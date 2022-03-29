@@ -1,0 +1,8 @@
+rootProject.name = 'dwh-migration-dumper'
+include(
+	'lib-common',
+	'lib-dumper-spi',
+	'lib-ext-bigquery',
+	'lib-ext-hive-metastore',
+	'app'
+)

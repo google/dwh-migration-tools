@@ -1,0 +1,8 @@
+build
+.svn
+.sw?
+.*.swp
+*~
+*#
+*.pyc
+

@@ -1,0 +1,200 @@
+/*
+ * Copyright 2022 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+plugins {
+    id 'java'
+    id 'java-test-fixtures'
+	id 'com.diffplug.spotless'
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+	all {
+		exclude group: 'javax.activation'   // In JDK since mumble.
+		exclude group: 'findbugs', module: 'annotations'
+		exclude group: 'net.jcip', module: 'jcip-annotations'   // In google-findbugs-annotations.
+		exclude group: 'org.springframework', module: 'spring-jcl'  // In jcl-over-slf4j
+		exclude group: 'commons-logging'	// Replaced by jcl-over-slf4j
+	}
+}
+
+dependencies {
+    def autoserviceVersion = '1.0.1'
+    def autoValueVersion = '1.8.1'
+    def checkerFrameworkVersion = '3.19.0'
+    def jclOverSlf4jVersion = '1.7.14'
+    def jsr305Version = '3.0.2'
+    def junitVersion = '4.13.2'
+    def log4jOverSlf4jVersion = '1.7.14'
+    def scJcipVersion = '1.0-1'
+    def slf4jVersion = '1.7.30'
+    def logbackVersion = '1.2.3'
+
+    constraints {
+        // Define dependency versions as constraints
+		def guavaVersion =  '31.0.1-jre'
+        implementation "com.google.guava:guava:$guavaVersion"
+        testFixturesImplementation "com.google.guava:guava:$guavaVersion"
+        def jacksonVersion = '2.9.0'
+        implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+        implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion"
+
+        implementation "net.sf.jopt-simple:jopt-simple:5.0.4"
+        implementation "org.anarres.jdiagnostics:jdiagnostics:1.0.7"
+        implementation "commons-io:commons-io:2.6"
+        implementation "org.apache.commons:commons-csv:1.9.0"
+        implementation "org.apache.commons:commons-lang3:3.8.1"
+        testFixturesImplementation "org.apache.commons:commons-lang3:3.8.1"
+        def springVersion = '5.3.14'
+        implementation "org.springframework:spring-core:$springVersion"
+        implementation "org.springframework:spring-jdbc:$springVersion"
+        implementation "com.zaxxer:HikariCP:3.2.0"
+        implementation "com.swrve:rate-limited-logger:2.0.0"
+        implementation "com.google.cloud:google-cloud-bigquery:1.126.3"
+
+		runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
+
+		testFixturesApi "org.apache.commons:commons-compress:1.18"
+        testFixturesApi "commons-io:commons-io:2.6"
+		testImplementation "org.xerial:sqlite-jdbc:3.32.3"
+		testImplementation "com.github.stefanbirkner:system-rules:1.18.0"
+		testImplementation "org.postgresql:postgresql:9.4.1208.jre7"
+		testImplementation "joda-time:joda-time:2.3"
+    }
+
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
+    testFixturesApi "org.slf4j:slf4j-api:$slf4jVersion"
+    implementation "com.google.code.findbugs:jsr305:$jsr305Version"
+    testFixturesImplementation "com.google.code.findbugs:jsr305:$jsr305Version"
+    testImplementation "com.google.code.findbugs:jsr305:$jsr305Version"
+    implementation "com.github.stephenc.jcip:jcip-annotations:$scJcipVersion"
+    testFixturesImplementation "com.github.stephenc.jcip:jcip-annotations:$scJcipVersion"
+    testImplementation "com.github.stephenc.jcip:jcip-annotations:$scJcipVersion"
+    // Ideally, implementation, but this annotation is preserved/exposed.
+    implementation "org.checkerframework:checker-qual:$checkerFrameworkVersion"
+    testFixturesImplementation "org.checkerframework:checker-qual:$checkerFrameworkVersion"
+    testImplementation "org.checkerframework:checker-qual:$checkerFrameworkVersion"
+
+    compileOnly "com.google.auto.value:auto-value-annotations:$autoValueVersion"
+    annotationProcessor "com.google.auto.value:auto-value:$autoValueVersion";
+    testFixturesCompileOnly "com.google.auto.value:auto-value-annotations:$autoValueVersion"
+    testFixturesAnnotationProcessor "com.google.auto.value:auto-value:$autoValueVersion";
+    testCompileOnly "com.google.auto.value:auto-value-annotations:$autoValueVersion"
+    testAnnotationProcessor "com.google.auto.value:auto-value:$autoValueVersion";
+
+    compileOnly "com.google.auto.service:auto-service:$autoserviceVersion"
+    annotationProcessor "com.google.auto.service:auto-service:$autoserviceVersion"
+    testFixturesCompileOnly "com.google.auto.service:auto-service:$autoserviceVersion"
+    testFixturesAnnotationProcessor "com.google.auto.service:auto-service:$autoserviceVersion"
+    testCompileOnly "com.google.auto.service:auto-service:$autoserviceVersion"
+    testAnnotationProcessor "com.google.auto.service:auto-service:$autoserviceVersion"
+
+    testImplementation "junit:junit:$junitVersion"
+    testRuntimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
+    testRuntimeOnly "org.slf4j:jul-to-slf4j:$slf4jVersion"
+    testRuntimeOnly "org.slf4j:log4j-over-slf4j:$log4jOverSlf4jVersion"
+    testRuntimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
+}
+
+tasks.named('test') {
+    // Use junit platform for unit tests.
+    // useJUnitPlatform()
+    outputs.cacheIf { false }
+    systemProperty 'org.slf4j.simpleLogger.logFile', 'System.out'
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', 'debug'
+    systemProperty 'jna.nosys', 'true'
+    [System.properties, project.ext.properties].each { sourceProperties ->
+        sourceProperties.each { k, v ->
+            // println "System: " + k + " => " + v;
+            if (k.startsWith("test-sys-prop."))
+                systemProperty k.substring(14), v
+            else if (k.equals("test.parameter"))
+                systemProperty k, v
+            else if (k.equals("test.verbose"))
+                    systemProperty k, v
+        }
+    }
+    if (Boolean.getBoolean('test.debug'))
+        jvmArgs "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"
+
+    testLogging {
+        // events "started", "passed", "skipped", "failed"
+        events "passed", "skipped", "failed"    // Skipping the 'started' message will reduce log size and GC overhead
+        if (Boolean.getBoolean("test.verbose")) {
+            // events "passed", "skipped", "failed"
+            showExceptions true
+            exceptionFormat "full"
+            showStandardStreams true
+        }
+
+        debug {
+            events "started", "passed", "skipped", "failed", "standard_out", "standard_error"
+            exceptionFormat "full"
+        }
+    }
+
+    ignoreFailures = false
+}
+
+spotless {
+	// In an ideal world we would use $YEAR in the HEADER templates, but that
+	// breaks some internal tooling. So we also can't use:
+	// ratchetFrom 'origin/main' // Enables lazy copyright year updates.
+
+	java {
+		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java");
+		trimTrailingWhitespace();
+        FileCollection files = files();
+        for (SourceSet sourceSet : sourceSets)
+            files = files.plus(sourceSet.allJava)
+        files = files.filter { f ->
+			// println "Filtering " + f;
+            String path = f.path;
+            // Ignore generated sources.
+            if (path.contains('/build/'))
+                return false;
+            return true;
+        }
+        target files;
+	}
+
+	format('gradle', com.diffplug.gradle.spotless.FormatExtension.class) {
+		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java"), '(?i:[a-z])'
+		trimTrailingWhitespace();
+		target files('build.gradle');
+	}
+
+	sql {
+		// Or use: '(?i:create|drop|insert|select)';
+		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.sql"), '(?i:[a-z])'
+		trimTrailingWhitespace();
+
+		FileCollection files = files();
+		for (SourceSet sourceSet : sourceSets)
+			files = files.plus(sourceSet.resources)
+		files = files.filter { f ->
+			// println "Filtering " + f;
+			if (!f.name.endsWith(".sql"))
+				return false;
+			return true;
+		}
+		target files;
+	}
+}

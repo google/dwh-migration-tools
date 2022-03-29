@@ -1,0 +1,119 @@
+/*
+ * Copyright 2022 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+buildscript {
+    dependencies {
+        classpath 'com.github.jk1:gradle-license-report:1.17'
+    }
+}
+
+plugins {
+    id 'dwh-migration-dumper.java-application-conventions'
+}
+
+apply plugin: 'com.github.jk1.dependency-license-report'
+
+configurations {
+	sources {
+		transitive = true
+	}
+}
+
+dependencies {
+    implementation project(':lib-common')
+    implementation project(':lib-dumper-spi')
+    implementation project(':lib-ext-bigquery')
+    implementation project(':lib-ext-hive-metastore')
+
+    implementation "com.google.guava:guava"
+    implementation "net.sf.jopt-simple:jopt-simple"
+    implementation "org.anarres.jdiagnostics:jdiagnostics"
+    implementation "commons-io:commons-io"
+    implementation "org.apache.commons:commons-csv"
+    implementation "org.apache.commons:commons-lang3"
+    implementation "org.springframework:spring-core"
+    implementation "org.springframework:spring-jdbc"
+    implementation "com.zaxxer:HikariCP"
+    implementation "com.swrve:rate-limited-logger"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
+
+    runtimeOnly "ch.qos.logback:logback-classic"
+
+    testFixturesApi testFixtures(project(':lib-common'))
+
+    testImplementation "org.xerial:sqlite-jdbc"
+	testImplementation "org.postgresql:postgresql"
+	testImplementation "com.github.stefanbirkner:system-rules"
+	testImplementation "joda-time:joda-time"
+
+    sources "ch.qos.logback:logback-classic:1.2.3@sources"
+}
+
+application {
+    // Define the main class for the application.
+    mainClass = 'com.google.edwmigration.dumper.application.dumper.MetadataDumper'
+	applicationName = 'dwh-migration-dumper'
+}
+
+licenseReport {
+    // onlyIf { ! gradle.startParameter.offline }
+    filters = [
+        // new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
+    ]
+    renderers = [
+        // new com.github.jk1.license.render.XmlReportRenderer("licenses.xml", "Licenses of Third Party Dependencies"),
+        new com.github.jk1.license.render.CsvReportRenderer(),
+        new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
+    ]
+    allowedLicensesFile = new File("$rootProject.projectDir/gradle/license-allowed.json")
+}
+
+tasks.register('generateSourceMirror', Copy) {
+    from {
+        dependencies.createArtifactResolutionQuery()
+            .forComponents(
+                 configurations.runtimeClasspath.incoming.resolutionResult
+                     .allDependencies.collect { it.selected.id }
+            )
+            .withArtifacts(JvmLibrary, SourcesArtifact)
+            .execute()
+            .resolvedComponents
+            .collectMany {
+                it.artifactResults
+                    .collect { it.file.path }
+            }
+    }
+    into layout.buildDirectory.dir('mirror/sources')
+	outputs.dir "mirror/sources"
+}
+
+distributions {
+	main {
+		distributionBaseName = "app"
+	}
+	published {
+		distributionBaseName = "dwh-migration-dumper"
+		contents {
+			from installDist
+			from(generateLicenseReport) {
+				into "docs/licenses"
+			}
+			from(generateSourceMirror) {
+				into "docs/sources"
+			}
+		}
+	}
+}

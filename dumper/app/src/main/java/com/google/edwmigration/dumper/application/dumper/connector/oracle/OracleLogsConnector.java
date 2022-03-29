@@ -1,0 +1,110 @@
+/*
+ * Copyright 2022 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.google.edwmigration.dumper.application.dumper.connector.oracle;
+
+import com.google.auto.service.AutoService;
+import com.google.common.io.ByteSink;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.sql.Clob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import javax.annotation.Nonnull;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.io.IOUtils;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
+import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleLogsDumpFormat;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.ResultSetExtractor;
+
+@AutoService({Connector.class, LogsConnector.class})
+@Description("Dumps query logs from Oracle")
+public class OracleLogsConnector extends AbstractOracleConnector implements LogsConnector, OracleLogsDumpFormat {
+
+    public OracleLogsConnector() {
+        super("oracle-logs");
+    }
+
+    /**
+     * Exists so we can extract query text CLOBs to Strings before they reach the CSVPrinter.
+     */
+    private static class QueryHistoryTask extends JdbcSelectTask {
+
+        public QueryHistoryTask(@Nonnull String targetPath, @Nonnull String sql) {
+            super(targetPath, sql);
+        }
+
+        @Nonnull
+        @Override
+        protected ResultSetExtractor<Void> newCsvResultSetExtractor(@Nonnull ByteSink sink, long count) {
+            return new ResultSetExtractor<Void>() {
+                @Override
+                public Void extractData(@Nonnull ResultSet rs) throws SQLException, DataAccessException {
+                    CSVFormat format = newCsvFormat(rs);
+                    try (RecordProgressMonitor monitor
+                                 = count >= 0
+                            ? new RecordProgressMonitor(getName(), count)
+                            : new RecordProgressMonitor(getName());
+                         Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
+                         CSVPrinter printer = format.print(writer))
+                    {
+                        //printer.printRecords(rs);
+                        final int columnCount = rs.getMetaData().getColumnCount();
+                        while (rs.next()) {
+                            monitor.count();
+                            for (int i = 1; i <= columnCount; i++) {
+                                Object obj = rs.getObject(i);
+                                if (obj instanceof Clob) {
+                                    InputStream in = ((Clob) obj).getAsciiStream();
+                                    StringWriter w = new StringWriter();
+                                    IOUtils.copy(in, w);
+                                    printer.print(w.toString());
+                                } else {
+                                    printer.print(rs.getObject(i));
+                                }
+                            }
+                            printer.println();
+                        }
+                        return null;
+                    } catch (IOException e) {
+                        throw new SQLException(e);
+                    }
+                }
+            };
+        }
+    }
+
+    @Override
+    public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) throws Exception {
+        out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+        // It's not clear to me whether we should be using v$sqlarea instead here.
+        String query = "SELECT sql_fulltext, cpu_time, elapsed_time, disk_reads, runtime_mem FROM v$sql";
+        out.add(new QueryHistoryTask(ZIP_ENTRY_FILENAME, query).withHeaderClass(Header.class));
+    }
+}

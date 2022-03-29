@@ -1,0 +1,13 @@
+{
+	"transformationRules" : [
+		{ "bundleName" : "Apache-2.0",     "licenseNamePattern" : "Apache.*2.0" },
+		{ "bundleName" : "CDDL-1.0",       "licenseNamePattern" : "CDDL License" },
+		{ "bundleName" : "EPL-1.0",        "licenseNamePattern" : "EPL 1.0" },
+		{ "bundleName" : "BSD-3-Clause",   "licenseNamePattern" : ".*BSD[ |-]3-[c|C]lause.*" },
+		{ "bundleName" : "LGPL-2.1-only",  "licenseNamePattern" : "GNU Lesser.*2.1.*" },
+		{ "bundleName" : "GPL-2.0 WITH Classpath-exception-2.0", "licenseNamePattern" : "GNU General Public License.*version 2.*Classpath exception" },
+		{ "bundleName" : "BSD-3-Clause",   "licenseNamePattern" : ".*New BSD.*" },
+		{ "bundleName" : "BSD-3-Clause",   "licenseNamePattern" : ".*Revised BSD.*" },
+		{ "bundleName" : "MIT", "licenseNamePattern" : "(The\\s)?MIT(\\slicen[c|s]e)?(\\s\\(MIT\\))?" }
+	]
+}

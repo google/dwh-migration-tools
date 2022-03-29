@@ -1,0 +1,107 @@
+{
+	"allowedLicenses": [
+		{
+			"moduleLicense": "Apache Software License, Version 1.1",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "Apache License, Version 2.0",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "The 3-Clause BSD License",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "The 2-Clause BSD License",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "The BSD License",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "BSD licence",
+			"notes": "Mostly antlr?",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "BSD License",
+			"notes": "Mostly antlr?",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "BSD Zero Clause License",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "GNU GENERAL PUBLIC LICENSE, Version 2 + Classpath Exception",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "Eclipse Distribution License - v 1.0",
+			"notes": "This is a BSD 3-clause license.",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "MIT License",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "ISC",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "PUBLIC DOMAIN",
+			"moduleName": ".*"
+		},
+
+		{
+			"moduleLicense": "Eclipse Public License - v 1.0",
+			"notes": "Generally acceptable license?",
+			"moduleName": "org.sonatype.aether.*"
+		},
+
+		{
+			"moduleLicense": "CDDL + GPLv2 with classpath exception",
+			"notes": "Generally acceptable license combination?",
+			"moduleName": ".*"
+		},
+
+		{
+			"moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
+			"moduleName": ".*"
+		},
+		{
+			"moduleLicense": "The Go license",
+			"notes": "This is another BSD license.",
+			"moduleName": ".*"
+		},
+
+
+		{
+			"moduleLicense": "Apache License",
+			"moduleName": "org.apache.httpcomponents:httpclient"
+		},
+		{
+			"moduleLicense": "CDDL + GPLv2 with classpath exception",
+			"moduleName": "javax.annotation:javax.annotation-api"
+		},
+		{
+			"moduleLicense": "Eclipse Public License - v 1.0",
+			"moduleName": "ch.qos.logback.*"
+		},
+		{
+			"moduleLicense": "The PostgreSQL License",
+			"moduleName": "org.postgresql:postgresql"
+		},
+		{
+			"moduleLicense": "PUBLIC DOMAIN",
+			"moduleName": "com.ibm.icu:icu4j"
+		},
+		{
+			"moduleLicense": null,
+			"moduleName": "com.fasterxml.jackson:jackson-bom"
+		}
+	]
+}
