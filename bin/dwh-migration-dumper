@@ -1,0 +1,9 @@
+#!/bin/sh -ex
+
+BIN=$(dirname $(readlink -f $0))/../dumper/app/build/install/app/bin/dwh-migration-dumper
+
+if [ ! -x "$BIN" ] ; then
+	(cd dumper && ./gradlew --parallel :app:installDist)
+fi
+
+exec "$BIN" "$@"
