@@ -69,7 +69,8 @@ dependencies {
         implementation "com.swrve:rate-limited-logger:2.0.0"
         implementation "com.google.cloud:google-cloud-bigquery:1.126.3"
 
-		runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
+        runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
+        runtimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
 
 		testFixturesApi "org.apache.commons:commons-compress:1.18"
         testFixturesApi "commons-io:commons-io:2.6"
