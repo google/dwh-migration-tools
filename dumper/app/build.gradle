@@ -51,14 +51,16 @@ dependencies {
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
 
     runtimeOnly "ch.qos.logback:logback-classic"
+    runtimeOnly "org.slf4j:jcl-over-slf4j"
 
     testFixturesApi testFixtures(project(':lib-common'))
 
     testImplementation "org.xerial:sqlite-jdbc"
-	testImplementation "org.postgresql:postgresql"
-	testImplementation "com.github.stefanbirkner:system-rules"
-	testImplementation "joda-time:joda-time"
+    testImplementation "org.postgresql:postgresql"
+    testImplementation "com.github.stefanbirkner:system-rules"
+    testImplementation "joda-time:joda-time"
 
+    sources "org.slf4j:jcl-over-slf4j:1.7.14@sources"
     sources "ch.qos.logback:logback-classic:1.2.3@sources"
 }
 
