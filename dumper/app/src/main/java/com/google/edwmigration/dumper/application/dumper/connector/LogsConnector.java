@@ -24,6 +24,6 @@ public interface LogsConnector extends Connector {
 
     @Override
     default public String getDefaultFileName() {
-        return "compilerworks-" + getName() + ".zip";
+        return "dwh-migration-" + getName() + ".zip";
     }
 }
