@@ -24,6 +24,6 @@ public interface MetadataConnector extends Connector {
 
     @Override
     default public String getDefaultFileName() {
-        return "compilerworks-" + getName() + "-metadata.zip";
+        return "dwh-migration-" + getName() + "-metadata.zip";
     }
 }

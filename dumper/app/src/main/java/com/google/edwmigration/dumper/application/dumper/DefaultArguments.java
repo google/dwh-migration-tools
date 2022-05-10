@@ -86,7 +86,7 @@ public class DefaultArguments {
     }
 
     private static final String PRODUCT_GROUP = "com.google.edwmigration.dumper";
-    private static final String PRODUCT_CORE_MODULE = "compilerworks-application-dumper";
+    private static final String PRODUCT_CORE_MODULE = "dwh-migration-dumper";
 
     protected final OptionParser parser = new OptionParser();
     private final OptionSpec<?> helpOption = parser.accepts("help", "Displays command-line help.").forHelp();
