@@ -6,3 +6,5 @@ include(
 	'lib-ext-hive-metastore',
 	'app'
 )
+includeFlat 'integration-tests'
+
