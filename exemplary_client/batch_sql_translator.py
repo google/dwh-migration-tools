@@ -26,10 +26,8 @@ from google.cloud import bigquery_migration_v2
 
 
 class BatchSqlTranslator:
-    """A structure for holding a tree of files.
-
-    This index is used internally by resources.py to help implement an os.walk
-    style API.
+    """A class to manage Batch SQL Translation job using the bigquery_migration_v2
+    python client library. 
     """
 
     def __init__(self, config):
