@@ -24,13 +24,14 @@ parser.add_argument('-m', '--macro_map', type=str,
                     help='Path to the macro map yaml file. If specified, the program will pre-process '
                          'all the input query files by replacing the macros with corresponding '
                          'string values according to the macro map definition. After translation, '
-                         'the program will reverse the macro substitution for the output files in a '
-                         'post-processing step.')
+                         'the program will revert the substitutions for all the output query files in a '
+                         'post-processing step.  The replacement does not apply for files with extension of '
+                         '.zip, .csv, .json.')
 args = parser.parse_args()
 
 
 def start_translation():
-    """Starts a batch translation job.
+    """Starts a batch sql translation job.
     """
     print("Reading translation config file from config.yaml")
     config = ConfigParser().parse_config()

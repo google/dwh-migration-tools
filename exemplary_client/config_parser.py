@@ -112,3 +112,5 @@ class ConfigParser:
         assert self.__TRANSLATION_CONFIG in yaml_data, "Missing translation_config field in config.yaml."
         assert self.__TRANSLATION_TYPE in yaml_data[
             self.__TRANSLATION_CONFIG], "Missing translation_type field in config.yaml."
+        type = yaml_data[self.__TRANSLATION_CONFIG][self.__TRANSLATION_TYPE]
+        assert type in self.__SUPPORTED_TYPES, "The type \"%s\" is not supported." % type

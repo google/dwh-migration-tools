@@ -181,7 +181,6 @@ class BatchSqlTranslator:
     def get_input_dialect(self) -> bigquery_migration_v2.Dialect:
         """Returns the input dialect proto based on the translation type in the config.
         """
-        self.config.translation_type
         dialect = bigquery_migration_v2.Dialect()
         if self.config.translation_type == config_parser.TERADATA2BQ:
             dialect.teradata_dialect = bigquery_migration_v2.TeradataDialect(
@@ -201,3 +200,4 @@ class BatchSqlTranslator:
             dialect.snowflake_dialect = bigquery_migration_v2.SnowflakeDialect()
         elif self.config.translation_type == config_parser.NETEZZA2BQ:
             dialect.netezza_dialect = bigquery_migration_v2.NetezzaDialect()
+        return dialect
