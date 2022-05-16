@@ -13,10 +13,11 @@
 # limitations under the License.
 
 
+import argparse
 import batch_sql_translator
 
-import argparse
 from config_parser import ConfigParser
+from gcloud_auth_helper import validate_gcloud_auth_settings
 from sql_processor import MacrosMapParser
 
 parser = argparse.ArgumentParser(description='Config the Batch Sql translation tool.')
@@ -35,6 +36,8 @@ def start_translation():
     """
     print("Reading translation config file from config.yaml")
     config = ConfigParser().parse_config()
+    print("Verify cloud login and credential settings...")
+    validate_gcloud_auth_settings(config.project_number)
     if args.macro_map:
         print('Reading macros replacement map from %s' % args.macro_map)
         config.macro_maps = MacrosMapParser(args.macro_map).parse()
