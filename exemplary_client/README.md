@@ -48,18 +48,18 @@ number here.
 If you want to use an existing project, make sure you have all the required [IAM
 permissions](https://cloud.google.com/bigquery/docs/batch-sql-translator#required_permissions).
 
-## Input
+## input_directory
 
 The input folder is supposed to contain files with pure SQL statements (comments
 are OK). The file extension can be in any format like .txt or .sql.
 
-TODO: add instruction about how to use the metadata dumper and metadata.
+TODO: add instruction about how to use the metadata dumper outputs as inputs here.
 
-## Output
+## output_directory
 
-In the config, you just need to specify a local directory to store the outputs
-of the translation job. Every input SQL file will have a corresponding output
-file under the same name in the output directory.
+In the config, specify a local directory to store the outputs of the translation job. 
+Every input SQL file will have a corresponding output file under the same name in 
+the output directory.
 
 ## Run a translation job
 
