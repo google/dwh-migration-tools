@@ -6,19 +6,44 @@ client package.
 
 ## Installation
 
-Download the entire directory from the [exemplary_client](https://github.com/xiashang0624/dwh-migration-tools/tree/python-client/exemplary_client) on GitHub and
-install the Python packages listed in the [requirements.txt](https://github.com/xiashang0624/dwh-migration-tools/tree/python-client/exemplary_client/requirements.txt) file.
+Download the entire directory from the [exemplary_client](https://github.com/google/dwh-migration-tools/tree/main/exemplary_client) on GitHub and
+install the Python packages listed in the [requirements.txt](https://github.com/google/dwh-migration-tools/tree/main/exemplary_client/requirements.txt) file through: 
 
+```pip install -r requirements.txt```
+
+Install the gcloud CLI following the [instructions](http://cloud/sdk/docs/install).
+
+### [Optional] gcloud login and authentication
+
+The program will first validate the login and credential status of
+gcloud. If the validation steps failed, the program will run the following two
+commands automatically and bring up a page on browser for your agreement of
+using your Google account.
+
+However, it's recommended that you run these two commands on the terminal first as a one-time setup requirement:
+
+Log in to gcloud:
+
+```
+gcloud auth login
+```
+
+Generate an application-default credential file so that you can use gcloud API
+programmatically:
+
+```
+gcloud auth application-default login
+```
 ## User Manual
 
-Open the [config.yaml](https://github.com/xiashang0624/dwh-migration-tools/tree/python-client/exemplary_client/config.yaml) file and fill all the required fields. If you are a first
+Open the [config.yaml](https://github.com/google/dwh-migration-tools/tree/main/exemplary_client/config.yaml) file and fill all the required fields. If you are a first
 time user who just wants to give it a try, we recommend to create a new [GCP
-project](https://pantheon.corp.google.com/) and put the project_number in the config. You can find the project
+project](https://console.cloud.google.com/) and put the project_number in the config. You can find the project
 number here.
 
 <div style="text-align:center">
     <img src="img/example_gcp_project_number.png" alt="project_number" width="400"/>
-</div>>
+</div>
 
 If you want to use an existing project, make sure you have all the required [IAM
 permissions](https://cloud.google.com/bigquery/docs/batch-sql-translator#required_permissions).
@@ -26,7 +51,7 @@ permissions](https://cloud.google.com/bigquery/docs/batch-sql-translator#require
 ## Input
 
 The input folder is supposed to contain files with pure SQL statements (comments
-are OK). The file type can be in any format like .txt or .sql.
+are OK). The file extension can be in any format like .txt or .sql.
 
 TODO: add instruction about how to use the metadata dumper and metadata.
 
@@ -42,28 +67,6 @@ Simply run the following commands in Python3:
 
 ```
 python main.py
-```
-
-### [Optional] gcloud login and authentication
-
-Note that the program will first validate the login and credential status of
-gcloud. If the validation steps failed, the program will run the following two
-commands automatically and bring up a page on browser for your aggreement of
-using one of you google accounts.
-
-However, it's recommended that you run these two commands on the terminal first:
-
-Log in to gcloud:
-
-```
-gcloud auth login
-```
-
-Generate an application-default credential file so that you can use gcloud API
-programmatically:
-
-```
-gcloud auth application-default login
 ```
 
 ### [Optional] macros replacement mapping

@@ -97,7 +97,7 @@ class BatchSqlTranslator:
     def __get_ui_link(self) -> str:
         """Returns the http link to the offline translation page for this project.
         """
-        return ("https://pantheon.corp.google.com/bigquery/migrations/offline-translation?projectnumber=%s" %
+        return ("https://console.cloud.google.com/bigquery/migrations/offline-translation?projectnumber=%s" %
                 self.config.project_number)
 
     def __wait_until_job_finished(self, workflow_id: str, length_seconds: int = 600):
