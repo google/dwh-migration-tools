@@ -46,6 +46,13 @@ public interface OutputHandle {
     public ByteSink asTemporaryByteSink();
 
     /**
+     * Ensures that the target file can be written.
+     *
+     * Call this before calling openStream() on a ByteStream acquired from this object.
+     */
+    public void prepare() throws IOException;
+
+    /**
      * Renames the temporary file to the final file.
      *
      * The stream, if any, must be closed.
