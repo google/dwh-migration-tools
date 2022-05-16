@@ -65,7 +65,7 @@ def get_all_regex_pattern_mapping(file_name: str, macro_maps: Dict[str, Dict[str
     reg_pattern_map = {}
     for file_map_key, token_map in macro_maps.items():
         if fnmatch.fnmatch(file_name, join(base_dir, file_map_key)):
-            for key, value in macro_maps.items():
+            for key, value in token_map.items():
                 reg_pattern_map[re.escape(key)] = value
     all_patterns = re.compile("|".join(reg_pattern_map.keys()))
     return reg_pattern_map, all_patterns

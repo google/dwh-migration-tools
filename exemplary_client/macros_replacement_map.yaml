@@ -28,7 +28,7 @@
 
 macros_replacement_map:
   '*.sql':
-    '${MACRO_1}': 'macro_replacement_1'
+    '${MACRO_1}': 'my_table'
     '%MACRO_2%': 'macro_replacement_2'
   '2.sql':
     'templated_column': 'replacing_column'

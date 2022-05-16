@@ -1,4 +1,5 @@
 # Required Python 3 packages for using the Batch SQL Translation exemplary Python client.
+# To install: run `pip install -r requirements.txt` in the terminal
 
 # google cloud packages.
 google-cloud==0.34.0

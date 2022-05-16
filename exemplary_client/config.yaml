@@ -14,18 +14,18 @@
 
 gcp_settings:
   # GCP project number, example: 576339195321 (translation-test-external project)
-  project_number: xxxxxxxxxx
+  project_number: 'XXXXXXXXXX'
 
   # Google Cloud Storage bucket, example: 'xshang_test_external'
-  gcs_bucket: 'xxxxxxxxxxxxxxx'
+  gcs_bucket: 'exemplary_client_test_external'
 
 translation_config:
-  input_directory: '/path/to/local/input'
-  output_directory: '/path/to/target/output'
+  input_directory: 'input'
+  output_directory: 'output'
 
   # The translation type needs to be one of these: Translation_Teradata2BQ, Translation_Redshift2BQ,Translation_Bteq2BQ,
   # Translation_Oracle2BQ, Translation_HiveQL2BQ, Translation_SparkSQL2BQ, Translation_Snowflake2BQ, Translation_Netezza2BQ.
-  translation_type: Translation_Redshift2BQ
+  translation_type: Translation_Teradata2BQ
   location: 'us'
 
   # Set this to True (default) to clean up the temporary data in the '.tmp_processed' folder after job finishes.
