@@ -39,10 +39,6 @@ public class FileSystemByteSink extends ByteSink {
 
     @Override
     public OutputStream openStream() throws IOException {
-        Path parent = path.getParent();
-        if (!Files.isDirectory(parent)) {
-            Files.createDirectory(parent);
-        }
         return Files.newOutputStream(path);
     }
 

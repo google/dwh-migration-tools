@@ -172,6 +172,7 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector implements M
         // Not documented.
         out.add(new JdbcSelectTask("nz.v_objects.csv", "SELECT * FROM system.._v_objects"));
 
+        // TODO; these might be placed in a ParallelTaskGroup?`
         // these neeed to be filtered on WHERE = dbname, or else which DB md table will contain SYSTEM data too
         for (String db : dbs) {
             // The benefit of having this reduces the amount of data in the zip file
@@ -181,7 +182,6 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector implements M
             // https://www.ibm.com/support/knowledgecenter/en/SSULQD_7.2.1/com.ibm.nz.adm.doc/t_sysadm_enable_multiple_schema.html
             String schemaPrefix = db + "..";    // We don't know what the default schema is, but it should contain the views we require.
             String filePrefix = db.toUpperCase() + "/"; // If we have databases with the same name but mismatched case, this will break.
-
             // also _v_relation_column: all attributes of a relation, Constraints and other informations
             // Undocumented?
             // TABLE_CAT,TABLE_SCHEM,TABLE_NAME,COLUMN_NAME,DATA_TYPE,TYPE_NAME,COLUMN_SIZE,BUFFER_LENGTH,DECIMAL_DIGITS,NUM_PREC_RADIX,

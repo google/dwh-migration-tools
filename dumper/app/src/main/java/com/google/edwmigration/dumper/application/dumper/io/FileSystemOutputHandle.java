@@ -62,6 +62,12 @@ public class FileSystemOutputHandle implements OutputHandle {
     }
 
     @Override
+    public void prepare() throws IOException {
+        // Ensure the directory we want to write to exists
+        Files.createDirectories(targetPath.getParent());
+    }
+
+    @Override
     public void commit() throws IOException {
         if (!Files.exists(temporaryPath))
             throw new FileNotFoundException("File does not exist: " + temporaryPath + "; cannot move to " + targetPath);
