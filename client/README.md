@@ -6,12 +6,15 @@ client package.
 
 ## Installation
 
-Download the entire directory from the [exemplary_client](https://github.com/google/dwh-migration-tools/tree/main/exemplary_client) on GitHub and
-install the Python packages listed in the [requirements.txt](https://github.com/google/dwh-migration-tools/tree/main/exemplary_client/requirements.txt) file through: 
+Clone or download this repository and
+install the Python packages listed in the [requirements.txt](requirements.txt) file through: 
 
-```pip install -r requirements.txt```
+```
+cd client
+pip install -r requirements.txt
+```
 
-Install the gcloud CLI following the [instructions](http://cloud/sdk/docs/install).
+Install the gcloud CLI following the [instructions](http://cloud.google.com/sdk/docs/install).
 
 ### [Optional] gcloud login and authentication
 
@@ -34,9 +37,10 @@ programmatically:
 ```
 gcloud auth application-default login
 ```
+
 ## User Manual
 
-Open the [config.yaml](https://github.com/google/dwh-migration-tools/tree/main/exemplary_client/config.yaml) file and fill all the required fields. If you are a first
+Open the [config.yaml](config.yaml) file and fill all the required fields. If you are a first
 time user who just wants to give it a try, we recommend to create a new [GCP
 project](https://console.cloud.google.com/) and put the project_number in the config. You can find the project
 number here.
