@@ -21,7 +21,7 @@ from gcloud_auth_helper import validate_gcloud_auth_settings
 from macro_processor import MacrosProcessor
 
 parser = argparse.ArgumentParser(description='Config the Batch Sql translation tool.')
-parser.add_argument('-m', '--macro_map', type=str,
+parser.add_argument('-m', '--macros', type=str,
                     help='Path to the macro map yaml file. If specified, the program will pre-process '
                          'all the input query files by replacing the macros with corresponding '
                          'string values according to the macro map definition. After translation, '
@@ -38,7 +38,11 @@ def start_translation():
     config = ConfigParser().parse_config()
     print("Verify cloud login and credential settings...")
     validate_gcloud_auth_settings(config.project_number)
-    translator = batch_sql_translator.BatchSqlTranslator(config, MacrosProcessor(args))
+	if args.macros:
+		preprocessor = MacroProcessor(args)
+	else
+		preprocessor = None
+    translator = batch_sql_translator.BatchSqlTranslator(config, preprocessor)
     translator.start_translation()
 
 

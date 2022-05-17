@@ -21,7 +21,7 @@ import time
 
 from datetime import datetime
 from os.path import dirname, join
-from macro_processor import MacrosProcessor
+from macro_processor import MacroProcessor
 from google.cloud import bigquery_migration_v2
 
 
@@ -31,11 +31,11 @@ class BatchSqlTranslator:
 
     """
 
-    def __init__(self, config, macros_processor: MacrosProcessor):
+    def __init__(self, config, preprocessor: MacroProcessor):
         self.config = config
         self.client = bigquery_migration_v2.MigrationServiceClient()
         self.gcs_path = None
-        self.macros_processor = macros_processor
+        self.preprocessor = preprocessor	# May be None
 
     __JOB_FINISHED_STATES = {
         bigquery_migration_v2.types.MigrationWorkflow.State.COMPLETED,
@@ -55,11 +55,11 @@ class BatchSqlTranslator:
         local_input_dir = self.config.input_directory
         local_output_dir = self.config.output_directory
         tmp_dir = join(dirname(self.config.input_directory), self.__TMP_DIR_NAME)
-        if self.macros_processor.enable_macro_substitution:
+        if self.preprocessor is not None:
             print("Start pre-processing input query files...")
             local_input_dir = join(tmp_dir, "input")
             local_output_dir = join(tmp_dir, "output")
-            self.macros_processor.pre_process(self.config.input_directory, local_input_dir)
+            self.preprocessor.pre_process(self.config.input_directory, local_input_dir)
 
         self.gcs_path = self.__generate_gcs_path()
         gcs_input_path = join("gs://%s" % self.config.gcs_bucket, self.gcs_path, "input")
@@ -72,9 +72,9 @@ class BatchSqlTranslator:
         print("Downloading outputs...")
         gcs_util.download_directory(local_output_dir, self.config.gcs_bucket, join(self.gcs_path, "output"))
 
-        if self.macros_processor.enable_macro_substitution:
+        if self.preprocessor is not None:
             print("Start post-processing by reverting the macros substitution...")
-            self.macros_processor.post_process(local_output_dir, self.config.output_directory)
+            self.preprocessor.post_process(local_output_dir, self.config.output_directory)
 
         print("Finished post-processing. The output query files are in %s" % self.config.output_directory)
 
