@@ -13,10 +13,10 @@
 # limitations under the License.
 
 gcp_settings:
-  # GCP project number, example: 576339195321 (translation-test-external project)
+  # GCP project number.
   project_number: 'XXXXXXXXXX'
 
-  # Google Cloud Storage bucket, example: 'xshang_test_external'
+  # Google Cloud Storage bucket, example: 'exemplary_client_test_external'
   gcs_bucket: 'exemplary_client_test_external'
 
 translation_config:
