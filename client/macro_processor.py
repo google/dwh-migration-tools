@@ -18,7 +18,6 @@ import re
 import shutil
 import yaml
 
-
 from argparse import Namespace
 from yaml.loader import SafeLoader
 from os.path import dirname, isfile, join
@@ -28,133 +27,152 @@ from typing import Dict
 class MacroProcessor:
     """A processor to handle macros in the query files during the pre-processing and post-processing stages of a Batch
     Sql Translation job.
-
     """
+
     def __init__(self, context: Namespace):
         self.context = context
-		self.expander = MapBasedExpander(context.macros)
+        self.expander = MapBasedExpander(context.macros)
 
     def preprocess(self, input_dir: str, tmp_dir: str):
-		"""The pre-upload entry point of a MacroProcessor
+        """The pre-upload entry point of a MacroProcessor.
 
-		This method expands customer-specific macros and
-		substitutions in the source-language SQL, to make it
-		valid for the compiler.
-		"""
-        self.__process(input_dir, tmp_dir)
+        This method expands customer-specific macros and substitutions in the source-language SQL, to make it valid
+        for the compiler.
+        """
+        self.__process(input_dir, tmp_dir, revert_expansion=False)
 
     def postprocess(self, tmp_dir: str, output_dir: str):
-		"""The post-download entry point of a MacroProcessor
+        """The post-download entry point of a MacroProcessor
 
-		This method re-inserts macros into the generated target-language SQL, if required.
-		"""
-        self.__process(tmp_dir, output_dir, use_reversed_map=True)
+        This method re-inserts macros into the generated target-language SQL, if required.
+        """
+        self.__process(tmp_dir, output_dir, revert_expansion=True)
 
-	def is_ignored(self, path, name):
-		"""Returns true if a file is ignored.
+    def is_ignored(self, path, name: str) -> bool:
+        """Returns true if a file is ignored.
 
-		Ignored files are not transpiled or copied to the output directory.
-		"""
-		if (!isfile(path))
-			return True
-		if (name.startswith("."))
-			return True
-		return False
+        Ignored files are not transpiled or copied to the output directory.
+        """
+        if not isfile(path):
+            return True
+        if name.startswith("."):
+            return True
+        return False
 
-	def is_processable(self, path, name):
-		"""Returns true if a file is preprocessable.
+    def is_processable(self, path, name) -> bool:
+        """Returns true if a file is preprocessable.
 
-		Preprocessable files are subject to macro expansion and (optionally) unexpansion.
-		Non-preprocessable files are transpiled verbatim. To ignore a file entirely, modify is_ignored.
-		"""
-		if (is_ignored(path))
-			return False
-		if name.lower().endswith(('.zip', '.json', '.csv')):
-			return False
-		return True
+        Preprocessable files are subject to macro expansion and (optionally) unexpansion.
+        Non-preprocessable files are transpiled verbatim. To ignore a file entirely, modify is_ignored.
+        """
+        if self.is_ignored(path, name):
+            return False
+        if name.lower().endswith(('.zip', '.json', '.csv')):
+            return False
+        return True
 
-    def __process(self, input_dir: str, output_dir: str, use_reversed_map=False):
+    def __process(self, input_dir: str, output_dir: str, revert_expansion=False):
         """Replaces or restores macros for every file in the input folder and save outputs in a new folder.
-		Macro replacement doesn't apply for files which are ignored, or not processable.
-		Note that this method is called for varying combinations of input and output directories
-		at different points in the process.
+        Macro replacement doesn't apply for files which are ignored, or not processable.
+        Note that this method is called for varying combinations of input and output directories
+        at different points in the process.
 
         Args:
             input_dir: path to the input directory.
             output_dir: path to the output directory.
-            use_reversed_map: whether to use the reversed macro_replacement_maps.
+            revert_expansion: whether to revert the macro substitution.
         """
-		# TODO: This needs to be a recursive walk using os.walk
-        for name in os.listdir(input_dir):
-            input_path = join(input_dir, name)
-			output_path = join(output_dir, name)
-			if is_ignored(input_path):
-				continue
-			os.makedirs(dirname(output_path), exist_ok=True)
-			if not is_processable(input_path):
-				shutil.copy(input_path, output_path)
-				continue
-			# The user may implement entirely different logic for macro expansion
-			# vs unexpansion, especially if they are migrating between systems,
-			# so we use our boolean flag to separate the paths again here.
-			if not use_reversed_map:
-				self.preprocess_file(file_path, input_dir, output_dir, use_reversed_map)
-			else
-				self.postprocess_file(file_path, input_dir, output_dir, use_reversed_map)
+        for (root, dirs, files) in os.walk(input_dir):
+            for name in files:
+                sub_dir = root[len(input_dir):]
+                if sub_dir.startswith("/"):
+                    sub_dir = sub_dir[1:]
+                input_path = join(input_dir, sub_dir, name)
+                output_path = join(output_dir, sub_dir, name)
+                if self.is_ignored(input_path, name):
+                    continue
+                os.makedirs(dirname(output_path), exist_ok=True)
+                if not self.is_processable(input_path, name):
+                    shutil.copy(input_path, output_path)
+                    continue
+                # The user may implement entirely different logic for macro expansion
+                # vs. unexpansion, especially if they are migrating between systems,
+                # so we use a boolean flag to separate the paths again here.
+                if not revert_expansion:
+                    self.preprocess_file(input_path, output_path)
+                else:
+                    self.postprocess_file(input_path, output_path)
 
-	def preprocess_file(self, input_path: str, tmp_path: str):
-		print("Preprocessing %s" % input_path)
-		with open(input_path) as input_fh:
-			text = input_fh.read()
-		text = preprocess_text(text, input_path)
-		with open(tmp_path) as tmp_fh:
-			tmp_fh.write(text)
+    def preprocess_file(self, input_path: str, tmp_path: str):
+        print("Preprocessing %s" % input_path)
+        with open(input_path) as input_fh:
+            text = input_fh.read()
+        text = self.preprocess_text(text, input_path)
+        with open(tmp_path, "w") as tmp_fh:
+            tmp_fh.write(text)
 
-	def preprocess_text(self, text: str, input_path: str):
-		return self.expander.expand(text, input_path, False)
+    def preprocess_text(self, text: str, input_path: str):
+        return self.expander.expand(text, input_path)
 
-	def postprocess_file(self, tmp_path: str, output_path: str):
-		"""Postprocesses the given file, after conversion to the target dialect.
+    def postprocess_file(self, tmp_path: str, output_path: str):
+        """Postprocesses the given file, after conversion to the target dialect.
 
-		The user may replace this method with any locally-specified implementation.
-		If only simple textual replacement is required, it may be easier to modify postprocess_text.
+        The user may replace this method with any locally-specified implementation.
+        If only simple textual replacement is required, it may be easier to modify postprocess_text.
 
-		Not all users will want postprocessing, and some may just copy the file.
-		"""
-		print("Postprocessing into %s" % output_path)
-		with open(tmp_path) as tmp_fh:
-			text = input_fh.read()
-		text = postprocess_text(text, output_path)
-		with open(output_path) as output_fh:
-			output_fh.write(text)
+        Not all users will want postprocessing, and some may just copy the file.
+        """
+        print("Postprocessing into %s" % output_path)
+        with open(tmp_path) as tmp_fh:
+            text = tmp_fh.read()
+        text = self.postprocess_text(text, output_path)
+        with open(output_path, "w") as output_fh:
+            output_fh.write(text)
 
-	def postprocess_text(self, text: str, output_path: str):
-		"""Postprocesses the given text, after conversion to the target dialect.
+    def postprocess_text(self, text: str, output_path: str) -> str:
+        """Postprocesses the given text, after conversion to the target dialect.
 
-		The user may replace this method with any locally-specified implementation.
-		If access to the file is required, modify postprocess_file instead, and (optionally) delete this method.
+        The user may replace this method with any locally-specified implementation.
+        If access to the file is required, modify postprocess_file instead, and (optionally) delete this method.
 
-		Not all users will want postprocessing, and some may just return text.
-		"""
-		return self.expander.expand(text, output_path, True)
+        Not all users will want postprocessing, and some may just return text.
+        """
+        return self.expander.unexpand(text, output_path)
 
 
 class MapBasedExpander:
     """An util class to handle map based yaml file.
 
     """
-    __YAML_KEY = "macros_replacement_map"
+    __YAML_KEY = "macros"
 
     def __init__(self, yaml_file_path):
         self.yaml_file_path = yaml_file_path
-        self.macro_replacement_maps = self.__parse_macros_config_file()
-		self. #TODO: Precompile all the regexes.
+        self.macro_expansion_maps = self.__parse_macros_config_file()
+        self.reversed_maps = self.__get_reversed_maps()
 
-    def get_reversed_maps(self) -> Dict[str, Dict[str, str]]:
+    def expand(self, text: str, path: str) -> str:
+        """ Expands the macros in the text with the corresponding values defined in the macros_substitution_map file.
+
+        Returns the text after macro substitution.
+        """
+        reg_pattern_map, patterns = self.__get_all_regex_pattern_mapping(path)
+        return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
+
+    def unexpand(self, text: str, path: str):
+        """ Reverts the macros substitution by replacing the values with macros defined in the macros_substitution_map
+        file.
+
+        Returns the text after replacing the values with macros.
+        """
+        reg_pattern_map, patterns = self.__get_all_regex_pattern_mapping(path, True)
+        return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
+
+    def __get_reversed_maps(self) -> Dict[str, Dict[str, str]]:
         """ Swaps key and value in the macro maps and return the new map.
         """
         reversed_maps = {}
-        for file_key, macro_map in self.macro_replacement_maps.items():
+        for file_key, macro_map in self.macro_expansion_maps.items():
             reversed_maps[file_key] = dict((v, k) for k, v in macro_map.items())
         return reversed_maps
 
@@ -179,20 +197,14 @@ class MapBasedExpander:
         assert self.__YAML_KEY in yaml_data, "Missing %s field in %s." % (self.__YAML_KEY, self.yaml_file_path)
         assert yaml_data[self.__YAML_KEY], "The %s is empty in %s." % (self.__YAML_KEY, self.yaml_file_path)
 
-    def __get_all_regex_pattern_mapping(self, file_name: str, base_dir: str, use_reversed_map):
-        """ Compiles all the macros matched with the file into a single regex pattern.
+    def __get_all_regex_pattern_mapping(self, file_path: str, use_reversed_map=False):
+        """ Compiles all the macros matched with the file path into a single regex pattern.
         """
-        macro_subst_maps = self.expander.get_reversed_maps() if use_reversed_map else \
-            self.expander.macro_replacement_maps
+        macro_subst_maps = self.reversed_maps if use_reversed_map else self.macro_expansion_maps
         reg_pattern_map = {}
         for file_map_key, token_map in macro_subst_maps.items():
-            if fnmatch.fnmatch(file_name, join(base_dir, file_map_key)):
+            if fnmatch.fnmatch(file_path, file_map_key):
                 for key, value in token_map.items():
                     reg_pattern_map[re.escape(key)] = value
         all_patterns = re.compile("|".join(reg_pattern_map.keys()))
         return reg_pattern_map, all_patterns
-
-	def expand(self, text: str, path: str, use_reversed_map):
-		# TODO os.path.filename(path)
-		# Using one or other of the cached patterns objects from the constructor:
-        # return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], input_text)
