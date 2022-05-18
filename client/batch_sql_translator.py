@@ -35,7 +35,8 @@ class BatchSqlTranslator:
         self.config = config
         self.client = bigquery_migration_v2.MigrationServiceClient()
         self.gcs_path = None
-        self.preprocessor = preprocessor	# May be None
+        self.preprocessor = preprocessor    # May be None
+        self.tmp_dir = join(dirname(self.config.input_directory), self.__TMP_DIR_NAME)
 
     __JOB_FINISHED_STATES = {
         bigquery_migration_v2.types.MigrationWorkflow.State.COMPLETED,
@@ -54,12 +55,11 @@ class BatchSqlTranslator:
         """
         local_input_dir = self.config.input_directory
         local_output_dir = self.config.output_directory
-        tmp_dir = join(dirname(self.config.input_directory), self.__TMP_DIR_NAME)
         if self.preprocessor is not None:
             print("Start pre-processing input query files...")
-            local_input_dir = join(tmp_dir, "input")
-            local_output_dir = join(tmp_dir, "output")
-            self.preprocessor.pre_process(self.config.input_directory, local_input_dir)
+            local_input_dir = join(self.tmp_dir, "input")
+            local_output_dir = join(self.tmp_dir, "output")
+            self.preprocessor.preprocess(self.config.input_directory, local_input_dir)
 
         self.gcs_path = self.__generate_gcs_path()
         gcs_input_path = join("gs://%s" % self.config.gcs_bucket, self.gcs_path, "input")
@@ -74,13 +74,13 @@ class BatchSqlTranslator:
 
         if self.preprocessor is not None:
             print("Start post-processing by reverting the macros substitution...")
-            self.preprocessor.post_process(local_output_dir, self.config.output_directory)
+            self.preprocessor.postprocess(local_output_dir, self.config.output_directory)
 
         print("Finished post-processing. The output query files are in %s" % self.config.output_directory)
 
         if self.config.clean_up_tmp_files:
             print("Cleaning up tmp files...")
-            shutil.rmtree(tmp_dir)
+            shutil.rmtree(self.tmp_dir)
 
         print("The job finished successfully!")
         print(

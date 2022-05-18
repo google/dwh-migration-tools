@@ -78,18 +78,18 @@ python main.py
 This tool can also perform macros substitution before/after the translation job
 through an option flag.
 
-To enable macros substitution, pass the arg '-m macro_replacement_map.yaml' when
+To enable macros substitution, pass the arg '-m macros.yaml' when
 running the tool:
 
 ```
-python main.py -m macros_replacement_map.yaml
+python main.py -m macros.yaml
 ```
 
-Here is an example of the macros_replacement_map.yaml file:
+Here is an example of the macros.yaml file:
 
 ```
-# This is an example of a macros_replacement_map.yaml file
-macros_replacement_map:
+# This is an example of a macros.yaml file
+macros:
   '*.sql':
     '${MACRO_1}': 'macro_replacement_1'
     '%MACRO_2%': 'macro_replacement_2'
