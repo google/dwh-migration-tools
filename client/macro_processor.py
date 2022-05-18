@@ -29,9 +29,9 @@ class MacroProcessor:
     Sql Translation job.
     """
 
-    def __init__(self, context: Namespace):
-        self.context = context
-        self.expander = MapBasedExpander(context.macros)
+    def __init__(self, macro_argument: Namespace):
+        self.macro_argument = macro_argument
+        self.expander = MapBasedExpander(macro_argument.macros)
 
     def preprocess(self, input_dir: str, tmp_dir: str):
         """The pre-upload entry point of a MacroProcessor.
