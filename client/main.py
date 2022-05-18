@@ -15,7 +15,6 @@
 
 import argparse
 import batch_sql_translator
-import os
 
 from config_parser import ConfigParser
 from gcloud_auth_helper import validate_gcloud_auth_settings

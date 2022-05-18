@@ -42,12 +42,8 @@ gcloud auth application-default login
 
 Open the [config.yaml](config.yaml) file and fill all the required fields. If you are a first
 time user who just wants to give it a try, we recommend to create a new [GCP
-project](https://console.cloud.google.com/) and put the project_number in the config. You can find the project
-number here.
-
-<div style="text-align:center">
-    <img src="img/example_gcp_project_number.png" alt="project_number" width="400"/>
-</div>
+project](https://console.cloud.google.com/) and put the project_number (or project_id) in the `project_number` field in 
+the config.
 
 If you want to use an existing project, make sure you have all the required [IAM
 permissions](https://cloud.google.com/bigquery/docs/batch-sql-translator#required_permissions).
