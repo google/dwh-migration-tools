@@ -33,10 +33,10 @@ configurations {
 }
 
 dependencies {
-    implementation project(':lib-common')
-    implementation project(':lib-dumper-spi')
-    implementation project(':lib-ext-bigquery')
-    implementation project(':lib-ext-hive-metastore')
+    implementation project(':dumper:lib-common')
+    implementation project(':dumper:lib-dumper-spi')
+    implementation project(':dumper:lib-ext-bigquery')
+    implementation project(':dumper:lib-ext-hive-metastore')
 
     implementation "com.google.guava:guava"
     implementation "net.sf.jopt-simple:jopt-simple"
@@ -53,7 +53,7 @@ dependencies {
     runtimeOnly "ch.qos.logback:logback-classic"
     runtimeOnly "org.slf4j:jcl-over-slf4j"
 
-    testFixturesApi testFixtures(project(':lib-common'))
+    testFixturesApi testFixtures(project(':dumper:lib-common'))
 
     testImplementation "org.xerial:sqlite-jdbc"
     testImplementation "org.postgresql:postgresql"
