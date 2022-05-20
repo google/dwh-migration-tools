@@ -7,11 +7,10 @@ client package.
 ## Installation
 
 Clone or download this repository and
-install the Python packages listed in the [requirements.txt](requirements.txt) file through: 
+install the Python packages listed in the [requirements.txt](requirements.txt) file through (all commands are supposed to be run from the archive or repository top level folder): 
 
 ```
-cd client
-pip install -r requirements.txt
+pip3 install -r client/requirements.txt
 ```
 
 Install the gcloud CLI following the [instructions](http://cloud.google.com/sdk/docs/install).
@@ -66,7 +65,7 @@ the output directory.
 Simply run the following commands in Python3:
 
 ```
-python main.py
+bin/dwh-migration-client
 ```
 
 ### [Optional] macros replacement mapping
@@ -78,7 +77,7 @@ To enable macros substitution, pass the arg '-m macros.yaml' when
 running the tool:
 
 ```
-python main.py -m macros.yaml
+bin/dwh-migration-client -m macros.yaml
 ```
 
 Here is an example of the macros.yaml file:
