@@ -20,5 +20,5 @@ plugins {
 
 dependencies {
 	implementation "com.swrve:rate-limited-logger"
-	api "com.google.cloud:google-cloud-bigquery"
+	implementation "com.google.cloud:google-cloud-bigquery"
 }
