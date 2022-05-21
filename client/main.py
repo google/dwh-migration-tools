@@ -39,7 +39,7 @@ def start_translation():
     """
     validate_dir()
     print("Reading translation config file from config.yaml")
-    config = ConfigParser().parse_config()
+    config = ConfigParser().parse_config(args.config)
     print("Verify cloud login and credential settings...")
     validate_gcloud_auth_settings(config.project_number)
     if args.macros:
