@@ -62,7 +62,7 @@ the output directory.
 
 ## Run a translation job
 
-Simply run the following commands in Python3:
+Simply run the following commands in using Python3:
 
 ```
 bin/dwh-migration-client
@@ -73,11 +73,11 @@ bin/dwh-migration-client
 This tool can also perform macros substitution before/after the translation job
 through an option flag.
 
-To enable macros substitution, pass the arg '-m macros.yaml' when
+To enable macros substitution, pass the arg '-m client/macros.yaml' when
 running the tool:
 
 ```
-bin/dwh-migration-client -m macros.yaml
+bin/dwh-migration-client -m client/macros.yaml
 ```
 
 Here is an example of the macros.yaml file:

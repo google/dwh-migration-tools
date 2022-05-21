@@ -33,6 +33,9 @@ class MacroProcessor:
         self.macro_argument = macro_argument
         self.expander = MapBasedExpander(macro_argument.macros)
 
+    __TMP_INPUT_DIR = ".tmp_processed/input/"
+    __TMP_OUTPUT_DIR = ".tmp_processed/output/"
+
     def preprocess(self, input_dir: str, tmp_dir: str):
         """The pre-upload entry point of a MacroProcessor.
 
@@ -107,7 +110,7 @@ class MacroProcessor:
         print("Preprocessing %s" % input_path)
         with open(input_path) as input_fh:
             text = input_fh.read()
-        text = self.preprocess_text(text, input_path)
+        text = self.preprocess_text(text, self.__get_path_in_tmp_input(tmp_path))
         with open(tmp_path, "w") as tmp_fh:
             tmp_fh.write(text)
 
@@ -125,7 +128,7 @@ class MacroProcessor:
         print("Postprocessing into %s" % output_path)
         with open(tmp_path) as tmp_fh:
             text = tmp_fh.read()
-        text = self.postprocess_text(text, output_path)
+        text = self.postprocess_text(text, self.__get_path_in_tmp_output(tmp_path))
         with open(output_path, "w") as output_fh:
             output_fh.write(text)
 
@@ -138,6 +141,22 @@ class MacroProcessor:
         Not all users will want postprocessing, and some may just return text.
         """
         return self.expander.unexpand(text, output_path)
+
+    def __get_path_in_tmp_input(self, tmp_path: str):
+        """Gets the relative file path in side the `.tmp_processed/input/` directory.
+
+        The relative file path will be used to determine which sets of macros substitution rules applied to the file.
+        """
+        tmp_dir_index = tmp_path.rfind(self.__TMP_INPUT_DIR)
+        return tmp_path if tmp_dir_index == -1 else tmp_path[tmp_dir_index + len(self.__TMP_INPUT_DIR):]
+
+    def __get_path_in_tmp_output(self, tmp_path: str):
+        """Gets the relative file path in side the `.tmp_processed/output/` directory.
+
+        The relative file path will be used to determine which sets of macros substitution rules applied to the file.
+        """
+        tmp_dir_index = tmp_path.rfind(self.__TMP_OUTPUT_DIR)
+        return tmp_path if tmp_dir_index == -1 else tmp_path[tmp_dir_index + len(self.__TMP_OUTPUT_DIR):]
 
 
 class MapBasedExpander:
@@ -184,7 +203,13 @@ class MapBasedExpander:
                 File name supports wildcard, e.g., with "*.sql", the method will apply the macro map to all the files with
                 extension of ".sql".
         """
-        assert isfile(self.yaml_file_path), "Can't find a file at \"%s\"." % self.yaml_file_path
+        # Try to read the yaml file from either the root dir or the root/client dir.
+        if not isfile(self.yaml_file_path):
+            maybe_file_path = os.path.join("client", self.yaml_file_path)
+            if not isfile(maybe_file_path):
+                raise ValueError("Can't find a file at \"%s\"." % self.yaml_file_path)
+            else:
+                self.yaml_file_path = maybe_file_path
 
         with open(self.yaml_file_path) as f:
             data = yaml.load(f, Loader=SafeLoader)

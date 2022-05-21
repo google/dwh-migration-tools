@@ -16,7 +16,7 @@
 import argparse
 import batch_sql_translator
 
-from config_parser import ConfigParser
+from config_parser import ConfigParser, validate_dir
 from gcloud_auth_helper import validate_gcloud_auth_settings
 from macro_processor import MacroProcessor
 
@@ -28,12 +28,16 @@ parser.add_argument('-m', '--macros', type=str,
                          'the program will revert the substitutions for all the output query files in a '
                          'post-processing step.  The replacement does not apply for files with extension of '
                          '.zip, .csv, .json.')
+parser.add_argument('-c', '--config', type=str, default="config.yaml",
+                    help='Path to the config.yaml file. (default: config.yaml)')
+
 args = parser.parse_args()
 
 
 def start_translation():
     """Starts a batch sql translation job.
     """
+    validate_dir()
     print("Reading translation config file from config.yaml")
     config = ConfigParser().parse_config()
     print("Verify cloud login and credential settings...")
