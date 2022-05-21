@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import yaml
 from os.path import abspath
 
+import yaml
 from yaml.loader import SafeLoader
 
 AZURESYNAPSE2BQ = "Translation_AzureSynapse2BQ"
@@ -31,8 +31,7 @@ SQLSERVER2BQ = "Translation_SQLServer2BQ"
 
 
 class TranslationConfig:
-    """A structure for holding the config info of the translation job.
-    """
+    """A structure for holding the config info of the translation job."""
 
     def __init__(self):
         self.project_number = None
@@ -45,8 +44,7 @@ class TranslationConfig:
 
 
 class ConfigParser:
-    """A parser for the config file.
-    """
+    """A parser for the config file."""
 
     def __init__(self, config_file_path: str):
         self._config_file_path = abspath(config_file_path)
@@ -70,7 +68,7 @@ class ConfigParser:
         SPARKSQL2BQ,
         TERADATA2BQ,
         VERTICA2BQ,
-        SQLSERVER2BQ
+        SQLSERVER2BQ,
     }
 
     def parse_config(self) -> TranslationConfig:
@@ -93,23 +91,31 @@ class ConfigParser:
         config.location = translation_config_input["location"]
         config.translation_type = translation_config_input[self.__TRANSLATION_TYPE]
 
-        config.clean_up_tmp_files = True if self.__CLEAN_UP not in translation_config_input \
+        config.clean_up_tmp_files = (
+            True
+            if self.__CLEAN_UP not in translation_config_input
             else translation_config_input[self.__CLEAN_UP]
+        )
 
         config.default_database = translation_config_input.get(self.__DEFAULT_DATABASE)
-        config.schema_search_path = translation_config_input.get(self.__SCHEMA_SEARCH_PATH)
+        config.schema_search_path = translation_config_input.get(
+            self.__SCHEMA_SEARCH_PATH
+        )
 
         print("Finished parsing translation config.")
         print("The config is:")
-        print('\n'.join("     %s: %s" % item for item in vars(config).items()))
+        print("\n".join("     %s: %s" % item for item in vars(config).items()))
         return config
 
     def __validate_config_yaml(self, yaml_data):
-        """Validate the data in the config yaml file.
-        """
-        assert self.__TRANSLATION_CONFIG in yaml_data, "Missing translation_config field in config.yaml."
-        assert self.__TRANSLATION_TYPE in yaml_data[
-            self.__TRANSLATION_CONFIG], "Missing translation_type field in config.yaml."
+        """Validate the data in the config yaml file."""
+        assert (
+            self.__TRANSLATION_CONFIG in yaml_data
+        ), "Missing translation_config field in config.yaml."
+        assert (
+            self.__TRANSLATION_TYPE in yaml_data[self.__TRANSLATION_CONFIG]
+        ), "Missing translation_type field in config.yaml."
         translation_type = yaml_data[self.__TRANSLATION_CONFIG][self.__TRANSLATION_TYPE]
-        assert translation_type in self.__SUPPORTED_TYPES, "The type \"%s\" is not supported." \
-                                                           % translation_type
+        assert translation_type in self.__SUPPORTED_TYPES, (
+            'The type "%s" is not supported.' % translation_type
+        )

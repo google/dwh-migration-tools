@@ -30,9 +30,7 @@ def validate_gcloud_auth_settings(project_number: str):
 
 
 class GcloudAuthHelper:
-    """A simpler helper class to check the status of GCP login and authentication through the gcloud CLI.
-
-    """
+    """A simpler helper class to check the status of GCP login and authentication through the gcloud CLI."""
 
     def __init__(self, project_number):
         self.project_number = project_number
@@ -53,8 +51,13 @@ class GcloudAuthHelper:
         print("Validate user login status in gcloud...")
         result = subprocess.getoutput(self.__AUTH_LIST)
         if "No credentialed accounts" in result:
-            print("User hasn't logged in to gcloud yet.  Running command to login \"%s\"..." % self.__AUTH_LOGIN)
-            print("Please open the following link in a browser and grant permission to login...")
+            print(
+                'User hasn\'t logged in to gcloud yet.  Running command to login "%s"...'
+                % self.__AUTH_LOGIN
+            )
+            print(
+                "Please open the following link in a browser and grant permission to login..."
+            )
             os.system(self.__AUTH_LOGIN)
 
     def validate_auth_status(self):
@@ -63,9 +66,13 @@ class GcloudAuthHelper:
         """
         print("Validate user credential status in gcloud...")
         if not os.path.exists(os.path.expanduser(self.__GCLOUD_CRED_FILE)):
-            print("Can't find application_default_credential file. Generating credential through the command \"%s\""
-                  % self.__APPLICATION_DEFAULT_LOGIN_COMMAND)
-            print("Please open the following link in a browser and grant permission to download credential file...")
+            print(
+                'Can\'t find application_default_credential file. Generating credential through the command "%s"'
+                % self.__APPLICATION_DEFAULT_LOGIN_COMMAND
+            )
+            print(
+                "Please open the following link in a browser and grant permission to download credential file..."
+            )
             os.system(self.__APPLICATION_DEFAULT_LOGIN_COMMAND)
 
     def validate_project_config(self):
@@ -73,6 +80,10 @@ class GcloudAuthHelper:
         os.system("%s %s" % (self.__SET_PROJECT, self.project_number))
         result = subprocess.getoutput(self.__CONFIG_LIST)
         print("Your cloud config used for this translation job is:\n%s" % result)
-        assert "account =" in result, "Can't find account info in gcloud config. Please log in through \"%s\"" \
-                                      % self.__AUTH_LOGIN
-        assert "project = %s" % self.project_number in result, "Can't find GCP project number in gcloud config."
+        assert "account =" in result, (
+            'Can\'t find account info in gcloud config. Please log in through "%s"'
+            % self.__AUTH_LOGIN
+        )
+        assert (
+            "project = %s" % self.project_number in result
+        ), "Can't find GCP project number in gcloud config."
