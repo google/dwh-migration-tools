@@ -1,0 +1,38 @@
+# ########################
+# ##### BLACK
+# ########################
+
+# [Docs root]
+#   https://black.readthedocs.io/en/stable/
+# [Config option reference]
+#   https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#command-line-options
+
+[tool.black]
+# Black will refuse to run if it's not this version.
+required-version = "22.3.0"
+
+# Ensure black's output will be compatible with all listed versions.
+target-version = ['py33', 'py34', 'py35', 'py36', 'py37', 'py38', 'py39', 'py310']
+
+# ########################
+# ##### ISORT
+# ########################
+
+# [Docs root]
+#   https://pycqa.github.io/isort/
+# [Config option reference]
+#   https://pycqa.github.io/isort/docs/configuration/options.html
+
+# NOTE: File inclusion//exclusion/skip options are set at the invocation site
+# and shouldn't be set in this config file.
+
+[tool.isort]
+
+# Ensures isort classifies imports from `dwh_migration_client` as first-party.
+known_first_party = ['dwh_migration_client']
+
+# Sets a variety of default options for parentheses etc that are compatible with black.
+profile = "black"
+
+# Sorts uppercase imports before lowercase improts.
+case_sensitive=true

@@ -16,12 +16,12 @@ import fnmatch
 import os
 import re
 import shutil
-import yaml
-
 from argparse import Namespace
-from yaml.loader import SafeLoader
-from os.path import dirname, isfile, join, abspath
+from os.path import abspath, dirname, isfile, join
 from typing import Dict
+
+import yaml
+from yaml.loader import SafeLoader
 
 
 class MacroProcessor:
@@ -76,7 +76,7 @@ class MacroProcessor:
         """
         if self.is_ignored(path, name):
             return False
-        if name.lower().endswith(('.zip', '.json', '.csv')):
+        if name.lower().endswith((".zip", ".json", ".csv")):
             return False
         return True
 
@@ -93,7 +93,7 @@ class MacroProcessor:
         """
         for (root, dirs, files) in os.walk(input_dir):
             for name in files:
-                sub_dir = root[len(input_dir)+1:]
+                sub_dir = root[len(input_dir) + 1 :]
                 input_path = join(input_dir, sub_dir, name)
                 output_path = join(output_dir, sub_dir, name)
                 if self.is_ignored(input_path, name):
@@ -121,17 +121,17 @@ class MacroProcessor:
         print("Preprocessing %s" % input_path)
         with open(input_path) as input_fh:
             text = input_fh.read()
-        text = self.preprocess_text(text, input_path[len(input_dir)+1:])
+        text = self.preprocess_text(text, input_path[len(input_dir) + 1 :])
         with open(tmp_path, "w") as tmp_fh:
             tmp_fh.write(text)
 
     def preprocess_text(self, text: str, relative_input_path: str) -> str:
         """Preprocesses the given text, after conversion to the target dialect.
 
-         Args:
-             text: input text for processing.
-             relative_input_path: relative path of the input file in the input_dir, e.g., subdir/subdir_2/sample.sql.
-         """
+        Args:
+            text: input text for processing.
+            relative_input_path: relative path of the input file in the input_dir, e.g., subdir/subdir_2/sample.sql.
+        """
         return self.expander.expand(text, relative_input_path)
 
     def postprocess_file(self, tmp_path: str, output_path: str, output_dir: str):
@@ -151,7 +151,7 @@ class MacroProcessor:
         print("Postprocessing into %s" % output_path)
         with open(tmp_path) as tmp_fh:
             text = tmp_fh.read()
-        text = self.postprocess_text(text, output_path[len(output_dir)+1:])
+        text = self.postprocess_text(text, output_path[len(output_dir) + 1 :])
         with open(output_path, "w") as output_fh:
             output_fh.write(text)
 
@@ -171,9 +171,8 @@ class MacroProcessor:
 
 
 class MapBasedExpander:
-    """An util class to handle map based yaml file.
+    """An util class to handle map based yaml file."""
 
-    """
     __YAML_KEY = "macros"
 
     def __init__(self, yaml_file_path):
@@ -182,7 +181,7 @@ class MapBasedExpander:
         self.reversed_maps = self.__get_reversed_maps()
 
     def expand(self, text: str, path: str) -> str:
-        """ Expands the macros in the text with the corresponding values defined in the macros_substitution_map file.
+        """Expands the macros in the text with the corresponding values defined in the macros_substitution_map file.
 
         Returns the text after macro substitution.
         """
@@ -190,7 +189,7 @@ class MapBasedExpander:
         return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
 
     def unexpand(self, text: str, path: str):
-        """ Reverts the macros substitution by replacing the values with macros defined in the macros_substitution_map
+        """Reverts the macros substitution by replacing the values with macros defined in the macros_substitution_map
         file.
 
         Returns the text after replacing the values with macros.
@@ -199,8 +198,7 @@ class MapBasedExpander:
         return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
 
     def __get_reversed_maps(self) -> Dict[str, Dict[str, str]]:
-        """ Swaps key and value in the macro maps and return the new map.
-        """
+        """Swaps key and value in the macro maps and return the new map."""
         reversed_maps = {}
         for file_key, macro_map in self.macro_expansion_maps.items():
             reversed_maps[file_key] = dict((v, k) for k, v in macro_map.items())
@@ -220,15 +218,21 @@ class MapBasedExpander:
         return data[self.__YAML_KEY]
 
     def __validate_macro_file(self, yaml_data):
-        """Validates the macro replacement map yaml data.
-        """
-        assert self.__YAML_KEY in yaml_data, "Missing %s field in %s." % (self.__YAML_KEY, self.yaml_file_path)
-        assert yaml_data[self.__YAML_KEY], "The %s is empty in %s." % (self.__YAML_KEY, self.yaml_file_path)
+        """Validates the macro replacement map yaml data."""
+        assert self.__YAML_KEY in yaml_data, "Missing %s field in %s." % (
+            self.__YAML_KEY,
+            self.yaml_file_path,
+        )
+        assert yaml_data[self.__YAML_KEY], "The %s is empty in %s." % (
+            self.__YAML_KEY,
+            self.yaml_file_path,
+        )
 
     def __get_all_regex_pattern_mapping(self, file_path: str, use_reversed_map=False):
-        """ Compiles all the macros matched with the file path into a single regex pattern.
-        """
-        macro_subst_maps = self.reversed_maps if use_reversed_map else self.macro_expansion_maps
+        """Compiles all the macros matched with the file path into a single regex pattern."""
+        macro_subst_maps = (
+            self.reversed_maps if use_reversed_map else self.macro_expansion_maps
+        )
         reg_pattern_map = {}
         for file_map_key, token_map in macro_subst_maps.items():
             if fnmatch.fnmatch(file_path, file_map_key):

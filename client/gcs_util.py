@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import os
-
 from os.path import abspath, basename, isdir, join
-from google.cloud.exceptions import NotFound
+
 from google.cloud import storage
+from google.cloud.exceptions import NotFound
 from google.cloud.storage import Bucket
 
 
@@ -35,21 +35,21 @@ def upload_directory(local_dir: str, bucket_name: str, gcs_path: str):
         print("Get bucket %s" % bucket_name)
         bucket: Bucket = client.get_bucket(bucket_name)
     except NotFound:
-        print("The bucket \"%s\" does not exist, creating one..." % bucket_name)
+        print('The bucket "%s" does not exist, creating one...' % bucket_name)
         bucket = client.create_bucket(bucket_name)
 
     dir_abs_path = abspath(local_dir)
     for (root, dirs, files) in os.walk(dir_abs_path):
         for name in files:
-            sub_dir = root[len(dir_abs_path):]
+            sub_dir = root[len(dir_abs_path) :]
             if sub_dir.startswith("/"):
                 sub_dir = sub_dir[1:]
             file_path = join(root, name)
-            print("Uploading file \"%s\" to gcs..." % file_path)
+            print('Uploading file "%s" to gcs...' % file_path)
             gcs_file_path = join(gcs_path, sub_dir, name)
             blob = bucket.blob(gcs_file_path)
             blob.upload_from_filename(file_path)
-    print("Finished uploading input files to gcs \"%s/%s\"." % (bucket_name, gcs_path))
+    print('Finished uploading input files to gcs "%s/%s".' % (bucket_name, gcs_path))
 
 
 def download_directory(local_dir: str, bucket_name: str, gcs_path: str):
@@ -63,14 +63,14 @@ def download_directory(local_dir: str, bucket_name: str, gcs_path: str):
     """
     client = storage.Client()
     blobs = client.list_blobs(bucket_name, prefix=gcs_path)
-    print("Start downloading outputs from gcs \"%s/%s\"" % (bucket_name, gcs_path))
+    print('Start downloading outputs from gcs "%s/%s"' % (bucket_name, gcs_path))
     for blob in blobs:
         file_name = basename(blob.name)
-        sub_dir = blob.name[len(gcs_path)+1:-len(file_name)]
+        sub_dir = blob.name[len(gcs_path) + 1 : -len(file_name)]
         file_dir = join(local_dir, sub_dir)
         os.makedirs(file_dir, exist_ok=True)
         file_path = join(file_dir, file_name)
-        print("Downloading output file to \"%s\"..." % file_path)
+        print('Downloading output file to "%s"...' % file_path)
         blob.download_to_filename(file_path)
 
-    print("Finished downloading. Output files are in \"%s\"." % local_dir)
+    print('Finished downloading. Output files are in "%s".' % local_dir)

@@ -14,8 +14,8 @@
 
 
 import argparse
-import shutil
 import pathlib
+import shutil
 
 
 def validated_file(unvalidated_path: str) -> str:
