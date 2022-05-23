@@ -62,7 +62,7 @@ the output directory.
 
 ## Run a translation job
 
-Simply run the following commands in using Python3:
+Simply run the following commands in Python3:
 
 ```
 bin/dwh-migration-client
