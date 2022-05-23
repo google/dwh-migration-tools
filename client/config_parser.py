@@ -17,14 +17,16 @@ import os
 
 from yaml.loader import SafeLoader
 
-TERADATA2BQ = "Translation_Teradata2BQ"
-REDSHIFT2BQ = "Translation_Redshift2BQ"
+AZURESYNAPSE2BQ = "Translation_AzureSynapse2BQ"
 BTEQ2BQ = "Translation_Bteq2BQ"
-ORACLE2BQ = "Translation_Oracle2BQ"
 HIVEQL2BQ = "Translation_HiveQL2BQ"
-SPARKSQL2BQ = "Translation_SparkSQL2BQ"
-SNOWFLAKE2BQ = "Translation_Snowflake2BQ"
 NETEZZA2BQ = "Translation_Netezza2BQ"
+ORACLE2BQ = "Translation_Oracle2BQ"
+REDSHIFT2BQ = "Translation_Redshift2BQ"
+SNOWFLAKE2BQ = "Translation_Snowflake2BQ"
+SPARKSQL2BQ = "Translation_SparkSQL2BQ"
+TERADATA2BQ = "Translation_Teradata2BQ"
+VERTICA2BQ = "Translation_Vertica2BQ"
 
 
 class TranslationConfig:
@@ -61,14 +63,16 @@ class ConfigParser:
 
     # The supported task types
     __SUPPORTED_TYPES = {
-        TERADATA2BQ,
-        REDSHIFT2BQ,
+        AZURESYNAPSE2BQ,
         BTEQ2BQ,
-        ORACLE2BQ,
         HIVEQL2BQ,
-        SPARKSQL2BQ,
-        SNOWFLAKE2BQ,
         NETEZZA2BQ,
+        ORACLE2BQ,
+        REDSHIFT2BQ,
+        SNOWFLAKE2BQ,
+        SPARKSQL2BQ,
+        TERADATA2BQ,
+        VERTICA2BQ
     }
 
     def parse_config(self, config_file: str = 'config.yaml') -> TranslationConfig:

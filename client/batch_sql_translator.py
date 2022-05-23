@@ -200,4 +200,8 @@ class BatchSqlTranslator:
             dialect.snowflake_dialect = bigquery_migration_v2.SnowflakeDialect()
         elif self.config.translation_type == config_parser.NETEZZA2BQ:
             dialect.netezza_dialect = bigquery_migration_v2.NetezzaDialect()
+        elif self.config.translation_type == config_parser.AZURESYNAPSE2BQ:
+            dialect.azure_synapse_dialect = bigquery_migration_v2.AzureSynapseDialect()
+        elif self.config.translation_type == config_parser.VERTICA2BQ:
+            dialect.vertica_dialect = bigquery_migration_v2.VerticaDialect()
         return dialect
