@@ -108,3 +108,51 @@ Notes that the tool just performs strict string replacement for all the macros
 map is first computed by simply swapping the keys and values for each file in
 the map. Unexpected behavior can happen if different macros are mapped to the
 same value.
+
+
+### [Optional] Object name mapping (ONM)
+
+Name mapping lets you identify the names of SQL objects in your source files, and specify target names for those objects
+in BigQuery.  For more information about ONM and the format of the json file, please see [here](https://cloud.google.com/bigquery/docs/output-name-mapping#json_file_format). 
+
+To enable object name mapping, pass the optional arg '-o path/to/object_mapping.json' when
+running the tool, e.g.:
+
+```
+bin/dwh-migration-client -o client/object_mapping.json
+```
+
+Here is an example of the object_mapping.json file:
+
+```
+{
+  "name_map": [{
+    "source": {
+      "type": "RELATION",
+      "database": "my_project",
+      "schema": "dataset2",
+      "relation": "table2"
+    },
+    "target": {
+      "database": "bq_project",
+      "schema": "bq_dataset2",
+      "relation": "bq_table2"
+    }
+  }, {
+    "source": {
+      "type": "DATABASE",
+      "database": "my_project"
+    },
+    "target": {
+      "database": "bq_project"
+    }
+  }]
+}
+```
+
+The name mapping rules in this example make the following object name changes:
+
+* Rename instances of the my_project.dataset2.table2 relation object to bq_project.bq_dataset2.bq_table2.
+* Renames all instances of the my_project database object to bq_project. For example, my_project.my_dataset.table2 
+becomes bq_project.my_dataset.table2, and CREATE DATASET my_project.my_dataset becomes CREATE DATASET 
+bq_project.my_dataset.
