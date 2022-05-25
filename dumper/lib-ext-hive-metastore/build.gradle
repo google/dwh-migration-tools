@@ -22,21 +22,21 @@ buildscript {
 plugins {
     id 'dwh-migration-dumper.java-library-conventions'
 }
-apply plugin: 'org.anarres.thrift'
+//apply plugin: 'org.anarres.thrift'
 
 dependencies {
     api "org.apache.thrift:libthrift:0.14.1"
     implementation "com.google.guava:guava"
 }
 
-generateThriftSource {
-    generators {
-        java {
-            out file('build/generated-sources/thrift/main')
-            // option 'java5'
-        }
-    }
-}
+//generateThriftSource {
+//    generators {
+//        java {
+//            out file('build/generated-sources/thrift/main')
+//            // option 'java5'
+//        }
+//    }
+//}
 
 sourceSets.main.java {
     srcDir file('build/generated-sources/thrift/main')
