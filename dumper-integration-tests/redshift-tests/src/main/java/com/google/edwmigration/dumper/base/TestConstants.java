@@ -1,6 +1,5 @@
 /*
  * Copyright 2022 Google LLC
- * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.base;
+package com.google.edwmigration.dumper.base;
 
 import static java.lang.System.getenv;
 
 import java.util.regex.Pattern;
 
-/**
- * Stores constants common among all tests.
- */
+/** Stores constants common among all tests. */
 public final class TestConstants {
 
   public static final String URL_DB = getenv("DB_URL");
   public static final String USERNAME_DB = getenv("USERNAME");
   public static final String PASSWORD_DB = getenv("PASSWORD");
 
-  public static final String ET_OUTPUT_PATH = getenv("EXPORT_PATH");
+  public static final String EXPORTED_FILES_BASE_PATH = getenv("EXPORT_PATH");
+
+  public static final String SQL_REQUESTS_BASE_PATH = "sql/";
+
   public static final Pattern TRAILING_SPACES_REGEX = Pattern.compile("\\s+$");
 
-  private TestConstants() {
-  }
+  private TestConstants() {}
 }
