@@ -2,14 +2,11 @@ buildscript {
     repositories {
         mavenCentral()
     }
-    dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
-    }
 }
 
 plugins {
     id 'java'
-    id "com.google.protobuf" version "0.8.18"
+    id 'com.adarshr.test-logger' version '3.2.0'
 }
 
 sourceCompatibility = 1.8
@@ -22,28 +19,24 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.codehaus.groovy:groovy-all:3.0.5'
+    implementation 'org.codehaus.groovy:groovy-all:3.0.10'
+    implementation 'com.google.guava:guava:31.1-jre'
     implementation 'org.testng:testng:7.5'
     implementation 'org.slf4j:slf4j-api:2.0.0-alpha5'
     implementation 'org.slf4j:slf4j-jdk14:2.0.0-alpha5'
-    implementation 'com.amazon.redshift:redshift-jdbc42:2.1.0.6'
+    implementation 'com.amazon.redshift:redshift-jdbc42:2.1.0.7'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
-    implementation 'com.google.guava:guava:31.0.1-jre'
     implementation 'com.opencsv:opencsv:5.6'
-    implementation 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
-    implementation 'com.google.protobuf:protobuf-java:3.20.1'
+    annotationProcessor 'com.google.auto.value:auto-value:1.9'
+    compileOnly 'com.google.auto.value:auto-value-annotations:1.9'
 }
 
 test {
+    ignoreFailures = true
+
     useTestNG {
         preserveOrder true
         systemProperty 'java.util.logging.config.file', 'src/main/resources/logging.properties'
-    }
-}
-
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:3.20.1'
     }
 }
