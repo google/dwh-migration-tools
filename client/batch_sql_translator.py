@@ -158,6 +158,8 @@ class BatchSqlTranslator:
             source_dialect=self.get_input_dialect(),
             target_dialect=target_dialect
         )
+        if self.config.object_name_mapping_list:
+            translation_config.name_mapping_list = self.config.object_name_mapping_list
 
         migration_task = bigquery_migration_v2.MigrationTask(
             type=self.config.translation_type,

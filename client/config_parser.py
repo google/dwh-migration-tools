@@ -15,6 +15,8 @@
 import yaml
 import os
 
+from argparse import Namespace
+from object_mapping_parser import ObjectMappingParser
 from yaml.loader import SafeLoader
 
 AZURESYNAPSE2BQ = "Translation_AzureSynapse2BQ"
@@ -40,8 +42,7 @@ class TranslationConfig:
         self.translation_type = None
         self.input_directory = None
         self.output_directory = None
-        self.macro_maps = None
-        self.output_token_maps = None
+        self.object_name_mapping_list = None
         self.clean_up_tmp_files = True
 
 
@@ -49,12 +50,14 @@ class ConfigParser:
     """A parser for the config file.
     """
 
+    def __init__(self, argument: Namespace):
+        self.__argument = argument
+
     # Config field name
     __TRANSLATION_TYPE = "translation_type"
     __TRANSLATION_CONFIG = "translation_config"
     __INPUT_DIR = "input_directory"
     __OUTPUT_DIR = "output_directory"
-    __OUTPUT_TOKEN_MAPS = "output_token_replacement_maps"
     __CLEAN_UP = "clean_up_tmp_files"
 
     # Config default values
@@ -105,6 +108,10 @@ class ConfigParser:
 
         if not os.path.exists(config.output_directory):
             os.makedirs(config.output_directory)
+
+        if self.__argument.object_name_mapping:
+            config.object_name_mapping_list = \
+                ObjectMappingParser(self.__argument.object_name_mapping).get_name_mapping_list()
 
         print("Finished Parsing translation config: ")
         print('\n'.join("     %s: %s" % item for item in vars(config).items()))

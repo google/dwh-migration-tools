@@ -19,6 +19,7 @@ import batch_sql_translator
 from config_parser import ConfigParser
 from gcloud_auth_helper import validate_gcloud_auth_settings
 from macro_processor import MacroProcessor
+from object_mapping_parser import ObjectMappingParser
 
 parser = argparse.ArgumentParser(description='Config the Batch Sql translation tool.')
 parser.add_argument('-m', '--macros', type=str,
@@ -28,6 +29,10 @@ parser.add_argument('-m', '--macros', type=str,
                          'the program will revert the substitutions for all the output query files in a '
                          'post-processing step.  The replacement does not apply for files with extension of '
                          '.zip, .csv, .json.')
+parser.add_argument('-o', '--object_name_mapping', type=str,
+                    help='Path to the object name mapping json file. Name mapping lets you identify the names of SQL '
+                         'objects in your source files, and specify target names for those objects in BigQuery. More '
+                         'info please see https://cloud.google.com/bigquery/docs/output-name-mapping.')
 args = parser.parse_args()
 
 
@@ -35,7 +40,7 @@ def start_translation():
     """Starts a batch sql translation job.
     """
     print("Reading translation config file from config.yaml")
-    config = ConfigParser().parse_config()
+    config = ConfigParser(args).parse_config()
     print("Verify cloud login and credential settings...")
     validate_gcloud_auth_settings(config.project_number)
     if args.macros:
