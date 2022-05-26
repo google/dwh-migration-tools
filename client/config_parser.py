@@ -42,6 +42,8 @@ class TranslationConfig:
         self.translation_type = None
         self.input_directory = None
         self.output_directory = None
+        self.default_database = None
+        self.schema_search_path = None
         self.object_name_mapping_list = None
         self.clean_up_tmp_files = True
 
@@ -58,6 +60,8 @@ class ConfigParser:
     __TRANSLATION_CONFIG = "translation_config"
     __INPUT_DIR = "input_directory"
     __OUTPUT_DIR = "output_directory"
+    __DEFAULT_DATABASE = "default_database"
+    __SCHEMA_SEARCH_PATH = "schema_search_path"
     __CLEAN_UP = "clean_up_tmp_files"
 
     # Config default values
@@ -105,6 +109,9 @@ class ConfigParser:
             else translation_config_input[self.__OUTPUT_DIR]
         config.clean_up_tmp_files = True if self.__CLEAN_UP not in translation_config_input \
             else translation_config_input[self.__CLEAN_UP]
+
+        config.default_database = translation_config_input.get(self.__DEFAULT_DATABASE)
+        config.schema_search_path = translation_config_input.get(self.__SCHEMA_SEARCH_PATH)
 
         if not os.path.exists(config.output_directory):
             os.makedirs(config.output_directory)
