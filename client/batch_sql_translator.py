@@ -157,11 +157,14 @@ class BatchSqlTranslator:
             gcs_target_path=gcs_output_path,
             source_dialect=self.get_input_dialect(),
             target_dialect=target_dialect,
-            source_env=bigquery_migration_v2.types.SourceEnv(
+        )
+
+        if self.config.default_database or self.config.schema_search_path:
+            translation_config.source_env = bigquery_migration_v2.types.SourceEnv(
                 default_database=self.config.default_database,
                 schema_search_path=self.config.schema_search_path
             )
-        )
+
         if self.config.object_name_mapping_list:
             translation_config.name_mapping_list = self.config.object_name_mapping_list
 

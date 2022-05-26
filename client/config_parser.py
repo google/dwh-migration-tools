@@ -67,8 +67,6 @@ class ConfigParser:
     # Config default values
     __DEFAULT_INPUT_DIR = "input"
     __DEFAULT_OUTPUT_DIR = "output"
-    __DEFAULT_DEFAULT_DATABASE = "__DEFAULT_DATABASE__"
-    __DEFAULT_SCHEMA_SEARCH_PATH = ["__DEFAULT_SCHEMA__"]
 
     # The supported task types
     __SUPPORTED_TYPES = {
@@ -109,12 +107,11 @@ class ConfigParser:
             else translation_config_input[self.__INPUT_DIR]
         config.output_directory = self.__DEFAULT_OUTPUT_DIR if self.__OUTPUT_DIR not in translation_config_input \
             else translation_config_input[self.__OUTPUT_DIR]
-        config.default_database = self.__DEFAULT_DEFAULT_DATABASE if self.__DEFAULT_DATABASE not in translation_config_input \
-            else translation_config_input[self.__DEFAULT_DATABASE]
-        config.schema_search_path = self.__DEFAULT_SCHEMA_SEARCH_PATH if self.__SCHEMA_SEARCH_PATH not in translation_config_input \
-            else translation_config_input[self.__SCHEMA_SEARCH_PATH]
         config.clean_up_tmp_files = True if self.__CLEAN_UP not in translation_config_input \
             else translation_config_input[self.__CLEAN_UP]
+
+        config.default_database = translation_config_input.get(self.__DEFAULT_DATABASE)
+        config.schema_search_path = translation_config_input.get(self.__SCHEMA_SEARCH_PATH)
 
         if not os.path.exists(config.output_directory):
             os.makedirs(config.output_directory)

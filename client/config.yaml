@@ -29,12 +29,12 @@ translation_config:
   translation_type: Translation_Teradata2BQ
   location: 'us'
 
-  # The default database name to fully qualify SQL objects when their database name is missing.
-  default_database: __DEFAULT_DATABASE__
+  # [Optional field] The default database name to fully qualify SQL objects when their database name is missing.
+  # default_database: __DEFAULT_DATABASE__
 
-  # The schema search path. When SQL objects are missing schema name, translation engine will search through this list to find the value.
-  schema_search_path:
-  - __DEFAULT_SCHEMA__
+  # [Optional field] The schema search path. When SQL objects are missing schema name, translation engine will search through this list to find the value.
+  # schema_search_path:
+  #   - __DEFAULT_SCHEMA__
 
   # Set this to True (default) to clean up the temporary data in the '.tmp_processed' folder after job finishes.
   clean_up_tmp_files: False
