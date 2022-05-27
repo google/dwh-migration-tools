@@ -1,6 +1,5 @@
 /*
  * Copyright 2022 Google LLC
- * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.base;
+package com.google.edwmigration.dumper.base;
 
 import static java.lang.String.format;
 import static java.lang.System.lineSeparator;
@@ -25,9 +24,7 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Base class with general values for all Junit test suites
- */
+/** Base class with general values for all Junit test suites */
 public abstract class TestBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TestBase.class);
@@ -36,24 +33,26 @@ public abstract class TestBase {
    * @param dbList List of extracted from DB items
    * @param outputList List of uploaded from Avro items
    */
-  public static void assertListsEqual(final LinkedHashMultiset dbList,
-      final LinkedHashMultiset outputList) {
+  public static void assertListsEqual(
+      final LinkedHashMultiset dbList, final LinkedHashMultiset outputList) {
     String dbListOutputForLogs = lineSeparator() + Joiner.on("").join(dbList);
     String outputListForLogs = lineSeparator() + Joiner.on("").join(outputList);
 
     if (dbList.isEmpty() && outputList.isEmpty()) {
       LOGGER.info("DB view and Output file are equal");
     } else if (!dbList.isEmpty() && !outputList.isEmpty()) {
-      Assert.fail(format("DB view and Output file have mutually exclusive row(s)%n"
-              + "DB view '%s' has %d different row(s): %s%n"
-              + "Output file %s has %d different row(s): %s", dbList.size(), dbListOutputForLogs,
-          outputList.size(), outputListForLogs));
+      Assert.fail(
+          format(
+              "DB view and Output file have mutually exclusive row(s)%n"
+                  + "DB view has %d different row(s): %s%n"
+                  + "Output file has %d different row(s): %s",
+              dbList.size(), dbListOutputForLogs, outputList.size(), outputListForLogs));
     } else if (!dbList.isEmpty()) {
       Assert.fail(
-          format("DB view '%s' has %d extra row(s):%n%s", dbList.size(), dbListOutputForLogs));
+          format("DB view has %d extra row(s):%n%s", dbList.size(), dbListOutputForLogs));
     } else if (!outputList.isEmpty()) {
       Assert.fail(
-          format("Output file %s has %d extra row(s):%n%s", outputList.size(), outputListForLogs));
+          format("Output file has %d extra row(s):%n%s", outputList.size(), outputListForLogs));
     }
   }
 }
