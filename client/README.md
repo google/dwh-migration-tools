@@ -47,26 +47,33 @@ the config.
 If you want to use an existing project, make sure you have all the required [IAM
 permissions](https://cloud.google.com/bigquery/docs/batch-sql-translator#required_permissions).
 
-## input_directory
+## Run a translation job using example inputs.
 
-The input folder is supposed to contain files with pure SQL statements (comments
-are OK). The file extension can be in any format like .txt or .sql.
-
-TODO: add instruction about how to use the metadata dumper outputs as inputs here.
-
-## output_directory
-
-In the config, specify a local directory to store the outputs of the translation job. 
-Every input SQL file will have a corresponding output file under the same name in 
-the output directory.
-
-## Run a translation job
-
-Simply run the following commands in Python3:
+Simply run the following commands in Python3 to start a translation using the sample query files in [input](input).
 
 ```
 bin/dwh-migration-client
 ```
+## input and output directory
+
+The input folder is supposed to contain files with pure SQL statements (comments
+are OK). The file extension can be in any format like .txt or .sql.
+
+Every input SQL file will have a corresponding output file under the same name in
+the output directory.
+
+The default value of input dir is `client/input`. To override it, add the flag `--input path/to/input_dir` when running 
+the above command.  
+
+The default value of output dir that stores the outputs of a translation job is `client/output`. To override it, add the 
+flag `--output path/to/output_dir` when running the above command.
+
+Example command of overriding the default input/output directory.
+```
+bin/dwh-migration-client --input path/to/input_dir --output path/to/output_dir
+```
+
+TODO: add instruction about how to use the metadata dumper outputs as inputs here.
 
 ### [Optional] macros replacement mapping
 

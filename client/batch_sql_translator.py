@@ -86,7 +86,7 @@ class BatchSqlTranslator:
         print("\nThe job finished successfully!")
         print(
             "To view the job details, please go to the link: %s" % self.__get_ui_link())
-        print("Thank you for using BigQuery SQL Translation Service with Python client!")
+        print("Thank you for using BigQuery SQL Translation Service with the Python exemplary client!")
 
     def __generate_gcs_path(self) -> str:
         """Generates a gcs_path in the format of {translation_type}-{yyyy-mm-dd}-xxxx-xxxx-xxx-xxxx-xxxxxx.

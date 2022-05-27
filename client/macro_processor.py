@@ -130,7 +130,7 @@ class MacroProcessor:
 
          Args:
              text: input text for processing.
-             relative_input_path: relative path of the output file in the output_dir, e.g., subdir/subdir_2/sample.sql.
+             relative_input_path: relative path of the input file in the input_dir, e.g., subdir/subdir_2/sample.sql.
          """
         return self.expander.expand(text, relative_input_path)
 
@@ -144,7 +144,7 @@ class MacroProcessor:
 
         Args:
             tmp_path: absolute path to the tmp file.
-            output_path: absolute path to the output file after postprocessing
+            output_path: absolute path to the output file after postprocessing.
             output_dir: absolute path to the output directory. The output file can be in a subdirectory in the
                 output_dir.
         """
