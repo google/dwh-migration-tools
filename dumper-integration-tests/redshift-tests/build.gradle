@@ -29,7 +29,7 @@ dependencies {
     implementation 'org.apache.commons:commons-collections4:4.4'
     implementation 'com.opencsv:opencsv:5.6'
     annotationProcessor 'com.google.auto.value:auto-value:1.9'
-    compileOnly 'com.google.auto.value:auto-value-annotations:1.9'
+    implementation 'com.google.auto.value:auto-value-annotations:1.9'
 }
 
 test {

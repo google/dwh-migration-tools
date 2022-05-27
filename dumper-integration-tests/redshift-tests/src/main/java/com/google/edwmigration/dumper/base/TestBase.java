@@ -20,6 +20,8 @@ import static java.lang.System.lineSeparator;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.LinkedHashMultiset;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,30 +29,35 @@ import org.slf4j.LoggerFactory;
 /** Base class with general values for all TestNG test suites */
 public abstract class TestBase {
 
+  public static final CSVParser CSV_PARSER = new CSVParserBuilder().withEscapeChar('\0').build();
   private static final Logger LOGGER = LoggerFactory.getLogger(TestBase.class);
 
   /**
-   * @param dbList List of extracted from DB items
-   * @param csvList List of uploaded from Avro items
+   * @param dbMultiset List of extracted from DB items
+   * @param csvMultiset List of uploaded from Avro items
    */
-  public static void assertListsEqual(
-      final LinkedHashMultiset dbList, final LinkedHashMultiset csvList) {
-    String dbListForLogs = lineSeparator() + Joiner.on("").join(dbList);
-    String csvListForLogs = lineSeparator() + Joiner.on("").join(csvList);
+  public static void assertMultisetsEqual(
+      LinkedHashMultiset<?> dbMultiset, LinkedHashMultiset<?> csvMultiset) {
+    LinkedHashMultiset<?> dbMultisetCopy = LinkedHashMultiset.create(dbMultiset);
+    csvMultiset.forEach(dbMultiset::remove);
+    dbMultisetCopy.forEach(csvMultiset::remove);
 
-    if (dbList.isEmpty() && csvList.isEmpty()) {
+    String dbListForLogs = lineSeparator() + Joiner.on("").join(dbMultiset);
+    String csvListForLogs = lineSeparator() + Joiner.on("").join(csvMultiset);
+
+    if (dbMultiset.isEmpty() && csvMultiset.isEmpty()) {
       LOGGER.info("DB view and CSV file are equal");
-    } else if (!dbList.isEmpty() && !csvList.isEmpty()) {
+    } else if (!dbMultiset.isEmpty() && !csvMultiset.isEmpty()) {
       Assert.fail(
           format(
               "DB view and CSV file have mutually exclusive row(s)%n"
                   + "DB view has %d different row(s): %s%n"
                   + "CSV file has %d different row(s): %s",
-              dbList.size(), dbListForLogs, csvList.size(), csvListForLogs));
-    } else if (!dbList.isEmpty()) {
-      Assert.fail(format("DB view has %d extra row(s):%n%s", dbList.size(), dbListForLogs));
-    } else if (!csvList.isEmpty()) {
-      Assert.fail(format("CSV file has %d extra row(s):%n%s", csvList.size(), csvListForLogs));
+              dbMultiset.size(), dbListForLogs, csvMultiset.size(), csvListForLogs));
+    } else if (!dbMultiset.isEmpty()) {
+      Assert.fail(format("DB view has %d extra row(s):%n%s", dbMultiset.size(), dbListForLogs));
+    } else if (!csvMultiset.isEmpty()) {
+      Assert.fail(format("CSV file has %d extra row(s):%n%s", csvMultiset.size(), csvListForLogs));
     }
   }
 }

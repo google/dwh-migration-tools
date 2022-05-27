@@ -1,5 +1,6 @@
 /*
  * Copyright 2022 Google LLC
+ * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +28,7 @@ public final class TestConstants {
   public static final String PASSWORD_DB = getenv("PASSWORD");
 
   public static final String EXPORTED_FILES_BASE_PATH = getenv("EXPORT_PATH");
-
   public static final String SQL_REQUESTS_BASE_PATH = "sql/";
-
   public static final Pattern TRAILING_SPACES_REGEX = Pattern.compile("\\s+$");
 
   private TestConstants() {}

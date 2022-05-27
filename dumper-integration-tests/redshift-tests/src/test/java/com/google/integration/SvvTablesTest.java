@@ -38,13 +38,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.testng.annotations.Test;
 
-public class SvvColumnsTest {
+public class SvvTablesTest {
 
-  private static final String SQL_PATH = SQL_REQUESTS_BASE_PATH + "svv_columns.sql";
-  private static final String CSV_FILE_PATH = EXPORTED_FILES_BASE_PATH + "svv_columns.csv";
+  private static final String SQL_PATH = SQL_REQUESTS_BASE_PATH + "svv_tables.sql";
+  private static final String CSV_FILE_PATH = EXPORTED_FILES_BASE_PATH + "svv_tables.csv";
 
   @Test
-  public void svvColumnsTest() throws SQLException, IOException, CsvValidationException {
+  public void svvTablesTest() throws SQLException, IOException, CsvValidationException {
     LinkedHashMultiset<SvvColumnsRow> dbMultiset = LinkedHashMultiset.create();
     LinkedHashMultiset<SvvColumnsRow> csvMultiset = LinkedHashMultiset.create();
 

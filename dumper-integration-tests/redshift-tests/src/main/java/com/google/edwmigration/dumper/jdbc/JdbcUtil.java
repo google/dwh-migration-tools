@@ -48,8 +48,7 @@ public final class JdbcUtil {
    * @return int or 0 if null.
    */
   public static int getIntNotNull(ResultSet rs, String column) throws SQLException {
-    int intValue = rs.getInt(column);
-    return rs.wasNull() ? 0 : intValue;
+    return rs.getInt(column);
   }
 
   /**
@@ -58,8 +57,7 @@ public final class JdbcUtil {
    * @return long or 0L if null.
    */
   public static long getLongNotNull(ResultSet rs, String column) throws SQLException {
-    long longValue = rs.getLong(column);
-    return rs.wasNull() ? 0L : longValue;
+    return rs.getLong(column);
   }
 
   /**
@@ -83,8 +81,7 @@ public final class JdbcUtil {
    * @return double or 0.0 if null.
    */
   public static double getDoubleNotNull(ResultSet rs, String column) throws SQLException {
-    double doubleValue = rs.getDouble(column);
-    return rs.wasNull() ? 0.0 : doubleValue;
+    return rs.getDouble(column);
   }
 
   /**

@@ -106,7 +106,7 @@ public abstract class SvvColumnsRow {
   }
 
   public static SvvColumnsRow create(String[] csvLine) {
-    return new AutoValue_SvvColumnsRow(
+    return SvvColumnsRow.create(
         CsvUtil.getStringNotNull(csvLine[0]),
         CsvUtil.getStringNotNull(csvLine[1]),
         CsvUtil.getStringNotNull(csvLine[2]),
