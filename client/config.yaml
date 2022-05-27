@@ -20,13 +20,10 @@ gcp_settings:
   gcs_bucket: 'exemplary_client_test_external'
 
 translation_config:
-  input_directory: 'input'
-  output_directory: 'output'
-
   # The translation type needs to be one of these: Translation_Teradata2BQ, Translation_Redshift2BQ,Translation_Bteq2BQ,
   # Translation_Oracle2BQ, Translation_HiveQL2BQ, Translation_SparkSQL2BQ, Translation_Snowflake2BQ, Translation_Netezza2BQ.
   translation_type: Translation_Teradata2BQ
   location: 'us'
 
   # Set this to True (default) to clean up the temporary data in the '.tmp_processed' folder after job finishes.
-  clean_up_tmp_files: False
+  clean_up_tmp_files: True

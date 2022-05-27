@@ -72,7 +72,7 @@ class GcloudAuthHelper:
         print("validate project config status in gcloud...")
         os.system("%s %s" % (self.__SET_PROJECT, self.project_number))
         result = subprocess.getoutput(self.__CONFIG_LIST)
-        print("Your cloud config used for this translation job is \n %s" % result)
+        print("Your cloud config used for this translation job is:\n%s" % result)
         assert "account =" in result, "Can't find account info in gcloud config. Please log in through \"%s\"" \
                                       % self.__AUTH_LOGIN
         assert "project = %s" % self.project_number in result, "Can't find GCP project number in gcloud config."

@@ -56,7 +56,7 @@ class BatchSqlTranslator:
         local_input_dir = self.config.input_directory
         local_output_dir = self.config.output_directory
         if self.preprocessor is not None:
-            print("Start pre-processing input query files...")
+            print("\nStart pre-processing input query files...")
             local_input_dir = join(self.tmp_dir, "input")
             local_output_dir = join(self.tmp_dir, "output")
             self.preprocessor.preprocess(self.config.input_directory, local_input_dir)
@@ -64,28 +64,29 @@ class BatchSqlTranslator:
         self.gcs_path = self.__generate_gcs_path()
         gcs_input_path = join("gs://%s" % self.config.gcs_bucket, self.gcs_path, "input")
         gcs_output_path = join("gs://%s" % self.config.gcs_bucket, self.gcs_path, "output")
-        print("Uploading inputs to gcs ...")
+        print("\nUploading inputs to gcs ...")
         gcs_util.upload_directory(local_input_dir, self.config.gcs_bucket, join(self.gcs_path, "input"))
-        print("Start translation job...")
+        print("\nStart translation job...")
         job_name = self.create_migration_workflow(gcs_input_path, gcs_output_path)
         self.__wait_until_job_finished(job_name)
-        print("Downloading outputs...")
+        print("\nDownloading outputs...")
         gcs_util.download_directory(local_output_dir, self.config.gcs_bucket, join(self.gcs_path, "output"))
 
         if self.preprocessor is not None:
-            print("Start post-processing by reverting the macros substitution...")
+            print("\nStart post-processing by reverting the macros substitution...")
             self.preprocessor.postprocess(local_output_dir, self.config.output_directory)
 
-        print("Finished post-processing. The output query files are in %s" % self.config.output_directory)
+        print("Finished postprocessing. The outputs are in %s\n" % self.config.output_directory)
 
         if self.config.clean_up_tmp_files:
-            print("Cleaning up tmp files...")
+            print("Cleaning up tmp files under \"%s\"..." % self.tmp_dir)
             shutil.rmtree(self.tmp_dir)
+            print("Finished cleanup.")
 
-        print("The job finished successfully!")
+        print("\nThe job finished successfully!")
         print(
             "To view the job details, please go to the link: %s" % self.__get_ui_link())
-        print("Thank you for using the python exemplary library!")
+        print("Thank you for using BigQuery SQL Translation Service with Python client!")
 
     def __generate_gcs_path(self) -> str:
         """Generates a gcs_path in the format of {translation_type}-{yyyy-mm-dd}-xxxx-xxxx-xxx-xxxx-xxxxxx.

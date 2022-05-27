@@ -15,7 +15,8 @@
 import yaml
 import os
 
-from os.path import abspath, exists, isfile, join, dirname
+from argparse import Namespace
+from os.path import exists, abspath
 from yaml.loader import SafeLoader
 
 TERADATA2BQ = "Translation_Teradata2BQ"
@@ -29,6 +30,10 @@ NETEZZA2BQ = "Translation_Netezza2BQ"
 
 REPO_ROOT_DIR = "dwh-migration-tools"
 CLIENT_DIR = "client"
+
+DEFAULT_CONFIG_PATH = "client/config.yaml"
+DEFAULT_INPUT_PATH = "client/input"
+DEFAULT_OUTPUT_PATH = "client/output"
 
 
 class TranslationConfig:
@@ -51,17 +56,13 @@ class ConfigParser:
     """A parser for the config file.
     """
 
+    def __init__(self, argument: Namespace):
+        self.__argument = argument
+
     # Config field name
     __TRANSLATION_TYPE = "translation_type"
     __TRANSLATION_CONFIG = "translation_config"
-    __INPUT_DIR = "input_directory"
-    __OUTPUT_DIR = "output_directory"
-    __OUTPUT_TOKEN_MAPS = "output_token_replacement_maps"
     __CLEAN_UP = "clean_up_tmp_files"
-
-    # Config default values
-    __DEFAULT_INPUT_DIR = "input"
-    __DEFAULT_OUTPUT_DIR = "output"
 
     # The supported task types
     __SUPPORTED_TYPES = {
@@ -75,19 +76,22 @@ class ConfigParser:
         NETEZZA2BQ,
     }
 
-    def parse_config(self, config_file: str = 'config.yaml') -> TranslationConfig:
+    def parse_config(self) -> TranslationConfig:
         """Parses the config file into TranslationConfig.
 
-        Args:
-            config_file: path to the config file.  Default value is config.yaml.
         Return:
             translation config.
         """
-        with open(validate_path(config_file)) as f:
-            data = yaml.load(f, Loader=SafeLoader)
-        self.validate_config_yaml(data)
-
         config = TranslationConfig()
+        config_file_path = DEFAULT_CONFIG_PATH if not self.__argument.config else self.__argument.config
+        input_directory = DEFAULT_INPUT_PATH if not self.__argument.input else self.__argument.input
+        output_directory = DEFAULT_OUTPUT_PATH if not self.__argument.output else self.__argument.output
+        config.input_directory = abspath(input_directory)
+        config.output_directory = abspath(output_directory)
+        print("Reading translation config file from %s..." % config_file_path)
+        with open(config_file_path) as f:
+            data = yaml.load(f, Loader=SafeLoader)
+        self.__validate_config_yaml(data)
 
         gcp_settings_input = data["gcp_settings"]
         config.project_number = gcp_settings_input["project_number"]
@@ -96,13 +100,6 @@ class ConfigParser:
         translation_config_input = data[self.__TRANSLATION_CONFIG]
         config.location = translation_config_input["location"]
         config.translation_type = translation_config_input[self.__TRANSLATION_TYPE]
-        input_directory = self.__DEFAULT_INPUT_DIR if self.__INPUT_DIR not in translation_config_input \
-            else translation_config_input[self.__INPUT_DIR]
-        config.input_directory = validate_path(input_directory)
-        config.output_directory = self.__DEFAULT_OUTPUT_DIR if self.__OUTPUT_DIR not in translation_config_input \
-            else translation_config_input[self.__OUTPUT_DIR]
-        if os.getcwd().endswith(REPO_ROOT_DIR) and config.output_directory == self.__DEFAULT_OUTPUT_DIR:
-            config.output_directory = join(CLIENT_DIR, self.__DEFAULT_OUTPUT_DIR)
 
         config.clean_up_tmp_files = True if self.__CLEAN_UP not in translation_config_input \
             else translation_config_input[self.__CLEAN_UP]
@@ -110,36 +107,47 @@ class ConfigParser:
         if not os.path.exists(config.output_directory):
             os.makedirs(config.output_directory)
 
-        print("Finished Parsing translation config: ")
+        print("Finished parsing translation config.")
+        print("The config is:")
         print('\n'.join("     %s: %s" % item for item in vars(config).items()))
         return config
 
-    def validate_config_yaml(self, yaml_data):
+    def __validate_config_yaml(self, yaml_data):
         """Validate the data in the config yaml file.
         """
         assert self.__TRANSLATION_CONFIG in yaml_data, "Missing translation_config field in config.yaml."
         assert self.__TRANSLATION_TYPE in yaml_data[
             self.__TRANSLATION_CONFIG], "Missing translation_type field in config.yaml."
-        type = yaml_data[self.__TRANSLATION_CONFIG][self.__TRANSLATION_TYPE]
-        assert type in self.__SUPPORTED_TYPES, "The type \"%s\" is not supported." % type
+        translation_type = yaml_data[self.__TRANSLATION_CONFIG][self.__TRANSLATION_TYPE]
+        assert translation_type in self.__SUPPORTED_TYPES, "The type \"%s\" is not supported." \
+                                                           % translation_type
 
 
-def validate_path(file_path: str) -> str:
-    """Validates the path exists. Returns the correct path if the validation fails because the user runs the
-    tool from the root dir.
+def validate_args(args: Namespace):
+    """Validates the arguments passed to the tool
     """
-    if exists(file_path):
-        return file_path
-    elif os.getcwd().endswith(REPO_ROOT_DIR) and exists(join(CLIENT_DIR, file_path)):
-        return join(CLIENT_DIR, file_path)
+    if not os.getcwd().endswith(REPO_ROOT_DIR):
+        if not args.config:
+            print("Warning: you are not running the binary from the repo's root dir \"%s\" and you did not "
+                  "pass a config file path through \"--config\". Trying to use the default config path \"%s\"."
+                  % (REPO_ROOT_DIR, DEFAULT_CONFIG_PATH))
+        if not args.input:
+            print("Warning: you are not running the binary from the repo's root dir \"%s\" and you did not "
+                  "pass an input path through \"--input\". Trying to use the default input path \"%s\"." %
+                  (REPO_ROOT_DIR, DEFAULT_INPUT_PATH))
+        if not args.output:
+            print("Warning: you are not running the binary from the repo's root dir \"%s\" and you did not "
+                  "pass an output path through \"--output\". Trying to use the default output path \"%s\"." %
+                  (REPO_ROOT_DIR, DEFAULT_OUTPUT_PATH))
+
+    if args.input:
+        assert exists(args.input), "Can't find an input directory at \"%s\"." % args.input
     else:
-        raise ValueError("The path \"%s\" don't exist." % file_path)
-
-
-def validate_dir():
-    """Validates that the user runs under either the repo root or under the client directory.
-    """
-    current_path = os.getcwd()
-    assert current_path.endswith(REPO_ROOT_DIR) or current_path.endswith(join(REPO_ROOT_DIR, CLIENT_DIR)), \
-        "You need to run the client tool under the directory of \"%s\" or \"%s\". The current path is \"%s\"" %\
-        (REPO_ROOT_DIR, join(REPO_ROOT_DIR, CLIENT_DIR), current_path)
+        assert exists(DEFAULT_INPUT_PATH), "Can't find a directory at the default input path \"%s\"" \
+                                           % DEFAULT_INPUT_PATH
+    if args.config:
+        assert exists(args.config), "Can't find a config file at \"%s\"." % args.config
+    else:
+        assert exists(DEFAULT_CONFIG_PATH), "Can't find a file at the default config path \"%s\"" % DEFAULT_CONFIG_PATH
+    if args.macros:
+        assert exists(args.macros), "Can't find a file at \"%s\"." % args.macros
