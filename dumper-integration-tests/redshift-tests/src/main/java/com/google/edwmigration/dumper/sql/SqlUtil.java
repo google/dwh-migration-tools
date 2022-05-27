@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.sql;
+package com.google.edwmigration.dumper.sql;
 
-import static com.google.base.TestConstants.URL_DB;
+import static com.google.edwmigration.dumper.base.TestConstants.URL_DB;
 import static java.lang.String.format;
 import static org.apache.commons.io.FileUtils.readFileToString;
 
@@ -32,15 +32,12 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * A helper class for reading .sql files.
- */
+/** A helper class for reading .sql files. */
 public final class SqlUtil {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SqlUtil.class);
 
-  private SqlUtil() {
-  }
+  private SqlUtil() {}
 
   /**
    * @param sqlPath Path to an .sql file.
