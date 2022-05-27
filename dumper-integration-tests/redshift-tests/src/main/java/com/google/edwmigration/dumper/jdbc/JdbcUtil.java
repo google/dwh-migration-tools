@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.jdbc;
 import static com.google.edwmigration.dumper.base.TestConstants.TRAILING_SPACES_REGEX;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -102,4 +103,25 @@ public final class JdbcUtil {
             ZonedDateTime.of(timestamp.toLocalDateTime(), cal.getTimeZone().toZoneId()).toInstant())
         .getTime();
   }
+
+  /**
+   * @param rs A row with SELECT results.
+   * @param column Database column name.
+   * @return BigInteger or BigInteger.ZERO if null.
+   */
+  public static BigInteger getBigIntegerNotNull(ResultSet rs, String column) throws SQLException {
+    BigInteger bigInteger = new BigInteger(rs.getString(column));
+    return rs.wasNull() ? BigInteger.ZERO : bigInteger;
+  }
+
+  /**
+   * @param rs A row with SELECT results.
+   * @param column Database column name.
+   * @return BigDecimal or BigDecimal.ZERO if null.
+   */
+  public static BigDecimal getBigDecimalNotNull(ResultSet rs, String column) throws SQLException {
+    BigDecimal bigDecimal = rs.getBigDecimal(column);
+    return rs.wasNull() ? BigDecimal.ZERO : bigDecimal;
+  }
+
 }

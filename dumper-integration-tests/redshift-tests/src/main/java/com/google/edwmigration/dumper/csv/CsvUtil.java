@@ -18,6 +18,9 @@ package com.google.edwmigration.dumper.csv;
 import static com.google.edwmigration.dumper.base.TestConstants.TRAILING_SPACES_REGEX;
 import static java.lang.Integer.parseInt;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 /** A helper class for reading and extracting data from CSV files. */
 public final class CsvUtil {
 
@@ -35,5 +38,19 @@ public final class CsvUtil {
    */
   public static int getIntNotNull(String value) {
     return getStringNotNull(value).equals("") ? 0 : parseInt(value);
+  }
+
+  /**
+   * @return BigInteger or 0 if "".
+   */
+  public static BigInteger getBigIntegerNotNull(String value) {
+    return getStringNotNull(value).equals("") ? BigInteger.ZERO : new BigInteger(value);
+  }
+
+  /**
+   * @return BigDecimal or 0 if "".
+   */
+  public static BigDecimal getBigDecimalNotNull(String value) {
+    return getStringNotNull(value).equals("") ? BigDecimal.ZERO : new BigDecimal(value);
   }
 }
