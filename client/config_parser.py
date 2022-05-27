@@ -16,11 +16,8 @@ import yaml
 import os
 
 from argparse import Namespace
-<<<<<<< HEAD
 from os.path import exists, abspath
-=======
 from object_mapping_parser import ObjectMappingParser
->>>>>>> main
 from yaml.loader import SafeLoader
 
 AZURESYNAPSE2BQ = "Translation_AzureSynapse2BQ"

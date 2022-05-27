@@ -78,7 +78,7 @@ class BatchSqlTranslator:
 
         print("Finished postprocessing. The outputs are in %s\n" % self.config.output_directory)
 
-        if self.config.clean_up_tmp_files:
+        if self.config.clean_up_tmp_files and exit(self.tmp_dir):
             print("Cleaning up tmp files under \"%s\"..." % self.tmp_dir)
             shutil.rmtree(self.tmp_dir)
             print("Finished cleanup.")

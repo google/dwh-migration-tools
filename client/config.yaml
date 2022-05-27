@@ -34,4 +34,4 @@ translation_config:
   #   - __DEFAULT_SCHEMA__
 
   # Set this to True (default) to clean up the temporary data in the '.tmp_processed' folder after job finishes.
-  clean_up_tmp_files: True
+  clean_up_tmp_files: False
