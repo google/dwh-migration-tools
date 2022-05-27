@@ -21,9 +21,17 @@ gcp_settings:
 
 translation_config:
   # The translation type needs to be one of these: Translation_Teradata2BQ, Translation_Redshift2BQ,Translation_Bteq2BQ,
-  # Translation_Oracle2BQ, Translation_HiveQL2BQ, Translation_SparkSQL2BQ, Translation_Snowflake2BQ, Translation_Netezza2BQ.
+  # Translation_Oracle2BQ, Translation_HiveQL2BQ, Translation_SparkSQL2BQ, Translation_Snowflake2BQ,
+  # Translation_Netezza2BQ, Translation_AzureSynapse2BQ, Translation_Vertica2BQ.
   translation_type: Translation_Teradata2BQ
   location: 'us'
+
+  # [Optional field] The default database name to fully qualify SQL objects when their database name is missing.
+  # default_database: __DEFAULT_DATABASE__
+
+  # [Optional field] The schema search path. When SQL objects are missing schema name, translation engine will search through this list to find the value.
+  # schema_search_path:
+  #   - __DEFAULT_SCHEMA__
 
   # Set this to True (default) to clean up the temporary data in the '.tmp_processed' folder after job finishes.
   clean_up_tmp_files: True

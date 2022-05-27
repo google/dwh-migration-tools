@@ -28,13 +28,16 @@ parser.add_argument('-m', '--macros', type=str,
                          'the program will revert the substitutions for all the output query files in a '
                          'post-processing step.  The replacement does not apply for files with extension of '
                          '.zip, .csv, .json.')
+parser.add_argument('-o', '--object_name_mapping', type=str,
+                    help='Path to the object name mapping json file. Name mapping lets you identify the names of SQL '
+                         'objects in your source files, and specify target names for those objects in BigQuery. More '
+                         'info please see https://cloud.google.com/bigquery/docs/output-name-mapping.')
 parser.add_argument('--config', type=str, help='Path to the config.yaml file. By default, the tool tries to read from '
                                                '\"%s\".' % DEFAULT_CONFIG_PATH)
 parser.add_argument('--input', type=str, help='Path to the input_directory. By default, the tool tries to use the '
                                               'directory at \"%s\".' % DEFAULT_INPUT_PATH)
 parser.add_argument('--output', type=str, help='Path to the input_directory. By default, the tool tries to use the '
                                                'directory at \"%s\".' % DEFAULT_OUTPUT_PATH)
-
 args = parser.parse_args()
 
 

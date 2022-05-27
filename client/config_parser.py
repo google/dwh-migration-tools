@@ -16,17 +16,23 @@ import yaml
 import os
 
 from argparse import Namespace
+<<<<<<< HEAD
 from os.path import exists, abspath
+=======
+from object_mapping_parser import ObjectMappingParser
+>>>>>>> main
 from yaml.loader import SafeLoader
 
-TERADATA2BQ = "Translation_Teradata2BQ"
-REDSHIFT2BQ = "Translation_Redshift2BQ"
+AZURESYNAPSE2BQ = "Translation_AzureSynapse2BQ"
 BTEQ2BQ = "Translation_Bteq2BQ"
-ORACLE2BQ = "Translation_Oracle2BQ"
 HIVEQL2BQ = "Translation_HiveQL2BQ"
-SPARKSQL2BQ = "Translation_SparkSQL2BQ"
-SNOWFLAKE2BQ = "Translation_Snowflake2BQ"
 NETEZZA2BQ = "Translation_Netezza2BQ"
+ORACLE2BQ = "Translation_Oracle2BQ"
+REDSHIFT2BQ = "Translation_Redshift2BQ"
+SNOWFLAKE2BQ = "Translation_Snowflake2BQ"
+SPARKSQL2BQ = "Translation_SparkSQL2BQ"
+TERADATA2BQ = "Translation_Teradata2BQ"
+VERTICA2BQ = "Translation_Vertica2BQ"
 
 REPO_ROOT_DIR = "dwh-migration-tools"
 CLIENT_DIR = "client"
@@ -47,8 +53,9 @@ class TranslationConfig:
         self.translation_type = None
         self.input_directory = None
         self.output_directory = None
-        self.macro_maps = None
-        self.output_token_maps = None
+        self.default_database = None
+        self.schema_search_path = None
+        self.object_name_mapping_list = None
         self.clean_up_tmp_files = True
 
 
@@ -62,18 +69,22 @@ class ConfigParser:
     # Config field name
     __TRANSLATION_TYPE = "translation_type"
     __TRANSLATION_CONFIG = "translation_config"
+    __DEFAULT_DATABASE = "default_database"
+    __SCHEMA_SEARCH_PATH = "schema_search_path"
     __CLEAN_UP = "clean_up_tmp_files"
 
     # The supported task types
     __SUPPORTED_TYPES = {
-        TERADATA2BQ,
-        REDSHIFT2BQ,
+        AZURESYNAPSE2BQ,
         BTEQ2BQ,
-        ORACLE2BQ,
         HIVEQL2BQ,
-        SPARKSQL2BQ,
-        SNOWFLAKE2BQ,
         NETEZZA2BQ,
+        ORACLE2BQ,
+        REDSHIFT2BQ,
+        SNOWFLAKE2BQ,
+        SPARKSQL2BQ,
+        TERADATA2BQ,
+        VERTICA2BQ
     }
 
     def parse_config(self) -> TranslationConfig:
@@ -104,8 +115,15 @@ class ConfigParser:
         config.clean_up_tmp_files = True if self.__CLEAN_UP not in translation_config_input \
             else translation_config_input[self.__CLEAN_UP]
 
+        config.default_database = translation_config_input.get(self.__DEFAULT_DATABASE)
+        config.schema_search_path = translation_config_input.get(self.__SCHEMA_SEARCH_PATH)
+
         if not os.path.exists(config.output_directory):
             os.makedirs(config.output_directory)
+
+        if self.__argument.object_name_mapping:
+            config.object_name_mapping_list = \
+                ObjectMappingParser(self.__argument.object_name_mapping).get_name_mapping_list()
 
         print("Finished parsing translation config.")
         print("The config is:")

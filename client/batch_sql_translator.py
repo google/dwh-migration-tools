@@ -160,6 +160,15 @@ class BatchSqlTranslator:
             target_dialect=target_dialect
         )
 
+        if self.config.default_database or self.config.schema_search_path:
+            translation_config.source_env = bigquery_migration_v2.types.SourceEnv(
+                default_database=self.config.default_database,
+                schema_search_path=self.config.schema_search_path
+            )
+
+        if self.config.object_name_mapping_list:
+            translation_config.name_mapping_list = self.config.object_name_mapping_list
+
         migration_task = bigquery_migration_v2.MigrationTask(
             type=self.config.translation_type,
             translation_config_details=translation_config
@@ -201,4 +210,8 @@ class BatchSqlTranslator:
             dialect.snowflake_dialect = bigquery_migration_v2.SnowflakeDialect()
         elif self.config.translation_type == config_parser.NETEZZA2BQ:
             dialect.netezza_dialect = bigquery_migration_v2.NetezzaDialect()
+        elif self.config.translation_type == config_parser.AZURESYNAPSE2BQ:
+            dialect.azure_synapse_dialect = bigquery_migration_v2.AzureSynapseDialect()
+        elif self.config.translation_type == config_parser.VERTICA2BQ:
+            dialect.vertica_dialect = bigquery_migration_v2.VerticaDialect()
         return dialect
