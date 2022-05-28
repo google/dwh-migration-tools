@@ -20,7 +20,6 @@ import static java.lang.System.lineSeparator;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.LinkedHashMultiset;
-import com.google.edwmigration.dumper.pojo.SvvColumnsRow;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import org.junit.Assert;
@@ -39,7 +38,7 @@ public abstract class TestBase {
    */
   public static void assertMultisetsEqual(
       LinkedHashMultiset dbMultiset, LinkedHashMultiset csvMultiset) {
-    LinkedHashMultiset<SvvColumnsRow> dbMultisetCopy = LinkedHashMultiset.create(dbMultiset);
+    LinkedHashMultiset dbMultisetCopy = LinkedHashMultiset.create(dbMultiset);
     csvMultiset.forEach(dbMultiset::remove);
     dbMultisetCopy.forEach(csvMultiset::remove);
 
