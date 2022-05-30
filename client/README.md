@@ -52,8 +52,6 @@ permissions](https://cloud.google.com/bigquery/docs/batch-sql-translator#require
 The input folder is supposed to contain files with pure SQL statements (comments
 are OK). The file extension can be in any format like .txt or .sql.
 
-TODO: add instruction about how to use the metadata dumper outputs as inputs here.
-
 ## output_directory
 
 In the config, specify a local directory to store the outputs of the translation job. 
