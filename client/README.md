@@ -73,8 +73,6 @@ Example command of overriding the default input/output directory.
 bin/dwh-migration-client --input path/to/input_dir --output path/to/output_dir
 ```
 
-TODO: add instruction about how to use the metadata dumper outputs as inputs here.
-
 ### [Optional] macros replacement mapping
 
 This tool can also perform macros substitution before/after the translation job
