@@ -36,4 +36,11 @@ public final class CsvUtil {
   public static int getIntNotNull(String value) {
     return getStringNotNull(value).equals("") ? 0 : parseInt(value);
   }
+
+  /**
+   * @return boolean or false if "".
+   */
+  public static boolean getBooleanNotNull(String value) {
+    return Boolean.parseBoolean(value);
+  }
 }
