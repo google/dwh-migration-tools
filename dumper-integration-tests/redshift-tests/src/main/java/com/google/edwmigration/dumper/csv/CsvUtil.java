@@ -18,6 +18,13 @@ package com.google.edwmigration.dumper.csv;
 import static com.google.edwmigration.dumper.base.TestConstants.TRAILING_SPACES_REGEX;
 import static java.lang.Integer.parseInt;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.TimeZone;
+
 /** A helper class for reading and extracting data from CSV files. */
 public final class CsvUtil {
 
@@ -35,5 +42,26 @@ public final class CsvUtil {
    */
   public static int getIntNotNull(String value) {
     return getStringNotNull(value).equals("") ? 0 : parseInt(value);
+  }
+
+  /**
+   * @return boolean or false if "".
+   */
+  public static boolean getBooleanNotNull(String value) {
+    return Boolean.parseBoolean(value);
+  }
+
+  /**
+   * @return long or 0 if "".
+   */
+  public static long getTimestampNotNull(String value) {
+    if (getStringNotNull(value).equals("")) {
+      return 0L;
+    }
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyyyyyy-MM-dd HH:mm:ss.S");
+    LocalDateTime localDateTime = LocalDateTime.parse(value, dateTimeFormatter);
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    return Timestamp.from(ZonedDateTime.of(localDateTime, cal.getTimeZone().toZoneId()).toInstant())
+        .getTime();
   }
 }

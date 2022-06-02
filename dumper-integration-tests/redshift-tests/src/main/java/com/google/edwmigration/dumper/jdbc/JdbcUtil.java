@@ -102,4 +102,14 @@ public final class JdbcUtil {
             ZonedDateTime.of(timestamp.toLocalDateTime(), cal.getTimeZone().toZoneId()).toInstant())
         .getTime();
   }
+
+  /**
+   * @param rs A row with SELECT results.
+   * @param column Database column name.
+   * @return boolean or false if null.
+   */
+  public static boolean getBooleanNotNull(ResultSet rs, String column) throws SQLException {
+    boolean bool = rs.getBoolean(column);
+    return rs.wasNull() ? false : bool;
+  }
 }
