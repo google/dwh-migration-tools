@@ -11,21 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""A parser for the object name mapping json file."""
 
-import os
 import json
+import os
+from typing import Dict
 
-from google.cloud.bigquery_migration_v2 import ObjectNameMappingList
-from google.cloud.bigquery_migration_v2 import ObjectNameMapping
-from google.cloud.bigquery_migration_v2 import NameMappingKey
-from google.cloud.bigquery_migration_v2 import NameMappingValue
+from google.cloud.bigquery_migration_v2 import (
+    NameMappingKey,
+    NameMappingValue,
+    ObjectNameMapping,
+    ObjectNameMappingList,
+)
 
 
-class ObjectMappingParser:
-    """A parser for the object name mapping json file.
-    """
+class ObjectMappingParser:  # pylint: disable=too-few-public-methods
+    """A parser for the object name mapping json file."""
 
-    def __init__(self, json_file_path):
+    def __init__(self, json_file_path: str) -> None:
         self.__json_file_path = json_file_path
 
     __NAME_MAP_FIELD = "name_map"
@@ -37,35 +40,52 @@ class ObjectMappingParser:
     __RELATION_FIELD = "relation"
     __ATTRIBUTE_FIELD = "attribute"
 
-    __SUPPORTED_TYPES = {"DATABASE", "SCHEMA", "RELATION", "ATTRIBUTE", "RELATION_ALIAS", "ATTRIBUTE_ALIAS", "FUNCTION"}
+    __SUPPORTED_TYPES = {
+        "DATABASE",
+        "SCHEMA",
+        "RELATION",
+        "ATTRIBUTE",
+        "RELATION_ALIAS",
+        "ATTRIBUTE_ALIAS",
+        "FUNCTION",
+    }
 
     def get_name_mapping_list(self) -> ObjectNameMappingList:
-        """Parses the object name mapping json file into ObjectNameMappingList.
-        """
-        print("Start parsing object name mapping from \"%s\"..." % self.__json_file_path)
+        """Parses the object name mapping json file into ObjectNameMappingList."""
+        print('Start parsing object name mapping from "%s"...' % self.__json_file_path)
         self.__validate_onm_file()
         onm_list = ObjectNameMappingList()
-        f = open(self.__json_file_path)
-        data = json.load(f)
+        with open(self.__json_file_path, encoding="utf-8") as file:
+            data = json.load(file)
         for name_map in data[self.__NAME_MAP_FIELD]:
-            assert self.__SOURCE_FIELD in name_map, \
-                "Invalid object name mapping: can't find a \"%s\" field in \"%s\". Instead we got \"%s\"." \
+            assert self.__SOURCE_FIELD in name_map, (
+                'Invalid object name mapping: can\'t find a "%s" field in "%s". '
+                'Instead we got "%s".'
                 % (self.__SOURCE_FIELD, self.__json_file_path, name_map)
-            assert self.__TARGET_FIELD in name_map, \
-                "Invalid object name mapping: can't find a \"%s\" field in \"%s\". Instead we got \"%s\"." \
+            )
+            assert self.__TARGET_FIELD in name_map, (
+                'Invalid object name mapping: can\'t find a "%s" field in "%s". '
+                'Instead we got "%s".'
                 % (self.__TARGET_FIELD, self.__json_file_path, name_map)
+            )
             onm = ObjectNameMapping()
             onm.source = self.__parse_source(name_map[self.__SOURCE_FIELD])
             onm.target = self.__parse_target(name_map[self.__TARGET_FIELD])
             onm_list.name_map.append(onm)
         return onm_list
 
-    def __parse_source(self, source_data) -> NameMappingKey:
+    def __parse_source(self, source_data: Dict[str, str]) -> NameMappingKey:
         name_mapping_key = NameMappingKey()
         if self.__TYPE_FIELD in source_data:
-            assert source_data[self.__TYPE_FIELD] in self.__SUPPORTED_TYPES, \
-                "The source type of name mapping \"%s\" in file \"%s\" is not one of the supported types: \"%s\"" \
-                % (source_data[self.__TYPE_FIELD], self.__json_file_path, self.__SUPPORTED_TYPES)
+            assert source_data[self.__TYPE_FIELD] in self.__SUPPORTED_TYPES, (
+                'The source type of name mapping "%s" in file "%s" is not one of '
+                'the supported types: "%s"'
+                % (
+                    source_data[self.__TYPE_FIELD],
+                    self.__json_file_path,
+                    self.__SUPPORTED_TYPES,
+                )
+            )
             name_mapping_key.type_ = source_data[self.__TYPE_FIELD]
         if self.__DB_FIELD in source_data:
             name_mapping_key.database = source_data[self.__DB_FIELD]
@@ -77,7 +97,7 @@ class ObjectMappingParser:
             name_mapping_key.attribute = source_data[self.__ATTRIBUTE_FIELD]
         return name_mapping_key
 
-    def __parse_target(self, target_data) -> NameMappingValue:
+    def __parse_target(self, target_data: Dict[str, str]) -> NameMappingValue:
         name_mapping_value = NameMappingValue()
         if self.__DB_FIELD in target_data:
             name_mapping_value.database = target_data[self.__DB_FIELD]
@@ -89,5 +109,7 @@ class ObjectMappingParser:
             name_mapping_value.attribute = target_data[self.__ATTRIBUTE_FIELD]
         return name_mapping_value
 
-    def __validate_onm_file(self):
-        assert os.path.isfile(self.__json_file_path), "Can't find a file at \"%s\"." % self.__json_file_path
+    def __validate_onm_file(self) -> None:
+        assert os.path.isfile(self.__json_file_path), (
+            'Can\'t find a file at "%s".' % self.__json_file_path
+        )

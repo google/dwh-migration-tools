@@ -6,14 +6,39 @@ client package.
 
 ## Installation
 
-Clone or download this repository and
-install the Python packages listed in the [requirements.txt](requirements.txt) file through (all commands are supposed to be run from the archive or repository top level folder): 
-
-```
-pip3 install -r client/requirements.txt
-```
-
 Install the gcloud CLI following the [instructions](http://cloud.google.com/sdk/docs/install).
+
+Clone or download this repository, create a virtualenv, activate it and install
+the exemplary Python client:
+
+```shell
+git clone git@github.com:google/dwh-migration-tools.git
+cd client
+python3 -m venv venv
+source venv/bin/activate
+pip3 install .
+```
+
+### [Optional] Install in editable mode
+
+If you plan on editing the Python files of the client directly, you will want to
+install it in editable mode using `-e`:
+
+```shell
+pip3 install -e .
+```
+
+### [Optional] Install the recommended concrete dependencies
+
+Running `pip3 install .` will install concrete dependencies from a list of 
+abstract dependencies defined in `setup.py`. If you want to ensure your 
+installation is using the same concrete dependencies that the exemplary client
+was developed against, then run the following before running either of the
+commands above:
+
+```shell
+pip3 install -r requirements.txt
+```
 
 ### [Optional] gcloud login and authentication
 
@@ -63,7 +88,7 @@ the output directory.
 Simply run the following commands in Python3:
 
 ```
-bin/dwh-migration-client
+dwh-migration-client -c config/config.yaml
 ```
 
 ### [Optional] macros replacement mapping
@@ -75,7 +100,7 @@ To enable macros substitution, pass the arg '-m macros.yaml' when
 running the tool:
 
 ```
-bin/dwh-migration-client -m macros.yaml
+dwh-migration-client -m config/macros.yaml
 ```
 
 Here is an example of the macros.yaml file:
@@ -117,7 +142,7 @@ To enable object name mapping, pass the optional arg '-o path/to/object_mapping.
 running the tool, e.g.:
 
 ```
-bin/dwh-migration-client -o client/object_mapping.json
+dwh-migration-client -o config/object_mapping.json
 ```
 
 Here is an example of the object_mapping.json file:
