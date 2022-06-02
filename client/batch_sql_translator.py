@@ -213,4 +213,6 @@ class BatchSqlTranslator:
             dialect.azure_synapse_dialect = bigquery_migration_v2.AzureSynapseDialect()
         elif self.config.translation_type == config_parser.VERTICA2BQ:
             dialect.vertica_dialect = bigquery_migration_v2.VerticaDialect()
+        elif self.config.translation_type == config_parser.SQLSERVER2BQ:
+            dialect.sql_server_dialect = bigquery_migration_v2.SQLServerDialect()
         return dialect
