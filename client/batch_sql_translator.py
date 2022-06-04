@@ -15,13 +15,17 @@
 import shutil
 import config_parser
 import gcs_util
+import os
 import sys
 import uuid
 import time
+from typing import Optional
 
 from datetime import datetime
 from os.path import dirname, join
 from macro_processor import MacroProcessor
+from object_mapping_parser import ObjectMappingParser
+from config_parser import TranslationConfig
 from google.cloud import bigquery_migration_v2
 
 
@@ -31,12 +35,15 @@ class BatchSqlTranslator:
 
     """
 
-    def __init__(self, config, preprocessor: MacroProcessor):
+    def __init__(self, config: TranslationConfig, input_directory: str, output_directory: str, preprocessor: Optional[MacroProcessor] = None, object_name_mapping_list: Optional[ObjectMappingParser] = None):
         self.config = config
+        self._input_directory = input_directory
+        self._output_directory = output_directory
         self.client = bigquery_migration_v2.MigrationServiceClient()
         self.gcs_path = None
         self.preprocessor = preprocessor    # May be None
-        self.tmp_dir = join(dirname(self.config.input_directory), self.__TMP_DIR_NAME)
+        self._object_name_mapping_list = object_name_mapping_list
+        self.tmp_dir = join(dirname(self._input_directory), self.__TMP_DIR_NAME)
 
     __JOB_FINISHED_STATES = {
         bigquery_migration_v2.types.MigrationWorkflow.State.COMPLETED,
@@ -53,13 +60,13 @@ class BatchSqlTranslator:
         workflow_id: the workflow id in the format of
         length_seconds: max wait time.
         """
-        local_input_dir = self.config.input_directory
-        local_output_dir = self.config.output_directory
+        local_input_dir = self._input_directory
+        local_output_dir = self._output_directory
         if self.preprocessor is not None:
             print("\nStart pre-processing input query files...")
             local_input_dir = join(self.tmp_dir, "input")
             local_output_dir = join(self.tmp_dir, "output")
-            self.preprocessor.preprocess(self.config.input_directory, local_input_dir)
+            self.preprocessor.preprocess(self._input_directory, local_input_dir)
 
         self.gcs_path = self.__generate_gcs_path()
         gcs_input_path = join("gs://%s" % self.config.gcs_bucket, self.gcs_path, "input")
@@ -74,9 +81,9 @@ class BatchSqlTranslator:
 
         if self.preprocessor is not None:
             print("\nStart post-processing by reverting the macros substitution...")
-            self.preprocessor.postprocess(local_output_dir, self.config.output_directory)
+            self.preprocessor.postprocess(local_output_dir, self._output_directory)
 
-        print("Finished postprocessing. The outputs are in %s\n" % self.config.output_directory)
+        print("Finished postprocessing. The outputs are in %s\n" % self._output_directory)
 
         if self.config.clean_up_tmp_files and os.path.exists(self.tmp_dir):
             print("Cleaning up tmp files under \"%s\"..." % self.tmp_dir)
@@ -166,8 +173,8 @@ class BatchSqlTranslator:
                 schema_search_path=self.config.schema_search_path
             )
 
-        if self.config.object_name_mapping_list:
-            translation_config.name_mapping_list = self.config.object_name_mapping_list
+        if self._object_name_mapping_list:
+            translation_config.name_mapping_list = self._object_name_mapping_list
 
         migration_task = bigquery_migration_v2.MigrationTask(
             type=self.config.translation_type,

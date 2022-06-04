@@ -13,11 +13,8 @@
 # limitations under the License.
 
 import yaml
-import os
+from os.path import abspath
 
-from argparse import Namespace
-from os.path import exists, abspath
-from object_mapping_parser import ObjectMappingParser
 from yaml.loader import SafeLoader
 
 AZURESYNAPSE2BQ = "Translation_AzureSynapse2BQ"
@@ -31,13 +28,6 @@ SPARKSQL2BQ = "Translation_SparkSQL2BQ"
 TERADATA2BQ = "Translation_Teradata2BQ"
 VERTICA2BQ = "Translation_Vertica2BQ"
 
-REPO_ROOT_DIR = "dwh-migration-tools"
-CLIENT_DIR = "client"
-
-DEFAULT_CONFIG_PATH = "client/config.yaml"
-DEFAULT_INPUT_PATH = "client/input"
-DEFAULT_OUTPUT_PATH = "client/output"
-
 
 class TranslationConfig:
     """A structure for holding the config info of the translation job.
@@ -48,11 +38,8 @@ class TranslationConfig:
         self.gcs_bucket = None
         self.location = None
         self.translation_type = None
-        self.input_directory = None
-        self.output_directory = None
         self.default_database = None
         self.schema_search_path = None
-        self.object_name_mapping_list = None
         self.clean_up_tmp_files = True
 
 
@@ -60,8 +47,8 @@ class ConfigParser:
     """A parser for the config file.
     """
 
-    def __init__(self, argument: Namespace):
-        self.__argument = argument
+    def __init__(self, config_file_path: str):
+        self._config_file_path = abspath(config_file_path)
 
     # Config field name
     __TRANSLATION_TYPE = "translation_type"
@@ -91,13 +78,8 @@ class ConfigParser:
             translation config.
         """
         config = TranslationConfig()
-        config_file_path = DEFAULT_CONFIG_PATH if not self.__argument.config else self.__argument.config
-        input_directory = DEFAULT_INPUT_PATH if not self.__argument.input else self.__argument.input
-        output_directory = DEFAULT_OUTPUT_PATH if not self.__argument.output else self.__argument.output
-        config.input_directory = abspath(input_directory)
-        config.output_directory = abspath(output_directory)
-        print("Reading translation config file from %s..." % config_file_path)
-        with open(config_file_path) as f:
+        print("Reading translation config file from %s..." % self._config_file_path)
+        with open(self._config_file_path) as f:
             data = yaml.load(f, Loader=SafeLoader)
         self.__validate_config_yaml(data)
 
@@ -115,13 +97,6 @@ class ConfigParser:
         config.default_database = translation_config_input.get(self.__DEFAULT_DATABASE)
         config.schema_search_path = translation_config_input.get(self.__SCHEMA_SEARCH_PATH)
 
-        if not os.path.exists(config.output_directory):
-            os.makedirs(config.output_directory)
-
-        if self.__argument.object_name_mapping:
-            config.object_name_mapping_list = \
-                ObjectMappingParser(self.__argument.object_name_mapping).get_name_mapping_list()
-
         print("Finished parsing translation config.")
         print("The config is:")
         print('\n'.join("     %s: %s" % item for item in vars(config).items()))
@@ -136,33 +111,3 @@ class ConfigParser:
         translation_type = yaml_data[self.__TRANSLATION_CONFIG][self.__TRANSLATION_TYPE]
         assert translation_type in self.__SUPPORTED_TYPES, "The type \"%s\" is not supported." \
                                                            % translation_type
-
-
-def validate_args(args: Namespace):
-    """Validates the arguments passed to the tool
-    """
-    if not os.getcwd().endswith(REPO_ROOT_DIR):
-        if not args.config:
-            print("Warning: you are not running the binary from the repo's root dir \"%s\" and you did not "
-                  "pass a config file path through \"--config\". Trying to use the default config path \"%s\"."
-                  % (REPO_ROOT_DIR, DEFAULT_CONFIG_PATH))
-        if not args.input:
-            print("Warning: you are not running the binary from the repo's root dir \"%s\" and you did not "
-                  "pass an input path through \"--input\". Trying to use the default input path \"%s\"." %
-                  (REPO_ROOT_DIR, DEFAULT_INPUT_PATH))
-        if not args.output:
-            print("Warning: you are not running the binary from the repo's root dir \"%s\" and you did not "
-                  "pass an output path through \"--output\". Trying to use the default output path \"%s\"." %
-                  (REPO_ROOT_DIR, DEFAULT_OUTPUT_PATH))
-
-    if args.input:
-        assert exists(args.input), "Can't find an input directory at \"%s\"." % args.input
-    else:
-        assert exists(DEFAULT_INPUT_PATH), "Can't find a directory at the default input path \"%s\"" \
-                                           % DEFAULT_INPUT_PATH
-    if args.config:
-        assert exists(args.config), "Can't find a config file at \"%s\"." % args.config
-    else:
-        assert exists(DEFAULT_CONFIG_PATH), "Can't find a file at the default config path \"%s\"" % DEFAULT_CONFIG_PATH
-    if args.macros:
-        assert exists(args.macros), "Can't find a file at \"%s\"." % args.macros
