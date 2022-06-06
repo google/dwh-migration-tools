@@ -82,9 +82,11 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector implements 
         // DDL TEXT is simple ...
         // min() as there is no ANY() or SOME()
         String queryTemplateDDL
-                = " SELECT min(L.userid) as UserId, min(L.starttime) as StartTime, L.xid as xid, "
-                + " LISTAGG(CASE WHEN LEN(RTRIM(L.text)) = 0 THEN text ELSE RTRIM(L.text) END) WITHIN GROUP (ORDER BY L.sequence) as SqlText "
-                + " FROM STL_DDLTEXT L WHERE ## GROUP BY L.xid ";
+            = " SELECT any_value(L.userid) as UserId, any_value(L.starttime) as StartTime,"
+            + " any_value(L.endtime) as EndTime, any_value(trim(label)) as Label, L.xid as xid,"
+            + " L.pid as pid, LISTAGG(CASE WHEN LEN(RTRIM(L.text)) = 0 THEN text ELSE RTRIM(L.text)"
+            + " END) WITHIN GROUP (ORDER BY L.sequence) as SqlText FROM STL_DDLTEXT L WHERE ##"
+            + " GROUP BY L.xid, L.pid ";
         makeTasks(arguments, RedshiftLogsDumpFormat.DdlHistory.ZIP_ENTRY_PREFIX, queryTemplateDDL, "L.starttime", parallelTask);
 
         // Query Text has bit of playing around
@@ -92,9 +94,14 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector implements 
         // 2. STL_QUERY_TEXT has xid+squence+text which reconstructs query, but no starttime.
         // I think STL_QUERY is 1 row per query ; SQL_QUERY_TEXT is multi rows per query, using sequence and xid
         String queryTemplateQuery
-                = "with qt as (SELECT distinct userid, xid, pid, query, LISTAGG(CASE WHEN LEN(RTRIM(text)) = 0 THEN text ELSE RTRIM(text) END) WITHIN GROUP (ORDER BY sequence) OVER (PARTITION by userid, xid, pid, query) as SqlText FROM STL_QUERYTEXT)"
-                + " SELECT Q.query as \"QueryID\" , Q.xid as xid , Q.userid as UserId, Q.starttime as StartTime, QT.SqlText as SqlText"
-                + " FROM STL_QUERY Q JOIN QT USING (query) WHERE ##";
+            =
+            "with qt as (SELECT distinct userid, xid, pid, query, LISTAGG(CASE WHEN LEN(RTRIM(text))"
+                + " = 0 THEN text ELSE RTRIM(text) END) WITHIN GROUP (ORDER BY sequence) OVER"
+                + " (PARTITION by userid, xid, pid, query) as SqlText FROM STL_QUERYTEXT)"
+                + " SELECT Q.query as \"QueryID\" , Q.xid as xid , Q.pid as pid,"
+                + " Q.userid as UserId, Q.starttime as StartTime, Q.endtime as EndTime,"
+                + " trim(Q.label) as Label, QT.SqlText as SqlText"
+                + " FROM STL_QUERY Q JOIN QT USING (userid, xid, pid, query) WHERE ##";
 
         makeTasks(arguments, RedshiftLogsDumpFormat.QueryHistory.ZIP_ENTRY_PREFIX, queryTemplateQuery, "Q.starttime", parallelTask);
 
