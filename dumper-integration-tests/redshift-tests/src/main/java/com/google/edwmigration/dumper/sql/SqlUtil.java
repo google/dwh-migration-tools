@@ -41,7 +41,7 @@ public final class SqlUtil {
    * @return File contents, never null.
    */
   public static String getSql(String sqlPath) throws IOException {
-    return Resources.toString(Resources.getResource(sqlPath), UTF_8);
+      return Resources.toString(Resources.getResource(sqlPath), UTF_8);
   }
 
   /**
