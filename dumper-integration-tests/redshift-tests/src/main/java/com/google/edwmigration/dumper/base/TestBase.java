@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 /** Base class with general values for all TestNG test suites */
 public abstract class TestBase {
 
-  public static final CSVParser CSV_PARSER = new CSVParserBuilder().withEscapeChar('\0').build();
+  public static final CSVParser CSV_PARSER = new CSVParserBuilder().withEscapeChar('\\').build();
   private static final Logger LOGGER = LoggerFactory.getLogger(TestBase.class);
 
   /**
