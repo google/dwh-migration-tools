@@ -15,15 +15,13 @@
 
 import argparse
 from functools import partial
-import shutil
-import pathlib
-import sys
 import batch_sql_translator
 
 from config_parser import ConfigParser
 from gcloud_auth_helper import validate_gcloud_auth_settings
 from macro_processor import MacroProcessor
 from object_mapping_parser import ObjectMappingParser
+from validation import validated_file, validated_directory, validated_nonexistent_path
 
 
 def start_translation(args):
@@ -45,74 +43,19 @@ def start_translation(args):
     else:
         object_name_mapping_list = None
 
-    translator = batch_sql_translator.BatchSqlTranslator(config, args.input, args.output, preprocessor, object_name_mapping_list)
+    translator = batch_sql_translator.BatchSqlTranslator(config, args.input, args.output, preprocessor,
+                                                         object_name_mapping_list)
     translator.start_translation()
-
-
-def validated_file(unvalidated_path: str) -> str:
-    """Validates a path is a regular file that exists.
-    Args:
-        unvalidated_path: A string representing the path to validate.
-    Returns:
-        A string representing a validated POSIX path.
-    Raises:
-        argparse.ArgumentTypeError: unvalidated_path is not a regular file that exists.
-    """
-    path = pathlib.Path(unvalidated_path)
-    if path.is_file():
-        return path.as_posix()
-    raise argparse.ArgumentTypeError(
-        "%s is not a regular file that exists." % path.as_posix()
-    )
-
-
-def validated_directory(unvalidated_path: str) -> str:
-    """Validates a path is a directory that exists.
-    Args:
-        unvalidated_path: A string representing the path to validate.
-    Returns:
-        A string representing a validated POSIX path.
-    Raises:
-        argparse.ArgumentTypeError: unvalidated_path is not a directory that exists.
-    """
-    path = pathlib.Path(unvalidated_path)
-    if path.is_dir():
-        return path.as_posix()
-    raise argparse.ArgumentTypeError(
-        "%s is not a directory that exists." % path.as_posix()
-    )
-
-
-def validated_nonexistent_path(unvalidated_path: str, force: bool = False) -> str:
-    """Validates a path does not exist.
-    Args:
-        unvalidated_path: A string representing the path to validate.
-        force: A boolean representing whether to remove unvalidated_path if it exists.
-    Returns:
-        A string representing a validated POSIX path.
-    Raises:
-        argparse.ArgumentTypeError: unvalidated_path already exists.
-    """
-    path = pathlib.Path(unvalidated_path)
-
-    if not path.exists():
-        return path.as_posix()
-
-    if force:
-        if path.is_dir():
-            shutil.rmtree(path)
-        if path.is_file():
-            path.unlink()
-        return path.as_posix()
-
-    raise argparse.ArgumentTypeError("%s already exists." % path.as_posix())
 
 
 def main():
     parser = argparse.ArgumentParser(description='Config the Batch Sql translation tool.')
-    parser.add_argument('--config', type=validated_file, default="client/config.yaml", help='Path to the config.yaml file.')
-    parser.add_argument('--input', type=validated_directory, default="client/input", help='Path to the input_directory.')
-    parser.add_argument('--output', type=partial(validated_nonexistent_path, force=True), default="client/output", help='Path to the input_directory.')
+    parser.add_argument('--config', type=validated_file, default="client/config.yaml",
+                        help='Path to the config.yaml file. (default: client/config.yaml)')
+    parser.add_argument('--input', type=validated_directory, default="client/input",
+                        help='Path to the input_directory. (default: client/input)')
+    parser.add_argument('--output', type=partial(validated_nonexistent_path, force=True), default="client/output",
+                        help='Path to the output_directory. (default: client/output)')
     parser.add_argument('-m', '--macros', type=validated_file,
                         help='Path to the macro map yaml file. If specified, the program will pre-process '
                              'all the input query files by replacing the macros with corresponding '
@@ -125,12 +68,9 @@ def main():
                              'objects in your source files, and specify target names for those objects in BigQuery. More '
                              'info please see https://cloud.google.com/bigquery/docs/output-name-mapping.')
 
-    # Print usage message if no args are supplied.
-    if len(sys.argv) <= 1:
-        sys.argv.append("--help")
-
     args = parser.parse_args()
     return start_translation(args)
+
 
 if __name__ == '__main__':
     main()

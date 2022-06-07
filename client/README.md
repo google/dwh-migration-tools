@@ -161,3 +161,34 @@ The name mapping rules in this example make the following object name changes:
 * Renames all instances of the my_project database object to bq_project. For example, my_project.my_dataset.table2 
 becomes bq_project.my_dataset.table2, and CREATE DATASET my_project.my_dataset becomes CREATE DATASET 
 bq_project.my_dataset.
+
+### List of options:
+
+```commandline
+options:
+  -h, --help            show this help message and exit.
+  
+      --config path/to/config.yaml             
+                        Path to the config.yaml file. (default: client/config.yaml)
+    
+      --input path/to/input_dir
+                        Path to the input_directory. (default: client/input)
+  
+      --output path/to/output_dir
+                        Path to the output_directory. (default: client/output)
+  
+  -m, --macros path/to/macros.yaml
+                        Path to the macro map yaml file. If specified, the program will 
+                        pre-process all the input query files by replacing the macros 
+                        with corresponding string values according to the macro map
+                        definition. After translation, the tool will revert the 
+                        substitutions for all the output query files in a 
+                        post-processing step. The replacement does not apply for files 
+                        with extension of .zip, .csv, .json.
+                        
+  -o --object_name_mapping path/to/object_mapping.json
+                        Path to the object name mapping json file. Name mapping lets 
+                        you identify the names of SQL objects in your source files, and 
+                        specify target names for those objects in BigQuery. More info
+                        please see https://cloud.google.com/bigquery/docs/output-name-mapping.
+```
