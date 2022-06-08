@@ -29,6 +29,7 @@ SNOWFLAKE2BQ = "Translation_Snowflake2BQ"
 SPARKSQL2BQ = "Translation_SparkSQL2BQ"
 TERADATA2BQ = "Translation_Teradata2BQ"
 VERTICA2BQ = "Translation_Vertica2BQ"
+SQLSERVER2BQ = "Translation_SQLServer2BQ"
 
 
 class TranslationConfig:
@@ -79,7 +80,8 @@ class ConfigParser:
         SNOWFLAKE2BQ,
         SPARKSQL2BQ,
         TERADATA2BQ,
-        VERTICA2BQ
+        VERTICA2BQ,
+        SQLSERVER2BQ
     }
 
     def parse_config(self, config_file: str = 'config.yaml') -> TranslationConfig:
