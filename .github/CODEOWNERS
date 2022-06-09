@@ -1,0 +1,10 @@
+# Code owners
+
+# Reviewers for any change in the repository
+* @paolomorandini @mjquinn-google @bdw-g @shevek-google
+
+# Reviewers for Java changes
+/dumper-integration-tests/ @cyulysses-corp @haselbach
+
+# Reviewers for client changes
+/client/ @xiashang0624 @yzhvictor @ajwelch4
