@@ -32,7 +32,7 @@ public interface RedshiftLogsDumpFormat {
     public static final String ZIP_ENTRY_SUFFIX = ".csv";
 
     public static enum DdlHistory {
-        userid, starttime, xid, sqltext;
+        userid, starttime, endtime, label, xid, pid, sqltext;
         public static final String ZIP_ENTRY_PREFIX = "ddl_history_";
 
         public static boolean isZipEntryName(@Nonnull String name) {
@@ -41,7 +41,7 @@ public interface RedshiftLogsDumpFormat {
     }
 
     public static enum QueryHistory {
-        queryid, xid, userid, starttime, sqltext;
+        queryid, xid, pid, userid, starttime, endtime, label, sqltext;
 
         public static final String ZIP_ENTRY_PREFIX = "query_history_";
 
