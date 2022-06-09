@@ -20,9 +20,6 @@ gcp_settings:
   gcs_bucket: 'exemplary_client_test_external'
 
 translation_config:
-  input_directory: 'input'
-  output_directory: 'output'
-
   # The translation type needs to be one of these: Translation_Teradata2BQ, Translation_Redshift2BQ,Translation_Bteq2BQ,
   # Translation_Oracle2BQ, Translation_HiveQL2BQ, Translation_SparkSQL2BQ, Translation_Snowflake2BQ,
   # Translation_Netezza2BQ, Translation_AzureSynapse2BQ, Translation_Vertica2BQ, Translation_SQLServer2BQ.
