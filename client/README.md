@@ -47,25 +47,30 @@ the config.
 If you want to use an existing project, make sure you have all the required [IAM
 permissions](https://cloud.google.com/bigquery/docs/batch-sql-translator#required_permissions).
 
-## input_directory
+## Run a translation job using example inputs.
+
+Simply run the following commands in Python3 to start a translation using the sample query files in [input](input).
+
+```
+bin/dwh-migration-client
+```
+## input and output directory
 
 The input folder is supposed to contain files with pure SQL statements (comments
 are OK). The file extension can be in any format like .txt or .sql.
 
-TODO: add instruction about how to use the metadata dumper outputs as inputs here.
-
-## output_directory
-
-In the config, specify a local directory to store the outputs of the translation job. 
-Every input SQL file will have a corresponding output file under the same name in 
+Every input SQL file will have a corresponding output file under the same name in
 the output directory.
 
-## Run a translation job
+The default value of input dir is `client/input`. To override it, add the flag `--input path/to/input_dir` when running 
+the above command.  
 
-Simply run the following commands in Python3:
+The default value of output dir that stores the outputs of a translation job is `client/output`. To override it, add the 
+flag `--output path/to/output_dir` when running the above command.
 
+Example command of overriding the default input/output directory.
 ```
-bin/dwh-migration-client
+bin/dwh-migration-client --input path/to/input_dir --output path/to/output_dir
 ```
 
 ### [Optional] macros replacement mapping
@@ -73,11 +78,11 @@ bin/dwh-migration-client
 This tool can also perform macros substitution before/after the translation job
 through an option flag.
 
-To enable macros substitution, pass the arg '-m macros.yaml' when
+To enable macros substitution, pass the arg '-m client/macros.yaml' when
 running the tool:
 
 ```
-bin/dwh-migration-client -m macros.yaml
+bin/dwh-migration-client -m client/macros.yaml
 ```
 
 Here is an example of the macros.yaml file:
@@ -156,3 +161,34 @@ The name mapping rules in this example make the following object name changes:
 * Renames all instances of the my_project database object to bq_project. For example, my_project.my_dataset.table2 
 becomes bq_project.my_dataset.table2, and CREATE DATASET my_project.my_dataset becomes CREATE DATASET 
 bq_project.my_dataset.
+
+### List of options:
+
+```commandline
+options:
+  -h, --help            show this help message and exit.
+  
+      --config path/to/config.yaml             
+                        Path to the config.yaml file. (default: client/config.yaml)
+    
+      --input path/to/input_dir
+                        Path to the input_directory. (default: client/input)
+  
+      --output path/to/output_dir
+                        Path to the output_directory. (default: client/output)
+  
+  -m, --macros path/to/macros.yaml
+                        Path to the macro map yaml file. If specified, the program will 
+                        pre-process all the input query files by replacing the macros 
+                        with corresponding string values according to the macro map
+                        definition. After translation, the tool will revert the 
+                        substitutions for all the output query files in a 
+                        post-processing step. The replacement does not apply for files 
+                        with extension of .zip, .csv, .json.
+                        
+  -o --object_name_mapping path/to/object_mapping.json
+                        Path to the object name mapping json file. Name mapping lets 
+                        you identify the names of SQL objects in your source files, and 
+                        specify target names for those objects in BigQuery. More info
+                        please see https://cloud.google.com/bigquery/docs/output-name-mapping.
+```

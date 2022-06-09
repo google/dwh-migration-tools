@@ -20,13 +20,13 @@ gcp_settings:
   gcs_bucket: 'exemplary_client_test_external'
 
 translation_config:
-  input_directory: 'input'
-  output_directory: 'output'
-
   # The translation type needs to be one of these: Translation_Teradata2BQ, Translation_Redshift2BQ,Translation_Bteq2BQ,
   # Translation_Oracle2BQ, Translation_HiveQL2BQ, Translation_SparkSQL2BQ, Translation_Snowflake2BQ,
-  # Translation_Netezza2BQ, Translation_AzureSynapse2BQ, Translation_Vertica2BQ.
+  # Translation_Netezza2BQ, Translation_AzureSynapse2BQ, Translation_Vertica2BQ, Translation_SQLServer2BQ.
   translation_type: Translation_Teradata2BQ
+
+  # The location needs to be one of these: us, eu, asia-northeast1, asia-southeast1, europe-west2, asia-south1,
+  # australia-southeast1, southamerica-east1.
   location: 'us'
 
   # [Optional field] The default database name to fully qualify SQL objects when their database name is missing.
