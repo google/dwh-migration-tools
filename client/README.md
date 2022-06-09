@@ -4,6 +4,9 @@ This is an exemplary command-line tool to simplify the process of running a
 Batch SQL Translation job using the Google Cloud Bigquery Migration Python
 client package.
 
+## Supported Python Versions 
+Python >= 3.7
+
 ## Installation
 
 Clone or download this repository and
@@ -192,3 +195,15 @@ options:
                         specify target names for those objects in BigQuery. More info
                         please see https://cloud.google.com/bigquery/docs/output-name-mapping.
 ```
+
+## FAQ:
+### pip install couldn't find the right version for `google-cloud-storage`?
+
+Make sure you are using Python 3.7 or later to install [google-cloud-storage](https://pypi.org/project/google-cloud-storage/). 
+
+### I am using Python 3.7 or a later version, but I am still seeing errors about packages like `bigquery_migration_v2'.
+
+It's recommended to run this tool in the Python [virtual env](https://docs.python.org/3/library/venv.html) to avoid 
+dependency noises. 
+
+Create a Python3 virtual env by `python3 -m venv my_env`, and activate it by `source my_env/bin/activate`.
