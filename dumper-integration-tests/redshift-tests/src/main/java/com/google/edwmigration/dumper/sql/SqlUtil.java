@@ -18,12 +18,10 @@ package com.google.edwmigration.dumper.sql;
 
 import static com.google.edwmigration.dumper.base.TestConstants.URL_DB;
 import static java.lang.String.format;
-import static org.apache.commons.io.FileUtils.readFileToString;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.File;
+import com.google.common.io.Resources;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -43,12 +41,8 @@ public final class SqlUtil {
    * @param sqlPath Path to an .sql file.
    * @return File contents, never null.
    */
-  public static String getSql(String sqlPath) {
-    try {
-      return readFileToString(new File(sqlPath), StandardCharsets.UTF_8);
-    } catch (IOException exception) {
-      throw new UncheckedIOException(format("Error while reading sql file %s", sqlPath), exception);
-    }
+  public static String getSql(String sqlPath) throws IOException {
+    return Resources.toString(Resources.getResource(sqlPath), UTF_8);
   }
 
   /**
