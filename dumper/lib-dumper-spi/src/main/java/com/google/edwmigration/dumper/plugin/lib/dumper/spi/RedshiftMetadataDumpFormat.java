@@ -99,6 +99,86 @@ public interface RedshiftMetadataDumpFormat extends PostgresqlMetadataDumpFormat
         }
     }
 
+    /**
+     * Headers for results from SVV_TABLES table.
+     * SVV_TABLES contains both local and external catalogs.
+     */
+    public static interface SvvTables {
+        public static final String ZIP_ENTRY_NAME = "svv_tables.csv";
+
+        public static enum Header {
+            table_catalog,
+            table_schema,
+            table_name,
+            table_type,
+            remarks
+        }
+    }
+
+    /**
+     * Headers for results from SVV_TABLE_INFO table.
+     * SVV_TABLE_INFO filters system tables and shows only user-defined tables.
+     */
+    public static interface SvvTableInfo {
+        public static final String ZIP_ENTRY_NAME = "svv_table_info.csv";
+
+        public static enum Header {
+            database,
+            schema,
+            table_id,
+            table,
+            encoded,
+            diststyle,
+            sortkey1,
+            max_varchar,
+            sortkey1_enc,
+            sortkey_num,
+            size,
+            pct_used,
+            empty,
+            unsorted,
+            stats_off,
+            tbl_rows,
+            skew_sortkey1,
+            skew_rows,
+            estimated_visible_rows,
+            risk_event,
+            vacuum_sort_benefit
+        }
+    }
+
+    /**
+     * Headers for results from pg_user table.
+     */
+    public static interface PgUser {
+        public static final String ZIP_ENTRY_NAME = "pg_user.csv";
+
+        public static enum Header {
+            usename,
+            usesysid,
+            usecreatedb,
+            usesuper,
+            usecatupd,
+            valuntil,
+            useconfig
+        }
+    }
+
+    /**
+     * Headers for results from functions.csv, whose data comes from pg_catalog.pg_proc.
+     * Added "Tbl" suffix to avoid name collision.
+     */
+    public static interface FunctionsTbl {
+        public static final String ZIP_ENTRY_NAME = "functions.csv";
+
+        public static enum Header {
+            schema,
+            name,
+            result_data_type,
+            argument_data_types
+        }
+    }
+
     @Deprecated // Does not give information about column order. TODO: Use SVV_TABLE_INFO.
     public static interface PgTableDef {
 
