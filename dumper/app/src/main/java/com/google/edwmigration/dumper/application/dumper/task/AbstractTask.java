@@ -103,8 +103,6 @@ public abstract class AbstractTask<T> implements Task<T> {
             LOG.info("Skipping " + getName() + ": " + sink + " already exists.");
             return null;
         }
-        // Ensure that we can make this output file
-        sink.prepare();
         T result = doRun(context, sink.asTemporaryByteSink(), context.getHandle());
         sink.commit();
         return result;

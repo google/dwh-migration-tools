@@ -182,6 +182,7 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector implements M
             // https://www.ibm.com/support/knowledgecenter/en/SSULQD_7.2.1/com.ibm.nz.adm.doc/t_sysadm_enable_multiple_schema.html
             String schemaPrefix = db + "..";    // We don't know what the default schema is, but it should contain the views we require.
             String filePrefix = db.toUpperCase() + "/"; // If we have databases with the same name but mismatched case, this will break.
+
             // also _v_relation_column: all attributes of a relation, Constraints and other informations
             // Undocumented?
             // TABLE_CAT,TABLE_SCHEM,TABLE_NAME,COLUMN_NAME,DATA_TYPE,TYPE_NAME,COLUMN_SIZE,BUFFER_LENGTH,DECIMAL_DIGITS,NUM_PREC_RADIX,
