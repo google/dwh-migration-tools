@@ -38,6 +38,7 @@ public class FileSystemOutputHandle implements OutputHandle {
     private final Path targetPath;
 
     public FileSystemOutputHandle(@Nonnull Path rootPath, @Nonnull String targetPath) {
+        // Due to the semantics of prepare(), both of these must be within the same subdirectory.
         this.targetPath = rootPath.resolve(targetPath);
         this.temporaryPath = rootPath.resolve(targetPath + ".tmp");
         // LOG.debug("Created " + this);
@@ -50,15 +51,27 @@ public class FileSystemOutputHandle implements OutputHandle {
     }
 
     @Override
-    public ByteSink asByteSink() {
+    public ByteSink asByteSink() throws IOException {
         // LOG.debug("As ByteSink: " + this + " = " + targetPath);
+        prepare();
         return new FileSystemByteSink(targetPath);
     }
 
     @Override
-    public ByteSink asTemporaryByteSink() {
+    public ByteSink asTemporaryByteSink() throws IOException {
         // LOG.debug("As Temporary ByteSink: " + this + " = " + temporaryPath);
+        prepare();
         return new FileSystemByteSink(temporaryPath);
+    }
+
+    /**
+     * Ensures that the target file can be written.
+     *
+     * Must be called before calling openStream() on a ByteStream acquired from this object.
+     */
+    private void prepare() throws IOException {
+        // Ensures that the directory to which we want to write exists
+        Files.createDirectories(targetPath.getParent());
     }
 
     @Override

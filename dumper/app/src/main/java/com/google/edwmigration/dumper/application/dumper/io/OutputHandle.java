@@ -33,17 +33,17 @@ public interface OutputHandle {
 
     /** Returns a ByteSink on the target file. */
     @Nonnull
-    public ByteSink asByteSink();
+    public ByteSink asByteSink() throws IOException;
 
     /** Returns a CharSink on the target file. */
     @Nonnull
-    default public CharSink asCharSink(@Nonnull Charset charset) {
+    default public CharSink asCharSink(@Nonnull Charset charset) throws IOException {
         return asByteSink().asCharSink(charset);
     }
 
     /** Returns a ByteSink on the temporary file. */
     @Nonnull
-    public ByteSink asTemporaryByteSink();
+    public ByteSink asTemporaryByteSink() throws IOException;
 
     /**
      * Renames the temporary file to the final file.
