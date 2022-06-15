@@ -30,6 +30,8 @@ public final class TestConstants {
   public static final String EXPORTED_FILES_BASE_PATH = getenv("EXPORT_PATH");
   public static final String SQL_REQUESTS_BASE_PATH = "sql/";
   public static final Pattern TRAILING_SPACES_REGEX = Pattern.compile("\\s+$");
+  public static final String EXTRACTION_START_TIME = getenv("START_TIME");
+  public static final String EXTRACTION_END_TIME = getenv("END_TIME");
 
   private TestConstants() {}
 }
