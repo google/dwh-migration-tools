@@ -1,0 +1,5 @@
+// Independent from root project
+rootProject.name = 'dumper-integration-tests'
+include(
+        ':redshift-tests',
+)
