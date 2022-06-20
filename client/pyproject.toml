@@ -36,3 +36,51 @@ profile = "black"
 
 # Sorts uppercase imports before lowercase improts.
 case_sensitive=true
+
+# ########################
+# ##### PYLINT
+# ########################
+
+# [Docs root]
+#   https://pylint.pycqa.org/en/latest/
+# [Rule/options reference]
+#   https://pylint.pycqa.org/en/latest/technical_reference/features.html
+#   This is a comprehensive reference of all Pylint checkers/rules and seems to be one of the only
+#   docs pages that's actually maintained.
+# [Changelog]
+#   https://pylint.pycqa.org/en/latest/whatsnew/index.html
+#   Often contains up-to-date info that corrects incorrect stuff in the older docs.
+# [Github issues]
+#   https://github.com/PyCQA/pylint/issues
+#   Best places to find workarounds or discussion/explanation of weird behavior.
+
+# Pylint has many options that are divvied up by category. Each [SECTION] below corresponds to a
+# section in the "Rule/options reference" doc.
+
+[tool.pylint.master]
+
+# Minimum python version.
+py-version = 3.0
+
+[tool.pylint.messages-control]
+disable=[
+    # [checker] redundant with mypy
+    'typecheck',
+    # Sometimes it's useful to leave `TODO` comments in the code.
+    'fixme',
+]
+
+[tool.pylint.format]
+
+# https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#pylint
+max-line-length = "88"
+
+[tool.pylint.basic]
+
+# Minimum line length for functions/classes that require docstrings, shorter ones are exempt.
+docstring-min-length = "10"
+
+[tool.pylint.design]
+
+# Maximum number of arguments for function / method.
+max-args = "7"
