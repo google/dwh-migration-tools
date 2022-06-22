@@ -26,7 +26,8 @@ import java.util.List;
  */
 public final class JdbcUtil {
 
-  private JdbcUtil() {}
+  private JdbcUtil() {
+  }
 
   /**
    * @param rs A row with SELECT results.
@@ -51,7 +52,6 @@ public final class JdbcUtil {
   /**
    * @param rsmd Metadata of the executed SQL query.
    * @return List of column names.
-   * @throws SQLException
    */
   public static List<String> getDbColumnNames(ResultSetMetaData rsmd) throws SQLException {
     List<String> columnNames = new ArrayList<>();
