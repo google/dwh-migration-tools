@@ -12,7 +12,7 @@
 required-version = "22.3.0"
 
 # Ensure black's output will be compatible with all listed versions.
-target-version = ['py33', 'py34', 'py35', 'py36', 'py37', 'py38', 'py39', 'py310']
+target-version = ['py37', 'py38', 'py39', 'py310']
 
 # ########################
 # ##### ISORT
@@ -60,7 +60,7 @@ case_sensitive=true
 [tool.pylint.master]
 
 # Minimum python version.
-py-version = 3.0
+py-version = 3.7
 
 [tool.pylint.messages-control]
 disable=[
@@ -84,3 +84,28 @@ docstring-min-length = "10"
 
 # Maximum number of arguments for function / method.
 max-args = "7"
+
+# ########################
+# ##### MYPY
+# ########################
+
+# [Docs root]
+#   https://mypy.readthedocs.io/en/stable/index.html
+# [Config option reference]
+#   https://mypy.readthedocs.io/en/stable/config_file.html#the-mypy-configuration-file
+
+[tool.mypy]
+
+# google.cloud.storage missing library stubs or py.typed marker
+ignore_missing_imports = true
+
+# If a type stub package is missing from the environment but available on typeshed, automatically
+# install it. Note that without `--non-interactive` this will prompt the user.
+install_types = true
+
+# Allow PEP-420-style namespace packages. Without this enabled, different parts of a namespace
+# package will trigger "Duplicate module" errors.
+namespace_packages = true
+
+# Print codes (e.g. "[arg-type]") for each error in output.
+show_error_codes = true

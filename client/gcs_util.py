@@ -21,7 +21,7 @@ from google.cloud.exceptions import NotFound
 from google.cloud.storage import Bucket
 
 
-def upload_directory(local_dir: str, bucket_name: str, gcs_path: str):
+def upload_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
     """Uploads all the files from a local directory to a gcs bucket.
 
     Args:
@@ -54,7 +54,7 @@ def upload_directory(local_dir: str, bucket_name: str, gcs_path: str):
     print('Finished uploading input files to gcs "%s/%s".' % (bucket_name, gcs_path))
 
 
-def download_directory(local_dir: str, bucket_name: str, gcs_path: str):
+def download_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
     """Download all the files from a gcs bucket to a local directory.
 
     Args:

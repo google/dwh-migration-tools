@@ -24,7 +24,7 @@ from object_mapping_parser import ObjectMappingParser
 from validation import validated_directory, validated_file, validated_nonexistent_path
 
 
-def start_translation(args):
+def start_translation(args: argparse.Namespace) -> None:
     """Starts a batch sql translation job."""
     config = ConfigParser(args.config).parse_config()
 
@@ -49,7 +49,7 @@ def start_translation(args):
     translator.start_translation()
 
 
-def main():
+def main() -> None:
     """CLI for BigQuery Batch SQL Translator"""
     parser = argparse.ArgumentParser(
         description="Config the Batch Sql translation tool."

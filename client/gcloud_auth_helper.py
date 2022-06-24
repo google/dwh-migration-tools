@@ -18,7 +18,7 @@ import os
 import subprocess
 
 
-def validate_gcloud_auth_settings(project_number: str):
+def validate_gcloud_auth_settings(project_number: str) -> None:
     """Validates the gcloud login and authentication settings for the user through
     gcloud CLI command. If validation fails, the method will try to log in and generate
     an application-default-authentication.json file.
@@ -36,7 +36,7 @@ class GcloudAuthHelper:
     """A simple helper class to check the status of GCP login and authentication through
     the gcloud CLI."""
 
-    def __init__(self, project_number):
+    def __init__(self, project_number: str) -> None:
         self.project_number = project_number
         self.project_id = None
         self.user_email = None
@@ -48,7 +48,7 @@ class GcloudAuthHelper:
     __CONFIG_LIST = "gcloud config list"
     __SET_PROJECT = "gcloud config set project"
 
-    def validate_login_status(self):
+    def validate_login_status(self) -> None:
         """Validates the gcloud login status for the user through gcloud CLI command.
         If validation fails, the method will try to log in through the gcloud auth login
         command.
@@ -66,7 +66,7 @@ class GcloudAuthHelper:
             )
             os.system(self.__AUTH_LOGIN)
 
-    def validate_auth_status(self):
+    def validate_auth_status(self) -> None:
         """Validates the user credential status.
         If validation fails, the method will try to generate an application-default
         credential file.
@@ -84,7 +84,7 @@ class GcloudAuthHelper:
             )
             os.system(self.__APPLICATION_DEFAULT_LOGIN_COMMAND)
 
-    def validate_project_config(self):
+    def validate_project_config(self) -> None:
         print("validate project config status in gcloud...")
         os.system("%s %s" % (self.__SET_PROJECT, self.project_number))
         result = subprocess.getoutput(self.__CONFIG_LIST)

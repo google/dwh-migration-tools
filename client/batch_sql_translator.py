@@ -46,12 +46,11 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         output_directory: str,
         preprocessor: Optional[MacroProcessor] = None,
         object_name_mapping_list: Optional[ObjectMappingParser] = None,
-    ):
+    ) -> None:
         self.config = config
         self._input_directory = input_directory
         self._output_directory = output_directory
         self.client = bigquery_migration_v2.MigrationServiceClient()
-        self.gcs_path = None
         self.preprocessor = preprocessor  # May be None
         self._object_name_mapping_list = object_name_mapping_list
         self.tmp_dir = join(dirname(self._input_directory), self.__TMP_DIR_NAME)
@@ -66,7 +65,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
     # This directory will be deleted (by default) after the job finishes.
     __TMP_DIR_NAME = ".tmp_processed"
 
-    def start_translation(self):
+    def start_translation(self) -> None:
         """Waits until the workflow finishes by calling the Migration Service API every
         5 seconds.
 
@@ -81,23 +80,19 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             local_output_dir = join(self.tmp_dir, "output")
             self.preprocessor.preprocess(self._input_directory, local_input_dir)
 
-        self.gcs_path = self.__generate_gcs_path()
-        gcs_input_path = join(
-            "gs://%s" % self.config.gcs_bucket, self.gcs_path, "input"
-        )
-        gcs_output_path = join(
-            "gs://%s" % self.config.gcs_bucket, self.gcs_path, "output"
-        )
+        gcs_path = self.__generate_gcs_path()
+        gcs_input_path = join("gs://%s" % self.config.gcs_bucket, gcs_path, "input")
+        gcs_output_path = join("gs://%s" % self.config.gcs_bucket, gcs_path, "output")
         print("\nUploading inputs to gcs ...")
         gcs_util.upload_directory(
-            local_input_dir, self.config.gcs_bucket, join(self.gcs_path, "input")
+            local_input_dir, self.config.gcs_bucket, join(gcs_path, "input")
         )
         print("\nStart translation job...")
         job_name = self.create_migration_workflow(gcs_input_path, gcs_output_path)
         self.__wait_until_job_finished(job_name)
         print("\nDownloading outputs...")
         gcs_util.download_directory(
-            local_output_dir, self.config.gcs_bucket, join(self.gcs_path, "output")
+            local_output_dir, self.config.gcs_bucket, join(gcs_path, "output")
         )
 
         if self.preprocessor is not None:
@@ -140,7 +135,9 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             "?projectnumber=%s" % self.config.project_number
         )
 
-    def __wait_until_job_finished(self, workflow_id: str, length_seconds: int = 600):
+    def __wait_until_job_finished(
+        self, workflow_id: str, length_seconds: int = 600
+    ) -> None:
         """Waits until the workflow finishes by calling the Migration Service API every
         5 seconds.
 
@@ -166,7 +163,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         )
         sys.exit()
 
-    def list_migration_workflows(self, num_jobs=5):
+    def list_migration_workflows(self, num_jobs: int = 5) -> None:
         """Lists the most recent bigquery migration workflows status and prints on the
         terminal.
 
@@ -184,7 +181,9 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             if i < num_jobs:
                 print(response)
 
-    def get_migration_workflow(self, job_name):
+    def get_migration_workflow(
+        self, job_name: str
+    ) -> bigquery_migration_v2.MigrationWorkflow:
         """Starts a get API call for a migration workflow and print out the status on
         terminal."""
         print("Get migration workflows for %s" % job_name)
@@ -237,7 +236,8 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
 
         response = self.client.create_migration_workflow(request=request)
         print(response)
-        return response.name
+        name: str = response.name
+        return name
 
     def get_input_dialect(self) -> bigquery_migration_v2.Dialect:
         """Returns the input dialect proto based on the translation type in the

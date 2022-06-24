@@ -9,5 +9,9 @@ format:
 lint:
 	pylint *.py
 
+.PHONY: typecheck
+typecheck:
+	mypy --strict .
+
 .PHONY: check
-check: format lint
+check: format lint typecheck
