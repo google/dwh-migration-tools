@@ -11,14 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""A simple helper class to check the status of GCP login and authentication through the
+gcloud CLI."""
 
 import os
 import subprocess
 
 
 def validate_gcloud_auth_settings(project_number: str):
-    """Validates the gcloud login and authentication settings for the user through gcloud CLI command.
-    If validation fails, the method will try to log in and generate an application-default-authentication.json file.
+    """Validates the gcloud login and authentication settings for the user through
+    gcloud CLI command. If validation fails, the method will try to log in and generate
+    an application-default-authentication.json file.
 
     Args:
         project_number: the GCP project number.
@@ -30,7 +33,8 @@ def validate_gcloud_auth_settings(project_number: str):
 
 
 class GcloudAuthHelper:
-    """A simpler helper class to check the status of GCP login and authentication through the gcloud CLI."""
+    """A simple helper class to check the status of GCP login and authentication through
+    the gcloud CLI."""
 
     def __init__(self, project_number):
         self.project_number = project_number
@@ -46,32 +50,37 @@ class GcloudAuthHelper:
 
     def validate_login_status(self):
         """Validates the gcloud login status for the user through gcloud CLI command.
-        If validation fails, the method will try to log in through the gcloud auth login command.
+        If validation fails, the method will try to log in through the gcloud auth login
+        command.
         """
         print("Validate user login status in gcloud...")
         result = subprocess.getoutput(self.__AUTH_LIST)
         if "No credentialed accounts" in result:
             print(
-                'User hasn\'t logged in to gcloud yet.  Running command to login "%s"...'
-                % self.__AUTH_LOGIN
+                "User hasn't logged in to gcloud yet.  Running command to login "
+                '"%s"...' % self.__AUTH_LOGIN
             )
             print(
-                "Please open the following link in a browser and grant permission to login..."
+                "Please open the following link in a browser and grant permission to "
+                "login..."
             )
             os.system(self.__AUTH_LOGIN)
 
     def validate_auth_status(self):
         """Validates the user credential status.
-        If validation fails, the method will try to generate an application-default credential file.
+        If validation fails, the method will try to generate an application-default
+        credential file.
         """
         print("Validate user credential status in gcloud...")
         if not os.path.exists(os.path.expanduser(self.__GCLOUD_CRED_FILE)):
             print(
-                'Can\'t find application_default_credential file. Generating credential through the command "%s"'
+                "Can't find application_default_credential file. Generating "
+                'credential through the command "%s"'
                 % self.__APPLICATION_DEFAULT_LOGIN_COMMAND
             )
             print(
-                "Please open the following link in a browser and grant permission to download credential file..."
+                "Please open the following link in a browser and grant permission to "
+                "download credential file..."
             )
             os.system(self.__APPLICATION_DEFAULT_LOGIN_COMMAND)
 

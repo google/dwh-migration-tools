@@ -17,5 +17,5 @@ pip install -r client/requirements_dev.txt
 ## Before committing
 
 ```shell
-cd client && make format
+cd client && make check
 ```

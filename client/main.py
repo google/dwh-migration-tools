@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""CLI for BigQuery Batch SQL Translator"""
 
 import argparse
 from functools import partial
@@ -50,6 +50,7 @@ def start_translation(args):
 
 
 def main():
+    """CLI for BigQuery Batch SQL Translator"""
     parser = argparse.ArgumentParser(
         description="Config the Batch Sql translation tool."
     )
@@ -75,20 +76,21 @@ def main():
         "-m",
         "--macros",
         type=validated_file,
-        help="Path to the macro map yaml file. If specified, the program will pre-process "
-        "all the input query files by replacing the macros with corresponding "
-        "string values according to the macro map definition. After translation, "
-        "the program will revert the substitutions for all the output query files in a "
-        "post-processing step.  The replacement does not apply for files with extension of "
-        ".zip, .csv, .json.",
+        help="Path to the macro map yaml file. If specified, the program will "
+        "pre-process all the input query files by replacing the macros with "
+        "corresponding string values according to the macro map definition. After "
+        "translation, the program will revert the substitutions for all the output "
+        "query files in a post-processing step.  The replacement does not apply for "
+        "files with extension of .zip, .csv, .json.",
     )
     parser.add_argument(
         "-o",
         "--object_name_mapping",
         type=validated_file,
-        help="Path to the object name mapping json file. Name mapping lets you identify the names of SQL "
-        "objects in your source files, and specify target names for those objects in BigQuery. More "
-        "info please see https://cloud.google.com/bigquery/docs/output-name-mapping.",
+        help="Path to the object name mapping json file. Name mapping lets you "
+        "identify the names of SQL objects in your source files, and specify target "
+        "names for those objects in BigQuery. More info please see "
+        "https://cloud.google.com/bigquery/docs/output-name-mapping.",
     )
 
     args = parser.parse_args()

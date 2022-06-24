@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""A class to manage Batch SQL Translation job using the bigquery_migration_v2
+    python client library."""
 
 import os
 import shutil
@@ -30,7 +32,8 @@ from macro_processor import MacroProcessor
 from object_mapping_parser import ObjectMappingParser
 
 
-class BatchSqlTranslator:
+# TODO: Refactor the attributes of this class.
+class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
     """A class to manage Batch SQL Translation job using the bigquery_migration_v2
     python client library.
 
@@ -58,12 +61,14 @@ class BatchSqlTranslator:
         bigquery_migration_v2.types.MigrationWorkflow.State.PAUSED,
     }
 
-    # The name of a hidden directory that stores temporary processed files if user defines a macro replacement map.
+    # The name of a hidden directory that stores temporary processed files if user
+    # defines a macro replacement map.
     # This directory will be deleted (by default) after the job finishes.
     __TMP_DIR_NAME = ".tmp_processed"
 
     def start_translation(self):
-        """Waits until the workflow finishes by calling the Migration Service API every 5 seconds.
+        """Waits until the workflow finishes by calling the Migration Service API every
+        5 seconds.
 
         workflow_id: the workflow id in the format of
         length_seconds: max wait time.
@@ -113,11 +118,13 @@ class BatchSqlTranslator:
             "To view the job details, please go to the link: %s" % self.__get_ui_link()
         )
         print(
-            "Thank you for using BigQuery SQL Translation Service with the Python exemplary client!"
+            "Thank you for using BigQuery SQL Translation Service with the Python "
+            "exemplary client!"
         )
 
     def __generate_gcs_path(self) -> str:
-        """Generates a gcs_path in the format of {translation_type}-{yyyy-mm-dd}-xxxx-xxxx-xxx-xxxx-xxxxxx.
+        """Generates a gcs_path in the format of
+        {translation_type}-{yyyy-mm-dd}-xxxx-xxxx-xxx-xxxx-xxxxxx.
         The suffix is a random generated uuid string.
         """
         return "%s-%s-%s" % (
@@ -129,12 +136,13 @@ class BatchSqlTranslator:
     def __get_ui_link(self) -> str:
         """Returns the http link to the offline translation page for this project."""
         return (
-            "https://console.cloud.google.com/bigquery/migrations/batch-translation?project=%s"
-            % self.config.project_number
+            "https://console.cloud.google.com/bigquery/migrations/offline-translation"
+            "?projectnumber=%s" % self.config.project_number
         )
 
     def __wait_until_job_finished(self, workflow_id: str, length_seconds: int = 600):
-        """Waits until the workflow finishes by calling the Migration Service API every 5 seconds.
+        """Waits until the workflow finishes by calling the Migration Service API every
+        5 seconds.
 
         workflow_id: the workflow id in the format of
         length_seconds: max wait time.
@@ -152,13 +160,15 @@ class BatchSqlTranslator:
             if job_status.state in self.__JOB_FINISHED_STATES:
                 return
         print(
-            "The job is still running after %d seconds. Please go to the UI page and download the outputs manually %s"
+            "The job is still running after %d seconds. Please go to the UI page and "
+            "download the outputs manually %s"
             % (processing_seconds, self.__get_ui_link())
         )
         sys.exit()
 
     def list_migration_workflows(self, num_jobs=5):
-        """Lists the most recent bigquery migration workflows status and prints on the terminal.
+        """Lists the most recent bigquery migration workflows status and prints on the
+        terminal.
 
         num_jobs: the number of workflows to print (default value is 5).
         """
@@ -175,7 +185,8 @@ class BatchSqlTranslator:
                 print(response)
 
     def get_migration_workflow(self, job_name):
-        """Starts a get API call for a migration workflow and print out the status on terminal."""
+        """Starts a get API call for a migration workflow and print out the status on
+        terminal."""
         print("Get migration workflows for %s" % job_name)
         request = bigquery_migration_v2.GetMigrationWorkflowRequest(
             name=job_name,
@@ -229,7 +240,8 @@ class BatchSqlTranslator:
         return response.name
 
     def get_input_dialect(self) -> bigquery_migration_v2.Dialect:
-        """Returns the input dialect proto based on the translation type in the config."""
+        """Returns the input dialect proto based on the translation type in the
+        config."""
         dialect = bigquery_migration_v2.Dialect()
         if self.config.translation_type == config_parser.TERADATA2BQ:
             dialect.teradata_dialect = bigquery_migration_v2.TeradataDialect(
