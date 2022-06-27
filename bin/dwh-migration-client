@@ -1,3 +1,3 @@
 #!/bin/sh -ex
 
-exec python3 $(dirname $0)/../client/main.py "$@"
+exec dwh-migration-client "$@"

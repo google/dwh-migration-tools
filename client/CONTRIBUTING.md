@@ -12,7 +12,18 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r client/requirements.txt
 pip install -r client/requirements_dev.txt
+pip install -e client[dev]
 ```
+
+# Adding and updating dependencies
+
+Add
+[abstract dependencies](https://pipenv.pypa.io/en/latest/advanced/#pipfile-vs-setup-py)
+to `setup.py` and then run:
+
+```shell
+cd client && make requirements
+````
 
 ## Before committing
 

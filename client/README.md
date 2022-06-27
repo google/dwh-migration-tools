@@ -9,11 +9,10 @@ Python >= 3.7
 
 ## Installation
 
-Clone or download this repository and
-install the Python packages listed in the [requirements.txt](requirements.txt) file through (all commands are supposed to be run from the archive or repository top level folder): 
+Clone or download this repository and install the exemplary Python client: 
 
 ```
-pip3 install -r client/requirements.txt
+pip3 install dwh-migration-tools/client
 ```
 
 Install the gcloud CLI following the [instructions](http://cloud.google.com/sdk/docs/install).
@@ -207,3 +206,10 @@ It's recommended to run this tool in the Python [virtual env](https://docs.pytho
 dependency noises. 
 
 Create a Python3 virtual env by `python3 -m venv my_env`, and activate it by `source my_env/bin/activate`.
+
+Furthermore, when installing the client, you can install the exact dependencies
+against which the client was developed by running:
+
+```shell
+pip3 install -r client/requirements.txt
+```
