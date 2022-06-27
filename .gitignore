@@ -9,4 +9,5 @@ build
 .idea
 venv
 .mypy_cache
+*.egg-info
 

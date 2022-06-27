@@ -25,11 +25,10 @@ from typing import Optional
 
 from google.cloud import bigquery_migration_v2
 
-import config_parser
-import gcs_util
-from config_parser import TranslationConfig
-from macro_processor import MacroProcessor
-from object_mapping_parser import ObjectMappingParser
+from dwh_migration_client import config_parser, gcs_util
+from dwh_migration_client.config_parser import TranslationConfig
+from dwh_migration_client.macro_processor import MacroProcessor
+from dwh_migration_client.object_mapping_parser import ObjectMappingParser
 
 
 # TODO: Refactor the attributes of this class.

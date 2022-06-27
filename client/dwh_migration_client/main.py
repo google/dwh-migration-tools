@@ -16,12 +16,16 @@
 import argparse
 from functools import partial
 
-import batch_sql_translator
-from config_parser import ConfigParser
-from gcloud_auth_helper import validate_gcloud_auth_settings
-from macro_processor import MacroProcessor
-from object_mapping_parser import ObjectMappingParser
-from validation import validated_directory, validated_file, validated_nonexistent_path
+from dwh_migration_client import batch_sql_translator
+from dwh_migration_client.config_parser import ConfigParser
+from dwh_migration_client.gcloud_auth_helper import validate_gcloud_auth_settings
+from dwh_migration_client.macro_processor import MacroProcessor
+from dwh_migration_client.object_mapping_parser import ObjectMappingParser
+from dwh_migration_client.validation import (
+    validated_directory,
+    validated_file,
+    validated_nonexistent_path,
+)
 
 
 def start_translation(args: argparse.Namespace) -> None:
