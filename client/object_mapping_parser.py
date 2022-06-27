@@ -15,6 +15,7 @@
 
 import json
 import os
+from typing import Dict
 
 from google.cloud.bigquery_migration_v2 import (
     NameMappingKey,
@@ -27,7 +28,7 @@ from google.cloud.bigquery_migration_v2 import (
 class ObjectMappingParser:  # pylint: disable=too-few-public-methods
     """A parser for the object name mapping json file."""
 
-    def __init__(self, json_file_path):
+    def __init__(self, json_file_path: str) -> None:
         self.__json_file_path = json_file_path
 
     __NAME_MAP_FIELD = "name_map"
@@ -73,7 +74,7 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
             onm_list.name_map.append(onm)
         return onm_list
 
-    def __parse_source(self, source_data) -> NameMappingKey:
+    def __parse_source(self, source_data: Dict[str, str]) -> NameMappingKey:
         name_mapping_key = NameMappingKey()
         if self.__TYPE_FIELD in source_data:
             assert source_data[self.__TYPE_FIELD] in self.__SUPPORTED_TYPES, (
@@ -96,7 +97,7 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
             name_mapping_key.attribute = source_data[self.__ATTRIBUTE_FIELD]
         return name_mapping_key
 
-    def __parse_target(self, target_data) -> NameMappingValue:
+    def __parse_target(self, target_data: Dict[str, str]) -> NameMappingValue:
         name_mapping_value = NameMappingValue()
         if self.__DB_FIELD in target_data:
             name_mapping_value.database = target_data[self.__DB_FIELD]
@@ -108,7 +109,7 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
             name_mapping_value.attribute = target_data[self.__ATTRIBUTE_FIELD]
         return name_mapping_value
 
-    def __validate_onm_file(self):
+    def __validate_onm_file(self) -> None:
         assert os.path.isfile(self.__json_file_path), (
             'Can\'t find a file at "%s".' % self.__json_file_path
         )

@@ -8,3 +8,5 @@ build
 .gradle
 .idea
 venv
+.mypy_cache
+

@@ -21,7 +21,8 @@ import re
 import shutil
 from argparse import Namespace
 from os.path import abspath, dirname, isfile, join
-from typing import Dict
+from re import Pattern
+from typing import Dict, Tuple
 
 import yaml
 from yaml.loader import SafeLoader
@@ -32,11 +33,11 @@ class MacroProcessor:
     post-processing stages of a Batch Sql Translation job.
     """
 
-    def __init__(self, macro_argument: Namespace):
+    def __init__(self, macro_argument: Namespace) -> None:
         self.macro_argument = macro_argument
         self.expander = MapBasedExpander(macro_argument.macros)
 
-    def preprocess(self, input_dir: str, tmp_dir: str):
+    def preprocess(self, input_dir: str, tmp_dir: str) -> None:
         """The pre-upload entry point of a MacroProcessor.
 
         This method expands customer-specific macros and substitutions in the
@@ -48,7 +49,7 @@ class MacroProcessor:
         """
         self.__process(abspath(input_dir), abspath(tmp_dir), revert_expansion=False)
 
-    def postprocess(self, tmp_dir: str, output_dir: str):
+    def postprocess(self, tmp_dir: str, output_dir: str) -> None:
         """The post-download entry point of a MacroProcessor
 
         This method re-inserts macros into the generated target-language SQL, if
@@ -62,7 +63,7 @@ class MacroProcessor:
         """
         self.__process(abspath(tmp_dir), abspath(output_dir), revert_expansion=True)
 
-    def is_ignored(self, path, name: str) -> bool:
+    def is_ignored(self, path: str, name: str) -> bool:
         """Returns true if a file is ignored.
 
         Ignored files are not transpiled or copied to the output directory.
@@ -73,7 +74,7 @@ class MacroProcessor:
             return True
         return False
 
-    def is_processable(self, path, name) -> bool:
+    def is_processable(self, path: str, name: str) -> bool:
         """Returns true if a file is preprocessable.
 
         Preprocessable files are subject to macro expansion and (optionally)
@@ -86,7 +87,9 @@ class MacroProcessor:
             return False
         return True
 
-    def __process(self, input_dir: str, output_dir: str, revert_expansion=False):
+    def __process(
+        self, input_dir: str, output_dir: str, revert_expansion: bool = False
+    ) -> None:
         """Replaces or restores macros for every file in the input folder and save
         outputs in a new folder.
 
@@ -118,7 +121,7 @@ class MacroProcessor:
                 else:
                     self.postprocess_file(input_path, output_path, output_dir)
 
-    def preprocess_file(self, input_path: str, tmp_path: str, input_dir: str):
+    def preprocess_file(self, input_path: str, tmp_path: str, input_dir: str) -> None:
         """Replaces macros for the input file and save the output file in a tmp path.
 
         Args:
@@ -144,7 +147,9 @@ class MacroProcessor:
         """
         return self.expander.expand(text, relative_input_path)
 
-    def postprocess_file(self, tmp_path: str, output_path: str, output_dir: str):
+    def postprocess_file(
+        self, tmp_path: str, output_path: str, output_dir: str
+    ) -> None:
         """Postprocesses the given file, after conversion to the target dialect.
 
         The user may replace this method with any locally-specified implementation.
@@ -188,7 +193,7 @@ class MapBasedExpander:
 
     __YAML_KEY = "macros"
 
-    def __init__(self, yaml_file_path):
+    def __init__(self, yaml_file_path: str) -> None:
         self.yaml_file_path = yaml_file_path
         self.macro_expansion_maps = self.__parse_macros_config_file()
         self.reversed_maps = self.__get_reversed_maps()
@@ -202,7 +207,7 @@ class MapBasedExpander:
         reg_pattern_map, patterns = self.__get_all_regex_pattern_mapping(path)
         return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
 
-    def unexpand(self, text: str, path: str):
+    def unexpand(self, text: str, path: str) -> str:
         """Reverts the macros substitution by replacing the values with macros defined
         in the macros_substitution_map file.
 
@@ -228,11 +233,15 @@ class MapBasedExpander:
                 the files with extension of ".sql".
         """
         with open(self.yaml_file_path, encoding="utf-8") as file:
-            data = yaml.load(file, Loader=SafeLoader)
+            data: Dict[str, Dict[str, Dict[str, str]]] = yaml.load(
+                file, Loader=SafeLoader
+            )
         self.__validate_macro_file(data)
         return data[self.__YAML_KEY]
 
-    def __validate_macro_file(self, yaml_data):
+    def __validate_macro_file(
+        self, yaml_data: Dict[str, Dict[str, Dict[str, str]]]
+    ) -> None:
         """Validates the macro replacement map yaml data."""
         assert self.__YAML_KEY in yaml_data, "Missing %s field in %s." % (
             self.__YAML_KEY,
@@ -243,7 +252,9 @@ class MapBasedExpander:
             self.yaml_file_path,
         )
 
-    def __get_all_regex_pattern_mapping(self, file_path: str, use_reversed_map=False):
+    def __get_all_regex_pattern_mapping(
+        self, file_path: str, use_reversed_map: bool = False
+    ) -> Tuple[Dict[str, str], Pattern[str]]:
         """Compiles all the macros matched with the file path into a single regex
         pattern."""
         macro_subst_maps = (
