@@ -131,9 +131,9 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         )
 
     def __get_ui_link(self) -> str:
-        """Returns the http link to the offline translation page for this project."""
+        """Returns the http link to the batch translation page for this project."""
         return (
-            "https://console.cloud.google.com/bigquery/migrations/offline-translation"
+            "https://console.cloud.google.com/bigquery/migrations/batch-translation"
             "?projectnumber=%s" % self.config.project_number
         )
 
