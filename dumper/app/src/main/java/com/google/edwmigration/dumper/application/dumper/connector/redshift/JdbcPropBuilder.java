@@ -16,7 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Joiner;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.CheckForNull;
@@ -46,7 +50,7 @@ import org.slf4j.LoggerFactory;
         if (val == null) {
             LOG.warn(msg);
         } else {
-            props.add(prop + punctuations.charAt(1) + val);
+            addProp(prop, val);
         }
         return this;
     }
@@ -57,7 +61,7 @@ import org.slf4j.LoggerFactory;
             LOG.error(msg);
             throw new MetadataDumperUsageException(msg);
         } else {
-            props.add(prop + punctuations.charAt(1) + val);
+            addProp(prop, val);
         }
         return this;
     }
@@ -67,9 +71,13 @@ import org.slf4j.LoggerFactory;
         if (val == null) {
             throw new InternalError("Not checked for null: " + val);
         } else {
-            props.add(prop + punctuations.charAt(1) + val);
+            addProp(prop, val);
         }
         return this;
+    }
+
+    private void addProp(String prop, String val) {
+        props.add(prop + punctuations.charAt(1) + URLEncoder.encode(val, UTF_8));
     }
 
     @Nonnull
