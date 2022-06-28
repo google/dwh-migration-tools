@@ -14,6 +14,7 @@
 """CLI for BigQuery Batch SQL Translator"""
 
 import argparse
+import logging
 from functools import partial
 
 from dwh_migration_client import batch_sql_translator
@@ -32,7 +33,7 @@ def start_translation(args: argparse.Namespace) -> None:
     """Starts a batch sql translation job."""
     config = ConfigParser(args.config).parse_config()
 
-    print("\nVerify cloud login and credential settings...")
+    logging.info("Verify cloud login and credential settings...")
     validate_gcloud_auth_settings(config.project_number)
 
     if args.macros:
@@ -57,6 +58,9 @@ def main() -> None:
     """CLI for BigQuery Batch SQL Translator"""
     parser = argparse.ArgumentParser(
         description="Config the Batch Sql translation tool."
+    )
+    parser.add_argument(
+        "--verbose", help="Increase output verbosity", action="store_true"
     )
     parser.add_argument(
         "--config",
@@ -98,6 +102,12 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        format="%(asctime)s: %(levelname)s: %(message)s",
+    )
+
     return start_translation(args)
 
 
