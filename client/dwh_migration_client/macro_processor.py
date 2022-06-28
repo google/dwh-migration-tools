@@ -244,14 +244,12 @@ class MapBasedExpander:
         self, yaml_data: Dict[str, Dict[str, Dict[str, str]]]
     ) -> None:
         """Validates the macro replacement map yaml data."""
-        assert self.__YAML_KEY in yaml_data, "Missing %s field in %s." % (
-            self.__YAML_KEY,
-            self.yaml_file_path,
-        )
-        assert yaml_data[self.__YAML_KEY], "The %s is empty in %s." % (
-            self.__YAML_KEY,
-            self.yaml_file_path,
-        )
+        assert (
+            self.__YAML_KEY in yaml_data
+        ), f"Missing {self.__YAML_KEY} field in {self.yaml_file_path}."
+        assert yaml_data[
+            self.__YAML_KEY
+        ], f"The {self.__YAML_KEY} is empty in {self.yaml_file_path}."
 
     def __get_all_regex_pattern_mapping(
         self, file_path: str, use_reversed_map: bool = False

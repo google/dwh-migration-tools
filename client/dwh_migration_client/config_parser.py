@@ -129,6 +129,6 @@ class ConfigParser:  # pylint: disable=too-few-public-methods
             self.__TRANSLATION_TYPE in yaml_data[self.__TRANSLATION_CONFIG]
         ), "Missing translation_type field in config.yaml."
         translation_type = yaml_data[self.__TRANSLATION_CONFIG][self.__TRANSLATION_TYPE]
-        assert translation_type in self.__SUPPORTED_TYPES, (
-            'The type "%s" is not supported.' % translation_type
-        )
+        assert (
+            translation_type in self.__SUPPORTED_TYPES
+        ), f'The type "{translation_type}" is not supported.'

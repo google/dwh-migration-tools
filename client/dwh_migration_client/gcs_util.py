@@ -31,7 +31,7 @@ def upload_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
         tries to create one.
       gcs_path: the path to the gcs directory that stores the files.
     """
-    assert isdir(local_dir), "Can't find input directory %s." % local_dir
+    assert isdir(local_dir), f"Can't find input directory {local_dir}."
     client = storage.Client()
 
     try:

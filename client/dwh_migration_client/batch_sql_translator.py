@@ -81,8 +81,8 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             self.preprocessor.preprocess(self._input_directory, local_input_dir)
 
         gcs_path = self.__generate_gcs_path()
-        gcs_input_path = join("gs://%s" % self.config.gcs_bucket, gcs_path, "input")
-        gcs_output_path = join("gs://%s" % self.config.gcs_bucket, gcs_path, "output")
+        gcs_input_path = join(f"gs://{self.config.gcs_bucket}", gcs_path, "input")
+        gcs_output_path = join(f"gs://{self.config.gcs_bucket}", gcs_path, "output")
         logging.info("Uploading inputs to gcs ...")
         gcs_util.upload_directory(
             local_input_dir, self.config.gcs_bucket, join(gcs_path, "input")
@@ -124,17 +124,17 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         {translation_type}-{yyyy-mm-dd}-xxxx-xxxx-xxx-xxxx-xxxxxx.
         The suffix is a random generated uuid string.
         """
-        return "%s-%s-%s" % (
-            self.config.translation_type,
-            datetime.now().strftime("%Y-%m-%d"),
-            str(uuid.uuid4()),
+        return (
+            f"{self.config.translation_type}-"
+            f"{datetime.now().strftime('%Y-%m-%d')}-"
+            f"{str(uuid.uuid4())}"
         )
 
     def __get_ui_link(self) -> str:
         """Returns the http link to the offline translation page for this project."""
         return (
             "https://console.cloud.google.com/bigquery/migrations/offline-translation"
-            "?projectnumber=%s" % self.config.project_number
+            f"?projectnumber={self.config.project_number}"
         )
 
     def __wait_until_job_finished(
@@ -177,8 +177,10 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             "List migration workflows for project %s", self.config.project_number
         )
         request = bigquery_migration_v2.ListMigrationWorkflowsRequest(
-            parent="projects/%s/locations/%s"
-            % (self.config.project_number, self.config.location),
+            parent=(
+                f"projects/{self.config.project_number}/"
+                f"locations/{self.config.location}"
+            )
         )
 
         page_result = self.client.list_migration_workflows(request=request)
@@ -229,14 +231,18 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         )
 
         workflow = bigquery_migration_v2.MigrationWorkflow(
-            display_name="%s-cli-%s"
-            % (self.config.translation_type, datetime.now().strftime("%m-%d-%H:%M"))
+            display_name=(
+                f"{self.config.translation_type}-cli-"
+                f"{datetime.now().strftime('%m-%d-%H:%M')}"
+            )
         )
 
         workflow.tasks["translation-task"] = migration_task
         request = bigquery_migration_v2.CreateMigrationWorkflowRequest(
-            parent="projects/%s/locations/%s"
-            % (self.config.project_number, self.config.location),
+            parent=(
+                f"projects/{self.config.project_number}/"
+                f"locations/{self.config.location}"
+            ),
             migration_workflow=workflow,
         )
 
