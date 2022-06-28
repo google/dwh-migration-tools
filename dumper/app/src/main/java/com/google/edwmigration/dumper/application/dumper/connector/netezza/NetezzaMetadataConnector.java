@@ -172,6 +172,7 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector implements M
         // Not documented.
         out.add(new JdbcSelectTask("nz.v_objects.csv", "SELECT * FROM system.._v_objects"));
 
+        // TODO; these might be placed in a ParallelTaskGroup?`
         // these neeed to be filtered on WHERE = dbname, or else which DB md table will contain SYSTEM data too
         for (String db : dbs) {
             // The benefit of having this reduces the amount of data in the zip file

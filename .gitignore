@@ -6,3 +6,8 @@ build
 *#
 *.pyc
 .gradle
+.idea
+venv
+.mypy_cache
+*.egg-info
+
