@@ -13,8 +13,10 @@
 # limitations under the License.
 """A parser for the config file."""
 
-from dataclasses import dataclass
+import logging
+from dataclasses import asdict, dataclass
 from os.path import abspath
+from pprint import pformat
 from typing import Dict, Optional, Tuple
 
 import yaml
@@ -80,7 +82,9 @@ class ConfigParser:  # pylint: disable=too-few-public-methods
         Return:
             translation config.
         """
-        print("Reading translation config file from %s..." % self._config_file_path)
+        logging.info(
+            "Reading translation config file from %s...", self._config_file_path
+        )
         with open(self._config_file_path, encoding="utf-8") as file:
             data = yaml.load(file, Loader=SafeLoader)
         self.__validate_config_yaml(data)
@@ -112,9 +116,8 @@ class ConfigParser:  # pylint: disable=too-few-public-methods
             schema_search_path=schema_search_path,
         )
 
-        print("Finished parsing translation config.")
-        print("The config is:")
-        print("\n".join("     %s: %s" % item for item in vars(config).items()))
+        logging.info("Finished parsing translation config.")
+        logging.info("The config is:\n%s", pformat(asdict(config)))
         return config
 
     def __validate_config_yaml(self, yaml_data: Dict[str, Dict[str, str]]) -> None:

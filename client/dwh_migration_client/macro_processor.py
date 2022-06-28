@@ -16,6 +16,7 @@ post-processing stages of a Batch Sql Translation job.
 """
 
 import fnmatch
+import logging
 import os
 import re
 import shutil
@@ -130,7 +131,7 @@ class MacroProcessor:
             input_dir: absolute path to the input directory. The input file can be in a
                 subdirectory in the input_dir.
         """
-        print("Preprocessing %s" % input_path)
+        logging.info("Preprocessing %s", input_path)
         with open(input_path, encoding="utf-8") as input_fh:
             text = input_fh.read()
         text = self.preprocess_text(text, input_path[len(input_dir) + 1 :])
@@ -164,7 +165,7 @@ class MacroProcessor:
             output_dir: absolute path to the output directory. The output file can be in
                 a subdirectory in the output_dir.
         """
-        print("Postprocessing into %s" % output_path)
+        logging.info("Postprocessing into %s", output_path)
         with open(tmp_path, encoding="utf-8") as tmp_fh:
             text = tmp_fh.read()
         text = self.postprocess_text(text, output_path[len(output_dir) + 1 :])

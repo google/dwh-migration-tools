@@ -14,6 +14,7 @@
 """A class to manage Batch SQL Translation job using the bigquery_migration_v2
     python client library."""
 
+import logging
 import os
 import shutil
 import sys
@@ -74,7 +75,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         local_input_dir = self._input_directory
         local_output_dir = self._output_directory
         if self.preprocessor is not None:
-            print("\nStart pre-processing input query files...")
+            logging.info("Start pre-processing input query files...")
             local_input_dir = join(self.tmp_dir, "input")
             local_output_dir = join(self.tmp_dir, "output")
             self.preprocessor.preprocess(self._input_directory, local_input_dir)
@@ -82,36 +83,38 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         gcs_path = self.__generate_gcs_path()
         gcs_input_path = join("gs://%s" % self.config.gcs_bucket, gcs_path, "input")
         gcs_output_path = join("gs://%s" % self.config.gcs_bucket, gcs_path, "output")
-        print("\nUploading inputs to gcs ...")
+        logging.info("Uploading inputs to gcs ...")
         gcs_util.upload_directory(
             local_input_dir, self.config.gcs_bucket, join(gcs_path, "input")
         )
-        print("\nStart translation job...")
+        logging.info("Start translation job...")
         job_name = self.create_migration_workflow(gcs_input_path, gcs_output_path)
         self.__wait_until_job_finished(job_name)
-        print("\nDownloading outputs...")
+        logging.info("Downloading outputs...")
         gcs_util.download_directory(
             local_output_dir, self.config.gcs_bucket, join(gcs_path, "output")
         )
 
         if self.preprocessor is not None:
-            print("\nStart post-processing by reverting the macros substitution...")
+            logging.info(
+                "Start post-processing by reverting the macros substitution..."
+            )
             self.preprocessor.postprocess(local_output_dir, self._output_directory)
 
-        print(
-            "Finished postprocessing. The outputs are in %s\n" % self._output_directory
+        logging.info(
+            "Finished postprocessing. The outputs are in %s", self._output_directory
         )
 
         if self.config.clean_up_tmp_files and os.path.exists(self.tmp_dir):
-            print('Cleaning up tmp files under "%s"...' % self.tmp_dir)
+            logging.info('Cleaning up tmp files under "%s"...', self.tmp_dir)
             shutil.rmtree(self.tmp_dir)
-            print("Finished cleanup.")
+            logging.info("Finished cleanup.")
 
-        print("\nThe job finished successfully!")
-        print(
-            "To view the job details, please go to the link: %s" % self.__get_ui_link()
+        logging.info("The job finished successfully!")
+        logging.info(
+            "To view the job details, please go to the link: %s", self.__get_ui_link()
         )
-        print(
+        logging.info(
             "Thank you for using BigQuery SQL Translation Service with the Python "
             "exemplary client!"
         )
@@ -149,16 +152,18 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             time.sleep(5)
             processing_seconds = int(time.time() - start_time)
             job_status = self.get_migration_workflow(workflow_id)
-            print(
-                "Translation job status is %s. Processing time: %s seconds"
-                % (job_status.state, processing_seconds)
+            logging.info(
+                "Translation job status is %s. Processing time: %s seconds",
+                job_status.state,
+                processing_seconds,
             )
             if job_status.state in self.__JOB_FINISHED_STATES:
                 return
-        print(
+        logging.info(
             "The job is still running after %d seconds. Please go to the UI page and "
-            "download the outputs manually %s"
-            % (processing_seconds, self.__get_ui_link())
+            "download the outputs manually %s",
+            processing_seconds,
+            self.__get_ui_link(),
         )
         sys.exit()
 
@@ -168,7 +173,9 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
 
         num_jobs: the number of workflows to print (default value is 5).
         """
-        print("List migration workflows for project %s" % self.config.project_number)
+        logging.info(
+            "List migration workflows for project %s", self.config.project_number
+        )
         request = bigquery_migration_v2.ListMigrationWorkflowsRequest(
             parent="projects/%s/locations/%s"
             % (self.config.project_number, self.config.location),
@@ -178,14 +185,14 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
 
         for i, response in enumerate(page_result):
             if i < num_jobs:
-                print(response)
+                logging.info(response)
 
     def get_migration_workflow(
         self, job_name: str
     ) -> bigquery_migration_v2.MigrationWorkflow:
         """Starts a get API call for a migration workflow and print out the status on
         terminal."""
-        print("Get migration workflows for %s" % job_name)
+        logging.info("Get migration workflows for %s", job_name)
         request = bigquery_migration_v2.GetMigrationWorkflowRequest(
             name=job_name,
         )
@@ -234,7 +241,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         )
 
         response = self.client.create_migration_workflow(request=request)
-        print(response)
+        logging.info(response)
         name: str = response.name
         return name
 

@@ -14,6 +14,7 @@
 """A parser for the object name mapping json file."""
 
 import json
+import logging
 import os
 from typing import Dict
 
@@ -52,7 +53,9 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
 
     def get_name_mapping_list(self) -> ObjectNameMappingList:
         """Parses the object name mapping json file into ObjectNameMappingList."""
-        print('Start parsing object name mapping from "%s"...' % self.__json_file_path)
+        logging.info(
+            'Start parsing object name mapping from "%s"...', self.__json_file_path
+        )
         self.__validate_onm_file()
         onm_list = ObjectNameMappingList()
         with open(self.__json_file_path, encoding="utf-8") as file:
