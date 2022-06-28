@@ -116,6 +116,7 @@ public class ConnectorArguments extends DefaultArguments {
     public static final String OPT_HIVE_METASTORE_VERSION_DEFAULT = "2.3.6";
     public static final String OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA = "hive-metastore-dump-partition-metadata";
     public static final String OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT = "true";
+    public static final String OPT_HIVE_THRIFT_MESSAGE_SIZE = "thrift-max-message-size";
 
     public static final String OPT_REQUIRED_IF_NOT_URL = "if --url is not specified";
     public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
@@ -178,6 +179,7 @@ public class ConnectorArguments extends DefaultArguments {
     // Hive metastore
     public final OptionSpec<String> optionHiveMetastoreVersion = parser.accepts(OPT_HIVE_METASTORE_VERSION).withOptionalArg().describedAs("major.minor.patch").defaultsTo(OPT_HIVE_METASTORE_VERSION_DEFAULT);
     public final OptionSpec<Boolean> optionHivePartitionMetadataCollection = parser.accepts(OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA).withOptionalArg().withValuesConvertedBy(BooleanValueConverter.INSTANCE).defaultsTo(Boolean.parseBoolean(OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT));
+    public final OptionSpec<Integer> optionThriftMessageSize = parser.accepts(OPT_HIVE_THRIFT_MESSAGE_SIZE).withRequiredArg().ofType(Integer.class).describedAs("16384000");
 
     // Threading / Pooling
     private final OptionSpec<Integer> optionThreadPoolSize = parser.accepts(OPT_THREAD_POOL_SIZE, "Set thread pool size (affects connection pool size). Defaults to " + OPT_THREAD_POOL_SIZE_DEFAULT).withRequiredArg().ofType(Integer.class).defaultsTo(OPT_THREAD_POOL_SIZE_DEFAULT);
@@ -581,6 +583,11 @@ public class ConnectorArguments extends DefaultArguments {
 
     public boolean isHiveMetastorePartitionMetadataDumpingEnabled() {
         return BooleanUtils.isTrue(getOptions().valueOf(optionHivePartitionMetadataCollection));
+    }
+
+    @CheckForNull
+    public Integer getMessageSize() {
+        return getOptions().valueOf(optionThriftMessageSize);
     }
 
     public boolean saveResponseFile() {

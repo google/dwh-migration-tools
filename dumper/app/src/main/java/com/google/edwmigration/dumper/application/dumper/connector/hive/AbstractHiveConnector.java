@@ -192,6 +192,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
         String requestedClientVersion = arguments.getHiveMetastoreVersion();
         HiveMetastoreThriftClient.Builder thriftClientBuilder = new HiveMetastoreThriftClient.Builder(requestedClientVersion)
                 .withHost(arguments.getHost())
+                .withMessageSize(arguments.getMessageSize())
                 .withPort(arguments.getPort(Integer.parseInt(ConnectorArguments.OPT_HIVE_METASTORE_PORT_DEFAULT)))
                 .withUnavailableClientVersionBehavior(HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK);
         return new ThriftClientHandle(thriftClientBuilder, arguments.getThreadPoolSize());

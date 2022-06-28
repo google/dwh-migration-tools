@@ -17,20 +17,24 @@
 package com.google.edwmigration.dumper.ext.hive.metastore;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
+import org.apache.thrift.TConfiguration;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
+import org.checkerframework.checker.index.qual.Positive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +74,8 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
         private String host = "localhost";
         @Nonnegative
         private int port;
+        @CheckForNull
+        private Integer messageSize;
         @Nonnull
         private UnavailableClientVersionBehavior unavailableClientBehavior = UnavailableClientVersionBehavior.FALLBACK;
         private boolean debug = false;
@@ -101,6 +107,12 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
         }
 
         @Nonnull
+        public Builder withMessageSize(@CheckForNull Integer messageSize) {
+            this.messageSize = messageSize;
+            return this;
+        }
+
+        @Nonnull
         public Builder withPort(@Nonnegative int port) {
             this.port = port;
             return this;
@@ -125,7 +137,11 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
             // wrapper around Thrift. Now that we are connecting via Thrift directly, we would need to wrap
             // the TTransport here with a TSaslClientTransport parameterized accordingly. This hasn't been done yet
             // in the interest of expediency.
-            TTransport transport = new TSocket(host, port);
+            TConfiguration configuration = new TConfiguration();
+            if (messageSize != null) {
+                configuration.setMaxMessageSize(messageSize);
+            }
+            TTransport transport = new TSocket(configuration, host, port);
             TProtocol protocol = new TBinaryProtocol(transport);
             transport.open();
 
