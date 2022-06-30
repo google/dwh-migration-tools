@@ -62,14 +62,14 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
             data = json.load(file)
         for name_map in data[self.__NAME_MAP_FIELD]:
             assert self.__SOURCE_FIELD in name_map, (
-                'Invalid object name mapping: can\'t find a "%s" field in "%s". '
-                'Instead we got "%s".'
-                % (self.__SOURCE_FIELD, self.__json_file_path, name_map)
+                f'Invalid object name mapping: can\'t find a "{self.__SOURCE_FIELD}" '
+                f'field in "{self.__json_file_path}". '
+                f'Instead we got "{name_map}".'
             )
             assert self.__TARGET_FIELD in name_map, (
-                'Invalid object name mapping: can\'t find a "%s" field in "%s". '
-                'Instead we got "%s".'
-                % (self.__TARGET_FIELD, self.__json_file_path, name_map)
+                f'Invalid object name mapping: can\'t find a "{self.__TARGET_FIELD}" '
+                f'field in "{self.__json_file_path}". '
+                f'Instead we got "{name_map}".'
             )
             onm = ObjectNameMapping()
             onm.source = self.__parse_source(name_map[self.__SOURCE_FIELD])
@@ -81,13 +81,9 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
         name_mapping_key = NameMappingKey()
         if self.__TYPE_FIELD in source_data:
             assert source_data[self.__TYPE_FIELD] in self.__SUPPORTED_TYPES, (
-                'The source type of name mapping "%s" in file "%s" is not one of'
-                'the supported types: "%s"'
-                % (
-                    source_data[self.__TYPE_FIELD],
-                    self.__json_file_path,
-                    self.__SUPPORTED_TYPES,
-                )
+                f'The source type of name mapping "{source_data[self.__TYPE_FIELD]}" '
+                f'in file "{self.__json_file_path}" is not one of'
+                f'the supported types: "{self.__SUPPORTED_TYPES}"'
             )
             name_mapping_key.type_ = source_data[self.__TYPE_FIELD]
         if self.__DB_FIELD in source_data:
@@ -113,6 +109,6 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
         return name_mapping_value
 
     def __validate_onm_file(self) -> None:
-        assert os.path.isfile(self.__json_file_path), (
-            'Can\'t find a file at "%s".' % self.__json_file_path
-        )
+        assert os.path.isfile(
+            self.__json_file_path
+        ), f'Can\'t find a file at "{self.__json_file_path}".'

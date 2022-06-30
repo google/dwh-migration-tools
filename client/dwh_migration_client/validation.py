@@ -31,7 +31,7 @@ def validated_file(unvalidated_path: str) -> str:
     if path.is_file():
         return path.as_posix()
     raise argparse.ArgumentTypeError(
-        "%s is not a regular file that exists." % path.as_posix()
+        f"{path.as_posix()} is not a regular file that exists."
     )
 
 
@@ -48,7 +48,7 @@ def validated_directory(unvalidated_path: str) -> str:
     if path.is_dir():
         return path.as_posix()
     raise argparse.ArgumentTypeError(
-        "%s is not a directory that exists." % path.as_posix()
+        f"{path.as_posix()} is not a directory that exists."
     )
 
 
@@ -74,4 +74,4 @@ def validated_nonexistent_path(unvalidated_path: str, force: bool = False) -> st
             path.unlink()
         return path.as_posix()
 
-    raise argparse.ArgumentTypeError("%s already exists." % path.as_posix())
+    raise argparse.ArgumentTypeError(f"{path.as_posix()} already exists.")
