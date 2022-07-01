@@ -75,14 +75,18 @@ application {
 licenseReport {
     // onlyIf { ! gradle.startParameter.offline }
     filters = [
-        // new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
+        new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
     ]
     renderers = [
         // new com.github.jk1.license.render.XmlReportRenderer("licenses.xml", "Licenses of Third Party Dependencies"),
         new com.github.jk1.license.render.CsvReportRenderer(),
         new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
     ]
-    allowedLicensesFile = new File("$rootProject.projectDir/gradle/license-allowed.json")
+    allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
+}
+
+tasks.named('check') {
+	dependsOn 'checkLicense'
 }
 
 tasks.register('generateSourceMirror', Copy) {
