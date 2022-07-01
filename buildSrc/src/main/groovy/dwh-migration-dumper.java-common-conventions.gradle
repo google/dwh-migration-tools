@@ -114,6 +114,11 @@ dependencies {
     testRuntimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
 }
 
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 tasks.named('test') {
     // Use junit platform for unit tests.
     // useJUnitPlatform()
