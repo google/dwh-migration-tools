@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.ext.hive.metastore;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -123,29 +124,40 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
             @Nonnull
             @Override
             public List<? extends Field> getFields() throws Exception {
+                if (table.getSd() != null) {
+                    List<com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.FieldSchema> cols = table.getSd().getCols();
+                    if (cols != null) {
+                        return cols.stream().map(this::toField).collect(Collectors.toList());
+                    }
+                }
                 List<Field> out = new ArrayList<>();
                 for (com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.FieldSchema field : client.get_fields(databaseName, tableName)) {
-                    out.add(new Field() {
-                        @CheckForNull
-                        @Override
-                        public String getFieldName() {
-                            return (field.isSetName() ? field.getName() : null);
-                        }
-
-                        @CheckForNull
-                        @Override
-                        public String getType() {
-                            return (field.isSetType() ? field.getType() : null);
-                        }
-
-                        @CheckForNull
-                        @Override
-                        public String getComment() {
-                            return (field.isSetComment() ? field.getComment() : null);
-                        }
-                    });
+                    out.add(toField(field));
                 }
                 return out;
+            }
+
+            @Nonnull
+            private Field toField(com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.FieldSchema field) {
+                return new Field() {
+                    @CheckForNull
+                    @Override
+                    public String getFieldName() {
+                        return (field.isSetName() ? field.getName() : null);
+                    }
+
+                    @CheckForNull
+                    @Override
+                    public String getType() {
+                        return (field.isSetType() ? field.getType() : null);
+                    }
+
+                    @CheckForNull
+                    @Override
+                    public String getComment() {
+                        return (field.isSetComment() ? field.getComment() : null);
+                    }
+                };
             }
 
             @Nonnull
