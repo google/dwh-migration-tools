@@ -18,7 +18,7 @@
 plugins {
     id 'java'
     id 'java-test-fixtures'
-	id 'com.diffplug.spotless'
+    id 'com.diffplug.spotless'
 }
 
 repositories {
@@ -26,13 +26,13 @@ repositories {
 }
 
 configurations {
-	all {
-		exclude group: 'javax.activation'   // In JDK since mumble.
-		exclude group: 'findbugs', module: 'annotations'
-		exclude group: 'net.jcip', module: 'jcip-annotations'   // In google-findbugs-annotations.
-		exclude group: 'org.springframework', module: 'spring-jcl'  // In jcl-over-slf4j
-		exclude group: 'commons-logging'	// Replaced by jcl-over-slf4j
-	}
+    all {
+        exclude group: 'javax.activation'   // In JDK since mumble.
+        exclude group: 'findbugs', module: 'annotations'
+        exclude group: 'net.jcip', module: 'jcip-annotations'   // In google-findbugs-annotations.
+        exclude group: 'org.springframework', module: 'spring-jcl'  // In jcl-over-slf4j
+        exclude group: 'commons-logging'	// Replaced by jcl-over-slf4j
+    }
 }
 
 dependencies {
@@ -49,7 +49,7 @@ dependencies {
 
     constraints {
         // Define dependency versions as constraints
-		def guavaVersion =  '31.0.1-jre'
+        def guavaVersion =  '31.0.1-jre'
         implementation "com.google.guava:guava:$guavaVersion"
         testFixturesImplementation "com.google.guava:guava:$guavaVersion"
         def jacksonVersion = '2.9.0'
@@ -72,12 +72,12 @@ dependencies {
         runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
         runtimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
 
-		testFixturesApi "org.apache.commons:commons-compress:1.18"
+        testFixturesApi "org.apache.commons:commons-compress:1.18"
         testFixturesApi "commons-io:commons-io:2.6"
-		testImplementation "org.xerial:sqlite-jdbc:3.32.3"
-		testImplementation "com.github.stefanbirkner:system-rules:1.18.0"
-		testImplementation "org.postgresql:postgresql:9.4.1208.jre7"
-		testImplementation "joda-time:joda-time:2.3"
+        testImplementation "org.xerial:sqlite-jdbc:3.32.3"
+        testImplementation "com.github.stefanbirkner:system-rules:1.18.0"
+        testImplementation "org.postgresql:postgresql:9.4.1208.jre7"
+        testImplementation "joda-time:joda-time:2.3"
     }
 
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
