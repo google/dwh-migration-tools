@@ -55,6 +55,10 @@ dependencies {
     runtimeOnly "ch.qos.logback:logback-classic"
     runtimeOnly "org.slf4j:jcl-over-slf4j"
 
+    runtimeOnly "org.postgresql:postgresql"
+    runtimeOnly "net.snowflake:snowflake-jdbc"
+    runtimeOnly "com.amazon.redshift:redshift-jdbc42"
+
     testFixturesApi testFixtures(project(':dumper:lib-common'))
 
     testImplementation "org.xerial:sqlite-jdbc"
@@ -69,7 +73,7 @@ dependencies {
 application {
     // Define the main class for the application.
     mainClass = 'com.google.edwmigration.dumper.application.dumper.MetadataDumper'
-	applicationName = 'dwh-migration-dumper'
+    applicationName = 'dwh-migration-dumper'
 }
 
 licenseReport {

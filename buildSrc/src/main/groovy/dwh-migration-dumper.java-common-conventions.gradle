@@ -72,6 +72,10 @@ dependencies {
         runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
         runtimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
 
+        runtimeOnly "org.postgresql:postgresql:9.4.1208.jre7"
+        runtimeOnly "net.snowflake:snowflake-jdbc:3.13.20"
+        runtimeOnly "com.amazon.redshift:redshift-jdbc42:2.1.0.8"
+
         testFixturesApi "org.apache.commons:commons-compress:1.18"
         testFixturesApi "commons-io:commons-io:2.6"
         testImplementation "org.xerial:sqlite-jdbc:3.32.3"
