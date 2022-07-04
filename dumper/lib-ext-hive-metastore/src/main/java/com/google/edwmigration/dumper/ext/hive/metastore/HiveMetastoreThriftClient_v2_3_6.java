@@ -124,6 +124,8 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
             @Nonnull
             @Override
             public List<? extends Field> getFields() throws Exception {
+                // If we already have a non-null Storage Descriptor let's get the columns from it, we do one less remote call and we also avoid
+                // an exception "Storage schema reading not supported" due to OpenCSVSerde based tables. If this is null we fall-back to calling get_fields.
                 if (table.getSd() != null) {
                     List<com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.FieldSchema> cols = table.getSd().getCols();
                     if (cols != null) {
