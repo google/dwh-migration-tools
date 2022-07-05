@@ -105,25 +105,26 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
         @Override
         protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle) throws Exception {
             try (ThriftClientPool clientPool = thriftClientHandle.newMultiThreadedThriftClientPool("tables-task-pooled-client")) {
-                List<? extends String> allDatabases = clientPool.getThreadLocalThriftClient().get().getAllDatabaseNames();
-                for (String databaseName : allDatabases) {
-                    if (isIncludedSchema(databaseName)) {
-                        List<? extends String> allTables = clientPool.getThreadLocalThriftClient().get().getAllTableNamesInDatabase(databaseName);
-                        try (ConcurrentProgressMonitor monitor = new ConcurrentRecordProgressMonitor("Writing tables in schema '" + databaseName + "' to " + getTargetPath(), allTables.size())) {
-                            for (String tableName : allTables) {
-                                dumpTable(monitor, writer, clientPool, databaseName, tableName);
+                clientPool.execute(thriftClient -> {
+                    List<? extends String> allDatabases = thriftClient.getAllDatabaseNames();
+                    for (String databaseName : allDatabases) {
+                        if (isIncludedSchema(databaseName)) {
+                            List<? extends String> allTables = thriftClient.getAllTableNamesInDatabase(databaseName);
+                            try (ConcurrentProgressMonitor monitor = new ConcurrentRecordProgressMonitor("Writing tables in schema '" + databaseName + "' to " + getTargetPath(), allTables.size())) {
+                                for (String tableName : allTables) {
+                                    dumpTable(monitor, writer, clientPool, databaseName, tableName);
+                                }
                             }
                         }
                     }
-                }
+                });
             }
         }
 
         private void dumpTable(@Nonnull ConcurrentProgressMonitor monitor, @Nonnull Writer writer, @Nonnull ThriftClientPool clientPool, @Nonnull String databaseName, @Nonnull String tableName) {
-            clientPool.getExecutorService().execute(() -> {
+            clientPool.execute((thriftClient) -> {
                 try {
                     monitor.count();
-                    HiveMetastoreThriftClient thriftClient = clientPool.getThreadLocalThriftClient().get();
                     Table table = thriftClient.getTable(databaseName, tableName);
                     TableMetadata outTable = new TableMetadata();
                     outTable.schemaName = table.getDatabaseName();
