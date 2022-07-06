@@ -53,9 +53,9 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         self.client = bigquery_migration_v2.MigrationServiceClient()
         self.preprocessor = preprocessor  # May be None
         self._object_name_mapping_list = object_name_mapping_list
-        self.tmp_dir = join(dirname(self._input_directory), self.__TMP_DIR_NAME)
+        self.tmp_dir = join(dirname(self._input_directory), self._TMP_DIR_NAME)
 
-    __JOB_FINISHED_STATES = {
+    _JOB_FINISHED_STATES = {
         bigquery_migration_v2.types.MigrationWorkflow.State.COMPLETED,
         bigquery_migration_v2.types.MigrationWorkflow.State.PAUSED,
     }
@@ -63,7 +63,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
     # The name of a hidden directory that stores temporary processed files if user
     # defines a macro replacement map.
     # This directory will be deleted (by default) after the job finishes.
-    __TMP_DIR_NAME = ".tmp_processed"
+    _TMP_DIR_NAME = ".tmp_processed"
 
     def start_translation(self) -> None:
         """Waits until the workflow finishes by calling the Migration Service API every
@@ -80,7 +80,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             local_output_dir = join(self.tmp_dir, "output")
             self.preprocessor.preprocess(self._input_directory, local_input_dir)
 
-        gcs_path = self.__generate_gcs_path()
+        gcs_path = self._generate_gcs_path()
         gcs_input_path = join(f"gs://{self.config.gcs_bucket}", gcs_path, "input")
         gcs_output_path = join(f"gs://{self.config.gcs_bucket}", gcs_path, "output")
         logging.info("Uploading inputs to gcs ...")
@@ -89,7 +89,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         )
         logging.info("Start translation job...")
         job_name = self.create_migration_workflow(gcs_input_path, gcs_output_path)
-        self.__wait_until_job_finished(job_name)
+        self._wait_until_job_finished(job_name)
         logging.info("Downloading outputs...")
         gcs_util.download_directory(
             local_output_dir, self.config.gcs_bucket, join(gcs_path, "output")
@@ -112,14 +112,14 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
 
         logging.info("The job finished successfully!")
         logging.info(
-            "To view the job details, please go to the link: %s", self.__get_ui_link()
+            "To view the job details, please go to the link: %s", self._get_ui_link()
         )
         logging.info(
             "Thank you for using BigQuery SQL Translation Service with the Python "
             "exemplary client!"
         )
 
-    def __generate_gcs_path(self) -> str:
+    def _generate_gcs_path(self) -> str:
         """Generates a gcs_path in the format of
         {translation_type}-{yyyy-mm-dd}-xxxx-xxxx-xxx-xxxx-xxxxxx.
         The suffix is a random generated uuid string.
@@ -130,14 +130,14 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             f"{str(uuid.uuid4())}"
         )
 
-    def __get_ui_link(self) -> str:
+    def _get_ui_link(self) -> str:
         """Returns the http link to the batch translation page for this project."""
         return (
             "https://console.cloud.google.com/bigquery/migrations/batch-translation"
-            "?projectnumber=%s" % self.config.project_number
+            f"?projectnumber={self.config.project_number}"
         )
 
-    def __wait_until_job_finished(
+    def _wait_until_job_finished(
         self, workflow_id: str, length_seconds: int = 600
     ) -> None:
         """Waits until the workflow finishes by calling the Migration Service API every
@@ -157,13 +157,13 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
                 job_status.state,
                 processing_seconds,
             )
-            if job_status.state in self.__JOB_FINISHED_STATES:
+            if job_status.state in self._JOB_FINISHED_STATES:
                 return
         logging.info(
             "The job is still running after %d seconds. Please go to the UI page and "
             "download the outputs manually %s",
             processing_seconds,
-            self.__get_ui_link(),
+            self._get_ui_link(),
         )
         sys.exit()
 

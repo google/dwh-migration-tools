@@ -42,12 +42,12 @@ class GcloudAuthHelper:
         self.project_id = None
         self.user_email = None
 
-    __GCLOUD_CRED_FILE = "~/.config/gcloud/application_default_credentials.json"
-    __APPLICATION_DEFAULT_LOGIN_COMMAND = "gcloud auth application-default login"
-    __AUTH_LIST = "gcloud auth list"
-    __AUTH_LOGIN = "gcloud auth login"
-    __CONFIG_LIST = "gcloud config list"
-    __SET_PROJECT = "gcloud config set project"
+    _GCLOUD_CRED_FILE = "~/.config/gcloud/application_default_credentials.json"
+    _APPLICATION_DEFAULT_LOGIN_COMMAND = "gcloud auth application-default login"
+    _AUTH_LIST = "gcloud auth list"
+    _AUTH_LOGIN = "gcloud auth login"
+    _CONFIG_LIST = "gcloud config list"
+    _SET_PROJECT = "gcloud config set project"
 
     def validate_login_status(self) -> None:
         """Validates the gcloud login status for the user through gcloud CLI command.
@@ -55,18 +55,18 @@ class GcloudAuthHelper:
         command.
         """
         logging.info("Validate user login status in gcloud...")
-        result = subprocess.getoutput(self.__AUTH_LIST)
+        result = subprocess.getoutput(self._AUTH_LIST)
         if "No credentialed accounts" in result:
             logging.info(
                 "User hasn't logged in to gcloud yet.  Running command to login "
                 '"%s"...',
-                self.__AUTH_LOGIN,
+                self._AUTH_LOGIN,
             )
             logging.info(
                 "Please open the following link in a browser and grant permission to "
                 "login..."
             )
-            os.system(self.__AUTH_LOGIN)
+            os.system(self._AUTH_LOGIN)
 
     def validate_auth_status(self) -> None:
         """Validates the user credential status.
@@ -74,26 +74,26 @@ class GcloudAuthHelper:
         credential file.
         """
         logging.info("Validate user credential status in gcloud...")
-        if not os.path.exists(os.path.expanduser(self.__GCLOUD_CRED_FILE)):
+        if not os.path.exists(os.path.expanduser(self._GCLOUD_CRED_FILE)):
             logging.info(
                 "Can't find application_default_credential file. Generating "
                 'credential through the command "%s"',
-                self.__APPLICATION_DEFAULT_LOGIN_COMMAND,
+                self._APPLICATION_DEFAULT_LOGIN_COMMAND,
             )
             logging.info(
                 "Please open the following link in a browser and grant permission to "
                 "download credential file..."
             )
-            os.system(self.__APPLICATION_DEFAULT_LOGIN_COMMAND)
+            os.system(self._APPLICATION_DEFAULT_LOGIN_COMMAND)
 
     def validate_project_config(self) -> None:
         logging.info("Validate project config status in gcloud...")
-        os.system(f"{self.__SET_PROJECT} {self.project_number}")
-        result = subprocess.getoutput(self.__CONFIG_LIST)
+        os.system(f"{self._SET_PROJECT} {self.project_number}")
+        result = subprocess.getoutput(self._CONFIG_LIST)
         logging.info("Your cloud config used for this translation job is:\n%s", result)
         assert "account =" in result, (
             "Can't find account info in gcloud config. "
-            f'Please log in through "{self.__AUTH_LOGIN}"'
+            f'Please log in through "{self._AUTH_LOGIN}"'
         )
         assert (
             f"project = {self.project_number in result}"

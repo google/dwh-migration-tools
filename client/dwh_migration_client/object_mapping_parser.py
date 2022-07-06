@@ -30,18 +30,18 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
     """A parser for the object name mapping json file."""
 
     def __init__(self, json_file_path: str) -> None:
-        self.__json_file_path = json_file_path
+        self._json_file_path = json_file_path
 
-    __NAME_MAP_FIELD = "name_map"
-    __SOURCE_FIELD = "source"
-    __TARGET_FIELD = "target"
-    __TYPE_FIELD = "type"
-    __DB_FIELD = "database"
-    __SCHEMA_FIELD = "schema"
-    __RELATION_FIELD = "relation"
-    __ATTRIBUTE_FIELD = "attribute"
+    _NAME_MAP_FIELD = "name_map"
+    _SOURCE_FIELD = "source"
+    _TARGET_FIELD = "target"
+    _TYPE_FIELD = "type"
+    _DB_FIELD = "database"
+    _SCHEMA_FIELD = "schema"
+    _RELATION_FIELD = "relation"
+    _ATTRIBUTE_FIELD = "attribute"
 
-    __SUPPORTED_TYPES = {
+    _SUPPORTED_TYPES = {
         "DATABASE",
         "SCHEMA",
         "RELATION",
@@ -54,61 +54,61 @@ class ObjectMappingParser:  # pylint: disable=too-few-public-methods
     def get_name_mapping_list(self) -> ObjectNameMappingList:
         """Parses the object name mapping json file into ObjectNameMappingList."""
         logging.info(
-            'Start parsing object name mapping from "%s"...', self.__json_file_path
+            'Start parsing object name mapping from "%s"...', self._json_file_path
         )
-        self.__validate_onm_file()
+        self._validate_onm_file()
         onm_list = ObjectNameMappingList()
-        with open(self.__json_file_path, encoding="utf-8") as file:
+        with open(self._json_file_path, encoding="utf-8") as file:
             data = json.load(file)
-        for name_map in data[self.__NAME_MAP_FIELD]:
-            assert self.__SOURCE_FIELD in name_map, (
-                f'Invalid object name mapping: can\'t find a "{self.__SOURCE_FIELD}" '
-                f'field in "{self.__json_file_path}". '
+        for name_map in data[self._NAME_MAP_FIELD]:
+            assert self._SOURCE_FIELD in name_map, (
+                f'Invalid object name mapping: can\'t find a "{self._SOURCE_FIELD}" '
+                f'field in "{self._json_file_path}". '
                 f'Instead we got "{name_map}".'
             )
-            assert self.__TARGET_FIELD in name_map, (
-                f'Invalid object name mapping: can\'t find a "{self.__TARGET_FIELD}" '
-                f'field in "{self.__json_file_path}". '
+            assert self._TARGET_FIELD in name_map, (
+                f'Invalid object name mapping: can\'t find a "{self._TARGET_FIELD}" '
+                f'field in "{self._json_file_path}". '
                 f'Instead we got "{name_map}".'
             )
             onm = ObjectNameMapping()
-            onm.source = self.__parse_source(name_map[self.__SOURCE_FIELD])
-            onm.target = self.__parse_target(name_map[self.__TARGET_FIELD])
+            onm.source = self._parse_source(name_map[self._SOURCE_FIELD])
+            onm.target = self._parse_target(name_map[self._TARGET_FIELD])
             onm_list.name_map.append(onm)
         return onm_list
 
-    def __parse_source(self, source_data: Dict[str, str]) -> NameMappingKey:
+    def _parse_source(self, source_data: Dict[str, str]) -> NameMappingKey:
         name_mapping_key = NameMappingKey()
-        if self.__TYPE_FIELD in source_data:
-            assert source_data[self.__TYPE_FIELD] in self.__SUPPORTED_TYPES, (
-                f'The source type of name mapping "{source_data[self.__TYPE_FIELD]}" '
-                f'in file "{self.__json_file_path}" is not one of'
-                f'the supported types: "{self.__SUPPORTED_TYPES}"'
+        if self._TYPE_FIELD in source_data:
+            assert source_data[self._TYPE_FIELD] in self._SUPPORTED_TYPES, (
+                f'The source type of name mapping "{source_data[self._TYPE_FIELD]}" '
+                f'in file "{self._json_file_path}" is not one of'
+                f'the supported types: "{self._SUPPORTED_TYPES}"'
             )
-            name_mapping_key.type_ = source_data[self.__TYPE_FIELD]
-        if self.__DB_FIELD in source_data:
-            name_mapping_key.database = source_data[self.__DB_FIELD]
-        if self.__SCHEMA_FIELD in source_data:
-            name_mapping_key.schema = source_data[self.__SCHEMA_FIELD]
-        if self.__RELATION_FIELD in source_data:
-            name_mapping_key.relation = source_data[self.__RELATION_FIELD]
-        if self.__ATTRIBUTE_FIELD in source_data:
-            name_mapping_key.attribute = source_data[self.__ATTRIBUTE_FIELD]
+            name_mapping_key.type_ = source_data[self._TYPE_FIELD]
+        if self._DB_FIELD in source_data:
+            name_mapping_key.database = source_data[self._DB_FIELD]
+        if self._SCHEMA_FIELD in source_data:
+            name_mapping_key.schema = source_data[self._SCHEMA_FIELD]
+        if self._RELATION_FIELD in source_data:
+            name_mapping_key.relation = source_data[self._RELATION_FIELD]
+        if self._ATTRIBUTE_FIELD in source_data:
+            name_mapping_key.attribute = source_data[self._ATTRIBUTE_FIELD]
         return name_mapping_key
 
-    def __parse_target(self, target_data: Dict[str, str]) -> NameMappingValue:
+    def _parse_target(self, target_data: Dict[str, str]) -> NameMappingValue:
         name_mapping_value = NameMappingValue()
-        if self.__DB_FIELD in target_data:
-            name_mapping_value.database = target_data[self.__DB_FIELD]
-        if self.__SCHEMA_FIELD in target_data:
-            name_mapping_value.schema = target_data[self.__SCHEMA_FIELD]
-        if self.__RELATION_FIELD in target_data:
-            name_mapping_value.relation = target_data[self.__RELATION_FIELD]
-        if self.__ATTRIBUTE_FIELD in target_data:
-            name_mapping_value.attribute = target_data[self.__ATTRIBUTE_FIELD]
+        if self._DB_FIELD in target_data:
+            name_mapping_value.database = target_data[self._DB_FIELD]
+        if self._SCHEMA_FIELD in target_data:
+            name_mapping_value.schema = target_data[self._SCHEMA_FIELD]
+        if self._RELATION_FIELD in target_data:
+            name_mapping_value.relation = target_data[self._RELATION_FIELD]
+        if self._ATTRIBUTE_FIELD in target_data:
+            name_mapping_value.attribute = target_data[self._ATTRIBUTE_FIELD]
         return name_mapping_value
 
-    def __validate_onm_file(self) -> None:
+    def _validate_onm_file(self) -> None:
         assert os.path.isfile(
-            self.__json_file_path
-        ), f'Can\'t find a file at "{self.__json_file_path}".'
+            self._json_file_path
+        ), f'Can\'t find a file at "{self._json_file_path}".'
