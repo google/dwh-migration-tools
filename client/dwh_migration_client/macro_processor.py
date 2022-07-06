@@ -48,7 +48,7 @@ class MacroProcessor:
             input_dir: path to the input directory.
             tmp_dir: path to a tmp directory that stores the files after preprocessing.
         """
-        self.__process(abspath(input_dir), abspath(tmp_dir), revert_expansion=False)
+        self._process(abspath(input_dir), abspath(tmp_dir), revert_expansion=False)
 
     def postprocess(self, tmp_dir: str, output_dir: str) -> None:
         """The post-download entry point of a MacroProcessor
@@ -62,7 +62,7 @@ class MacroProcessor:
             output_dir: path to the directory that stores the final outputs after
                 preprocessing.
         """
-        self.__process(abspath(tmp_dir), abspath(output_dir), revert_expansion=True)
+        self._process(abspath(tmp_dir), abspath(output_dir), revert_expansion=True)
 
     def is_ignored(self, path: str, name: str) -> bool:
         """Returns true if a file is ignored.
@@ -88,7 +88,7 @@ class MacroProcessor:
             return False
         return True
 
-    def __process(
+    def _process(
         self, input_dir: str, output_dir: str, revert_expansion: bool = False
     ) -> None:
         """Replaces or restores macros for every file in the input folder and save
@@ -192,12 +192,12 @@ class MacroProcessor:
 class MapBasedExpander:
     """An util class to handle map based yaml file."""
 
-    __YAML_KEY = "macros"
+    _YAML_KEY = "macros"
 
     def __init__(self, yaml_file_path: str) -> None:
         self.yaml_file_path = yaml_file_path
-        self.macro_expansion_maps = self.__parse_macros_config_file()
-        self.reversed_maps = self.__get_reversed_maps()
+        self.macro_expansion_maps = self._parse_macros_config_file()
+        self.reversed_maps = self._get_reversed_maps()
 
     def expand(self, text: str, path: str) -> str:
         """Expands the macros in the text with the corresponding values defined in the
@@ -205,7 +205,7 @@ class MapBasedExpander:
 
         Returns the text after macro substitution.
         """
-        reg_pattern_map, patterns = self.__get_all_regex_pattern_mapping(path)
+        reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(path)
         return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
 
     def unexpand(self, text: str, path: str) -> str:
@@ -214,17 +214,17 @@ class MapBasedExpander:
 
         Returns the text after replacing the values with macros.
         """
-        reg_pattern_map, patterns = self.__get_all_regex_pattern_mapping(path, True)
+        reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(path, True)
         return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
 
-    def __get_reversed_maps(self) -> Dict[str, Dict[str, str]]:
+    def _get_reversed_maps(self) -> Dict[str, Dict[str, str]]:
         """Swaps key and value in the macro maps and return the new map."""
         reversed_maps = {}
         for file_key, macro_map in self.macro_expansion_maps.items():
             reversed_maps[file_key] = dict((v, k) for k, v in macro_map.items())
         return reversed_maps
 
-    def __parse_macros_config_file(self) -> Dict[str, Dict[str, str]]:
+    def _parse_macros_config_file(self) -> Dict[str, Dict[str, str]]:
         """Parses the macros mapping yaml file.
 
         Return:
@@ -238,20 +238,20 @@ class MapBasedExpander:
                 file, Loader=SafeLoader
             )
         self.__validate_macro_file(data)
-        return data[self.__YAML_KEY]
+        return data[self._YAML_KEY]
 
     def __validate_macro_file(
         self, yaml_data: Dict[str, Dict[str, Dict[str, str]]]
     ) -> None:
         """Validates the macro replacement map yaml data."""
         assert (
-            self.__YAML_KEY in yaml_data
-        ), f"Missing {self.__YAML_KEY} field in {self.yaml_file_path}."
+            self._YAML_KEY in yaml_data
+        ), f"Missing {self._YAML_KEY} field in {self.yaml_file_path}."
         assert yaml_data[
-            self.__YAML_KEY
-        ], f"The {self.__YAML_KEY} is empty in {self.yaml_file_path}."
+            self._YAML_KEY
+        ], f"The {self._YAML_KEY} is empty in {self.yaml_file_path}."
 
-    def __get_all_regex_pattern_mapping(
+    def _get_all_regex_pattern_mapping(
         self, file_path: str, use_reversed_map: bool = False
     ) -> Tuple[Dict[str, str], Pattern[str]]:
         """Compiles all the macros matched with the file path into a single regex

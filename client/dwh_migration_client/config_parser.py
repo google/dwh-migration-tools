@@ -55,14 +55,14 @@ class ConfigParser:  # pylint: disable=too-few-public-methods
         self._config_file_path = abspath(config_file_path)
 
     # Config field name
-    __TRANSLATION_TYPE = "translation_type"
-    __TRANSLATION_CONFIG = "translation_config"
-    __DEFAULT_DATABASE = "default_database"
-    __SCHEMA_SEARCH_PATH = "schema_search_path"
-    __CLEAN_UP = "clean_up_tmp_files"
+    _TRANSLATION_TYPE = "translation_type"
+    _TRANSLATION_CONFIG = "translation_config"
+    _DEFAULT_DATABASE = "default_database"
+    _SCHEMA_SEARCH_PATH = "schema_search_path"
+    _CLEAN_UP = "clean_up_tmp_files"
 
     # The supported task types
-    __SUPPORTED_TYPES = {
+    _SUPPORTED_TYPES = {
         AZURESYNAPSE2BQ,
         BTEQ2BQ,
         HIVEQL2BQ,
@@ -87,24 +87,24 @@ class ConfigParser:  # pylint: disable=too-few-public-methods
         )
         with open(self._config_file_path, encoding="utf-8") as file:
             data = yaml.load(file, Loader=SafeLoader)
-        self.__validate_config_yaml(data)
+        self._validate_config_yaml(data)
 
         gcp_settings_input = data["gcp_settings"]
         project_number = gcp_settings_input["project_number"]
         gcs_bucket = gcp_settings_input["gcs_bucket"]
 
-        translation_config_input = data[self.__TRANSLATION_CONFIG]
+        translation_config_input = data[self._TRANSLATION_CONFIG]
         location = translation_config_input["location"]
-        translation_type = translation_config_input[self.__TRANSLATION_TYPE]
+        translation_type = translation_config_input[self._TRANSLATION_TYPE]
 
         clean_up_tmp_files = (
             True
-            if self.__CLEAN_UP not in translation_config_input
-            else translation_config_input[self.__CLEAN_UP]
+            if self._CLEAN_UP not in translation_config_input
+            else translation_config_input[self._CLEAN_UP]
         )
 
-        default_database = translation_config_input.get(self.__DEFAULT_DATABASE)
-        schema_search_path = translation_config_input.get(self.__SCHEMA_SEARCH_PATH)
+        default_database = translation_config_input.get(self._DEFAULT_DATABASE)
+        schema_search_path = translation_config_input.get(self._SCHEMA_SEARCH_PATH)
 
         config = TranslationConfig(
             project_number=project_number,
@@ -120,15 +120,15 @@ class ConfigParser:  # pylint: disable=too-few-public-methods
         logging.info("The config is:\n%s", pformat(asdict(config)))
         return config
 
-    def __validate_config_yaml(self, yaml_data: Dict[str, Dict[str, str]]) -> None:
+    def _validate_config_yaml(self, yaml_data: Dict[str, Dict[str, str]]) -> None:
         """Validate the data in the config yaml file."""
         assert (
-            self.__TRANSLATION_CONFIG in yaml_data
+            self._TRANSLATION_CONFIG in yaml_data
         ), "Missing translation_config field in config.yaml."
         assert (
-            self.__TRANSLATION_TYPE in yaml_data[self.__TRANSLATION_CONFIG]
+            self._TRANSLATION_TYPE in yaml_data[self._TRANSLATION_CONFIG]
         ), "Missing translation_type field in config.yaml."
-        translation_type = yaml_data[self.__TRANSLATION_CONFIG][self.__TRANSLATION_TYPE]
+        translation_type = yaml_data[self._TRANSLATION_CONFIG][self._TRANSLATION_TYPE]
         assert (
-            translation_type in self.__SUPPORTED_TYPES
+            translation_type in self._SUPPORTED_TYPES
         ), f'The type "{translation_type}" is not supported.'
