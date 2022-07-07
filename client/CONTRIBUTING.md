@@ -12,6 +12,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r client/requirements.txt
 pip install -r client/requirements_dev.txt
+pip install bigquery-migration-v2alpha-py.tar.gz
 pip install -e client[dev]
 ```
 
