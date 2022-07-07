@@ -17,7 +17,6 @@ setup(
         # google cloud packages.
         "google-cloud>=0.34.0",
         "google-cloud-storage>=2.3.0",
-        "google-cloud-bigquery_migration>=0.5.0",
         "google-api-python-client>=2.45.0",
         # protobuf
         "protobuf>=3.20.1",
