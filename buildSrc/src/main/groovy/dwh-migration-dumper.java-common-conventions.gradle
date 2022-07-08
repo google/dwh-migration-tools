@@ -180,6 +180,8 @@ spotless {
             // Ignore generated sources.
             if (path.contains('/build/'))
                 return false;
+            if (path.contains('hive/support/HiveServerSupport.java'))
+                return false; // Additional copyright credits
             return true;
         }
         target files;

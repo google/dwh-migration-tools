@@ -16,16 +16,14 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.common.base.Joiner;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +44,7 @@ import org.slf4j.LoggerFactory;
     }
 
     @Nonnull
-    public JdbcPropBuilder propOrWarn(@Nonnull String prop, @CheckForNull String val, @Nonnull String msg) {
+    public JdbcPropBuilder propOrWarn(@Nonnull String prop, @CheckForNull String val, @Nonnull String msg) throws UnsupportedEncodingException {
         if (val == null) {
             LOG.warn(msg);
         } else {
@@ -56,7 +54,7 @@ import org.slf4j.LoggerFactory;
     }
 
     @Nonnull
-    public JdbcPropBuilder propOrError(@Nonnull String prop, @CheckForNull String val, @Nonnull String msg) throws MetadataDumperUsageException {
+    public JdbcPropBuilder propOrError(@Nonnull String prop, @CheckForNull String val, @Nonnull String msg) throws MetadataDumperUsageException, UnsupportedEncodingException {
         if (val == null) {
             LOG.error(msg);
             throw new MetadataDumperUsageException(msg);
@@ -67,7 +65,7 @@ import org.slf4j.LoggerFactory;
     }
 
     @Nonnull
-    public JdbcPropBuilder prop(@Nonnull String prop, @Nonnull String val) {
+    public JdbcPropBuilder prop(@Nonnull String prop, @Nonnull String val) throws UnsupportedEncodingException {
         if (val == null) {
             throw new InternalError("Not checked for null: " + val);
         } else {
@@ -76,8 +74,9 @@ import org.slf4j.LoggerFactory;
         return this;
     }
 
-    private void addProp(String prop, String val) {
-        props.add(prop + punctuations.charAt(1) + URLEncoder.encode(val, UTF_8));
+    private void addProp(String prop, String val) throws UnsupportedEncodingException {
+        // The encode(String, Charset) overload is JDK 10+
+        props.add(prop + punctuations.charAt(1) + URLEncoder.encode(val, "UTF-8"));
     }
 
     @Nonnull
