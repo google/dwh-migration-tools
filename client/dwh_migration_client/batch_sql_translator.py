@@ -24,7 +24,7 @@ from datetime import datetime
 from os.path import dirname, join
 from typing import Optional
 
-from google.cloud import bigquery_migration_v2alpha
+from google.cloud import bigquery_migration_v2alpha as bigquery_migration_v2
 
 from dwh_migration_client import config_parser, gcs_util
 from dwh_migration_client.config_parser import TranslationConfig
@@ -50,14 +50,14 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         self.config = config
         self._input_directory = input_directory
         self._output_directory = output_directory
-        self.client = bigquery_migration_v2alpha.MigrationServiceClient()
+        self.client = bigquery_migration_v2.MigrationServiceClient()
         self.preprocessor = preprocessor  # May be None
         self._object_name_mapping_list = object_name_mapping_list
         self.tmp_dir = join(dirname(self._input_directory), self._TMP_DIR_NAME)
 
     _JOB_FINISHED_STATES = {
-        bigquery_migration_v2alpha.types.MigrationWorkflow.State.COMPLETED,
-        bigquery_migration_v2alpha.types.MigrationWorkflow.State.PAUSED,
+        bigquery_migration_v2.types.MigrationWorkflow.State.COMPLETED,
+        bigquery_migration_v2.types.MigrationWorkflow.State.PAUSED,
     }
 
     # The name of a hidden directory that stores temporary processed files if user
@@ -176,7 +176,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         logging.info(
             "List migration workflows for project %s", self.config.project_number
         )
-        request = bigquery_migration_v2alpha.ListMigrationWorkflowsRequest(
+        request = bigquery_migration_v2.ListMigrationWorkflowsRequest(
             parent=(
                 f"projects/{self.config.project_number}/"
                 f"locations/{self.config.location}"
@@ -191,11 +191,11 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
 
     def get_migration_workflow(
         self, job_name: str
-    ) -> bigquery_migration_v2alpha.MigrationWorkflow:
+    ) -> bigquery_migration_v2.MigrationWorkflow:
         """Starts a get API call for a migration workflow and print out the status on
         terminal."""
         logging.info("Get migration workflows for %s", job_name)
-        request = bigquery_migration_v2alpha.GetMigrationWorkflowRequest(
+        request = bigquery_migration_v2.GetMigrationWorkflowRequest(
             name=job_name,
         )
 
@@ -206,10 +206,10 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         self, gcs_input_path: str, gcs_output_path: str
     ) -> str:
         """Creates a migration workflow and returns the name of the workflow."""
-        target_dialect = bigquery_migration_v2alpha.Dialect()
-        target_dialect.bigquery_dialect = bigquery_migration_v2alpha.BigQueryDialect()
+        target_dialect = bigquery_migration_v2.Dialect()
+        target_dialect.bigquery_dialect = bigquery_migration_v2.BigQueryDialect()
 
-        translation_config = bigquery_migration_v2alpha.TranslationConfigDetails(
+        translation_config = bigquery_migration_v2.TranslationConfigDetails(
             gcs_source_path=gcs_input_path,
             gcs_target_path=gcs_output_path,
             source_dialect=self.get_input_dialect(),
@@ -217,7 +217,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         )
 
         if self.config.default_database or self.config.schema_search_path:
-            translation_config.source_env = bigquery_migration_v2alpha.types.SourceEnv(
+            translation_config.source_env = bigquery_migration_v2.types.SourceEnv(
                 default_database=self.config.default_database,
                 schema_search_path=self.config.schema_search_path,
             )
@@ -225,12 +225,12 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         if self._object_name_mapping_list:
             translation_config.name_mapping_list = self._object_name_mapping_list
 
-        migration_task = bigquery_migration_v2alpha.MigrationTask(
+        migration_task = bigquery_migration_v2.MigrationTask(
             type=self.config.translation_type,
             translation_config_details=translation_config,
         )
 
-        workflow = bigquery_migration_v2alpha.MigrationWorkflow(
+        workflow = bigquery_migration_v2.MigrationWorkflow(
             display_name=(
                 f"{self.config.translation_type}-cli-"
                 f"{datetime.now().strftime('%m-%d-%H:%M')}"
@@ -238,7 +238,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         )
 
         workflow.tasks["translation-task"] = migration_task
-        request = bigquery_migration_v2alpha.CreateMigrationWorkflowRequest(
+        request = bigquery_migration_v2.CreateMigrationWorkflowRequest(
             parent=(
                 f"projects/{self.config.project_number}/"
                 f"locations/{self.config.location}"
@@ -251,34 +251,34 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         name: str = response.name
         return name
 
-    def get_input_dialect(self) -> bigquery_migration_v2alpha.Dialect:
+    def get_input_dialect(self) -> bigquery_migration_v2.Dialect:
         """Returns the input dialect proto based on the translation type in the
         config."""
-        dialect = bigquery_migration_v2alpha.Dialect()
+        dialect = bigquery_migration_v2.Dialect()
         if self.config.translation_type == config_parser.TERADATA2BQ:
-            dialect.teradata_dialect = bigquery_migration_v2alpha.TeradataDialect(
-                mode=bigquery_migration_v2alpha.TeradataDialect.Mode.SQL
+            dialect.teradata_dialect = bigquery_migration_v2.TeradataDialect(
+                mode=bigquery_migration_v2.TeradataDialect.Mode.SQL
             )
         elif self.config.translation_type == config_parser.BTEQ2BQ:
-            dialect.teradata_dialect = bigquery_migration_v2alpha.TeradataDialect(
-                mode=bigquery_migration_v2alpha.TeradataDialect.Mode.BTEQ
+            dialect.teradata_dialect = bigquery_migration_v2.TeradataDialect(
+                mode=bigquery_migration_v2.TeradataDialect.Mode.BTEQ
             )
         elif self.config.translation_type == config_parser.REDSHIFT2BQ:
-            dialect.redshift_dialect = bigquery_migration_v2alpha.RedshiftDialect()
+            dialect.redshift_dialect = bigquery_migration_v2.RedshiftDialect()
         elif self.config.translation_type == config_parser.ORACLE2BQ:
-            dialect.oracle_dialect = bigquery_migration_v2alpha.OracleDialect()
+            dialect.oracle_dialect = bigquery_migration_v2.OracleDialect()
         elif self.config.translation_type == config_parser.HIVEQL2BQ:
-            dialect.hiveql_dialect = bigquery_migration_v2alpha.HiveQLDialect()
+            dialect.hiveql_dialect = bigquery_migration_v2.HiveQLDialect()
         elif self.config.translation_type == config_parser.SPARKSQL2BQ:
-            dialect.sparksql_dialect = bigquery_migration_v2alpha.SparkSQLDialect()
+            dialect.sparksql_dialect = bigquery_migration_v2.SparkSQLDialect()
         elif self.config.translation_type == config_parser.SNOWFLAKE2BQ:
-            dialect.snowflake_dialect = bigquery_migration_v2alpha.SnowflakeDialect()
+            dialect.snowflake_dialect = bigquery_migration_v2.SnowflakeDialect()
         elif self.config.translation_type == config_parser.NETEZZA2BQ:
-            dialect.netezza_dialect = bigquery_migration_v2alpha.NetezzaDialect()
+            dialect.netezza_dialect = bigquery_migration_v2.NetezzaDialect()
         elif self.config.translation_type == config_parser.AZURESYNAPSE2BQ:
-            dialect.azure_synapse_dialect = bigquery_migration_v2alpha.AzureSynapseDialect()
+            dialect.azure_synapse_dialect = bigquery_migration_v2.AzureSynapseDialect()
         elif self.config.translation_type == config_parser.VERTICA2BQ:
-            dialect.vertica_dialect = bigquery_migration_v2alpha.VerticaDialect()
+            dialect.vertica_dialect = bigquery_migration_v2.VerticaDialect()
         elif self.config.translation_type == config_parser.SQLSERVER2BQ:
-            dialect.sql_server_dialect = bigquery_migration_v2alpha.SQLServerDialect()
+            dialect.sql_server_dialect = bigquery_migration_v2.SQLServerDialect()
         return dialect
