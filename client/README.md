@@ -200,7 +200,7 @@ options:
 
 Make sure you are using Python 3.7 or later to install [google-cloud-storage](https://pypi.org/project/google-cloud-storage/). 
 
-### I am using Python 3.7 or a later version, but I am still seeing errors about packages like `bigquery_migration_v2`.
+### I am using Python 3.7 or a later version, but I am still seeing errors about packages like `bigquery_migration_v2alpha`.
 
 It's recommended to run this tool in the Python [virtual env](https://docs.python.org/3/library/venv.html) to avoid 
 dependency noises. 

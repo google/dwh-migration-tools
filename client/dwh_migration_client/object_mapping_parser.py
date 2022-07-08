@@ -18,7 +18,7 @@ import logging
 import os
 from typing import Dict
 
-from google.cloud.bigquery_migration_v2 import (
+from google.cloud.bigquery_migration_v2alpha import (
     NameMappingKey,
     NameMappingValue,
     ObjectNameMapping,
