@@ -18,12 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
-import java.sql.Driver;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import javax.annotation.Nonnull;
-import javax.sql.DataSource;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -35,6 +29,13 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import java.io.UnsupportedEncodingException;
+import java.sql.Driver;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import javax.annotation.Nonnull;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -123,7 +124,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     }
 
     @Nonnull
-    private String makeJdbcUrlPostgresql(ConnectorArguments arguments) throws MetadataDumperUsageException {
+    private String makeJdbcUrlPostgresql(ConnectorArguments arguments) throws MetadataDumperUsageException, UnsupportedEncodingException {
         return "jdbc:postgresql://"
                 + requireNonNull(arguments.getHost(), "--host should be specified")
                 + ":"
@@ -138,7 +139,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     }
 
     @Nonnull
-    private String makeJdbcUrlRedshiftSimple(ConnectorArguments arguments) throws MetadataDumperUsageException {
+    private String makeJdbcUrlRedshiftSimple(ConnectorArguments arguments) throws MetadataDumperUsageException, UnsupportedEncodingException {
         return "jdbc:redshift://"
                 + requireNonNull(arguments.getHost(), "--host should be specified")
                 + ":"
@@ -154,7 +155,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     //TODO:  [cluster-id]:[region] syntax.
     // either profile, or key+ secret
     @Nonnull
-    private String makeJdbcUrlRedshiftIAM(ConnectorArguments arguments) throws MetadataDumperUsageException {
+    private String makeJdbcUrlRedshiftIAM(ConnectorArguments arguments) throws MetadataDumperUsageException, UnsupportedEncodingException {
         String url = "jdbc:redshift:iam://"
                 + requireNonNull(arguments.getHost(), "--host should be specified")
                 + ":"

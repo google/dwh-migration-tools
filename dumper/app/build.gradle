@@ -66,6 +66,14 @@ dependencies {
     testImplementation "com.github.stefanbirkner:system-rules"
     testImplementation "joda-time:joda-time"
 
+    // Test Hive 3.1.2
+    testImplementation project(path: ':dumper:lib-ext-hive-metastore', configuration: 'shadow')
+    // Excluded during shadowJar step, same versions as exclusions
+    testRuntimeOnly "org.datanucleus:datanucleus-api-jdo:4.2.4"
+    testRuntimeOnly "org.datanucleus:datanucleus-core:4.1.17"
+    testRuntimeOnly "org.datanucleus:javax.jdo:3.2.0-m3"
+    testRuntimeOnly "org.datanucleus:datanucleus-rdbms:4.1.19"
+
     sources "org.slf4j:jcl-over-slf4j:1.7.14@sources"
     sources "ch.qos.logback:logback-classic:1.2.3@sources"
 }

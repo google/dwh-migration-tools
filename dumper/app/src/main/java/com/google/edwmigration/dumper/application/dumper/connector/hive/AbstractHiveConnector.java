@@ -19,8 +19,16 @@ package com.google.edwmigration.dumper.application.dumper.connector.hive;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
+import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
+import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient;
+import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import com.google.errorprone.annotations.ForOverride;
-import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -33,15 +41,6 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.thrift.transport.TTransportException;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
-import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
-import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
-import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient;
-import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,10 +63,16 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     @ThreadSafe
     public static class ThriftClientPool implements AutoCloseable {
 
+        public interface ThriftClientConsumer {
+            void accept(HiveMetastoreThriftClient thriftClient) throws Exception;
+        }
+
         @Nonnull
         private final String name;
         @Nonnull
         private final ThreadLocal<? extends HiveMetastoreThriftClient> threadLocalThriftClient;
+        @Nonnull
+        private final ExecutorManager executorManager;
         @Nonnull
         private final ExecutorService executorService;
         @Nonnull
@@ -76,9 +81,10 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
         @Nonnull
         private final List<@NonNull HiveMetastoreThriftClient> builtClients = new ArrayList<>();
 
-        public ThriftClientPool(@Nonnull String name, @Nonnull HiveMetastoreThriftClient.Builder thriftClientBuilder, @Nonnull ExecutorService executorService) {
+        public ThriftClientPool(@Nonnull String name, @Nonnull HiveMetastoreThriftClient.Builder thriftClientBuilder, int threadPoolSize) {
             this.name = Preconditions.checkNotNull(name, "name was null.");
-            this.executorService = Preconditions.checkNotNull(executorService, "executorService was null.");
+            this.executorService = ExecutorManager.newExecutorServiceWithBackpressure(name, threadPoolSize);
+            this.executorManager = new ExecutorManager(executorService);
             this.threadLocalThriftClient = ThreadLocal.withInitial(() -> {
                 String threadName = Thread.currentThread().getName();
                 LOG.debug("Creating new thread-local Thrift client '{}' owned by pooled client '{}'.", threadName, name);
@@ -94,22 +100,23 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
             });
         }
 
-        @Nonnull
-        public ExecutorService getExecutorService() {
-            return executorService;
-        }
+        public void execute(ThriftClientConsumer consumer) {
+            executorManager.execute(() -> {
+                consumer.accept(getThreadLocalThriftClient().get());
+                return null;
+            });
+       }
 
         @Nonnull
-        public ThreadLocal<@NonNull ? extends HiveMetastoreThriftClient> getThreadLocalThriftClient() {
+        private ThreadLocal<@NonNull ? extends HiveMetastoreThriftClient> getThreadLocalThriftClient() {
             return threadLocalThriftClient;
         }
 
         @Override
-        public void close() throws IOException {
-            LOG.debug("Closing pooled Thrift client '{}'.", name);
-            final int TIMEOUT = 30;
-            LOG.debug("Shutting down thread pool backing pooled Thrift client '{}'; will wait up to {} seconds", name, TIMEOUT);
-            MoreExecutors.shutdownAndAwaitTermination(executorService, TIMEOUT, TimeUnit.SECONDS);
+        public void close() throws Exception {
+            LOG.debug("Shutting down thread pool backing pooled Thrift client '{}'", name);
+            executorManager.close();
+            MoreExecutors.shutdownAndAwaitTermination(executorService, 30, TimeUnit.SECONDS);
             synchronized (lock) {
                 for (HiveMetastoreThriftClient client : builtClients) {
                     try {
@@ -147,7 +154,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
         @Nonnull
         public ThriftClientPool newMultiThreadedThriftClientPool(@Nonnull String name) {
             LOG.debug("Creating a new multi-threaded pooled Thrift client named '{}' backed by a thread pool of size {}.", name, threadPoolSize);
-            return new ThriftClientPool(name, thriftClientBuilder, ExecutorManager.newExecutorServiceWithBackpressure(name, threadPoolSize));
+            return new ThriftClientPool(name, thriftClientBuilder, threadPoolSize);
         }
     }
 
