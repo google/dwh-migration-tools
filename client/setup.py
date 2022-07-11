@@ -1,5 +1,5 @@
 """setup.py for dwh_migration_client."""
-from setuptools import find_packages, setup
+from setuptools import PEP420PackageFinder, setup
 
 with open("README.md") as readme:
   long_description = readme.read()
@@ -12,7 +12,8 @@ setup(
     url="https://github.com/google/dwh-migration-tools/client",
     version="0.1.0",
     python_requires=">=3.7",
-    packages=find_packages(),
+    packages=PEP420PackageFinder.find(),
+    namespace_packages=('google', 'google.cloud'),
     install_requires=[
         # google cloud packages.
         "google-cloud>=0.34.0",
@@ -24,6 +25,10 @@ setup(
         "grpcio>=1.46.1",
         # PyYML package to parse yaml config files.
         "PyYAML>=6.0",
+        'google-api-core[grpc] >= 2.8.0, < 3.0.0dev',
+        'libcst >= 0.2.5',
+        'googleapis-common-protos >= 1.55.0, <2.0.0dev',
+        'proto-plus >= 1.19.7',
     ],
     extras_require={
         "dev": [
