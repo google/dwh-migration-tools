@@ -175,7 +175,8 @@ public interface RedshiftMetadataDumpFormat extends PostgresqlMetadataDumpFormat
             schema,
             name,
             result_data_type,
-            argument_data_types
+            argument_data_types,
+            language_name
         }
     }
 

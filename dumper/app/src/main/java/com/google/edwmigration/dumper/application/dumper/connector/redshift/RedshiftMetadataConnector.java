@@ -83,7 +83,15 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector impleme
         // \l
         parallelTask.addTask(new JdbcSelectTask("database.csv", "SELECT d.datname as \"Name\", pg_catalog.pg_get_userbyid(d.datdba) as \"Owner\", pg_catalog.pg_encoding_to_char(d.encoding) as \"Encoding\", pg_catalog.array_to_string(d.datacl, ',') AS \"Access_privileges\" FROM pg_catalog.pg_database_info d ORDER BY 1"));
         // \df
-        parallelTask.addTask(new JdbcSelectTask("functions.csv", "SELECT n.nspname as \"Schema\", p.proname as \"Name\", format_type(p.prorettype, null) as \"Result_data_type\",oidvectortypes(p.proargtypes) as \"Argument_data_types\" FROM pg_catalog.pg_proc p LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace WHERE pg_catalog.pg_function_is_visible(p.oid) ORDER BY 1, 2, 4"));
+        parallelTask.addTask(new JdbcSelectTask("functions.csv",
+            "SELECT n.nspname as \"Schema\", p.proname as \"Name\","
+                + " format_type(p.prorettype, null) as \"Result_data_type\","
+                + " oidvectortypes(p.proargtypes) as \"Argument_data_types\","
+                + " lang.lanname as \"Language_name\""
+                + " FROM pg_catalog.pg_proc p"
+                + " LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace"
+                + " LEFT JOIN pg_catalog.pg_language lang ON lang.oid = p.prolang"
+                + " WHERE pg_catalog.pg_function_is_visible(p.oid) ORDER BY 1, 2, 4"));
         // \dT
         parallelTask.addTask(new JdbcSelectTask("types.csv", "SELECT n.nspname as \"Schema\", pg_catalog.format_type(t.oid, NULL) AS \"Name\", pg_catalog.obj_description(t.oid, 'pg_type') as \"Description\" FROM pg_catalog.pg_type t LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid)) AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem ) AND pg_catalog.pg_type_is_visible(t.oid) ORDER BY 1, 2"));
         // \da
