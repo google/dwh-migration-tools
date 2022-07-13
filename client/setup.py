@@ -23,8 +23,9 @@ setup(
         "protobuf>=3.20.1",
         # gRPC,
         "grpcio>=1.46.1",
-        # PyYML package to parse yaml config files.
+        # Used to marshal config file data.
         "PyYAML>=6.0",
+        "marshmallow<=3.14.1",
     ],
     extras_require={
         "dev": [

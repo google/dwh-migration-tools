@@ -22,10 +22,12 @@ import re
 import shutil
 from argparse import Namespace
 from os.path import abspath, dirname, isfile, join
+from pprint import pformat
 from re import Pattern
 from typing import Dict, Tuple
 
 import yaml
+from marshmallow import Schema, ValidationError, fields
 from yaml.loader import SafeLoader
 
 
@@ -189,10 +191,16 @@ class MacroProcessor:
         return self.expander.unexpand(text, relative_output_path)
 
 
+class MacrosSchema(Schema):
+    macros = fields.Dict(
+        keys=fields.String(),
+        values=fields.Dict(keys=fields.String(), values=fields.String(), required=True),
+        required=True,
+    )
+
+
 class MapBasedExpander:
     """An util class to handle map based yaml file."""
-
-    _YAML_KEY = "macros"
 
     def __init__(self, yaml_file_path: str) -> None:
         self.yaml_file_path = yaml_file_path
@@ -233,23 +241,22 @@ class MapBasedExpander:
                 wildcard, e.g., with "*.sql", the method will apply the macro map to all
                 the files with extension of ".sql".
         """
+        logging.info("Parsing macros file: %s.", self.yaml_file_path)
         with open(self.yaml_file_path, encoding="utf-8") as file:
-            data: Dict[str, Dict[str, Dict[str, str]]] = yaml.load(
-                file, Loader=SafeLoader
+            data = yaml.load(file, Loader=SafeLoader)
+        try:
+            validated_data: Dict[str, Dict[str, Dict[str, str]]] = MacrosSchema().load(
+                data
             )
-        self.__validate_macro_file(data)
-        return data[self._YAML_KEY]
-
-    def __validate_macro_file(
-        self, yaml_data: Dict[str, Dict[str, Dict[str, str]]]
-    ) -> None:
-        """Validates the macro replacement map yaml data."""
-        assert (
-            self._YAML_KEY in yaml_data
-        ), f"Missing {self._YAML_KEY} field in {self.yaml_file_path}."
-        assert yaml_data[
-            self._YAML_KEY
-        ], f"The {self._YAML_KEY} is empty in {self.yaml_file_path}."
+        except ValidationError as error:
+            logging.error("Invalid macros file: %s: %s.", self.yaml_file_path, error)
+            raise
+        logging.info(
+            "Finished parsing macros file: %s:\n%s.",
+            self.yaml_file_path,
+            pformat(validated_data),
+        )
+        return validated_data["macros"]
 
     def _get_all_regex_pattern_mapping(
         self, file_path: str, use_reversed_map: bool = False

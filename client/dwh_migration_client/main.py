@@ -15,13 +15,16 @@
 
 import argparse
 import logging
+import sys
 from functools import partial
 
+from marshmallow import ValidationError
+
 from dwh_migration_client import batch_sql_translator
-from dwh_migration_client.config_parser import ConfigParser
+from dwh_migration_client.config import parse as parse_config
 from dwh_migration_client.gcloud_auth_helper import validate_gcloud_auth_settings
 from dwh_migration_client.macro_processor import MacroProcessor
-from dwh_migration_client.object_mapping_parser import ObjectMappingParser
+from dwh_migration_client.object_name_mapping import parse as parse_object_name_mapping
 from dwh_migration_client.validation import (
     validated_directory,
     validated_file,
@@ -31,22 +34,31 @@ from dwh_migration_client.validation import (
 
 def start_translation(args: argparse.Namespace) -> None:
     """Starts a batch sql translation job."""
-    config = ConfigParser(args.config).parse_config()
+    try:
+        config = parse_config(args.config)
+    except ValidationError:
+        sys.exit(1)
 
-    logging.info("Verify cloud login and credential settings...")
-    validate_gcloud_auth_settings(config.project_number)
+    if args.object_name_mapping:
+        try:
+            object_name_mapping_list = parse_object_name_mapping(
+                args.object_name_mapping
+            )
+        except ValidationError:
+            sys.exit(1)
+    else:
+        object_name_mapping_list = None
 
     if args.macros:
-        preprocessor = MacroProcessor(args)
+        try:
+            preprocessor = MacroProcessor(args)
+        except ValidationError:
+            sys.exit(1)
     else:
         preprocessor = None
 
-    if args.object_name_mapping:
-        object_name_mapping_list = ObjectMappingParser(
-            args.object_name_mapping
-        ).get_name_mapping_list()
-    else:
-        object_name_mapping_list = None
+    logging.info("Verify cloud login and credential settings...")
+    validate_gcloud_auth_settings(config.gcp_settings.project_number)
 
     translator = batch_sql_translator.BatchSqlTranslator(
         config, args.input, args.output, preprocessor, object_name_mapping_list
