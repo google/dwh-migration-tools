@@ -96,6 +96,9 @@ max-args = "7"
 
 [tool.mypy]
 
+# The Python version used to parse and check the target program.
+python_version = "3.7"
+
 # google.cloud.storage missing library stubs or py.typed marker
 ignore_missing_imports = true
 
