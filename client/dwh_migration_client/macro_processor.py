@@ -260,7 +260,7 @@ class MapBasedExpander:
 
     def _get_all_regex_pattern_mapping(
         self, file_path: str, use_reversed_map: bool = False
-    ) -> Tuple[Dict[str, str], Pattern[str]]:
+    ):
         """Compiles all the macros matched with the file path into a single regex
         pattern."""
         macro_subst_maps = (
