@@ -10,4 +10,5 @@ build
 venv
 .mypy_cache
 *.egg-info
-
+.nox
+.python-version
