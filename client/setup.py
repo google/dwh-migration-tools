@@ -37,6 +37,8 @@ setup(
             "isort",
             "pylint",
             "mypy",
+            "pytest",
+            "nox",
             "types-setuptools",
             "types-PyYAML",
             "types-protobuf",

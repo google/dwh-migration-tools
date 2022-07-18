@@ -17,6 +17,7 @@ import argparse
 import logging
 import sys
 from functools import partial
+from typing import List
 
 from marshmallow import ValidationError
 
@@ -66,8 +67,8 @@ def start_translation(args: argparse.Namespace) -> None:
     translator.start_translation()
 
 
-def main() -> None:
-    """CLI for BigQuery Batch SQL Translator"""
+def parse_args(args: List[str]) -> argparse.Namespace:
+    """Argument parser for the BigQuery Batch SQL Translator CLI."""
     parser = argparse.ArgumentParser(
         description="Config the Batch Sql translation tool."
     )
@@ -113,13 +114,19 @@ def main() -> None:
         "https://cloud.google.com/bigquery/docs/output-name-mapping.",
     )
 
-    args = parser.parse_args()
+    parsed_args = parser.parse_args(args)
 
     logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
+        level=logging.DEBUG if parsed_args.verbose else logging.INFO,
         format="%(asctime)s: %(levelname)s: %(message)s",
     )
 
+    return parsed_args
+
+
+def main() -> None:
+    """CLI for BigQuery Batch SQL Translator"""
+    args = parse_args(sys.argv[1:])
     return start_translation(args)
 
 

@@ -109,3 +109,20 @@ namespace_packages = true
 
 # Print codes (e.g. "[arg-type]") for each error in output.
 show_error_codes = true
+
+# ########################
+# ##### PYTEST
+# ########################
+
+# [Docs root]
+#   https://docs.pytest.org/en/stable/
+# [Config option reference]
+#   https://docs.pytest.org/en/stable/reference/customize.html
+
+[tool.pytest.ini_options]
+
+# https://docs.pytest.org/en/stable/how-to/capture-warnings.html#controlling-warnings
+filterwarnings = [
+    # https://docs.pytest.org/en/stable/how-to/capture-warnings.html#deprecationwarning-and-pendingdeprecationwarning
+    'ignore:distutils Version classes are deprecated. Use packaging.version instead.:DeprecationWarning:marshmallow',
+]

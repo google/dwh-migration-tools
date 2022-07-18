@@ -40,6 +40,9 @@ class TranslationType(Enum):
     Translation_Oracle2BQ = bigquery_migration_v2.Dialect(
         oracle_dialect=bigquery_migration_v2.OracleDialect()
     )
+    Translation_Presto2BQ = bigquery_migration_v2.Dialect(
+        presto_dialect=bigquery_migration_v2.PrestoDialect()
+    )
     Translation_Redshift2BQ = bigquery_migration_v2.Dialect(
         redshift_dialect=bigquery_migration_v2.RedshiftDialect()
     )
