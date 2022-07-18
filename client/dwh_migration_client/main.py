@@ -68,7 +68,7 @@ def start_translation(args: argparse.Namespace) -> None:
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
-    """CLI for BigQuery Batch SQL Translator"""
+    """Argument parser for the BigQuery Batch SQL Translator CLI."""
     parser = argparse.ArgumentParser(
         description="Config the Batch Sql translation tool."
     )
@@ -125,6 +125,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
 
 def main() -> None:
+    """CLI for BigQuery Batch SQL Translator"""
     args = parse_args(sys.argv[1:])
     return start_translation(args)
 
