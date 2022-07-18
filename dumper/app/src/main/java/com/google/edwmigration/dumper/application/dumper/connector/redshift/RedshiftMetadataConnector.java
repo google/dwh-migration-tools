@@ -71,8 +71,6 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector impleme
         selStar(parallelTask, "SVV_EXTERNAL_SCHEMAS");
         selStar(parallelTask, "SVV_EXTERNAL_TABLES");
 
-        selStar(parallelTask, "SVV_DISKUSAGE");
-
         selStar(parallelTask, "PG_LIBRARY");
 
         selStar(parallelTask, "pg_database");
@@ -108,5 +106,8 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector impleme
         parallelTask.addTask(new JdbcSelectTask(RedshiftMetadataDumpFormat.PgViews.ZIP_ENTRY_NAME, "select * from pg_views where schemaname not in " + PG_SCHEMAS));
         parallelTask.addTask(new JdbcSelectTask(RedshiftMetadataDumpFormat.PgUser.ZIP_ENTRY_NAME, "select * from pg_user"));
 
+        if (arguments.isMetadataStats()) {
+            selStar(parallelTask, "SVV_DISKUSAGE");
+        }
     }
 }
