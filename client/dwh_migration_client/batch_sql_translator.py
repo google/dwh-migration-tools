@@ -123,7 +123,8 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
 
         logging.info("The job finished successfully!")
         logging.info(
-            "To view the job details, please go to the link: %s", self._get_ui_link(job_name)
+            "To view the job details, please go to the link: %s",
+            self._get_ui_link(job_name),
         )
         logging.info(
             "Thank you for using BigQuery SQL Translation Service with the Python "
@@ -145,8 +146,10 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         """Returns the http link to the batch translation page for this project."""
         workflow_uuid = workflow_id.rsplit("/", 1)[1]
         return (
-            "https://console.cloud.google.com/bigquery/migrations/batch-translation;viewTranslationDetails="
-            f"{self.config.translation_config.location},{workflow_uuid}?projectnumber={self.config.gcp_settings.project_number}"
+            "https://console.cloud.google.com/bigquery/migrations/batch-translation"
+            ";viewTranslationDetails="
+            f"{self.config.translation_config.location},{workflow_uuid}"
+            f"?projectnumber={self.config.gcp_settings.project_number}"
         )
 
     def _wait_until_job_finished(

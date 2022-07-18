@@ -28,5 +28,5 @@ cd client && make requirements
 ## Before committing
 
 ```shell
-cd client && make check
+cd client && make check && make test
 ```

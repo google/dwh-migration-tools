@@ -23,8 +23,7 @@ import shutil
 from argparse import Namespace
 from os.path import abspath, dirname, isfile, join
 from pprint import pformat
-from re import Pattern
-from typing import Dict, Tuple
+from typing import Dict, Pattern, Tuple
 
 import yaml
 from marshmallow import Schema, ValidationError, fields
