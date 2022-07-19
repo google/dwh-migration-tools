@@ -213,6 +213,8 @@ class MapBasedExpander:
         Returns the text after macro substitution.
         """
         reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(path)
+        if len(reg_pattern_map) == 0:
+            return text
         return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
 
     def unexpand(self, text: str, path: str) -> str:
@@ -222,6 +224,8 @@ class MapBasedExpander:
         Returns the text after replacing the values with macros.
         """
         reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(path, True)
+        if len(reg_pattern_map) == 0:
+            return text
         return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
 
     def _get_reversed_maps(self) -> Dict[str, Dict[str, str]]:
