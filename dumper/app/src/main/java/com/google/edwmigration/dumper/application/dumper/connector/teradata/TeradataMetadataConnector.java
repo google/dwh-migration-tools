@@ -58,6 +58,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
 
         String whereDatabaseNameClause = new SqlBuilder().withWhereInVals("\"DatabaseName\"", arguments.getDatabases()).toWhereClause();
         String whereDataBaseNameClause = new SqlBuilder().withWhereInVals("\"DataBaseName\"", arguments.getDatabases()).toWhereClause();
+        String whereBDatabaseNameClause = new SqlBuilder().withWhereInVals("\"B_DatabaseName\"", arguments.getDatabases()).toWhereClause();
 
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
         out.add(new FormatTask(FORMAT_NAME));
@@ -104,6 +105,14 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
         out.add(new TeradataJdbcSelectTask(FunctionsVFormat.ZIP_ENTRY_NAME,
                 TaskCategory.OPTIONAL,
                 "SELECT %s FROM DBC.FunctionsV" + whereDatabaseNameClause + " ;"));
+
+        out.add(new TeradataJdbcSelectTask(AllTempTablesVXFormat.ZIP_ENTRY_NAME,
+            TaskCategory.OPTIONAL,
+            "SELECT %s FROM DBC.AllTempTablesVX" + whereBDatabaseNameClause + " ;"));
+
+        out.add(new TeradataJdbcSelectTask(DiskSpaceVFormat.ZIP_ENTRY_NAME,
+            TaskCategory.OPTIONAL,
+            "SELECT %s FROM DBC.DiskSpaceV" + whereDataBaseNameClause + " ;"));
 
         if (arguments.isMetadataStats()) {
             out.add(new TeradataJdbcSelectTask(StatsVFormat.ZIP_ENTRY_NAME,
