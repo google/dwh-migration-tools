@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A class to manage Batch SQL Translation job using the bigquery_migration_v2
+"""A class to manage Batch SQL Translation job using the bigquery_migration_v2alpha
     python client library."""
 
 import logging
@@ -24,7 +24,7 @@ from datetime import datetime
 from os.path import dirname, join
 from typing import Optional
 
-from google.cloud import bigquery_migration_v2
+from google.cloud import bigquery_migration_v2alpha as bigquery_migration_v2
 
 from dwh_migration_client import gcs_util
 from dwh_migration_client.config import Config
@@ -33,7 +33,7 @@ from dwh_migration_client.macro_processor import MacroProcessor
 
 # TODO: Refactor the attributes of this class.
 class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
-    """A class to manage Batch SQL Translation job using the bigquery_migration_v2
+    """A class to manage Batch SQL Translation job using the bigquery_migration_v2alpha
     python client library.
 
     """

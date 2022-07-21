@@ -12,3 +12,4 @@ venv
 *.egg-info
 .nox
 .python-version
+.vscode
