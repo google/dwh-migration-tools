@@ -114,6 +114,18 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
             TaskCategory.OPTIONAL,
             "SELECT %s FROM DBC.DiskSpaceV" + whereDataBaseNameClause + " ;"));
 
+        out.add(new TeradataJdbcSelectTask(RoleMembersVFormat.ZIP_ENTRY_NAME,
+            TaskCategory.OPTIONAL,
+            "SELECT %s FROM DBC.RoleMembersV ;"));
+
+        out.add(new TeradataJdbcSelectTask(All_RI_ChildrenVFormat.ZIP_ENTRY_NAME,
+            TaskCategory.OPTIONAL,
+            "SELECT %s FROM DBC.All_RI_ChildrenV ;"));
+
+        out.add(new TeradataJdbcSelectTask(All_RI_ParentsVFormat.ZIP_ENTRY_NAME,
+            TaskCategory.OPTIONAL,
+            "SELECT %s FROM DBC.All_RI_ParentsV ;"));
+
         if (arguments.isMetadataStats()) {
             out.add(new TeradataJdbcSelectTask(StatsVFormat.ZIP_ENTRY_NAME,
                     TaskCategory.OPTIONAL,

@@ -167,4 +167,31 @@ public interface TeradataMetadataDumpFormat {
             VProc, DatabaseName, AccountName, MaxPerm, MaxSpool, MaxTemp, CurrentPerm, CurrentSpool, CurrentPersistentSpool, CurrentTemp, PeakPerm, PeakSpool, PeakPersistentSpool, PeakTemp, MaxProfileSpool, MaxProfileTemp, TrustUserName, AppProxyUser, AllocatedPerm, AllocatedSpool, AllocatedTemp, PermSkew, SpoolSkew, TempSkew
         }
     }
+
+    public static interface RoleMembersVFormat {
+
+        public static String ZIP_ENTRY_NAME = "dbc.RoleMembersV.csv";
+
+        public static enum Header {
+            RoleName, Grantor, Grantee, WhenGranted, DefaultRole, WithAdmin
+        }
+    }
+
+    public static interface All_RI_ChildrenVFormat {
+
+        public static String ZIP_ENTRY_NAME = "dbc.All_RI_ChildrenV.csv";
+
+        public static enum Header {
+            IndexId, IndexName, ChildDB, ChildTable, ChildKeyColumn, ParentDB, ParentTable, ParentKeyColumn, InconsistencyFlag, CreatorName, CreateTimeStamp
+        }
+    }
+
+    public static interface All_RI_ParentsVFormat {
+
+        public static String ZIP_ENTRY_NAME = "dbc.All_RI_ParentsV.csv";
+
+        public static enum Header {
+            IndexId, IndexName, ChildDB, ChildTable, ChildKeyColumn, ParentDB, ParentTable, ParentKeyColumn, InconsistencyFlag, CreatorName, CreateTimeStamp
+        }
+    }
 }
