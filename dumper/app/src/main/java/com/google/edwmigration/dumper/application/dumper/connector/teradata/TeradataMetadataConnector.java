@@ -59,6 +59,8 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
         String whereDatabaseNameClause = new SqlBuilder().withWhereInVals("\"DatabaseName\"", arguments.getDatabases()).toWhereClause();
         String whereDataBaseNameClause = new SqlBuilder().withWhereInVals("\"DataBaseName\"", arguments.getDatabases()).toWhereClause();
         String whereBDatabaseNameClause = new SqlBuilder().withWhereInVals("\"B_DatabaseName\"", arguments.getDatabases()).toWhereClause();
+        String whereChildDBClause = new SqlBuilder().withWhereInVals("\"ChildDB\"", arguments.getDatabases()).toWhereClause();
+        String whereParentDBClause = new SqlBuilder().withWhereInVals("\"ParentDB\"", arguments.getDatabases()).toWhereClause();
 
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
         out.add(new FormatTask(FORMAT_NAME));
@@ -122,6 +124,18 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
             out.add(new TeradataJdbcSelectTask(DiskSpaceVFormat.ZIP_ENTRY_NAME,
                 TaskCategory.OPTIONAL,
                 "SELECT %s FROM DBC.DiskSpaceV" + whereDataBaseNameClause + " ;"));
+
+            out.add(new TeradataJdbcSelectTask(RoleMembersVFormat.ZIP_ENTRY_NAME,
+                TaskCategory.OPTIONAL,
+                "SELECT %s FROM DBC.RoleMembersV ;"));
+
+            out.add(new TeradataJdbcSelectTask(All_RI_ChildrenVFormat.ZIP_ENTRY_NAME,
+                TaskCategory.OPTIONAL,
+                "SELECT %s FROM DBC.All_RI_ChildrenV " + whereChildDBClause + " ;"));
+
+            out.add(new TeradataJdbcSelectTask(All_RI_ParentsVFormat.ZIP_ENTRY_NAME,
+                TaskCategory.OPTIONAL,
+                "SELECT %s FROM DBC.All_RI_ParentsV " + whereParentDBClause + " ;"));
         }
     }
 
