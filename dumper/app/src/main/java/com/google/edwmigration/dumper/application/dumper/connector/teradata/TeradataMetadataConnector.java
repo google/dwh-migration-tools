@@ -58,6 +58,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
 
         String whereDatabaseNameClause = new SqlBuilder().withWhereInVals("\"DatabaseName\"", arguments.getDatabases()).toWhereClause();
         String whereDataBaseNameClause = new SqlBuilder().withWhereInVals("\"DataBaseName\"", arguments.getDatabases()).toWhereClause();
+        String whereBDatabaseNameClause = new SqlBuilder().withWhereInVals("\"B_DatabaseName\"", arguments.getDatabases()).toWhereClause();
 
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
         out.add(new FormatTask(FORMAT_NAME));
@@ -109,9 +110,18 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
             out.add(new TeradataJdbcSelectTask(StatsVFormat.ZIP_ENTRY_NAME,
                     TaskCategory.OPTIONAL,
                     "SELECT %s FROM DBC.StatsV " + whereDatabaseNameClause + " ;"));
+
             out.add(new TeradataJdbcSelectTask(TableSizeVFormat.ZIP_ENTRY_NAME,
                     TaskCategory.OPTIONAL,
                     "SELECT %s FROM DBC.TableSizeV" + whereDataBaseNameClause + " ;")); // What's a VProc? (AMP, col 1)
+
+            out.add(new TeradataJdbcSelectTask(AllTempTablesVXFormat.ZIP_ENTRY_NAME,
+                TaskCategory.OPTIONAL,
+                "SELECT %s FROM DBC.AllTempTablesVX" + whereBDatabaseNameClause + " ;"));
+
+            out.add(new TeradataJdbcSelectTask(DiskSpaceVFormat.ZIP_ENTRY_NAME,
+                TaskCategory.OPTIONAL,
+                "SELECT %s FROM DBC.DiskSpaceV" + whereDataBaseNameClause + " ;"));
         }
     }
 
