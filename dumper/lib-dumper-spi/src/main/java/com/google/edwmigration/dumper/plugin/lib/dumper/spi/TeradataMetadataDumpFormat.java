@@ -149,4 +149,49 @@ public interface TeradataMetadataDumpFormat {
             Vproc, DataBaseName, AccountName, TableName, CurrentPerm, PeakPerm
         }
     }
+
+    public static interface AllTempTablesVXFormat {
+
+        public static String ZIP_ENTRY_NAME = "dbc.AllTempTablesVX.csv";
+
+        public static enum Header {
+            HostNo, SessionNo, UserName, B_DatabaseName, B_TableName, E_TableId
+        }
+    }
+
+    public static interface DiskSpaceVFormat {
+
+        public static String ZIP_ENTRY_NAME = "dbc.DiskSpaceV.csv";
+
+        public static enum Header {
+            VProc, DatabaseName, AccountName, MaxPerm, MaxSpool, MaxTemp, CurrentPerm, CurrentSpool, CurrentPersistentSpool, CurrentTemp, PeakPerm, PeakSpool, PeakPersistentSpool, PeakTemp, MaxProfileSpool, MaxProfileTemp, TrustUserName, AppProxyUser, AllocatedPerm, AllocatedSpool, AllocatedTemp, PermSkew, SpoolSkew, TempSkew
+        }
+    }
+
+    public static interface RoleMembersVFormat {
+
+        public static String ZIP_ENTRY_NAME = "dbc.RoleMembersV.csv";
+
+        public static enum Header {
+            RoleName, Grantor, Grantee, WhenGranted, DefaultRole, WithAdmin
+        }
+    }
+
+    public static interface All_RI_ChildrenVFormat {
+
+        public static String ZIP_ENTRY_NAME = "dbc.All_RI_ChildrenV.csv";
+
+        public static enum Header {
+            IndexId, IndexName, ChildDB, ChildTable, ChildKeyColumn, ParentDB, ParentTable, ParentKeyColumn, InconsistencyFlag, CreatorName, CreateTimeStamp
+        }
+    }
+
+    public static interface All_RI_ParentsVFormat {
+
+        public static String ZIP_ENTRY_NAME = "dbc.All_RI_ParentsV.csv";
+
+        public static enum Header {
+            IndexId, IndexName, ChildDB, ChildTable, ChildKeyColumn, ParentDB, ParentTable, ParentKeyColumn, InconsistencyFlag, CreatorName, CreateTimeStamp
+        }
+    }
 }
