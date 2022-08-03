@@ -65,12 +65,12 @@ class TranslationTaskDetails(proto.Message):
     .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
 
     Attributes:
-        teradata_options (google.cloud.bigquery_migration_v2alpha.types.TeradataOptions):
+        teradata_options (google.cloud.bigquery.migration_v2alpha.types.TeradataOptions):
             The Teradata SQL specific settings for the
             translation task.
 
             This field is a member of `oneof`_ ``language_options``.
-        bteq_options (google.cloud.bigquery_migration_v2alpha.types.BteqOptions):
+        bteq_options (google.cloud.bigquery.migration_v2alpha.types.BteqOptions):
             The BTEQ specific settings for the
             translation task.
 
@@ -81,17 +81,17 @@ class TranslationTaskDetails(proto.Message):
         output_path (str):
             The Cloud Storage path for translation output
             files.
-        file_paths (Sequence[google.cloud.bigquery_migration_v2alpha.types.TranslationFileMapping]):
+        file_paths (Sequence[google.cloud.bigquery.migration_v2alpha.types.TranslationFileMapping]):
             Cloud Storage files to be processed for
             translation.
         schema_path (str):
             The Cloud Storage path to DDL files as table
             schema to assist semantic translation.
-        file_encoding (google.cloud.bigquery_migration_v2alpha.types.TranslationTaskDetails.FileEncoding):
+        file_encoding (google.cloud.bigquery.migration_v2alpha.types.TranslationTaskDetails.FileEncoding):
             The file encoding type.
-        identifier_settings (google.cloud.bigquery_migration_v2alpha.types.IdentifierSettings):
+        identifier_settings (google.cloud.bigquery.migration_v2alpha.types.IdentifierSettings):
             The settings for SQL identifiers.
-        special_token_map (Mapping[str, google.cloud.bigquery_migration_v2alpha.types.TranslationTaskDetails.TokenType]):
+        special_token_map (Mapping[str, google.cloud.bigquery.migration_v2alpha.types.TranslationTaskDetails.TokenType]):
             The map capturing special tokens to be
             replaced during translation. The key is special
             token in string. The value is the token data
@@ -102,7 +102,7 @@ class TranslationTaskDetails(proto.Message):
             those special token with types to let parser
             understand how to parse them into proper
             structure with type information.
-        filter (google.cloud.bigquery_migration_v2alpha.types.Filter):
+        filter (google.cloud.bigquery.migration_v2alpha.types.Filter):
             The filter applied to translation details.
         translation_exception_table (str):
             Specifies the exact name of the bigquery
@@ -209,10 +209,10 @@ class IdentifierSettings(proto.Message):
     r"""Settings related to SQL identifiers.
 
     Attributes:
-        output_identifier_case (google.cloud.bigquery_migration_v2alpha.types.IdentifierSettings.IdentifierCase):
+        output_identifier_case (google.cloud.bigquery.migration_v2alpha.types.IdentifierSettings.IdentifierCase):
             The setting to control output queries'
             identifier case.
-        identifier_rewrite_mode (google.cloud.bigquery_migration_v2alpha.types.IdentifierSettings.IdentifierRewriteMode):
+        identifier_rewrite_mode (google.cloud.bigquery.migration_v2alpha.types.IdentifierSettings.IdentifierRewriteMode):
             Specifies the rewrite mode for SQL
             identifiers.
     """
@@ -250,7 +250,7 @@ class BteqOptions(proto.Message):
     r"""BTEQ translation task related settings.
 
     Attributes:
-        project_dataset (google.cloud.bigquery_migration_v2alpha.types.DatasetReference):
+        project_dataset (google.cloud.bigquery.migration_v2alpha.types.DatasetReference):
             Specifies the project and dataset in BigQuery
             that will be used for external table creation
             during the translation.

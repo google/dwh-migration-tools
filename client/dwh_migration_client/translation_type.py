@@ -14,7 +14,7 @@
 """TranslationType Enum."""
 from enum import Enum
 
-from google.cloud import bigquery_migration_v2alpha as bigquery_migration_v2
+from google.cloud.bigquery import migration_v2alpha as bigquery_migration_v2
 
 
 class TranslationType(Enum):
