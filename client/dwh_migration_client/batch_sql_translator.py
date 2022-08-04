@@ -24,7 +24,7 @@ from datetime import datetime
 from os.path import dirname, join
 from typing import Optional
 
-from google.cloud import bigquery_migration_v2alpha as bigquery_migration_v2
+from google.cloud.bigquery import migration_v2alpha as bigquery_migration_v2
 
 from dwh_migration_client import gcs_util
 from dwh_migration_client.config import Config
