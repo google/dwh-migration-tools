@@ -17,7 +17,7 @@ import json
 import logging
 from pprint import pformat
 
-from google.cloud.bigquery_migration_v2alpha import (
+from google.cloud.bigquery.migration_v2alpha import (
     NameMappingKey,
     NameMappingValue,
     ObjectNameMapping,
