@@ -15,11 +15,11 @@
 #
 import proto  # type: ignore
 
-from google.cloud.bigquery_migration_v2alpha.types import assessment_task
-from google.cloud.bigquery_migration_v2alpha.types import migration_error_details
-from google.cloud.bigquery_migration_v2alpha.types import migration_metrics
-from google.cloud.bigquery_migration_v2alpha.types import translation_config
-from google.cloud.bigquery_migration_v2alpha.types import translation_task
+from google.cloud.bigquery.migration_v2alpha.types import assessment_task
+from google.cloud.bigquery.migration_v2alpha.types import migration_error_details
+from google.cloud.bigquery.migration_v2alpha.types import migration_metrics
+from google.cloud.bigquery.migration_v2alpha.types import translation_config
+from google.cloud.bigquery.migration_v2alpha.types import translation_task
 from google.protobuf import any_pb2  # type: ignore
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.rpc import error_details_pb2  # type: ignore
@@ -50,12 +50,12 @@ class MigrationWorkflow(proto.Message):
             The display name of the workflow. This can be
             set to give a workflow a descriptive name. There
             is no guarantee or enforcement of uniqueness.
-        tasks (Mapping[str, google.cloud.bigquery_migration_v2alpha.types.MigrationTask]):
+        tasks (Mapping[str, google.cloud.bigquery.migration_v2alpha.types.MigrationTask]):
             The tasks in a workflow in a named map. The
             name (i.e. key) has no meaning and is merely a
             convenient way to address a specific task in a
             workflow.
-        state (google.cloud.bigquery_migration_v2alpha.types.MigrationWorkflow.State):
+        state (google.cloud.bigquery.migration_v2alpha.types.MigrationWorkflow.State):
             Output only. That status of the workflow.
         create_time (google.protobuf.timestamp_pb2.Timestamp):
             Time when the workflow was created.
@@ -113,15 +113,15 @@ class MigrationTask(proto.Message):
     .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
 
     Attributes:
-        assessment_task_details (google.cloud.bigquery_migration_v2alpha.types.AssessmentTaskDetails):
+        assessment_task_details (google.cloud.bigquery.migration_v2alpha.types.AssessmentTaskDetails):
             Task configuration for Assessment.
 
             This field is a member of `oneof`_ ``task_details``.
-        translation_task_details (google.cloud.bigquery_migration_v2alpha.types.TranslationTaskDetails):
+        translation_task_details (google.cloud.bigquery.migration_v2alpha.types.TranslationTaskDetails):
             Task configuration for Batch SQL Translation.
 
             This field is a member of `oneof`_ ``task_details``.
-        translation_config_details (google.cloud.bigquery_migration_v2alpha.types.TranslationConfigDetails):
+        translation_config_details (google.cloud.bigquery.migration_v2alpha.types.TranslationConfigDetails):
             Task configuration for CW Batch/Offline SQL
             Translation.
 
@@ -142,7 +142,7 @@ class MigrationTask(proto.Message):
             DEPRECATED! Use one of the task_details below. The details
             of the task. The type URL must be one of the supported task
             details messages and correspond to the Task's type.
-        state (google.cloud.bigquery_migration_v2alpha.types.MigrationTask.State):
+        state (google.cloud.bigquery.migration_v2alpha.types.MigrationTask.State):
             Output only. The current state of the task.
         processing_error (google.rpc.error_details_pb2.ErrorInfo):
             Output only. An explanation that may be
@@ -151,7 +151,7 @@ class MigrationTask(proto.Message):
             Time when the task was created.
         last_update_time (google.protobuf.timestamp_pb2.Timestamp):
             Time when the task was last updated.
-        orchestration_result (google.cloud.bigquery_migration_v2alpha.types.MigrationTaskOrchestrationResult):
+        orchestration_result (google.cloud.bigquery.migration_v2alpha.types.MigrationTaskOrchestrationResult):
             Output only. Additional information about the
             orchestration.
     """
@@ -246,13 +246,13 @@ class MigrationSubtask(proto.Message):
             orchestrator or worker) to ensure it only
             creates subtasks for which there are compatible
             workers polling for Subtasks.
-        state (google.cloud.bigquery_migration_v2alpha.types.MigrationSubtask.State):
+        state (google.cloud.bigquery.migration_v2alpha.types.MigrationSubtask.State):
             Output only. The current state of the
             subtask.
         processing_error (google.rpc.error_details_pb2.ErrorInfo):
             Output only. An explanation that may be
             populated when the task is in FAILED state.
-        resource_error_details (Sequence[google.cloud.bigquery_migration_v2alpha.types.ResourceErrorDetail]):
+        resource_error_details (Sequence[google.cloud.bigquery.migration_v2alpha.types.ResourceErrorDetail]):
             Output only. Provides details to errors and
             issues encountered while processing the subtask.
             Presence of error details does not mean that the
@@ -267,7 +267,7 @@ class MigrationSubtask(proto.Message):
             Time when the subtask was created.
         last_update_time (google.protobuf.timestamp_pb2.Timestamp):
             Time when the subtask was last updated.
-        metrics (Sequence[google.cloud.bigquery_migration_v2alpha.types.TimeSeries]):
+        metrics (Sequence[google.cloud.bigquery.migration_v2alpha.types.TimeSeries]):
             The metrics for the subtask.
     """
     class State(proto.Enum):
@@ -335,7 +335,7 @@ class MigrationTaskOrchestrationResult(proto.Message):
     .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
 
     Attributes:
-        assessment_details (google.cloud.bigquery_migration_v2alpha.types.AssessmentOrchestrationResultDetails):
+        assessment_details (google.cloud.bigquery.migration_v2alpha.types.AssessmentOrchestrationResultDetails):
             Details specific to assessment task types.
 
             This field is a member of `oneof`_ ``details``.
