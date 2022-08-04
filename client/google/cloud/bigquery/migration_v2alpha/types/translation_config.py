@@ -61,17 +61,17 @@ class TranslationConfigDetails(proto.Message):
             corresponding input files to.
 
             This field is a member of `oneof`_ ``target_location``.
-        name_mapping_list (google.cloud.bigquery_migration_v2alpha.types.ObjectNameMappingList):
+        name_mapping_list (google.cloud.bigquery.migration_v2alpha.types.ObjectNameMappingList):
             The mapping of objects to their desired
             output names in list form.
 
             This field is a member of `oneof`_ ``output_name_mapping``.
-        source_dialect (google.cloud.bigquery_migration_v2alpha.types.Dialect):
+        source_dialect (google.cloud.bigquery.migration_v2alpha.types.Dialect):
             The dialect of the input files.
-        target_dialect (google.cloud.bigquery_migration_v2alpha.types.Dialect):
+        target_dialect (google.cloud.bigquery.migration_v2alpha.types.Dialect):
             The target dialect for the engine to
             translate the input to.
-        source_env (google.cloud.bigquery_migration_v2alpha.types.SourceEnv):
+        source_env (google.cloud.bigquery.migration_v2alpha.types.SourceEnv):
             The default source environment values for the
             translation.
     """
@@ -120,55 +120,55 @@ class Dialect(proto.Message):
     .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
 
     Attributes:
-        bigquery_dialect (google.cloud.bigquery_migration_v2alpha.types.BigQueryDialect):
+        bigquery_dialect (google.cloud.bigquery.migration_v2alpha.types.BigQueryDialect):
             The BigQuery dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        hiveql_dialect (google.cloud.bigquery_migration_v2alpha.types.HiveQLDialect):
+        hiveql_dialect (google.cloud.bigquery.migration_v2alpha.types.HiveQLDialect):
             The HiveQL dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        redshift_dialect (google.cloud.bigquery_migration_v2alpha.types.RedshiftDialect):
+        redshift_dialect (google.cloud.bigquery.migration_v2alpha.types.RedshiftDialect):
             The Redshift dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        teradata_dialect (google.cloud.bigquery_migration_v2alpha.types.TeradataDialect):
+        teradata_dialect (google.cloud.bigquery.migration_v2alpha.types.TeradataDialect):
             The Teradata dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        oracle_dialect (google.cloud.bigquery_migration_v2alpha.types.OracleDialect):
+        oracle_dialect (google.cloud.bigquery.migration_v2alpha.types.OracleDialect):
             The Oracle dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        sparksql_dialect (google.cloud.bigquery_migration_v2alpha.types.SparkSQLDialect):
+        sparksql_dialect (google.cloud.bigquery.migration_v2alpha.types.SparkSQLDialect):
             The SparkSQL dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        snowflake_dialect (google.cloud.bigquery_migration_v2alpha.types.SnowflakeDialect):
+        snowflake_dialect (google.cloud.bigquery.migration_v2alpha.types.SnowflakeDialect):
             The Snowflake dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        netezza_dialect (google.cloud.bigquery_migration_v2alpha.types.NetezzaDialect):
+        netezza_dialect (google.cloud.bigquery.migration_v2alpha.types.NetezzaDialect):
             The Netezza dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        azure_synapse_dialect (google.cloud.bigquery_migration_v2alpha.types.AzureSynapseDialect):
+        azure_synapse_dialect (google.cloud.bigquery.migration_v2alpha.types.AzureSynapseDialect):
             The Azure Synapse dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        vertica_dialect (google.cloud.bigquery_migration_v2alpha.types.VerticaDialect):
+        vertica_dialect (google.cloud.bigquery.migration_v2alpha.types.VerticaDialect):
             The Vertica dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        sql_server_dialect (google.cloud.bigquery_migration_v2alpha.types.SQLServerDialect):
+        sql_server_dialect (google.cloud.bigquery.migration_v2alpha.types.SQLServerDialect):
             The SQL Server dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        postgresql_dialect (google.cloud.bigquery_migration_v2alpha.types.PostgresqlDialect):
+        postgresql_dialect (google.cloud.bigquery.migration_v2alpha.types.PostgresqlDialect):
             The Postgresql dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
-        presto_dialect (google.cloud.bigquery_migration_v2alpha.types.PrestoDialect):
+        presto_dialect (google.cloud.bigquery.migration_v2alpha.types.PrestoDialect):
             The Presto dialect
 
             This field is a member of `oneof`_ ``dialect_value``.
@@ -273,7 +273,7 @@ class TeradataDialect(proto.Message):
     r"""The dialect definition for Teradata.
 
     Attributes:
-        mode (google.cloud.bigquery_migration_v2alpha.types.TeradataDialect.Mode):
+        mode (google.cloud.bigquery.migration_v2alpha.types.TeradataDialect.Mode):
             Which Teradata sub-dialect mode the user
             specifies.
     """
@@ -340,7 +340,7 @@ class ObjectNameMappingList(proto.Message):
     proto messages of existing name to desired output name.
 
     Attributes:
-        name_map (Sequence[google.cloud.bigquery_migration_v2alpha.types.ObjectNameMapping]):
+        name_map (Sequence[google.cloud.bigquery.migration_v2alpha.types.ObjectNameMapping]):
             The elements of the object name map.
     """
 
@@ -357,10 +357,10 @@ class ObjectNameMapping(proto.Message):
     input value to desired output.
 
     Attributes:
-        source (google.cloud.bigquery_migration_v2alpha.types.NameMappingKey):
+        source (google.cloud.bigquery.migration_v2alpha.types.NameMappingKey):
             The name of the object in source that is
             being mapped.
-        target (google.cloud.bigquery_migration_v2alpha.types.NameMappingValue):
+        target (google.cloud.bigquery.migration_v2alpha.types.NameMappingValue):
             The desired target name of the object that is
             being mapped.
     """
@@ -382,7 +382,7 @@ class NameMappingKey(proto.Message):
     mapped during translation in the source data warehouse.
 
     Attributes:
-        type_ (google.cloud.bigquery_migration_v2alpha.types.NameMappingKey.Type):
+        type_ (google.cloud.bigquery.migration_v2alpha.types.NameMappingKey.Type):
             The type of object that is being mapped.
         database (str):
             The database name (BigQuery project ID
