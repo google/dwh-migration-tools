@@ -290,25 +290,12 @@ public class MetadataDumper {
                 System.out.println(
                         "**********************************************************\n"
                         + "* Metadata has been saved to " + outputFile + "\n"
-                        + "* To import this file, add the metadata line to your\n"
-                        + "* transpiler configuration:\n"
-                        + "*\n"
-                        + "    environment(\"my-environment-name\", type: \"" + connector.getName().toLowerCase() + "\") {\n"
-                        + "        metadata \"" + outputFile + "\"\n"
-                        + "    }\n"
                         + "**********************************************************"
                 );
             } else if (connector instanceof LogsConnector) {
                 System.out.println(
                         "**********************************************************\n"
                         + "* Logs have been saved to " + outputFile + "\n"
-                        + "* To import this file, add a logdump ingester line to your\n"
-                        + "* transpiler configuration:\n"
-                        + "*\n"
-                        + "    ingester(\"my-ingester-name\", type: \"logdump\") {\n"
-                        + "        include \"" + outputFile + "\"\n"
-                        + "        send \"OK\" to \"my-compiler-name\"\n"
-                        + "    }\n"
                         + "**********************************************************"
                 );
             }
