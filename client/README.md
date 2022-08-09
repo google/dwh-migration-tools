@@ -206,10 +206,3 @@ It's recommended to run this tool in the Python [virtual env](https://docs.pytho
 dependency noises. 
 
 Create a Python3 virtual env by `python3 -m venv my_env`, and activate it by `source my_env/bin/activate`.
-
-Furthermore, when installing the client, you can install the exact dependencies
-against which the client was developed by running:
-
-```shell
-pip3 install -r client/requirements.txt
-```
