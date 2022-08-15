@@ -100,6 +100,7 @@ public class ConnectorArguments extends DefaultArguments {
     public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
     public static final String OPT_METADATA_STATS = "metadata-stats";
+    public static final String OPT_ASSESSMENT = "assessment";
 
     public static final String OPT_QUERY_LOG_DAYS = "query-log-days";
     public static final String OPT_QUERY_LOG_START = "query-log-start";
@@ -141,6 +142,7 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<File> optionOutput = parser.accepts("output", "Output file").withRequiredArg().ofType(File.class).describedAs("cw-dump.zip");
     private final OptionSpec<Void> optionOutputContinue = parser.accepts("continue", "Continues writing a previous output file.");
     private final OptionSpec<Boolean> optionMetadataStats = parser.accepts(OPT_METADATA_STATS, "Dump metadata stats.").withOptionalArg().withValuesConvertedBy(BooleanValueConverter.INSTANCE).defaultsTo(Boolean.FALSE);
+    private final OptionSpec<Boolean> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Dump data required for Migration Assessment.").withOptionalArg().withValuesConvertedBy(BooleanValueConverter.INSTANCE).defaultsTo(Boolean.FALSE);
     // TODO: Make this be an ISO instant.
     @Deprecated
     private final OptionSpec<String> optionQueryLogEarliestTimestamp = parser.accepts("query-log-earliest-timestamp",
@@ -475,6 +477,10 @@ public class ConnectorArguments extends DefaultArguments {
         return BooleanUtils.isTrue(getOptions().valueOf(optionMetadataStats));
     }
 
+    public boolean isAssessment() {
+        return BooleanUtils.isTrue(getOptions().valueOf(optionAssessment));
+    }
+
     @CheckForNull
     @Deprecated
     public String getQueryLogEarliestTimestamp() {
@@ -633,6 +639,7 @@ public class ConnectorArguments extends DefaultArguments {
                 .add("query-log-start", getQueryLogStart())
                 .add("query-log-end", getQueryLogEnd())
                 .add("query-log-alternates", getQueryLogAlternates())
+                .add("assessment", isAssessment())
                 .toString();
     }
 

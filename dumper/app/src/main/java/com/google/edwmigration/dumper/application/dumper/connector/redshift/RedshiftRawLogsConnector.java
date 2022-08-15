@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
@@ -56,6 +57,7 @@ import org.slf4j.LoggerFactory;
         description = "The port of the server.",
         required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
         defaultValue = "" + RedshiftMetadataConnector.OPT_PORT_DEFAULT)
+@RespectsArgumentAssessment
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
@@ -83,17 +85,31 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
 
         // DDL TEXT is simple ...
         // min() as there is no ANY() or SOME()
-        String queryTemplateDDL = "SELECT userid, xid, pid, trim(label) as label, starttime, endtime, sequence, text FROM STL_DDLTEXT WHERE ##";
-        makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.DdlHistory.ZIP_ENTRY_PREFIX, queryTemplateDDL, "starttime", parallelTask);
+        StringBuilder queryTemplateDDL = new StringBuilder(
+            "SELECT userid, xid, pid, trim(label) as label, starttime, endtime, sequence, text FROM STL_DDLTEXT WHERE ##");
+
+        if (arguments.isAssessment()) {
+            queryTemplateDDL.append(" ORDER BY starttime, xid, pid, sequence");
+        }
+
+        makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.DdlHistory.ZIP_ENTRY_PREFIX,
+            queryTemplateDDL.toString(), "starttime", parallelTask);
 
         // Query Text has bit of playing around
         // 1. STL_QUERY has starttime, queryid, but text is 4000 char wich is useless
         // 2. STL_QUERY_TEXT has xid+squence+text which reconstructs query, but no starttime.
         // STL_QUERY is 1 row per query ; SQL_QUERY_TEXT is multi rows per query, using sequence and xid
-        String queryTemplateQuery
-                = "SELECT userid, xid, pid, query, trim(label) as label, starttime, endtime, sequence, text"
-                + " FROM STL_QUERY join STL_QUERYTEXT using (userid, xid, pid, query) WHERE ##";
-        makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.QueryHistory.ZIP_ENTRY_PREFIX, queryTemplateQuery, "starttime", parallelTask);
+        StringBuilder queryTemplateQuery
+            = new StringBuilder(
+            "SELECT userid, xid, pid, query, trim(label) as label, starttime, endtime, sequence, text"
+                + " FROM STL_QUERY join STL_QUERYTEXT using (userid, xid, pid, query) WHERE ##");
+
+        if (arguments.isAssessment()) {
+            queryTemplateQuery.append(" ORDER BY starttime, query, sequence");
+        }
+
+        makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.QueryHistory.ZIP_ENTRY_PREFIX,
+            queryTemplateQuery.toString(), "starttime", parallelTask);
     }
 
     // ##  in the template to be replaced by the complete WHERE clause.
