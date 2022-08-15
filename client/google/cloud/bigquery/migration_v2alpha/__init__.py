@@ -43,6 +43,7 @@ from .types.translation_config import AzureSynapseDialect
 from .types.translation_config import BigQueryDialect
 from .types.translation_config import Dialect
 from .types.translation_config import HiveQLDialect
+from .types.translation_config import MySQLDialect
 from .types.translation_config import NameMappingKey
 from .types.translation_config import NameMappingValue
 from .types.translation_config import NetezzaDialect
@@ -94,6 +95,7 @@ __all__ = (
 'MigrationTask',
 'MigrationTaskOrchestrationResult',
 'MigrationWorkflow',
+'MySQLDialect',
 'NameMappingKey',
 'NameMappingValue',
 'NetezzaDialect',
