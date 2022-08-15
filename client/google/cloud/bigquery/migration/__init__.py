@@ -43,6 +43,7 @@ from google.cloud.bigquery.migration_v2alpha.types.translation_config import Azu
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import BigQueryDialect
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import Dialect
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import HiveQLDialect
+from google.cloud.bigquery.migration_v2alpha.types.translation_config import MySQLDialect
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import NameMappingKey
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import NameMappingValue
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import NetezzaDialect
@@ -95,6 +96,7 @@ __all__ = ('MigrationServiceClient',
     'BigQueryDialect',
     'Dialect',
     'HiveQLDialect',
+    'MySQLDialect',
     'NameMappingKey',
     'NameMappingValue',
     'NetezzaDialect',
