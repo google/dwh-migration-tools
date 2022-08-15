@@ -137,7 +137,8 @@ class MigrationTask(proto.Message):
             Translation_HiveQL2BQ, Translation_SparkSQL2BQ,
             Translation_Snowflake2BQ, Translation_Netezza2BQ,
             Translation_AzureSynapse2BQ, Translation_Vertica2BQ,
-            Translation_SQLServer2BQ, Translation_Presto2BQ.
+            Translation_SQLServer2BQ, Translation_Presto2BQ,
+            Translation_MySQL2BQ.
         details (google.protobuf.any_pb2.Any):
             DEPRECATED! Use one of the task_details below. The details
             of the task. The type URL must be one of the supported task
