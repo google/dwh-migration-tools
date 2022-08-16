@@ -94,6 +94,19 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
                 = "SELECT userid, xid, pid, query, trim(label) as label, starttime, endtime, sequence, text"
                 + " FROM STL_QUERY join STL_QUERYTEXT using (userid, xid, pid, query) WHERE ##";
         makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.QueryHistory.ZIP_ENTRY_PREFIX, queryTemplateQuery, "starttime", parallelTask);
+
+        if (arguments.isAssessment()) {
+            String queryMetricsTemplateQuery
+                = "SELECT userid, service_class, query, segment, step_type, starttime, slices, "
+                + "  max_rows, rows, max_cpu_time, cpu_time, max_blocks_read, blocks_read, "
+                + "  max_run_time, run_time, max_blocks_to_disk, blocks_to_disk, step, "
+                + "  max_query_scan_size, query_scan_size, query_priority, query_queue_time, "
+                + "  service_class_name "
+                + "FROM STL_QUERY_METRICS WHERE ##";
+            makeTasks(arguments, intervals,
+                RedshiftRawLogsDumpFormat.QueryMetricsHistory.ZIP_ENTRY_PREFIX,
+                queryMetricsTemplateQuery, "starttime", parallelTask);
+        }
     }
 
     // ##  in the template to be replaced by the complete WHERE clause.
