@@ -412,9 +412,7 @@ public class ConnectorArguments extends DefaultArguments {
         return getOptions().valuesOf(optionSchema);
     }
 
-    public boolean isAssessment() {
-        return getOptions().has(optionAssessment);
-    }
+    public boolean isAssessment() { return getOptions().has(optionAssessment); }
 
     @Nonnull
     public Predicate<String> getSchemaPredicate() {
