@@ -34,6 +34,9 @@ class TranslationType(Enum):
     Translation_HiveQL2BQ = bigquery_migration_v2.Dialect(
         hiveql_dialect=bigquery_migration_v2.HiveQLDialect()
     )
+    Translation_MySQL2BQ = bigquery_migration_v2.Dialect(
+        mysql_dialect=bigquery_migration_v2.MySQLDialect()
+    )
     Translation_Netezza2BQ = bigquery_migration_v2.Dialect(
         netezza_dialect=bigquery_migration_v2.NetezzaDialect()
     )

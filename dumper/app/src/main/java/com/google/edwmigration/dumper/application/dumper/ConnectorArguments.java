@@ -96,11 +96,11 @@ public class ConnectorArguments extends DefaultArguments {
     public static final String OPT_WAREHOUSE = "warehouse";
     public static final String OPT_DATABASE = "database";
     public static final String OPT_SCHEMA = "schema";
+    public static final String OPT_ASSESSMENT = "assessment";
     public static final String OPT_ORACLE_SID = "oracle-sid";
     public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
     public static final String OPT_METADATA_STATS = "metadata-stats";
-    public static final String OPT_ASSESSMENT = "assessment";
 
     public static final String OPT_QUERY_LOG_DAYS = "query-log-days";
     public static final String OPT_QUERY_LOG_START = "query-log-start";
@@ -132,6 +132,7 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<String> optionWarehouse = parser.accepts(OPT_WAREHOUSE, "Virtual warehouse to use once connected (for providers such as Snowflake)").withRequiredArg().ofType(String.class);
     private final OptionSpec<String> optionDatabase = parser.accepts(OPT_DATABASE, "Database(s) to export").withRequiredArg().ofType(String.class).withValuesSeparatedBy(',').describedAs("db0,db1,...");
     private final OptionSpec<String> optionSchema = parser.accepts(OPT_SCHEMA, "Schemata to export").withRequiredArg().ofType(String.class).withValuesSeparatedBy(',').describedAs("sch0,sch1,...");
+    private final OptionSpec<Boolean> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Whether to create a dump for assessment (i.e., dump additional information).").withOptionalArg().withValuesConvertedBy(BooleanValueConverter.INSTANCE).defaultsTo(Boolean.FALSE);;
     private final OptionSpec<String> optionUser = parser.accepts(OPT_USER, "Database username").withRequiredArg().describedAs("admin");
     private final OptionSpec<String> optionPass = parser.accepts(OPT_PASSWORD, "Database password, prompted if not provided").withOptionalArg().describedAs("sekr1t");
     private final OptionSpec<String> optionRole = parser.accepts(OPT_ROLE, "Database role").withRequiredArg().describedAs("dumper");
@@ -142,7 +143,6 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<File> optionOutput = parser.accepts("output", "Output file").withRequiredArg().ofType(File.class).describedAs("cw-dump.zip");
     private final OptionSpec<Void> optionOutputContinue = parser.accepts("continue", "Continues writing a previous output file.");
     private final OptionSpec<Boolean> optionMetadataStats = parser.accepts(OPT_METADATA_STATS, "Dump metadata stats.").withOptionalArg().withValuesConvertedBy(BooleanValueConverter.INSTANCE).defaultsTo(Boolean.FALSE);
-    private final OptionSpec<Boolean> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Dump data required for Migration Assessment.").withOptionalArg().withValuesConvertedBy(BooleanValueConverter.INSTANCE).defaultsTo(Boolean.FALSE);
     // TODO: Make this be an ISO instant.
     @Deprecated
     private final OptionSpec<String> optionQueryLogEarliestTimestamp = parser.accepts("query-log-earliest-timestamp",
@@ -415,6 +415,10 @@ public class ConnectorArguments extends DefaultArguments {
         return getOptions().valuesOf(optionSchema);
     }
 
+    public boolean isAssessment() {
+        return BooleanUtils.isTrue(getOptions().valueOf(optionAssessment));
+    }
+
     @Nonnull
     public Predicate<String> getSchemaPredicate() {
         return toPredicate(getSchemata());
@@ -475,10 +479,6 @@ public class ConnectorArguments extends DefaultArguments {
 
     public boolean isMetadataStats() {
         return BooleanUtils.isTrue(getOptions().valueOf(optionMetadataStats));
-    }
-
-    public boolean isAssessment() {
-        return BooleanUtils.isTrue(getOptions().valueOf(optionAssessment));
     }
 
     @CheckForNull
