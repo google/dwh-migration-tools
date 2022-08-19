@@ -132,7 +132,7 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<String> optionWarehouse = parser.accepts(OPT_WAREHOUSE, "Virtual warehouse to use once connected (for providers such as Snowflake)").withRequiredArg().ofType(String.class);
     private final OptionSpec<String> optionDatabase = parser.accepts(OPT_DATABASE, "Database(s) to export").withRequiredArg().ofType(String.class).withValuesSeparatedBy(',').describedAs("db0,db1,...");
     private final OptionSpec<String> optionSchema = parser.accepts(OPT_SCHEMA, "Schemata to export").withRequiredArg().ofType(String.class).withValuesSeparatedBy(',').describedAs("sch0,sch1,...");
-    private final OptionSpec<Void> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Whether to create a dump for assessment (i.e., dump additional information).");
+    private final OptionSpec<Boolean> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Whether to create a dump for assessment (i.e., dump additional information).").withOptionalArg().withValuesConvertedBy(BooleanValueConverter.INSTANCE).defaultsTo(Boolean.FALSE);
     private final OptionSpec<String> optionUser = parser.accepts(OPT_USER, "Database username").withRequiredArg().describedAs("admin");
     private final OptionSpec<String> optionPass = parser.accepts(OPT_PASSWORD, "Database password, prompted if not provided").withOptionalArg().describedAs("sekr1t");
     private final OptionSpec<String> optionRole = parser.accepts(OPT_ROLE, "Database role").withRequiredArg().describedAs("dumper");
