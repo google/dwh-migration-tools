@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
@@ -56,6 +57,7 @@ import org.slf4j.LoggerFactory;
         description = "The port of the server.",
         required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
         defaultValue = "" + RedshiftMetadataConnector.OPT_PORT_DEFAULT)
+@RespectsArgumentAssessment
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
@@ -84,6 +86,11 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
         // DDL TEXT is simple ...
         // min() as there is no ANY() or SOME()
         String queryTemplateDDL = "SELECT userid, xid, pid, trim(label) as label, starttime, endtime, sequence, text FROM STL_DDLTEXT WHERE ##";
+
+        if (arguments.isAssessment()) {
+            queryTemplateDDL += " ORDER BY starttime, xid, pid, sequence";
+        }
+
         makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.DdlHistory.ZIP_ENTRY_PREFIX, queryTemplateDDL, "starttime", parallelTask);
 
         // Query Text has bit of playing around
@@ -93,7 +100,25 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
         String queryTemplateQuery
                 = "SELECT userid, xid, pid, query, trim(label) as label, starttime, endtime, sequence, text"
                 + " FROM STL_QUERY join STL_QUERYTEXT using (userid, xid, pid, query) WHERE ##";
+
+        if (arguments.isAssessment()) {
+            queryTemplateQuery += " ORDER BY starttime, query, sequence";
+        }
+
         makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.QueryHistory.ZIP_ENTRY_PREFIX, queryTemplateQuery, "starttime", parallelTask);
+
+        if (arguments.isAssessment()) {
+            String queryMetricsTemplateQuery
+                = "SELECT userid, service_class, query, segment, step_type, starttime, slices, "
+                + "  max_rows, rows, max_cpu_time, cpu_time, max_blocks_read, blocks_read, "
+                + "  max_run_time, run_time, max_blocks_to_disk, blocks_to_disk, step, "
+                + "  max_query_scan_size, query_scan_size, query_priority, query_queue_time, "
+                + "  service_class_name "
+                + "FROM STL_QUERY_METRICS WHERE ##";
+            makeTasks(arguments, intervals,
+                RedshiftRawLogsDumpFormat.QueryMetricsHistory.ZIP_ENTRY_PREFIX,
+                queryMetricsTemplateQuery, "starttime", parallelTask);
+        }
     }
 
     // ##  in the template to be replaced by the complete WHERE clause.
