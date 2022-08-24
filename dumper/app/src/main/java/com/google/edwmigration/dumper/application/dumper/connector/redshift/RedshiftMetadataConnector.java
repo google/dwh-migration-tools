@@ -79,7 +79,7 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector impleme
         selStar(parallelTask, "pg_tables");
 
         // \l
-        parallelTask.addTask(new JdbcSelectTask("database.csv", "SELECT d.datname as \"Name\", pg_catalog.pg_get_userbyid(d.datdba) as \"Owner\", pg_catalog.pg_encoding_to_char(d.encoding) as \"Encoding\", pg_catalog.array_to_string(d.datacl, ',') AS \"Access_privileges\" FROM pg_catalog.pg_database_info d ORDER BY 1"));
+        parallelTask.addTask(new JdbcSelectTask("database.csv", "SELECT d.datid as \"Database_id\", d.datname as \"Name\", pg_catalog.pg_get_userbyid(d.datdba) as \"Owner\", pg_catalog.pg_encoding_to_char(d.encoding) as \"Encoding\", pg_catalog.array_to_string(d.datacl, ',') AS \"Access_privileges\" FROM pg_catalog.pg_database_info d ORDER BY 1"));
         // \df
         parallelTask.addTask(new JdbcSelectTask("functions.csv",
             "SELECT n.nspname as \"Schema\", p.proname as \"Name\","
