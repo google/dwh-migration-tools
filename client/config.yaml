@@ -39,3 +39,9 @@ translation_config:
 
   # Set this to True (default) to clean up the temporary data in the '.tmp_processed' folder after job finishes.
   clean_up_tmp_files: False
+
+  # [Optional field] The mapping from source file paths to target file paths.
+  # source_target_location_mapping: {
+    # "source_path1":"target_path",
+    # "source_path2":"",
+    # }
