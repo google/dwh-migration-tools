@@ -16,7 +16,7 @@
 import logging
 from dataclasses import asdict, dataclass
 from pprint import pformat
-from typing import List, Optional
+from typing import List, Dict, Optional
 
 import yaml
 from marshmallow import Schema, ValidationError, fields, post_load
@@ -49,6 +49,7 @@ class TranslationConfig:
     default_database: Optional[str]
     schema_search_path: Optional[List[str]]
     clean_up_tmp_files: bool
+    source_target_location_mapping: Optional[Dict[str, str]]
 
 
 class TranslationConfigSchema(Schema):
@@ -69,6 +70,9 @@ class TranslationConfigSchema(Schema):
     default_database = fields.String(load_default=None)
     schema_search_path = fields.List(fields.String(), load_default=None)
     clean_up_tmp_files = fields.Boolean(load_default=True)
+    source_target_location_mapping = fields.Dict(
+        keys=fields.String(), values=fields.String, load_default=None
+    )
 
     @post_load
     def build(self, data, **kwargs):  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
