@@ -13,3 +13,6 @@ venv
 .nox
 .python-version
 .vscode
+node_modules
+.coverage
+.pytest_cache
