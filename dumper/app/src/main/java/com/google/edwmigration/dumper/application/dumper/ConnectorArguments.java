@@ -130,7 +130,7 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<String> optionWarehouse = parser.accepts(OPT_WAREHOUSE, "Virtual warehouse to use once connected (for providers such as Snowflake)").withRequiredArg().ofType(String.class);
     private final OptionSpec<String> optionDatabase = parser.accepts(OPT_DATABASE, "Database(s) to export").withRequiredArg().ofType(String.class).withValuesSeparatedBy(',').describedAs("db0,db1,...");
     private final OptionSpec<String> optionSchema = parser.accepts(OPT_SCHEMA, "Schemata to export").withRequiredArg().ofType(String.class).withValuesSeparatedBy(',').describedAs("sch0,sch1,...");
-    private final OptionSpec<Boolean> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Whether to create a dump for assessment (i.e., dump additional information).").withOptionalArg().withValuesConvertedBy(BooleanValueConverter.INSTANCE).defaultsTo(Boolean.FALSE);
+    private final OptionSpec<Void> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Whether to create a dump for assessment (i.e., dump additional information).");
     private final OptionSpec<String> optionUser = parser.accepts(OPT_USER, "Database username").withRequiredArg().describedAs("admin");
     private final OptionSpec<String> optionPass = parser.accepts(OPT_PASSWORD, "Database password, prompted if not provided").withOptionalArg().describedAs("sekr1t");
     private final OptionSpec<String> optionRole = parser.accepts(OPT_ROLE, "Database role").withRequiredArg().describedAs("dumper");
@@ -140,6 +140,7 @@ public class ConnectorArguments extends DefaultArguments {
     // private final OptionSpec<String> optionDatabase = parser.accepts("database", "database (can be repeated; all if not specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
     private final OptionSpec<File> optionOutput = parser.accepts("output", "Output file").withRequiredArg().ofType(File.class).describedAs("cw-dump.zip");
     private final OptionSpec<Void> optionOutputContinue = parser.accepts("continue", "Continues writing a previous output file.");
+    private final OptionSpec<Void> optionMetadataStats = parser.accepts(OPT_METADATA_STATS, "Dump metadata stats.");
     // TODO: Make this be an ISO instant.
     @Deprecated
     private final OptionSpec<String> optionQueryLogEarliestTimestamp = parser.accepts("query-log-earliest-timestamp",
@@ -413,7 +414,7 @@ public class ConnectorArguments extends DefaultArguments {
     }
 
     public boolean isAssessment() {
-        return BooleanUtils.isTrue(getOptions().valueOf(optionAssessment));
+        return getOptions().has(optionAssessment);
     }
 
     @Nonnull
@@ -472,6 +473,10 @@ public class ConnectorArguments extends DefaultArguments {
 
     public boolean isDryRun() {
         return getOptions().has(optionDryrun);
+    }
+
+    public boolean isMetadataStats() {
+        return getOptions().has(optionMetadataStats);
     }
 
     @CheckForNull
