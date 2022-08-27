@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "jsonlint": "^1.6.3",
+    "markdownlint-cli2": "^0.5.1"
+  }
+}
