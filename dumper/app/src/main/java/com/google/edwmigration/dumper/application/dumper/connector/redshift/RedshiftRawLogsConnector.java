@@ -91,7 +91,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
             queryTemplateDDL += " ORDER BY starttime, xid, pid, sequence";
         }
 
-        makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.DdlHistory.ZIP_ENTRY_PREFIX, queryTemplateDDL, "starttime", parallelTask);
+//        makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.DdlHistory.ZIP_ENTRY_PREFIX, queryTemplateDDL, "starttime", parallelTask);
 
         // Query Text has bit of playing around
         // 1. STL_QUERY has starttime, queryid, but text is 4000 char wich is useless
@@ -105,7 +105,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
             queryTemplateQuery += " ORDER BY starttime, query, sequence";
         }
 
-        makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.QueryHistory.ZIP_ENTRY_PREFIX, queryTemplateQuery, "starttime", parallelTask);
+//        makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.QueryHistory.ZIP_ENTRY_PREFIX, queryTemplateQuery, "starttime", parallelTask);
 
         if (arguments.isAssessment()) {
             String queryMetricsTemplateQuery
@@ -118,6 +118,15 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
             makeTasks(arguments, intervals,
                 RedshiftRawLogsDumpFormat.QueryMetricsHistory.ZIP_ENTRY_PREFIX,
                 queryMetricsTemplateQuery, "starttime", parallelTask);
+
+            String queryQueueInfoTemplateQuery
+                = "SELECT database, query, xid, userid, queue_start_time, "
+                + " exec_start_time, service_class, slots, queue_elapsed, exec_elapsed, "
+                + " wlm_total_elapsed, commit_queue_elapsed, commit_exec_time "
+                + "FROM SVL_QUERY_QUEUE_INFO WHERE ##";
+            makeTasks(arguments, intervals,
+                RedshiftRawLogsDumpFormat.QueryQueueInfo.ZIP_ENTRY_PREFIX,
+                queryQueueInfoTemplateQuery, "queue_start_time", parallelTask);
         }
     }
 
