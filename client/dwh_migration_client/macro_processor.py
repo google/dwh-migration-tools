@@ -23,7 +23,7 @@ import shutil
 from argparse import Namespace
 from os.path import abspath, dirname, isfile, join
 from pprint import pformat
-from typing import Dict, Pattern, Tuple
+from typing import AnyStr, Dict, Pattern, Tuple
 
 import yaml
 from marshmallow import Schema, ValidationError, fields
@@ -205,6 +205,7 @@ class MapBasedExpander:
         self.yaml_file_path = yaml_file_path
         self.macro_expansion_maps = self._parse_macros_config_file()
         self.reversed_maps = self._get_reversed_maps()
+        self._case_insensitive_re_pattern = r"(?i)"
 
     def expand(self, text: str, path: str) -> str:
         """Expands the macros in the text with the corresponding values defined in the
@@ -215,7 +216,7 @@ class MapBasedExpander:
         reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(path)
         if len(reg_pattern_map) == 0:
             return text
-        return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
+        return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group())], text)
 
     def unexpand(self, text: str, path: str) -> str:
         """Reverts the macros substitution by replacing the values with macros defined
@@ -226,7 +227,9 @@ class MapBasedExpander:
         reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(path, True)
         if len(reg_pattern_map) == 0:
             return text
-        return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group(0))], text)
+        return re.sub(
+            patterns, lambda m: reg_pattern_map[re.escape(m.group().lower())], text
+        )
 
     def _get_reversed_maps(self) -> Dict[str, Dict[str, str]]:
         """Swaps key and value in the macro maps and return the new map."""
@@ -273,6 +276,11 @@ class MapBasedExpander:
         for file_map_key, token_map in macro_subst_maps.items():
             if fnmatch.fnmatch(file_path, file_map_key):
                 for key, value in token_map.items():
-                    reg_pattern_map[re.escape(key)] = value
-        all_patterns = re.compile("|".join(reg_pattern_map.keys()))
+                    # Converts the keys to lower case during macro unexpansion to support case-insensitive pattern
+                    # matching.
+                    reg_pattern_map[re.escape(key.lower()) if use_reversed_map else re.escape(key)] = value
+        all_regex_pattern_str = "|".join(reg_pattern_map.keys())
+        if use_reversed_map:
+            all_regex_pattern_str = self._case_insensitive_re_pattern + all_regex_pattern_str
+        all_patterns = re.compile(all_regex_pattern_str)
         return reg_pattern_map, all_patterns
