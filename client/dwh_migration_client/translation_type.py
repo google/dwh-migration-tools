@@ -46,6 +46,9 @@ class TranslationType(Enum):
     Translation_Presto2BQ = bigquery_migration_v2.Dialect(
         presto_dialect=bigquery_migration_v2.PrestoDialect()
     )
+    Translation_Postgresql2BQ = bigquery_migration_v2.Dialect(
+        postgresql_dialect=bigquery_migration_v2.PostgresqlDialect()
+    )
     Translation_Redshift2BQ = bigquery_migration_v2.Dialect(
         redshift_dialect=bigquery_migration_v2.RedshiftDialect()
     )
@@ -55,6 +58,9 @@ class TranslationType(Enum):
     Translation_SparkSQL2BQ = bigquery_migration_v2.Dialect(
         sparksql_dialect=bigquery_migration_v2.SparkSQLDialect()
     )
+    Translation_SQLServer2BQ = bigquery_migration_v2.Dialect(
+        sql_server_dialect=bigquery_migration_v2.SQLServerDialect()
+    )
     Translation_Teradata2BQ = bigquery_migration_v2.Dialect(
         teradata_dialect=bigquery_migration_v2.TeradataDialect(
             mode=bigquery_migration_v2.TeradataDialect.Mode.SQL
@@ -62,9 +68,6 @@ class TranslationType(Enum):
     )
     Translation_Vertica2BQ = bigquery_migration_v2.Dialect(
         vertica_dialect=bigquery_migration_v2.VerticaDialect()
-    )
-    Translation_SQLServer2BQ = bigquery_migration_v2.Dialect(
-        sql_server_dialect=bigquery_migration_v2.SQLServerDialect()
     )
 
     # pylint: enable=invalid-name
