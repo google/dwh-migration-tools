@@ -80,14 +80,4 @@ public interface RedshiftRawLogsDumpFormat {
             commit_queue_elapsed, commit_exec_time;
         }
     }
-
-    interface WlmQuery {
-        String ZIP_ENTRY_PREFIX = "wlm_query_";
-
-        enum Header {
-            userid, xid, task, query, service_class, slot_count, service_class_start_time,
-            queue_start_time, queue_end_time, total_queue_time, exec_start_time, exec_end_time,
-            total_exec_time, service_class_end_time, final_state, query_priority;
-        }
-    }
 }
