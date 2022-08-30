@@ -278,13 +278,9 @@ class MapBasedExpander:
                 for key, value in token_map.items():
                     # Converts the keys to lower case during macro unexpansion to support case-insensitive pattern
                     # matching.
-                    reg_pattern_map[
-                        re.escape(key.lower()) if use_reversed_map else re.escape(key)
-                    ] = value
+                    reg_pattern_map[re.escape(key.lower()) if use_reversed_map else re.escape(key)] = value
         all_regex_pattern_str = "|".join(reg_pattern_map.keys())
         if use_reversed_map:
-            all_regex_pattern_str = (
-                self._case_insensitive_re_pattern + all_regex_pattern_str
-            )
+            all_regex_pattern_str = self._case_insensitive_re_pattern + all_regex_pattern_str
         all_patterns = re.compile(all_regex_pattern_str)
         return reg_pattern_map, all_patterns
