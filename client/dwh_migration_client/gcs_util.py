@@ -58,53 +58,6 @@ def upload_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
         'Finished uploading input files to gcs "%s/%s".', bucket_name, gcs_path
     )
 
-def upload_full_directories(local_dir_list: List[str], bucket_name: str, gcs_path: str) -> None:
-    """Uploads all the files from local directories to a gcs bucket using the full paths.
-
-    Args:
-      local_dir_list: paths to the local directories
-      bucket_name: name of the gcs bucket.  If the bucket doesn't exist, the method
-        tries to create one.
-      gcs_path: the path to the gcs directory that stores the files.
-    """
-    for local_dir in local_dir_list:
-        upload_full_directory(local_dir, bucket_name, gcs_path)
-
-def upload_full_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
-    """Uploads all the files from a local directory to a gcs bucket using the full file path.
-
-    Args:
-      local_dir: path to the local directory.
-      bucket_name: name of the gcs bucket.  If the bucket doesn't exist, the method
-        tries to create one.
-      gcs_path: the path to the gcs directory that stores the files.
-    """
-    assert isdir(local_dir), f"Can't find input directory {local_dir}."
-    client = storage.Client()
-
-    try:
-        logging.info("Get bucket %s", bucket_name)
-        bucket: Bucket = client.get_bucket(bucket_name)
-    except NotFound:
-        logging.info('The bucket "%s" does not exist, creating one...', bucket_name)
-        bucket = client.create_bucket(bucket_name)
-
-    dir_abs_path = abspath(local_dir)
-    for root, _, files in os.walk(dir_abs_path):
-        for name in files:
-            sub_dir = root[len(dir_abs_path) :]
-            if sub_dir.startswith("/"):
-                sub_dir = sub_dir[1:]
-            file_path = join(root, name)
-            logging.info('Uploading file "%s" to gcs...', file_path)
-            # gcs_file_path = join(gcs_path, sub_dir, name)
-            gcs_file_path = join(join(gcs_path, file_path[1:]))
-            blob = bucket.blob(gcs_file_path)
-            blob.upload_from_filename(file_path)
-    logging.info(
-        'Finished uploading input files to gcs "%s/%s".', bucket_name, gcs_path
-    )
-
 def upload_full_directories(
     local_dir_list: List[str], bucket_name: str, gcs_path: str
 ) -> None:

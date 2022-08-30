@@ -70,4 +70,14 @@ public interface RedshiftRawLogsDumpFormat {
             return name.startsWith(ZIP_ENTRY_PREFIX) && name.endsWith(ZIP_ENTRY_SUFFIX);
         }
     }
+
+    interface QueryQueueInfo {
+        String ZIP_ENTRY_PREFIX = "query_queue_info_";
+
+        enum Header {
+            database, query, xid, userid, queue_start_time, exec_start_time,
+            service_class, slots, queue_elapsed, exec_elapsed, wlm_total_elapsed,
+            commit_queue_elapsed, commit_exec_time;
+        }
+    }
 }
