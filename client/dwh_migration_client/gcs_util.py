@@ -58,6 +58,7 @@ def upload_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
         'Finished uploading input files to gcs "%s/%s".', bucket_name, gcs_path
     )
 
+
 def upload_full_directories(
     local_dir_list: List[str], bucket_name: str, gcs_path: str
 ) -> None:
