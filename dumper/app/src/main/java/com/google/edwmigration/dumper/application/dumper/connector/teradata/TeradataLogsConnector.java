@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.errorprone.annotations.ForOverride;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -68,6 +69,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
+@RespectsArgumentAssessment
 public class TeradataLogsConnector extends AbstractTeradataConnector implements LogsConnector, TeradataLogsDumpFormat {
 
     private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
@@ -143,7 +145,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         protected final String condition;
         protected final ZonedInterval interval;
 
-        public TeradataLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable, String queryTable, String condition, ZonedInterval interval) {
+        public TeradataLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable,
+            String queryTable, String condition, ZonedInterval interval) {
             super(targetPath);
             this.state = Preconditions.checkNotNull(state, "SharedState was null.");
             this.logTable = logTable;
@@ -178,11 +181,14 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         @ForOverride
         @Nonnull
         /* pp */ String getSql(@Nonnull Predicate<? super String> predicate) {
+            return getSql(predicate, EXPRESSIONS);
+        }
+        /* pp */ String getSql(Predicate<? super String> predicate, String[] expressions) {
             StringBuilder buf = new StringBuilder("SELECT ");
 
             String separator = "";
             boolean queryTableIncluded = false;
-            for (String expression : EXPRESSIONS) {
+            for (String expression : expressions) {
                 buf.append(separator);
                 if (predicate.test(expression)) {
                     buf.append(expression);
@@ -243,6 +249,143 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         }
     }
 
+    protected static class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
+
+        static final String[] EXPRESSIONS_FOR_ASSESSMENT = new String[]{
+                "ST.QueryID",
+                "ST.SQLRowNo",
+                "ST.SQLTextInfo",
+                "L.AbortFlag",
+                "L.AcctString",
+                "L.AcctStringDate",
+                "L.AcctStringHour",
+                "L.AcctStringTime",
+                "L.AMPCPUTime",
+                "L.AMPCPUTimeNorm",
+                "L.AppID",
+                "L.CacheFlag",
+                "L.CalendarName",
+                "L.CallNestingLevel",
+                "L.CheckpointNum",
+                "L.ClientAddr",
+                "L.ClientID",
+                "L.CollectTimeStamp AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"CollectTimeStamp\"",
+                "L.CPUDecayLevel",
+                "L.DataCollectAlg",
+                "L.DBQLStatus",
+                "L.DefaultDatabase",
+                "L.DelayTime",
+                "L.DisCPUTime",
+                "L.DisCPUTimeNorm",
+                "L.ErrorCode",
+                "L.EstMaxRowCount",
+                "L.EstMaxStepTime",
+                "L.EstProcTime",
+                "L.EstResultRows",
+                "L.ExpandAcctString",
+                "L.FirstRespTime AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"FirstRespTime\"",
+                "L.FirstStepTime AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"FirstStepTime\"",
+                "L.FlexThrottle",
+                "L.ImpactSpool",
+                "L.InternalRequestNum",
+                "L.IODecayLevel",
+                "L.IterationCount",
+                "L.KeepFlag",
+                "L.LastRespTime",
+                "L.LockDelay",
+                "L.LockLevel",
+                "L.LogicalHostID",
+                "L.LogonDateTime AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"LogonDateTime\"",
+                "L.LogonSource",
+                "L.LSN",
+                "L.MaxAMPCPUTime",
+                "L.MaxAMPCPUTimeNorm",
+                "L.MaxAmpIO",
+                "L.MaxCPUAmpNumber",
+                "L.MaxCPUAmpNumberNorm",
+                "L.MaxIOAmpNumber",
+                "L.MaxNumMapAMPs",
+                "L.MaxOneMBRowSize",
+                "L.MaxStepMemory",
+                "L.MaxStepsInPar",
+                "L.MinAmpCPUTime",
+                "L.MinAmpCPUTimeNorm",
+                "L.MinAmpIO",
+                "L.MinNumMapAMPs",
+                "L.MinRespHoldTime",
+                "L.NumFragments",
+                "L.NumOfActiveAMPs",
+                "L.NumRequestCtx",
+                "L.NumResultOneMBRows",
+                "L.NumResultRows",
+                "L.NumSteps",
+                "L.NumStepswPar",
+                "L.ParamQuery",
+                "L.ParserCPUTime",
+                "L.ParserCPUTimeNorm",
+                "L.ParserExpReq",
+                "L.PersistentSpool",
+                "L.ProcID",
+                "L.ProfileID",
+                "L.ProfileName",
+                "L.ProxyRole",
+                "L.ProxyUser",
+                "L.ProxyUserID",
+                "L.QueryBand",
+                "L.QueryRedriven",
+                "L.QueryText",
+                "L.ReDriveKind",
+                "L.RemoteQuery",
+                "L.ReqIOKB",
+                "L.ReqPhysIO",
+                "L.ReqPhysIOKB",
+                "L.RequestMode",
+                "L.RequestNum",
+                "L.SeqRespTime",
+                "L.SessionID",
+                "L.SessionTemporalQualifier",
+                "L.SpoolUsage",
+                "L.StartTime AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"StartTime\"",
+                "L.StatementGroup",
+                "L.Statements",
+                "L.StatementType",
+                "L.SysDefNumMapAMPs",
+                "L.TacticalCPUException",
+                "L.TacticalIOException",
+                "L.TDWMEstMemUsage",
+                "L.ThrottleBypassed",
+                "L.TotalFirstRespTime",
+                "L.TotalIOCount",
+                "L.TotalServerByteCount",
+                "L.TTGranularity",
+                "L.TxnMode",
+                "L.TxnUniq",
+                "L.UnitySQL",
+                "L.UnityTime",
+                "L.UsedIota",
+                "L.UserID",
+                "L.UserName",
+                "L.UtilityByteCount",
+                "L.UtilityInfoAvailable",
+                "L.UtilityRowCount",
+                "L.VHLogicalIO",
+                "L.VHLogicalIOKB",
+                "L.VHPhysIO",
+                "L.VHPhysIOKB",
+                "L.WarningOnly",
+                "L.WDName"
+        };
+
+        public TeradataAssessmentLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable, String queryTable, String condition, ZonedInterval interval) {
+            super(targetPath, state, logTable, queryTable, condition, interval);
+        }
+
+        @Nonnull
+        @Override
+        String getSql(@Nonnull Predicate<? super String> predicate) {
+            return getSql(predicate, EXPRESSIONS_FOR_ASSESSMENT);
+        }
+    }
     @Override
     public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) throws MetadataDumperUsageException {
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
@@ -273,9 +416,16 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
         LOG.info("Exporting query log for " + intervals);
         SharedState state = new SharedState();
+        boolean isAssessment = arguments.isAssessment();
         for (ZonedInterval interval : intervals) {
             String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
-            out.add(new TeradataLogsJdbcTask(file, state, logTable, queryTable, condition, interval).withHeaderClass(Header.class));
+            if (isAssessment) {
+                out.add(new TeradataAssessmentLogsJdbcTask(file, state, logTable, queryTable, condition, interval)
+                        .withHeaderClass(HeaderForAssessment.class));
+            } else {
+                out.add(new TeradataLogsJdbcTask(file, state, logTable, queryTable, condition, interval)
+                        .withHeaderClass(Header.class));
+            }
         }
     }
 }
