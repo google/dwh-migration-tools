@@ -111,7 +111,6 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector impleme
             selStar(parallelTask, "STV_MV_INFO");
             selStar(parallelTask, "STV_WLM_SERVICE_CLASS_CONFIG");
             selStar(parallelTask, "STV_WLM_SERVICE_CLASS_STATE");
-            selStar(parallelTask, "STL_WLM_QUERY");
         }
     }
 }
