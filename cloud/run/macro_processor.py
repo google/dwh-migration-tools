@@ -14,13 +14,14 @@
 """Text processor for macro/templating langs embedded in code to translate."""
 
 import fnmatch
-import pathlib
 import re
 from collections.abc import Mapping
 from pprint import pformat
 from typing import Pattern, Tuple
 
 from marshmallow import Schema, fields, post_load
+
+from run.paths import Path
 
 
 class _MacroProcessorSchema(Schema):
@@ -33,7 +34,7 @@ class _MacroProcessorSchema(Schema):
     )
 
     @post_load
-    def build(self, data, **kwargs) -> "MacroProcessor":  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
+    def build(self, data, **kwargs):  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
         return MacroProcessor(data["macros"])
 
 
@@ -56,9 +57,9 @@ class MacroProcessor:
                 }
             })
 
-            relative_path = "foo.sql"
+            relative_path = pathlib.Path("foo.sql")
 
-            imput_text = "select ${MACRO_1} from my_db.%MACRO_2%;"
+            input_text = "select ${MACRO_1} from my_db.%MACRO_2%;"
             expanded_text = macro_processor.expand(relative_path, input_text)
             print(expanded_text)  # select my_col from my_db.my_table;
 
@@ -92,11 +93,11 @@ class MacroProcessor:
         macro_processor: MacroProcessor = _MacroProcessorSchema().load(mapping)
         return macro_processor
 
-    def expand(self, path: pathlib.Path, text: str) -> str:
+    def expand(self, path: Path, text: str) -> str:
         """Expands macro/template expressions embedded in input to be translated.
 
         Args:
-            path: A pathlib.Path representing the relative path of the input to
+            path: A run.paths.Path representing the relative path of the input to
                 be translated.
             text: A string representing the contents of the input to be
                 translated.
@@ -104,25 +105,23 @@ class MacroProcessor:
         Returns:
             A string representing the expanded input.
         """
-        reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(path.as_posix())
+        reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(str(path))
         if not reg_pattern_map:
             return text
         return patterns.sub(lambda m: reg_pattern_map[re.escape(m.group())], text)
 
-    def unexpand(self, path: pathlib.Path, text: str) -> str:
+    def unexpand(self, path: Path, text: str) -> str:
         """Unexpands macro/template expressions embedded in translated output.
 
         Args:
-            path: A pathlib.Path representing the relative path of the
+            path: A run.paths.Path representing the relative path of the
                 translated output.
             text: A string representing the contents of the translated output.
 
         Returns:
             A string representing the unexpanded translated output.
         """
-        reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(
-            path.as_posix(), True
-        )
+        reg_pattern_map, patterns = self._get_all_regex_pattern_mapping(str(path), True)
         if not reg_pattern_map:
             return text
         return re.sub(

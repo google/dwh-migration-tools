@@ -140,7 +140,7 @@ class _TranslationTypeSchema(Schema):
     )
 
     @post_load
-    def build(self, data, **kwargs) -> "TranslationType":  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
+    def build(self, data, **kwargs):  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
         name = data["name"]
         source_dialect = self._dialect_map[name]["source"]
         target_dialect = self._dialect_map[name]["target"]
