@@ -99,9 +99,9 @@ def execute(request: CreateMigrationWorkflowRequest) -> None:
 
     client = MigrationServiceClient()
 
-    logging.info("Create migration workflow request: %s.", request)
+    logging.info("Create migration workflow request:\n%s", request)
     response = client.create_migration_workflow(request=request)
-    logging.info("Create migration workflow response: %s.", response)
+    logging.info("Create migration workflow response:\n%s", response)
     workflow_name: str = response.name
     workflow_name_parts = workflow_name.split("/")
     project = workflow_name_parts[1]

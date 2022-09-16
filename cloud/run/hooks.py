@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """User-defined code that is hooked into the translation workflow."""
+from run.paths import Path
 
-import pathlib
 
-
-def preprocess(path: pathlib.Path, text: str) -> str:  # pylint: disable=unused-argument
+def preprocess(path: Path, text: str) -> str:  # pylint: disable=unused-argument
     """Preprocesses input via user-defined code before submitting it to BQMS.
 
     Args:
-        path: A pathlib.Path representing the relative path of the input to be
+        path: A run.paths.Path representing the relative path of the input to be
             preprocessed.
         text: A string representing the contents of the input to be
             preprocessed.
@@ -31,13 +30,11 @@ def preprocess(path: pathlib.Path, text: str) -> str:  # pylint: disable=unused-
     return text
 
 
-def postprocess(
-    path: pathlib.Path, text: str  # pylint: disable=unused-argument
-) -> str:
+def postprocess(path: Path, text: str) -> str:  # pylint: disable=unused-argument
     """Postprocesses translated BQMS output via user-defined code.
 
     Args:
-        path: A pathlib.Path representing the relative path of the translated
+        path: A run.paths.Path representing the relative path of the translated
             output to be postprocessed.
         text: A string representing the contents of the translated output to be
             postprocessed.

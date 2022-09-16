@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Schemas and validators for object name mapping."""
+from collections.abc import Mapping
 
 from google.cloud.bigquery_migration_v2 import (
     NameMappingKey,
@@ -45,7 +46,7 @@ class _NameMappingKeySchema(Schema):
     attribute = fields.String()
 
     @post_load
-    def build(self, data, **kwargs) -> NameMappingKey:  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
+    def build(self, data, **kwargs):  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
         return NameMappingKey(**data)
 
 
@@ -58,7 +59,7 @@ class _NameMappingValueSchema(Schema):
     attribute = fields.String()
 
     @post_load
-    def build(self, data, **kwargs) -> NameMappingValue:  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
+    def build(self, data, **kwargs):  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
         return NameMappingValue(**data)
 
 
@@ -69,7 +70,7 @@ class _ObjectNameMappingSchema(Schema):
     target = fields.Nested(_NameMappingValueSchema, required=True)
 
     @post_load
-    def build(self, data, **kwargs) -> ObjectNameMapping:  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
+    def build(self, data, **kwargs):  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
         return ObjectNameMapping(**data)
 
 
@@ -79,5 +80,19 @@ class ObjectNameMappingListSchema(Schema):
     name_map = fields.List(fields.Nested(_ObjectNameMappingSchema), required=True)
 
     @post_load
-    def build(self, data, **kwargs) -> ObjectNameMappingList:  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
+    def build(self, data, **kwargs):  # type: ignore[no-untyped-def] # pylint: disable=unused-argument
         return ObjectNameMappingList(**data)
+
+    @classmethod
+    def from_mapping(cls, mapping: Mapping[str, object]) -> ObjectNameMappingList:
+        """Factory method for creating a ObjectNameMappingList from a Mapping.
+
+        Args:
+            mapping: A Mapping similar to
+                examples/teradata/sql/config/object_name_mapping.json.
+
+        Returns:
+            A ObjectNameMappingList instance.
+        """
+        object_name_mapping_list: ObjectNameMappingList = cls().load(mapping)
+        return object_name_mapping_list

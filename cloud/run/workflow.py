@@ -12,28 +12,60 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Preprocess->translate->postprocess workflow."""
-
-import pathlib
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional
+from concurrent.futures import Executor, Future, as_completed
+from threading import Lock
+from typing import Optional, ParamSpec, Type, TypeVar
 
 from google.cloud.bigquery_migration_v2 import CreateMigrationWorkflowRequest
-from google.cloud.storage.blob import Blob
 
 from run.gcp.bqms.request import execute as execute_bqms_request
-from run.gcp.gcs import GCS
 from run.macro_processor import MacroProcessor
+from run.paths import Path, Paths
 
-ProcessingHook = Callable[[pathlib.Path, str], str]
+_P = ParamSpec("_P")
+_T = TypeVar("_T")
+
+
+class SynchronousExecutor(Executor):
+    """Synchronous executor."""
+
+    def __init__(self) -> None:
+        self._shutdown = False
+        self._shutdownLock = Lock()  # pylint: disable=invalid-name
+
+    def submit(  # pylint: disable=arguments-differ
+        self, __fn: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs
+    ) -> Future[_T]:
+        with self._shutdownLock:
+            if self._shutdown:
+                raise RuntimeError("cannot schedule new futures after shutdown")
+
+            future: Future[_T] = Future()
+            try:
+                result = __fn(*args, **kwargs)
+            except Exception as exc:  # pylint: disable=broad-except
+                future.set_exception(exc)
+            else:
+                future.set_result(result)
+
+            return future
+
+    def shutdown(self, wait: bool = True, *, cancel_futures: bool = False) -> None:
+        with self._shutdownLock:
+            self._shutdown = True
+
+
+ProcessingHook = Callable[[Path, str], str]
 
 
 def execute(
-    gcs: GCS,
+    paths: Paths,
     preprocess_hook: ProcessingHook,
     postprocess_hook: ProcessingHook,
     bqms_request: CreateMigrationWorkflowRequest,
     macro_processor: Optional[MacroProcessor] = None,
+    executor_factory: Type[Executor] = SynchronousExecutor,
 ) -> None:
     """Executes the preprocess->translate->postprocess workflow.
 
@@ -41,21 +73,21 @@ def execute(
         .. code-block::
 
             from run.gcp.bqms.request import build as build_bqms_request
-            from run.gcp.gcs import GCS
             from run.hooks import (
                 postprocess as postprocess_hook,
                 preprocess as preprocess_hook
             )
             from run.macro_processor import MacroProcessor
+            from run.paths import Paths
 
-            gcs = GCS.from_mapping(...)
+            paths = Paths.from_mapping(...)
             bqms_request = build_bqms_request(...)
             macro_processor = MacroProcessor.from_mapping(...)
-            execute(gcs, preprocess_hook, postprocess_hook, bqms_request,
+            execute(paths, preprocess_hook, postprocess_hook, bqms_request,
                     macro_processor)
 
     Args:
-        gcs: A run.gcp.gcs.GCS instance for reading input and writing output.
+        paths: A run.paths.Paths instance containing project paths.
         preprocess_hook: A callable for hooking user-defined preprocessing
             logic into the translation workflow.
         postprocess_hook: A callable for hooking user-defined postprocessing
@@ -66,56 +98,69 @@ def execute(
         macro_processor: An optional run.macro_processor.MacroProcessor for
             handling macro/templating languages embedded in code to be
             translated.
+        executor_factory: An optional concurrent.futures.Executor factory used
+            to create an executor for per-path pre and postprocessing tasks.
     """
 
-    def _preprocess(source_blob: Blob) -> None:
-        """Preprocessing logic.
+    def _preprocess(source_file_path: Path) -> None:
+        """Preprocessing task.
 
-        To be submitted to thread pool executor for each input GCS blob.
+        To be submitted to executor for each input path.
         """
-        relative_path = pathlib.Path(source_blob.name).relative_to(gcs.input_path)
-        target_blob = gcs.bucket.blob(
-            (gcs.preprocessed_path / relative_path).as_posix()
-        )
+        relative_file_path = source_file_path.relative_to(paths.input_path)
+        target_file_path = paths.preprocessed_path / relative_file_path
+        target_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if relative_path.name.endswith(".zip"):
-            target_blob.rewrite(source_blob)
+        # Do not preprocess metadata zip file.
+        if relative_file_path.name.endswith(".zip"):
+            with source_file_path.open(mode="rb") as source_file:
+                source_bytes = source_file.read()
+            with target_file_path.open(mode="wb") as target_file:
+                target_file.write(source_bytes)
             return
 
-        input_text = source_blob.download_as_text()
-        preprocessed_text = preprocess_hook(relative_path, input_text)
+        with source_file_path.open(mode="r", encoding="utf-8") as source_file:
+            source_text = source_file.read()
+
+        preprocessed_text = preprocess_hook(relative_file_path, source_text)
         macro_expanded_text = (
-            macro_processor.expand(relative_path, preprocessed_text)
+            macro_processor.expand(relative_file_path, preprocessed_text)
             if macro_processor
             else preprocessed_text
         )
-        target_blob.upload_from_string(macro_expanded_text)
 
-    def _postprocess(source_blob: Blob) -> None:
-        """Postprocessing logic.
+        with target_file_path.open(mode="w", encoding="utf-8") as target_file:
+            target_file.write(macro_expanded_text)
 
-        To be submitted to thread pool executor for each translated GCS blob.
+    def _postprocess(source_file_path: Path) -> None:
+        """Postprocessing task.
+
+        To be submitted to executor for each translated path.
         """
-        relative_path = pathlib.Path(source_blob.name).relative_to(gcs.translated_path)
-        target_blob = gcs.bucket.blob(
-            (gcs.postprocessed_path / relative_path).as_posix()
-        )
+        relative_file_path = source_file_path.relative_to(paths.translated_path)
+        target_file_path = paths.postprocessed_path / relative_file_path
+        target_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        translated_text = source_blob.download_as_text()
+        with source_file_path.open(mode="r", encoding="utf-8") as source_file:
+            source_text = source_file.read()
+
         macro_unexpanded_text = (
-            macro_processor.unexpand(relative_path, translated_text)
+            macro_processor.unexpand(relative_file_path, source_text)
             if macro_processor
-            else translated_text
+            else source_text
         )
-        postprocessed_text = postprocess_hook(relative_path, macro_unexpanded_text)
-        target_blob.upload_from_string(postprocessed_text)
+        postprocessed_text = postprocess_hook(relative_file_path, macro_unexpanded_text)
 
-    with ThreadPoolExecutor() as executor:
+        with target_file_path.open(mode="w", encoding="utf-8") as target_file:
+            target_file.write(postprocessed_text)
+
+    with executor_factory() as executor:
         futures = []
 
         # Preprocess.
-        for input_blob in gcs.bucket.list_blobs(prefix=gcs.input_path.as_posix()):
-            futures.append(executor.submit(_preprocess, input_blob))
+        for input_path in paths.input_path.rglob("*"):
+            if input_path.is_file():
+                futures.append(executor.submit(_preprocess, input_path))
 
         # Trigger any exceptions caught during preprocessing.
         for future in as_completed(futures):
@@ -126,10 +171,11 @@ def execute(
         execute_bqms_request(bqms_request)
 
         # Postprocess.
-        for translated_blob in gcs.bucket.list_blobs(
-            prefix=gcs.translated_path.as_posix()
-        ):
-            futures.append(executor.submit(_postprocess, translated_blob))
+        for translated_path in paths.translated_path.rglob(
+            "*"
+        ):  # type: ignore[no-untyped-call]
+            if translated_path.is_file():
+                futures.append(executor.submit(_postprocess, translated_path))
 
         # Trigger any exceptions caught during postprocessing.
         for future in as_completed(futures):
