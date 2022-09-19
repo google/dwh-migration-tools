@@ -218,10 +218,12 @@ Windows support is limited.  And you may experience unexpected behavior running 
 The following steps has been tested in Windows 10 and Python 3.10:
 
 Follow the steps in the Installation section to install Python, gloud, and this 
-GitHub repo.  After installing the package via `pip3 install dwh-migration-tools/client` and edit the `config.yaml` 
-file, run the following commands to run the tool:
+GitHub repo.  After installing the package via `pip3 install dwh-migration-tools/client` and editing the 
+`dwh-migration-tools/clientconfig.yaml` file, run the following commands to start a translation job:
 
 ```
 cd dwh-migration-tools
 python client/dwh_migration_client/main.py
 ```
+
+The commandline options are also acceptable in Windows.
