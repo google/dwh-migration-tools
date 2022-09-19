@@ -118,6 +118,24 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
             makeTasks(arguments, intervals,
                 RedshiftRawLogsDumpFormat.QueryMetricsHistory.ZIP_ENTRY_PREFIX,
                 queryMetricsTemplateQuery, "starttime", parallelTask);
+
+            String queryQueueInfoTemplateQuery
+                = "SELECT database, query, xid, userid, queue_start_time, "
+                + " exec_start_time, service_class, slots, queue_elapsed, exec_elapsed, "
+                + " wlm_total_elapsed, commit_queue_elapsed, commit_exec_time "
+                + "FROM SVL_QUERY_QUEUE_INFO WHERE ##";
+            makeTasks(arguments, intervals,
+                RedshiftRawLogsDumpFormat.QueryQueueInfo.ZIP_ENTRY_PREFIX,
+                queryQueueInfoTemplateQuery, "queue_start_time", parallelTask);
+
+            String wlmQueryTemplateQuery
+                = "SELECT userid, xid, task, query, service_class, slot_count, service_class_start_time,"
+                + " queue_start_time, queue_end_time, total_queue_time, exec_start_time, exec_end_time,"
+                + " total_exec_time, service_class_end_time, final_state, query_priority"
+                + " FROM STL_WLM_QUERY WHERE ##";
+            makeTasks(arguments, intervals,
+                RedshiftRawLogsDumpFormat.WlmQuery.ZIP_ENTRY_PREFIX,
+                wlmQueryTemplateQuery, "service_class_start_time", parallelTask);
         }
     }
 
