@@ -16,6 +16,7 @@
 import logging
 import os
 from os.path import abspath, basename, isdir, join
+from pathlib import Path, PurePosixPath
 
 from google.cloud import storage
 from google.cloud.exceptions import NotFound
@@ -45,12 +46,12 @@ def upload_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
     for root, _, files in os.walk(dir_abs_path):
         for name in files:
             sub_dir = root[len(dir_abs_path) :]
-            if sub_dir.startswith("/"):
+            if sub_dir.startswith("/") or sub_dir.startswith("\\"):
                 sub_dir = sub_dir[1:]
             file_path = join(root, name)
-            logging.info('Uploading file "%s" to gcs...', file_path)
-            gcs_file_path = join(gcs_path, sub_dir, name)
-            blob = bucket.blob(gcs_file_path)
+            gcs_file_path = PurePosixPath(gcs_path, sub_dir, name)
+            logging.info('Uploading file "%s" to gcs "%s" ...', file_path, gcs_file_path)
+            blob = bucket.blob(str(gcs_file_path))
             blob.upload_from_filename(file_path)
     logging.info(
         'Finished uploading input files to gcs "%s/%s".', bucket_name, gcs_path
@@ -71,10 +72,10 @@ def download_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
     logging.info('Start downloading outputs from gcs "%s/%s"', bucket_name, gcs_path)
     for blob in blobs:
         file_name = basename(blob.name)
-        sub_dir = blob.name[len(gcs_path) + 1 : -len(file_name)]
-        file_dir = join(local_dir, sub_dir)
+        sub_dir = Path(blob.name[len(gcs_path) + 1 : -len(file_name)])
+        file_dir = Path(local_dir) / sub_dir
         os.makedirs(file_dir, exist_ok=True)
-        file_path = join(file_dir, file_name)
+        file_path = file_dir / file_name
         logging.info('Downloading output file to "%s"...', file_path)
         blob.download_to_filename(file_path)
 

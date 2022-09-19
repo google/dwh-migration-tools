@@ -7,6 +7,11 @@ client package.
 ## Supported Python Versions 
 Python >= 3.7
 
+## Supported OS
+Preferred OS: Linus, MacOS.
+
+Unexpected behavior may exist in Windows, see the FAQ section about Windows usage.
+
 ## Installation
 
 Clone or download this repository and install the exemplary Python client: 
@@ -206,3 +211,17 @@ It's recommended to run this tool in the Python [virtual env](https://docs.pytho
 dependency noises. 
 
 Create a Python3 virtual env by `python3 -m venv my_env`, and activate it by `source my_env/bin/activate`.
+
+### Can I use the tool in Windows?
+Windows support is limited.  And you may experience unexpected behavior running the tool in Windows OS.
+
+The following steps has been tested in Windows 10 and Python 3.10:
+
+Follow the steps in the Installation section to install Python, gloud, and this 
+GitHub repo.  After installing the package via `pip3 install dwh-migration-tools/client` and edit the `config.yaml` 
+file, run the following commands to run the tool:
+
+```
+cd dwh-migration-tools
+python client/dwh_migration_client/main.py
+```

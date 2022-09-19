@@ -82,17 +82,13 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             self.preprocessor.preprocess(self._input_directory, local_input_dir)
 
         gcs_path = self._generate_gcs_path()
-        gcs_input_path = join(
-            f"gs://{self.config.gcp_settings.gcs_bucket}", gcs_path, "input"
-        )
-        gcs_output_path = join(
-            f"gs://{self.config.gcp_settings.gcs_bucket}", gcs_path, "output"
-        )
+        gcs_input_path = f"gs://{self.config.gcp_settings.gcs_bucket}/{gcs_path}/input"
+        gcs_output_path = f"gs://{self.config.gcp_settings.gcs_bucket}/{gcs_path}/output"
         logging.info("Uploading inputs to gcs ...")
         gcs_util.upload_directory(
             local_input_dir,
             self.config.gcp_settings.gcs_bucket,
-            join(gcs_path, "input"),
+            f"{gcs_path}/input",
         )
         logging.info("Start translation job...")
         job_name = self.create_migration_workflow(gcs_input_path, gcs_output_path)
@@ -101,7 +97,7 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
         gcs_util.download_directory(
             local_output_dir,
             self.config.gcp_settings.gcs_bucket,
-            join(gcs_path, "output"),
+            f"{gcs_path}/output",
         )
 
         if self.preprocessor is not None:
