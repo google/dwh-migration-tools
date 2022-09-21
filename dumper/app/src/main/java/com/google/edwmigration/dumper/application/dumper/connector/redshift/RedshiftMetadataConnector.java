@@ -60,6 +60,7 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector impleme
 
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
         out.add(new FormatTask(FORMAT_NAME));
+        out.add(new RedshiftEnvironmentYamlTask());
 
         parallelTask.addTask(new JdbcSelectTask(SvvColumnsFormat.ZIP_ENTRY_NAME, "SELECT * FROM SVV_COLUMNS"));
         selStar(parallelTask, "SVV_TABLES");
