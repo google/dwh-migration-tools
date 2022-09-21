@@ -40,6 +40,9 @@ __protobuf__ = proto.module(
         'NameMappingKey',
         'NameMappingValue',
         'SourceEnv',
+        'SourceTargetLocationMapping',
+        'SourceLocation',
+        'TargetLocation',
     },
 )
 
@@ -75,6 +78,9 @@ class TranslationConfigDetails(proto.Message):
         source_env (google.cloud.bigquery.migration_v2alpha.types.SourceEnv):
             The default source environment values for the
             translation.
+        source_target_location_mapping (Sequence[google.cloud.bigquery.migration_v2alpha.types.SourceTargetLocationMapping]):
+            The mapping from source location paths to
+            target location paths.
     """
 
     gcs_source_path = proto.Field(
@@ -107,6 +113,11 @@ class TranslationConfigDetails(proto.Message):
         proto.MESSAGE,
         number=6,
         message='SourceEnv',
+    )
+    source_target_location_mapping = proto.RepeatedField(
+        proto.MESSAGE,
+        number=7,
+        message='SourceTargetLocationMapping',
     )
 
 
@@ -505,6 +516,71 @@ class SourceEnv(proto.Message):
     schema_search_path = proto.RepeatedField(
         proto.STRING,
         number=2,
+    )
+
+
+class SourceTargetLocationMapping(proto.Message):
+    r"""Represents one mapping from a source location path to an
+    optional target location path.
+
+    Attributes:
+        source_location (google.cloud.bigquery.migration_v2alpha.types.SourceLocation):
+            The path to the location of the source data.
+        target_location (google.cloud.bigquery.migration_v2alpha.types.TargetLocation):
+            The path to the location of the target data.
+    """
+
+    source_location = proto.Field(
+        proto.MESSAGE,
+        number=1,
+        message='SourceLocation',
+    )
+    target_location = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message='TargetLocation',
+    )
+
+
+class SourceLocation(proto.Message):
+    r"""Represents one path to the location that holds source data.
+
+    .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
+
+    Attributes:
+        gcs_path (str):
+            The Cloud Storage path for a directory of
+            files.
+
+            This field is a member of `oneof`_ ``location``.
+    """
+
+    gcs_path = proto.Field(
+        proto.STRING,
+        number=1,
+        oneof='location',
+    )
+
+
+class TargetLocation(proto.Message):
+    r"""// Represents one path to the location that holds target
+    data.
+
+
+    .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
+
+    Attributes:
+        gcs_path (str):
+            The Cloud Storage path for a directory of
+            files.
+
+            This field is a member of `oneof`_ ``location``.
+    """
+
+    gcs_path = proto.Field(
+        proto.STRING,
+        number=1,
+        oneof='location',
     )
 
 

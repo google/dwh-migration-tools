@@ -55,8 +55,11 @@ from google.cloud.bigquery.migration_v2alpha.types.translation_config import Pre
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import RedshiftDialect
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import SnowflakeDialect
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import SourceEnv
+from google.cloud.bigquery.migration_v2alpha.types.translation_config import SourceLocation
+from google.cloud.bigquery.migration_v2alpha.types.translation_config import SourceTargetLocationMapping
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import SparkSQLDialect
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import SQLServerDialect
+from google.cloud.bigquery.migration_v2alpha.types.translation_config import TargetLocation
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import TeradataDialect
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import TranslationConfigDetails
 from google.cloud.bigquery.migration_v2alpha.types.translation_config import VerticaDialect
@@ -108,8 +111,11 @@ __all__ = ('MigrationServiceClient',
     'RedshiftDialect',
     'SnowflakeDialect',
     'SourceEnv',
+    'SourceLocation',
+    'SourceTargetLocationMapping',
     'SparkSQLDialect',
     'SQLServerDialect',
+    'TargetLocation',
     'TeradataDialect',
     'TranslationConfigDetails',
     'VerticaDialect',

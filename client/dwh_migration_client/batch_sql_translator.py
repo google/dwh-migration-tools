@@ -21,8 +21,8 @@ import sys
 import time
 import uuid
 from datetime import datetime
-from os.path import dirname, join
-from typing import Optional
+from os.path import dirname, join, abspath
+from typing import Optional, OrderedDict
 
 from google.cloud.bigquery import migration_v2alpha as bigquery_migration_v2
 
@@ -89,20 +89,49 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
             f"gs://{self.config.gcp_settings.gcs_bucket}", gcs_path, "output"
         )
         logging.info("Uploading inputs to gcs ...")
-        gcs_util.upload_directory(
-            local_input_dir,
-            self.config.gcp_settings.gcs_bucket,
-            join(gcs_path, "input"),
-        )
+
+        local_source_target_location_mapping = OrderedDict()
+        if self.config.translation_config.source_target_location_mapping:
+            # Use the input/output specified by the user arguments when not default.
+            if local_input_dir != "client/input":
+                local_source_target_location_mapping[
+                    abspath(local_input_dir)
+                ] = local_output_dir
+            local_source_target_location_mapping.update(
+                self.config.translation_config.source_target_location_mapping
+            )
+
+        if not local_source_target_location_mapping:
+            gcs_util.upload_directory(
+                local_input_dir,
+                self.config.gcp_settings.gcs_bucket,
+                join(gcs_path, "input"),
+            )
+        else:
+            # Upload using the map.
+            gcs_util.upload_full_directories(
+                local_source_target_location_mapping.keys(),
+                self.config.gcp_settings.gcs_bucket,
+                join(gcs_path, "input"),
+            )
+
         logging.info("Start translation job...")
         job_name = self.create_migration_workflow(gcs_input_path, gcs_output_path)
         self._wait_until_job_finished(job_name)
         logging.info("Downloading outputs...")
-        gcs_util.download_directory(
-            local_output_dir,
-            self.config.gcp_settings.gcs_bucket,
-            join(gcs_path, "output"),
-        )
+        if not local_source_target_location_mapping:
+            gcs_util.download_directory(
+                local_output_dir,
+                self.config.gcp_settings.gcs_bucket,
+                join(gcs_path, "output"),
+            )
+        else:
+            # Download using the map
+            gcs_util.download_directories(
+                local_source_target_location_mapping,
+                self.config.gcp_settings.gcs_bucket,
+                join(gcs_path, "output"),
+            )
 
         if self.preprocessor is not None:
             logging.info(

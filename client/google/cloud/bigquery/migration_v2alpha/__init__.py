@@ -55,8 +55,11 @@ from .types.translation_config import PrestoDialect
 from .types.translation_config import RedshiftDialect
 from .types.translation_config import SnowflakeDialect
 from .types.translation_config import SourceEnv
+from .types.translation_config import SourceLocation
+from .types.translation_config import SourceTargetLocationMapping
 from .types.translation_config import SparkSQLDialect
 from .types.translation_config import SQLServerDialect
+from .types.translation_config import TargetLocation
 from .types.translation_config import TeradataDialect
 from .types.translation_config import TranslationConfigDetails
 from .types.translation_config import VerticaDialect
@@ -110,8 +113,11 @@ __all__ = (
 'SQLServerDialect',
 'SnowflakeDialect',
 'SourceEnv',
+'SourceLocation',
+'SourceTargetLocationMapping',
 'SparkSQLDialect',
 'StartMigrationWorkflowRequest',
+'TargetLocation',
 'TeradataDialect',
 'TeradataOptions',
 'TimeInterval',
