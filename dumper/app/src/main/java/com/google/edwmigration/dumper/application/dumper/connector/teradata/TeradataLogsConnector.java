@@ -23,20 +23,23 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
+import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.errorprone.annotations.ForOverride;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.StringUtils;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -60,6 +63,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
+
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataAssessmentLogsJdbcTask.ASSESSMENT_DEF_LOG_TABLE;
 
 /**
  *
@@ -263,7 +268,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
     }
 
     protected static class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
-
+        /* pp */ static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
         static final String[] EXPRESSIONS_FOR_ASSESSMENT = new String[]{
                 "ST.QueryID",
                 "ST.SQLRowNo",
@@ -393,6 +398,39 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
             super(targetPath, state, logTable, queryTable, conditions, interval, orderBy);
         }
 
+        //Need to be overridden because for byte[] array toString returns not string representation but address of array in memory
+        @Nonnull
+        @Override
+        protected ResultSetExtractor<Void> newCsvResultSetExtractor(@Nonnull ByteSink sink, long count) {
+            return rs -> {
+                CSVFormat format = newCsvFormat(rs);
+                try (RecordProgressMonitor monitor
+                             = count >= 0
+                        ? new RecordProgressMonitor(getName(), count)
+                        : new RecordProgressMonitor(getName());
+                     Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
+                     CSVPrinter printer = format.print(writer)) {
+                    final int columnCount = rs.getMetaData().getColumnCount();
+                    while (rs.next()) {
+                        monitor.count();
+                        for (int i = 1; i <= columnCount; i++) {
+                            Object object = rs.getObject(i);
+                            if (object instanceof byte[]) {
+                                printer.print(Base64.getEncoder().encodeToString((byte[]) object));
+                            } else {
+                                printer.print(object);
+                            }
+                        }
+                        printer.println();
+                    }
+                    return null;
+                } catch (IOException e) {
+                    throw new SQLException(e);
+                }
+            };
+        }
+
+
         @Nonnull
         @Override
         String getSql(@Nonnull Predicate<? super String> predicate) {
@@ -404,7 +442,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
         out.add(new FormatTask(FORMAT_NAME));
 
-        String logTable = DEF_LOG_TABLE;
+        boolean isAssessment = arguments.isAssessment();
+        String logTable = isAssessment ? ASSESSMENT_DEF_LOG_TABLE : DEF_LOG_TABLE;
         String queryTable = DEF_QUERY_TABLE;
         List<String> alternates = arguments.getQueryLogAlternates();
         if (!alternates.isEmpty()) {
@@ -426,7 +465,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
         LOG.info("Exporting query log for " + intervals);
         SharedState state = new SharedState();
-        boolean isAssessment = arguments.isAssessment();
         for (ZonedInterval interval : intervals) {
             String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
             if (isAssessment) {
