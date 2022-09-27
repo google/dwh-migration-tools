@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Dataclass, schema and validator for translation type."""
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 

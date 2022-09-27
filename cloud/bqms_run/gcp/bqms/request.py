@@ -29,7 +29,9 @@ from google.cloud.bigquery_migration_v2 import (
     TranslationConfigDetails,
 )
 
-from run.gcp.bqms.translation_type import TranslationType
+from bqms_run.gcp.bqms.translation_type import TranslationType
+
+logger = logging.getLogger(__name__)
 
 
 def build(
@@ -99,15 +101,16 @@ def execute(request: CreateMigrationWorkflowRequest) -> None:
 
     client = MigrationServiceClient()
 
-    logging.info("Create migration workflow request:\n%s", request)
+    logger.info("Create migration workflow request:\n%s", request)
     response = client.create_migration_workflow(request=request)
-    logging.info("Create migration workflow response:\n%s", response)
+    logger.debug("Create migration workflow response:\n%s", response)
     workflow_name: str = response.name
     workflow_name_parts = workflow_name.split("/")
     project = workflow_name_parts[1]
     location = workflow_name_parts[3]
     workflow_id = workflow_name_parts[5]
 
+    logger.info("Polling for migration workflow status.")
     while True:
         time.sleep(5)
         processing_seconds = int(time.time() - start_time)
@@ -115,17 +118,17 @@ def execute(request: CreateMigrationWorkflowRequest) -> None:
             name=workflow_name,
         )
         workflow_status = client.get_migration_workflow(request=request)
-        logging.info("Status: %s.", workflow_status.state)
-        logging.info("Processing time: %s seconds.", processing_seconds)
+        logger.info("Status: %s.", workflow_status.state)
+        logger.info("Processing time: %s seconds.", processing_seconds)
         if workflow_status.state in (
             MigrationWorkflow.State.COMPLETED,
             MigrationWorkflow.State.PAUSED,
         ):
             break
 
-    logging.info("Completed migration workflow in %d seconds.", processing_seconds)
-    logging.info(
+    logger.info("Completed migration workflow in %d seconds.", processing_seconds)
+    logger.info(
         "Migration workflow details: %s.",
         "https://console.cloud.google.com/bigquery/migrations/batch-translation"
-        f";viewTranslationDetails={location},{workflow_id}?projectnumber={project}",
+        f";viewTranslationDetails={location},{workflow_id}?project={project}",
     )

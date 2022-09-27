@@ -21,9 +21,9 @@ import nox
 def format(session):  # pylint: disable=redefined-builtin
     """Execute addlicense, black and isort."""
     session.run("poetry", "install")
-    session.run("addlicense", "examples", "run", "tests")
-    session.run("poetry", "run", "black", "run", "tests", "noxfile.py")
-    session.run("poetry", "run", "isort", "run", "tests", "noxfile.py")
+    session.run("addlicense", "examples", "bqms_run", "tests")
+    session.run("poetry", "run", "black", "bqms_run", "tests", "noxfile.py")
+    session.run("poetry", "run", "isort", "bqms_run", "tests", "noxfile.py")
 
 
 @nox.session(tags=["analyze"], python=False)
@@ -32,7 +32,7 @@ def lint(session):
     session.run("poetry", "install")
     session.run("npm", "install")
     test_paths = set(p.as_posix() for p in pathlib.Path("tests").rglob("*.py"))
-    session.run("poetry", "run", "pylint", "run", "noxfile.py", *test_paths)
+    session.run("poetry", "run", "pylint", "bqms_run", "noxfile.py", *test_paths)
     session.run("poetry", "run", "yamllint", "examples")
     session.run("npm", "exec", "markdownlint-cli2", "*.md")
     for json_path in set(
@@ -45,7 +45,7 @@ def lint(session):
 def type_check(session):
     """Execute mypy."""
     session.run("poetry", "install")
-    session.run("poetry", "run", "mypy", "--strict", "run")
+    session.run("poetry", "run", "mypy", "--strict", "bqms_run")
 
 
 @nox.session(python=False)
@@ -63,7 +63,7 @@ def tests(session):
             "run",
             "coverage",
             "run",
-            "--source=run",
+            "--source=bqms_run",
             "-m",
             "pytest",
             "-vv",
@@ -79,7 +79,7 @@ def tests(session):
             "run",
             "coverage",
             "run",
-            "--source=run",
+            "--source=bqms_run",
             "-m",
             "pytest",
             tests_path.as_posix(),

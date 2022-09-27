@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "run"
+name = "bqms-run"
 version = "0.1.0"
-description = "BQMS Cloud Run Image"
+description = "BQMS Python Client"
 authors = ["A.J. Welch <ajwelch@google.com>"]
 
 [tool.poetry.scripts]
-bqms-cloud-run = 'run.main:main'
+bqms-run = 'bqms_run.main:main'
 
 [tool.poetry.dependencies]
 python = "^3.10"
