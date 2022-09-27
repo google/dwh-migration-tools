@@ -13,6 +13,7 @@ export BQMS_PROJECT="bqms"
 export BQMS_PROJECT_BILLING_ACCOUNT_ID="######-######-######"
 export BQMS_DEVELOPER_EMAIL="dev@google.com"
 export BQMS_GCS_BUCKET=$BQMS_PROJECT
+export BQMS_GCS_BUCKET_LOCATION="us-east4"
 
 ./provision.sh
 ```
@@ -48,6 +49,7 @@ export BQMS_PROJECT="bqms"
 export BQMS_PROJECT_BILLING_ACCOUNT_ID="######-######-######"
 export BQMS_DEVELOPER_EMAIL="dev@google.com"
 export BQMS_GCS_BUCKET=$BQMS_PROJECT
+export BQMS_GCS_BUCKET_LOCATION="us-east4"
 export BQMS_CLOUD_RUN_SERVICE_ACCOUNT_NAME="bqms-sa"
 # TODO: The following goes away when we have a public image.
 export BQMS_ARTIFACT_PROJECT="bqms-artifact"
