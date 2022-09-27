@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,8 +73,8 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
 
     private static class LSqlQueryFactory extends TeradataLogsConnector.TeradataLogsJdbcTask {
 
-        public LSqlQueryFactory(String targetPath, SharedState state, String logTable, String queryTable, String condition, ZonedInterval interval) {
-            super(targetPath, state, logTable, queryTable, condition, interval);
+        public LSqlQueryFactory(String targetPath, SharedState state, String logTable, String queryTable, List<String> conditions, ZonedInterval interval) {
+            super(targetPath, state, logTable, queryTable, conditions, interval);
         }
 
         @Override
@@ -100,8 +99,9 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
                     + "AND ST.CollectTimeStamp < CAST('%s' AS TIMESTAMP)\n",
                     SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
 
-            if (!Strings.isNullOrEmpty(condition))
+            for (String condition : conditions) {
                 buf.append(" AND ").append(condition);
+            }
 
             return buf.toString().replace('\n', ' ');
         }
@@ -110,8 +110,8 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
 
     private static class LogQueryFactory extends TeradataLogsConnector.TeradataLogsJdbcTask {
 
-        public LogQueryFactory(String targetPath, SharedState state, String logTable, String queryTable, String condition, ZonedInterval interval) {
-            super(targetPath, state, logTable, queryTable, condition, interval);
+        public LogQueryFactory(String targetPath, SharedState state, String logTable, String queryTable, List<String> conditions, ZonedInterval interval) {
+            super(targetPath, state, logTable, queryTable, conditions, interval);
         }
 
         @Override
@@ -136,8 +136,9 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
                     + "AND L.CollectTimeStamp < CAST('%s' AS TIMESTAMP)\n",
                     SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
 
-            if (!Strings.isNullOrEmpty(condition))
+            for (String condition : conditions) {
                 buf.append(" AND ").append(condition);
+            }
 
             return buf.toString().replace('\n', ' ');
         }
@@ -163,13 +164,11 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
         // because we always iterate over the full 7 trailing days; maybe it's worth
         // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
         // to parse and return an ISO instant, not a database-server-specific format.
-        String LSqlcondition, Logcondition;
+        List<String> lSqlConditions = new ArrayList<>();
+        List<String> logConditions = new ArrayList<>();
         if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp())) {
-            LSqlcondition = "ST.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp();
-            Logcondition = "L.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp();
-        } else {
-            LSqlcondition = null;
-            Logcondition = null;
+            lSqlConditions.add("ST.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp());
+            logConditions.add("L.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp());
         }
 
         final int daysToExport = arguments.getQueryLogDays(7);
@@ -183,10 +182,10 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
         SharedState state = new SharedState();
         for (ZonedInterval interval : intervals) {
             String LSqlfile = ZIP_ENTRY_PREFIX_LSQL + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
-            out.add(new LSqlQueryFactory(LSqlfile, state, logTable, queryTable, LSqlcondition, interval).withHeaderClass(TeradataLogsDumpFormat.HeaderLSql.class));
+            out.add(new LSqlQueryFactory(LSqlfile, state, logTable, queryTable, lSqlConditions, interval).withHeaderClass(TeradataLogsDumpFormat.HeaderLSql.class));
 
             String LOGfile = ZIP_ENTRY_PREFIX_LOG + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
-            out.add(new LogQueryFactory(LOGfile, state, logTable, queryTable, Logcondition, interval).withHeaderClass(TeradataLogsDumpFormat.HeaderLog.class));
+            out.add(new LogQueryFactory(LOGfile, state, logTable, queryTable, logConditions, interval).withHeaderClass(TeradataLogsDumpFormat.HeaderLog.class));
 
         }
     }
