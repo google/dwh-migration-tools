@@ -87,13 +87,11 @@ class _PathsSchema(Schema):
         return path
 
     @classmethod
-    def _deserialize_gcs_directory_force_empty(cls, obj: str) -> CloudPath:
+    def _deserialize_gcs_directory_force_empty(cls, obj: str) -> GSPath:
         try:
-            path = CloudPath(obj)  # type: ignore[abstract]
+            path = GSPath(obj)
         except Exception as err:
             raise ValidationError(f"Invalid path: {err}.") from err
-        if not path.cloud_prefix == GSPath.cloud_prefix:
-            raise ValidationError(f"Must be a GCS path: {path.as_uri()}.")
         cls._directory_force_empty(path)
         return path
 
@@ -124,9 +122,9 @@ class Paths:
 
     Attributes:
         input_path: A run.paths.Path where input to be translated is located.
-        preprocessed_path: A cloudpathlib.CloudPath where preprocessed input to be
+        preprocessed_path: A cloudpathlib.GSPath where preprocessed input to be
             translated is written.
-        translated_path: A cloudpathlib.CloudPath where translated output is written.
+        translated_path: A cloudpathlib.GSPath where translated output is written.
         postprocessed_path: A run.paths.Path where postprocessed translated
             output is written.
         macro_mapping_path: An optional run.paths.Path where the macro mapping
@@ -136,8 +134,8 @@ class Paths:
     """
 
     input_path: Path
-    preprocessed_path: CloudPath
-    translated_path: CloudPath
+    preprocessed_path: GSPath
+    translated_path: GSPath
     postprocessed_path: Path
     macro_mapping_path: Optional[Path] = None
     object_name_mapping_path: Optional[Path] = None

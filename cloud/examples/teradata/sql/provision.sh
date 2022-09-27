@@ -23,7 +23,7 @@ gcloud config set project "${BQMS_PROJECT}"
 
 gcloud services enable bigquerymigration.googleapis.com
 
-gsutil mb "gs://${BQMS_GCS_BUCKET}"
+gsutil mb -l "${BQMS_GCS_BUCKET_LOCATION}" "gs://${BQMS_GCS_BUCKET}"
 
 gsutil iam ch "user:${BQMS_DEVELOPER_EMAIL}:objectAdmin" "gs://${BQMS_GCS_BUCKET}"
 
