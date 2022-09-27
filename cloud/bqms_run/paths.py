@@ -13,8 +13,9 @@
 # limitations under the License.
 """Dataclass that contains project paths."""
 import pathlib
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from dataclasses import fields as dataclass_fields
 from typing import Optional, Union
 
 from cloudpathlib import CloudPath, GSPath
@@ -152,3 +153,7 @@ class Paths:
         """
         paths: Paths = _PathsSchema().load(mapping)
         return paths
+
+    def __iter__(self) -> Iterator[tuple[str, Path]]:
+        for field in dataclass_fields(self.__class__):
+            yield field.name, getattr(self, field.name)

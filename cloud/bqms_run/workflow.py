@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Preprocess->translate->postprocess workflow."""
+import logging
 from collections.abc import Callable
 from concurrent.futures import Executor, Future, as_completed
 from threading import Lock
@@ -19,9 +20,12 @@ from typing import Optional, ParamSpec, Type, TypeVar
 
 from google.cloud.bigquery_migration_v2 import CreateMigrationWorkflowRequest
 
-from run.gcp.bqms.request import execute as execute_bqms_request
-from run.macro_processor import MacroProcessor
-from run.paths import Path, Paths
+from bqms_run.gcp.bqms.request import execute as execute_bqms_request
+from bqms_run.macro_processor import MacroProcessor
+from bqms_run.paths import Path, Paths
+
+logger = logging.getLogger(__name__)
+
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
@@ -72,13 +76,13 @@ def execute(
     Example:
         .. code-block::
 
-            from run.gcp.bqms.request import build as build_bqms_request
-            from run.hooks import (
+            from bqms_run.gcp.bqms.request import build as build_bqms_request
+            from bqms_run.hooks import (
                 postprocess as postprocess_hook,
                 preprocess as preprocess_hook
             )
-            from run.macro_processor import MacroProcessor
-            from run.paths import Paths
+            from bqms_run.macro_processor import MacroProcessor
+            from bqms_run.paths import Paths
 
             paths = Paths.from_mapping(...)
             bqms_request = build_bqms_request(...)
@@ -107,6 +111,7 @@ def execute(
 
         To be submitted to executor for each input path.
         """
+        logger.debug("Preprocessing: %s.", source_file_path)
         relative_file_path = source_file_path.relative_to(paths.input_path)
         target_file_path = paths.preprocessed_path / relative_file_path
         target_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -137,6 +142,7 @@ def execute(
 
         To be submitted to executor for each translated path.
         """
+        logger.debug("Postprocessing: %s.", source_file_path)
         relative_file_path = source_file_path.relative_to(paths.translated_path)
         target_file_path = paths.postprocessed_path / relative_file_path
         target_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -158,6 +164,7 @@ def execute(
         futures = []
 
         # Preprocess.
+        logger.info("Preprocessing input paths.")
         for input_path in paths.input_path.rglob("*"):
             if input_path.is_file():
                 futures.append(executor.submit(_preprocess, input_path))
@@ -171,6 +178,7 @@ def execute(
         execute_bqms_request(bqms_request)
 
         # Postprocess.
+        logger.info("Postprocessing translated paths.")
         for translated_path in paths.translated_path.rglob(
             "*"
         ):  # type: ignore[no-untyped-call]

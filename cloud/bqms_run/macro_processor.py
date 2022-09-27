@@ -21,7 +21,7 @@ from typing import Pattern, Tuple
 
 from marshmallow import Schema, fields, post_load
 
-from run.paths import Path
+from bqms_run.paths import Path
 
 
 class _MacroProcessorSchema(Schema):
