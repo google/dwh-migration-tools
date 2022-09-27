@@ -31,7 +31,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -154,7 +157,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         protected final List<String> orderBy;
 
         public TeradataLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable,
-            String queryTable, String condition, ZonedInterval interval) {
+                                    String queryTable, List<String> conditions, ZonedInterval interval) {
+            this(targetPath, state, logTable, queryTable, conditions, interval, Collections.emptyList());
+        }
+
+        protected TeradataLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable,
+                                    String queryTable, List<String> conditions, ZonedInterval interval, List<String> orderBy) {
             super(targetPath);
             this.state = Preconditions.checkNotNull(state, "SharedState was null.");
             this.logTable = logTable;
@@ -388,8 +396,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
                 "L.WDName"
         };
 
-        public TeradataAssessmentLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable, String queryTable, String condition, ZonedInterval interval) {
-            super(targetPath, state, logTable, queryTable, condition, interval);
+        public TeradataAssessmentLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable, String queryTable, List<String> conditions, ZonedInterval interval, List<String> orderBy) {
+            super(targetPath, state, logTable, queryTable, conditions, interval, orderBy);
         }
 
         @Nonnull
@@ -430,10 +438,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         for (ZonedInterval interval : intervals) {
             String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
             if (isAssessment) {
-                out.add(new TeradataAssessmentLogsJdbcTask(file, state, logTable, queryTable, condition, interval)
+                List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
+                out.add(new TeradataAssessmentLogsJdbcTask(file, state, logTable, queryTable, conditions, interval, orderBy)
                         .withHeaderClass(HeaderForAssessment.class));
             } else {
-                out.add(new TeradataLogsJdbcTask(file, state, logTable, queryTable, condition, interval)
+                conditions.add("L.UserName <> 'DBC'");
+                out.add(new TeradataLogsJdbcTask(file, state, logTable, queryTable, conditions, interval)
                         .withHeaderClass(Header.class));
             }
         }
