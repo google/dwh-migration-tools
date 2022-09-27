@@ -1,4 +1,4 @@
-# BQMS Cloud Run Container
+# BQMS Python Client
 
 ```shell
 cd examples/teradata/sql
@@ -10,7 +10,6 @@ Provision:
 
 ```shell
 export BQMS_PROJECT="bqms"
-export BQMS_PROJECT_BILLING_ACCOUNT_ID="######-######-######"
 export BQMS_DEVELOPER_EMAIL="dev@google.com"
 export BQMS_GCS_BUCKET=$BQMS_PROJECT
 export BQMS_GCS_BUCKET_LOCATION="us-east4"
@@ -46,7 +45,6 @@ Provision:
 
 ```shell
 export BQMS_PROJECT="bqms"
-export BQMS_PROJECT_BILLING_ACCOUNT_ID="######-######-######"
 export BQMS_DEVELOPER_EMAIL="dev@google.com"
 export BQMS_GCS_BUCKET=$BQMS_PROJECT
 export BQMS_GCS_BUCKET_LOCATION="us-east4"

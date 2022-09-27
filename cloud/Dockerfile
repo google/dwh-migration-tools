@@ -49,4 +49,4 @@ RUN set -x \
 # $HOME/.cache/pypoetry/virtualenvs which will not be writeable by $APP_USER
 # if $HOME is set to /home. Thus, we ensure $HOME is properly set to
 # /home/$APP_USER.
-ENTRYPOINT HOME=/home/$APP_USER poetry run bqms-cloud-run
+ENTRYPOINT HOME=/home/$APP_USER poetry run bqms-run

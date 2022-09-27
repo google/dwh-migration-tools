@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """User-defined code that is hooked into the translation workflow."""
-from run.paths import Path
+from bqms_run.paths import Path
 
 
 def preprocess(path: Path, text: str) -> str:  # pylint: disable=unused-argument
