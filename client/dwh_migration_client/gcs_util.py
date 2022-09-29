@@ -50,7 +50,9 @@ def upload_directory(local_dir: str, bucket_name: str, gcs_path: str) -> None:
                 sub_dir = sub_dir[1:]
             file_path = join(root, name)
             gcs_file_path = PurePosixPath(gcs_path, sub_dir, name)
-            logging.info('Uploading file "%s" to gcs "%s" ...', file_path, gcs_file_path)
+            logging.info(
+                'Uploading file "%s" to gcs "%s" ...', file_path, gcs_file_path
+            )
             blob = bucket.blob(str(gcs_file_path))
             blob.upload_from_filename(file_path)
     logging.info(

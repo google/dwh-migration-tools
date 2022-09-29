@@ -8,7 +8,7 @@ client package.
 Python >= 3.7
 
 ## Supported OS
-Preferred OS: Linus, MacOS.
+Preferred OS: Linux, MacOS.
 
 Unexpected behavior may exist in Windows, see the FAQ section about Windows usage.
 
@@ -217,7 +217,7 @@ Windows support is limited.  And you may experience unexpected behavior running 
 
 The following steps has been tested in Windows 10 and Python 3.10:
 
-Follow the steps in the Installation section to install Python, gloud, and this 
+Follow the steps in the Installation section to install Python, gcloud, and this 
 GitHub repo.  After installing the package via `pip3 install dwh-migration-tools/client` and editing the 
 `dwh-migration-tools/clientconfig.yaml` file, run the following commands to start a translation job:
 

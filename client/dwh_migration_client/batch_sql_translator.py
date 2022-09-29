@@ -83,7 +83,9 @@ class BatchSqlTranslator:  # pylint: disable=too-many-instance-attributes
 
         gcs_path = self._generate_gcs_path()
         gcs_input_path = f"gs://{self.config.gcp_settings.gcs_bucket}/{gcs_path}/input"
-        gcs_output_path = f"gs://{self.config.gcp_settings.gcs_bucket}/{gcs_path}/output"
+        gcs_output_path = (
+            f"gs://{self.config.gcp_settings.gcs_bucket}/{gcs_path}/output"
+        )
         logging.info("Uploading inputs to gcs ...")
         gcs_util.upload_directory(
             local_input_dir,
