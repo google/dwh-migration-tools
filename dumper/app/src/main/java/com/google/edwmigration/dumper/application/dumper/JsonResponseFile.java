@@ -85,7 +85,7 @@ public class JsonResponseFile {
     }
 
     @VisibleForTesting
-    /* pp */ static List<? extends String> to_arguments(@Nonnull String text) throws JsonProcessingException {
+    /* pp */ static List<? extends String> to_arguments(@Nonnull String text) throws IOException, JsonProcessingException {
         return convert(newObjectMapper().readTree(text));
     }
 
