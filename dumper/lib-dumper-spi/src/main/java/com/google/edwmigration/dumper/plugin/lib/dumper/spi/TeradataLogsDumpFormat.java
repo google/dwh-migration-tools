@@ -180,6 +180,7 @@ public interface TeradataLogsDumpFormat {
     }
 
     enum HeaderLSql {
+        QueryID,
         CollectTimeStamp,
         SQLRowNo, // 1,2,... All SQLTextInfo to be concated based on this.
         SQLTextInfo
