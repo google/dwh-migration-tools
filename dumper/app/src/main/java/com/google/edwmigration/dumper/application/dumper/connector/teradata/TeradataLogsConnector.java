@@ -398,39 +398,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
             super(targetPath, state, logTable, queryTable, conditions, interval, orderBy);
         }
 
-        //Need to be overridden because for byte[] array toString returns not string representation but address of array in memory
-        @Nonnull
-        @Override
-        protected ResultSetExtractor<Void> newCsvResultSetExtractor(@Nonnull ByteSink sink, long count) {
-            return rs -> {
-                CSVFormat format = newCsvFormat(rs);
-                try (RecordProgressMonitor monitor
-                             = count >= 0
-                        ? new RecordProgressMonitor(getName(), count)
-                        : new RecordProgressMonitor(getName());
-                     Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
-                     CSVPrinter printer = format.print(writer)) {
-                    final int columnCount = rs.getMetaData().getColumnCount();
-                    while (rs.next()) {
-                        monitor.count();
-                        for (int i = 1; i <= columnCount; i++) {
-                            Object object = rs.getObject(i);
-                            if (object instanceof byte[]) {
-                                printer.print(Base64.getEncoder().encodeToString((byte[]) object));
-                            } else {
-                                printer.print(object);
-                            }
-                        }
-                        printer.println();
-                    }
-                    return null;
-                } catch (IOException e) {
-                    throw new SQLException(e);
-                }
-            };
-        }
-
-
         @Nonnull
         @Override
         String getSql(@Nonnull Predicate<? super String> predicate) {
