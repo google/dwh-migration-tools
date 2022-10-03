@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
+import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.errorprone.annotations.ForOverride;
 import java.io.IOException;
 import java.io.Writer;
@@ -31,10 +32,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -270,7 +268,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
     }
 
     protected static class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
-
+        /* pp */ static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
         static final String[] EXPRESSIONS_FOR_ASSESSMENT = new String[]{
                 "ST.QueryID",
                 "ST.SQLRowNo",
@@ -434,7 +432,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
         LOG.info("Exporting query log for " + intervals);
         SharedState state = new SharedState();
-        boolean isAssessment = arguments.isAssessment();
         for (ZonedInterval interval : intervals) {
             String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
             if (isAssessment) {
