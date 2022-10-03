@@ -59,45 +59,6 @@ public class OracleLogsConnector extends AbstractOracleConnector implements Logs
         public QueryHistoryTask(@Nonnull String targetPath, @Nonnull String sql) {
             super(targetPath, sql);
         }
-
-        @Nonnull
-        @Override
-        protected ResultSetExtractor<Void> newCsvResultSetExtractor(@Nonnull ByteSink sink, long count) {
-            return new ResultSetExtractor<Void>() {
-                @Override
-                public Void extractData(@Nonnull ResultSet rs) throws SQLException, DataAccessException {
-                    CSVFormat format = newCsvFormat(rs);
-                    try (RecordProgressMonitor monitor
-                                 = count >= 0
-                            ? new RecordProgressMonitor(getName(), count)
-                            : new RecordProgressMonitor(getName());
-                         Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
-                         CSVPrinter printer = format.print(writer))
-                    {
-                        //printer.printRecords(rs);
-                        final int columnCount = rs.getMetaData().getColumnCount();
-                        while (rs.next()) {
-                            monitor.count();
-                            for (int i = 1; i <= columnCount; i++) {
-                                Object obj = rs.getObject(i);
-                                if (obj instanceof Clob) {
-                                    InputStream in = ((Clob) obj).getAsciiStream();
-                                    StringWriter w = new StringWriter();
-                                    IOUtils.copy(in, w);
-                                    printer.print(w.toString());
-                                } else {
-                                    printer.print(rs.getObject(i));
-                                }
-                            }
-                            printer.println();
-                        }
-                        return null;
-                    } catch (IOException e) {
-                        throw new SQLException(e);
-                    }
-                }
-            };
-        }
     }
 
     @Override
