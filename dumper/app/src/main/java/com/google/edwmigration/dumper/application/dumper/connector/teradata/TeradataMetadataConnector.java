@@ -108,7 +108,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
                 TaskCategory.OPTIONAL,
                 "SELECT %s FROM DBC.FunctionsV" + whereDatabaseNameClause + " ;"));
 
-        if (arguments.isMetadataStats()) {
+        if (arguments.isAssessment()) {
             out.add(new TeradataJdbcSelectTask(StatsVFormat.ZIP_ENTRY_NAME,
                     TaskCategory.OPTIONAL,
                     "SELECT %s FROM DBC.StatsV " + whereDatabaseNameClause + " ;"));

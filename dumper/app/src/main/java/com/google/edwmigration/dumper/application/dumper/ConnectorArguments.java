@@ -100,8 +100,6 @@ public class ConnectorArguments extends DefaultArguments {
     public static final String OPT_ORACLE_SID = "oracle-sid";
     public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
-    public static final String OPT_METADATA_STATS = "metadata-stats";
-
     public static final String OPT_QUERY_LOG_DAYS = "query-log-days";
     public static final String OPT_QUERY_LOG_START = "query-log-start";
     public static final String OPT_QUERY_LOG_END = "query-log-end";
@@ -142,7 +140,6 @@ public class ConnectorArguments extends DefaultArguments {
     // private final OptionSpec<String> optionDatabase = parser.accepts("database", "database (can be repeated; all if not specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
     private final OptionSpec<File> optionOutput = parser.accepts("output", "Output file").withRequiredArg().ofType(File.class).describedAs("cw-dump.zip");
     private final OptionSpec<Void> optionOutputContinue = parser.accepts("continue", "Continues writing a previous output file.");
-    private final OptionSpec<Void> optionMetadataStats = parser.accepts(OPT_METADATA_STATS, "Dump metadata stats.");
     // TODO: Make this be an ISO instant.
     @Deprecated
     private final OptionSpec<String> optionQueryLogEarliestTimestamp = parser.accepts("query-log-earliest-timestamp",
@@ -475,10 +472,6 @@ public class ConnectorArguments extends DefaultArguments {
 
     public boolean isDryRun() {
         return getOptions().has(optionDryrun);
-    }
-
-    public boolean isMetadataStats() {
-        return getOptions().has(optionMetadataStats);
     }
 
     @CheckForNull
