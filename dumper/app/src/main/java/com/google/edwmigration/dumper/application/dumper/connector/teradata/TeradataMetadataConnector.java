@@ -17,10 +17,10 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.auto.service.AutoService;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import java.util.List;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentMetadataStats;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Teradata.")
 @RespectsArgumentDatabasePredicate
-@RespectsArgumentMetadataStats
+@RespectsArgumentAssessment
 public class TeradataMetadataConnector extends AbstractTeradataConnector implements MetadataConnector, TeradataMetadataDumpFormat {
 
     @SuppressWarnings("UnusedVariable")
@@ -108,7 +108,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
                 TaskCategory.OPTIONAL,
                 "SELECT %s FROM DBC.FunctionsV" + whereDatabaseNameClause + " ;"));
 
-        if (arguments.isMetadataStats()) {
+        if (arguments.isAssessment()) {
             out.add(new TeradataJdbcSelectTask(StatsVFormat.ZIP_ENTRY_NAME,
                     TaskCategory.OPTIONAL,
                     "SELECT %s FROM DBC.StatsV " + whereDatabaseNameClause + " ;"));

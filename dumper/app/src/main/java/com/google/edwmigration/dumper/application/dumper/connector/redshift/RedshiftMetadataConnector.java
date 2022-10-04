@@ -107,7 +107,7 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector impleme
         parallelTask.addTask(new JdbcSelectTask(RedshiftMetadataDumpFormat.PgViews.ZIP_ENTRY_NAME, "select * from pg_views where schemaname not in " + PG_SCHEMAS));
         parallelTask.addTask(new JdbcSelectTask(RedshiftMetadataDumpFormat.PgUser.ZIP_ENTRY_NAME, "select * from pg_user"));
 
-        if (arguments.isMetadataStats() || arguments.isAssessment()) {
+        if (arguments.isAssessment()) {
             selStar(parallelTask, "SVV_DISKUSAGE");
             selStar(parallelTask, "STV_MV_INFO");
             selStar(parallelTask, "STV_WLM_SERVICE_CLASS_CONFIG");
