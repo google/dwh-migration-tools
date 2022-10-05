@@ -24,11 +24,12 @@ from argparse import Namespace
 from os.path import abspath, dirname, isfile, join
 from pprint import pformat
 from typing import AnyStr, Dict, Pattern, Tuple
-from dwh_migration_client.macro_expander import MacroExpanderRouter
 
 import yaml
 from marshmallow import Schema, ValidationError, fields
 from yaml.loader import SafeLoader
+
+from dwh_migration_client.macro_expander import MacroExpanderRouter
 
 
 class MacroProcessor:
@@ -197,6 +198,7 @@ class MacrosSchema(Schema):
         required=True,
     )
 
+
 def parse_macros_config_file(yaml_file_path: str) -> Dict[str, Dict[str, str]]:
     """Parses the macros mapping yaml file.
 
@@ -210,9 +212,7 @@ def parse_macros_config_file(yaml_file_path: str) -> Dict[str, Dict[str, str]]:
     with open(yaml_file_path, encoding="utf-8") as file:
         data = yaml.load(file, Loader=SafeLoader)
     try:
-        validated_data: Dict[str, Dict[str, Dict[str, str]]] = MacrosSchema().load(
-            data
-        )
+        validated_data: Dict[str, Dict[str, Dict[str, str]]] = MacrosSchema().load(data)
     except ValidationError as error:
         logging.error("Invalid macros file: %s: %s.", yaml_file_path, error)
         raise
@@ -222,4 +222,3 @@ def parse_macros_config_file(yaml_file_path: str) -> Dict[str, Dict[str, str]]:
         pformat(validated_data),
     )
     return validated_data["macros"]
-

@@ -16,9 +16,17 @@
 """Custom macro handling code goes here"""
 
 from argparse import Namespace
-from dwh_migration_client.macro_expander import SimpleMacroExpander, PatternMacroExpander, MacroExpanderRouter
-from dwh_migration_client.macro_processor import MacroProcessor, parse_macros_config_file
 from typing import Dict
+
+from dwh_migration_client.macro_expander import (
+    MacroExpanderRouter,
+    PatternMacroExpander,
+    SimpleMacroExpander,
+)
+from dwh_migration_client.macro_processor import (
+    MacroProcessor,
+    parse_macros_config_file,
+)
 
 
 def custom_macros(args: Namespace) -> MacroProcessor:
@@ -44,7 +52,7 @@ def custom_pattern_macros_example(args: Namespace) -> MacroProcessor:
     mappings = parse_macros_config_file(args.macros)
 
     # matches something like ${NAME}
-    pattern="\\$\\{(\\w+)\\}"
+    pattern = "\\$\\{(\\w+)\\}"
 
     # ${MACRO_NAME} -> MACRO_NAME_MACRO
     def expand(file_name: str, macro_name: str) -> str:
@@ -62,7 +70,6 @@ def custom_pattern_macros_example(args: Namespace) -> MacroProcessor:
     expanders = {}
     for glob, mapping in mappings.items():
         expanders[glob] = PatternMacroExpander(
-            pattern=pattern,
-            generator=expand,
-            un_generator=un_expand)
+            pattern=pattern, generator=expand, un_generator=un_expand
+        )
     return MacroProcessor(MacroExpanderRouter(expanders))

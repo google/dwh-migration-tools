@@ -14,21 +14,23 @@
 
 """ Macro handling classes """
 
-import re
 import logging
-from typing import Callable, Dict, List, Optional, Tuple, Set
+import re
 from fnmatch import fnmatch
+from typing import Callable, Dict, List, Optional, Set, Tuple
+
 
 class RecordingLogger:
-
     def __init__(self) -> None:
         self.messages = []
 
     """Logger that keeps track of the messages that it has logged."""
+
     def warnLog(self, format_string, *args) -> None:
         message = format_string.format(*args)
         self.messages.append(message)
         logging.warning(message)
+
 
 class MacroExpander(RecordingLogger):
     """Base class for macro expanders. Do not use this directly."""
@@ -40,7 +42,7 @@ class MacroExpander(RecordingLogger):
     reverse: Dict[str, str]
 
     def __init__(self, mapping: Optional[Dict[str, str]] = None) -> None:
-        super().__init__();
+        super().__init__()
         self.reverse = {}
         self.mapping = mapping
         pass
@@ -48,15 +50,20 @@ class MacroExpander(RecordingLogger):
     def _sanity_check(self, file_name: str) -> None:
         for replacement, originals in self.reverse[file_name].items():
             if len(originals[1]) > 1:
-                self.warnLog("The value '{0}' was expanded from "
+                self.warnLog(
+                    "The value '{0}' was expanded from "
                     + "the following macros: {1}. Un-expansion will not "
-                    + "be accurate.", replacement, originals[1])
+                    + "be accurate.",
+                    replacement,
+                    originals[1],
+                )
 
     def expand(self, file_name: str, text: str) -> str:
         pass
 
     def un_expand(self, file_name: str, text: str) -> str:
         pass
+
 
 class SimpleMacroExpander(MacroExpander):
     """
@@ -71,9 +78,13 @@ class SimpleMacroExpander(MacroExpander):
                 for_file = self.reverse[file_name]
                 existing_macro_name = substitution_text in for_file
                 if existing_macro_name and macro_name != existing_macro_name:
-                    self.warnLog("The value '{0}' was expanded from "
+                    self.warnLog(
+                        "The value '{0}' was expanded from "
                         + "the following macros: {1}. Un-expansion will not "
-                        + "be accurate.", replacement, originals[1])
+                        + "be accurate.",
+                        replacement,
+                        originals[1],
+                    )
                 self.reverse[file_name][substitution_text] = macro_name
             else:
                 self.reverse[file_name] = {substitution_text: macro_name}
@@ -83,6 +94,7 @@ class SimpleMacroExpander(MacroExpander):
         for substitution_text, macro_name in self.reverse[file_name].items():
             text = text.replace(substitution_text, macro_name)
         return text
+
 
 class PatternMacroExpander(MacroExpander):
     """Handles expanding and un-expanding macros in a user-customizable way."""
@@ -140,7 +152,8 @@ class PatternMacroExpander(MacroExpander):
             self.warnLog(
                 "Could not expand '{0}' as it is not "
                 + "present in the mapping and no generator function was "
-                + "provided", full_match
+                + "provided",
+                full_match,
             )
             generated = full_match
         if not file_name in self.reverse:
@@ -188,7 +201,7 @@ class PatternMacroExpander(MacroExpander):
                     re.escape(replacement),
                     self.un_generator(file_name, replacement, original_text),
                     text,
-                    flags=re.I
+                    flags=re.I,
                 )
             else:
                 result = re.subn(re.escape(replacement), original_text, text)
@@ -201,6 +214,7 @@ class MacroExpanderRouter(RecordingLogger):
     Contains multiple 'MacroExpander' instances and decided which to use
     based on file names and file glob patterns.
     """
+
     all_macros: Dict[str, MacroExpander]
 
     def __init__(self, all_macros: Dict[str, MacroExpander]) -> None:
@@ -226,7 +240,8 @@ class MacroExpanderRouter(RecordingLogger):
         if len(matches) > 1:
             self.warnLog(
                 "File name {0} matches multiple patterns. Arbitrarily choosing '{1}'.",
-                file_name, chosen_pattern
+                file_name,
+                chosen_pattern,
             )
         return chosen_expander
 

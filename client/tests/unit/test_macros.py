@@ -13,8 +13,13 @@
 # limitations under the License.
 
 """Macro processing unit tests."""
-from dwh_migration_client.macro_expander import MacroExpanderRouter, PatternMacroExpander, SimpleMacroExpander
 import re
+
+from dwh_migration_client.macro_expander import (
+    MacroExpanderRouter,
+    PatternMacroExpander,
+    SimpleMacroExpander,
+)
 
 
 def test_basic_replacement():
@@ -85,12 +90,17 @@ def test_ambiguous_unexpand():
     expanded = expander.expand("abc.sql", input_text)
     assert expanded == "abc.abc xyz.xyz"
     un_expanded = expander.un_expand("abc.sql", expanded)
-    assert un_expanded in ("${a}.${a} ${c}.${c}", "${a}.${a} ${d}.${d}",
-        "${b}.${b} ${c}.${c}", "${b}.${b} ${d}.${d}")
+    assert un_expanded in (
+        "${a}.${a} ${c}.${c}",
+        "${a}.${a} ${d}.${d}",
+        "${b}.${b} ${c}.${c}",
+        "${b}.${b} ${d}.${d}",
+    )
     messages = expander.all_messages()
     messages.sort()
     assert messages[0].startswith("The value 'abc'")
     assert messages[1].startswith("The value 'xyz'")
+
 
 def test_unintended_unexpand():
     """It is possible to un-expand a something that was not actually a macro
@@ -132,6 +142,7 @@ def test_unexpand_generator():
     assert expanded == "PARAM_a_PARAM abc"
     un_expanded = expander.un_expand("abc.sql", expanded)
     assert un_expanded == "{a} abc"
+
 
 def test_basic_expand():
     """Test basic macro expansion"""
