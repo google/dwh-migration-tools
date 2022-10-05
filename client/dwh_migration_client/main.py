@@ -24,13 +24,14 @@ from marshmallow import ValidationError
 from dwh_migration_client import batch_sql_translator
 from dwh_migration_client.config import parse as parse_config
 from dwh_migration_client.gcloud_auth_helper import validate_gcloud_auth_settings
-from dwh_migration_client.macro_processor import MacroProcessor
+from dwh_migration_client.macro_processor import MacroProcessor, parse_macros_config_file
 from dwh_migration_client.object_name_mapping import parse as parse_object_name_mapping
 from dwh_migration_client.validation import (
     validated_directory,
     validated_file,
     validated_nonexistent_path,
 )
+from dwh_migration_client.custom_macros import custom_macros
 
 
 def start_translation(args: argparse.Namespace) -> None:
@@ -52,7 +53,7 @@ def start_translation(args: argparse.Namespace) -> None:
 
     if args.macros:
         try:
-            preprocessor = MacroProcessor(args)
+            preprocessor = custom_macros(args)
         except ValidationError:
             sys.exit(1)
     else:
