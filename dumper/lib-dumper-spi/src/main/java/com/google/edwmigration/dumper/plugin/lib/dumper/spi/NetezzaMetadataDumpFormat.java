@@ -37,4 +37,24 @@ public interface NetezzaMetadataDumpFormat {
         }
     }
 
+    public interface DistMapFormat {
+
+        public static final String ZIP_ENTRY_SUFFIX = "/nz.v_table_dist_map.csv";
+
+        public static enum DistMapHeader {
+            OBJID,
+            TABLENAME,
+            OWNER,
+            CREATEDATE,
+            DISTSEQNO, // 1-based index
+            DISTATTNUM,
+            ATTNUM,
+            ATTNAME,
+            DATABASE,
+            OBJDB,
+            SCHEMA,
+            SCHEMAID
+        }
+    }
+
 }
