@@ -185,7 +185,7 @@ class MacroProcessor:
             relative_output_path: relative path of the output file in the output_dir,
                 e.g., subdir/subdir_2/sample.sql.
         """
-        return self.expander.unexpand(relative_output_path, text)
+        return self.expander.un_expand(relative_output_path, text)
 
 
 class MacrosSchema(Schema):
