@@ -15,8 +15,8 @@
 
 """Custom macro handling code goes here"""
 
+import re
 from argparse import Namespace
-from typing import Dict
 
 from dwh_migration_client.macro_expander import (
     MacroExpanderRouter,
@@ -34,11 +34,11 @@ def custom_macros(args: Namespace) -> MacroProcessor:
     return simple_macros(args)
 
 
-# This default implementation just creates a simple macro expander for each file
-# glob found in the macros.yaml file. See the documentation for
-# PatternMacroExpander and the example below if more complicated behavior is
-# required.
 def simple_macros(args: Namespace) -> MacroProcessor:
+    """This default implementation just creates a simple macro expander for each
+    file glob found in the macros.yaml file. See the documentation for
+    PatternMacroExpander and the example below if more complicated behavior is
+    required."""
     mappings = parse_macros_config_file(args.macros)
 
     expanders = {}
@@ -47,8 +47,10 @@ def simple_macros(args: Namespace) -> MacroProcessor:
     return MacroProcessor(MacroExpanderRouter(expanders))
 
 
-# An example of a more complicated macro processor. This is not used by default.
 def custom_pattern_macros_example(args: Namespace) -> MacroProcessor:
+    """An example of a more complicated macro processor. This is not
+    used by default."""
+
     mappings = parse_macros_config_file(args.macros)
 
     # matches something like ${NAME}
@@ -68,7 +70,7 @@ def custom_pattern_macros_example(args: Namespace) -> MacroProcessor:
         return "{" + unexpanded + "}"
 
     expanders = {}
-    for glob, mapping in mappings.items():
+    for glob in mappings.keys():
         expanders[glob] = PatternMacroExpander(
             pattern=pattern, generator=expand, un_generator=un_expand
         )

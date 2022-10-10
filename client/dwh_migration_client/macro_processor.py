@@ -15,15 +15,12 @@
 post-processing stages of a Batch Sql Translation job.
 """
 
-import fnmatch
 import logging
 import os
-import re
 import shutil
-from argparse import Namespace
 from os.path import abspath, dirname, isfile, join
 from pprint import pformat
-from typing import AnyStr, Dict, Pattern, Tuple
+from typing import Dict
 
 import yaml
 from marshmallow import Schema, ValidationError, fields

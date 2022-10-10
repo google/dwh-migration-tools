@@ -21,12 +21,12 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 
 class RecordingLogger:
+    """Logger that keeps track of the messages that it has logged."""
+
     def __init__(self) -> None:
         self.messages = []
 
-    """Logger that keeps track of the messages that it has logged."""
-
-    def warnLog(self, format_string, *args) -> None:
+    def warn_log(self, format_string, *args) -> None:
         message = format_string.format(*args)
         self.messages.append(message)
         logging.warning(message)
@@ -35,22 +35,17 @@ class RecordingLogger:
 class MacroExpander(RecordingLogger):
     """Base class for macro expanders. Do not use this directly."""
 
-    # macro name -> replacement
-    mapping: Optional[Dict[str, str]]
-
-    # replacement -> macro_name. May contain fewer entries than 'mapping'
-    reverse: Dict[str, str]
-
     def __init__(self, mapping: Optional[Dict[str, str]] = None) -> None:
         super().__init__()
-        self.reverse = {}
+        # macro name -> replacement
         self.mapping = mapping
-        pass
+        # replacement -> macro_name. May contain fewer entries than 'mapping'
+        self.reverse = {}
 
     def _sanity_check(self, file_name: str) -> None:
         for replacement, originals in self.reverse[file_name].items():
             if len(originals[1]) > 1:
-                self.warnLog(
+                self.warn_log(
                     "The value '{0}' was expanded from "
                     + "the following macros: {1}. Un-expansion will not "
                     + "be accurate.",
@@ -78,12 +73,13 @@ class SimpleMacroExpander(MacroExpander):
                 for_file = self.reverse[file_name]
                 existing_macro_name = substitution_text in for_file
                 if existing_macro_name and macro_name != existing_macro_name:
-                    self.warnLog(
+                    self.warn_log(
                         "The value '{0}' was expanded from "
-                        + "the following macros: {1}. Un-expansion will not "
+                        + "the following macros: {1}, {2}. Un-expansion will not "
                         + "be accurate.",
-                        replacement,
-                        originals[1],
+                        substitution_text,
+                        macro_name,
+                        existing_macro_name,
                     )
                 self.reverse[file_name][substitution_text] = macro_name
             else:
@@ -98,15 +94,6 @@ class SimpleMacroExpander(MacroExpander):
 
 class PatternMacroExpander(MacroExpander):
     """Handles expanding and un-expanding macros in a user-customizable way."""
-
-    # function for generating values when a macro is missing from 'mapping'
-    generator: Optional[Callable[[str, str], str]]
-    # function for custom un-expanding of macros
-    un_generator: Optional[Callable[[str, str, str], str]]
-    # file name -> unmapped macros
-    unmapped: Dict[str, Set[str]]
-    # file name -> [replacement -> original(s)]
-    reverse: Dict[str, Dict[str, Tuple[int, Set[str]]]]
 
     def __init__(
         self,
@@ -133,7 +120,9 @@ class PatternMacroExpander(MacroExpander):
         self.pattern = re.compile(pattern, re.I)
         self.generator = generator
         self.un_generator = un_generator
+        # file name -> unmapped macros
         self.unmapped = {}
+        # file name -> [replacement -> original(s)]
         self.reverse = {}
 
     def _substitution(self, file_name: str, match) -> str:
@@ -149,7 +138,7 @@ class PatternMacroExpander(MacroExpander):
                 self.unmapped[file_name] = {macro_name}
             generated = self.generator(file_name, macro_name)
         else:
-            self.warnLog(
+            self.warn_log(
                 "Could not expand '{0}' as it is not "
                 + "present in the mapping and no generator function was "
                 + "provided",
@@ -224,7 +213,6 @@ class MacroExpanderRouter(RecordingLogger):
         """
         super().__init__()
         self.all_macros = all_macros
-        self.messages = []
 
     def _choose_expander(self, file_name: str) -> Optional[MacroExpander]:
         chosen_expander = None
@@ -238,7 +226,7 @@ class MacroExpanderRouter(RecordingLogger):
         if len(matches) == 0:
             return None
         if len(matches) > 1:
-            self.warnLog(
+            self.warn_log(
                 "File name {0} matches multiple patterns. Arbitrarily choosing '{1}'.",
                 file_name,
                 chosen_pattern,
