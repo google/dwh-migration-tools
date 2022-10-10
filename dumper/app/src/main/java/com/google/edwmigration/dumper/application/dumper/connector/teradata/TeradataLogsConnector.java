@@ -18,9 +18,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
-import com.google.common.base.Strings;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.errorprone.annotations.ForOverride;
@@ -28,6 +28,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -142,17 +145,24 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         protected final SharedState state;
         protected final String logTable;
         protected final String queryTable;
-        protected final String condition;
+        protected final List<String> conditions;
         protected final ZonedInterval interval;
+        protected final List<String> orderBy;
 
         public TeradataLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable,
-            String queryTable, String condition, ZonedInterval interval) {
+                                    String queryTable, List<String> conditions, ZonedInterval interval) {
+            this(targetPath, state, logTable, queryTable, conditions, interval, Collections.emptyList());
+        }
+
+        protected TeradataLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable,
+                                    String queryTable, List<String> conditions, ZonedInterval interval, List<String> orderBy) {
             super(targetPath);
             this.state = Preconditions.checkNotNull(state, "SharedState was null.");
             this.logTable = logTable;
             this.queryTable = queryTable;
-            this.condition = condition;
+            this.conditions = conditions;
             this.interval = interval;
+            this.orderBy = orderBy;
         }
 
         @Override
@@ -185,7 +195,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         }
         /* pp */ String getSql(Predicate<? super String> predicate, String[] expressions) {
             StringBuilder buf = new StringBuilder("SELECT ");
-
             String separator = "";
             boolean queryTableIncluded = false;
             for (String expression : expressions) {
@@ -215,15 +224,19 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
                 // buf.append(" LEFT OUTER JOIN ").append(queryTable).append(" ST ON L.ProcID=ST.ProcID AND L.CollectTimeStamp=ST.CollectTimeStamp AND L.QueryID=ST.QueryID");
             }
 
-            buf.append(String.format(" WHERE L.UserName <> 'DBC'\n" // not useful (according to a customer)
-                    + "AND L.ErrorCode=0\n" // errors are not useful to us
+            buf.append(String.format(" WHERE L.ErrorCode=0\n"
                     + "AND L.CollectTimeStamp >= CAST('%s' AS TIMESTAMP)\n"
                     + "AND L.CollectTimeStamp < CAST('%s' AS TIMESTAMP)\n",
                     SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
 
-            if (!Strings.isNullOrEmpty(condition))
+            for (String condition : conditions) {
                 buf.append(" AND ").append(condition);
+            }
 
+            if (!orderBy.isEmpty()) {
+                buf.append(" ORDER BY ");
+                Joiner.on(", ").appendTo(buf, orderBy);
+            }
             return buf.toString().replace('\n', ' ');
         }
 
@@ -376,8 +389,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
                 "L.WDName"
         };
 
-        public TeradataAssessmentLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable, String queryTable, String condition, ZonedInterval interval) {
-            super(targetPath, state, logTable, queryTable, condition, interval);
+        public TeradataAssessmentLogsJdbcTask(@Nonnull String targetPath, SharedState state, String logTable, String queryTable, List<String> conditions, ZonedInterval interval, List<String> orderBy) {
+            super(targetPath, state, logTable, queryTable, conditions, interval, orderBy);
         }
 
         @Nonnull
@@ -400,16 +413,13 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
             logTable = alternates.get(0);
             queryTable = alternates.get(1);
         }
-
+        List<String> conditions = new ArrayList<>();
         // if the user specifies an earliest start time there will be extraneous empty dump files
         // because we always iterate over the full 7 trailing days; maybe it's worth
         // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
         // to parse and return an ISO instant, not a database-server-specific format.
-        String condition;
         if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
-            condition = "L.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp();
-        else
-            condition = null;
+            conditions.add("L.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp());
 
         // Beware of Teradata SQLSTATE HY000. See issue #4126.
         // Most likely caused by some operation (equality?) being performed on a datum which is too long for a varchar.
@@ -420,10 +430,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         for (ZonedInterval interval : intervals) {
             String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
             if (isAssessment) {
-                out.add(new TeradataAssessmentLogsJdbcTask(file, state, logTable, queryTable, condition, interval)
+                List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
+                out.add(new TeradataAssessmentLogsJdbcTask(file, state, logTable, queryTable, conditions, interval, orderBy)
                         .withHeaderClass(HeaderForAssessment.class));
             } else {
-                out.add(new TeradataLogsJdbcTask(file, state, logTable, queryTable, condition, interval)
+                conditions.add("L.UserName <> 'DBC'");
+                out.add(new TeradataLogsJdbcTask(file, state, logTable, queryTable, conditions, interval)
                         .withHeaderClass(Header.class));
             }
         }

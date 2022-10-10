@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  *
  * @author shevek
@@ -199,6 +202,17 @@ public interface RedshiftMetadataDumpFormat extends PostgresqlMetadataDumpFormat
             /* Trailing fields are optional; as long as we match on the important ones. */
             // column_set_using,   // Used not to be present, but is in Elon's dump.
             // is_identity;
+        }
+    }
+
+    public static interface RedshiftEnvironmentFormat {
+        public static final String ZIP_ENTRY_NAME = "redshift-environment.yaml";
+
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        @JsonInclude(JsonInclude.Include.NON_ABSENT)
+        public static class Root {
+            public String currentDatabase;
+            public String redshiftVersion;
         }
     }
 }
