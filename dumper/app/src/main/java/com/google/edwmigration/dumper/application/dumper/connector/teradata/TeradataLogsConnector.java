@@ -270,7 +270,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
     protected static class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
         /* pp */ static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
         static final String[] EXPRESSIONS_FOR_ASSESSMENT = new String[]{
-                "ST.QueryID",
+                "L.QueryID",
                 "ST.SQLRowNo",
                 "ST.SQLTextInfo",
                 "L.AbortFlag",
