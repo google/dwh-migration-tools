@@ -17,7 +17,7 @@
 import logging
 import re
 from fnmatch import fnmatch
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional
 
 
 class RecordingLogger:
@@ -214,41 +214,29 @@ class MacroExpanderRouter(RecordingLogger):
         super().__init__()
         self.all_macros = all_macros
 
-    def _choose_expander(self, file_name: str) -> Optional[MacroExpander]:
-        chosen_expander = None
-        chosen_pattern = None
-        matches = []
+    def _choose_expanders(self, file_name: str) -> List[MacroExpander]:
+        chosen_expanders = []
         for pattern, expander in self.all_macros.items():
             if fnmatch(file_name, pattern):
-                matches.append(file_name)
-                chosen_expander = expander
-                chosen_pattern = pattern
-        if len(matches) == 0:
-            return None
-        if len(matches) > 1:
-            self.warn_log(
-                "File name {0} matches multiple patterns. Arbitrarily choosing '{1}'.",
-                file_name,
-                chosen_pattern,
-            )
-        return chosen_expander
+                chosen_expanders.append(expander)
+        return chosen_expanders
 
     def expand(self, file_name: str, text: str) -> str:
         """
         Calls 'expand' on the correct macro expander based on the file name
         """
-        expander = self._choose_expander(file_name)
-        if expander:
-            return expander.expand(file_name, text)
+        expanders = self._choose_expanders(file_name)
+        for expander in expanders:
+            text = expander.expand(file_name, text)
         return text
 
     def un_expand(self, file_name: str, text: str) -> str:
         """
         Calls 'un_expand' on the correct macro expander based on the file name
         """
-        expander = self._choose_expander(file_name)
-        if expander:
-            return expander.un_expand(file_name, text)
+        expanders = self._choose_expanders(file_name)
+        for expander in expanders:
+            text = expander.un_expand(file_name, text)
         return text
 
     def all_messages(self) -> List[str]:
