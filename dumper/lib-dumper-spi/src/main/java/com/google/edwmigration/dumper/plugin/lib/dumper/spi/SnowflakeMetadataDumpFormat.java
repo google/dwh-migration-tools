@@ -57,7 +57,8 @@ public interface SnowflakeMetadataDumpFormat {
             TableName,
             TableType,
             RowCount,
-            Bytes
+            Bytes,
+            ClusteringKey
         }
     }
 

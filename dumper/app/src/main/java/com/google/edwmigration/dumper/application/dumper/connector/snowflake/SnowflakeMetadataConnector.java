@@ -155,7 +155,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector imple
                 new TaskVariant(SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
 
         addSqlTasks(out, SnowflakeMetadataDumpFormat.TablesFormat.Header.class,
-                getOverrideableQuery(arguments, "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes FROM %1$s.TABLES%2$s",
+                getOverrideableQuery(arguments, "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM %1$s.TABLES%2$s",
                         SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_QUERY, SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_WHERE),
                 new TaskVariant(SnowflakeMetadataDumpFormat.TablesFormat.IS_ZIP_ENTRY_NAME, IS),
                 new TaskVariant(SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE)); // Painfully slow.
