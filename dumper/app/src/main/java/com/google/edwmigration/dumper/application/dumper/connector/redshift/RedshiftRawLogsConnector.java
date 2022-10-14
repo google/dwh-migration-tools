@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,9 +100,9 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
         // 1. STL_QUERY has starttime, queryid, but text is 4000 char wich is useless
         // 2. STL_QUERY_TEXT has xid+squence+text which reconstructs query, but no starttime.
         // STL_QUERY is 1 row per query ; SQL_QUERY_TEXT is multi rows per query, using sequence and xid
-        List<String> queryTemplateColumns = new ArrayList<>(ImmutableList.<String>of(
+        List<String> queryTemplateColumns = Lists.newArrayList(
             "userid", "xid", "pid", "query", "trim(label) as label", "starttime", "endtime",
-            "sequence", "text"));
+            "sequence", "text");
         List<String> queryTemplateOrderBy = new ArrayList<>();
 
         if (arguments.isAssessment()) {
