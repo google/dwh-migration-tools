@@ -17,6 +17,9 @@
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,13 +100,20 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector implemen
         // 1. STL_QUERY has starttime, queryid, but text is 4000 char wich is useless
         // 2. STL_QUERY_TEXT has xid+squence+text which reconstructs query, but no starttime.
         // STL_QUERY is 1 row per query ; SQL_QUERY_TEXT is multi rows per query, using sequence and xid
-        String queryTemplateQuery
-                = "SELECT userid, xid, pid, query, trim(label) as label, starttime, endtime, sequence, text"
-                + " FROM STL_QUERY join STL_QUERYTEXT using (userid, xid, pid, query) WHERE ##";
+        List<String> queryTemplateColumns = Lists.newArrayList(
+            "userid", "xid", "pid", "query", "trim(label) as label", "starttime", "endtime",
+            "sequence", "text");
+        List<String> queryTemplateOrderBy = new ArrayList<>();
 
         if (arguments.isAssessment()) {
-            queryTemplateQuery += " ORDER BY starttime, query, sequence";
+            queryTemplateColumns.add("aborted");
+            queryTemplateOrderBy.addAll(ImmutableList.of("starttime", "query", "sequence"));
         }
+
+        String queryTemplateQuery = String.format(
+            "SELECT %s FROM STL_QUERY join STL_QUERYTEXT using (userid, xid, pid, query) WHERE ##%s",
+            Joiner.on(", ").join(queryTemplateColumns),
+            queryTemplateOrderBy.isEmpty() ? "" : (" ORDER BY " + Joiner.on(", ").join(queryTemplateOrderBy)));
 
         makeTasks(arguments, intervals, RedshiftRawLogsDumpFormat.QueryHistory.ZIP_ENTRY_PREFIX, queryTemplateQuery, "starttime", parallelTask);
 
