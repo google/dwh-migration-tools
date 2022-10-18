@@ -181,44 +181,46 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector implements M
             String whereClause = " where DATABASE = upper('" + db + "')";
             // https://www.ibm.com/support/knowledgecenter/en/SSULQD_7.2.1/com.ibm.nz.adm.doc/t_sysadm_enable_multiple_schema.html
             String schemaPrefix = db + "..";    // We don't know what the default schema is, but it should contain the views we require.
-            String filePrefix = db.toUpperCase() + "/"; // If we have databases with the same name but mismatched case, this will break.
+            String filePrefix = db.toUpperCase(); // If we have databases with the same name but mismatched case, this will break.
 
             // also _v_relation_column: all attributes of a relation, Constraints and other informations
             // Undocumented?
             // TABLE_CAT,TABLE_SCHEM,TABLE_NAME,COLUMN_NAME,DATA_TYPE,TYPE_NAME,COLUMN_SIZE,BUFFER_LENGTH,DECIMAL_DIGITS,NUM_PREC_RADIX,
             // NULLABLE,REMARKS,COLUMN_DEF,SQL_DATA_TYPE,SQL_DATETIME_SUB,CHAR_OCTET_LENGTH,ORDINAL_POSITION,IS_NULLABLE,OBJID,DATABASE,OBJDB,SCHEMA,SCHEMAID
             // This has to match NetezzaDatabaseLoader.
-            out.add(new JdbcSelectTask(filePrefix + "netezza.columns.csv", "SELECT DATABASE, TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, TYPE_NAME FROM " + schemaPrefix + "_v_sys_columns ORDER BY TABLE_NAME, OBJID"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "netezza.columns.csv"), "SELECT DATABASE, TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, TYPE_NAME FROM " + schemaPrefix + "_v_sys_columns ORDER BY TABLE_NAME, OBJID"));
 
             // objid, Function, Owner, CreateDate, Description, Result, Arguments [order by Function]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_function.csv", "SELECT * FROM " + schemaPrefix + "_v_function"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_function.csv"), "SELECT * FROM " + schemaPrefix + "_v_function"));
             // objid, IndexName, TableName, Owner, CreateDate [order by TableName, IndexName]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_index.csv", "SELECT * FROM " + schemaPrefix + "_v_index"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_index.csv"), "SELECT * FROM " + schemaPrefix + "_v_index"));
             // objid, procedure, owner, createdate, objtype, description, result, numargs, arguments, proceduresignature, builtin, proceduresource, sproc, executedasowner [order by procedure]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_procedure.csv", "SELECT * FROM " + schemaPrefix + "_v_procedure"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_procedure.csv"), "SELECT * FROM " + schemaPrefix + "_v_procedure"));
             // objid, ObjectName, Owner, CreateDate, ObjectType, attnum, attname, format_type(attypid,attypmod), attnotnullA [order by ObjectType, attnum]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_relation_column.csv", "SELECT * FROM " + schemaPrefix + "_v_relation_column"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_relation_column.csv"), "SELECT * FROM " + schemaPrefix + "_v_relation_column"));
             // objid, ObjectName, Owner, CreateDate, Objecttype, attnum, attname, and adsrc [order by Objecttype, attnum]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_relation_column_def.csv", "SELECT * FROM " + schemaPrefix + "_v_relation_column_def"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_relation_column_def.csv"), "SELECT * FROM " + schemaPrefix + "_v_relation_column_def"));
             // Don't know... Database owner, relation, constraint name, contype, conseq, attname, pk database, pk owner, pk relation, pk conseq, pk att name, updt_type, del_type, match_type, deferrable, deferred, constr_ord ?
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_relation_keydata.csv", "SELECT * FROM " + schemaPrefix + "_v_relation_keydata"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_relation_keydata.csv"), "SELECT * FROM " + schemaPrefix + "_v_relation_keydata"));
+            // OBJID,TABLENAME,OWNER,CREATEDATE,DISTSEQNO,DISTATTNUM,ATTNUM,ATTNAME,DATABASE,OBJDB,SCHEMA,SCHEMAID
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, DistMapFormat.ZIP_ENTRY_SUFFIX), "SELECT * FROM " + schemaPrefix + "_v_table_dist_map"));
             // objid, SeqName, Owner, CreateDate [order by SeqName]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_sequence.csv", "SELECT * FROM " + schemaPrefix + "_v_sequence"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_sequence.csv"), "SELECT * FROM " + schemaPrefix + "_v_sequence"));
             // objid, TableName, Owner, CreateDate [order by TableName]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_table.csv", "SELECT * FROM " + schemaPrefix + "_v_table"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_table.csv"), "SELECT * FROM " + schemaPrefix + "_v_table"));
             // objid, UserName, Owner, ValidUntil, and CreateDate [order by UserName]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_user.csv", "SELECT * FROM " + schemaPrefix + "_v_user"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_user.csv"), "SELECT * FROM " + schemaPrefix + "_v_user"));
             // objid, ViewName, Owner, CreateDate, relhasindex, relkind, relchecks, reltriggers, relhasrules, relukeys, relfkeys, relhaspkey, relnatts [order by ViewName]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_view.csv", "SELECT * FROM " + schemaPrefix + "_v_view"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, Views.ZIP_ENTRY_SUFFIX), "SELECT * FROM " + schemaPrefix + "_v_view"));
 
             // Not documented.
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_sys_columns.csv", "SELECT * FROM " + schemaPrefix + "_v_sys_columns"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_sys_columns.csv"), "SELECT * FROM " + schemaPrefix + "_v_sys_columns"));
             // Not documented.
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_sys_database.csv", "SELECT * FROM " + schemaPrefix + "_v_sys_database"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_sys_database.csv"), "SELECT * FROM " + schemaPrefix + "_v_sys_database"));
             // objid, SysTableName, and Owner [order by SysTableName]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_sys_table.csv", "SELECT * FROM " + schemaPrefix + "_v_sys_table"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_sys_table.csv"), "SELECT * FROM " + schemaPrefix + "_v_sys_table"));
             // objid, SysViewName, and Owner [order by SysViewName]
-            out.add(new JdbcSelectTask(filePrefix + "nz.v_sys_view.csv", "SELECT * FROM " + schemaPrefix + "_v_sys_view"));
+            out.add(new JdbcSelectTask(withPrefix(filePrefix, "nz.v_sys_view.csv"), "SELECT * FROM " + schemaPrefix + "_v_sys_view"));
         }
     }
 
@@ -235,5 +237,10 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector implements M
         Driver driver = newDriver(arguments.getDriverPaths(), "org.netezza.Driver");
         DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
         return new JdbcHandle(dataSource);
+    }
+
+    private static String withPrefix(String filePrefix, String name) {
+        String separator = name.startsWith("/") ? "" : "/";
+        return filePrefix + separator + name;
     }
 }

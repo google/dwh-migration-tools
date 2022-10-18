@@ -19,8 +19,11 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteSink;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,12 +31,14 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Base64;
 import javax.annotation.CheckForNull;
 import javax.annotation.CheckForSigned;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -41,7 +46,6 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.SqlTypeValue;
 import org.springframework.jdbc.core.StatementCreatorUtils;
@@ -95,29 +99,35 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
     @Nonnull
     protected ResultSetExtractor<Void> newCsvResultSetExtractor(@Nonnull ByteSink sink, @CheckForSigned long count) {
-        return new ResultSetExtractor<Void>() {
-            @Override
-            public Void extractData(@Nonnull ResultSet rs) throws SQLException, DataAccessException {
-                CSVFormat format = newCsvFormat(rs);
-                try (RecordProgressMonitor monitor
-                        = count >= 0
-                                ? new RecordProgressMonitor(getName(), count)
-                                : new RecordProgressMonitor(getName());
-                        Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
-                        CSVPrinter printer = format.print(writer)) {
-                    //printer.printRecords(rs);
-                    final int columnCount = rs.getMetaData().getColumnCount();
-                    while (rs.next()) {
-                        monitor.count();
-                        for (int i = 1; i <= columnCount; i++) {
-                            printer.print(rs.getObject(i));
+        return rs -> {
+            CSVFormat format = newCsvFormat(rs);
+            try (RecordProgressMonitor monitor
+                         = count >= 0
+                    ? new RecordProgressMonitor(getName(), count)
+                    : new RecordProgressMonitor(getName());
+                 Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
+                 CSVPrinter printer = format.print(writer)) {
+                final int columnCount = rs.getMetaData().getColumnCount();
+                while (rs.next()) {
+                    monitor.count();
+                    for (int i = 1; i <= columnCount; i++) {
+                        Object object = rs.getObject(i);
+                        if (object instanceof byte[]) {
+                            printer.print(Base64.getEncoder().encodeToString((byte[]) object));
+                        } else if (object instanceof Clob) {
+                            InputStream in = ((Clob) object).getAsciiStream();
+                            StringWriter w = new StringWriter();
+                            IOUtils.copy(in, w);
+                            printer.print(w.toString());
+                        } else {
+                            printer.print(object);
                         }
-                        printer.println();
                     }
-                    return null;
-                } catch (IOException e) {
-                    throw new SQLException(e);
+                    printer.println();
                 }
+                return null;
+            } catch (IOException e) {
+                throw new SQLException(e);
             }
         };
     }
