@@ -19,7 +19,7 @@ def preprocess(path: Path, text: str) -> str:  # pylint: disable=unused-argument
     """Preprocesses input via user-defined code before submitting it to BQMS.
 
     Args:
-        path: A run.paths.Path representing the relative path of the input to be
+        path: Abqms_run.paths.Path representing the relative path of the input to be
             preprocessed.
         text: A string representing the contents of the input to be
             preprocessed.
@@ -34,7 +34,7 @@ def postprocess(path: Path, text: str) -> str:  # pylint: disable=unused-argumen
     """Postprocesses translated BQMS output via user-defined code.
 
     Args:
-        path: A run.paths.Path representing the relative path of the translated
+        path: Abqms_run.paths.Path representing the relative path of the translated
             output to be postprocessed.
         text: A string representing the contents of the translated output to be
             postprocessed.

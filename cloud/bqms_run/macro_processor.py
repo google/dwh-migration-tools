@@ -97,7 +97,7 @@ class MacroProcessor:
         """Expands macro/template expressions embedded in input to be translated.
 
         Args:
-            path: A run.paths.Path representing the relative path of the input to
+            path: Abqms_run.paths.Path representing the relative path of the input to
                 be translated.
             text: A string representing the contents of the input to be
                 translated.
@@ -114,7 +114,7 @@ class MacroProcessor:
         """Unexpands macro/template expressions embedded in translated output.
 
         Args:
-            path: A run.paths.Path representing the relative path of the
+            path: Abqms_run.paths.Path representing the relative path of the
                 translated output.
             text: A string representing the contents of the translated output.
 

@@ -53,7 +53,7 @@ def build(
         project: A string representing the GCS project to use.
         location: A string representing the GCP location within which to run the
             translation.
-        translation_type: A run.gcp.bqms.translation_type.TranslationType.
+        translation_type: Abqms_run.gcp.bqms.translation_type.TranslationType.
         source_env: An optional google.cloud.bigquery_migration_v2.SourceEnv.
         object_name_mapping_list: An optional
             google.cloud.bigquery_migration_v2.ObjectNameMappingList.
