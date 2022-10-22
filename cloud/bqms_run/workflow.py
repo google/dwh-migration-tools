@@ -91,7 +91,7 @@ def execute(
                     macro_processor)
 
     Args:
-        paths: A run.paths.Paths instance containing project paths.
+        paths: Abqms_run.paths.Paths instance containing project paths.
         preprocess_hook: A callable for hooking user-defined preprocessing
             logic into the translation workflow.
         postprocess_hook: A callable for hooking user-defined postprocessing
@@ -99,7 +99,7 @@ def execute(
         bqms_request: A
             google.cloud.bigquery_migration_v2.CreateMigrationWorkflowRequest
             for requesting the execution of the BQMS migration workflow.
-        macro_processor: An optional run.macro_processor.MacroProcessor for
+        macro_processor: An optionalbqms_run.macro_processor.MacroProcessor for
             handling macro/templating languages embedded in code to be
             translated.
         executor_factory: An optional concurrent.futures.Executor factory used
