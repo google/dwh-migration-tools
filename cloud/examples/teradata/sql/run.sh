@@ -108,6 +108,9 @@ then
     export BQMS_POSTPROCESSED_PATH="gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}/postprocessed"
     log_info "Postprocessed path: ${BQMS_POSTPROCESSED_PATH}."
 
+    export BQMS_CONFIG_PATH="gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}/config/config.yaml"
+    log_info "Config path: ${BQMS_CONFIG_PATH}."
+
     # Macro mapping is optional. Check that macro mapping path exists before
     # setting BQMS_MACRO_MAPPING_PATH.
     BQMS_RELATIVE_MACRO_MAPPING_PATH="config/macros_mapping.yaml"
@@ -159,6 +162,7 @@ then
                 --set-env-vars="BQMS_PREPROCESSED_PATH=${BQMS_PREPROCESSED_PATH}" \
                 --set-env-vars="BQMS_TRANSLATED_PATH=${BQMS_TRANSLATED_PATH}" \
                 --set-env-vars="BQMS_POSTPROCESSED_PATH=${BQMS_POSTPROCESSED_PATH}" \
+                --set-env-vars="BQMS_CONFIG_PATH=${BQMS_CONFIG_PATH}" \
                 ${BQMS_MACRO_MAPPING_PATH:+ --set-env-vars="BQMS_MACRO_MAPPING_PATH=${BQMS_MACRO_MAPPING_PATH}"} \
                 ${BQMS_OBJECT_NAME_MAPPING_PATH:+ --set-env-vars="BQMS_OBJECT_NAME_MAPPING_PATH=${BQMS_OBJECT_NAME_MAPPING_PATH}"}
 
@@ -193,6 +197,9 @@ else
     log_info "Translated path: ${BQMS_TRANSLATED_PATH}."
     export BQMS_POSTPROCESSED_PATH="${SCRIPT_DIR}/postprocessed"
     log_info "Postprocessed path: ${BQMS_POSTPROCESSED_PATH}."
+
+    export BQMS_CONFIG_PATH="${SCRIPT_DIR}/config/config.yaml"
+    log_info "Config path: ${BQMS_CONFIG_PATH}."
 
     # Macro mapping is optional. Check that macro mapping path exists before
     # setting BQMS_MACRO_MAPPING_PATH.

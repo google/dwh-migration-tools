@@ -18,6 +18,7 @@ import logging
 import os
 import signal
 import sys
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pprint import pformat
 from types import FrameType
@@ -44,13 +45,14 @@ logger = logging.getLogger("bqms_run")
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 
-def _parse_paths_settings() -> Paths:
-    logger.debug("Parsing BQMS_*_PATH settings.")
+def _parse_paths() -> Paths:
+    logger.debug("Parsing BQMS_*_PATH env vars.")
     paths_mapping = {
         "input_path": os.getenv("BQMS_INPUT_PATH"),
         "preprocessed_path": os.getenv("BQMS_PREPROCESSED_PATH"),
         "translated_path": os.getenv("BQMS_TRANSLATED_PATH"),
         "postprocessed_path": os.getenv("BQMS_POSTPROCESSED_PATH"),
+        "config_path": os.getenv("BQMS_CONFIG_PATH"),
     }
 
     macro_mapping_path = os.getenv("BQMS_MACRO_MAPPING_PATH")
@@ -73,36 +75,52 @@ def _parse_paths_settings() -> Paths:
     return paths
 
 
-def _parse_translation_type_setting() -> TranslationType:
-    logger.debug("Parsing BQMS_TRANSLATION_TYPE setting.")
+def _read_config(config_path: Path) -> dict[str, object]:
+    logger.debug("Parsing config: %s.", config_path.as_uri())
+    with config_path.open(mode="r", encoding="utf-8") as config_file:
+        config_text = config_file.read()
+    config: dict[str, object] = yaml.load(config_text, Loader=yaml.SafeLoader)
+    return config
+
+
+def _parse_location(config: Mapping[str, object]) -> str:
+    logger.debug("Parsing location.")
+    location = config.get("location")
+    if not location:
+        logger.error("location must be set.")
+        sys.exit(1)
+    logger.debug("Region: %s.", location)
+    return str(location)
+
+
+def _parse_translation_type(config: Mapping[str, object]) -> TranslationType:
+    logger.debug("Parsing translation_type.")
     try:
-        translation_type = TranslationType.from_mapping(
+        validated_translation_type = TranslationType.from_mapping(
             {
-                "name": os.getenv("BQMS_TRANSLATION_TYPE"),
+                "name": config.get("translation_type"),
             }
         )
     except ValidationError as errors:
         for error in errors.messages_dict["name"]:
-            logger.error("Invalid BQMS_TRANSLATION_TYPE: %s.", error)
+            logger.error("Invalid translation_type: %s.", error)
         sys.exit(1)
-    logger.debug("Translation type: %s.", translation_type.name)
-    return translation_type
+    logger.debug("Translation type: %s.", validated_translation_type.name)
+    return validated_translation_type
 
 
-def _parse_source_env_settings() -> Optional[SourceEnv]:
-    logger.debug("Parsing BQMS_SOURCE_ENV_* settings.")
+def _parse_source_env(config: Mapping[str, object]) -> Optional[SourceEnv]:
+    logger.debug("Parsing source env config.")
     source_env = None
     source_env_mapping: dict[str, object] = {}
 
-    source_env_default_database = os.getenv("BQMS_SOURCE_ENV_DEFAULT_DATABASE")
+    source_env_default_database = config.get("default_database")
     if source_env_default_database:
         source_env_mapping["default_database"] = source_env_default_database
 
-    source_env_schema_search_path = os.getenv("BQMS_SOURCE_ENV_SCHEMA_SEARCH_PATH")
+    source_env_schema_search_path = config.get("schema_search_path")
     if source_env_schema_search_path:
-        source_env_mapping["schema_search_path"] = source_env_schema_search_path.split(
-            ","
-        )
+        source_env_mapping["schema_search_path"] = source_env_schema_search_path
 
     if source_env_mapping:
         try:
@@ -111,8 +129,8 @@ def _parse_source_env_settings() -> Optional[SourceEnv]:
             for source_env_attr, source_env_attr_errors in errors.messages_dict.items():
                 for source_env_attr_error in source_env_attr_errors:
                     logger.error(
-                        "Invalid BQMS_SOURCE_ENV_%s: %s.",
-                        source_env_attr.upper(),
+                        "Invalid source env config: %s: %s.",
+                        source_env_attr,
                         source_env_attr_error,
                     )
             sys.exit(1)
@@ -238,7 +256,13 @@ def main() -> None:
 
     logger.info("Parsing env vars and config files.")
 
-    logger.debug("Parsing BQMS_PROJECT setting.")
+    logger.debug("Parsing BQMS_MULTITHREADED.")
+    multithreaded = (
+        os.getenv("BQMS_MULTITHREADED", "False").lower() in true_env_var_values
+    )
+    logger.debug("Multithreaded: %s.", multithreaded)
+
+    logger.debug("Parsing BQMS_PROJECT.")
     project = os.getenv("BQMS_PROJECT")
     if not project:
         logger.error("BQMS_PROJECT must be set.")
@@ -248,18 +272,12 @@ def main() -> None:
     gcs_client = GSClient(project)
     gcs_client.set_as_default_client()
 
-    paths = _parse_paths_settings()
+    paths = _parse_paths()
 
-    logger.debug("Parsing BQMS_TRANSLATION_REGION setting.")
-    location = os.getenv("BQMS_TRANSLATION_REGION")
-    if not location:
-        logger.error("BQMS_TRANSLATION_REGION must be set.")
-        sys.exit(1)
-    logger.debug("Region: %s.", location)
-
-    translation_type = _parse_translation_type_setting()
-
-    source_env = _parse_source_env_settings()
+    config = _read_config(paths.config_path)
+    location = _parse_location(config)
+    translation_type = _parse_translation_type(config)
+    source_env = _parse_source_env(config)
 
     object_name_mapping_list = (
         _parse_object_name_mapping(paths.object_name_mapping_path)
@@ -282,12 +300,6 @@ def main() -> None:
         if paths.macro_mapping_path
         else None
     )
-
-    logger.debug("Parsing BQMS_MULTITHREADED setting.")
-    multithreaded = (
-        os.getenv("BQMS_MULTITHREADED", "False").lower() in true_env_var_values
-    )
-    logger.debug("Multithreaded: %s.", multithreaded)
 
     try:
         logger.info("Executing BQMS workflow.")

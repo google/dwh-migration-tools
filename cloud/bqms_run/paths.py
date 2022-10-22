@@ -38,6 +38,7 @@ class _PathsSchema(Schema):
     postprocessed_path = fields.Method(
         required=True, deserialize="_deserialize_directory_force_empty"
     )
+    config_path = fields.Method(deserialize="_deserialize_file")
     macro_mapping_path = fields.Method(deserialize="_deserialize_file")
     object_name_mapping_path = fields.Method(deserialize="_deserialize_file")
 
@@ -115,6 +116,7 @@ class Paths:
                 "preprocessed_path": os.getenv("BQMS_PREPROCESSED_PATH"),
                 "translated_path": os.getenv("BQMS_TRANSLATED_PATH"),
                 "postprocessed_path": os.getenv("BQMS_POSTPROCESSED_PATH"),
+                "config_path": os.getenv("BQMS_CONFIG_PATH"),
                 "macro_mapping_path": os.getenv("BQMS_MACRO_MAPPING_PATH"),
                 "object_name_mapping_path": os.getenv(
                     "BQMS_OBJECT_NAME_MAPPING_PATH"
@@ -122,15 +124,16 @@ class Paths:
             })
 
     Attributes:
-        input_path: A run.paths.Path where input to be translated is located.
+        input_path: A bqms_run.paths.Path where input to be translated is located.
         preprocessed_path: A cloudpathlib.GSPath where preprocessed input to be
             translated is written.
         translated_path: A cloudpathlib.GSPath where translated output is written.
-        postprocessed_path: A run.paths.Path where postprocessed translated
+        postprocessed_path: A bqms_run.paths.Path where postprocessed translated
             output is written.
-        macro_mapping_path: An optional run.paths.Path where the macro mapping
+        config_path: A bqms_run.paths.Path where the translation config is located.
+        macro_mapping_path: An optional bqms_run.paths.Path where the macro mapping
             is located.
-        object_name_mapping_path: An optional  run.paths.Path where the object
+        object_name_mapping_path: An optional bqms_run.paths.Path where the object
             name mapping is located.
     """
 
@@ -138,6 +141,7 @@ class Paths:
     preprocessed_path: GSPath
     translated_path: GSPath
     postprocessed_path: Path
+    config_path: Path
     macro_mapping_path: Optional[Path] = None
     object_name_mapping_path: Optional[Path] = None
 
