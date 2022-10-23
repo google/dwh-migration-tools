@@ -34,9 +34,10 @@ from bqms_run.gcp.bqms.request import build as build_bqms_request
 from bqms_run.gcp.bqms.source_env import SourceEnvSchema
 from bqms_run.gcp.bqms.translation_type import TranslationType
 from bqms_run.gcp.gcs import GSClient
+from bqms_run.hooks import custom_macros
 from bqms_run.hooks import postprocess as postprocess_hook
 from bqms_run.hooks import preprocess as preprocess_hook
-from bqms_run.macro_processor import MacroProcessor
+from bqms_run.macros import MacroExpanderRouter, MacroMapping
 from bqms_run.paths import Path, Paths
 
 root_logger = logging.getLogger()
@@ -169,13 +170,13 @@ def _parse_object_name_mapping(
     return object_name_mapping_list
 
 
-def _parse_macro_mapping(macro_mapping_path: Path) -> MacroProcessor:
+def _parse_macro_mapping(macro_mapping_path: Path) -> MacroExpanderRouter:
     logger.debug("Parsing macro mapping: %s.", macro_mapping_path.as_uri())
     with macro_mapping_path.open(mode="r", encoding="utf-8") as macro_mapping_file:
         macro_mapping_text = macro_mapping_file.read()
     macro_mapping = yaml.load(macro_mapping_text, Loader=yaml.SafeLoader)
     try:
-        macro_processor = MacroProcessor.from_mapping(macro_mapping)
+        validated_macro_mapping = MacroMapping.from_mapping(macro_mapping)
     except ValidationError as error:
         logger.error(
             "Invalid macro mapping: %s: %s.", macro_mapping_path.as_uri(), error
@@ -185,9 +186,9 @@ def _parse_macro_mapping(macro_mapping_path: Path) -> MacroProcessor:
     # migration workflow request.
     logger.info(
         "Macro mapping:\n%s.",
-        macro_processor,
+        pformat(validated_macro_mapping),
     )
-    return macro_processor
+    return custom_macros(validated_macro_mapping)
 
 
 class LoggingFormatter(logging.Formatter):
@@ -295,7 +296,7 @@ def main() -> None:
         object_name_mapping_list,
     )
 
-    macro_processor = (
+    macro_expander_router = (
         _parse_macro_mapping(paths.macro_mapping_path)
         if paths.macro_mapping_path
         else None
@@ -308,7 +309,7 @@ def main() -> None:
             preprocess_hook,
             postprocess_hook,
             bqms_request,
-            macro_processor,
+            macro_expander_router,
             ThreadPoolExecutor if multithreaded else workflow.SynchronousExecutor,
         )
     except Exception as exc:  # pylint: disable=broad-except
