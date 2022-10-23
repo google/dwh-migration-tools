@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Schema and validator for source environment."""
-from collections.abc import Mapping
+from typing import Mapping
 
 from google.cloud import bigquery_migration_v2
 from marshmallow import Schema, fields, post_load

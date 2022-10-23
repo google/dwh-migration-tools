@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Schemas and validators for object name mapping."""
-from collections.abc import Mapping
+from typing import Mapping
 
 from google.cloud.bigquery_migration_v2 import (
     NameMappingKey,

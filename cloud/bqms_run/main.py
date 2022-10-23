@@ -18,11 +18,10 @@ import logging
 import os
 import signal
 import sys
-from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pprint import pformat
 from types import FrameType
-from typing import Optional
+from typing import Dict, Mapping, Optional
 
 import yaml
 from google.cloud.bigquery_migration_v2 import ObjectNameMappingList, SourceEnv
@@ -69,18 +68,18 @@ def _parse_paths() -> Paths:
     except ValidationError as errors:
         for path_name, path_errors in errors.messages_dict.items():
             for path_error in path_errors:
-                logger.error("Invalid BQMS_%s: %s.", path_name.upper(), path_error)
+                logger.error("Invalid BQMS_%s: %s", path_name.upper(), path_error)
         sys.exit(1)
     for path_name, path in paths:
         logger.debug("%s: %s.", path_name.capitalize(), path)
     return paths
 
 
-def _read_config(config_path: Path) -> dict[str, object]:
+def _read_config(config_path: Path) -> Dict[str, object]:
     logger.debug("Parsing config: %s.", config_path.as_uri())
     with config_path.open(mode="r", encoding="utf-8") as config_file:
         config_text = config_file.read()
-    config: dict[str, object] = yaml.load(config_text, Loader=yaml.SafeLoader)
+    config: Dict[str, object] = yaml.load(config_text, Loader=yaml.SafeLoader)
     return config
 
 
@@ -104,7 +103,7 @@ def _parse_translation_type(config: Mapping[str, object]) -> TranslationType:
         )
     except ValidationError as errors:
         for error in errors.messages_dict["name"]:
-            logger.error("Invalid translation_type: %s.", error)
+            logger.error("Invalid translation_type: %s", error)
         sys.exit(1)
     logger.debug("Translation type: %s.", validated_translation_type.name)
     return validated_translation_type
@@ -113,7 +112,7 @@ def _parse_translation_type(config: Mapping[str, object]) -> TranslationType:
 def _parse_source_env(config: Mapping[str, object]) -> Optional[SourceEnv]:
     logger.debug("Parsing source env config.")
     source_env = None
-    source_env_mapping: dict[str, object] = {}
+    source_env_mapping: Dict[str, object] = {}
 
     source_env_default_database = config.get("default_database")
     if source_env_default_database:
@@ -130,7 +129,7 @@ def _parse_source_env(config: Mapping[str, object]) -> Optional[SourceEnv]:
             for source_env_attr, source_env_attr_errors in errors.messages_dict.items():
                 for source_env_attr_error in source_env_attr_errors:
                     logger.error(
-                        "Invalid source env config: %s: %s.",
+                        "Invalid source env config: %s: %s",
                         source_env_attr,
                         source_env_attr_error,
                     )
@@ -158,7 +157,7 @@ def _parse_object_name_mapping(
         )
     except ValidationError as error:
         logger.error(
-            "Invalid object name mapping: %s: %s.",
+            "Invalid object name mapping: %s: %s",
             object_name_mapping_path.as_uri(),
             error,
         )
@@ -179,7 +178,7 @@ def _parse_macro_mapping(macro_mapping_path: Path) -> MacroExpanderRouter:
         validated_macro_mapping = MacroMapping.from_mapping(macro_mapping)
     except ValidationError as error:
         logger.error(
-            "Invalid macro mapping: %s: %s.", macro_mapping_path.as_uri(), error
+            "Invalid macro mapping: %s: %s", macro_mapping_path.as_uri(), error
         )
         sys.exit(1)
     # Log macro mapping at INFO level since it is not logged as part of
