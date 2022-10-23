@@ -48,9 +48,10 @@ def type_check(session):
     session.run("poetry", "run", "mypy", "--strict", "bqms_run")
 
 
-@nox.session(python=False)
+@nox.session(python=["3.7", "3.8", "3.9", "3.10"])
 def tests(session):
     """Execute tests."""
+    session.install("poetry")
     session.run("poetry", "install")
     tests_path = pathlib.Path("tests")
     if "unit" in session.posargs:

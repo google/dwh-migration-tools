@@ -15,10 +15,8 @@
 
 import logging
 import re
-from collections.abc import Mapping
 from fnmatch import fnmatch
-from re import Match
-from typing import Callable, Optional
+from typing import Callable, Dict, List, Mapping, Match, Optional, Set, Tuple
 
 from marshmallow import Schema, fields, post_load
 
@@ -53,7 +51,7 @@ class RecordingLogger:  # pylint: disable=too-few-public-methods
     """Logger that keeps track of the messages that it has logged."""
 
     def __init__(self) -> None:
-        self.messages: list[str] = []
+        self.messages: List[str] = []
 
     def warn_log(self, format_string: str, *args: str) -> None:
         message = format_string.format(*args)
@@ -69,7 +67,7 @@ class MacroExpander(RecordingLogger):
         # macro name -> replacement
         self.mapping = mapping
         # path -> [replacement -> (count, original(s))]
-        self.reverse: dict[Path, dict[str, tuple[int, set[str]]]] = {}
+        self.reverse: Dict[Path, Dict[str, Tuple[int, Set[str]]]] = {}
 
     def _update_reverse_map(
         self, path: Path, replacement: str, macro_name: str
@@ -155,7 +153,7 @@ class PatternMacroExpander(MacroExpander):
         self.generator = generator
         self.un_generator = un_generator
         # path -> unmapped macros
-        self.unmapped: dict[Path, set[str]] = {}
+        self.unmapped: Dict[Path, Set[str]] = {}
 
     def _substitution(self, path: Path, match: Match[str]) -> str:
         macro_name = match.group(1)
@@ -229,7 +227,7 @@ class MacroExpanderRouter(RecordingLogger):
         super().__init__()
         self.all_macros = all_macros
 
-    def _choose_expanders(self, path: Path) -> list[MacroExpander]:
+    def _choose_expanders(self, path: Path) -> List[MacroExpander]:
         chosen_expanders = []
         for pattern, expander in self.all_macros.items():
             if fnmatch(str(path), pattern):
@@ -254,7 +252,7 @@ class MacroExpanderRouter(RecordingLogger):
             text = expander.un_expand(path, text)
         return text
 
-    def all_messages(self) -> list[str]:
+    def all_messages(self) -> List[str]:
         """
         Return all warning/error messages that the macro expanders generated.
         """
