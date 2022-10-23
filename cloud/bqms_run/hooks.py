@@ -13,7 +13,7 @@
 # limitations under the License.
 """User-defined code that is hooked into the translation workflow."""
 import re
-from collections.abc import Mapping
+from typing import Mapping
 
 from bqms_run.macros import (
     MacroExpanderRouter,

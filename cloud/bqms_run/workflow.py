@@ -13,12 +13,12 @@
 # limitations under the License.
 """Preprocess->translate->postprocess workflow."""
 import logging
-from collections.abc import Callable
 from concurrent.futures import Executor, Future, as_completed
 from threading import Lock
-from typing import Optional, ParamSpec, Type, TypeVar
+from typing import Callable, Optional, Type, TypeVar
 
 from google.cloud.bigquery_migration_v2 import CreateMigrationWorkflowRequest
+from typing_extensions import ParamSpec
 
 from bqms_run.gcp.bqms.request import execute as execute_bqms_request
 from bqms_run.macros import MacroExpanderRouter
@@ -40,12 +40,12 @@ class SynchronousExecutor(Executor):
 
     def submit(  # pylint: disable=arguments-differ
         self, __fn: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs
-    ) -> Future[_T]:
+    ) -> "Future[_T]":
         with self._shutdownLock:
             if self._shutdown:
                 raise RuntimeError("cannot schedule new futures after shutdown")
 
-            future: Future[_T] = Future()
+            future: "Future[_T]" = Future()
             try:
                 result = __fn(*args, **kwargs)
             except Exception as exc:  # pylint: disable=broad-except

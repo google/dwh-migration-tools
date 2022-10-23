@@ -33,6 +33,10 @@ nox -s tests -- unit
 
 ```shell
 poetry shell
+BQMS_VERBOSE="False" \
+BQMS_MULTITHREADED="True" \
+BQMS_PROJECT="<YOUR_TEST_PROJECT>" \
+BQMS_GCS_BUCKET="<YOUR_TEST_BUCKET>" \
 nox -s tests -- integration
 ```
 

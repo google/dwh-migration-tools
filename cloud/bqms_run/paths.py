@@ -13,10 +13,9 @@
 # limitations under the License.
 """Dataclass that contains project paths."""
 import pathlib
-from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from dataclasses import fields as dataclass_fields
-from typing import Optional, Union
+from typing import Iterator, Mapping, Optional, Tuple, Union
 
 from cloudpathlib import CloudPath, GSPath
 from cloudpathlib.anypath import to_anypath
@@ -45,7 +44,7 @@ class _PathsSchema(Schema):
     @staticmethod
     def _deserialize_file(obj: str) -> Path:
         try:
-            path = to_anypath(obj)
+            path = to_anypath(obj).resolve()
         except Exception as err:
             raise ValidationError(f"Invalid path: {err}.") from err
         if not path.is_file():
@@ -55,7 +54,7 @@ class _PathsSchema(Schema):
     @staticmethod
     def _deserialize_directory(obj: str) -> Path:
         try:
-            path = to_anypath(obj)
+            path = to_anypath(obj).resolve()
         except Exception as err:
             raise ValidationError(f"Invalid path: {err}.") from err
         if not path.is_dir():
@@ -82,7 +81,7 @@ class _PathsSchema(Schema):
     @classmethod
     def _deserialize_directory_force_empty(cls, obj: str) -> Path:
         try:
-            path = to_anypath(obj)
+            path = to_anypath(obj).resolve()
         except Exception as err:
             raise ValidationError(f"Invalid path: {err}.") from err
         cls._directory_force_empty(path)
@@ -158,6 +157,6 @@ class Paths:
         paths: Paths = _PathsSchema().load(mapping)
         return paths
 
-    def __iter__(self) -> Iterator[tuple[str, Path]]:
+    def __iter__(self) -> Iterator[Tuple[str, Path]]:
         for field in dataclass_fields(self.__class__):
             yield field.name, getattr(self, field.name)
