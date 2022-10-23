@@ -21,7 +21,7 @@ from typing import Optional, ParamSpec, Type, TypeVar
 from google.cloud.bigquery_migration_v2 import CreateMigrationWorkflowRequest
 
 from bqms_run.gcp.bqms.request import execute as execute_bqms_request
-from bqms_run.macro_processor import MacroProcessor
+from bqms_run.macros import MacroExpanderRouter
 from bqms_run.paths import Path, Paths
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ def execute(
     preprocess_hook: ProcessingHook,
     postprocess_hook: ProcessingHook,
     bqms_request: CreateMigrationWorkflowRequest,
-    macro_processor: Optional[MacroProcessor] = None,
+    macro_expander_router: Optional[MacroExpanderRouter] = None,
     executor_factory: Type[Executor] = SynchronousExecutor,
 ) -> None:
     """Executes the preprocess->translate->postprocess workflow.
@@ -81,14 +81,14 @@ def execute(
                 postprocess as postprocess_hook,
                 preprocess as preprocess_hook
             )
-            from bqms_run.macro_processor import MacroProcessor
+            from bqms_run.macros import MacroExpanderRouter
             from bqms_run.paths import Paths
 
             paths = Paths.from_mapping(...)
             bqms_request = build_bqms_request(...)
-            macro_processor = MacroProcessor.from_mapping(...)
+            macro_expander_router = MacroExpanderRouter.from_mapping(...)
             execute(paths, preprocess_hook, postprocess_hook, bqms_request,
-                    macro_processor)
+                    macro_expander_router)
 
     Args:
         paths: Abqms_run.paths.Paths instance containing project paths.
@@ -99,8 +99,8 @@ def execute(
         bqms_request: A
             google.cloud.bigquery_migration_v2.CreateMigrationWorkflowRequest
             for requesting the execution of the BQMS migration workflow.
-        macro_processor: An optionalbqms_run.macro_processor.MacroProcessor for
-            handling macro/templating languages embedded in code to be
+        macro_expander_router: An optional bqms_run.macros.MacroExpanderRouter
+            for handling macro/templating languages embedded in code to be
             translated.
         executor_factory: An optional concurrent.futures.Executor factory used
             to create an executor for per-path pre and postprocessing tasks.
@@ -129,8 +129,8 @@ def execute(
 
         preprocessed_text = preprocess_hook(relative_file_path, source_text)
         macro_expanded_text = (
-            macro_processor.expand(relative_file_path, preprocessed_text)
-            if macro_processor
+            macro_expander_router.expand(relative_file_path, preprocessed_text)
+            if macro_expander_router
             else preprocessed_text
         )
 
@@ -151,8 +151,8 @@ def execute(
             source_text = source_file.read()
 
         macro_unexpanded_text = (
-            macro_processor.unexpand(relative_file_path, source_text)
-            if macro_processor
+            macro_expander_router.un_expand(relative_file_path, source_text)
+            if macro_expander_router
             else source_text
         )
         postprocessed_text = postprocess_hook(relative_file_path, macro_unexpanded_text)
