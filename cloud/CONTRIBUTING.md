@@ -5,7 +5,7 @@
 - [Poetry][poetry] (analyze, test)
 - [npm][npm] (analyze)
 - [addlicense][addlicense] (analyze)
-- [Google Cloud CLI][google-cloud-cli] (test, build)
+- [Google Cloud CLI][google-cloud-cli] (test)
 
 ## Install
 
@@ -44,6 +44,10 @@ nox -s tests -- integration
 
 ```shell
 poetry shell
+BQMS_VERBOSE="False" \
+BQMS_MULTITHREADED="True" \
+BQMS_PROJECT="<YOUR_TEST_PROJECT>" \
+BQMS_GCS_BUCKET="<YOUR_TEST_BUCKET>" \
 nox -s tests
 ```
 
@@ -53,26 +57,7 @@ To view all logs while running tests:
 
 ```shell
 poetry shell
-nox -s tests --verbose -- integration pytest_verbose
-```
-
-## Build
-
-```shell
-export BQMS_ARTIFACT_PROJECT="ajwelch-bqms-test-004"
-export BQMS_ARTIFACT_REPOSITORY_ID="bqms"
-export BQMS_ARTIFACT_REPOSITORY_REGION="us-east4"
-IFS=''
-tag=("$BQMS_ARTIFACT_REPOSITORY_REGION-docker.pkg.dev/$BQMS_ARTIFACT_PROJECT/"
-     "$BQMS_ARTIFACT_REPOSITORY_ID/bqms:latest")
-export BQMS_ARTIFACT_TAG="${tag[*]}"
-
-# TODO: How do we make this public and publish via CI/CD?
-gcloud --project=$BQMS_ARTIFACT_PROJECT artifacts repositories create \
-    $BQMS_ARTIFACT_REPOSITORY_ID --repository-format=docker \
-    --location=$BQMS_ARTIFACT_REPOSITORY_REGION
-
-gcloud --project=$BQMS_ARTIFACT_PROJECT builds submit -t $BQMS_ARTIFACT_TAG
+nox -s tests --verbose -- unit pytest_verbose
 ```
 
 ## Docs

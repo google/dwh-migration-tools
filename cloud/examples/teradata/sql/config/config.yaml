@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-# See the type field here:
+# The type of translation to perform e.g. Teradata to BigQuery. Doc:
 # https://cloud.google.com/bigquery/docs/reference/migration/rest/v2/projects.locations.workflows#migrationtask
 translation_type: Translation_Teradata2BQ
 
 # The region where the translation job will run.
 location: 'us'
+
+# Default database and schemas to use when looking up unqualified references:
 
 # https://cloud.google.com/bigquery/docs/output-name-mapping#default_database
 default_database: default_db
