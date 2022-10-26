@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,9 +13,10 @@
 # limitations under the License.
 
 """Macro processing unit tests."""
+import pathlib
 import re
 
-from dwh_migration_client.macro_expander import (
+from bqms_run.macros import (
     MacroExpanderRouter,
     PatternMacroExpander,
     SimpleMacroExpander,
@@ -33,9 +34,9 @@ def test_basic_replacement():
         }
     )
     input_text = "abcdef ${a}.${b} ghijkl"
-    expanded = expander.expand("abc.sql", input_text)
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
     assert expanded == "abcdef alpha.bravo ghijkl"
-    un_expanded = expander.un_expand("abc.sql", expanded)
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
     assert un_expanded == input_text
 
 
@@ -50,7 +51,7 @@ def test_missing_replacement():
         }
     )
     input_text = "abcdef ${a}.${b} ${c} ghijkl"
-    expanded = expander.expand("abc.sql", input_text)
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
     assert expanded == "abcdef alpha.bravo ${c} ghijkl"
     assert expander.all_messages()[0].startswith("Could not expand '${c}'")
 
@@ -63,14 +64,14 @@ def test_generator_replacement():
             "*.sql": PatternMacroExpander(
                 mapping={},
                 pattern="\\$\\{(\\w+)\\}",
-                generator=lambda file_name, text: "##" + file_name + "_" + text + "##",
+                generator=lambda path, text: "##" + str(path) + "_" + text + "##",
             )
         }
     )
     input_text = "abc${something}def"
-    expanded = expander.expand("abc.sql", input_text)
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
     assert expanded == "abc##abc.sql_something##def"
-    un_expanded = expander.un_expand("abc.sql", expanded)
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
     assert un_expanded == input_text
 
 
@@ -82,14 +83,14 @@ def test_ambiguous_unexpand():
             "*.sql": PatternMacroExpander(
                 mapping={"a": "abc", "b": "abc"},
                 pattern="\\$\\{(\\w+)\\}",
-                generator=lambda file_name, text: "xyz",
+                generator=lambda path, text: "xyz",
             )
         }
     )
     input_text = "${a}.${b} ${c}.${d}"
-    expanded = expander.expand("abc.sql", input_text)
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
     assert expanded == "abc.abc xyz.xyz"
-    un_expanded = expander.un_expand("abc.sql", expanded)
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
     assert un_expanded in (
         "${a}.${a} ${c}.${c}",
         "${a}.${a} ${d}.${d}",
@@ -115,9 +116,9 @@ def test_unintended_unexpand():
         }
     )
     input_text = "${a} abc"
-    expanded = expander.expand("abc.sql", input_text)
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
     assert expanded == "abc abc"
-    un_expanded = expander.un_expand("abc.sql", expanded)
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
     assert un_expanded == "${a} ${a}"
 
 
@@ -128,19 +129,20 @@ def test_unexpand_generator():
         {
             "*.sql": PatternMacroExpander(
                 pattern="\\$\\{(\\w+)\\}",
-                generator=lambda file_name, macro_name: "PARAM_"
+                mapping={},
+                generator=lambda path, macro_name: "PARAM_"
                 + macro_name.lower()
                 + "_PARAM",
-                un_generator=lambda file_name, replacement, macro_name: "{"
+                un_generator=lambda path, replacement, macro_name: "{"
                 + re.match("PARAM_(.+)_PARAM", replacement).group(1)
                 + "}",
             )
         }
     )
     input_text = "${a} abc"
-    expanded = expander.expand("abc.sql", input_text)
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
     assert expanded == "PARAM_a_PARAM abc"
-    un_expanded = expander.un_expand("abc.sql", expanded)
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
     assert un_expanded == "{a} abc"
 
 
@@ -154,7 +156,7 @@ def test_basic_expand():
         }
     )
     input_text = "abcdef ${a}.${b} ghijkl"
-    expanded = expander.expand("abc.sql", input_text)
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
     assert expanded == "abcdef alpha.bravo ghijkl"
-    un_expanded = expander.un_expand("abc.sql", expanded)
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
     assert un_expanded == input_text
