@@ -211,7 +211,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
         // Debugging:
         //   DSILogLevel=0..6;LogPath=C:\temp
         //   LogLevel 0/1
-        LOG.debug("URI is " + url);
+        LOG.trace("URI is " + url);
         DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
 
         return JdbcHandle.newPooledJdbcHandle(dataSource, arguments.getThreadPoolSize());
