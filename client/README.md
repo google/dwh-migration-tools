@@ -25,13 +25,20 @@ SQL files to/from GCS.
 ## Quickstart
 
 ```shell
-# Install the CLI as described in the Installation section below.
+# Clone the repo.
+git clone git@github.com:google/dwh-migration-tools.git
 
-# Copy the example project directory to a project directory of your own.
-cp -R examples/teradata/sql <YOUR_PROJECT_DIRECTORY>
+# Copy the example project directory to a project directory of your own 
+# (preferably outside of the source tree to make pulling source updates easier).
+cp -R dwh-migration-tools/client/examples/teradata/sql <YOUR_PROJECT_DIRECTORY>
 
 # Change directory to your project directory.
 cd <YOUR_PROJECT_DIRECTORY>
+
+# Create a virtualenv and install the Python CLI.
+python3 -m venv venv
+source venv/bin/activate
+pip install ../dwh-migration-tools/client
 
 # Remove the example input files from the input directory.
 rm -rf input/*
@@ -41,7 +48,6 @@ cp <YOUR_INPUT_FILES> input/
 
 # Edit the config/config.yaml file appropriately as described in the Basic Usage
 # section below.
-nano config/config.yaml
 
 # Set the appropriate environment variables as described in the Basic Usage
 # section below.
