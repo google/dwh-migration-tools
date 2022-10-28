@@ -1,7 +1,7 @@
 # BigQuery Migration Service Batch SQL Translator CLI
 
 The [BigQuery Migration Service][BQMS] includes a product known as the
-[batch SQL translator][batch SQL translator] that supports translation of a 
+[batch SQL translator][batch SQL translator] that supports translation of a
 wide variety of SQL dialects to Google Standard SQL. This command line tool
 simplifies the process of using the batch SQL translator by providing a
 framework for pre and postprocessing of SQL files as well as upload/download of
@@ -14,8 +14,8 @@ SQL files to/from GCS.
   - [config.yaml](#configyaml)
   - [Recommended Usage](#recommended-usage)
 - [Metadata Lookup](#metadata-lookup)
-    - [DDL and Metadata Dump](#ddl-and-metadata-dump)
-    - [Unqualified References](#unqualified-references)
+  - [DDL and Metadata Dump](#ddl-and-metadata-dump)
+  - [Unqualified References](#unqualified-references)
 - [Pre and Postprocessing](#pre-and-postprocessing)
   - [Handling Macro/Templating Languages](#handling-macrotemplating-languages)
   - [Custom Pre and Postprocessing Logic](#custom-pre-and-postprocessing-logic)
@@ -78,39 +78,39 @@ Direct execution requires setting
 [environment variables](#environment-variables) and modifying a
 [config.yaml](#configyaml) file.
 
-`run.sh` execution is described in detail in 
+`run.sh` execution is described in detail in
 [Recommended Usage](#recommended-usage).
 
 ### Environment Variables
 
 The CLI accepts the following environment variables:
 
-  - `BQMS_PROJECT` **(required)**: The project that the translation job will be
-    run in. All GCS paths must reside in this project.
-  - `BQMS_INPUT_PATH` **(required)**: The path that raw input to be preprocessed
-    will be read from . This can either be a local path or a path that 
-    begins with the `gs://` scheme.
-  - `BQMS_PREPROCESSED_PATH` **(required)**: The path that the batch SQL
-    translator will read preprocessed input from. It must be a path that begins
-    with the `gs://` scheme and thus always reside on GCS.
-  - `BQMS_TRANSLATED_PATH` **(required)**: The path that the batch SQL
-    translator will write translated output to for postprocessing. It must be a
-    path that begins with the `gs://` scheme and thus always reside on GCS.
-  - `BQMS_POSTPROCESSED_PATH` **(required)**: The path that postprocessed output
-    will be written to. This can either be a local path or a path that
-    begins with the `gs://` scheme.
-  - `BQMS_CONFIG_PATH` **(required)**: The path to the
-    [config.yaml](#configyaml) file. This can either be a local path or a path
-    that begins with the `gs://` scheme.
-  - `BQMS_MACRO_MAPPING_PATH`: The path to the
-    [macro mapping](#handling-macrotemplating-languages) file. This can either
-    be a local path or a path that begins with the `gs://` scheme.
-  - `BQMS_OBJECT_NAME_MAPPING_PATH`: The path to the
-    [object name mapping](#renaming-sql-identifiers) file. This can either be a
-    local path or a path that begins with the `gs://` scheme.
-  - `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded 
-    pre/postprocessing and uploads/downloads.
-  - `BQMS_VERBOSE`: Set to `True` to enable debug logging.
+- `BQMS_PROJECT` **(required)**: The project that the translation job will be
+  run in. All GCS paths must reside in this project.
+- `BQMS_INPUT_PATH` **(required)**: The path that raw input to be preprocessed
+  will be read from . This can either be a local path or a path that
+  begins with the `gs://` scheme.
+- `BQMS_PREPROCESSED_PATH` **(required)**: The path that the batch SQL
+  translator will read preprocessed input from. It must be a path that begins
+  with the `gs://` scheme and thus always reside on GCS.
+- `BQMS_TRANSLATED_PATH` **(required)**: The path that the batch SQL
+  translator will write translated output to for postprocessing. It must be a
+  path that begins with the `gs://` scheme and thus always reside on GCS.
+- `BQMS_POSTPROCESSED_PATH` **(required)**: The path that postprocessed output
+  will be written to. This can either be a local path or a path that
+  begins with the `gs://` scheme.
+- `BQMS_CONFIG_PATH` **(required)**: The path to the
+  [config.yaml](#configyaml) file. This can either be a local path or a path
+  that begins with the `gs://` scheme.
+- `BQMS_MACRO_MAPPING_PATH`: The path to the
+  [macro mapping](#handling-macrotemplating-languages) file. This can either
+  be a local path or a path that begins with the `gs://` scheme.
+- `BQMS_OBJECT_NAME_MAPPING_PATH`: The path to the
+  [object name mapping](#renaming-sql-identifiers) file. This can either be a
+  local path or a path that begins with the `gs://` scheme.
+- `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
+  pre/postprocessing and uploads/downloads.
+- `BQMS_VERBOSE`: Set to `True` to enable debug logging.
 
 ### config.yaml
 
@@ -172,28 +172,28 @@ This directory structure is meant to be used in conjunction with the `run.sh`
 script within the directory instead of executing the CLI directly. Doing so
 provides the following benefits:
 
-  - Automatic setting of most [environment variables](#environment-variables)
-    based on the recommended directory structure. Modifying the
-    [config.yaml](#configyaml) file is still required. 
-  - Downloading of intermediate pre and postprocessed files from GCS for
-    debugging as described in [Pre and Postprocessing](#pre-and-postprocessing). 
-  - Execution via Cloud Run as  described in
-    [Deploying to Cloud Run](#deploying-to-cloud-run).
+- Automatic setting of most [environment variables](#environment-variables)
+  based on the recommended directory structure. Modifying the
+  [config.yaml](#configyaml) file is still required.
+- Downloading of intermediate pre and postprocessed files from GCS for
+  debugging as described in [Pre and Postprocessing](#pre-and-postprocessing).
+- Execution via Cloud Run as  described in
+  [Deploying to Cloud Run](#deploying-to-cloud-run).
 
 The `run.sh` script accepts the following environment variables when
 run locally:
 
-  - `BQMS_PROJECT` **(required)**: The project that the translation job will be
-    run in.
-  - `BQMS_GCS_BUCKET` **(required)**: The GCS bucket where preprocessed and
-    translated code will be written to.
-  - `BQMS_SYNC_INTERMEDIATE_FILES`: Set to `True` to enable syncing of
-    intermediate files from GCS e.g. preprocessed files. This is useful for
-    debugging pre and postprocessing logic but also requires additional GCS
-    downloads.
-  - `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
-    pre/postprocessing and uploads/downloads.
-  - `BQMS_VERBOSE`: Set to `True` to enable debug logging.
+- `BQMS_PROJECT` **(required)**: The project that the translation job will be
+  run in.
+- `BQMS_GCS_BUCKET` **(required)**: The GCS bucket where preprocessed and
+  translated code will be written to.
+- `BQMS_SYNC_INTERMEDIATE_FILES`: Set to `True` to enable syncing of
+  intermediate files from GCS e.g. preprocessed files. This is useful for
+  debugging pre and postprocessing logic but also requires additional GCS
+  downloads.
+- `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
+  pre/postprocessing and uploads/downloads.
+- `BQMS_VERBOSE`: Set to `True` to enable debug logging.
 
 For a list of environment variables accepted by the `run.sh` script when using
 Cloud Run, please see [Deploying to Cloud Run](#deploying-to-cloud-run).
@@ -201,19 +201,21 @@ Cloud Run, please see [Deploying to Cloud Run](#deploying-to-cloud-run).
 In addition to the `run.sh` script, the example directory also contains the
 following shell scripts for convenience:
 
-  - `provision.sh`: Creates the `BQMS_PROJECT`, creates the `BQMS_GCS_BUCKET`,
-    enables the necessary services and grants the necessary permissions to
-    the `BQMS_DEVELOPER_EMAIL`. Example execution:
-    ```shell
-    export BQMS_PROJECT="<YOUR_DESIRED_GCP_PROJECT>"
-    export BQMS_DEVELOPER_EMAIL="<YOUR_EMAIL>"
-    export BQMS_GCS_BUCKET="<YOUR_DESIRED_GCS_BUCKET>"
-    export BQMS_GCS_BUCKET_LOCATION="<YOUR_DESIRED_GCS_BUCKET_LOCATION>"
-    ./provision.sh
-    ```
-  - `deprovision.sh`: Deletes the `BQMS_PROJECT`.
-  - `clean.sh`: Removes local `preprocessed`, `translated` and `postprocessed` 
-    directories.
+- `provision.sh`: Creates the `BQMS_PROJECT`, creates the `BQMS_GCS_BUCKET`,
+  enables the necessary services and grants the necessary permissions to
+  the `BQMS_DEVELOPER_EMAIL`. Example execution:
+
+  ```shell
+  export BQMS_PROJECT="<YOUR_DESIRED_GCP_PROJECT>"
+  export BQMS_DEVELOPER_EMAIL="<YOUR_EMAIL>"
+  export BQMS_GCS_BUCKET="<YOUR_DESIRED_GCS_BUCKET>"
+  export BQMS_GCS_BUCKET_LOCATION="<YOUR_DESIRED_GCS_BUCKET_LOCATION>"
+  ./provision.sh
+  ```
+
+- `deprovision.sh`: Deletes the `BQMS_PROJECT`.
+- `clean.sh`: Removes local `preprocessed`, `translated` and `postprocessed`
+  directories.
 
 ## Metadata Lookup
 
@@ -223,9 +225,9 @@ information can be provided either via DDL or a metadata dump.
 
 ### DDL and Metadata Dump
 
-If DDL scripts are available, please include them in the `BQMS_INPUT_PATH` 
+If DDL scripts are available, please include them in the `BQMS_INPUT_PATH`
 directory along with the DML and queries to be translated. If DDL scripts are
-not available, please 
+not available, please
 [generate a metadata dump as described in the docs][dumper] and include it in
 the `BQMS_INPUT_PATH` directory along with the DML and queries to be translated.
 
@@ -283,10 +285,10 @@ select my_col
 from foo
 ```
 
-Once translated, `my_col` will be unexpanded back to `${MACRO_1}` during 
+Once translated, `my_col` will be unexpanded back to `${MACRO_1}` during
 postprocessing.
 
-More advanced macro replacement schemes are possible. Please see the 
+More advanced macro replacement schemes are possible. Please see the
 `custom_pattern_macros_example` function in the `bqms_run/hooks.py` module for
 an example.
 
@@ -296,7 +298,7 @@ Beyond handling macro/templating languages, it is common to require custom pre
 and postprocessing logic that is specific to a particular organization or a
 particular set of scripts. For example, Netezza [nzsql][nzsql] scripts usually
 contain [slash commands][nzsql_slash_cmds] that do not need to be translated to
-BigQuery and can be commented out. The `bqms_run/hooks.py` module supports 
+BigQuery and can be commented out. The `bqms_run/hooks.py` module supports
 custom user-defined per-script processing logic via a `preprocess` function that
 is called once for each input script and a `postprocess` function that is called
 once for each translated output script. For example, to comment out nzsql slash
@@ -307,8 +309,8 @@ def preprocess(path: Path, text: str) -> str:
     """Preprocesses input via user-defined code before submitting it to BQMS.
 
     Args:
-        path: A bqms_run.paths.Path representing the relative path of the input to be
-            preprocessed.
+        path: A bqms_run.paths.Path representing the relative path of the input
+            to be preprocessed.
         text: A string representing the contents of the input to be
             preprocessed.
 
@@ -321,7 +323,7 @@ def preprocess(path: Path, text: str) -> str:
 ## Renaming SQL Identifiers
 
 The batch SQL translator supports renaming SQL identifiers via a feature called
-object name mapping. This feature can be configured by setting the 
+object name mapping. This feature can be configured by setting the
 `BQMS_OBJECT_NAME_MAPPING_PATH` environment variable to the path of a JSON file
 that contains name mapping rules. Please see the
 [official object name mapping docs][ONM] for details on how to specify name
@@ -346,8 +348,8 @@ gcloud --project="${BQMS_ARTIFACT_PROJECT}" builds submit \
 For more information on building and publishing Cloud Run container images,
 please see the [docs][cloud_run_build].
 
-Once a container image has been published to an artifact registry, the 
-`provision.sh` script can be executed to create the `BQMS_PROJECT`, create the 
+Once a container image has been published to an artifact registry, the
+`provision.sh` script can be executed to create the `BQMS_PROJECT`, create the
 `BQMS_GCS_BUCKET`, enable the necessary services, create the Cloud Run service
 account and grant the necessary permissions.
 
