@@ -187,6 +187,10 @@ run locally:
     run in.
   - `BQMS_GCS_BUCKET` **(required)**: The GCS bucket where preprocessed and
     translated code will be written to.
+  - `BQMS_SYNC_INTERMEDIATE_FILES`: Set to `True` to enable syncing of
+    intermediate files from GCS e.g. preprocessed files. This is useful for
+    debugging pre and postprocessing logic but also requires additional GCS
+    downloads.
   - `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
     pre/postprocessing and uploads/downloads.
   - `BQMS_VERBOSE`: Set to `True` to enable debug logging.

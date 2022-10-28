@@ -81,6 +81,12 @@ case $(echo "${BQMS_MULTITHREADED}" | tr '[:upper:]' '[:lower:]') in # smash to 
     *) log_info "Multithreading disabled.";;
 esac
 
+# Determine whether to sync intermediate files (i.e. preprocessed and translated).
+case $(echo "${BQMS_SYNC_INTERMEDIATE_FILES}" | tr '[:upper:]' '[:lower:]') in # smash to lowercase
+    "true"|"1"|"t") SYNC_INTERMEDIATE_FILES="true"; log_info "Sync intermediate files enabled.";;
+    *) log_info "Sync intermediate files disabled.";;
+esac
+
 # Generate a prefix of the form 1664253390380560406-uwvu1vpdgsrrl to use as the
 # root folder in the GCS bucket to read/write input/output.
 BQMS_GCS_PREFIX=$(date +%s%N  )-$(tr -dc A-Za-z0-9 </dev/urandom \
@@ -180,12 +186,14 @@ then
         "resource.type=cloud_run_job AND resource.labels.job_name=${BQMS_CLOUD_RUN_JOB_NAME} timestamp>=\"${BQMS_CLOUD_RUN_JOB_START_TIME}\"" \
         --order asc --format "value(textPayload)"
 
-    # Sync the translated BQMS output locally so it can be inspected if need be.
-    log_exec "Syncing gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX} to ${SCRIPT_DIR}." \
-        "Could not sync gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX} to ${SCRIPT_DIR}." \
-            gsutil ${MULTITHREADED:+ -m} \
-                rsync -r -d "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}" "${SCRIPT_DIR}"
-
+    if [[ -n "${SYNC_INTERMEDIATE_FILES}" ]]
+    then
+        # Sync the translated BQMS output locally so it can be inspected if need be.
+        log_exec "Syncing gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX} to ${SCRIPT_DIR}." \
+            "Could not sync gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX} to ${SCRIPT_DIR}." \
+                gsutil ${MULTITHREADED:+ -m} \
+                    rsync -r -d "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}" "${SCRIPT_DIR}"
+    fi
 # Execute Python tool locally.
 else
     # Build and export path env vars that the Python client will use.
@@ -222,22 +230,25 @@ else
     bqms-run || exit $?
     log_info "Completed executing bqms-run command."
 
-    # Sync the preprocessed BQMS input locally so it can be inspected if need
-    # be.
-    BQMS_LOCAL_PREPROCESSED_PATH="${SCRIPT_DIR}/preprocessed"
-    mkdir -p "${BQMS_LOCAL_PREPROCESSED_PATH}"
-    log_exec "Syncing ${BQMS_PREPROCESSED_PATH} to ${BQMS_LOCAL_PREPROCESSED_PATH}." \
-        "Could not sync ${BQMS_PREPROCESSED_PATH} to ${BQMS_LOCAL_PREPROCESSED_PATH}." \
-            gsutil ${MULTITHREADED:+ -m} rsync -r -d "${BQMS_PREPROCESSED_PATH}" \
-                "${BQMS_LOCAL_PREPROCESSED_PATH}"
+    if [[ -n "${SYNC_INTERMEDIATE_FILES}" ]]
+    then
+        # Sync the preprocessed BQMS input locally so it can be inspected if need
+        # be.
+        BQMS_LOCAL_PREPROCESSED_PATH="${SCRIPT_DIR}/preprocessed"
+        mkdir -p "${BQMS_LOCAL_PREPROCESSED_PATH}"
+        log_exec "Syncing ${BQMS_PREPROCESSED_PATH} to ${BQMS_LOCAL_PREPROCESSED_PATH}." \
+            "Could not sync ${BQMS_PREPROCESSED_PATH} to ${BQMS_LOCAL_PREPROCESSED_PATH}." \
+                gsutil ${MULTITHREADED:+ -m} rsync -r -d "${BQMS_PREPROCESSED_PATH}" \
+                    "${BQMS_LOCAL_PREPROCESSED_PATH}"
 
-    # Sync the translated BQMS output locally so it can be inspected if need be.
-    BQMS_LOCAL_TRANSLATED_PATH="${SCRIPT_DIR}/translated"
-    mkdir -p "${BQMS_LOCAL_TRANSLATED_PATH}"
-    log_exec "Syncing ${BQMS_TRANSLATED_PATH} to ${BQMS_LOCAL_TRANSLATED_PATH}." \
-        "Could not sync ${BQMS_TRANSLATED_PATH} to ${BQMS_LOCAL_TRANSLATED_PATH}." \
-            gsutil ${MULTITHREADED:+ -m} rsync -r -d "${BQMS_TRANSLATED_PATH}" \
-                "${BQMS_LOCAL_TRANSLATED_PATH}"
+        # Sync the translated BQMS output locally so it can be inspected if need be.
+        BQMS_LOCAL_TRANSLATED_PATH="${SCRIPT_DIR}/translated"
+        mkdir -p "${BQMS_LOCAL_TRANSLATED_PATH}"
+        log_exec "Syncing ${BQMS_TRANSLATED_PATH} to ${BQMS_LOCAL_TRANSLATED_PATH}." \
+            "Could not sync ${BQMS_TRANSLATED_PATH} to ${BQMS_LOCAL_TRANSLATED_PATH}." \
+                gsutil ${MULTITHREADED:+ -m} rsync -r -d "${BQMS_TRANSLATED_PATH}" \
+                    "${BQMS_LOCAL_TRANSLATED_PATH}"
+    fi
 fi
 
 log_info "Preprocessing, translation and postprocessing has completed successfully."
