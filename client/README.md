@@ -21,6 +21,7 @@ SQL files to/from GCS.
   - [Custom Pre and Postprocessing Logic](#custom-pre-and-postprocessing-logic)
 - [Renaming SQL Identifiers](#renaming-sql-identifiers)
 - [Deploying to Cloud Run](#deploying-to-cloud-run)
+- [Performance](#performance)
 
 ## Quickstart
 
@@ -108,8 +109,12 @@ The CLI accepts the following environment variables:
 - `BQMS_OBJECT_NAME_MAPPING_PATH`: The path to the
   [object name mapping](#renaming-sql-identifiers) file. This can either be a
   local path or a path that begins with the `gs://` scheme.
-- `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
-  pre/postprocessing and uploads/downloads.
+- `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded uploads/downloads.
+- `BQMS_GCS_CHECKS`: Set to `True` to enable additional checks that ensure local
+   files are in sync with GCS files. **WARNING**: This will generate additional
+   network requests that can increase execution time by 2-3x. Most users should
+   not set this as it is only required if GCS files are being manipulated by an
+   out-of-band process which is highly discouraged.
 - `BQMS_VERBOSE`: Set to `True` to enable debug logging.
 
 ### config.yaml
@@ -384,6 +389,154 @@ export BQMS_CLOUD_RUN_JOB_NAME="<YOUR_DESIRED_CLOUD_RUN_JOB_NAME"
 export BQMS_CLOUD_RUN_ARTIFACT_TAG="<YOUR_CLOUD_RUN_ARTIFACT_TAG>"
 ./run.sh
 ```
+
+## Performance
+
+Performance of this tool has been tested using the `test_teradata_local` test
+located at `tests/integration/test_teradata.py`. The test was run on a machine
+with the following specs:
+
+<!-- markdownlint-disable line-length -->
+
+```shell
+> free -hm
+
+               total        used        free      shared  buff/cache   available
+Mem:            94Gi        10Gi        63Gi       146Mi        20Gi        82Gi
+Swap:          1.9Gi        32Mi       1.8Gi
+
+> lscpu
+
+Architecture:            x86_64
+  CPU op-mode(s):        32-bit, 64-bit
+  Address sizes:         46 bits physical, 48 bits virtual
+  Byte Order:            Little Endian
+CPU(s):                  24
+  On-line CPU(s) list:   0-23
+Vendor ID:               GenuineIntel
+  Model name:            Intel(R) Xeon(R) CPU @ 2.20GHz
+    CPU family:          6
+    Model:               79
+    Thread(s) per core:  2
+    Core(s) per socket:  12
+    Socket(s):           1
+    Stepping:            0
+    BogoMIPS:            4400.41
+    Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc
+                          cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch invpcid_single pti ssbd ibrs
+                          ibpb stibp fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt arat md_clear arch_capabilities
+Virtualization features: 
+  Hypervisor vendor:     KVM
+  Virtualization type:   full
+Caches (sum of all):     
+  L1d:                   384 KiB (12 instances)
+  L1i:                   384 KiB (12 instances)
+  L2:                    3 MiB (12 instances)
+  L3:                    55 MiB (1 instance)
+NUMA:                    
+  NUMA node(s):          1
+  NUMA node0 CPU(s):     0-23
+```
+
+<!-- markdownlint-enable line-length -->
+
+### Results
+
+The execution times were as follows:
+
+#### 10k files * 10 KB/file = 100 MB of data
+
+| Threading       | Client     | Service    | Total      |
+|-----------------|------------|------------|------------|
+| Single-threaded | 0h 17m 36s | 0h 08m 30s | 0h 26m 06s |
+| Multi-threaded  | 0h 02m 17s | 0h 11m 56s | 0h 14m 13s |
+
+Single-threaded command:
+
+<!-- markdownlint-disable line-length -->
+
+```shell
+BQMS_VERBOSE="True" \
+BQMS_MULTITHREADED="False" \
+BQMS_PROJECT="<YOUR_PROJECT>" \
+BQMS_GCS_BUCKET="<YOUR_GCS_BUCKET>" \
+pytest \
+  -vv \
+  --log-cli-level=DEBUG \
+  --log-cli-format="%(asctime)s: %(levelname)s: %(threadName)s: %(filename)s:%(lineno)s: %(message)s" \
+  -k "test_teradata_local[10000]" \
+  --performance \
+  tests/integration
+```
+
+<!-- markdownlint-enable line-length -->
+
+Multi-threaded command:
+
+<!-- markdownlint-disable line-length -->
+
+```shell
+BQMS_VERBOSE="True" \
+BQMS_MULTITHREADED="True" \
+BQMS_PROJECT="<YOUR_PROJECT>" \
+BQMS_GCS_BUCKET="<YOUR_GCS_BUCKET>" \
+pytest \
+  -vv \
+  --log-cli-level=DEBUG \
+  --log-cli-format="%(asctime)s: %(levelname)s: %(threadName)s: %(filename)s:%(lineno)s: %(message)s" \
+  -k "test_teradata_local[10000]" \
+  --performance \
+  tests/integration
+```
+
+<!-- markdownlint-enable line-length -->
+
+#### 100k files * 10 KB/file = 1 GB of data (service limit)
+
+| Threading       | Client     | Service    | Total      |
+|-----------------|------------|------------|------------|
+| Single-threaded | 2h 35m 39s | 1h 40m 00s | 4h 15m 39s |
+| Multi-threaded  | 0h 21m 02s | 1h 24m 44s | 1h 45m 46s |
+
+Single-threaded command:
+
+<!-- markdownlint-disable line-length -->
+
+```shell
+BQMS_VERBOSE="True" \
+BQMS_MULTITHREADED="False" \
+BQMS_PROJECT="<YOUR_PROJECT>" \
+BQMS_GCS_BUCKET="<YOUR_GCS_BUCKET>" \
+pytest \
+  -vv \
+  --log-cli-level=DEBUG \
+  --log-cli-format="%(asctime)s: %(levelname)s: %(threadName)s: %(filename)s:%(lineno)s: %(message)s" \
+  -k "test_teradata_local[100000]" \
+  --performance \
+  tests/integration
+```
+
+<!-- markdownlint-enable line-length -->
+
+Multi-threaded command:
+
+<!-- markdownlint-disable line-length -->
+
+```shell
+BQMS_VERBOSE="True" \
+BQMS_MULTITHREADED="True" \
+BQMS_PROJECT="<YOUR_PROJECT>" \
+BQMS_GCS_BUCKET="<YOUR_GCS_BUCKET>" \
+pytest \
+  -vv \
+  --log-cli-level=DEBUG \
+  --log-cli-format="%(asctime)s: %(levelname)s: %(threadName)s: %(filename)s:%(lineno)s: %(message)s" \
+  -k "test_teradata_local[100000]" \
+  --performance \
+  tests/integration
+```
+
+<!-- markdownlint-enable line-length -->
 
 <!-- markdownlint-disable line-length -->
 

@@ -24,6 +24,7 @@ from types import FrameType
 from typing import Dict, Mapping, Optional
 
 import yaml
+from cloudpathlib.cloudpath import register_path_class
 from google.cloud.bigquery_migration_v2 import ObjectNameMappingList, SourceEnv
 from marshmallow import ValidationError
 
@@ -32,7 +33,7 @@ from bqms_run.gcp.bqms.object_name_mapping import ObjectNameMappingListSchema
 from bqms_run.gcp.bqms.request import build as build_bqms_request
 from bqms_run.gcp.bqms.source_env import SourceEnvSchema
 from bqms_run.gcp.bqms.translation_type import TranslationType
-from bqms_run.gcp.gcs import GSClient
+from bqms_run.gcp.gcs import GSClient, GSPath
 from bqms_run.hooks import custom_macros
 from bqms_run.hooks import postprocess as postprocess_hook
 from bqms_run.hooks import preprocess as preprocess_hook
@@ -271,6 +272,9 @@ def main() -> None:
 
     gcs_client = GSClient(project)
     gcs_client.set_as_default_client()
+
+    if os.getenv("BQMS_GCS_CHECKS", "False").lower() not in true_env_var_values:
+        register_path_class("gs")(GSPath)
 
     paths = _parse_paths()
 
