@@ -15,7 +15,8 @@
 import pathlib
 from dataclasses import dataclass
 from dataclasses import fields as dataclass_fields
-from typing import Iterator, Mapping, Optional, Tuple, Union
+from functools import singledispatch
+from typing import Iterable, Iterator, Mapping, Optional, Tuple, Union
 
 from cloudpathlib import CloudPath, GSPath
 from cloudpathlib.anypath import to_anypath
@@ -160,3 +161,24 @@ class Paths:
     def __iter__(self) -> Iterator[Tuple[str, Path]]:
         for field in dataclass_fields(self.__class__):
             yield field.name, getattr(self, field.name)
+
+
+# We use functools.singledispatch here instead of inheritance because Path
+# objects are often created by third parties using the Path constructor directly
+# instead of type(self).
+@singledispatch
+def iterdirfiles(path: Path) -> Iterable[Path]:
+    for child_path in path.iterdir():
+        if child_path.is_dir():
+            yield from iterdirfiles(child_path)
+        else:
+            yield child_path
+
+
+@iterdirfiles.register
+def _(path: CloudPath) -> Iterable[CloudPath]:
+    for child_path, is_dir in path.client._list_dir(  # pylint: disable=protected-access
+        path, recursive=True
+    ):
+        if not is_dir and child_path != path:
+            yield child_path
