@@ -22,7 +22,7 @@ from typing_extensions import ParamSpec
 
 from bqms_run.gcp.bqms.request import execute as execute_bqms_request
 from bqms_run.macros import MacroExpanderRouter
-from bqms_run.paths import Path, Paths
+from bqms_run.paths import Path, Paths, iterdirfiles
 
 logger = logging.getLogger(__name__)
 
@@ -165,9 +165,8 @@ def execute(
 
         # Preprocess.
         logger.info("Preprocessing input paths.")
-        for input_path in paths.input_path.rglob("*"):
-            if input_path.is_file():
-                futures.append(executor.submit(_preprocess, input_path))
+        for input_path in iterdirfiles(paths.input_path):
+            futures.append(executor.submit(_preprocess, input_path))
 
         # Trigger any exceptions caught during preprocessing.
         for future in as_completed(futures):
@@ -179,11 +178,8 @@ def execute(
 
         # Postprocess.
         logger.info("Postprocessing translated paths.")
-        for translated_path in paths.translated_path.rglob(
-            "*"
-        ):  # type: ignore[no-untyped-call]
-            if translated_path.is_file():
-                futures.append(executor.submit(_postprocess, translated_path))
+        for translated_path in iterdirfiles(paths.translated_path):
+            futures.append(executor.submit(_postprocess, translated_path))
 
         # Trigger any exceptions caught during postprocessing.
         for future in as_completed(futures):
