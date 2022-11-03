@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 
-BIN=$(dirname $(readlink -f $0))/../dumper/app/build/install/app/bin/dwh-migration-dumper
+BIN=$(dirname $(readlink -f $0 2> /dev/null || perl -MCwd=abs_path -le 'print abs_path readlink(shift);' $0))/../dumper/app/build/install/app/bin/dwh-migration-dumper
 
 if [ ! -x "$BIN" ] ; then
 	./gradlew --parallel :dumper:app:installDist
