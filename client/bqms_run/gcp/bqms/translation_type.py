@@ -131,6 +131,14 @@ class _TranslationTypeSchema(Schema):
                 bigquery_dialect=bigquery_migration_v2.BigQueryDialect()
             ),
         },
+        "Translation_Postgresql2BQ": {
+            "source": bigquery_migration_v2.Dialect(
+                postgresql_dialect=bigquery_migration_v2.PostgresqlDialect()
+            ),
+            "target": bigquery_migration_v2.Dialect(
+                bigquery_dialect=bigquery_migration_v2.BigQueryDialect()
+            ),
+        },
     }
 
     name = fields.String(
