@@ -194,7 +194,7 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
             @Override
             public List<? extends Partition> getPartitions() throws Exception {
                 List<Partition> out = new ArrayList<>();
-                for (String partitionName : client.get_partition_names(databaseName, tableName, Short.MAX_VALUE)) {
+                for (String partitionName : client.get_partition_names(databaseName, tableName, (short) -1)) {
                     com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.Partition partition = client.get_partition_by_name(databaseName, tableName, partitionName);
                     out.add(new Partition() {
                         @Nonnull

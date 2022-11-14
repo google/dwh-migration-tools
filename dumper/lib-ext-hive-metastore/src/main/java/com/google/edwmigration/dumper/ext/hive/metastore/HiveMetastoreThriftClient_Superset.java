@@ -194,7 +194,7 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
             @Override
             public List<? extends Partition> getPartitions() throws Exception {
                 List<Partition> out = new ArrayList<>();
-                for (String partitionName : client.get_partition_names(databaseName, tableName, Short.MAX_VALUE)) {
+                for (String partitionName : client.get_partition_names(databaseName, tableName, (short) -1)) {
                     com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Partition partition = client.get_partition_by_name(databaseName, tableName, partitionName);
                     out.add(new Partition() {
                         @Nonnull
