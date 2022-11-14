@@ -13,9 +13,6 @@ Contributing instructions are available, per tool, at the following locations:
 - [Batch SQL Translation Client contribution guide](client/CONTRIBUTING.md)
 - [Metadata and Log Dumper](dumper/CONTRIBUTING.md)
 
-## Release process
-The release process is documented [here](http://go/dwh-migration-tools-release).
-
 ## License
 
 Copyright 2021 Google LLC
