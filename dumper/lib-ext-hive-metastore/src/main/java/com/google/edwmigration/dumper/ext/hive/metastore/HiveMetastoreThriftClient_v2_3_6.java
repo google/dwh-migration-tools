@@ -245,6 +245,24 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
                 public String getClassName() {
                     return (function.isSetClassName() ? function.getClassName() : null);
                 }
+
+                @CheckForNull
+                @Override
+                public String getOwner() {
+                    return function.getOwnerName();
+                }
+
+                @CheckForNull
+                @Override
+                public Integer getOwnerType() {
+                    return (function.isSetOwnerType() ? function.getOwnerType().getValue() : null);
+                }
+
+                @CheckForNull
+                @Override
+                public Integer getCreateTime() {
+                    return function.getCreateTime();
+                }
             });
         }
         return out;

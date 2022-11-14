@@ -147,7 +147,10 @@ public interface HiveMetadataDumpFormat {
             FunctionSchema,
             FunctionName,
             FunctionType,
-            ClassName
+            ClassName,
+            OwnerName,
+            OwnerType,
+            CreateTime
         }
     }
 }

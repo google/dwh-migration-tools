@@ -245,6 +245,24 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
                 public String getClassName() {
                     return (function.isSetClassName() ? function.getClassName() : null);
                 }
+
+                @CheckForNull
+                @Override
+                public String getOwner() {
+                    return function.getOwnerName();
+                }
+
+                @CheckForNull
+                @Override
+                public Integer getOwnerType() {
+                    return (function.isSetOwnerType() ? function.getOwnerType().getValue() : null);
+                }
+
+                @CheckForNull
+                @Override
+                public Integer getCreateTime() {
+                    return function.getCreateTime();
+                }
             });
         }
         return out;
