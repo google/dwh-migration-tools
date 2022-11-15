@@ -31,4 +31,13 @@ public interface Function {
 
     @CheckForNull
     public String getClassName();
+
+    @CheckForNull
+    public String getOwner();
+
+    @CheckForNull
+    public Integer getOwnerType();
+
+    @CheckForNull
+    public Integer getCreateTime();
 }
