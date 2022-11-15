@@ -193,7 +193,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
                     for (Function function : client.getFunctions()) {
                         if (isIncludedSchema(MoreObjects.firstNonNull(function.getDatabaseName(), ""))) {
                             monitor.count();
-                            printer.printRecord(function.getDatabaseName(), function.getFunctionName(), function.getType(), function.getClassName());
+                            printer.printRecord(
+                                function.getDatabaseName(),
+                                function.getFunctionName(),
+                                function.getType(),
+                                function.getClassName(),
+                                function.getOwner(),
+                                function.getOwnerType(),
+                                function.getCreateTime());
                         }
                     }
                 }
