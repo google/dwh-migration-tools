@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hive;
 import com.google.auto.service.AutoService;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.edwmigration.dumper.ext.hive.metastore.Database;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +93,38 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
             return "get_all_databases()";
         }
     }
+
+    private static class DatabasesTask extends AbstractHiveMetadataTask implements DatabasesFormat {
+
+        private DatabasesTask(@Nonnull Predicate<String> schemaPredicate) {
+            super(ZIP_ENTRY_NAME, schemaPredicate);
+        }
+
+        @Override
+        protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle) throws Exception {
+            try (HiveMetastoreThriftClient client = thriftClientHandle.newClient("databases-task-client");
+                RecordProgressMonitor monitor = new RecordProgressMonitor("Writing databases info to " + getTargetPath());
+                CSVPrinter printer = FORMAT.withHeader(Header.class).print(writer)) {
+                List<? extends String> allDatabases = client.getAllDatabaseNames();
+                for (String databaseName : allDatabases) {
+                    Database database = client.getDatabase(databaseName);
+                    monitor.count();
+                    printer.printRecord(
+                        database.getName(),
+                        database.getDescription(),
+                        database.getOwner(),
+                        database.getOwnerType(),
+                        database.getLocation());
+                }
+            }
+        }
+
+        @Override
+        protected String toCallDescription() {
+            return "get_all_databases()*.get_database()";
+        }
+    }
+
 
     private static class TablesJsonTask extends AbstractHiveMetadataTask implements TablesJsonTaskFormat {
 
@@ -225,5 +258,9 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
         out.add(new SchemataTask(schemaPredicate));
         out.add(new TablesJsonTask(schemaPredicate, arguments.isHiveMetastorePartitionMetadataDumpingEnabled()));
         out.add(new FunctionsTask(schemaPredicate));
+
+        if (arguments.isAssessment()) {
+            out.add(new DatabasesTask(schemaPredicate));
+        }
     }
 }
