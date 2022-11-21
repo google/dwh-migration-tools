@@ -47,6 +47,19 @@ public interface HiveMetadataDumpFormat {
         }
     }
 
+    interface DatabasesFormat {
+
+        String ZIP_ENTRY_NAME = "databases.csv";
+
+        enum Header {
+            Name,
+            Description,
+            Owner,
+            OwnerType,
+            Location,
+        }
+    }
+
     public static interface TablesJsonTaskFormat {
 
         public static final String ZIP_ENTRY_NAME = "tables.jsonl";

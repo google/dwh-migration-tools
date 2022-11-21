@@ -58,6 +58,43 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
 
     @Nonnull
     @Override
+    public Database getDatabase(String databaseName) throws Exception {
+        com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Database database = client.get_database(databaseName);
+        return new Database() {
+            @CheckForNull
+            @Override
+            public String getName() {
+                return database.getName();
+            }
+
+            @CheckForNull
+            @Override
+            public String getDescription() {
+                return database.getDescription();
+            }
+
+            @CheckForNull
+            @Override
+            public String getOwner() {
+                return database.getOwnerName();
+            }
+
+            @CheckForNull
+            @Override
+            public Integer getOwnerType() {
+                return database.getOwnerType().getValue();
+            }
+
+            @CheckForNull
+            @Override
+            public String getLocation() {
+                return database.getLocationUri();
+            }
+        };
+    }
+
+    @Nonnull
+    @Override
     public List<? extends String> getAllTableNamesInDatabase(@Nonnull String databaseName) throws Exception {
         return client.get_all_tables(databaseName);
     }
