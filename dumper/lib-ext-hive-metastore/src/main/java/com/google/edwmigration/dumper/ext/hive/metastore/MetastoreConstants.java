@@ -16,38 +16,14 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+public final class MetastoreConstants {
+  public static final String DDL_TIME = "transient_lastDdlTime";
 
-public interface Partition {
+  public static final String TOTAL_SIZE = "totalSize";
 
-    @Nonnull
-    public String getPartitionName();
+  public static final String RAW_SIZE = "rawDataSize";
 
-    @CheckForNull
-    public String getLocation();
+  public static final String FILES_COUNT = "numFiles";
 
-    @CheckForNull
-    public Integer getCreateTime();
-
-    @CheckForNull
-    public Integer getLastAccessTime();
-
-    @CheckForNull
-    public Integer getLastDdlTime();
-
-    @CheckForNull
-    public Long getTotalSize();
-
-    @CheckForNull
-    public Long getRawSize();
-
-    @CheckForNull
-    public Long getRowsCount();
-
-    @CheckForNull
-    public Integer getFilesCount();
-
-    @CheckForNull
-    public Boolean isCompressed();
+  public static final String ROWS_COUNT = "numRows";
 }

@@ -168,6 +168,15 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
                     outTable.owner = table.getOwner();
                     outTable.viewText = table.getOriginalViewText();
                     outTable.location = table.getLocation();
+                    outTable.lastDdlTime = table.getLastDdlTime();
+                    outTable.totalSize = table.getTotalSize();
+                    outTable.rawSize = table.getRawSize();
+                    outTable.rowsCount = table.getRowsCount();
+                    outTable.filesCount = table.getFilesCount();
+                    outTable.retention = table.getRetention();
+                    outTable.bucketsCount = table.getBucketsCount();
+                    outTable.isCompressed = table.isCompressed();
+
                     outTable.fields = new ArrayList<>();
                     for (Field field : table.getFields()) {
                         TableMetadata.FieldMetadata fieldMetadata = new TableMetadata.FieldMetadata();
@@ -191,6 +200,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
                             TableMetadata.PartitionMetadata partitionMetadata = new TableMetadata.PartitionMetadata();
                             partitionMetadata.name = partition.getPartitionName();
                             partitionMetadata.location = partition.getLocation();
+                            partitionMetadata.createTime = partition.getCreateTime();
+                            partitionMetadata.lastAccessTime = partition.getLastAccessTime();
+                            partitionMetadata.lastDdlTime = partition.getLastDdlTime();
+                            partitionMetadata.totalSize = partition.getTotalSize();
+                            partitionMetadata.rawSize = partition.getRawSize();
+                            partitionMetadata.rowsCount = partition.getRowsCount();
+                            partitionMetadata.filesCount = partition.getFilesCount();
+                            partitionMetadata.isCompressed = partition.isCompressed();
                             outTable.partitions.add(partitionMetadata);
                         }
                     }
@@ -255,8 +272,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
         out.add(new FormatTask(FORMAT_NAME));
         Predicate<String> schemaPredicate = arguments.getSchemaPredicate();
+        boolean shouldDumpPartitions = arguments.isHiveMetastorePartitionMetadataDumpingEnabled() || arguments.isAssessment();
+
         out.add(new SchemataTask(schemaPredicate));
-        out.add(new TablesJsonTask(schemaPredicate, arguments.isHiveMetastorePartitionMetadataDumpingEnabled()));
+        out.add(new TablesJsonTask(schemaPredicate, shouldDumpPartitions));
         out.add(new FunctionsTask(schemaPredicate));
 
         if (arguments.isAssessment()) {
