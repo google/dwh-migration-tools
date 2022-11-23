@@ -49,6 +49,30 @@ public interface Table {
     @CheckForNull
     public String getLocation();
 
+    @CheckForNull
+    public Integer getLastDdlTime();
+
+    @CheckForNull
+    public Long getTotalSize();
+
+    @CheckForNull
+    public Long getRawSize();
+
+    @CheckForNull
+    public Long getRowsCount();
+
+    @CheckForNull
+    public Integer getFilesCount();
+
+    @CheckForNull
+    public Integer getRetention();
+
+    @CheckForNull
+    public Integer getBucketsCount();
+
+    @CheckForNull
+    public Boolean isCompressed();
+
     @Nonnull
     public List<? extends Field> getFields() throws Exception;
 
