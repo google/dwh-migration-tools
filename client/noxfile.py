@@ -51,8 +51,8 @@ def type_check(session):
 @nox.session(python=["3.7", "3.8", "3.9", "3.10"])
 def tests(session):
     """Execute tests."""
-    # MQ TODO: session.install("poetry")
-    # MQ TODO: session.run("poetry", "install")
+    session.install("poetry")
+    session.run("poetry", "install")
     tests_path = pathlib.Path("tests")
     if "unit" in session.posargs:
         tests_path = tests_path / "unit"
@@ -68,7 +68,7 @@ def tests(session):
             "-m",
             "pytest",
             "-vv",
-            "--log-cli-level=DEBUG",
+            "--log-cli-level=INFO",
             "--log-cli-format="
             "%(asctime)s: %(levelname)s: %(threadName)s: "
             "%(filename)s:%(lineno)s: %(message)s",
