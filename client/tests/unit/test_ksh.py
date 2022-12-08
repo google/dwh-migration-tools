@@ -19,20 +19,9 @@ from pytest import raises
 
 from bqms_run.ksh import (
     KshExtractor,
-    ShellFragment,
-    ShellFragmentType
 )
 
 logger = logging.getLogger(__name__)
-
-
-def filter_heredoc_fragments(fragments: [ShellFragment]):
-    """
-    TODO DESCRIBE
-    """
-    logging.debug("filtering fragments=%s", ','.join(str(f) for f in fragments))
-    return list(map(lambda f: f.text,
-                    filter(lambda f: f.ty == ShellFragmentType.HEREDOC, fragments)))
 
 
 def collapse_whitespace(strs: [str]):
@@ -47,19 +36,19 @@ def test_invalid_pattern():
 def test_commented_ksh():
     with open('tests/unit/test_ksh.input/commented.ksh', 'r') as file:
         fragments = KshExtractor("bteq").read_fragments(file.read())
-        assert ['select 1\n'] == filter_heredoc_fragments(fragments)
+        assert ['select 1\n'] == KshExtractor.filter_heredoc_sql_texts(fragments)
 
 
 def test_empty_ksh():
     with open('tests/unit/test_ksh.input/empty.ksh', 'r') as file:
         fragments = KshExtractor("bteq").read_fragments(file.read())
-        assert [] == filter_heredoc_fragments(fragments)
+        assert [] == KshExtractor.filter_heredoc_sql_texts(fragments)
 
 
 def test_no_prefix_ksh():
     with open('tests/unit/test_ksh.input/no-prefix.ksh', 'r') as file:
         fragments = KshExtractor("bteq").read_fragments(file.read())
-        assert ["select 1 + 1;\n"] == filter_heredoc_fragments(fragments)
+        assert ["select 1 + 1;\n"] == KshExtractor.filter_heredoc_sql_texts(fragments)
 
 
 def test_simple_ksh():
@@ -69,7 +58,7 @@ def test_simple_ksh():
             "SELECT 1 ; select '$Something' ; select '`backtick`'; select '\\\\esc'; ",
             "SELECT 2 ; select '$Something' ; select '`backtick`'; select '\\\\esc'; ",
             "select '$Something' ; select '`backtick`'; select '\\\\esc'; "
-        ] == collapse_whitespace(filter_heredoc_fragments(fragments))
+        ] == collapse_whitespace(KshExtractor.filter_heredoc_sql_texts(fragments))
 
 
 def test_with_flags_ksh():
@@ -78,7 +67,7 @@ def test_with_flags_ksh():
         assert [
             " .LOGON ${LOGON_STRING}; .export data file=${OUTDIR}/file.tmp; select trim(((date - ${DAYIND}(integer)) (integer))(char(20)))(char(7)); .export reset; .quit errorcode; ",
             " .LOGON ${LOGON_STRING}; select 'uninteresting-lot-of-sql'; .if errorcode != 0 then .quit errorcode .quit errorcode; "
-        ] == collapse_whitespace(filter_heredoc_fragments(fragments))
+        ] == collapse_whitespace(KshExtractor.filter_heredoc_sql_texts(fragments))
 
 
 def test_with_prefix_ksh():
@@ -86,4 +75,4 @@ def test_with_prefix_ksh():
         fragments = KshExtractor("bteq").read_fragments(file.read())
         assert [
             ".maxerror 1; .run file = $SCRIPTS_DIR/ETL_USER_$test_environment.login; delete stg.foo; ;insert into stg.foo SELECT A.foo, A.bar, A.baz, cast(AVG(b.quam) as decimal) as quix, cast(avg(cast(A.qib as date) - cast(A.zim as date)) as decimal) as zob, SUM(A.jibber) as jabber FROM tb.foo a,sys_calendar.calendar b WHERE a.qib = b.quam AND A.zif = 1 AND A.zaf = 1 AND A.cor >= (select year_of_calendar-1||'0101' from sys_calendar.calendar where calendar_date = current_date) AND A.jif = 1 AND A.foo IS NOT NULL AND A.bar IS NOT NULL AND A.quam IS NOT NULL GROUP BY A.foo,A.bar,A.baz; .quit; "
-        ] == collapse_whitespace(filter_heredoc_fragments(fragments))
+        ] == collapse_whitespace(KshExtractor.filter_heredoc_sql_texts(fragments))

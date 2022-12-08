@@ -110,6 +110,15 @@ class KshExtractor:
 
 
     @staticmethod
+    def filter_heredoc_sql_texts(fragments: [ShellFragment]) -> [str]:
+        """
+        TODO DESCRIBE
+        """
+        return list(map(lambda f: f.text,
+                        filter(lambda f: f.ty == ShellFragmentType.HEREDOC, fragments)))
+
+
+    @staticmethod
     def move_fragment(
         out: List[ShellFragment],
         buf: List[str],
