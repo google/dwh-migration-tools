@@ -15,8 +15,10 @@
 """KSH processing unit tests."""
 import logging
 import re
+from pathlib import Path
 from pytest import raises
 
+from bqms_run.hooks import preprocess as preprocess_hook
 from bqms_run.ksh import (
     KshExtractor,
 )
@@ -83,3 +85,20 @@ def test_with_prefix_ksh():
         assert [
             ".maxerror 1; .run file = $SCRIPTS_DIR/ETL_USER_$test_environment.login; delete stg.foo; ;insert into stg.foo SELECT A.foo, A.bar, A.baz, cast(AVG(b.quam) as decimal) as quix, cast(avg(cast(A.qib as date) - cast(A.zim as date)) as decimal) as zob, SUM(A.jibber) as jabber FROM tb.foo a,sys_calendar.calendar b WHERE a.qib = b.quam AND A.zif = 1 AND A.zaf = 1 AND A.cor >= (select year_of_calendar-1||'0101' from sys_calendar.calendar where calendar_date = current_date) AND A.jif = 1 AND A.foo IS NOT NULL AND A.bar IS NOT NULL AND A.quam IS NOT NULL GROUP BY A.foo,A.bar,A.baz; .quit; "  # pylint: disable=line-too-long
         ] == collapse_whitespace(KshExtractor.filter_heredoc_sql_texts(fragments))
+
+
+def test_preprocess_hook_includes_ksh_extractor():
+    """
+    Asserts that KSH/heredoc extraction runs when the preprocess
+    hook is invoked.
+    """
+    input = """#!/bin/ksh
+## A Very simple test.
+bteq  <<EOF
+SELECT 123, 'foo', 456 from bar;
+EOF
+echo Trying another select.
+"""
+    expected = "SELECT 123, 'foo', 456 from bar;\n"
+    preprocessed = preprocess_hook(Path("foo/bar.ksh"), input)
+    assert expected == preprocessed
