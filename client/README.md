@@ -297,6 +297,28 @@ More advanced macro replacement schemes are possible. Please see the
 `custom_pattern_macros_example` function in the `bqms_run/hooks.py` module for
 an example.
 
+### Extraction of Heredoc SQL Statements from KSH Inputs
+By default, during the preprocessing phase, any input paths ending in
+extension `.ksh` will be scanned for heredoc SQL statements. For example,
+given the following file named `foo.ksh`:
+
+```shell
+#!/bin/ksh
+## A Very simple test.
+bteq  <<EOF
+SELECT 123, 'foo', 456 from bar;
+EOF
+echo Trying another select.
+```
+
+will be preprocessed to:
+```sql
+SELECT 123, 'foo', 456 from bar;
+```
+
+Any KSH files which do not contain heredoc SQL fragments will be preprocessed
+to a single SQL comment indicating as much.
+
 ### Custom Pre and Postprocessing Logic
 
 Beyond handling macro/templating languages, it is common to require custom pre

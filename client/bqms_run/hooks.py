@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """User-defined code that is hooked into the translation workflow."""
+import logging
 import re
 from typing import Mapping
 
+from bqms_run.ksh import KshExtractor
 from bqms_run.macros import (
     MacroExpanderRouter,
     PatternMacroExpander,
@@ -23,7 +25,10 @@ from bqms_run.macros import (
 from bqms_run.paths import Path
 
 
-def preprocess(path: Path, text: str) -> str:  # pylint: disable=unused-argument
+logger = logging.getLogger(__name__)
+
+
+def preprocess(path: Path, text: str) -> str:
     """Preprocesses input via user-defined code before submitting it to BQMS.
 
     Args:
@@ -35,7 +40,7 @@ def preprocess(path: Path, text: str) -> str:  # pylint: disable=unused-argument
     Returns:
         A string representing the preprocesssed input.
     """
-    return text
+    return preprocess_extract_ksh_heredoc_fragments(path, text)
 
 
 def postprocess(path: Path, text: str) -> str:  # pylint: disable=unused-argument
@@ -98,3 +103,25 @@ def custom_pattern_macros_example(
             pattern, mapping, generator=expand, un_generator=un_expand
         )
     return MacroExpanderRouter(expanders)
+
+
+def preprocess_extract_ksh_heredoc_fragments(path: Path, text: str) -> str:
+    """
+    Extracts heredoc SQL fragments from any input ending in extension .ksh.
+    :param path: a bqms_run.paths.Path representing the relative path of the
+                 input to be preprocessed
+    :param text: a string representing the contents of the input to be
+                 preprocessed.
+    :return: for non-KSH inputs, the input text is returned unmodified. For
+                 KSH inputs, all heredoc SQL fragments in the input are
+                 concatenated together and returned. If an input contains
+                 no heredoc SQL fragments, a comment saying as much is returned.
+    """
+    if not path.match("*.ksh"):
+        return text
+    logger.info("Extracting heredoc fragments from KSH input: %s", path)
+    fragments = KshExtractor("bteq").read_fragments(text)
+    heredoc_sql_texts = KshExtractor.filter_heredoc_sql_texts(fragments)
+    if len(heredoc_sql_texts) == 0:
+        return "-- No heredoc SQL fragments exist in input file."
+    return "\n".join(heredoc_sql_texts)

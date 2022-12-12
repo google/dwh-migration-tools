@@ -1,6 +1,7 @@
 #!/bin/sh -ex
 
-BIN=$(dirname $(readlink -f $0))/../dumper/app/build/install/app/bin/dwh-migration-dumper
+BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>&1 > /dev/null && pwd)
+BIN="${BASE_DIR}/../dumper/app/build/install/app/bin/dwh-migration-dumper"
 
 if [ ! -x "$BIN" ] ; then
 	./gradlew --parallel :dumper:app:installDist

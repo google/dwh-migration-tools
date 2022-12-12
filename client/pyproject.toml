@@ -96,6 +96,9 @@ case_sensitive=true
 
 [tool.pylint.master]
 
+# the default of 4 is quite aggressive
+min-similarity-lines = "20"
+
 # Minimum python version.
 py-version = "3.7"
 
