@@ -432,7 +432,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
         LOG.info("Exporting query log for " + intervals);
         SharedState state = new SharedState();
-        boolean isAssessment = arguments.isAssessment();
         for (ZonedInterval interval : intervals) {
             String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
             if (isAssessment) {

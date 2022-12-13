@@ -26,4 +26,28 @@ public interface Partition {
 
     @CheckForNull
     public String getLocation();
+
+    @CheckForNull
+    public Integer getCreateTime();
+
+    @CheckForNull
+    public Integer getLastAccessTime();
+
+    @CheckForNull
+    public Integer getLastDdlTime();
+
+    @CheckForNull
+    public Long getTotalSize();
+
+    @CheckForNull
+    public Long getRawSize();
+
+    @CheckForNull
+    public Long getRowsCount();
+
+    @CheckForNull
+    public Integer getFilesCount();
+
+    @CheckForNull
+    public Boolean isCompressed();
 }

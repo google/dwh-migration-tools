@@ -167,6 +167,9 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     public abstract List<? extends String> getAllDatabaseNames() throws Exception;
 
     @Nonnull
+    public abstract Database getDatabase(@Nonnull String databaseName) throws Exception;
+
+    @Nonnull
     public abstract List<? extends String> getAllTableNamesInDatabase(@Nonnull String databaseName) throws Exception;
 
     @Nonnull

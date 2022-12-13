@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hive;
 import com.google.auto.service.AutoService;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.edwmigration.dumper.ext.hive.metastore.Database;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -93,6 +94,38 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
         }
     }
 
+    private static class DatabasesTask extends AbstractHiveMetadataTask implements DatabasesFormat {
+
+        private DatabasesTask(@Nonnull Predicate<String> schemaPredicate) {
+            super(ZIP_ENTRY_NAME, schemaPredicate);
+        }
+
+        @Override
+        protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle) throws Exception {
+            try (HiveMetastoreThriftClient client = thriftClientHandle.newClient("databases-task-client");
+                RecordProgressMonitor monitor = new RecordProgressMonitor("Writing databases info to " + getTargetPath());
+                CSVPrinter printer = FORMAT.withHeader(Header.class).print(writer)) {
+                List<? extends String> allDatabases = client.getAllDatabaseNames();
+                for (String databaseName : allDatabases) {
+                    Database database = client.getDatabase(databaseName);
+                    monitor.count();
+                    printer.printRecord(
+                        database.getName(),
+                        database.getDescription(),
+                        database.getOwner(),
+                        database.getOwnerType(),
+                        database.getLocation());
+                }
+            }
+        }
+
+        @Override
+        protected String toCallDescription() {
+            return "get_all_databases()*.get_database()";
+        }
+    }
+
+
     private static class TablesJsonTask extends AbstractHiveMetadataTask implements TablesJsonTaskFormat {
 
         private final boolean isHiveMetastorePartitionMetadataDumpingEnabled;
@@ -135,6 +168,15 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
                     outTable.owner = table.getOwner();
                     outTable.viewText = table.getOriginalViewText();
                     outTable.location = table.getLocation();
+                    outTable.lastDdlTime = table.getLastDdlTime();
+                    outTable.totalSize = table.getTotalSize();
+                    outTable.rawSize = table.getRawSize();
+                    outTable.rowsCount = table.getRowsCount();
+                    outTable.filesCount = table.getFilesCount();
+                    outTable.retention = table.getRetention();
+                    outTable.bucketsCount = table.getBucketsCount();
+                    outTable.isCompressed = table.isCompressed();
+
                     outTable.fields = new ArrayList<>();
                     for (Field field : table.getFields()) {
                         TableMetadata.FieldMetadata fieldMetadata = new TableMetadata.FieldMetadata();
@@ -158,6 +200,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
                             TableMetadata.PartitionMetadata partitionMetadata = new TableMetadata.PartitionMetadata();
                             partitionMetadata.name = partition.getPartitionName();
                             partitionMetadata.location = partition.getLocation();
+                            partitionMetadata.createTime = partition.getCreateTime();
+                            partitionMetadata.lastAccessTime = partition.getLastAccessTime();
+                            partitionMetadata.lastDdlTime = partition.getLastDdlTime();
+                            partitionMetadata.totalSize = partition.getTotalSize();
+                            partitionMetadata.rawSize = partition.getRawSize();
+                            partitionMetadata.rowsCount = partition.getRowsCount();
+                            partitionMetadata.filesCount = partition.getFilesCount();
+                            partitionMetadata.isCompressed = partition.isCompressed();
                             outTable.partitions.add(partitionMetadata);
                         }
                     }
@@ -193,7 +243,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
                     for (Function function : client.getFunctions()) {
                         if (isIncludedSchema(MoreObjects.firstNonNull(function.getDatabaseName(), ""))) {
                             monitor.count();
-                            printer.printRecord(function.getDatabaseName(), function.getFunctionName(), function.getType(), function.getClassName());
+                            printer.printRecord(
+                                function.getDatabaseName(),
+                                function.getFunctionName(),
+                                function.getType(),
+                                function.getClassName(),
+                                function.getOwner(),
+                                function.getOwnerType(),
+                                function.getCreateTime());
                         }
                     }
                 }
@@ -215,8 +272,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector implements Hive
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
         out.add(new FormatTask(FORMAT_NAME));
         Predicate<String> schemaPredicate = arguments.getSchemaPredicate();
+        boolean shouldDumpPartitions = arguments.isHiveMetastorePartitionMetadataDumpingEnabled() || arguments.isAssessment();
+
         out.add(new SchemataTask(schemaPredicate));
-        out.add(new TablesJsonTask(schemaPredicate, arguments.isHiveMetastorePartitionMetadataDumpingEnabled()));
+        out.add(new TablesJsonTask(schemaPredicate, shouldDumpPartitions));
         out.add(new FunctionsTask(schemaPredicate));
+
+        if (arguments.isAssessment()) {
+            out.add(new DatabasesTask(schemaPredicate));
+        }
     }
 }

@@ -16,9 +16,17 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore;
 
+import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.DDL_TIME;
+import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.FILES_COUNT;
+import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.RAW_SIZE;
+import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.ROWS_COUNT;
+import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.TOTAL_SIZE;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -58,6 +66,43 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
 
     @Nonnull
     @Override
+    public Database getDatabase(String databaseName) throws Exception {
+        com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Database database = client.get_database(databaseName);
+        return new Database() {
+            @CheckForNull
+            @Override
+            public String getName() {
+                return database.getName();
+            }
+
+            @CheckForNull
+            @Override
+            public String getDescription() {
+                return database.getDescription();
+            }
+
+            @CheckForNull
+            @Override
+            public String getOwner() {
+                return database.getOwnerName();
+            }
+
+            @CheckForNull
+            @Override
+            public Integer getOwnerType() {
+                return database.getOwnerType().getValue();
+            }
+
+            @CheckForNull
+            @Override
+            public String getLocation() {
+                return database.getLocationUri();
+            }
+        };
+    }
+
+    @Nonnull
+    @Override
     public List<? extends String> getAllTableNamesInDatabase(@Nonnull String databaseName) throws Exception {
         return client.get_all_tables(databaseName);
     }
@@ -66,6 +111,8 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
     @Override
     public Table getTable(@Nonnull String databaseName, @Nonnull String tableName) throws Exception {
         com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Table table = client.get_table(databaseName, tableName);
+        Map<String, String> parameters = table.isSetParameters() ? table.getParameters() : new HashMap<>();
+
         return new Table() {
             @CheckForNull
             @Override
@@ -119,6 +166,54 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
             @Override
             public String getLocation() {
                 return (table.isSetSd() && table.getSd().isSetLocation() ? table.getSd().getLocation() : null);
+            }
+
+            @CheckForNull
+            @Override
+            public Integer getLastDdlTime() {
+                return parameters.containsKey(DDL_TIME) ? Integer.parseInt(parameters.get(DDL_TIME)) : null;
+            }
+
+            @CheckForNull
+            @Override
+            public Long getTotalSize() {
+                return parameters.containsKey(TOTAL_SIZE) ? Long.parseLong(parameters.get(TOTAL_SIZE)) : null;
+            }
+
+            @CheckForNull
+            @Override
+            public Long getRawSize() {
+                return parameters.containsKey(RAW_SIZE) ? Long.parseLong(parameters.get(RAW_SIZE)) : null;
+            }
+
+            @CheckForNull
+            @Override
+            public Long getRowsCount() {
+                return parameters.containsKey(ROWS_COUNT) ? Long.parseLong(parameters.get(ROWS_COUNT)) : null;
+            }
+
+            @CheckForNull
+            @Override
+            public Integer getFilesCount() {
+                return parameters.containsKey(FILES_COUNT) ? Integer.parseInt(parameters.get(FILES_COUNT)) : null;
+            }
+
+            @CheckForNull
+            @Override
+            public Integer getRetention() {
+                return table.getRetention();
+            }
+
+            @CheckForNull
+            @Override
+            public Integer getBucketsCount() {
+                return table.isSetSd() ? table.getSd().getNumBuckets() : null;
+            }
+
+            @CheckForNull
+            @Override
+            public Boolean isCompressed() {
+                return table.isSetSd() && table.getSd().isCompressed();
             }
 
             @Nonnull
@@ -194,8 +289,10 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
             @Override
             public List<? extends Partition> getPartitions() throws Exception {
                 List<Partition> out = new ArrayList<>();
-                for (String partitionName : client.get_partition_names(databaseName, tableName, Short.MAX_VALUE)) {
+                for (String partitionName : client.get_partition_names(databaseName, tableName, (short) -1)) {
                     com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Partition partition = client.get_partition_by_name(databaseName, tableName, partitionName);
+                    Map<String, String> parameters = partition.isSetParameters() ? partition.getParameters() : new HashMap<>();
+
                     out.add(new Partition() {
                         @Nonnull
                         @Override
@@ -207,6 +304,54 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
                         @Override
                         public String getLocation() {
                             return (partition.isSetSd() && partition.getSd().isSetLocation() ? partition.getSd().getLocation() : null);
+                        }
+
+                        @CheckForNull
+                        @Override
+                        public Integer getCreateTime() {
+                            return partition.getCreateTime();
+                        }
+
+                        @CheckForNull
+                        @Override
+                        public Integer getLastAccessTime() {
+                            return partition.getLastAccessTime();
+                        }
+
+                        @CheckForNull
+                        @Override
+                        public Integer getLastDdlTime() {
+                            return parameters.containsKey(DDL_TIME) ? Integer.parseInt(parameters.get(DDL_TIME)) : null;
+                        }
+
+                        @CheckForNull
+                        @Override
+                        public Long getTotalSize() {
+                            return parameters.containsKey(TOTAL_SIZE) ? Long.parseLong(parameters.get(TOTAL_SIZE)) : null;
+                        }
+
+                        @CheckForNull
+                        @Override
+                        public Long getRawSize() {
+                            return parameters.containsKey(RAW_SIZE) ? Long.parseLong(parameters.get(RAW_SIZE)) : null;
+                        }
+
+                        @CheckForNull
+                        @Override
+                        public Long getRowsCount() {
+                            return parameters.containsKey(ROWS_COUNT) ? Long.parseLong(parameters.get(ROWS_COUNT)) : null;
+                        }
+
+                        @CheckForNull
+                        @Override
+                        public Integer getFilesCount() {
+                            return parameters.containsKey(FILES_COUNT) ? Integer.parseInt(parameters.get(FILES_COUNT)) : null;
+                        }
+
+                        @CheckForNull
+                        @Override
+                        public Boolean isCompressed() {
+                            return partition.isSetSd() && partition.getSd().isCompressed();
                         }
                     });
                 }
@@ -244,6 +389,24 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
                 @Override
                 public String getClassName() {
                     return (function.isSetClassName() ? function.getClassName() : null);
+                }
+
+                @CheckForNull
+                @Override
+                public String getOwner() {
+                    return function.getOwnerName();
+                }
+
+                @CheckForNull
+                @Override
+                public Integer getOwnerType() {
+                    return (function.isSetOwnerType() ? function.getOwnerType().getValue() : null);
+                }
+
+                @CheckForNull
+                @Override
+                public Integer getCreateTime() {
+                    return function.getCreateTime();
                 }
             });
         }

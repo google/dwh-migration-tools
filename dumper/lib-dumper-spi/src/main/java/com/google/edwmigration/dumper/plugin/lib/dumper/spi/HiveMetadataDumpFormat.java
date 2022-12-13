@@ -47,6 +47,19 @@ public interface HiveMetadataDumpFormat {
         }
     }
 
+    interface DatabasesFormat {
+
+        String ZIP_ENTRY_NAME = "databases.csv";
+
+        enum Header {
+            Name,
+            Description,
+            Owner,
+            OwnerType,
+            Location,
+        }
+    }
+
     public static interface TablesJsonTaskFormat {
 
         public static final String ZIP_ENTRY_NAME = "tables.jsonl";
@@ -85,6 +98,14 @@ public interface HiveMetadataDumpFormat {
             public static class PartitionMetadata {
                 public String name;
                 public String location;
+                public Integer createTime;
+                public Integer lastAccessTime;
+                public Integer lastDdlTime;
+                public Long totalSize;
+                public Long rawSize;
+                public Long rowsCount;
+                public Integer filesCount;
+                public Boolean isCompressed;
             }
 
             @CheckForNull
@@ -103,6 +124,23 @@ public interface HiveMetadataDumpFormat {
             public String viewText;
             @CheckForNull
             public String location;
+            @CheckForNull
+            public Integer lastDdlTime;
+            @CheckForNull
+            public Long totalSize;
+            @CheckForNull
+            public Long rawSize;
+            @CheckForNull
+            public Long rowsCount;
+            @CheckForNull
+            public Integer filesCount;
+            @CheckForNull
+            public Integer retention;
+            @CheckForNull
+            public Integer bucketsCount;
+            @CheckForNull
+            public Boolean isCompressed;
+
             @CheckForNull
             public List<FieldMetadata> fields;
             @CheckForNull
@@ -147,7 +185,10 @@ public interface HiveMetadataDumpFormat {
             FunctionSchema,
             FunctionName,
             FunctionType,
-            ClassName
+            ClassName,
+            OwnerName,
+            OwnerType,
+            CreateTime
         }
     }
 }
