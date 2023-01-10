@@ -116,7 +116,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
             OutputHandleFactory sinkFactory = new FileSystemOutputHandleFactory(fileSystem, "/");
             handle.getJdbcTemplate().execute("attach ':memory:' as dbc");
             // handle.getJdbcTemplate().execute("create table dbc.dbcinfo (InfoKey varchar,  InfoData varchar)");
-            handle.getJdbcTemplate().execute("create table " + TeradataLogsConnector.DEF_LOG_TABLE + " (UserName varchar, errorcode int, collecttimestamp int)");
+            handle.getJdbcTemplate().execute("create table " + TeradataLogsConnector.DEF_LOG_TABLE + " (UserName varchar, errorcode int, StartTime int)");
 
             TaskRunContext runContext = new DummyTaskRunContext(sinkFactory, handle);
             List<Task<?>> tasks = new ArrayList<>();
