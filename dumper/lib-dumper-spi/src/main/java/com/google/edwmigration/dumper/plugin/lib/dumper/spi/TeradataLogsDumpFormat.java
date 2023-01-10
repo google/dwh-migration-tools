@@ -50,7 +50,8 @@ public interface TeradataLogsDumpFormat {
         SessionWDID,
         Statements,
         TotalIOCount,
-        WarningOnly
+        WarningOnly,
+        StartTime
 
     }
 
@@ -205,7 +206,8 @@ public interface TeradataLogsDumpFormat {
         SessionWDID,
         Statements,
         TotalIOCount,
-        WarningOnly
+        WarningOnly,
+        StartTime
 
     }
 }

@@ -116,7 +116,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         "L.SessionWDID",
         "L.Statements",
         "L.TotalIOCount",
-        "L.WarningOnly"
+        "L.WarningOnly",
+        "L.StartTime"
     };
 
     public static boolean isQueryTable(@Nonnull String expression) {
@@ -230,8 +231,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
             }
 
             buf.append(String.format(" WHERE L.ErrorCode=0\n"
-                    + "AND L.CollectTimeStamp >= CAST('%s' AS TIMESTAMP)\n"
-                    + "AND L.CollectTimeStamp < CAST('%s' AS TIMESTAMP)\n",
+                    + "AND L.StartTime >= CAST('%s' AS TIMESTAMP)\n"
+                    + "AND L.StartTime < CAST('%s' AS TIMESTAMP)\n",
                     SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
 
             for (String condition : conditions) {
@@ -425,7 +426,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
         // to parse and return an ISO instant, not a database-server-specific format.
         if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
-            conditions.add("L.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp());
+            conditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
 
         // Beware of Teradata SQLSTATE HY000. See issue #4126.
         // Most likely caused by some operation (equality?) being performed on a datum which is too long for a varchar.

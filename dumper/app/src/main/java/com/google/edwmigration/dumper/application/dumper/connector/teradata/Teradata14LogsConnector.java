@@ -132,8 +132,8 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
 
             buf.append(" FROM ").append(logTable).append(" L ");
 
-            buf.append(String.format("WHERE L.CollectTimeStamp >= CAST('%s' AS TIMESTAMP)\n"
-                    + "AND L.CollectTimeStamp < CAST('%s' AS TIMESTAMP)\n",
+            buf.append(String.format("WHERE L.StartTime >= CAST('%s' AS TIMESTAMP)\n"
+                    + "AND L.StartTime < CAST('%s' AS TIMESTAMP)\n",
                     SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
 
             for (String condition : conditions) {
@@ -168,7 +168,7 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
         List<String> logConditions = new ArrayList<>();
         if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp())) {
             lSqlConditions.add("ST.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp());
-            logConditions.add("L.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp());
+            logConditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
         }
 
         final int daysToExport = arguments.getQueryLogDays(7);
