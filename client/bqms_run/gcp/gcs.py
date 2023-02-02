@@ -53,7 +53,10 @@ class GSClient(cloudpathlib.GSClient):
         cloudpathlib.GSClient._default_client = self  # type: ignore[misc] # pylint: disable=protected-access
 
     def _download_file(
-        self, cloud_path: cloudpathlib.GSPath, local_path: Union[str, os.PathLike[Any]]
+        self,
+        cloud_path: cloudpathlib.GSPath,
+        # Subscript type arg not supported on ABCs in Python < 3.9.
+        local_path: Union[str, os.PathLike],  # type: ignore[type-arg]
     ) -> Path:
         """Override to use bucket.blob instead of bucket.get_blob.
 
@@ -84,7 +87,11 @@ class GSPath(cloudpathlib.GSPath):
 
     client: GSClient
 
-    def download_to(self, destination: Union[str, os.PathLike[Any]]) -> Path:
+    def download_to(
+        self,
+        # Subscript type arg not supported on ABCs in Python < 3.9.
+        destination: Union[str, os.PathLike],  # type: ignore[type-arg]
+    ) -> Path:
         """Download GSPath to local cache."""
         destination = Path(destination)
         if destination.is_dir():
