@@ -13,6 +13,7 @@
 # limitations under the License.
 """Dev commands."""
 import pathlib
+import tempfile
 
 import nox
 
@@ -51,38 +52,45 @@ def type_check(session):
 @nox.session(python=["3.7", "3.8", "3.9", "3.10"])
 def tests(session):
     """Execute tests."""
-    session.install("poetry")
-    session.run("poetry", "install")
-    tests_path = pathlib.Path("tests")
-    if "unit" in session.posargs:
-        tests_path = tests_path / "unit"
-    if "integration" in session.posargs:
-        tests_path = tests_path / "integration"
-    if "pytest_verbose" in session.posargs:
+    with tempfile.NamedTemporaryFile() as temp_file:
+        session.install("poetry")
         session.run(
             "poetry",
-            "run",
-            "coverage",
-            "run",
-            "--source=bqms_run",
-            "-m",
-            "pytest",
-            "-vv",
-            "--log-cli-level=INFO",
-            "--log-cli-format="
-            "%(asctime)s: %(levelname)s: %(threadName)s: "
-            "%(filename)s:%(lineno)s: %(message)s",
-            tests_path.as_posix(),
+            "export",
+            "--with",
+            "dev",
+            "--without-hashes",
+            "--output",
+            temp_file.name,
         )
-    else:
-        session.run(
-            "poetry",
-            "run",
-            "coverage",
-            "run",
-            "--source=bqms_run",
-            "-m",
-            "pytest",
-            tests_path.as_posix(),
-        )
-    session.run("poetry", "run", "coverage", "report", "-m")
+        session.install("-r", temp_file.name)
+        session.install(".")
+        tests_path = pathlib.Path("tests")
+        if "unit" in session.posargs:
+            tests_path = tests_path / "unit"
+        if "integration" in session.posargs:
+            tests_path = tests_path / "integration"
+        if "pytest_verbose" in session.posargs:
+            session.run(
+                "coverage",
+                "run",
+                "--source=bqms_run",
+                "-m",
+                "pytest",
+                "-vv",
+                "--log-cli-level=INFO",
+                "--log-cli-format="
+                "%(asctime)s: %(levelname)s: %(threadName)s: "
+                "%(filename)s:%(lineno)s: %(message)s",
+                tests_path.as_posix(),
+            )
+        else:
+            session.run(
+                "coverage",
+                "run",
+                "--source=bqms_run",
+                "-m",
+                "pytest",
+                tests_path.as_posix(),
+            )
+        session.run("coverage", "report", "-m")
