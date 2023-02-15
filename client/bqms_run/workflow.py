@@ -20,6 +20,7 @@ from typing import Callable, Optional, Type, TypeVar
 from google.cloud.bigquery_migration_v2 import CreateMigrationWorkflowRequest
 from typing_extensions import ParamSpec
 
+from bqms_run.encoding import EncodingDetector
 from bqms_run.gcp.bqms.request import execute as execute_bqms_request
 from bqms_run.macros import MacroExpanderRouter
 from bqms_run.paths import Path, Paths, iterdirfiles
@@ -124,8 +125,8 @@ def execute(
                 target_file.write(source_bytes)
             return
 
-        with source_file_path.open(mode="r", encoding="utf-8") as source_file:
-            source_text = source_file.read()
+        with source_file_path.open(mode="rb") as source_file:
+            source_text = EncodingDetector().decode(data=source_file.read())
 
         preprocessed_text = preprocess_hook(relative_file_path, source_text)
         macro_expanded_text = (
@@ -147,8 +148,8 @@ def execute(
         target_file_path = paths.postprocessed_path / relative_file_path
         target_file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with source_file_path.open(mode="r", encoding="utf-8") as source_file:
-            source_text = source_file.read()
+        with source_file_path.open(mode="rb") as source_file:
+            source_text = EncodingDetector().decode(data=source_file.read())
 
         macro_unexpanded_text = (
             macro_expander_router.un_expand(relative_file_path, source_text)

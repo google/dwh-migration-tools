@@ -298,6 +298,7 @@ More advanced macro replacement schemes are possible. Please see the
 an example.
 
 ### Extraction of Heredoc SQL Statements from KSH Inputs
+
 By default, during the preprocessing phase, any input paths ending in
 extension `.ksh` will be scanned for heredoc SQL statements. For example,
 given the following file named `foo.ksh`:
@@ -312,6 +313,7 @@ echo Trying another select.
 ```
 
 will be preprocessed to:
+
 ```sql
 SELECT 123, 'foo', 456 from bar;
 ```
