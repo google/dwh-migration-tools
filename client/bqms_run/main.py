@@ -29,6 +29,7 @@ from google.cloud.bigquery_migration_v2 import ObjectNameMappingList, SourceEnv
 from marshmallow import ValidationError
 
 from bqms_run import workflow
+from bqms_run.encoding import EncodingDetector
 from bqms_run.gcp.bqms.object_name_mapping import ObjectNameMappingListSchema
 from bqms_run.gcp.bqms.request import build as build_bqms_request
 from bqms_run.gcp.bqms.source_env import SourceEnvSchema
@@ -78,8 +79,8 @@ def _parse_paths() -> Paths:
 
 def _read_config(config_path: Path) -> Dict[str, object]:
     logger.debug("Parsing config: %s.", config_path.as_uri())
-    with config_path.open(mode="r", encoding="utf-8") as config_file:
-        config_text = config_file.read()
+    with config_path.open(mode="rb") as config_file:
+        config_text = EncodingDetector().decode(config_file.read())
     config: Dict[str, object] = yaml.load(config_text, Loader=yaml.SafeLoader)
     return config
 
@@ -147,10 +148,8 @@ def _parse_object_name_mapping(
     object_name_mapping_path: Path,
 ) -> ObjectNameMappingList:
     logger.debug("Parsing object name mapping: %s.", object_name_mapping_path.as_uri())
-    with object_name_mapping_path.open(
-        mode="r", encoding="utf-8"
-    ) as macro_mapping_file:
-        object_name_mapping_text = macro_mapping_file.read()
+    with object_name_mapping_path.open(mode="rb") as macro_mapping_file:
+        object_name_mapping_text = EncodingDetector().decode(macro_mapping_file.read())
     object_name_mapping = json.loads(object_name_mapping_text)
     try:
         object_name_mapping_list = ObjectNameMappingListSchema.from_mapping(
@@ -172,8 +171,8 @@ def _parse_object_name_mapping(
 
 def _parse_macro_mapping(macro_mapping_path: Path) -> MacroExpanderRouter:
     logger.debug("Parsing macro mapping: %s.", macro_mapping_path.as_uri())
-    with macro_mapping_path.open(mode="r", encoding="utf-8") as macro_mapping_file:
-        macro_mapping_text = macro_mapping_file.read()
+    with macro_mapping_path.open(mode="rb") as macro_mapping_file:
+        macro_mapping_text = EncodingDetector().decode(macro_mapping_file.read())
     macro_mapping = yaml.load(macro_mapping_text, Loader=yaml.SafeLoader)
     try:
         validated_macro_mapping = MacroMapping.from_mapping(macro_mapping)

@@ -62,11 +62,19 @@ def gcs_prefix():
 
 
 _CONFIG_FILE_YAML = "translation_type: Translation_Bteq2BQ\nlocation: us\n"
-_INPUT_FILE_KSH = """
+_INPUT_FILE_UTF8_KSH = """
 #!/bin/ksh
 ## A Very simple test.
 bteq  <<EOF
-SELECT 123, 'foo', 456 from bar;
+SELECT 123, 'foo', '🃏', 456, '☕' from bar;
+EOF
+echo Trying another select.
+"""
+_INPUT_FILE_ISO_8859_1_KSH = """
+#!/bin/ksh
+## A Very simple test.
+bteq  <<EOF
+SELECT 'ä,ö,ü' from baz;
 EOF
 echo Trying another select.
 """
@@ -90,23 +98,42 @@ def _write_gcs_config_file(
     blob.upload_from_string(config_contents)
 
 
-def _write_local_input_file(input_path):
-    input_file_path = input_path / "test.ksh"
+def _write_local_input_utf8_file(input_path):
+    input_file_path = input_path / "test_utf8.ksh"
     logging.debug("Writing input file: %s", input_file_path)
     input_file_path.parent.mkdir(parents=True, exist_ok=True)
     with input_file_path.open("w", encoding="utf-8") as input_file:
-        input_file.write(_INPUT_FILE_KSH)
+        input_file.write(_INPUT_FILE_UTF8_KSH)
 
 
-def _write_gcs_input_file(
+def _write_local_input_iso_8859_1_file(input_path):
+    input_file_path = input_path / "test_iso_8859_1.ksh"
+    logging.debug("Writing input file: %s", input_file_path)
+    input_file_path.parent.mkdir(parents=True, exist_ok=True)
+    with input_file_path.open("w", encoding="iso-8859-1") as input_file:
+        input_file.write(_INPUT_FILE_ISO_8859_1_KSH)
+
+
+def _write_gcs_input_utf8_file(
     gcs_bucket, input_path
 ):  # pylint: disable=redefined-outer-name
-    input_file_path = input_path / "test.ksh"
+    input_file_path = input_path / "test_utf8.ksh"
     logging.debug("Writing input file: gs://%s/%s", gcs_bucket, input_file_path)
     client = gcs_client()
     bucket = client.bucket(gcs_bucket)
     blob = bucket.blob(str(input_file_path))
-    blob.upload_from_string(_INPUT_FILE_KSH)
+    blob.upload_from_string(_INPUT_FILE_UTF8_KSH)
+
+
+def _write_gcs_input_iso_8859_1_file(
+    gcs_bucket, input_path
+):  # pylint: disable=redefined-outer-name
+    input_file_path = input_path / "test_iso_8859_1.ksh"
+    logging.debug("Writing input file: gs://%s/%s", gcs_bucket, input_file_path)
+    client = gcs_client()
+    bucket = client.bucket(gcs_bucket)
+    blob = bucket.blob(str(input_file_path))
+    blob.upload_from_string(_INPUT_FILE_ISO_8859_1_KSH)
 
 
 def test_bteq_local(
@@ -119,7 +146,8 @@ def test_bteq_local(
     _write_local_config_file(config_path, _CONFIG_FILE_YAML)
 
     input_path = local_path / "input"
-    _write_local_input_file(input_path)
+    _write_local_input_utf8_file(input_path)
+    _write_local_input_iso_8859_1_file(input_path)
 
     with mock.patch.dict(
         os.environ,
@@ -143,7 +171,8 @@ def test_bteq_gcs(gcs_bucket, gcs_prefix):  # pylint: disable=redefined-outer-na
     _write_gcs_config_file(gcs_bucket, config_path, _CONFIG_FILE_YAML)
 
     input_path = Path(f"{gcs_prefix}/input")
-    _write_gcs_input_file(gcs_bucket, input_path)
+    _write_gcs_input_utf8_file(gcs_bucket, input_path)
+    _write_gcs_input_iso_8859_1_file(gcs_bucket, input_path)
 
     with mock.patch.dict(
         os.environ,

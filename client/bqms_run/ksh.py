@@ -18,7 +18,6 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -34,10 +33,7 @@ class ShellFragment:
     """
 
     def __init__(
-        self, text: str,
-        line: int,
-        fragment_type: ShellFragmentType,
-        quoted: bool
+        self, text: str, line: int, fragment_type: ShellFragmentType, quoted: bool
     ) -> None:
         super().__init__()
         self.text = text
@@ -91,15 +87,19 @@ class KshExtractor:
         :param command_replace_to: the suffix of the heredoc command
         """
         super().__init__()
-        self.pattern = self._check(re.compile(
-            KshExtractor.to_pattern_for_command(command)))
+        self.pattern = self._check(
+            re.compile(KshExtractor.to_pattern_for_command(command))
+        )
         self.command_replace_from = command_replace_from
         self.command_replace_to = command_replace_to
 
     @staticmethod
     def to_pattern_for_command(command: str) -> str:
-        return KshExtractor.PATTERN_DEFAULT_PREFIX + command \
-               + KshExtractor.PATTERN_DEFAULT_SUFFIX
+        return (
+            KshExtractor.PATTERN_DEFAULT_PREFIX
+            + command
+            + KshExtractor.PATTERN_DEFAULT_SUFFIX
+        )
 
     @staticmethod
     def _check(pattern: re.Pattern) -> re.Pattern:  # type: ignore[type-arg]
@@ -126,9 +126,10 @@ class KshExtractor:
         return list(
             map(
                 lambda f: f.get_text(),
-                filter(lambda f:
-                       f.get_fragment_type() == ShellFragmentType.HEREDOC,
-                       fragments),
+                filter(
+                    lambda f: f.get_fragment_type() == ShellFragmentType.HEREDOC,
+                    fragments,
+                ),
             )
         )
 

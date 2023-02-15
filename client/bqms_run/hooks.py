@@ -24,7 +24,6 @@ from bqms_run.macros import (
 )
 from bqms_run.paths import Path
 
-
 logger = logging.getLogger(__name__)
 
 
