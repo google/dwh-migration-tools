@@ -21,9 +21,8 @@ package com.google.edwmigration.dumper.application.dumper.connector;
  * @author shevek
  */
 public interface MetadataConnector extends Connector {
-
     @Override
-    default public String getDefaultFileName() {
-        return "dwh-migration-" + getName() + "-metadata.zip";
+    default String type() {
+        return "metadata";
     }
 }

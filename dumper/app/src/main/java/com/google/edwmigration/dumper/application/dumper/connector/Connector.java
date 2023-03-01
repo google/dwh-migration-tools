@@ -16,11 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
-import java.util.List;
-import javax.annotation.Nonnull;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import javax.annotation.Nonnull;
 
 /**
  *
@@ -36,10 +38,19 @@ public interface Connector {
     public String getName();
 
     @Nonnull
-    public String getDefaultFileName();
+    default String getDefaultFileName() {
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        return "dwh-migration-" + getName() + "-" + type() + "-" + format.format(timestamp)
+            + ".zip";
+    }
 
     @Nonnull
-    public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) throws Exception;
+    String type();
+
+    @Nonnull
+    public void addTasksTo(@Nonnull List<? super Task<?>> out,
+        @Nonnull ConnectorArguments arguments) throws Exception;
 
     @Nonnull
     public Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
