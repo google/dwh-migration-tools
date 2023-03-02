@@ -73,7 +73,7 @@ dependencies {
         runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
         runtimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
 
-        runtimeOnly "org.postgresql:postgresql:9.4.1208.jre7"
+        runtimeOnly "org.postgresql:postgresql:42.5.4"
         runtimeOnly "net.snowflake:snowflake-jdbc:3.13.20"
         runtimeOnly "com.amazon.redshift:redshift-jdbc42:2.1.0.8"
 
@@ -81,7 +81,7 @@ dependencies {
         testFixturesApi "commons-io:commons-io:2.6"
         testImplementation "org.xerial:sqlite-jdbc:3.32.3"
         testImplementation "com.github.stefanbirkner:system-rules:1.18.0"
-        testImplementation "org.postgresql:postgresql:9.4.1208.jre7"
+        testImplementation "org.postgresql:postgresql:42.5.4"
         testImplementation "joda-time:joda-time:2.3"
     }
 
