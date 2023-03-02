@@ -21,6 +21,23 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
+import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
+import com.google.edwmigration.dumper.application.dumper.task.TaskResult;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
+import com.google.edwmigration.dumper.application.dumper.task.TaskState;
+import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -33,30 +50,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
-import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
-import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import com.google.edwmigration.dumper.application.dumper.task.TaskState;
-import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
-import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
-import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
-import com.google.edwmigration.dumper.application.dumper.task.TaskResult;
 
 /**
  *
@@ -302,15 +304,44 @@ public class MetadataDumper {
 
             if (requiredTasksNotSucceeded > 0) {
                 System.out.println(
-                        "* ERROR: " + requiredTasksNotSucceeded + " required task[s] failed.\n"
-                        + "* Output, including debugging information, has been saved to " + outputFile + "\n"
+                    "* ERROR: " + requiredTasksNotSucceeded + " required task[s] failed.\n"
+                        + "* Output, including debugging information, has been saved to "
+                        + outputFile + "\n"
                         + "**********************************************************"
                 );
-                if (exitOnError)
+                if (exitOnError) {
                     System.exit(1);
+                }
             }
 
+            logStatusSummary(state);
+            System.out.println("**********************************************************");
         }
+    }
+
+    private void logStatusSummary(TaskSetState.Impl state) {
+        List<TaskState> taskStates = state.getTaskResultMap().values().stream()
+            .map(TaskResult::getState).collect(Collectors.toList());
+
+        Function<TaskState, Long> countState = desiredState -> taskStates.stream()
+            .filter(taskState -> taskState.equals(desiredState)).count();
+
+        long numberOfSuccess = countState.apply(TaskState.SUCCEEDED);
+        System.out.println("* SUCCESS: " + numberOfSuccess);
+
+        if (numberOfSuccess == taskStates.size()) {
+            return;
+        }
+
+        long numberOfFailures = countState.apply(TaskState.FAILED);
+        System.out.println("* FAIL: " + numberOfFailures);
+
+        if ((numberOfSuccess + numberOfFailures) == taskStates.size()) {
+            return;
+        }
+
+        long numberOfSkipped = countState.apply(TaskState.SKIPPED);
+        System.out.println("* SKIPPED: " + numberOfSkipped);
     }
 
     public static void main(String... args) throws Exception {
@@ -319,8 +350,9 @@ public class MetadataDumper {
             args = JsonResponseFile.addResponseFiles(args);
             //LOG.debug("Arguments are: [" + String.join("] [", args) + "]");
             // Without this, the dumper prints "Missing required arguments:[connector]"
-            if (args.length == 0)
+            if (args.length == 0) {
                 args = new String[]{"--help"};
+            }
             main.run(args);
         } catch (MetadataDumperUsageException e) {
             LOG.error(e.getMessage());
