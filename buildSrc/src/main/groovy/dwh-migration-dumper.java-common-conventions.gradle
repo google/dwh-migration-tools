@@ -46,7 +46,7 @@ dependencies {
     def log4jOverSlf4jVersion = '1.7.14'
     def scJcipVersion = '1.0-1'
     def slf4jVersion = '1.7.30'
-    def logbackVersion = '1.2.3'
+    def logbackVersion = '1.2.11'
 
     constraints {
         // Define dependency versions as constraints
