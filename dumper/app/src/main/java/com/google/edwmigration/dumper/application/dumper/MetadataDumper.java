@@ -315,33 +315,20 @@ public class MetadataDumper {
             }
 
             logStatusSummary(state);
-            System.out.println("**********************************************************");
         }
     }
 
     private void logStatusSummary(TaskSetState.Impl state) {
-        List<TaskState> taskStates = state.getTaskResultMap().values().stream()
-            .map(TaskResult::getState).collect(Collectors.toList());
+        Map<TaskState, Long> taskStateCountMap = state.getTaskResultMap().values().stream()
+            .map(TaskResult::getState)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        Function<TaskState, Long> countState = desiredState -> taskStates.stream()
-            .filter(taskState -> taskState.equals(desiredState)).count();
+        taskStateCountMap
+            .entrySet().stream()
+            .filter(entry -> entry.getValue() > 0)
+            .forEach(entry -> System.out.printf("* %s: %d", entry.getKey(), entry.getValue()));
 
-        long numberOfSuccess = countState.apply(TaskState.SUCCEEDED);
-        System.out.println("* SUCCESS: " + numberOfSuccess);
-
-        if (numberOfSuccess == taskStates.size()) {
-            return;
-        }
-
-        long numberOfFailures = countState.apply(TaskState.FAILED);
-        System.out.println("* FAIL: " + numberOfFailures);
-
-        if ((numberOfSuccess + numberOfFailures) == taskStates.size()) {
-            return;
-        }
-
-        long numberOfSkipped = countState.apply(TaskState.SKIPPED);
-        System.out.println("* SKIPPED: " + numberOfSkipped);
+        System.out.println("**********************************************************");
     }
 
     public static void main(String... args) throws Exception {
