@@ -1,5 +1,6 @@
-apply {
-    plugin 'java-library-distribution'
+plugins {
+    id 'java-library-distribution'
+    id "com.github.ben-manes.versions" version "0.46.0"
 }
 
 distributions {
