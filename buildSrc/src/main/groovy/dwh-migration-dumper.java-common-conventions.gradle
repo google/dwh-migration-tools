@@ -68,7 +68,7 @@ dependencies {
         implementation "org.springframework:spring-jdbc:$springVersion"
         implementation "com.zaxxer:HikariCP:3.2.0"
         implementation "com.swrve:rate-limited-logger:2.0.0"
-        implementation "com.google.cloud:google-cloud-bigquery:1.126.3"
+        implementation "com.google.cloud:google-cloud-bigquery:1.137.2"
 
         runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
         runtimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
