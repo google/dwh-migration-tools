@@ -21,6 +21,23 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
+import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
+import com.google.edwmigration.dumper.application.dumper.task.TaskResult;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
+import com.google.edwmigration.dumper.application.dumper.task.TaskState;
+import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -38,25 +55,8 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
-import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
-import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import com.google.edwmigration.dumper.application.dumper.task.TaskState;
-import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
-import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
-import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
-import com.google.edwmigration.dumper.application.dumper.task.TaskResult;
 
 /**
  *
@@ -189,8 +189,9 @@ public class MetadataDumper {
         // We had a customer request to base it on the database, but that isn't well-defined,
         // as there may be 0 or N databases in a single file.
         File outputFile = arguments.getOutputFile();
-        if (outputFile == null)
-            outputFile = new File(connector.getDefaultFileName());
+        if (outputFile == null) {
+            outputFile = new File(connector.getDefaultFileName(arguments.isAssessment()));
+        }
         if (arguments.isDryRun()) {
             String title = "Dry run: Printing task list for " + connector.getName();
             System.out.println(title);

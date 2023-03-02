@@ -128,8 +128,14 @@ public class DriverClasspathTest {
 
     @Nonnull
     @Override
-    public String getDefaultFileName() {
+    public String getDefaultFileName(boolean ignored) {
       return StringUtils.EMPTY;
+    }
+
+    @Nonnull
+    @Override
+    public String type() {
+      return "";
     }
 
     @Override

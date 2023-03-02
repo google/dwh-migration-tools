@@ -19,7 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Timestamp;
+import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -38,11 +38,12 @@ public interface Connector {
     public String getName();
 
     @Nonnull
-    default String getDefaultFileName() {
-        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        return "dwh-migration-" + getName() + "-" + type() + "-" + format.format(timestamp)
-            + ".zip";
+    default String getDefaultFileName(boolean isAssessment) {
+        Format format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
+        String timeSuffix = "-" + format.format(System.currentTimeMillis());
+        return String.format("dwh-migration-%s-%s%s.zip",
+            getName(), type(), isAssessment ? timeSuffix : ""
+        );
     }
 
     @Nonnull
