@@ -319,15 +319,11 @@ public class MetadataDumper {
     }
 
     private void logStatusSummary(TaskSetState.Impl state) {
-        Map<TaskState, Long> taskStateCountMap = state.getTaskResultMap().values().stream()
+        state
+            .getTaskResultMap().values().stream()
             .map(TaskResult::getState)
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-        taskStateCountMap
-            .entrySet().stream()
-            .filter(entry -> entry.getValue() > 0)
-            .forEach(entry -> System.out.printf("* %s: %d", entry.getKey(), entry.getValue()));
-
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+            .forEach((key, value) -> System.out.printf("* %s: %d %n", key, value));
         System.out.println("**********************************************************");
     }
 
