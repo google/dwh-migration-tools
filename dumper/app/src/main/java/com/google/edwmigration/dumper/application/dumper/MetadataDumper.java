@@ -191,8 +191,9 @@ public class MetadataDumper {
         // We had a customer request to base it on the database, but that isn't well-defined,
         // as there may be 0 or N databases in a single file.
         File outputFile = arguments.getOutputFile();
-        if (outputFile == null)
-            outputFile = new File(connector.getDefaultFileName());
+        if (outputFile == null) {
+            outputFile = new File(connector.getDefaultFileName(arguments.isAssessment()));
+        }
         if (arguments.isDryRun()) {
             String title = "Dry run: Printing task list for " + connector.getName();
             System.out.println(title);

@@ -21,9 +21,8 @@ package com.google.edwmigration.dumper.application.dumper.connector;
  * @author shevek
  */
 public interface LogsConnector extends Connector {
-
     @Override
-    default public String getDefaultFileName() {
-        return "dwh-migration-" + getName() + "-logs.zip";
+    default String getType() {
+        return "logs";
     }
 }
