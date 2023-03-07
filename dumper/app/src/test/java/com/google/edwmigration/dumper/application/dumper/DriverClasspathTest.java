@@ -134,8 +134,8 @@ public class DriverClasspathTest {
 
     @Nonnull
     @Override
-    public String type() {
-      return "";
+    public String getType() {
+      return StringUtils.EMPTY;
     }
 
     @Override

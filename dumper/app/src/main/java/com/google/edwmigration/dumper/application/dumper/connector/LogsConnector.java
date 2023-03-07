@@ -22,7 +22,7 @@ package com.google.edwmigration.dumper.application.dumper.connector;
  */
 public interface LogsConnector extends Connector {
     @Override
-    default String type() {
+    default String getType() {
         return "logs";
     }
 }

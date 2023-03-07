@@ -23,6 +23,7 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -42,12 +43,12 @@ public interface Connector {
         Format format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
         String timeSuffix = "-" + format.format(System.currentTimeMillis());
         return String.format("dwh-migration-%s-%s%s.zip",
-            getName(), type(), isAssessment ? timeSuffix : ""
+            getName(), getType(), isAssessment ? timeSuffix : StringUtils.EMPTY
         );
     }
 
     @Nonnull
-    String type();
+    String getType();
 
     @Nonnull
     public void addTasksTo(@Nonnull List<? super Task<?>> out,
