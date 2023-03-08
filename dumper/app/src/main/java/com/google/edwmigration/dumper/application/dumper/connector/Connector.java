@@ -19,11 +19,8 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *
