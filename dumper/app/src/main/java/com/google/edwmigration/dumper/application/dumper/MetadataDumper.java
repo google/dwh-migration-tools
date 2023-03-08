@@ -191,8 +191,14 @@ public class MetadataDumper {
         // We had a customer request to base it on the database, but that isn't well-defined,
         // as there may be 0 or N databases in a single file.
         File outputFile = arguments.getOutputFile();
+        String outputDirectory = arguments.getOutputDirectory();
+
+        if ((outputDirectory == null && outputFile == null) || (outputDirectory != null && outputFile != null)) {
+            throw new IllegalStateException("Please use exactly one of --output & --output-dir flags");
+        }
+
         if (outputFile == null) {
-            outputFile = new File(connector.getDefaultFileName(arguments.isAssessment()));
+            outputFile = new File(outputDirectory + connector.getDefaultFileName(arguments.isAssessment()));
         }
         if (arguments.isDryRun()) {
             String title = "Dry run: Printing task list for " + connector.getName();
