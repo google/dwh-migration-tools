@@ -39,7 +39,7 @@ public interface Connector {
     public String getName();
 
     @Nonnull
-    String getDefaultFileName(boolean isAssessment);
+    public String getDefaultFileName(boolean isAssessment);
 
     @Nonnull
     public void addTasksTo(@Nonnull List<? super Task<?>> out,
