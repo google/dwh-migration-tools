@@ -19,11 +19,8 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -39,16 +36,7 @@ public interface Connector {
     public String getName();
 
     @Nonnull
-    default String getDefaultFileName(boolean isAssessment) {
-        Format format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-        String timeSuffix = "-" + format.format(System.currentTimeMillis());
-        return String.format("dwh-migration-%s-%s%s.zip",
-            getName(), getType(), isAssessment ? timeSuffix : StringUtils.EMPTY
-        );
-    }
-
-    @Nonnull
-    String getType();
+    public String getDefaultFileName(boolean isAssessment);
 
     @Nonnull
     public void addTasksTo(@Nonnull List<? super Task<?>> out,
