@@ -39,16 +39,7 @@ public interface Connector {
     public String getName();
 
     @Nonnull
-    default String getDefaultFileName(boolean isAssessment) {
-        Format format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-        String timeSuffix = "-" + format.format(System.currentTimeMillis());
-        return String.format("dwh-migration-%s-%s%s.zip",
-            getName(), getType(), isAssessment ? timeSuffix : StringUtils.EMPTY
-        );
-    }
-
-    @Nonnull
-    String getType();
+    String getDefaultFileName(boolean isAssessment);
 
     @Nonnull
     public void addTasksTo(@Nonnull List<? super Task<?>> out,

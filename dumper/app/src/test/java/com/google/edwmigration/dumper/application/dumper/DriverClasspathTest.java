@@ -132,12 +132,6 @@ public class DriverClasspathTest {
       return StringUtils.EMPTY;
     }
 
-    @Nonnull
-    @Override
-    public String getType() {
-      return StringUtils.EMPTY;
-    }
-
     @Override
     public void addTasksTo(@Nonnull List<? super Task<?>> out,
         @Nonnull ConnectorArguments arguments) {
