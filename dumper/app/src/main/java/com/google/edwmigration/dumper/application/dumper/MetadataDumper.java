@@ -193,7 +193,7 @@ public class MetadataDumper {
         File outputFile = arguments.getOutputFile();
         String outputDirectory = arguments.getOutputDirectory();
 
-        if ((outputDirectory == null && outputFile == null) || (outputDirectory != null && outputFile != null)) {
+        if ((outputDirectory == null) == (outputFile == null)) {
             throw new IllegalStateException("Please use exactly one of --output & --output-dir flags");
         }
 
