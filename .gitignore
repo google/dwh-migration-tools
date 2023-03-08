@@ -16,5 +16,3 @@ venv
 node_modules
 .coverage
 .pytest_cache
-/*.zip
-/*.tmp
