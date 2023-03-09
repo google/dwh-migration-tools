@@ -205,7 +205,8 @@ public class MetadataDumper {
         }
 
         if (outputFile == null) {
-            outputFile = new File(outputDirectory + connector.getDefaultFileName(arguments.isAssessment()));
+            String separator = "".equals(outputDirectory) ? "" : File.separator;
+            outputFile = new File(outputDirectory + separator + connector.getDefaultFileName(arguments.isAssessment()));
         }
         if (arguments.isDryRun()) {
             String title = "Dry run: Printing task list for " + connector.getName();
