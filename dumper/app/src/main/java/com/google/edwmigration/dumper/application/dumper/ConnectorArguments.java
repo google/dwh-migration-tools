@@ -138,8 +138,8 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<String> optionOracleSID = parser.accepts(OPT_ORACLE_SID, "SID name for oracle").withRequiredArg().describedAs("orcl").ofType(String.class);
     private final OptionSpec<String> optionConfiguration = parser.accepts("config", "Configuration for DB connector").withRequiredArg().ofType(String.class).withValuesSeparatedBy(';').describedAs("key=val;key1=val1");
     // private final OptionSpec<String> optionDatabase = parser.accepts("database", "database (can be repeated; all if not specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
-    private final OptionSpec<File> optionOutput = parser.accepts("output", "Output file").withOptionalArg().ofType(File.class).describedAs("cw-dump.zip");
-    private final OptionSpec<String> optionOutputDir = parser.accepts("output-dir", "Output directory").withOptionalArg().ofType(String.class).defaultsTo("").describedAs("/home/user/...");
+    private final OptionSpec<File> optionOutput = parser.accepts("output", "Output file (cannot be used together with --output-dir)").withRequiredArg().ofType(File.class).describedAs("cw-dump.zip");
+    private final OptionSpec<String> optionOutputDir = parser.accepts("output-dir", "Output directory where the zip file with the default filename should be created (cannot be used together with --output option). If you want to specify the filename, use --output option instead.").withRequiredArg().ofType(String.class).defaultsTo("").describedAs("/home/user/my-dump-dir");
     private final OptionSpec<Void> optionOutputContinue = parser.accepts("continue", "Continues writing a previous output file.");
     // TODO: Make this be an ISO instant.
     @Deprecated

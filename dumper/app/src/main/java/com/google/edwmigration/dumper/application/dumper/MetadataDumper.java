@@ -193,8 +193,15 @@ public class MetadataDumper {
         File outputFile = arguments.getOutputFile();
         String outputDirectory = arguments.getOutputDirectory();
 
-        if ((outputDirectory == null) == (outputFile == null)) {
-            throw new IllegalStateException("Please use exactly one of --output & --output-dir flags");
+        boolean isDefaultPath = "".equals(outputDirectory);
+        if (!isDefaultPath && outputFile != null) {
+            System.out.println(
+                "**********************************************************\n"
+                + "* ERROR: Using both --output & --output-dir flags are not allowed.\n"
+                + "* Please use --help for more information.\n"
+                + "**********************************************************"
+            );
+            return;
         }
 
         if (outputFile == null) {
