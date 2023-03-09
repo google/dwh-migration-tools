@@ -197,7 +197,7 @@ public class MetadataDumper {
         if (!isDefaultPath && outputFile != null) {
             System.out.println(
                 "**********************************************************\n"
-                + "* ERROR: Using both --output & --output-dir flags are not allowed.\n"
+                + "* ERROR: Using both --output and --output-dir flags is not allowed.\n"
                 + "* Please use --help for more information.\n"
                 + "**********************************************************"
             );
