@@ -91,19 +91,6 @@ public class ZonedIntervalTest {
         assertEquals("Wrong end time", oneDaysAgo, obtainedInterval.getEndExclusive());
     }
 
-    @Test
-    public void testNullInterval() {
-        // Arrange
-        ZonedInterval interval = new ZonedInterval(sevenDaysAgo, oneDaysAgo);
-
-        // Act
-        ZonedInterval obtainedInterval = interval.span(null);
-
-        // Assert
-        assertEquals("Wrong start time", sevenDaysAgo, obtainedInterval.getStart());
-        assertEquals("Wrong end time", oneDaysAgo, obtainedInterval.getEndExclusive());
-    }
-
     private ZonedDateTime getTimeSubtractingDays(int days) {
         ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
         return nowAtUTC.minusDays(days).truncatedTo(ChronoUnit.HOURS);

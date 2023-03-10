@@ -23,7 +23,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * A zoned interval represents an interval of time delimited by an inclusive start zoned datetime
@@ -74,8 +73,7 @@ public class ZonedInterval {
     }
 
     @Nonnull
-    public ZonedInterval span(@Nullable ZonedInterval interval) {
-        if (interval == null) return this;
+    public ZonedInterval span(@Nonnull ZonedInterval interval) {
         ZonedDateTime startTime = Collections.min(Arrays.asList(interval.getStart(), this.getStart()));
         ZonedDateTime endTime = Collections.max(Arrays.asList(interval.getEndExclusive(), this.getEndExclusive()));
         return new ZonedInterval(startTime, endTime);
