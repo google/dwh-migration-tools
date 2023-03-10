@@ -287,7 +287,7 @@ public class MetadataDumper {
         if (connector instanceof MetadataConnector) {
             log("Metadata has been saved to " + outputFile);
         } else if (connector instanceof LogsConnector) {
-            log("Logs have been saved to" + outputFile);
+            log("Logs have been saved to " + outputFile);
         }
     }
 
