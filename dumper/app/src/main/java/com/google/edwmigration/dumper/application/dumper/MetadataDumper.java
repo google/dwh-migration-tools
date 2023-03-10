@@ -36,6 +36,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskResult;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
@@ -77,6 +78,8 @@ public class MetadataDumper {
             builder.put(connector.getName().toUpperCase(), connector);
         CONNECTORS = builder.build();
     }
+
+    private static final String STARS = "*******************************************************************";
 
     private boolean exitOnError = true;
     public MetadataDumper withExitOnError(boolean state) {
@@ -272,60 +275,72 @@ public class MetadataDumper {
                 LOG.debug("Dumper took " + stopwatch + ".");
             }
 
-            int requiredTasksNotSucceeded = 0;
-            System.out.println(
-                    "**********************************************************\n"
-                    + "* Task Summary:"
-            );
-            for (Map.Entry<Task<?>, TaskResult<?>> e : state.getTaskResultMap().entrySet()) {
-                Task<? extends Object> task = e.getKey();
-                TaskResult<? extends Object> result = e.getValue();
-                StringBuilder buf = new StringBuilder();
-                buf.append("* Task ").append(result.getState()).append(" (").append(task.getCategory()).append(")").append(' ').append(task);
-                if (result.getException() != null)
-                    buf.append(": ").append(result.getException());
-                if (TaskCategory.REQUIRED.equals(task.getCategory()) && TaskState.FAILED.equals(result.getState()))
-                    requiredTasksNotSucceeded++;
-                System.out.println(buf.toString());
-            }
-
-            if (connector instanceof MetadataConnector) {
-                System.out.println(
-                        "**********************************************************\n"
-                        + "* Metadata has been saved to " + outputFile + "\n"
-                        + "**********************************************************"
-                );
-            } else if (connector instanceof LogsConnector) {
-                System.out.println(
-                        "**********************************************************\n"
-                        + "* Logs have been saved to " + outputFile + "\n"
-                        + "**********************************************************"
-                );
-            }
-
-            if (requiredTasksNotSucceeded > 0) {
-                System.out.println(
-                    "* ERROR: " + requiredTasksNotSucceeded + " required task[s] failed.\n"
-                        + "* Output, including debugging information, has been saved to "
-                        + outputFile + "\n"
-                        + "**********************************************************"
-                );
-                if (exitOnError) {
-                    System.exit(1);
-                }
-            }
-
+            printTaskResults(state);
+            printDumperSummary(connector, outputFile);
+            checkRequiredTaskSuccess(state, outputFile);
             logStatusSummary(state);
+            System.out.println(STARS);
+        }
+    }
+
+    private void printDumperSummary(Connector connector, File outputFile) {
+        if (connector instanceof MetadataConnector) {
+            log("Metadata has been saved to " + outputFile);
+        } else if (connector instanceof LogsConnector) {
+            log("Logs have been saved to " + outputFile);
+        }
+    }
+
+    private void printTaskResults(TaskSetState.Impl state) {
+        List<String> lines = new ArrayList<>();
+        lines.add("Task Summary:");
+        state.getTaskResultMap()
+            .forEach((task, result) -> lines.add(String.format(
+                "Task %s (%s) %s%s",
+                result.getState(),
+                task.getCategory(),
+                task,
+                (result.getException() == null) ? "" : String.format(": %s", result.getException())
+            )));
+        log(lines);
+    }
+
+    private void checkRequiredTaskSuccess(Impl state, File outputFile) {
+        long requiredTasksNotSucceeded = state
+            .getTaskResultMap().entrySet().stream()
+            .filter(e -> TaskCategory.REQUIRED.equals(e.getKey().getCategory()))
+            .filter(e -> TaskState.FAILED.equals(e.getValue().getState()))
+            .count();
+        if (requiredTasksNotSucceeded > 0) {
+            log(
+                "ERROR: " + requiredTasksNotSucceeded + " required task[s] failed.",
+                "Output, including debugging information, has been saved to " + outputFile
+            );
+            if (exitOnError) {
+                System.out.println(STARS);
+                System.exit(1);
+            }
+
         }
     }
 
     private void logStatusSummary(TaskSetState.Impl state) {
+        List<String> lines = new ArrayList<>();
         state
             .getTaskResultMap().values().stream()
             .map(TaskResult::getState)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-            .forEach((key, value) -> System.out.printf("* %s: %d %n", key, value));
-        System.out.println("**********************************************************");
+            .forEach((key, value) -> lines.add(String.format("%d TASKS %s", value, key)));
+        log(lines);
+    }
+
+    private void log(String... lines) {
+        log(Arrays.asList(lines));
+    }
+
+    private void log(List<String> lines) {
+        System.out.println(STARS);
+        lines.stream().map(s -> "* " + s).forEach(System.out::println);
     }
 
     public static void main(String... args) throws Exception {
