@@ -18,12 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
-import javax.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
@@ -38,6 +32,12 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +71,7 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
         super("teradata14-logs");
     }
 
-    private static class LSqlQueryFactory extends TeradataLogsConnector.TeradataLogsJdbcTask {
+    private static class LSqlQueryFactory extends TeradataLogsJdbcTask {
 
         public LSqlQueryFactory(String targetPath, SharedState state, String logTable, String queryTable, List<String> conditions, ZonedInterval interval) {
             super(targetPath, state, logTable, queryTable, conditions, interval);
@@ -108,7 +108,7 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
 
     }
 
-    private static class LogQueryFactory extends TeradataLogsConnector.TeradataLogsJdbcTask {
+    private static class LogQueryFactory extends TeradataLogsJdbcTask {
 
         public LogQueryFactory(String targetPath, SharedState state, String logTable, String queryTable, List<String> conditions, ZonedInterval interval) {
             super(targetPath, state, logTable, queryTable, conditions, interval);

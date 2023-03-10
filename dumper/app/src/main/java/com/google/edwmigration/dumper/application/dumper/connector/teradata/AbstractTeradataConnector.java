@@ -18,13 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
-import javax.annotation.Nonnull;
-import javax.sql.DataSource;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverClass;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
@@ -39,6 +32,15 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import javax.annotation.Nonnull;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.support.DataAccessUtils;
@@ -66,6 +68,9 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
 @RespectsArgumentUri
 @RespectsArgumentDriverClass
 public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
+
+    /* pp */ static final DateTimeFormatter SQL_FORMAT = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(
+        ZoneOffset.UTC);
 
     @SuppressWarnings("UnusedVariable")
     private static final Logger LOG = LoggerFactory.getLogger(AbstractTeradataConnector.class);
