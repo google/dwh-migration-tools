@@ -17,13 +17,12 @@
 package com.google.edwmigration.dumper.application.dumper.connector;
 
 /**
- *
  * @author shevek
  */
 public interface MetadataConnector extends Connector {
 
-    @Override
-    default String getDefaultFileName(boolean isAssessment) {
-        return "dwh-migration-" + getName() + "-metadata.zip";
-    }
+  @Override
+  default String getDefaultFileName(boolean isAssessment) {
+    return "dwh-migration-" + getName() + "-metadata.zip";
+  }
 }

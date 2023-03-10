@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
 /**
- *
  * @author shevek
  */
 @Target(ElementType.TYPE)
@@ -35,6 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @RespectsInput(order = 0, arg = ConnectorArguments.OPT_DRIVER, description = RespectsArgumentDriver.DESCRIPTION)
 public @interface RespectsArgumentDriver {
 
-    public static final String DESCRIPTION = "The vendor-supplied driver JARs to use for this connector.";
+  public static final String DESCRIPTION = "The vendor-supplied driver JARs to use for this connector.";
 
 }

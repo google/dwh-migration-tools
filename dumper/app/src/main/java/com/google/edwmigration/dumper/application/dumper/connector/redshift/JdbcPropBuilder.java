@@ -32,57 +32,61 @@ import org.slf4j.LoggerFactory;
  */
 /* pp */ class JdbcPropBuilder {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcPropBuilder.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(JdbcPropBuilder.class);
 
-    final String punctuations;
+  final String punctuations;
 
-    final List<String> props = new ArrayList<>();
+  final List<String> props = new ArrayList<>();
 
-    public JdbcPropBuilder(String seps) {
-        this.punctuations = seps;
+  public JdbcPropBuilder(String seps) {
+    this.punctuations = seps;
+  }
+
+  @Nonnull
+  public JdbcPropBuilder propOrWarn(@Nonnull String prop, @CheckForNull String val,
+      @Nonnull String msg) throws UnsupportedEncodingException {
+    if (val == null) {
+      LOG.warn(msg);
+    } else {
+      addProp(prop, val);
     }
+    return this;
+  }
 
-    @Nonnull
-    public JdbcPropBuilder propOrWarn(@Nonnull String prop, @CheckForNull String val, @Nonnull String msg) throws UnsupportedEncodingException {
-        if (val == null) {
-            LOG.warn(msg);
-        } else {
-            addProp(prop, val);
-        }
-        return this;
+  @Nonnull
+  public JdbcPropBuilder propOrError(@Nonnull String prop, @CheckForNull String val,
+      @Nonnull String msg) throws MetadataDumperUsageException, UnsupportedEncodingException {
+    if (val == null) {
+      LOG.error(msg);
+      throw new MetadataDumperUsageException(msg);
+    } else {
+      addProp(prop, val);
     }
+    return this;
+  }
 
-    @Nonnull
-    public JdbcPropBuilder propOrError(@Nonnull String prop, @CheckForNull String val, @Nonnull String msg) throws MetadataDumperUsageException, UnsupportedEncodingException {
-        if (val == null) {
-            LOG.error(msg);
-            throw new MetadataDumperUsageException(msg);
-        } else {
-            addProp(prop, val);
-        }
-        return this;
+  @Nonnull
+  public JdbcPropBuilder prop(@Nonnull String prop, @Nonnull String val)
+      throws UnsupportedEncodingException {
+    if (val == null) {
+      throw new InternalError("Not checked for null: " + val);
+    } else {
+      addProp(prop, val);
     }
+    return this;
+  }
 
-    @Nonnull
-    public JdbcPropBuilder prop(@Nonnull String prop, @Nonnull String val) throws UnsupportedEncodingException {
-        if (val == null) {
-            throw new InternalError("Not checked for null: " + val);
-        } else {
-            addProp(prop, val);
-        }
-        return this;
-    }
+  private void addProp(String prop, String val) throws UnsupportedEncodingException {
+    // The encode(String, Charset) overload is JDK 10+
+    props.add(prop + punctuations.charAt(1) + URLEncoder.encode(val, "UTF-8"));
+  }
 
-    private void addProp(String prop, String val) throws UnsupportedEncodingException {
-        // The encode(String, Charset) overload is JDK 10+
-        props.add(prop + punctuations.charAt(1) + URLEncoder.encode(val, "UTF-8"));
+  @Nonnull
+  public String toJdbcPart() {
+    if (props.isEmpty()) {
+      return "";
     }
-
-    @Nonnull
-    public String toJdbcPart() {
-        if (props.isEmpty())
-            return "";
-        return punctuations.charAt(0) + Joiner.on(punctuations.charAt(2)).join(props);
-    }
+    return punctuations.charAt(0) + Joiner.on(punctuations.charAt(2)).join(props);
+  }
 }

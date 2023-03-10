@@ -31,66 +31,70 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import static org.junit.Assert.*;
 
 /**
- *
  * @author shevek
  */
 public abstract class AbstractConnectorTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractConnectorTest.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractConnectorTest.class);
 
-    protected static enum SpecialTaskType {
-        Version, Arguments, Format
+  protected static enum SpecialTaskType {
+    Version, Arguments, Format
+  }
+
+  private static String[] A(String... in) {
+    return in;
+  }
+
+  @Nonnull
+  protected static List<String[]> newStandardArguments(@Nonnull Connector connector) {
+    if (connector instanceof LogsConnector) {
+      return Arrays.asList(
+          ArrayUtils.EMPTY_STRING_ARRAY,
+          A("--query-log-days", "2")
+      );
+    }
+    return Collections.singletonList(ArrayUtils.EMPTY_STRING_ARRAY);
+  }
+
+  protected void testConnectorDefaults(@Nonnull Connector connector) throws Exception {
+    for (String[] args : newStandardArguments(connector)) {
+      testConnector(connector, args);
+    }
+  }
+
+  protected void testConnector(@Nonnull Connector connector, String... args) throws Exception {
+    List<String> a = new ArrayList<>();
+    a.addAll(Arrays.asList("--connector", connector.getName()));
+    Collections.addAll(a, args);
+    ConnectorArguments arguments = new ConnectorArguments(a.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+    List<Task<?>> out = new ArrayList<>();
+    connector.addTasksTo(out, arguments);
+
+    Set<SpecialTaskType> specialTasks = EnumSet.noneOf(SpecialTaskType.class);
+
+    LOG.debug("Tasks are:");
+    for (Task<?> task : out) {
+      LOG.debug(String.valueOf(task));
+      if (task instanceof VersionTask) {
+        specialTasks.add(SpecialTaskType.Version);
+      } else if (task instanceof ArgumentsTask) {
+        specialTasks.add(SpecialTaskType.Arguments);
+      } else if (task instanceof FormatTask) {
+        specialTasks.add(SpecialTaskType.Format);
+      }
     }
 
-    private static String[] A(String... in) {
-        return in;
-    }
-
-    @Nonnull
-    protected static List<String[]> newStandardArguments(@Nonnull Connector connector) {
-        if (connector instanceof LogsConnector)
-            return Arrays.asList(
-                    ArrayUtils.EMPTY_STRING_ARRAY,
-                    A("--query-log-days", "2")
-            );
-        return Collections.singletonList(ArrayUtils.EMPTY_STRING_ARRAY);
-    }
-
-    protected void testConnectorDefaults(@Nonnull Connector connector) throws Exception {
-        for (String[] args : newStandardArguments(connector)) {
-            testConnector(connector, args);
-        }
-    }
-
-    protected void testConnector(@Nonnull Connector connector, String... args) throws Exception {
-        List<String> a = new ArrayList<>();
-        a.addAll(Arrays.asList("--connector", connector.getName()));
-        Collections.addAll(a, args);
-        ConnectorArguments arguments = new ConnectorArguments(a.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
-        List<Task<?>> out = new ArrayList<>();
-        connector.addTasksTo(out, arguments);
-
-        Set<SpecialTaskType> specialTasks = EnumSet.noneOf(SpecialTaskType.class);
-
-        LOG.debug("Tasks are:");
-        for (Task<?> task : out) {
-            LOG.debug(String.valueOf(task));
-            if (task instanceof VersionTask)
-                specialTasks.add(SpecialTaskType.Version);
-            else if (task instanceof ArgumentsTask)
-                specialTasks.add(SpecialTaskType.Arguments);
-            else if (task instanceof FormatTask)
-                specialTasks.add(SpecialTaskType.Format);
-        }
-
-        LOG.debug("Special tasks discovered are " + specialTasks);
-        assertFalse(specialTasks.contains(SpecialTaskType.Version));    // Added by MetadataDumper, not the connector.
-        assertFalse(specialTasks.contains(SpecialTaskType.Arguments));    // Added by MetadataDumper, not the connector.
-        // TODO: assertTrue(specialTasks.contains(SpecialTaskType.Format));
-    }
+    LOG.debug("Special tasks discovered are " + specialTasks);
+    assertFalse(specialTasks.contains(
+        SpecialTaskType.Version));    // Added by MetadataDumper, not the connector.
+    assertFalse(specialTasks.contains(
+        SpecialTaskType.Arguments));    // Added by MetadataDumper, not the connector.
+    // TODO: assertTrue(specialTasks.contains(SpecialTaskType.Format));
+  }
 
 }

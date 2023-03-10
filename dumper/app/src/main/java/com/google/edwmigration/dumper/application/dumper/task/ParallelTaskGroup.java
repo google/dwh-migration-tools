@@ -25,56 +25,60 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 // Redshift is really slow, and is the only thing that uses this.
 public class ParallelTaskGroup extends TaskGroup {
 
-    public ParallelTaskGroup(String name) {
-        super("parallel-task-" + name);
+  public ParallelTaskGroup(String name) {
+    super("parallel-task-" + name);
+  }
+
+  @Override
+  public void addTask(Task<?> task) {
+    // Checking for conditions would need some ordering of tasks execution or waiting on {@link TaskSetState#getTaskResult}
+    Preconditions.checkState(task.getConditions().length == 0,
+        "Tasks in a parallel task should not have conditions");
+    Preconditions.checkState(task instanceof AbstractJdbcTask || task instanceof FormatTask,
+        "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to add %s.",
+        task.getClass().getSimpleName());
+    super.addTask(task);
+  }
+
+  private static class TaskRunner<T> implements Callable<T> {
+
+    private final TaskRunContext context;
+    private final Task<T> task;
+    private final CSVPrinter printer;
+
+    public TaskRunner(TaskRunContext context, Task<T> task, CSVPrinter printer) {
+      this.context = context;
+      this.task = task;
+      this.printer = printer;
     }
 
     @Override
-    public void addTask(Task<?> task) {
-        // Checking for conditions would need some ordering of tasks execution or waiting on {@link TaskSetState#getTaskResult}
-        Preconditions.checkState(task.getConditions().length == 0, "Tasks in a parallel task should not have conditions");
-        Preconditions.checkState(task instanceof AbstractJdbcTask || task instanceof FormatTask, "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to add %s.", task.getClass().getSimpleName());
-        super.addTask(task);
+    public T call() throws Exception {
+      T result = context.runChildTask(task);
+      TaskState state = context.getTaskState(task);
+      synchronized (printer) {
+        printer.printRecord(task, state);
+      }
+      return result;
     }
+  }
 
-    private static class TaskRunner<T> implements Callable<T> {
-
-        private final TaskRunContext context;
-        private final Task<T> task;
-        private final CSVPrinter printer;
-
-        public TaskRunner(TaskRunContext context, Task<T> task, CSVPrinter printer) {
-            this.context = context;
-            this.task = task;
-            this.printer = printer;
-        }
-
-        @Override
-        public T call() throws Exception {
-            T result = context.runChildTask(task);
-            TaskState state = context.getTaskState(task);
-            synchronized (printer) {
-                printer.printRecord(task, state);
-            }
-            return result;
-        }
+  @Override
+  @SuppressWarnings("FutureReturnValueIgnored")
+  // It's an ExecutorManager, which tracks the Future internally.
+  protected void doRun(TaskRunContext context, CSVPrinter printer, Handle handle) throws Exception {
+    // Throws ExecutionException if any sub-task threw. However, runChildTask() is nothrow, so that never happens.
+    // We safely publish the CSVPrinter to the ExecutorManager.
+    try (ExecutorManager executorManager = new ExecutorManager(context.getExecutorService())) {
+      for (Task<?> task : getTasks()) {
+        executorManager.submit(new TaskRunner<>(context, task, printer));
+      }
     }
+    // We now, by the t-w-r, safely collect the CSVPrinter from the sub-threads.
+  }
 
-    @Override
-    @SuppressWarnings("FutureReturnValueIgnored")   // It's an ExecutorManager, which tracks the Future internally.
-    protected void doRun(TaskRunContext context, CSVPrinter printer, Handle handle) throws Exception {
-        // Throws ExecutionException if any sub-task threw. However, runChildTask() is nothrow, so that never happens.
-        // We safely publish the CSVPrinter to the ExecutorManager.
-        try (ExecutorManager executorManager = new ExecutorManager(context.getExecutorService())) {
-            for (Task<?> task : getTasks()) {
-                executorManager.submit(new TaskRunner<>(context, task, printer));
-            }
-        }
-        // We now, by the t-w-r, safely collect the CSVPrinter from the sub-threads.
-    }
-
-    @Override
-    public String toString() {
-        return "ParallelTaskGroup(" + getTasks().size() + " children)";
-    }
+  @Override
+  public String toString() {
+    return "ParallelTaskGroup(" + getTasks().size() + " children)";
+  }
 }

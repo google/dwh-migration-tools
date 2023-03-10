@@ -27,38 +27,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Runs the BigQuery metadata dumper against the CompilerWorks
- * BigQuery account and asserts on the output.
+ * Runs the BigQuery metadata dumper against the CompilerWorks BigQuery account and asserts on the
+ * output.
  *
  * @author matt
  */
 @RunWith(JUnit4.class)
 public class BigQueryMetadataConnectorTest extends AbstractBigQueryConnectorExecutionTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(BigQueryMetadataConnectorTest.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(BigQueryMetadataConnectorTest.class);
 
-    private final BigQueryMetadataConnector connector = new BigQueryMetadataConnector();
+  private final BigQueryMetadataConnector connector = new BigQueryMetadataConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
 
-    @Ignore("Expensive. Move to integration tests?")
-    @Test
-    public void testExecution() throws Exception {
-        File outputFile = TestUtils.newOutputFile("test-compilerworks-bigquery.zip");
-        LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+  @Ignore("Expensive. Move to integration tests?")
+  @Test
+  public void testExecution() throws Exception {
+    File outputFile = TestUtils.newOutputFile("test-compilerworks-bigquery.zip");
+    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
 
-        runDumper("--connector", connector.getName(), "--output", outputFile.getAbsolutePath());
+    runDumper("--connector", connector.getName(), "--output", outputFile.getAbsolutePath());
 
-        ZipValidator validator = new ZipValidator()
-                .withFormat(BigQueryMetadataDumpFormat.FORMAT_NAME)
-                .withExpectedEntries(
-                        BigQueryMetadataConnector.DatasetsTask.ZIP_ENTRY_NAME,
-                        BigQueryMetadataConnector.TablesJsonTask.ZIP_ENTRY_NAME);
-        validator.withEntryValidator(BigQueryMetadataConnector.DatasetsTask.ZIP_ENTRY_NAME, BigQueryMetadataConnector.DatasetsTask.Header.class);
-        validator.run(outputFile);
-    }
+    ZipValidator validator = new ZipValidator()
+        .withFormat(BigQueryMetadataDumpFormat.FORMAT_NAME)
+        .withExpectedEntries(
+            BigQueryMetadataConnector.DatasetsTask.ZIP_ENTRY_NAME,
+            BigQueryMetadataConnector.TablesJsonTask.ZIP_ENTRY_NAME);
+    validator.withEntryValidator(BigQueryMetadataConnector.DatasetsTask.ZIP_ENTRY_NAME,
+        BigQueryMetadataConnector.DatasetsTask.Header.class);
+    validator.run(outputFile);
+  }
 }

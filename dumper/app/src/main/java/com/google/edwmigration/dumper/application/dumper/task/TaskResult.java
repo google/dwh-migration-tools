@@ -23,49 +23,48 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
- *
  * @author shevek
  */
 @Immutable  // Not technically, because value might be mutable.
 public class TaskResult<T> {
 
-    private final TaskState state;
-    private final T value;
-    private final Throwable exception;
+  private final TaskState state;
+  private final T value;
+  private final Throwable exception;
 
-    public TaskResult(@Nonnull TaskState state, @CheckForNull T value) {
-        this.state = Preconditions.checkNotNull(state);
-        this.value = value;
-        this.exception = null;
-    }
+  public TaskResult(@Nonnull TaskState state, @CheckForNull T value) {
+    this.state = Preconditions.checkNotNull(state);
+    this.value = value;
+    this.exception = null;
+  }
 
-    public TaskResult(@Nonnull TaskState state, @CheckForNull Exception exception) {
-        this.state = Preconditions.checkNotNull(state);
-        this.value = null;
-        this.exception = exception;
-    }
+  public TaskResult(@Nonnull TaskState state, @CheckForNull Exception exception) {
+    this.state = Preconditions.checkNotNull(state);
+    this.value = null;
+    this.exception = exception;
+  }
 
-    @Nonnull
-    public TaskState getState() {
-        return state;
-    }
+  @Nonnull
+  public TaskState getState() {
+    return state;
+  }
 
-    @CheckForNull
-    public T getValue() {
-        return value;
-    }
+  @CheckForNull
+  public T getValue() {
+    return value;
+  }
 
-    @CheckForNull
-    public Throwable getException() {
-        return exception;
-    }
+  @CheckForNull
+  public Throwable getException() {
+    return exception;
+  }
 
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("state", getState())
-                .add("value", getValue())
-                .add("exception", getException())
-                .toString();
-    }
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("state", getState())
+        .add("value", getValue())
+        .add("exception", getException())
+        .toString();
+  }
 }

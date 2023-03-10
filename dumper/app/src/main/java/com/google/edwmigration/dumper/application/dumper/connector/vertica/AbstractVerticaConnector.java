@@ -34,40 +34,42 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /**
- *
  * @author matt
  */
 @RespectsArgumentDriverRequired
 @RespectsArgumentHostUnlessUrl
-@RespectsInput(order = ConnectorArguments.OPT_PORT_ORDER, arg = ConnectorArguments.OPT_PORT, description = "The port of the server.", required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL, defaultValue = "" + AbstractVerticaConnector.OPT_PORT_DEFAULT)
+@RespectsInput(order = ConnectorArguments.OPT_PORT_ORDER, arg = ConnectorArguments.OPT_PORT, description = "The port of the server.", required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL, defaultValue =
+    "" + AbstractVerticaConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentUser
 @RespectsArgumentPassword
 @RespectsArgumentDatabaseForConnection
 @RespectsArgumentUri
 public abstract class AbstractVerticaConnector extends AbstractJdbcConnector {
 
-    public static final int OPT_PORT_DEFAULT = 5433;
+  public static final int OPT_PORT_DEFAULT = 5433;
 
-    public /* pp */ AbstractVerticaConnector(@Nonnull String name) {
-        super(name);
+  public /* pp */ AbstractVerticaConnector(@Nonnull String name) {
+    super(name);
+  }
+
+  @Override
+  public Handle open(ConnectorArguments arguments) throws Exception {
+    String url = arguments.getUri();
+    if (url == null) {
+      // Docref: https://www.vertica.com/docs/9.2.x/HTML/Content/Authoring/ConnectingToVertica/ClientJDBC/CreatingAndConfiguringAConnection.htm
+      String host = arguments.getHost("localhost");
+      int port = arguments.getPort(OPT_PORT_DEFAULT);
+      String database = Iterables.getFirst(arguments.getDatabases(), null);
+      url = "jdbc:vertica://" + host + ":" + port + "/";
+      if (database != null) {
+        url = url + database;
+      }
     }
 
-    @Override
-    public Handle open(ConnectorArguments arguments) throws Exception {
-        String url = arguments.getUri();
-        if (url == null) {
-            // Docref: https://www.vertica.com/docs/9.2.x/HTML/Content/Authoring/ConnectingToVertica/ClientJDBC/CreatingAndConfiguringAConnection.htm
-            String host = arguments.getHost("localhost");
-            int port = arguments.getPort(OPT_PORT_DEFAULT);
-            String database = Iterables.getFirst(arguments.getDatabases(), null);
-            url = "jdbc:vertica://" + host + ":" + port + "/";
-            if (database != null)
-                url = url + database;
-        }
-
-        Driver driver = newDriver(arguments.getDriverPaths(), "com.vertica.jdbc.Driver");
-        DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
-        return new JdbcHandle(dataSource);
-    }
+    Driver driver = newDriver(arguments.getDriverPaths(), "com.vertica.jdbc.Driver");
+    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(),
+        arguments.getPassword());
+    return new JdbcHandle(dataSource);
+  }
 
 }

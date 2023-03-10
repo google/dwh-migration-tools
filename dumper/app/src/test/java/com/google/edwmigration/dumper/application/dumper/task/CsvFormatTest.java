@@ -27,34 +27,35 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import static org.junit.Assert.assertEquals;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
 public class CsvFormatTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(CsvFormatTest.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(CsvFormatTest.class);
 
-    @Test
-    public void testCsvRoundTrip() throws IOException {
-        Object[] data = {"a", "b ", " c", " d "};
-        StringBuilder buf = new StringBuilder();
-        try (CSVPrinter printer = new CSVPrinter(buf, AbstractTask.FORMAT)) {
-            printer.printRecord(data);
-        }
-        LOG.debug("CSV = " + buf);
-        try (
-                StringReader reader = new StringReader(buf.toString());
-                CSVParser parser = new CSVParser(reader, AbstractTask.FORMAT)) {
-            CSVRecord record = Iterables.getOnlyElement(parser);
-            LOG.debug("Record = " + record);
-            assertEquals("Bad length", data.length, record.size());
-            for (int i = 0; i < data.length; i++)
-                assertEquals("Bad field " + i, data[i], record.get(i));
-        }
+  @Test
+  public void testCsvRoundTrip() throws IOException {
+    Object[] data = {"a", "b ", " c", " d "};
+    StringBuilder buf = new StringBuilder();
+    try (CSVPrinter printer = new CSVPrinter(buf, AbstractTask.FORMAT)) {
+      printer.printRecord(data);
     }
+    LOG.debug("CSV = " + buf);
+    try (
+        StringReader reader = new StringReader(buf.toString());
+        CSVParser parser = new CSVParser(reader, AbstractTask.FORMAT)) {
+      CSVRecord record = Iterables.getOnlyElement(parser);
+      LOG.debug("Record = " + record);
+      assertEquals("Bad length", data.length, record.size());
+      for (int i = 0; i < data.length; i++) {
+        assertEquals("Bad field " + i, data[i], record.get(i));
+      }
+    }
+  }
 }

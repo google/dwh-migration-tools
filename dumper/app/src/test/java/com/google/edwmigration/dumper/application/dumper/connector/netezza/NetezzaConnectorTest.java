@@ -22,16 +22,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
 public class NetezzaConnectorTest extends AbstractConnectorTest {
 
-    private final NetezzaMetadataConnector connector = new NetezzaMetadataConnector();
+  private final NetezzaMetadataConnector connector = new NetezzaMetadataConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
 }

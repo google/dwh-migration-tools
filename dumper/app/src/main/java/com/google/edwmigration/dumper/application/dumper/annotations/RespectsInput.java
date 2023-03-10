@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
 import javax.annotation.Nonnull;
 
 /**
- *
  * @author shevek
  */
 @Target(ElementType.TYPE)
@@ -36,20 +35,20 @@ import javax.annotation.Nonnull;
 @Repeatable(RespectsInputs.class)
 public @interface RespectsInput {
 
-    @Nonnull
-    public String arg() default "";
+  @Nonnull
+  public String arg() default "";
 
-    @Nonnull
-    public String env() default "";
+  @Nonnull
+  public String env() default "";
 
-    @Nonnull
-    public String description();
+  @Nonnull
+  public String description();
 
-    @Nonnull
-    public String defaultValue() default "";
+  @Nonnull
+  public String defaultValue() default "";
 
-    public int order() default Integer.MAX_VALUE;
+  public int order() default Integer.MAX_VALUE;
 
-    @Nonnull
-    public String required() default "";
+  @Nonnull
+  public String required() default "";
 }

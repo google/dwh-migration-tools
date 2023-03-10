@@ -29,42 +29,46 @@ import org.slf4j.LoggerFactory;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.MysqlMetadataDumpFormat;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
 public class MysqlMetadataConnectorTest extends AbstractConnectorExecutionTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(MysqlMetadataConnectorTest.class);
-    private final MetadataConnector connector = new MysqlMetadataConnector();
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(MysqlMetadataConnectorTest.class);
+  private final MetadataConnector connector = new MysqlMetadataConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
 
-    @Ignore("Expensive. Move to integration tests?")
-    @Test
-    public void testExecution() throws Exception {
-        File outputFile = TestUtils.newOutputFile("compilerworks-mysql-metadata.zip");
-        LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+  @Ignore("Expensive. Move to integration tests?")
+  @Test
+  public void testExecution() throws Exception {
+    File outputFile = TestUtils.newOutputFile("compilerworks-mysql-metadata.zip");
+    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
 
-        // TODO: Constants from MysqlValidator.
-        runDumper("--connector", connector.getName(),
-                "--user", "cw",
-                "--password", "password",
-                "--output", outputFile.getAbsolutePath());
+    // TODO: Constants from MysqlValidator.
+    runDumper("--connector", connector.getName(),
+        "--user", "cw",
+        "--password", "password",
+        "--output", outputFile.getAbsolutePath());
 
-        ZipValidator validator = new ZipValidator()
-                .withFormat(MysqlMetadataDumpFormat.FORMAT_NAME);
+    ZipValidator validator = new ZipValidator()
+        .withFormat(MysqlMetadataDumpFormat.FORMAT_NAME);
 
-        validator.withEntryValidator(MysqlMetadataDumpFormat.SchemataFormat.ZIP_ENTRY_NAME, MysqlMetadataDumpFormat.SchemataFormat.Header.class);
-        validator.withEntryValidator(MysqlMetadataDumpFormat.TablesFormat.ZIP_ENTRY_NAME, MysqlMetadataDumpFormat.TablesFormat.Header.class);
-        validator.withEntryValidator(MysqlMetadataDumpFormat.ColumnsFormat.ZIP_ENTRY_NAME, MysqlMetadataDumpFormat.ColumnsFormat.Header.class);
-        validator.withEntryValidator(MysqlMetadataDumpFormat.ViewsFormat.ZIP_ENTRY_NAME, MysqlMetadataDumpFormat.ViewsFormat.Header.class);
-        validator.withEntryValidator(MysqlMetadataDumpFormat.FunctionsFormat.ZIP_ENTRY_NAME, MysqlMetadataDumpFormat.FunctionsFormat.Header.class);
+    validator.withEntryValidator(MysqlMetadataDumpFormat.SchemataFormat.ZIP_ENTRY_NAME,
+        MysqlMetadataDumpFormat.SchemataFormat.Header.class);
+    validator.withEntryValidator(MysqlMetadataDumpFormat.TablesFormat.ZIP_ENTRY_NAME,
+        MysqlMetadataDumpFormat.TablesFormat.Header.class);
+    validator.withEntryValidator(MysqlMetadataDumpFormat.ColumnsFormat.ZIP_ENTRY_NAME,
+        MysqlMetadataDumpFormat.ColumnsFormat.Header.class);
+    validator.withEntryValidator(MysqlMetadataDumpFormat.ViewsFormat.ZIP_ENTRY_NAME,
+        MysqlMetadataDumpFormat.ViewsFormat.Header.class);
+    validator.withEntryValidator(MysqlMetadataDumpFormat.FunctionsFormat.ZIP_ENTRY_NAME,
+        MysqlMetadataDumpFormat.FunctionsFormat.Header.class);
 
-        validator.run(outputFile);
-    }
+    validator.run(outputFile);
+  }
 }

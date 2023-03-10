@@ -34,6 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @RespectsInput(order = 2000, arg = ConnectorArguments.OPT_QUERY_LOG_START, description = RespectsArgumentQueryLogStart.DESCRIPTION)
 public @interface RespectsArgumentQueryLogStart {
 
-    public static final String DESCRIPTION = "Start date for query history to dump";
+  public static final String DESCRIPTION = "Start date for query history to dump";
 
 }

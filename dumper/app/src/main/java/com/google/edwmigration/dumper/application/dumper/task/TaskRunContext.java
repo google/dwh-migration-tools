@@ -26,41 +26,43 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 
 /**
- *
  * @author shevek
  */
 public abstract class TaskRunContext implements OutputHandleFactory {
 
-    private final OutputHandleFactory sinkFactory;
-    private final Handle handle;
-    // Should we not create a pool here but instead just pass the int around, so a task can make a backpressure or non-backpressure pool appropriately?
-    private final Executor executorService;
+  private final OutputHandleFactory sinkFactory;
+  private final Handle handle;
+  // Should we not create a pool here but instead just pass the int around, so a task can make a backpressure or non-backpressure pool appropriately?
+  private final Executor executorService;
 
-    public TaskRunContext(OutputHandleFactory sinkFactory, Handle handle, int threadPoolSize) {
-        this.sinkFactory = Preconditions.checkNotNull(sinkFactory, "ByteSinkFactory was null.");
-        this.handle = Preconditions.checkNotNull(handle, "Handle was null.");
-        this.executorService = ExecutorManager.newUnboundedExecutorService("task-run-context", threadPoolSize);
-    }
+  public TaskRunContext(OutputHandleFactory sinkFactory, Handle handle, int threadPoolSize) {
+    this.sinkFactory = Preconditions.checkNotNull(sinkFactory, "ByteSinkFactory was null.");
+    this.handle = Preconditions.checkNotNull(handle, "Handle was null.");
+    this.executorService = ExecutorManager.newUnboundedExecutorService("task-run-context",
+        threadPoolSize);
+  }
 
-    @Nonnull
-    public Handle getHandle() {
-        return handle;
-    }
+  @Nonnull
+  public Handle getHandle() {
+    return handle;
+  }
 
-    @Override
-    public OutputHandle newOutputFileHandle(String targetPath) {
-        return sinkFactory.newOutputFileHandle(targetPath);
-    }
+  @Override
+  public OutputHandle newOutputFileHandle(String targetPath) {
+    return sinkFactory.newOutputFileHandle(targetPath);
+  }
 
-    @Nonnull
-    public abstract TaskState getTaskState(@Nonnull Task<?> task);
+  @Nonnull
+  public abstract TaskState getTaskState(@Nonnull Task<?> task);
 
-    // Only used by ParallelTaskGroup at the moment.
-    @Nonnull
-    public Executor getExecutorService() {
-        return executorService;
-    }
+  // Only used by ParallelTaskGroup at the moment.
+  @Nonnull
+  public Executor getExecutorService() {
+    return executorService;
+  }
 
-    /** nothrow */
-    public abstract <T> T runChildTask(@Nonnull Task<T> task) throws MetadataDumperUsageException;
+  /**
+   * nothrow
+   */
+  public abstract <T> T runChildTask(@Nonnull Task<T> task) throws MetadataDumperUsageException;
 }

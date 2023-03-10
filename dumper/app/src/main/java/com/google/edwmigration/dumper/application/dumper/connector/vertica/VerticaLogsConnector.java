@@ -32,33 +32,38 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.VerticaLogsDumpForma
 
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Vertica.")
-public class VerticaLogsConnector extends AbstractVerticaConnector implements LogsConnector, VerticaLogsDumpFormat {
+public class VerticaLogsConnector extends AbstractVerticaConnector implements LogsConnector,
+    VerticaLogsDumpFormat {
 
-    public VerticaLogsConnector() {
-        super("vertica-logs");
+  public VerticaLogsConnector() {
+    super("vertica-logs");
+  }
+
+  @Override
+  public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
+
+    // Docref: https://www.vertica.com/docs/9.2.x/HTML/Content/Authoring/AnalyzingData/Optimizations/OptimizingDCTableQueries.htm
+    //         https://forum.vertica.com/discussion/207345/how-to-find-all-statements-executed-by-any-user
+    // Importantly, dc_requests_issued is the only relation containing query text,
+    // but such queries may not have been successful, hence the join on dc_requests_completed.
+
+    String startTimestamp = arguments.getQueryLogEarliestTimestamp();
+
+    // Shevek checked on PostgreSQL, and it does not appear that `time` needs quoting here.
+    StringBuilder dc_requests_issued = new StringBuilder("SELECT * FROM dc_requests_issued");
+    if (!StringUtils.isBlank(startTimestamp)) {
+      dc_requests_issued.append(" WHERE time >= ").append(startTimestamp);
     }
+    out.add(new JdbcSelectTask(ZIP_ENTRY_PREFIX + "dc_requests_issued.csv",
+        dc_requests_issued.toString()));
 
-    @Override
-    public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
-        out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-        out.add(new FormatTask(FORMAT_NAME));
-
-        // Docref: https://www.vertica.com/docs/9.2.x/HTML/Content/Authoring/AnalyzingData/Optimizations/OptimizingDCTableQueries.htm
-        //         https://forum.vertica.com/discussion/207345/how-to-find-all-statements-executed-by-any-user
-        // Importantly, dc_requests_issued is the only relation containing query text,
-        // but such queries may not have been successful, hence the join on dc_requests_completed.
-
-        String startTimestamp = arguments.getQueryLogEarliestTimestamp();
-
-        // Shevek checked on PostgreSQL, and it does not appear that `time` needs quoting here.
-        StringBuilder dc_requests_issued = new StringBuilder("SELECT * FROM dc_requests_issued");
-        if (!StringUtils.isBlank(startTimestamp))
-            dc_requests_issued.append(" WHERE time >= ").append(startTimestamp);
-        out.add(new JdbcSelectTask(ZIP_ENTRY_PREFIX + "dc_requests_issued.csv", dc_requests_issued.toString()));
-
-        StringBuilder dc_requests_completed = new StringBuilder("SELECT * FROM dc_requests_completed");
-        if (!StringUtils.isBlank(startTimestamp))
-            dc_requests_completed.append(" WHERE time >= ").append(startTimestamp);
-        out.add(new JdbcSelectTask(ZIP_ENTRY_PREFIX + "dc_requests_completed.csv", dc_requests_completed.toString()));
+    StringBuilder dc_requests_completed = new StringBuilder("SELECT * FROM dc_requests_completed");
+    if (!StringUtils.isBlank(startTimestamp)) {
+      dc_requests_completed.append(" WHERE time >= ").append(startTimestamp);
     }
+    out.add(new JdbcSelectTask(ZIP_ENTRY_PREFIX + "dc_requests_completed.csv",
+        dc_requests_completed.toString()));
+  }
 }

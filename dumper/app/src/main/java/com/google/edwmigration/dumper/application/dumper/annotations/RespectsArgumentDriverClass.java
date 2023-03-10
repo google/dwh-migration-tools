@@ -40,6 +40,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @RespectsInput(order = 50, arg = ConnectorArguments.OPT_CLASS, description = RespectsArgumentDriverClass.DESCRIPTION)
 public @interface RespectsArgumentDriverClass {
 
-    public static final String DESCRIPTION = "Optionally overrides the vendor-specified JDBC driver class name.";
+  public static final String DESCRIPTION = "Optionally overrides the vendor-specified JDBC driver class name.";
 
 }

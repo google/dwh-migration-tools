@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
 /**
- *
  * @author shevek
  */
 @Target(ElementType.TYPE)
@@ -35,7 +34,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @RespectsInput(order = 100, arg = ConnectorArguments.OPT_HOST, description = RespectsArgumentHostUnlessUrl.DESCRIPTION, required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL, defaultValue = ConnectorArguments.OPT_HOST_DEFAULT)
 public @interface RespectsArgumentHostUnlessUrl {
 
-    public static final String DESCRIPTION = "The hostname of the database server.";
+  public static final String DESCRIPTION = "The hostname of the database server.";
 
-    // public static final String EXAMPLES[] = {};
+  // public static final String EXAMPLES[] = {};
 }

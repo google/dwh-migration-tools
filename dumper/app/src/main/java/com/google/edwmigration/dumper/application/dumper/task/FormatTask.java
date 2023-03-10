@@ -22,27 +22,26 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.MetadataDumperConstants;
 
 /**
- *
  * @author shevek
  */
 @Deprecated // Use DumpMetadataTask
 public class FormatTask extends AbstractTask<Void> {
 
-    private final String format;
+  private final String format;
 
-    public FormatTask(String format) {
-        super(MetadataDumperConstants.FORMAT_ZIP_ENTRY_NAME);
-        this.format = format;
-    }
+  public FormatTask(String format) {
+    super(MetadataDumperConstants.FORMAT_ZIP_ENTRY_NAME);
+    this.format = format;
+  }
 
-    @Override
-    protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
-        sink.asCharSink(StandardCharsets.UTF_8).write(format);
-        return null;
-    }
+  @Override
+  protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
+    sink.asCharSink(StandardCharsets.UTF_8).write(format);
+    return null;
+  }
 
-    @Override
-    public String toString() {
-        return "Write " + getTargetPath() + " containing '" + format + "'.";
-    }
+  @Override
+  public String toString() {
+    return "Write " + getTargetPath() + " containing '" + format + "'.";
+  }
 }

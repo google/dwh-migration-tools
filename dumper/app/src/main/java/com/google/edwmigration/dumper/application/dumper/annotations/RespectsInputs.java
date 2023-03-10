@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import javax.annotation.Nonnull;
 
 /**
- *
  * @author shevek
  */
 @Target(ElementType.TYPE)
@@ -34,6 +33,6 @@ import javax.annotation.Nonnull;
 @Inherited
 public @interface RespectsInputs {
 
-    @Nonnull
-    public RespectsInput[] value();
+  @Nonnull
+  public RespectsInput[] value();
 }

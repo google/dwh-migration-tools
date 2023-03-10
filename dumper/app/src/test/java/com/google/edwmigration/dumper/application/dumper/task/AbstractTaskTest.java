@@ -24,24 +24,24 @@ import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 
 /**
- *
  * @author shevek
  */
 public abstract class AbstractTaskTest {
 
-    protected static class DummyHandle extends AbstractHandle {
+  protected static class DummyHandle extends AbstractHandle {
+
+  }
+
+  protected static Handle HANDLE = new DummyHandle();
+
+  protected static class MemoryByteSink extends ByteSink {
+
+    private final ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+    @Override
+    public OutputStream openStream() throws IOException {
+      return out;
     }
-
-    protected static Handle HANDLE = new DummyHandle();
-
-    protected static class MemoryByteSink extends ByteSink {
-
-        private final ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        @Override
-        public OutputStream openStream() throws IOException {
-            return out;
-        }
-    }
+  }
 
 }

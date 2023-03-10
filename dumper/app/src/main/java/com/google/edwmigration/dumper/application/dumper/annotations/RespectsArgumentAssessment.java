@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
 /**
- *
  * @author frsv
  */
 @Target(ElementType.TYPE)
@@ -35,6 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @RespectsInput(order = 2000, arg = ConnectorArguments.OPT_ASSESSMENT, description = RespectsArgumentAssessment.DESCRIPTION, required = RespectsArgumentAssessment.REQUIRED)
 public @interface RespectsArgumentAssessment {
 
-    String DESCRIPTION = "Whether to dump additional data for Migration Assessment in the service compatible format.";
-    String REQUIRED = "when dumping for BigQuery Migration Assessment service";
+  String DESCRIPTION = "Whether to dump additional data for Migration Assessment in the service compatible format.";
+  String REQUIRED = "when dumping for BigQuery Migration Assessment service";
 }

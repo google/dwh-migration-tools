@@ -30,68 +30,68 @@ import java.io.IOException;
 @RunWith(JUnit4.class)
 public class JsonResponseFileTest {
 
-    // replace single quotes to double quotes to avoid \" messup.
-    private void check(String json, String... exp) throws IOException, JsonProcessingException {
-        Assert.assertArrayEquals(exp, JsonResponseFile.to_arguments(json.replace("'", "\"")).toArray());
-    }
+  // replace single quotes to double quotes to avoid \" messup.
+  private void check(String json, String... exp) throws IOException, JsonProcessingException {
+    Assert.assertArrayEquals(exp, JsonResponseFile.to_arguments(json.replace("'", "\"")).toArray());
+  }
 
-    @Test
-    public void testJson2Args() throws IOException, JsonProcessingException {
-        check("{'help':''}", "--help");
-        check("{'a':{'b':['c','d']}}", "--a-b", "c:d");
-        check("a:\n  b:\n    - c\n    - d\n", "--a-b", "c:d");
-        check("{"
-                + "    'connector' : 'redshift-logs',"
-                + "    'driver' : ["
-                + "        'some-path-to-redhsift.jdbc.jar',"
-                + "        'any-other-jar-to-load.jar' ],"
-                + "    'redshift' : {"
-                + "        'iam' : {"
-                + "            'accessid' : 'something',"
-                + "            'sercret' : 'secret'"
-                + "        }"
-                + "    },"
-                + "    's3' : {"
-                + "        'iam' : {"
-                + "            'accessid' : 'something',"
-                + "            'sercret' : 'secret'"
-                + "        },"
-                + "        'bucket' : 'bucket id'"
-                + "    }    "
-                + "}",
-                "--connector", "redshift-logs",
-                "--driver", "some-path-to-redhsift.jdbc.jar:any-other-jar-to-load.jar",
-                "--redshift-iam-accessid", "something",
-                "--redshift-iam-sercret", "secret",
-                "--s3-iam-accessid", "something",
-                "--s3-iam-sercret", "secret",
-                "--s3-bucket", "bucket id");
+  @Test
+  public void testJson2Args() throws IOException, JsonProcessingException {
+    check("{'help':''}", "--help");
+    check("{'a':{'b':['c','d']}}", "--a-b", "c:d");
+    check("a:\n  b:\n    - c\n    - d\n", "--a-b", "c:d");
+    check("{"
+            + "    'connector' : 'redshift-logs',"
+            + "    'driver' : ["
+            + "        'some-path-to-redhsift.jdbc.jar',"
+            + "        'any-other-jar-to-load.jar' ],"
+            + "    'redshift' : {"
+            + "        'iam' : {"
+            + "            'accessid' : 'something',"
+            + "            'sercret' : 'secret'"
+            + "        }"
+            + "    },"
+            + "    's3' : {"
+            + "        'iam' : {"
+            + "            'accessid' : 'something',"
+            + "            'sercret' : 'secret'"
+            + "        },"
+            + "        'bucket' : 'bucket id'"
+            + "    }    "
+            + "}",
+        "--connector", "redshift-logs",
+        "--driver", "some-path-to-redhsift.jdbc.jar:any-other-jar-to-load.jar",
+        "--redshift-iam-accessid", "something",
+        "--redshift-iam-sercret", "secret",
+        "--s3-iam-accessid", "something",
+        "--s3-iam-sercret", "secret",
+        "--s3-bucket", "bucket id");
 
-        check("{'definitions': {'a.b': 'test' } }", "-Da.b=test");
-    }
+    check("{'definitions': {'a.b': 'test' } }", "-Da.b=test");
+  }
 
-    @Test
-    public void testArgs2Json() throws IOException, JsonProcessingException {
-        String[] args = {
-                "--connector", "redshift-logs",
-                "--driver", "some-path-to-redhsift.jdbc.jar:any-other-jar-to-load.jar",
-                "--redshift-iam-accessid", "something",
-                "--redshift-iam-sercret", "secret",
-                "--s3-iam-accessid", "something",
-                "--s3-iam-sercret", "secret",
-                "--s3-bucket", "bucket id",
-                "-Dredshift.some.prop=some value",
-                "-Dredshift.some.other.prop=some other value = 123",
-        };
+  @Test
+  public void testArgs2Json() throws IOException, JsonProcessingException {
+    String[] args = {
+        "--connector", "redshift-logs",
+        "--driver", "some-path-to-redhsift.jdbc.jar:any-other-jar-to-load.jar",
+        "--redshift-iam-accessid", "something",
+        "--redshift-iam-sercret", "secret",
+        "--s3-iam-accessid", "something",
+        "--s3-iam-sercret", "secret",
+        "--s3-bucket", "bucket id",
+        "-Dredshift.some.prop=some value",
+        "-Dredshift.some.other.prop=some other value = 123",
+    };
 
-        // Round trip
-        Assert.assertArrayEquals(
-                args,
-                JsonResponseFile.to_arguments(
-                        new ObjectMapper().writeValueAsString(JsonResponseFile.from_arguments(args))
-                ).toArray(new String[] {})
-        );
+    // Round trip
+    Assert.assertArrayEquals(
+        args,
+        JsonResponseFile.to_arguments(
+            new ObjectMapper().writeValueAsString(JsonResponseFile.from_arguments(args))
+        ).toArray(new String[]{})
+    );
 
 
-    }
+  }
 }

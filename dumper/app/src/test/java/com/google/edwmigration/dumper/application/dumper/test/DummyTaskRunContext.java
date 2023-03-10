@@ -23,26 +23,25 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 
 /**
- *
  * @author shevek
  */
 public class DummyTaskRunContext extends TaskRunContext {
 
-    public DummyTaskRunContext(OutputHandleFactory sinkFactory, Handle handle) {
-        super(sinkFactory, handle, 10);
-    }
+  public DummyTaskRunContext(OutputHandleFactory sinkFactory, Handle handle) {
+    super(sinkFactory, handle, 10);
+  }
 
-    public DummyTaskRunContext(Handle handle) {
-        this(new DummyByteSinkFactory(), handle);
-    }
+  public DummyTaskRunContext(Handle handle) {
+    this(new DummyByteSinkFactory(), handle);
+  }
 
-    @Override
-    public TaskState getTaskState(Task<?> task) {
-        throw new UnsupportedOperationException("Not supported.");
-    }
+  @Override
+  public TaskState getTaskState(Task<?> task) {
+    throw new UnsupportedOperationException("Not supported.");
+  }
 
-    @Override
-    public <T> T runChildTask(Task<T> task) {
-        throw new UnsupportedOperationException("Not supported.");
-    }
+  @Override
+  public <T> T runChildTask(Task<T> task) {
+    throw new UnsupportedOperationException("Not supported.");
+  }
 }

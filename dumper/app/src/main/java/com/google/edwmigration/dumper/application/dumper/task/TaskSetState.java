@@ -24,52 +24,53 @@ import javax.annotation.concurrent.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 /**
- *
  * @author shevek
  */
 public interface TaskSetState {
 
-    @ThreadSafe
-    public static class Impl implements TaskSetState {
+  @ThreadSafe
+  public static class Impl implements TaskSetState {
 
-        @GuardedBy("lock")
-        private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
-        private final Object lock = new Object();
-
-        @Nonnull
-        public Map<Task<?>, TaskResult<?>> getTaskResultMap() {
-            synchronized (lock) {
-                return resultMap;
-            }
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task) {
-            synchronized (lock) {
-                return (TaskResult<T>) resultMap.get(task);
-            }
-        }
-
-        public <T> void setTaskResult(@Nonnull Task<T> task, @Nonnull TaskState state, @CheckForNull T value) {
-            synchronized (lock) {
-                resultMap.put(task, new TaskResult<>(state, value));
-            }
-        }
-
-        public <T> void setTaskException(@Nonnull Task<T> task, @Nonnull TaskState state, @CheckForNull Exception exception) {
-            synchronized (lock) {
-                resultMap.put(task, new TaskResult<>(state, exception));
-            }
-        }
-    }
-
-    @CheckForNull
-    public <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task);
+    @GuardedBy("lock")
+    private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
+    private final Object lock = new Object();
 
     @Nonnull
-    default public TaskState getTaskState(@Nonnull Task<?> task) {
-        TaskResult<?> result = getTaskResult(task);
-        return (result == null) ? TaskState.NOT_STARTED : result.getState();
+    public Map<Task<?>, TaskResult<?>> getTaskResultMap() {
+      synchronized (lock) {
+        return resultMap;
+      }
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task) {
+      synchronized (lock) {
+        return (TaskResult<T>) resultMap.get(task);
+      }
+    }
+
+    public <T> void setTaskResult(@Nonnull Task<T> task, @Nonnull TaskState state,
+        @CheckForNull T value) {
+      synchronized (lock) {
+        resultMap.put(task, new TaskResult<>(state, value));
+      }
+    }
+
+    public <T> void setTaskException(@Nonnull Task<T> task, @Nonnull TaskState state,
+        @CheckForNull Exception exception) {
+      synchronized (lock) {
+        resultMap.put(task, new TaskResult<>(state, exception));
+      }
+    }
+  }
+
+  @CheckForNull
+  public <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task);
+
+  @Nonnull
+  default public TaskState getTaskState(@Nonnull Task<?> task) {
+    TaskResult<?> result = getTaskResult(task);
+    return (result == null) ? TaskState.NOT_STARTED : result.getState();
+  }
 }

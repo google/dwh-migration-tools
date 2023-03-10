@@ -34,6 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @RespectsInput(order = 2000, arg = ConnectorArguments.OPT_QUERY_LOG_END, description = RespectsArgumentQueryLogEnd.DESCRIPTION)
 public @interface RespectsArgumentQueryLogEnd {
 
-    public static final String DESCRIPTION = "End date for query history to dump";
+  public static final String DESCRIPTION = "End date for query history to dump";
 
 }

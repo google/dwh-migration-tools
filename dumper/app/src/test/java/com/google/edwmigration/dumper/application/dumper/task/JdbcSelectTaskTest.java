@@ -34,81 +34,80 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.*;
 
 /**
- *
  * @author matt
  */
 @RunWith(JUnit4.class)
 public class JdbcSelectTaskTest extends AbstractTaskTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
 
-    private static final String NAME = JdbcSelectTaskTest.class.getSimpleName();
-    private static final File FILE = DumperTestUtils.newJdbcFile(NAME);
-    private static final String QUERY = "SELECT a, b, c FROM foo";
+  private static final String NAME = JdbcSelectTaskTest.class.getSimpleName();
+  private static final File FILE = DumperTestUtils.newJdbcFile(NAME);
+  private static final String QUERY = "SELECT a, b, c FROM foo";
 
-    private enum Header {
-        Foo, Bar, Baz
+  private enum Header {
+    Foo, Bar, Baz
+  }
+
+  @BeforeClass
+  public static void setUpClass() throws Exception {
+    Class.forName("org.sqlite.JDBC");
+    LOG.info("Writing to sqlite database: {}", FILE.getAbsolutePath());
+    FILE.delete();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      handle.getJdbcTemplate().execute("CREATE TABLE foo ( a INT, b INT, c INT )");
+      handle.getJdbcTemplate().execute("INSERT INTO foo VALUES ( 1, 2, 3 )");
     }
+  }
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-        Class.forName("org.sqlite.JDBC");
-        LOG.info("Writing to sqlite database: {}", FILE.getAbsolutePath());
-        FILE.delete();
-        try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-            handle.getJdbcTemplate().execute("CREATE TABLE foo ( a INT, b INT, c INT )");
-            handle.getJdbcTemplate().execute("INSERT INTO foo VALUES ( 1, 2, 3 )");
+  @Test
+  public void testResultSetHeader() throws Exception {
+    MemoryByteSink sink = new MemoryByteSink();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      new JdbcSelectTask("(memory)", QUERY).doRun(new DummyTaskRunContext(handle), sink, handle);
+    }
+    String actualOutput = sink.openStream().toString();
+    assertEquals("a,b,c\n1,2,3\n", actualOutput);
+  }
+
+  @Test
+  public void testClassHeader() throws Exception {
+    MemoryByteSink sink = new MemoryByteSink();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      new JdbcSelectTask("(memory)", QUERY)
+          .withHeaderClass(Header.class)
+          .doRun(new DummyTaskRunContext(handle), sink, handle);
+    }
+    String actualOutput = sink.openStream().toString();
+    assertEquals("Foo,Bar,Baz\n1,2,3\n", actualOutput);
+  }
+
+  @Test
+  public void testCsvFormat() throws Exception {
+    String sql = "select null, 14, c FROM foo";
+    MemoryByteSink sink = new MemoryByteSink();
+    final MutableObject<CSVFormat> formatHolder = new MutableObject<>();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      AbstractJdbcTask<Void> task = new JdbcSelectTask("(memory)", sql) {
+        @Override
+        protected CSVFormat newCsvFormat(ResultSet rs) throws SQLException {
+          CSVFormat format = super.newCsvFormat(rs);
+          formatHolder.setValue(format);
+          return format;
         }
+      }
+          .withHeaderClass(Header.class);
+      task.doRun(new DummyTaskRunContext(handle), sink, handle);
     }
+    String actualOutput = sink.openStream().toString();
+    assertEquals("Foo,Bar,Baz\n,14,3\n", actualOutput);
 
-    @Test
-    public void testResultSetHeader() throws Exception {
-        MemoryByteSink sink = new MemoryByteSink();
-        try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-            new JdbcSelectTask("(memory)", QUERY).doRun(new DummyTaskRunContext(handle), sink, handle);
-        }
-        String actualOutput = sink.openStream().toString();
-        assertEquals("a,b,c\n1,2,3\n", actualOutput);
-    }
+    CSVFormat format = formatHolder.getValue();
+    assertNotNull("CSVFormat was null.", format);
+    LOG.info("Format is " + format);
+    LOG.info("Format.nullString is " + format.getNullString());
 
-    @Test
-    public void testClassHeader() throws Exception {
-        MemoryByteSink sink = new MemoryByteSink();
-        try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-            new JdbcSelectTask("(memory)", QUERY)
-                    .withHeaderClass(Header.class)
-                    .doRun(new DummyTaskRunContext(handle), sink, handle);
-        }
-        String actualOutput = sink.openStream().toString();
-        assertEquals("Foo,Bar,Baz\n1,2,3\n", actualOutput);
-    }
-
-    @Test
-    public void testCsvFormat() throws Exception {
-        String sql = "select null, 14, c FROM foo";
-        MemoryByteSink sink = new MemoryByteSink();
-        final MutableObject<CSVFormat> formatHolder = new MutableObject<>();
-        try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-            AbstractJdbcTask<Void> task = new JdbcSelectTask("(memory)", sql) {
-                @Override
-                protected CSVFormat newCsvFormat(ResultSet rs) throws SQLException {
-                    CSVFormat format = super.newCsvFormat(rs);
-                    formatHolder.setValue(format);
-                    return format;
-                }
-            }
-                    .withHeaderClass(Header.class);
-            task.doRun(new DummyTaskRunContext(handle), sink, handle);
-        }
-        String actualOutput = sink.openStream().toString();
-        assertEquals("Foo,Bar,Baz\n,14,3\n", actualOutput);
-
-        CSVFormat format = formatHolder.getValue();
-        assertNotNull("CSVFormat was null.", format);
-        LOG.info("Format is " + format);
-        LOG.info("Format.nullString is " + format.getNullString());
-
-        // File file = TestUtils.newOutputFile("dumper-format-test.csv");
-    }
+    // File file = TestUtils.newOutputFile("dumper-format-test.csv");
+  }
 }

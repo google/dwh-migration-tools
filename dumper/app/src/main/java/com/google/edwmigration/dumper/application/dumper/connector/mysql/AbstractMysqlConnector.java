@@ -32,39 +32,42 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /**
- *
  * @author shevek
  */
 @RespectsArgumentDriverRequired
 @RespectsArgumentHostUnlessUrl
-@RespectsInput(order = ConnectorArguments.OPT_PORT_ORDER, arg = ConnectorArguments.OPT_PORT, description = "The port of the server.", required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL, defaultValue = "" + AbstractMysqlConnector.OPT_PORT_DEFAULT)
+@RespectsInput(order = ConnectorArguments.OPT_PORT_ORDER, arg = ConnectorArguments.OPT_PORT, description = "The port of the server.", required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL, defaultValue =
+    "" + AbstractMysqlConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentUser
 @RespectsArgumentPassword
 @RespectsArgumentUri
 public abstract class AbstractMysqlConnector extends AbstractJdbcConnector {
 
-    public static final int OPT_PORT_DEFAULT = 3306;
+  public static final int OPT_PORT_DEFAULT = 3306;
 
-    public AbstractMysqlConnector(String name) {
-        super(name);
+  public AbstractMysqlConnector(String name) {
+    super(name);
+  }
+
+  @Override
+  public Handle open(ConnectorArguments arguments) throws Exception {
+    String url = arguments.getUri();
+    if (url == null) {
+      StringBuilder buf = new StringBuilder("jdbc:mysql://");
+      buf.append(arguments.getHost("localhost"));
+      buf.append(':').append(arguments.getPort(OPT_PORT_DEFAULT));
+      buf.append("/");
+      List<String> databases = arguments.getDatabases();
+      if (!databases.isEmpty()) {
+        buf.append(databases.get(0));
+      }
+      url = buf.toString();
     }
 
-    @Override
-    public Handle open(ConnectorArguments arguments) throws Exception {
-        String url = arguments.getUri();
-        if (url == null) {
-            StringBuilder buf = new StringBuilder("jdbc:mysql://");
-            buf.append(arguments.getHost("localhost"));
-            buf.append(':').append(arguments.getPort(OPT_PORT_DEFAULT));
-            buf.append("/");
-            List<String> databases = arguments.getDatabases();
-            if (!databases.isEmpty())
-                buf.append(databases.get(0));
-            url = buf.toString();
-        }
-
-        Driver driver = newDriver(arguments.getDriverPaths(), "com.mysql.jdbc.Driver", "org.mariadb.jdbc.Driver");
-        DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
-        return new JdbcHandle(dataSource);
-    }
+    Driver driver = newDriver(arguments.getDriverPaths(), "com.mysql.jdbc.Driver",
+        "org.mariadb.jdbc.Driver");
+    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(),
+        arguments.getPassword());
+    return new JdbcHandle(dataSource);
+  }
 }

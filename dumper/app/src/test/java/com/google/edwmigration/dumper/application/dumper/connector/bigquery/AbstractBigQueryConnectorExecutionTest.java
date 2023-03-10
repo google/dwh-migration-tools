@@ -26,21 +26,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author matt
  */
-public abstract class AbstractBigQueryConnectorExecutionTest extends AbstractConnectorExecutionTest {
+public abstract class AbstractBigQueryConnectorExecutionTest extends
+    AbstractConnectorExecutionTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractBigQueryConnectorExecutionTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(
+      AbstractBigQueryConnectorExecutionTest.class);
 
-    @ClassRule
-    public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+  @ClassRule
+  public static final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
-    @BeforeClass
-    // TODO("The alternative to this is simply to set the environment variable in the gradle build file.")
-    public static void setEnvironmentVariables() {
-        File credentialsFile = new File(TestUtils.getProjectRootDir(), "compilerworks-plugin-test-bigquery/build/resources/main/api-token.json");
-        LOG.info("Using BigQuery credentials: {}", credentialsFile.getAbsolutePath());
-        environmentVariables.set("GOOGLE_APPLICATION_CREDENTIALS", credentialsFile.getAbsolutePath());
-    }
+  @BeforeClass
+  // TODO("The alternative to this is simply to set the environment variable in the gradle build file.")
+  public static void setEnvironmentVariables() {
+    File credentialsFile = new File(TestUtils.getProjectRootDir(),
+        "compilerworks-plugin-test-bigquery/build/resources/main/api-token.json");
+    LOG.info("Using BigQuery credentials: {}", credentialsFile.getAbsolutePath());
+    environmentVariables.set("GOOGLE_APPLICATION_CREDENTIALS", credentialsFile.getAbsolutePath());
+  }
 }

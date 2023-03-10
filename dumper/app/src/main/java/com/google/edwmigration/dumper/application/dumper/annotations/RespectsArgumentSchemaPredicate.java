@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
 /**
- *
  * @author shevek
  */
 @Target(ElementType.TYPE)
@@ -35,6 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @RespectsInput(order = 2000, arg = ConnectorArguments.OPT_SCHEMA, description = RespectsArgumentSchemaPredicate.DESCRIPTION)
 public @interface RespectsArgumentSchemaPredicate {
 
-    public static final String DESCRIPTION = "The list of schemas to dump, separated by commas.";
+  public static final String DESCRIPTION = "The list of schemas to dump, separated by commas.";
 
 }

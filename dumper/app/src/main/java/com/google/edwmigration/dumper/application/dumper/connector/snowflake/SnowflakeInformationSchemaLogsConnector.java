@@ -22,15 +22,14 @@ import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 
 /**
- *
  * @author shevek
  */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Snowflake, using INFORMATION_SCHEMA only.")
 public class SnowflakeInformationSchemaLogsConnector extends SnowflakeLogsConnector {
 
-    public SnowflakeInformationSchemaLogsConnector() {
-        super("snowflake-information-schema-logs");
-    }
+  public SnowflakeInformationSchemaLogsConnector() {
+    super("snowflake-information-schema-logs");
+  }
 
 }

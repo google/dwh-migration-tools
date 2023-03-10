@@ -22,17 +22,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
 public class MetadataDumperTest {
 
-    @Test
-    public void testInstantiate() throws Exception {
-        MetadataDumper dumper = new MetadataDumper();
-        // dumper.run("--help");    // Calls System.exit(1)
-        dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
-    }
+  @Test
+  public void testInstantiate() throws Exception {
+    MetadataDumper dumper = new MetadataDumper();
+    // dumper.run("--help");    // Calls System.exit(1)
+    dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
+  }
 
 }

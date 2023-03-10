@@ -26,36 +26,36 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 /**
- *
  * @author shevek
  */
 public class JdbcSelectTask extends AbstractJdbcTask<Void> {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTask.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTask.class);
 
-    @Nonnull
-    private final String sql;
+  @Nonnull
+  private final String sql;
 
-    public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
-        super(targetPath);
-        this.sql = sql;
-    }
+  public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
+    super(targetPath);
+    this.sql = sql;
+  }
 
-    @Nonnull
-    public String getSql() {
-        return sql;
-    }
+  @Nonnull
+  public String getSql() {
+    return sql;
+  }
 
-    @Override
-    protected Void doInConnection(@Nonnull TaskRunContext context, @Nonnull JdbcHandle jdbcHandle, @Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
-        ResultSetExtractor<Void> rse = newCsvResultSetExtractor(sink, -1);
-        return doSelect(connection, rse, sql);
-    }
+  @Override
+  protected Void doInConnection(@Nonnull TaskRunContext context, @Nonnull JdbcHandle jdbcHandle,
+      @Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
+    ResultSetExtractor<Void> rse = newCsvResultSetExtractor(sink, -1);
+    return doSelect(connection, rse, sql);
+  }
 
-    @Override
-    public String toString() {
-        // This is called in a situation where we have a variable amount of indentation. See MetadataDumper.
-        return "Write " + getTargetPath() + " from:\n        " + getSql();
-    }
+  @Override
+  public String toString() {
+    // This is called in a situation where we have a variable amount of indentation. See MetadataDumper.
+    return "Write " + getTargetPath() + " from:\n        " + getSql();
+  }
 }

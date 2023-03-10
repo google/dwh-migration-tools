@@ -19,11 +19,10 @@ package com.google.edwmigration.dumper.application.dumper.io;
 import javax.annotation.Nonnull;
 
 /**
- *
  * @author shevek
  */
 public interface OutputHandleFactory {
 
-    @Nonnull
-    public OutputHandle newOutputFileHandle(@Nonnull String targetPath);
+  @Nonnull
+  public OutputHandle newOutputFileHandle(@Nonnull String targetPath);
 }

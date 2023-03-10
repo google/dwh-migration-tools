@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
 /**
- *
  * @author shevek
  */
 @Target(ElementType.TYPE)

@@ -25,30 +25,37 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
-public class SnowflakeAccountUsageMetadataConnectorTest extends AbstractSnowflakeConnectorExecutionTest {
+public class SnowflakeAccountUsageMetadataConnectorTest extends
+    AbstractSnowflakeConnectorExecutionTest {
 
-    private final MetadataConnector connector = new SnowflakeAccountUsageMetadataConnector();
+  private final MetadataConnector connector = new SnowflakeAccountUsageMetadataConnector();
 
-    @Test
-    public void testExecution() throws Exception {
-        File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-metadata-au.zip");
-        if (!run(ARGS(connector, outputFile)))
-            return;
-
-        ZipValidator validator = new ZipValidator()
-                .withFormat(SnowflakeMetadataDumpFormat.FORMAT_NAME);
-
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.DatabasesFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.SchemataFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.TablesFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.ViewsFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
-
-        validator.run(outputFile);
+  @Test
+  public void testExecution() throws Exception {
+    File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-metadata-au.zip");
+    if (!run(ARGS(connector, outputFile))) {
+      return;
     }
+
+    ZipValidator validator = new ZipValidator()
+        .withFormat(SnowflakeMetadataDumpFormat.FORMAT_NAME);
+
+    validator.withEntryValidator(SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.DatabasesFormat.Header.class);
+    validator.withEntryValidator(SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.SchemataFormat.Header.class);
+    validator.withEntryValidator(SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.TablesFormat.Header.class);
+    validator.withEntryValidator(SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class);
+    validator.withEntryValidator(SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.ViewsFormat.Header.class);
+    validator.withEntryValidator(SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
+
+    validator.run(outputFile);
+  }
 }

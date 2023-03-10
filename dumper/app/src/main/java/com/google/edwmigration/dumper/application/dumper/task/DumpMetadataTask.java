@@ -27,42 +27,42 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
 
 /**
- *
  * @author shevek
  */
-public class DumpMetadataTask extends AbstractTask<Void> implements CoreMetadataDumpFormat.CompilerWorksDumpMetadataTaskFormat {
+public class DumpMetadataTask extends AbstractTask<Void> implements
+    CoreMetadataDumpFormat.CompilerWorksDumpMetadataTaskFormat {
 
-    @Nonnull
-    private final ConnectorArguments arguments;
-    private final String format;
+  @Nonnull
+  private final ConnectorArguments arguments;
+  private final String format;
 
-    public DumpMetadataTask(@Nonnull ConnectorArguments arguments, @Nonnull String format) {
-        super(ZIP_ENTRY_NAME);
-        this.arguments = Preconditions.checkNotNull(arguments, "Arguments was null.");
-        this.format = Preconditions.checkNotNull(format, "Format was null.");
+  public DumpMetadataTask(@Nonnull ConnectorArguments arguments, @Nonnull String format) {
+    super(ZIP_ENTRY_NAME);
+    this.arguments = Preconditions.checkNotNull(arguments, "Arguments was null.");
+    this.format = Preconditions.checkNotNull(format, "Format was null.");
+  }
+
+  @Override
+  protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
+    Root root = new Root();
+    root.format = format;
+    root.timestamp = System.currentTimeMillis();
+
+    {
+      Product product = new Product();
+      product.version = String.valueOf(new ProductMetadata());
+      product.arguments = String.valueOf(arguments);
+      root.product = product;
     }
 
-    @Override
-    protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
-        Root root = new Root();
-        root.format = format;
-        root.timestamp = System.currentTimeMillis();
-
-        {
-            Product product = new Product();
-            product.version = String.valueOf(new ProductMetadata());
-            product.arguments = String.valueOf(arguments);
-            root.product = product;
-        }
-
-        try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-            CoreMetadataDumpFormat.MAPPER.writeValue(writer, root);
-        }
-        return null;
+    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+      CoreMetadataDumpFormat.MAPPER.writeValue(writer, root);
     }
+    return null;
+  }
 
-    @Override
-    public String toString() {
-        return "Write " + getTargetPath() + " containing dump metadata.";
-    }
+  @Override
+  public String toString() {
+    return "Write " + getTargetPath() + " containing dump metadata.";
+  }
 }

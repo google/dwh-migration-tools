@@ -22,15 +22,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
 public class FormatTaskTest extends AbstractTaskTest {
 
-    @Test
-    public void testTask() throws Exception {
-        MemoryByteSink sink = new MemoryByteSink();
-        new FormatTask("test-format").doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
-    }
+  @Test
+  public void testTask() throws Exception {
+    MemoryByteSink sink = new MemoryByteSink();
+    new FormatTask("test-format").doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
+  }
 }

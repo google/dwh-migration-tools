@@ -27,38 +27,37 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractConne
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 
 /**
- *
  * @author shevek
  */
 public class AbstractSnowflakeConnectorExecutionTest extends AbstractConnectorExecutionTest {
 
-    // TODO("Constants from SnowflakeValidator.")
-    private static final ImmutableList<? extends String> ARGS = ImmutableList.of(
-            "--host", "compilerworks.snowflakecomputing.com",
-            "--database", "cw",
-            "--warehouse", "cw",
-            "--user", "cw",
-            "--password", "[redacted]",
-            "--role", "dumper"
-    );
+  // TODO("Constants from SnowflakeValidator.")
+  private static final ImmutableList<? extends String> ARGS = ImmutableList.of(
+      "--host", "compilerworks.snowflakecomputing.com",
+      "--database", "cw",
+      "--warehouse", "cw",
+      "--user", "cw",
+      "--password", "[redacted]",
+      "--role", "dumper"
+  );
 
-    @Nonnull
-    public static String[] ARGS(
-            @Nonnull Connector connector,
-            @Nonnull File outputFile,
-            @Nonnull String... args) {
-        List<String> out = new ArrayList<>(4 + ARGS.size() + args.length);
+  @Nonnull
+  public static String[] ARGS(
+      @Nonnull Connector connector,
+      @Nonnull File outputFile,
+      @Nonnull String... args) {
+    List<String> out = new ArrayList<>(4 + ARGS.size() + args.length);
 
-        out.add("--connector");
-        out.add(connector.getName());
+    out.add("--connector");
+    out.add(connector.getName());
 
-        out.add("--output");
-        out.add(outputFile.getAbsolutePath());
+    out.add("--output");
+    out.add(outputFile.getAbsolutePath());
 
-        out.addAll(ARGS);
+    out.addAll(ARGS);
 
-        Collections.addAll(out, args);
+    Collections.addAll(out, args);
 
-        return out.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
-    }
+    return out.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
+  }
 }

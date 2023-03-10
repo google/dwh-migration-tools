@@ -21,13 +21,13 @@ import org.apache.commons.lang3.StringUtils;
 
 public interface ConnectorProperty {
 
-    @Nonnull
-    public default String getName() {
-        return StringUtils.EMPTY;
-    }
+  @Nonnull
+  public default String getName() {
+    return StringUtils.EMPTY;
+  }
 
-    @Nonnull
-    public default String getDescription() {
-        return StringUtils.EMPTY;
-    }
+  @Nonnull
+  public default String getDescription() {
+    return StringUtils.EMPTY;
+  }
 }

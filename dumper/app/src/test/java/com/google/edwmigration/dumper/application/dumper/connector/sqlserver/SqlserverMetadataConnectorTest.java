@@ -29,43 +29,47 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author swapnil
  */
 @RunWith(JUnit4.class)
 public class SqlserverMetadataConnectorTest extends AbstractConnectorExecutionTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(SqlserverMetadataConnectorTest.class);
-    private final MetadataConnector connector = new SqlServerMetadataConnector();
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(SqlserverMetadataConnectorTest.class);
+  private final MetadataConnector connector = new SqlServerMetadataConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
 
-    @Ignore("Expensive. Move to integration tests?")
-    @Test
-    public void testExecution() throws Exception {
-        File outputFile = TestUtils.newOutputFile("compilerworks-sqlserver-metadata.zip");
-        LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+  @Ignore("Expensive. Move to integration tests?")
+  @Test
+  public void testExecution() throws Exception {
+    File outputFile = TestUtils.newOutputFile("compilerworks-sqlserver-metadata.zip");
+    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
 
-        runDumper("--connector", connector.getName(),
-                "--host", "codetestserver.database.windows.net",
-                "--database", "CodeTestDataWarehouse",
-                "--user", "cw",
-                "--password", "##CompilerW0rks!",
-                "--output", outputFile.getAbsolutePath());
+    runDumper("--connector", connector.getName(),
+        "--host", "codetestserver.database.windows.net",
+        "--database", "CodeTestDataWarehouse",
+        "--user", "cw",
+        "--password", "##CompilerW0rks!",
+        "--output", outputFile.getAbsolutePath());
 
-        ZipValidator validator = new ZipValidator()
-                .withFormat(SqlServerMetadataDumpFormat.FORMAT_NAME);
+    ZipValidator validator = new ZipValidator()
+        .withFormat(SqlServerMetadataDumpFormat.FORMAT_NAME);
 
-        validator.withEntryValidator(SqlServerMetadataDumpFormat.SchemataFormat.ZIP_ENTRY_NAME, SqlServerMetadataDumpFormat.SchemataFormat.Header.class);
-        validator.withEntryValidator(SqlServerMetadataDumpFormat.TablesFormat.ZIP_ENTRY_NAME, SqlServerMetadataDumpFormat.TablesFormat.Header.class);
-        validator.withEntryValidator(SqlServerMetadataDumpFormat.ColumnsFormat.ZIP_ENTRY_NAME, SqlServerMetadataDumpFormat.ColumnsFormat.Header.class);
-        validator.withEntryValidator(SqlServerMetadataDumpFormat.ViewsFormat.ZIP_ENTRY_NAME, SqlServerMetadataDumpFormat.ViewsFormat.Header.class);
-        validator.withEntryValidator(SqlServerMetadataDumpFormat.FunctionsFormat.ZIP_ENTRY_NAME, SqlServerMetadataDumpFormat.FunctionsFormat.Header.class);
+    validator.withEntryValidator(SqlServerMetadataDumpFormat.SchemataFormat.ZIP_ENTRY_NAME,
+        SqlServerMetadataDumpFormat.SchemataFormat.Header.class);
+    validator.withEntryValidator(SqlServerMetadataDumpFormat.TablesFormat.ZIP_ENTRY_NAME,
+        SqlServerMetadataDumpFormat.TablesFormat.Header.class);
+    validator.withEntryValidator(SqlServerMetadataDumpFormat.ColumnsFormat.ZIP_ENTRY_NAME,
+        SqlServerMetadataDumpFormat.ColumnsFormat.Header.class);
+    validator.withEntryValidator(SqlServerMetadataDumpFormat.ViewsFormat.ZIP_ENTRY_NAME,
+        SqlServerMetadataDumpFormat.ViewsFormat.Header.class);
+    validator.withEntryValidator(SqlServerMetadataDumpFormat.FunctionsFormat.ZIP_ENTRY_NAME,
+        SqlServerMetadataDumpFormat.FunctionsFormat.Header.class);
 
-        validator.run(outputFile);
-    }
+    validator.run(outputFile);
+  }
 }

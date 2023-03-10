@@ -31,67 +31,86 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
 public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorExecutionTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnectorTest.class);
-    private final MetadataConnector connector = new SnowflakeMetadataConnector();
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnectorTest.class);
+  private final MetadataConnector connector = new SnowflakeMetadataConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
+
+  @Nonnull
+  private static String iffaulty(int i, String s0, String s1) {
+    return i == 0 ? s0 : s1;
+  }
+
+  @Test
+  public void testExecution() throws Exception {
+    for (int i = 0; i < 2; i++) {
+      File outputFile = TestUtils.newOutputFile(
+          "compilerworks-snowflake-metadata-auto-" + iffaulty(i, "is", "au") + ".zip");
+      LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+
+      if (!run(ARGS(connector, outputFile, "--test-flags", iffaulty(i, "", "A")))) {
+        continue;
+      }
+
+      ZipValidator validator = new ZipValidator()
+          .withFormat(SnowflakeMetadataDumpFormat.FORMAT_NAME);
+
+      validator.withEntryValidator(
+          iffaulty(i, SnowflakeMetadataDumpFormat.DatabasesFormat.IS_ZIP_ENTRY_NAME,
+              SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME),
+          SnowflakeMetadataDumpFormat.DatabasesFormat.Header.class);
+      validator.withEntryValidator(
+          iffaulty(i, SnowflakeMetadataDumpFormat.SchemataFormat.IS_ZIP_ENTRY_NAME,
+              SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME),
+          SnowflakeMetadataDumpFormat.SchemataFormat.Header.class);
+      validator.withEntryValidator(
+          iffaulty(i, SnowflakeMetadataDumpFormat.TablesFormat.IS_ZIP_ENTRY_NAME,
+              SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME),
+          SnowflakeMetadataDumpFormat.TablesFormat.Header.class);
+      validator.withEntryValidator(
+          iffaulty(i, SnowflakeMetadataDumpFormat.ColumnsFormat.IS_ZIP_ENTRY_NAME,
+              SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME),
+          SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class);
+      validator.withEntryValidator(
+          iffaulty(i, SnowflakeMetadataDumpFormat.ViewsFormat.IS_ZIP_ENTRY_NAME,
+              SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME),
+          SnowflakeMetadataDumpFormat.ViewsFormat.Header.class);
+      validator.withEntryValidator(
+          iffaulty(i, SnowflakeMetadataDumpFormat.FunctionsFormat.IS_ZIP_ENTRY_NAME,
+              SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME),
+          SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
+
+      validator.run(outputFile);
     }
+  }
 
-    @Nonnull
-    private static String iffaulty(int i, String s0, String s1) {
-        return i == 0 ? s0 : s1;
-    }
+  // ./gradlew :compilerworks-application-dumper:{cleanTest,test} --tests SnowflakeMetadataConnectorTest.testDatabaseNameFailure -Dtest-sys-prop.test.dumper=true -Dtest.verbose=true
+  @Test
+  public void testDatabaseNameFailure() {
+    Assume.assumeTrue(isDumperTest());
 
-    @Test
-    public void testExecution() throws Exception {
-        for (int i = 0; i < 2; i++) {
-            File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-metadata-auto-" + iffaulty(i, "is", "au") + ".zip");
-            LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+    MetadataDumperUsageException exception = Assert.assertThrows(
+        MetadataDumperUsageException.class,
+        () -> {
+          File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-metadata-fail.zip");
+          String[] args = ARGS(connector, outputFile);
 
-            if (!run(ARGS(connector, outputFile, "--test-flags", iffaulty(i, "", "A"))))
-                continue;
+          Assert.assertEquals("--database", args[6]);
+          args[7] = args[7] + "_NOT_EXISTS";
+          run(args);
+        });
 
-            ZipValidator validator = new ZipValidator()
-                    .withFormat(SnowflakeMetadataDumpFormat.FORMAT_NAME);
+    Assert.assertTrue(exception.getMessage().startsWith("Database name not found"));
 
-            validator.withEntryValidator(iffaulty(i, SnowflakeMetadataDumpFormat.DatabasesFormat.IS_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME), SnowflakeMetadataDumpFormat.DatabasesFormat.Header.class);
-            validator.withEntryValidator(iffaulty(i, SnowflakeMetadataDumpFormat.SchemataFormat.IS_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME), SnowflakeMetadataDumpFormat.SchemataFormat.Header.class);
-            validator.withEntryValidator(iffaulty(i, SnowflakeMetadataDumpFormat.TablesFormat.IS_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME), SnowflakeMetadataDumpFormat.TablesFormat.Header.class);
-            validator.withEntryValidator(iffaulty(i, SnowflakeMetadataDumpFormat.ColumnsFormat.IS_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME), SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class);
-            validator.withEntryValidator(iffaulty(i, SnowflakeMetadataDumpFormat.ViewsFormat.IS_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME), SnowflakeMetadataDumpFormat.ViewsFormat.Header.class);
-            validator.withEntryValidator(iffaulty(i, SnowflakeMetadataDumpFormat.FunctionsFormat.IS_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME), SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
-
-            validator.run(outputFile);
-        }
-    }
-
-    // ./gradlew :compilerworks-application-dumper:{cleanTest,test} --tests SnowflakeMetadataConnectorTest.testDatabaseNameFailure -Dtest-sys-prop.test.dumper=true -Dtest.verbose=true
-    @Test
-    public void testDatabaseNameFailure() {
-        Assume.assumeTrue(isDumperTest());
-
-        MetadataDumperUsageException exception = Assert.assertThrows(
-                MetadataDumperUsageException.class,
-                () -> {
-                    File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-metadata-fail.zip");
-                    String[] args = ARGS(connector, outputFile);
-
-                    Assert.assertEquals("--database", args[6]);
-                    args[7] = args[7] + "_NOT_EXISTS";
-                    run(args);
-                });
-
-        Assert.assertTrue(exception.getMessage().startsWith("Database name not found"));
-
-    }
+  }
 
 }

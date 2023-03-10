@@ -48,18 +48,19 @@ import org.springframework.jdbc.core.RowMapperResultSetExtractor;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 
 /**
- * Note that connecting to any Teradata database requires their
- * JDBC driver (not included here for obvious reasons).
- * For details on how to obtain and use this driver, see the asciidoc
+ * Note that connecting to any Teradata database requires their JDBC driver (not included here for
+ * obvious reasons). For details on how to obtain and use this driver, see the asciidoc
  * documentation entitled "Metadata and Query Log Dumper"
  * <p>
- * Teradata table references: http://elsasoft.com/samples/teradata/Teradata.127.0.0.1.DBC/allTables.htm
+ * Teradata table references:
+ * http://elsasoft.com/samples/teradata/Teradata.127.0.0.1.DBC/allTables.htm
  * https://docs.teradata.com/reader/B7Lgdw6r3719WUyiCSJcgw/zpnjJYg3OPoAeMcGbnKuNQ
  *
  * @author matt
  */
 @RespectsArgumentHostUnlessUrl
-@RespectsInput(order = ConnectorArguments.OPT_PORT_ORDER, arg = ConnectorArguments.OPT_PORT, description = "The port of the server.", required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL, defaultValue = "" + AbstractTeradataConnector.OPT_PORT_DEFAULT)
+@RespectsInput(order = ConnectorArguments.OPT_PORT_ORDER, arg = ConnectorArguments.OPT_PORT, description = "The port of the server.", required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL, defaultValue =
+    "" + AbstractTeradataConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentUser
 @RespectsArgumentPassword
 @RespectsArgumentDriverRequired
@@ -67,79 +68,85 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
 @RespectsArgumentDriverClass
 public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractTeradataConnector.class);
-    public static final int OPT_PORT_DEFAULT = 1025;
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractTeradataConnector.class);
+  public static final int OPT_PORT_DEFAULT = 1025;
 
-    protected static class TeradataJdbcSelectTask extends JdbcSelectTask {
+  protected static class TeradataJdbcSelectTask extends JdbcSelectTask {
 
-        private final String sqlCount;
-        private final TaskCategory category;
+    private final String sqlCount;
+    private final TaskCategory category;
 
-        public TeradataJdbcSelectTask(String targetPath, TaskCategory category, String sqlTemplate) {
-            super(targetPath, String.format(sqlTemplate, "*"));
-            this.sqlCount = sqlTemplate.contains("%s") ? String.format(sqlTemplate, "count(*)") : null;
-            this.category = Preconditions.checkNotNull(category);
-        }
-
-        @Override
-        public TaskCategory getCategory() {
-            return category;
-        }
-
-        // This works to execute the count SQL on the same connection as the data SQL,
-        // because it's called from doInConnection, when we already have one connection open.
-        @Nonnull
-        private ResultSetExtractor<Void> newCountedResultSetExtractor(@Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
-            long count = -1;
-            if (sqlCount != null) {
-                // It's a lot of infrastructure, but we don't have to write it.
-                RowMapper<Long> rowMapper = new SingleColumnRowMapper<>(Long.class);
-                ResultSetExtractor<List<Long>> resultSetExtractor = new RowMapperResultSetExtractor<>(rowMapper);
-                List<Long> results = doSelect(connection, resultSetExtractor, sqlCount);
-                Long result = DataAccessUtils.nullableSingleResult(results);
-                if (result != null)
-                    count = result;
-            }
-            return newCsvResultSetExtractor(sink, count);
-        }
-
-        @Override
-        protected Void doInConnection(TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection) throws SQLException {
-            try {
-                connection.setAutoCommit(false);
-                PreparedStatement statement = connection.prepareStatement("SET QUERY_BAND='ApplicationName=compilerworks;' FOR SESSION");
-                statement.execute();
-            } catch (SQLException e) {
-                // We might still be in postgresql or sqlite.
-                LOG.warn("Failed to set QUERY_BAND: " + e);
-                // This puts the transaction in an aborted state unless we rollback here.
-                connection.rollback();
-            }
-            ResultSetExtractor<Void> rse = newCountedResultSetExtractor(sink, connection);
-            return doSelect(connection, rse, getSql());
-        }
+    public TeradataJdbcSelectTask(String targetPath, TaskCategory category, String sqlTemplate) {
+      super(targetPath, String.format(sqlTemplate, "*"));
+      this.sqlCount = sqlTemplate.contains("%s") ? String.format(sqlTemplate, "count(*)") : null;
+      this.category = Preconditions.checkNotNull(category);
     }
 
-    /* pp */ AbstractTeradataConnector(@Nonnull String name) {
-        super(name);
-    }
-
-    @Nonnull
     @Override
-    public Handle open(ConnectorArguments arguments) throws Exception {
-        String url = arguments.getUri();
-        if (url == null) {
-            String host = arguments.getHost();
-            int port = arguments.getPort(OPT_PORT_DEFAULT);
-            url = "jdbc:teradata://" + host + "/DBS_PORT=" + port + ",TMODE=ANSI,CHARSET=UTF8";
-            //,MAX_MESSAGE_BODY=16777216
-        }
-
-        Driver driver = newDriver(arguments.getDriverPaths(), arguments.getDriverClass("com.teradata.jdbc.TeraDriver"));
-        DataSource dataSource = newSimpleDataSource(driver, url, arguments);
-        // Teradata has a hard connection limit; let's stay below it, and block threads if required.
-        // This could probably be 1 because the Teradata dumper is single-threaded.
-        return JdbcHandle.newPooledJdbcHandle(dataSource, 2);
+    public TaskCategory getCategory() {
+      return category;
     }
+
+    // This works to execute the count SQL on the same connection as the data SQL,
+    // because it's called from doInConnection, when we already have one connection open.
+    @Nonnull
+    private ResultSetExtractor<Void> newCountedResultSetExtractor(@Nonnull ByteSink sink,
+        @Nonnull Connection connection) throws SQLException {
+      long count = -1;
+      if (sqlCount != null) {
+        // It's a lot of infrastructure, but we don't have to write it.
+        RowMapper<Long> rowMapper = new SingleColumnRowMapper<>(Long.class);
+        ResultSetExtractor<List<Long>> resultSetExtractor = new RowMapperResultSetExtractor<>(
+            rowMapper);
+        List<Long> results = doSelect(connection, resultSetExtractor, sqlCount);
+        Long result = DataAccessUtils.nullableSingleResult(results);
+          if (result != null) {
+              count = result;
+          }
+      }
+      return newCsvResultSetExtractor(sink, count);
+    }
+
+    @Override
+    protected Void doInConnection(TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink,
+        Connection connection) throws SQLException {
+      try {
+        connection.setAutoCommit(false);
+        PreparedStatement statement = connection.prepareStatement(
+            "SET QUERY_BAND='ApplicationName=compilerworks;' FOR SESSION");
+        statement.execute();
+      } catch (SQLException e) {
+        // We might still be in postgresql or sqlite.
+        LOG.warn("Failed to set QUERY_BAND: " + e);
+        // This puts the transaction in an aborted state unless we rollback here.
+        connection.rollback();
+      }
+      ResultSetExtractor<Void> rse = newCountedResultSetExtractor(sink, connection);
+      return doSelect(connection, rse, getSql());
+    }
+  }
+
+  /* pp */ AbstractTeradataConnector(@Nonnull String name) {
+    super(name);
+  }
+
+  @Nonnull
+  @Override
+  public Handle open(ConnectorArguments arguments) throws Exception {
+    String url = arguments.getUri();
+    if (url == null) {
+      String host = arguments.getHost();
+      int port = arguments.getPort(OPT_PORT_DEFAULT);
+      url = "jdbc:teradata://" + host + "/DBS_PORT=" + port + ",TMODE=ANSI,CHARSET=UTF8";
+      //,MAX_MESSAGE_BODY=16777216
+    }
+
+    Driver driver = newDriver(arguments.getDriverPaths(),
+        arguments.getDriverClass("com.teradata.jdbc.TeraDriver"));
+    DataSource dataSource = newSimpleDataSource(driver, url, arguments);
+    // Teradata has a hard connection limit; let's stay below it, and block threads if required.
+    // This could probably be 1 because the Teradata dumper is single-threaded.
+    return JdbcHandle.newPooledJdbcHandle(dataSource, 2);
+  }
 }

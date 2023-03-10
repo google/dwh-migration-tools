@@ -29,29 +29,33 @@ import javax.annotation.Nonnull;
  */
 public interface OutputHandle {
 
-    public boolean exists() throws IOException;
+  public boolean exists() throws IOException;
 
-    /** Returns a ByteSink on the target file. */
-    @Nonnull
-    public ByteSink asByteSink() throws IOException;
+  /**
+   * Returns a ByteSink on the target file.
+   */
+  @Nonnull
+  public ByteSink asByteSink() throws IOException;
 
-    /** Returns a CharSink on the target file. */
-    @Nonnull
-    default public CharSink asCharSink(@Nonnull Charset charset) throws IOException {
-        return asByteSink().asCharSink(charset);
-    }
+  /**
+   * Returns a CharSink on the target file.
+   */
+  @Nonnull
+  default public CharSink asCharSink(@Nonnull Charset charset) throws IOException {
+    return asByteSink().asCharSink(charset);
+  }
 
-    /** Returns a ByteSink on the temporary file. */
-    @Nonnull
-    public ByteSink asTemporaryByteSink() throws IOException;
+  /**
+   * Returns a ByteSink on the temporary file.
+   */
+  @Nonnull
+  public ByteSink asTemporaryByteSink() throws IOException;
 
-    /**
-     * Renames the temporary file to the final file.
-     *
-     * The stream, if any, must be closed.
-     * The temporary file must exist.
-     * Do NOT call commit() in a try-with-resources or finally block, or you
-     * risk committing bad data.
-     */
-    public void commit() throws IOException;
+  /**
+   * Renames the temporary file to the final file.
+   * <p>
+   * The stream, if any, must be closed. The temporary file must exist. Do NOT call commit() in a
+   * try-with-resources or finally block, or you risk committing bad data.
+   */
+  public void commit() throws IOException;
 }

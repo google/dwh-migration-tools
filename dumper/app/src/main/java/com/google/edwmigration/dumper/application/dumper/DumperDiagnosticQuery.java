@@ -31,30 +31,29 @@ import org.anarres.jdiagnostics.XalanQuery;
 import org.anarres.jdiagnostics.XercesQuery;
 
 /**
- *
  * @author shevek
  */
 public class DumperDiagnosticQuery extends CompositeQuery {
 
-    public DumperDiagnosticQuery(Throwable t) {
-        add(new SystemPropertiesQuery());
-        add(new SAXQuery());
-        add(new DOMQuery());
-        add(new JAXPQuery());
-        add(new ClassPathQuery());
-        // add(new XSLTQuery());
-        add(new EnvironmentQuery());
-        // add(new AntQuery());
-        add(new XalanQuery());
-        add(new XercesQuery());
-        add(new TmpDirQuery());
-        // add(new ProcessEnvironmentQuery());
-        add(new ProductMetadataQuery());
-        add(new ThrowableQuery(t));
+  public DumperDiagnosticQuery(Throwable t) {
+    add(new SystemPropertiesQuery());
+    add(new SAXQuery());
+    add(new DOMQuery());
+    add(new JAXPQuery());
+    add(new ClassPathQuery());
+    // add(new XSLTQuery());
+    add(new EnvironmentQuery());
+    // add(new AntQuery());
+    add(new XalanQuery());
+    add(new XercesQuery());
+    add(new TmpDirQuery());
+    // add(new ProcessEnvironmentQuery());
+    add(new ProductMetadataQuery());
+    add(new ThrowableQuery(t));
 
-        add(new ClassLoaderQuery("system", String.class.getClassLoader()));
-        add(new ClassLoaderQuery("threadcontext", Thread.currentThread().getContextClassLoader()));
-        add(new ClassLoaderQuery("jdiagnostics", getClass().getClassLoader()));
-    }
+    add(new ClassLoaderQuery("system", String.class.getClassLoader()));
+    add(new ClassLoaderQuery("threadcontext", Thread.currentThread().getContextClassLoader()));
+    add(new ClassLoaderQuery("jdiagnostics", getClass().getClassLoader()));
+  }
 
 }

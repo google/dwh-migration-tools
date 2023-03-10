@@ -23,33 +23,32 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.MetadataDumperConstants;
 
 /**
- *
  * @author shevek
  */
 @Deprecated // Use DumpMetadataTask
 public class VersionTask extends AbstractTask<Void> {
 
-    public VersionTask(String targetPath) {
-        super(targetPath);
-    }
+  public VersionTask(String targetPath) {
+    super(targetPath);
+  }
 
-    public VersionTask() {
-        this(MetadataDumperConstants.VERSION_ZIP_ENTRY_NAME);
-    }
+  public VersionTask() {
+    this(MetadataDumperConstants.VERSION_ZIP_ENTRY_NAME);
+  }
 
-    @Override
-    public TaskCategory getCategory() {
-        return TaskCategory.INFORMATIONAL;
-    }
+  @Override
+  public TaskCategory getCategory() {
+    return TaskCategory.INFORMATIONAL;
+  }
 
-    @Override
-    protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
-        sink.asCharSink(StandardCharsets.UTF_8).write(String.valueOf(new ProductMetadata()));
-        return null;
-    }
+  @Override
+  protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
+    sink.asCharSink(StandardCharsets.UTF_8).write(String.valueOf(new ProductMetadata()));
+    return null;
+  }
 
-    @Override
-    public String toString() {
-        return "Write " + getTargetPath() + " from product version information.";
-    }
+  @Override
+  public String toString() {
+    return "Write " + getTargetPath() + " from product version information.";
+  }
 }

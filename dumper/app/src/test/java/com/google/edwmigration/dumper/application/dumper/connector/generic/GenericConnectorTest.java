@@ -27,44 +27,47 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ./gradlew compilerworks-application-dumper:{clean,test} -Dtest.verbose=true -Dtest-sys-prop.test.dumper=true --tests GenericConnectorTest
+ * ./gradlew compilerworks-application-dumper:{clean,test} -Dtest.verbose=true
+ * -Dtest-sys-prop.test.dumper=true --tests GenericConnectorTest
  */
 @RunWith(JUnit4.class)
 public class GenericConnectorTest extends AbstractConnectorExecutionTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GenericConnectorTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GenericConnectorTest.class);
 
-    private final static String SUBPROJECT = "compilerworks-application-dumper";
+  private final static String SUBPROJECT = "compilerworks-application-dumper";
 
-    private final static File GENERIC_DUMPER_TEST = new File(TestUtils.getTestResourcesDir(SUBPROJECT), "dumper-test/generic.sql");
+  private final static File GENERIC_DUMPER_TEST = new File(
+      TestUtils.getTestResourcesDir(SUBPROJECT), "dumper-test/generic.sql");
 
-    @Test
-    public void testGeneric() throws IOException, Exception {
+  @Test
+  public void testGeneric() throws IOException, Exception {
 
-        File outputFile = TestUtils.newOutputFile("compilerworks-generic-logs.zip");
+    File outputFile = TestUtils.newOutputFile("compilerworks-generic-logs.zip");
 
-        run("--connector", "generic",
-                "--jdbcDriver", "org.postgresql.Driver",
-                "--url", "jdbc:postgresql:cw",
-                "--user", "cw",
-                "--password", "password",
-                "--generic-query", "select 1",
-                "--output", outputFile.getAbsolutePath(),
-                "--sqlscript", GENERIC_DUMPER_TEST.getAbsolutePath());
+    run("--connector", "generic",
+        "--jdbcDriver", "org.postgresql.Driver",
+        "--url", "jdbc:postgresql:cw",
+        "--user", "cw",
+        "--password", "password",
+        "--generic-query", "select 1",
+        "--output", outputFile.getAbsolutePath(),
+        "--sqlscript", GENERIC_DUMPER_TEST.getAbsolutePath());
 
-        File outputFile1 = TestUtils.newOutputFile("compilerworks-generic-logs-1.zip");
+    File outputFile1 = TestUtils.newOutputFile("compilerworks-generic-logs-1.zip");
 
-        run("--connector", "generic",
-                "--jdbcDriver", "org.postgresql.Driver",
-                "--url", "jdbc:postgresql:cw",
-                "--user", "cw",
-                "--password", "password",
-                "--query-log-start", "2019-12-25",
-                "--query-log-end", "2019-12-31",
-                "--generic-query", "select * from test.generic_logs  where log_timestamp>= {period-start} AND log_timestamp< {period-end}",
-                "--output", outputFile1.getAbsolutePath(),
-                "--sqlscript", GENERIC_DUMPER_TEST.getAbsolutePath());
+    run("--connector", "generic",
+        "--jdbcDriver", "org.postgresql.Driver",
+        "--url", "jdbc:postgresql:cw",
+        "--user", "cw",
+        "--password", "password",
+        "--query-log-start", "2019-12-25",
+        "--query-log-end", "2019-12-31",
+        "--generic-query",
+        "select * from test.generic_logs  where log_timestamp>= {period-start} AND log_timestamp< {period-end}",
+        "--output", outputFile1.getAbsolutePath(),
+        "--sqlscript", GENERIC_DUMPER_TEST.getAbsolutePath());
 
-    }
+  }
 
 }

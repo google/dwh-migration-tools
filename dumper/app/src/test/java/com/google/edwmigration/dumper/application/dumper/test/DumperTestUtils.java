@@ -28,42 +28,41 @@ import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
 /**
- *
  * @author shevek
  */
 public class DumperTestUtils {
 
-    private static final String JDBC_URL_PREFIX = "jdbc:sqlite:";
+  private static final String JDBC_URL_PREFIX = "jdbc:sqlite:";
 
-    @Nonnull
-    public static File newZipFile(@Nonnull String name) {
-        return TestUtils.newOutputFileUnchecked("dumper/" + name + ".zip");
-    }
+  @Nonnull
+  public static File newZipFile(@Nonnull String name) {
+    return TestUtils.newOutputFileUnchecked("dumper/" + name + ".zip");
+  }
 
-    @Nonnull
-    public static File newJdbcFile(@Nonnull String name) {
-        return TestUtils.newOutputFileUnchecked("dumper/" + name + ".db");
-    }
+  @Nonnull
+  public static File newJdbcFile(@Nonnull String name) {
+    return TestUtils.newOutputFileUnchecked("dumper/" + name + ".db");
+  }
 
-    @Nonnull
-    public static JdbcHandle newJdbcHandle(@Nonnull File file) throws IOException, SQLException {
-        SQLiteDataSource dataSource = new SQLiteDataSource(new SQLiteConfig());
-        dataSource.setUrl(JDBC_URL_PREFIX + file.getAbsolutePath());
-        final Connection connection = dataSource.getConnection();
-        // Now, we muck around to make sure we only use a single persistent connection
-        // so that using the JdbcTemplate to create tables or attach things
-        // leaves them attached for the later consumers.
-        return new JdbcHandle(new SingleConnectionDataSource(connection, true)) {
-            @Override
-            public void close() throws IOException {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    throw new IOException(e);
-                } finally {
-                    super.close();
-                }
-            }
-        };
-    }
+  @Nonnull
+  public static JdbcHandle newJdbcHandle(@Nonnull File file) throws IOException, SQLException {
+    SQLiteDataSource dataSource = new SQLiteDataSource(new SQLiteConfig());
+    dataSource.setUrl(JDBC_URL_PREFIX + file.getAbsolutePath());
+    final Connection connection = dataSource.getConnection();
+    // Now, we muck around to make sure we only use a single persistent connection
+    // so that using the JdbcTemplate to create tables or attach things
+    // leaves them attached for the later consumers.
+    return new JdbcHandle(new SingleConnectionDataSource(connection, true)) {
+      @Override
+      public void close() throws IOException {
+        try {
+          connection.close();
+        } catch (SQLException e) {
+          throw new IOException(e);
+        } finally {
+          super.close();
+        }
+      }
+    };
+  }
 }

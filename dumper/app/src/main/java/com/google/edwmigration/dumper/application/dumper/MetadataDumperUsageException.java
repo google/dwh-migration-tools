@@ -21,35 +21,33 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 /**
- * For exceptions that should halt the dumper, but for which
- * we do not need to show the user a stack trace (i.e.,
- * invalid arguments to the dumper). Do not use this for
- * JDBC/filesystem/etc issues; if a customer experiences any of those,
- * we want to know all of the gory details.
+ * For exceptions that should halt the dumper, but for which we do not need to show the user a stack
+ * trace (i.e., invalid arguments to the dumper). Do not use this for JDBC/filesystem/etc issues; if
+ * a customer experiences any of those, we want to know all of the gory details.
  *
  * @author matt
  */
 public class MetadataDumperUsageException extends Exception {
 
-    private final List<String> msgs;
+  private final List<String> msgs;
 
-    @SuppressWarnings("unchecked")
-    public MetadataDumperUsageException(@Nonnull String msg) {
-        this(msg, Collections.emptyList());
-    }
+  @SuppressWarnings("unchecked")
+  public MetadataDumperUsageException(@Nonnull String msg) {
+    this(msg, Collections.emptyList());
+  }
 
-    public MetadataDumperUsageException(@Nonnull String msg, @Nonnull List<String> msgs) {
-        super(msg);
-        this.msgs = msgs;
-    }
+  public MetadataDumperUsageException(@Nonnull String msg, @Nonnull List<String> msgs) {
+    super(msg);
+    this.msgs = msgs;
+  }
 
-    public List<String> getMessages() {
-        return msgs;
-    }
+  public List<String> getMessages() {
+    return msgs;
+  }
 
-    @Override
-    public String toString() {
-        return this.getMessage() + "\n" + String.join("\n", msgs);
-    }
+  @Override
+  public String toString() {
+    return this.getMessage() + "\n" + String.join("\n", msgs);
+  }
 
 }

@@ -23,30 +23,29 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 /**
- *
  * @author shevek
  */
 public interface Connector {
 
-    // Empty
-    public enum DefaultProperties implements ConnectorProperty {
-    }
+  // Empty
+  public enum DefaultProperties implements ConnectorProperty {
+  }
 
-    @Nonnull
-    public String getName();
+  @Nonnull
+  public String getName();
 
-    @Nonnull
-    public String getDefaultFileName(boolean isAssessment);
+  @Nonnull
+  public String getDefaultFileName(boolean isAssessment);
 
-    @Nonnull
-    public void addTasksTo(@Nonnull List<? super Task<?>> out,
-        @Nonnull ConnectorArguments arguments) throws Exception;
+  @Nonnull
+  public void addTasksTo(@Nonnull List<? super Task<?>> out,
+      @Nonnull ConnectorArguments arguments) throws Exception;
 
-    @Nonnull
-    public Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
+  @Nonnull
+  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
 
-    @Nonnull
-    default public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-        return DefaultProperties.class;
-    }
+  @Nonnull
+  default public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return DefaultProperties.class;
+  }
 }

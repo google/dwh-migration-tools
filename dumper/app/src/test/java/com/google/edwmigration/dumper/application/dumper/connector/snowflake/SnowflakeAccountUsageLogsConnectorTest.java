@@ -26,25 +26,26 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
-public class SnowflakeAccountUsageLogsConnectorTest extends AbstractSnowflakeConnectorExecutionTest {
+public class SnowflakeAccountUsageLogsConnectorTest extends
+    AbstractSnowflakeConnectorExecutionTest {
 
-    private final LogsConnector connector = new SnowflakeAccountUsageLogsConnector();
+  private final LogsConnector connector = new SnowflakeAccountUsageLogsConnector();
 
-    @Test
-    public void testExecution() throws Exception {
-        File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-logs-au.zip");
-        if (!run(ARGS(connector, outputFile)))
-            return;
-
-        ZipValidator validator = new ZipValidator()
-                .withFormat(SnowflakeLogsDumpFormat.FORMAT_NAME);
-
-        validator.withAllowedEntries(Predicates.alwaysTrue());  // Permit any files.
-
-        validator.run(outputFile);
+  @Test
+  public void testExecution() throws Exception {
+    File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-logs-au.zip");
+    if (!run(ARGS(connector, outputFile))) {
+      return;
     }
+
+    ZipValidator validator = new ZipValidator()
+        .withFormat(SnowflakeLogsDumpFormat.FORMAT_NAME);
+
+    validator.withAllowedEntries(Predicates.alwaysTrue());  // Permit any files.
+
+    validator.run(outputFile);
+  }
 }

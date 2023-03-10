@@ -29,50 +29,51 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
 
 /**
- *
  * @author shevek
  */
 public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFormat {
 
-    private final List<Task<?>> tasks = new ArrayList<>();
+  private final List<Task<?>> tasks = new ArrayList<>();
 
-    public TaskGroup(@Nonnull String targetPath, @Nonnull Task<?>... tasks) {
-        super(targetPath);
-        Collections.addAll(this.tasks, tasks);
-    }
+  public TaskGroup(@Nonnull String targetPath, @Nonnull Task<?>... tasks) {
+    super(targetPath);
+    Collections.addAll(this.tasks, tasks);
+  }
 
-    public void addTask(Task<?> task) {
-        // Checking for conditions would need some ordering of tasks execution or waiting on {@link TaskSetState#getTaskResult}
-        // Preconditions.checkState(task.getConditions().length == 0, "Tasks in a parallel task should not have conditions");
-        // Preconditions.checkState(task instanceof AbstractJdbcSelectTask || task instanceof FormatTask, "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to add %s.", task.getClass().getSimpleName());
-        tasks.add(task);
-    }
+  public void addTask(Task<?> task) {
+    // Checking for conditions would need some ordering of tasks execution or waiting on {@link TaskSetState#getTaskResult}
+    // Preconditions.checkState(task.getConditions().length == 0, "Tasks in a parallel task should not have conditions");
+    // Preconditions.checkState(task instanceof AbstractJdbcSelectTask || task instanceof FormatTask, "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to add %s.", task.getClass().getSimpleName());
+    tasks.add(task);
+  }
 
-    @Nonnull
-    public List<Task<?>> getTasks() {
-        return tasks;
-    }
+  @Nonnull
+  public List<Task<?>> getTasks() {
+    return tasks;
+  }
 
-    protected void doRun(@Nonnull TaskRunContext context, @Nonnull CSVPrinter printer, @Nonnull Handle handle) throws Exception {
-        for (Task<?> task : tasks) {
-            context.runChildTask(task);
-            TaskState state = context.getTaskState(task);
-            printer.printRecord(task, state);
-        }
+  protected void doRun(@Nonnull TaskRunContext context, @Nonnull CSVPrinter printer,
+      @Nonnull Handle handle) throws Exception {
+    for (Task<?> task : tasks) {
+      context.runChildTask(task);
+      TaskState state = context.getTaskState(task);
+      printer.printRecord(task, state);
     }
+  }
 
-    @Override
-    protected final Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
-        CSVFormat format = FORMAT.withHeader(CoreMetadataDumpFormat.Group.Header.class);
-        try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
-                CSVPrinter printer = format.print(writer)) {
-            doRun(context, printer, handle);
-        }
-        return null;
+  @Override
+  protected final Void doRun(TaskRunContext context, ByteSink sink, Handle handle)
+      throws Exception {
+    CSVFormat format = FORMAT.withHeader(CoreMetadataDumpFormat.Group.Header.class);
+    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
+        CSVPrinter printer = format.print(writer)) {
+      doRun(context, printer, handle);
     }
+    return null;
+  }
 
-    @Override
-    public String toString() {
-        return "TaskGroup(" + getTasks().size() + " children)";
-    }
+  @Override
+  public String toString() {
+    return "TaskGroup(" + getTasks().size() + " children)";
+  }
 }

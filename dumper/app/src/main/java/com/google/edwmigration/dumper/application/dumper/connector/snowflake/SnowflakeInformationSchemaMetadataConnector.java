@@ -25,22 +25,23 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 
 /**
- *
  * @author shevek
  */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Snowflake, using INFORMATION_SCHEMA only.")
 public class SnowflakeInformationSchemaMetadataConnector extends SnowflakeMetadataConnector {
 
-    public SnowflakeInformationSchemaMetadataConnector() {
-        super("snowflake-information-schema-metadata");
-    }
+  public SnowflakeInformationSchemaMetadataConnector() {
+    super("snowflake-information-schema-metadata");
+  }
 
-    @Override
-    protected void addSqlTasks(List<? super Task<?>> out, Class<? extends Enum<?>> header, String format, TaskVariant is_task, TaskVariant au_task) {
-        Task<?> t0 = new JdbcSelectTask(is_task.zipEntryName, String.format(format, is_task.schemaName, is_task.whereClause))
-                .withHeaderClass(header);
-        out.add(t0);
-    }
+  @Override
+  protected void addSqlTasks(List<? super Task<?>> out, Class<? extends Enum<?>> header,
+      String format, TaskVariant is_task, TaskVariant au_task) {
+    Task<?> t0 = new JdbcSelectTask(is_task.zipEntryName,
+        String.format(format, is_task.schemaName, is_task.whereClause))
+        .withHeaderClass(header);
+    out.add(t0);
+  }
 
 }

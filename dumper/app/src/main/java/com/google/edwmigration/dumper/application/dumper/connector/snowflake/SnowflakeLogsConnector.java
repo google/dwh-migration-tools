@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author shevek
  */
 @AutoService({Connector.class, LogsConnector.class})
@@ -52,132 +51,152 @@ import org.slf4j.LoggerFactory;
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
-public class SnowflakeLogsConnector extends AbstractSnowflakeConnector implements LogsConnector, SnowflakeLogsDumpFormat {
+public class SnowflakeLogsConnector extends AbstractSnowflakeConnector implements LogsConnector,
+    SnowflakeLogsDumpFormat {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(SnowflakeLogsConnector.class);
-    private static final DateTimeFormatter SQL_FORMAT = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeLogsConnector.class);
+  private static final DateTimeFormatter SQL_FORMAT = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(
+      ZoneOffset.UTC);
 
-    protected SnowflakeLogsConnector(@Nonnull String name) {
-        super(name);
-    }
+  protected SnowflakeLogsConnector(@Nonnull String name) {
+    super(name);
+  }
 
-    public SnowflakeLogsConnector() {
-        this("snowflake-logs");
-    }
+  public SnowflakeLogsConnector() {
+    this("snowflake-logs");
+  }
 
-    public enum SnowflakeLogConnectorProperties implements ConnectorProperty {
-        OVERRIDE_QUERY("snowflake.logs.query", "Custom query for log dump."),
-        OVERRIDE_WHERE("snowflake.logs.where", "Custom where condition to append to query for log dump.");
+  public enum SnowflakeLogConnectorProperties implements ConnectorProperty {
+    OVERRIDE_QUERY("snowflake.logs.query", "Custom query for log dump."),
+    OVERRIDE_WHERE("snowflake.logs.where",
+        "Custom where condition to append to query for log dump.");
 
-        private final String name;
-        private final String description;
+    private final String name;
+    private final String description;
 
-        SnowflakeLogConnectorProperties(String name, String description) {
-            this.name = name;
-            this.description = description;
-        }
-
-        @Nonnull
-        public String getName() {
-            return name;
-        }
-
-        @Nonnull
-        public String getDescription() {
-            return description;
-        }
+    SnowflakeLogConnectorProperties(String name, String description) {
+      this.name = name;
+      this.description = description;
     }
 
     @Nonnull
-    @Override
-    public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-        return SnowflakeLogConnectorProperties.class;
+    public String getName() {
+      return name;
     }
 
-    @ForOverride
-    protected String newQueryFormat(@Nonnull ConnectorArguments arguments) throws MetadataDumperUsageException {
-        // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
-        // Per the docref, Snowflake only retains/returns seven trailing days of logs.
-        String overrideQuery = getOvverrideQuery(arguments);
-        if (overrideQuery != null)
-            return overrideQuery;
-
-        String overrideWhere = getOverrideWhere(arguments);
-
-        @SuppressWarnings("OrphanedFormatString")
-        StringBuilder queryBuilder = new StringBuilder(
-                "SELECT database_name, \n"
-                + "schema_name, \n"
-                + "user_name, \n"
-                + "warehouse_name, \n"
-                + "execution_status, \n"
-                + "error_code, \n"
-                + "start_time, \n"
-                + "end_time, \n"
-                + "total_elapsed_time, \n"
-                + "bytes_scanned, \n"
-                + "rows_produced, \n"
-                + "credits_used_cloud_services, \n"
-                + "query_text \n"
-                + "FROM table(INFORMATION_SCHEMA.QUERY_HISTORY(\n"
-                + "result_limit=>10000\n"
-                // maximum range of 7 trailing days.
-                + ",end_time_range_start=>to_timestamp_ltz('%s')\n"
-                + ",end_time_range_end=>to_timestamp_ltz('%s')\n"
-                + "))\n"
-        );
-        // if the user specifies an earliest start time there will be extraneous empty dump files
-        // because we always iterate over the full 7 trailing days; maybe it's worth
-        // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
-        // to parse and return an ISO instant, not a database-server-specific format.
-        // TODO: Use ZonedIntervalIterable.forConnectorArguments()
-        boolean appendStartTime = !StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp());
-        if (appendStartTime)
-            queryBuilder.append("WHERE start_time >= ").append(arguments.getQueryLogEarliestTimestamp()).append("\n");
-        if (overrideWhere != null)
-            queryBuilder.append(appendStartTime ? " AND " : "WHERE").append(overrideWhere);
-        return queryBuilder.toString().replace('\n', ' ');
+    @Nonnull
+    public String getDescription() {
+      return description;
     }
+  }
 
-    @CheckForNull
-    protected String getOvverrideQuery(@Nonnull ConnectorArguments arguments) throws MetadataDumperUsageException {
-        String overrideQuery = arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_QUERY);
-        if (overrideQuery != null) {
-            if (StringUtils.countMatches(overrideQuery, "%s") != 2)
-                throw new MetadataDumperUsageException("Custom query for log dump needs two \"%s\" expansions, they will be expanded to end_time lower and upper boundaries.");
-            return overrideQuery;
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return SnowflakeLogConnectorProperties.class;
+  }
+
+  @ForOverride
+  protected String newQueryFormat(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
+    // Per the docref, Snowflake only retains/returns seven trailing days of logs.
+    String overrideQuery = getOvverrideQuery(arguments);
+      if (overrideQuery != null) {
+          return overrideQuery;
+      }
+
+    String overrideWhere = getOverrideWhere(arguments);
+
+    @SuppressWarnings("OrphanedFormatString")
+    StringBuilder queryBuilder = new StringBuilder(
+        "SELECT database_name, \n"
+            + "schema_name, \n"
+            + "user_name, \n"
+            + "warehouse_name, \n"
+            + "execution_status, \n"
+            + "error_code, \n"
+            + "start_time, \n"
+            + "end_time, \n"
+            + "total_elapsed_time, \n"
+            + "bytes_scanned, \n"
+            + "rows_produced, \n"
+            + "credits_used_cloud_services, \n"
+            + "query_text \n"
+            + "FROM table(INFORMATION_SCHEMA.QUERY_HISTORY(\n"
+            + "result_limit=>10000\n"
+            // maximum range of 7 trailing days.
+            + ",end_time_range_start=>to_timestamp_ltz('%s')\n"
+            + ",end_time_range_end=>to_timestamp_ltz('%s')\n"
+            + "))\n"
+    );
+    // if the user specifies an earliest start time there will be extraneous empty dump files
+    // because we always iterate over the full 7 trailing days; maybe it's worth
+    // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
+    // to parse and return an ISO instant, not a database-server-specific format.
+    // TODO: Use ZonedIntervalIterable.forConnectorArguments()
+    boolean appendStartTime = !StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp());
+      if (appendStartTime) {
+          queryBuilder.append("WHERE start_time >= ")
+              .append(arguments.getQueryLogEarliestTimestamp())
+              .append("\n");
+      }
+      if (overrideWhere != null) {
+          queryBuilder.append(appendStartTime ? " AND " : "WHERE").append(overrideWhere);
+      }
+    return queryBuilder.toString().replace('\n', ' ');
+  }
+
+  @CheckForNull
+  protected String getOvverrideQuery(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    String overrideQuery = arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_QUERY);
+    if (overrideQuery != null) {
+        if (StringUtils.countMatches(overrideQuery, "%s") != 2) {
+            throw new MetadataDumperUsageException(
+                "Custom query for log dump needs two \"%s\" expansions, they will be expanded to end_time lower and upper boundaries.");
         }
-        return null;
+      return overrideQuery;
     }
+    return null;
+  }
 
-    @CheckForNull
-    protected String getOverrideWhere(@Nonnull ConnectorArguments arguments) throws MetadataDumperUsageException {
-        return arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_WHERE);
+  @CheckForNull
+  protected String getOverrideWhere(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    return arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_WHERE);
+  }
+
+  @Override
+  public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
+
+    String queryFormat = newQueryFormat(arguments);
+
+    final int daysToExport = arguments.getQueryLogDays(7);
+      if (daysToExport <= 0) {
+          throw new MetadataDumperUsageException(
+              "At least one day of query logs should be exported; you specified: " + daysToExport);
+      }
+    LOG.info("Log entries within the last {} days will be exported in increments of 1 hour.",
+        daysToExport);
+
+    // (24 * 7) -> 7 trailing days == 168 hours
+    // Actually, on Snowflake, 7 days ago starts at midnight in an unadvertised time zone. What the <deleted>.
+    // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
+    // 7-day window allowed by the server-side function.
+    ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
+    LOG.info("Exporting query log for " + intervals);
+    for (ZonedInterval interval : intervals) {
+      String query = String.format(queryFormat, SQL_FORMAT.format(interval.getStart()),
+          SQL_FORMAT.format(interval.getEndInclusive()));
+      String file =
+          ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
+              + ".csv";
+      out.add(new JdbcSelectTask(file, query).withHeaderClass(Header.class));
     }
-
-    @Override
-    public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws MetadataDumperUsageException {
-        out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-        out.add(new FormatTask(FORMAT_NAME));
-
-        String queryFormat = newQueryFormat(arguments);
-
-        final int daysToExport = arguments.getQueryLogDays(7);
-        if (daysToExport <= 0)
-            throw new MetadataDumperUsageException("At least one day of query logs should be exported; you specified: " + daysToExport);
-        LOG.info("Log entries within the last {} days will be exported in increments of 1 hour.", daysToExport);
-
-        // (24 * 7) -> 7 trailing days == 168 hours
-        // Actually, on Snowflake, 7 days ago starts at midnight in an unadvertised time zone. What the <deleted>.
-        // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
-        // 7-day window allowed by the server-side function.
-        ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
-        LOG.info("Exporting query log for " + intervals);
-        for (ZonedInterval interval : intervals) {
-            String query = String.format(queryFormat, SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndInclusive()));
-            String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
-            out.add(new JdbcSelectTask(file, query).withHeaderClass(Header.class));
-        }
-    }
+  }
 }

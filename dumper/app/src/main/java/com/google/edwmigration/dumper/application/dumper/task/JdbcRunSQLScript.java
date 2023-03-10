@@ -34,28 +34,28 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
  */
 public class JdbcRunSQLScript extends AbstractTask<Void> {
 
-    private final File sqlScript;
+  private final File sqlScript;
 
-    public JdbcRunSQLScript(@Nonnull File script) {
-        super(script.getName());
-        sqlScript = Preconditions.checkNotNull(script);
+  public JdbcRunSQLScript(@Nonnull File script) {
+    super(script.getName());
+    sqlScript = Preconditions.checkNotNull(script);
+  }
+
+  @Override
+  protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
+    JdbcHandle jdbcHandle = (JdbcHandle) handle;
+
+    FileSystemResource resource = new FileSystemResource(sqlScript);
+    ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator(resource);
+    jdbcHandle.getJdbcTemplate().execute((Connection conn) -> {
+      databasePopulator.populate(conn);
+      return null;
+    });
+
+    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+      writer.append("-- Successfully executed:\n\n");
+      writer.append(new String(Files.readAllBytes(sqlScript.toPath()), StandardCharsets.UTF_8));
     }
-
-    @Override
-    protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
-        JdbcHandle jdbcHandle = (JdbcHandle) handle;
-
-        FileSystemResource resource = new FileSystemResource(sqlScript);
-        ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator(resource);
-        jdbcHandle.getJdbcTemplate().execute((Connection conn) -> {
-            databasePopulator.populate(conn);
-            return null;
-        });
-
-        try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-            writer.append("-- Successfully executed:\n\n");
-            writer.append(new String(Files.readAllBytes(sqlScript.toPath()), StandardCharsets.UTF_8));
-        }
-        return null;
-    }
+    return null;
+  }
 }

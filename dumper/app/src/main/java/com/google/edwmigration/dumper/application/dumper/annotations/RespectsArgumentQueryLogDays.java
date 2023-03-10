@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
 /**
- *
  * @author shevek
  */
 @Target(ElementType.TYPE)
@@ -35,6 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @RespectsInput(order = 2000, arg = ConnectorArguments.OPT_QUERY_LOG_DAYS, description = RespectsArgumentQueryLogDays.DESCRIPTION)
 public @interface RespectsArgumentQueryLogDays {
 
-    public static final String DESCRIPTION = "The number of days of query history to dump.";
+  public static final String DESCRIPTION = "The number of days of query history to dump.";
 
 }

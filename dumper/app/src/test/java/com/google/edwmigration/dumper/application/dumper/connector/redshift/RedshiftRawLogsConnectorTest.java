@@ -28,33 +28,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author shevek
  */
 @RunWith(JUnit4.class)
 public class RedshiftRawLogsConnectorTest extends AbstractConnectorExecutionTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(RedshiftRawLogsConnectorTest.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(RedshiftRawLogsConnectorTest.class);
 
-    private final RedshiftRawLogsConnector connector = new RedshiftRawLogsConnector();
+  private final RedshiftRawLogsConnector connector = new RedshiftRawLogsConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
 
-    @Ignore("Expensive. Move to integration tests? Needs IAM parameters.")
-    @Test
-    public void testExecution() throws Exception {
-        File outputFile = TestUtils.newOutputFile("test-compilerworks-bigquery.zip");
-        LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+  @Ignore("Expensive. Move to integration tests? Needs IAM parameters.")
+  @Test
+  public void testExecution() throws Exception {
+    File outputFile = TestUtils.newOutputFile("test-compilerworks-bigquery.zip");
+    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
 
-        runDumper("--connector", connector.getName(), "--output", outputFile.getAbsolutePath());
+    runDumper("--connector", connector.getName(), "--output", outputFile.getAbsolutePath());
 
-        ZipValidator validator = new ZipValidator()
-                .withFormat(RedshiftRawLogsDumpFormat.FORMAT_NAME);
-        validator.run(outputFile);
-    }
+    ZipValidator validator = new ZipValidator()
+        .withFormat(RedshiftRawLogsDumpFormat.FORMAT_NAME);
+    validator.run(outputFile);
+  }
 
 }

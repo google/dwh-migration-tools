@@ -36,54 +36,56 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.*;
 
 /**
- * Runs the BigQuery query logs dumper against the CompilerWorks
- * BigQuery account and asserts on the output.
+ * Runs the BigQuery query logs dumper against the CompilerWorks BigQuery account and asserts on the
+ * output.
  *
  * @author shevek
  */
 @RunWith(JUnit4.class)
 public class BigQueryLogsConnectorTest extends AbstractBigQueryConnectorExecutionTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BigQueryLogsConnectorTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BigQueryLogsConnectorTest.class);
 
-    private static final String CANARY_TEMPLATE = "SELECT '%s'";
+  private static final String CANARY_TEMPLATE = "SELECT '%s'";
 
-    private final BigQueryLogsConnector connector = new BigQueryLogsConnector();
+  private final BigQueryLogsConnector connector = new BigQueryLogsConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
 
-    private String submitCanaryQuery() throws Exception {
-        BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
-        final String canaryQuery = String.format(CANARY_TEMPLATE, UUIDGenerator.getInstance().nextUUID());
-        LOG.debug("Submitting canary query: {}", canaryQuery);
-        TableResult tableResult = bigQuery.query(QueryJobConfiguration.of(canaryQuery));
-        assertEquals(1, tableResult.getTotalRows());
-        return canaryQuery;
-    }
+  private String submitCanaryQuery() throws Exception {
+    BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
+    final String canaryQuery = String.format(CANARY_TEMPLATE,
+        UUIDGenerator.getInstance().nextUUID());
+    LOG.debug("Submitting canary query: {}", canaryQuery);
+    TableResult tableResult = bigQuery.query(QueryJobConfiguration.of(canaryQuery));
+    assertEquals(1, tableResult.getTotalRows());
+    return canaryQuery;
+  }
 
-    @Ignore("Expensive. Move to integration tests?")
-    @Test
-    public void testExecution() throws Exception {
+  @Ignore("Expensive. Move to integration tests?")
+  @Test
+  public void testExecution() throws Exception {
 
-        final String canaryQuery = submitCanaryQuery();
+    final String canaryQuery = submitCanaryQuery();
 
-        File outputFile = TestUtils.newOutputFile("test-compilerworks-bigquery-logs.zip");
-        LOG.debug("Output file: {}", outputFile.getAbsolutePath());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String earliestDate = dateFormat.format(new DateTime().minusDays(1).toDate()); // we could run at midnight, so we want -1 days
-        String latestDate = dateFormat.format(new DateTime().toDate());
-        LOG.debug("Earliest date: {}; latest date: {}", earliestDate, latestDate);
+    File outputFile = TestUtils.newOutputFile("test-compilerworks-bigquery-logs.zip");
+    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    String earliestDate = dateFormat.format(
+        new DateTime().minusDays(1).toDate()); // we could run at midnight, so we want -1 days
+    String latestDate = dateFormat.format(new DateTime().toDate());
+    LOG.debug("Earliest date: {}; latest date: {}", earliestDate, latestDate);
 
-        runDumper("--connector", "bigquery-logs", "--output", outputFile.getAbsolutePath(),
-                "--query-log-start", earliestDate, "--query-log-end", latestDate);
+    runDumper("--connector", "bigquery-logs", "--output", outputFile.getAbsolutePath(),
+        "--query-log-start", earliestDate, "--query-log-end", latestDate);
 
-        ZipValidator validator = new ZipValidator()
-                .withFormat(BigQueryLogsDumpFormat.FORMAT_NAME)
-                .withExpectedEntries(BigQueryLogsDumpFormat.QueryHistoryJson.ZIP_ENTRY_NAME)
-                .withAllowedEntries("query_history.csv");
-        validator.run(outputFile);
-    }
+    ZipValidator validator = new ZipValidator()
+        .withFormat(BigQueryLogsDumpFormat.FORMAT_NAME)
+        .withExpectedEntries(BigQueryLogsDumpFormat.QueryHistoryJson.ZIP_ENTRY_NAME)
+        .withAllowedEntries("query_history.csv");
+    validator.run(outputFile);
+  }
 }
