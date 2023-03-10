@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
+package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -31,9 +31,9 @@ import org.junit.runners.JUnit4;
  * @author shevek
  */
 @RunWith(JUnit4.class)
-public class SnowflakeLogsConnectorTest extends AbstractConnectorTest {
+public class Teradata14LogsConnectorTest extends AbstractConnectorTest {
 
-    private final SnowflakeLogsConnector connector = new SnowflakeLogsConnector();
+    private final Teradata14LogsConnector connector = new Teradata14LogsConnector();
 
     @Test
     public void testConnector() throws Exception {
