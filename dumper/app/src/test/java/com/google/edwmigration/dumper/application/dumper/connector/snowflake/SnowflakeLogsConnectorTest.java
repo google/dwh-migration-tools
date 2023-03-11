@@ -16,12 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
-import java.io.IOException;
-import java.util.ArrayList;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -38,21 +33,6 @@ public class SnowflakeLogsConnectorTest extends AbstractConnectorTest {
     @Test
     public void testConnector() throws Exception {
         testConnectorDefaults(connector);
-    }
-
-    @Test
-    public void testFailsForInvalidQueryLogTimespan() throws IOException {
-        ConnectorArguments arguments = new ConnectorArguments(new String[] {
-            "--query-log-days", "0",
-            "--connector", "snowflake"
-        });
-        MetadataDumperUsageException exception =
-        Assert.assertThrows(
-            MetadataDumperUsageException.class,
-            () -> connector.addTasksTo(new ArrayList<>(), arguments));
-
-        Assert.assertTrue(exception.getMessage().startsWith("At least one day of query logs should be exported"));
-
     }
 
 }

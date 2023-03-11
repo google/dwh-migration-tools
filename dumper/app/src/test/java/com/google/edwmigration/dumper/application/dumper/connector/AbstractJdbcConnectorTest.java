@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.teradata;
+package com.google.edwmigration.dumper.application.dumper.connector;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.ServiceLoader;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,31 +28,32 @@ import org.junit.runners.JUnit4;
 
 /**
  *
- * @author shevek
+ * @author ishmum
  */
 @RunWith(JUnit4.class)
-public class Teradata14LogsConnectorTest extends AbstractConnectorTest {
+public class AbstractJdbcConnectorTest extends AbstractConnectorTest {
 
-    private final Teradata14LogsConnector connector = new Teradata14LogsConnector();
-
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
+    private final ServiceLoader<AbstractJdbcConnector> connectors = ServiceLoader.load(
+        AbstractJdbcConnector.class
+    );
 
     @Test
     public void testFailsForInvalidQueryLogTimespan() throws IOException {
-        ConnectorArguments arguments = new ConnectorArguments(new String[] {
-            "--query-log-days", "0",
-            "--connector", "snowflake"
-        });
-        MetadataDumperUsageException exception =
-        Assert.assertThrows(
-            MetadataDumperUsageException.class,
-            () -> connector.addTasksTo(new ArrayList<>(), arguments));
+        for (AbstractJdbcConnector connector : connectors) {
+            ConnectorArguments arguments = new ConnectorArguments(new String[]{
+                "--query-log-days", "0",
+                "--connector", connector.getName()
+            });
 
-        Assert.assertTrue(exception.getMessage().startsWith("At least one day of query logs should be exported"));
-
+            MetadataDumperUsageException exception =
+                Assert.assertThrows(
+                    "No exception thrown from " + connector.getName(),
+                    MetadataDumperUsageException.class,
+                    () -> connector.addTasksTo(new ArrayList<>(), arguments));
+            Assert.assertTrue(exception.getMessage()
+                    .startsWith("At least one day of query logs should be exported")
+            );
+        }
     }
 
 }
