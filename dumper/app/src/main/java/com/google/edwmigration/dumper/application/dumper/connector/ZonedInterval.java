@@ -20,9 +20,8 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * A zoned interval represents an interval of time delimited by an inclusive start zoned datetime
@@ -74,8 +73,8 @@ public class ZonedInterval {
 
     @Nonnull
     public ZonedInterval span(@Nonnull ZonedInterval interval) {
-        ZonedDateTime startTime = Collections.min(Arrays.asList(interval.getStart(), this.getStart()));
-        ZonedDateTime endTime = Collections.max(Arrays.asList(interval.getEndExclusive(), this.getEndExclusive()));
+        ZonedDateTime startTime = ObjectUtils.min(interval.getStart(), this.getStart());
+        ZonedDateTime endTime = ObjectUtils.max(interval.getEndExclusive(), this.getEndExclusive());
         return new ZonedInterval(startTime, endTime);
     }
 
