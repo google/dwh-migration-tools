@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,65 +30,77 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ZonedIntervalTest {
 
-    private final ZonedDateTime SEVEN_DAYS_AGO = getTimeSubtractingDays(7);
-    private final ZonedDateTime FIVE_DAYS_AGO = getTimeSubtractingDays(5);
-    private final ZonedDateTime THREE_DAYS_AGO = getTimeSubtractingDays(3);
-    private final ZonedDateTime ONE_DAY_AGO = getTimeSubtractingDays(1);
+  private final ZonedDateTime SEVEN_DAYS_AGO = getTimeSubtractingDays(7);
+  private final ZonedDateTime FIVE_DAYS_AGO = getTimeSubtractingDays(5);
+  private final ZonedDateTime THREE_DAYS_AGO = getTimeSubtractingDays(3);
+  private final ZonedDateTime ONE_DAY_AGO = getTimeSubtractingDays(1);
 
+  @Test
+  public void testInclusiveEndIsSmallerThanExclusiveEnd() {
+    // Arrange
+    ZonedInterval interval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
 
-    @Test
-    public void testInclusiveEndIsSmallerThanExclusiveEnd() {
-        // Arrange
-        ZonedInterval interval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
+    // Assert
+    assertTrue(
+        "Inclusive time should be smaller",
+        interval.getEndInclusive().isBefore(interval.getEndExclusive()));
+  }
 
-        // Assert
-        assertTrue("Inclusive time should be smaller", interval.getEndInclusive().isBefore(interval.getEndExclusive()));
-    }
+  @Test
+  public void testDisjointInterval() {
+    // Arrange
+    ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
+    ZonedInterval latestInterval = new ZonedInterval(THREE_DAYS_AGO, ONE_DAY_AGO);
 
-    @Test
-    public void testDisjointInterval() {
-        // Arrange
-        ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
-        ZonedInterval latestInterval = new ZonedInterval(THREE_DAYS_AGO, ONE_DAY_AGO);
+    // Act
+    ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
 
-        // Act
-        ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
+    // Assert
+    assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
+    assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
+  }
 
-        // Assert
-        assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
-        assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
-    }
+  @Test
+  public void testOverlappingInterval() {
+    // Arrange
+    ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, THREE_DAYS_AGO);
+    ZonedInterval latestInterval = new ZonedInterval(FIVE_DAYS_AGO, ONE_DAY_AGO);
 
-    @Test
-    public void testOverlappingInterval() {
-        // Arrange
-        ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, THREE_DAYS_AGO);
-        ZonedInterval latestInterval = new ZonedInterval(FIVE_DAYS_AGO, ONE_DAY_AGO);
+    // Act
+    ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
 
-        // Act
-        ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
+    // Assert
+    assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
+    assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
+  }
 
-        // Assert
-        assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
-        assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
-    }
+  @Test
+  public void testSubsetInterval() {
+    // Arrange
+    ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
+    ZonedInterval latestInterval = new ZonedInterval(FIVE_DAYS_AGO, THREE_DAYS_AGO);
 
-    @Test
-    public void testSubsetInterval() {
-        // Arrange
-        ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
-        ZonedInterval latestInterval = new ZonedInterval(THREE_DAYS_AGO, FIVE_DAYS_AGO);
+    // Act
+    ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
 
-        // Act
-        ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
+    // Assert
+    assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
+    assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
+  }
 
-        // Assert
-        assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
-        assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
-    }
+  @Test
+  public void testIntervalCreationValidation() {
+    // Arrange & Act
+    IllegalArgumentException exception =
+        Assert.assertThrows(
+            IllegalArgumentException.class, () -> new ZonedInterval(THREE_DAYS_AGO, FIVE_DAYS_AGO));
 
-    private static ZonedDateTime getTimeSubtractingDays(int days) {
-        ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
-        return nowAtUTC.minusDays(days).truncatedTo(ChronoUnit.HOURS);
-    }
+    // Assert
+    assertEquals("Start date must be before end date", exception.getMessage());
+  }
+
+  private static ZonedDateTime getTimeSubtractingDays(int days) {
+    ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
+    return nowAtUTC.minusDays(days).truncatedTo(ChronoUnit.HOURS);
+  }
 }

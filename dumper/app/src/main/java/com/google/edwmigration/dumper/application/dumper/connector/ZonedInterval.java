@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import com.google.common.base.Preconditions;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -31,56 +32,56 @@ import org.apache.commons.lang3.ObjectUtils;
  */
 public class ZonedInterval {
 
-    private static final ZoneId Z_UTC = ZoneOffset.UTC;
+  private static final ZoneId Z_UTC = ZoneOffset.UTC;
 
-    private final ZonedDateTime start;
-    private final ZonedDateTime endExclusive;
+  private final ZonedDateTime start;
+  private final ZonedDateTime endExclusive;
 
-    public ZonedInterval(ZonedDateTime start, ZonedDateTime endExclusive) {
-        this.start = start;
-        this.endExclusive = endExclusive;
-    }
+  public ZonedInterval(ZonedDateTime start, ZonedDateTime endExclusive) {
+    Preconditions.checkArgument(start.isBefore(endExclusive), "Start date must be before end date");
+    this.start = start;
+    this.endExclusive = endExclusive;
+  }
 
-    @Nonnull
-    public ZonedDateTime getStart() {
-        return start;
-    }
+  @Nonnull
+  public ZonedDateTime getStart() {
+    return start;
+  }
 
-    @Nonnull
-    public ZonedDateTime getStartUTC() {
-        return getStart().withZoneSameInstant(Z_UTC);
-    }
+  @Nonnull
+  public ZonedDateTime getStartUTC() {
+    return getStart().withZoneSameInstant(Z_UTC);
+  }
 
-    @Nonnull
-    public ZonedDateTime getEndExclusive() {
-        return endExclusive;
-    }
+  @Nonnull
+  public ZonedDateTime getEndExclusive() {
+    return endExclusive;
+  }
 
-    @Nonnull
-    public ZonedDateTime getEndExclusiveUTC() {
-        return getEndExclusive().withZoneSameInstant(Z_UTC);
-    }
+  @Nonnull
+  public ZonedDateTime getEndExclusiveUTC() {
+    return getEndExclusive().withZoneSameInstant(Z_UTC);
+  }
 
-    @Nonnull
-    public ZonedDateTime getEndInclusive() {
-        return getEndExclusive().minus(1, ChronoUnit.MILLIS);
-    }
+  @Nonnull
+  public ZonedDateTime getEndInclusive() {
+    return getEndExclusive().minus(1, ChronoUnit.MILLIS);
+  }
 
-    @Nonnull
-    public ZonedDateTime getEndInclusiveUTC() {
-        return getEndInclusive().withZoneSameInstant(Z_UTC);
-    }
+  @Nonnull
+  public ZonedDateTime getEndInclusiveUTC() {
+    return getEndInclusive().withZoneSameInstant(Z_UTC);
+  }
 
-    @Nonnull
-    public ZonedInterval span(@Nonnull ZonedInterval interval) {
-        ZonedDateTime startTime = ObjectUtils.min(interval.getStart(), this.getStart());
-        ZonedDateTime endTime = ObjectUtils.max(interval.getEndExclusive(), this.getEndExclusive());
-        return new ZonedInterval(startTime, endTime);
-    }
+  @Nonnull
+  public ZonedInterval span(@Nonnull ZonedInterval interval) {
+    ZonedDateTime startTime = ObjectUtils.min(interval.getStart(), this.getStart());
+    ZonedDateTime endTime = ObjectUtils.max(interval.getEndExclusive(), this.getEndExclusive());
+    return new ZonedInterval(startTime, endTime);
+  }
 
-    @Override
-    public String toString() {
-        return "[" + getStart() + ".." + getEndExclusive() + ")";
-    }
-
+  @Override
+  public String toString() {
+    return "[" + getStart() + ".." + getEndExclusive() + ")";
+  }
 }
