@@ -59,7 +59,7 @@ dependencies {
 
         implementation "net.sf.jopt-simple:jopt-simple:5.0.4"
         implementation "org.anarres.jdiagnostics:jdiagnostics:1.0.7"
-        implementation "commons-io:commons-io:2.6"
+        implementation "commons-io:commons-io:2.11.0"
         implementation "org.apache.commons:commons-csv:1.9.0"
         implementation "org.apache.commons:commons-lang3:3.8.1"
         testFixturesImplementation "org.apache.commons:commons-lang3:3.8.1"
@@ -78,7 +78,7 @@ dependencies {
         runtimeOnly "com.amazon.redshift:redshift-jdbc42:2.1.0.8"
 
         testFixturesApi "org.apache.commons:commons-compress:1.18"
-        testFixturesApi "commons-io:commons-io:2.6"
+        testFixturesApi "commons-io:commons-io:2.11.0"
         testImplementation "org.xerial:sqlite-jdbc:3.32.3"
         testImplementation "com.github.stefanbirkner:system-rules:1.18.0"
         testImplementation "org.postgresql:postgresql:42.5.4"
