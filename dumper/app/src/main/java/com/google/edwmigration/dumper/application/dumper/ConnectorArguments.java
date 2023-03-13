@@ -20,6 +20,10 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
+import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
+import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.Console;
 import java.io.File;
 import java.io.IOException;
@@ -54,10 +58,6 @@ import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
-import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -138,7 +138,8 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<String> optionOracleSID = parser.accepts(OPT_ORACLE_SID, "SID name for oracle").withRequiredArg().describedAs("orcl").ofType(String.class);
     private final OptionSpec<String> optionConfiguration = parser.accepts("config", "Configuration for DB connector").withRequiredArg().ofType(String.class).withValuesSeparatedBy(';').describedAs("key=val;key1=val1");
     // private final OptionSpec<String> optionDatabase = parser.accepts("database", "database (can be repeated; all if not specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
-    private final OptionSpec<File> optionOutput = parser.accepts("output", "Output file").withRequiredArg().ofType(File.class).describedAs("cw-dump.zip");
+    private final OptionSpec<File> optionOutput = parser.accepts("output", "Output file (cannot be used together with --output-dir)").withRequiredArg().ofType(File.class).describedAs("cw-dump.zip");
+    private final OptionSpec<String> optionOutputDir = parser.accepts("output-dir", "Output directory where the zip file with the default filename should be created (cannot be used together with --output option). If you want to specify the filename, use --output option instead.").withRequiredArg().ofType(String.class).defaultsTo("").describedAs("/home/user/my-dump-dir");
     private final OptionSpec<Void> optionOutputContinue = parser.accepts("continue", "Continues writing a previous output file.");
     // TODO: Make this be an ISO instant.
     @Deprecated
@@ -466,6 +467,11 @@ public class ConnectorArguments extends DefaultArguments {
         return getOptions().valueOf(optionOutput);
     }
 
+    @CheckForNull
+    public String getOutputDirectory() {
+        return getOptions().valueOf(optionOutputDir);
+    }
+
     public boolean isOutputContinue() {
         return getOptions().has(optionOutputContinue);
     }
@@ -627,6 +633,7 @@ public class ConnectorArguments extends DefaultArguments {
                 .add("user", getUser())
                 .add("configuration", getConfiguration())
                 .add("output", getOutputFile())
+                .add("output-dir", getOutputDirectory())
                 .add("query-log-earliest-timestamp", getQueryLogEarliestTimestamp())
                 .add("query-log-days", getQueryLogDays())
                 .add("query-log-start", getQueryLogStart())

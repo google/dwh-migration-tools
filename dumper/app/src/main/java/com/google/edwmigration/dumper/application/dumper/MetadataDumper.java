@@ -194,8 +194,21 @@ public class MetadataDumper {
         // We had a customer request to base it on the database, but that isn't well-defined,
         // as there may be 0 or N databases in a single file.
         File outputFile = arguments.getOutputFile();
+        String outputDirectory = arguments.getOutputDirectory();
+
+        boolean isDefaultPath = "".equals(outputDirectory);
+        if (!isDefaultPath && outputFile != null) {
+            System.out.println(
+                "**********************************************************\n"
+                + "* ERROR: Using both --output and --output-dir flags is not allowed.\n"
+                + "* Please use --help for more information.\n"
+                + "**********************************************************"
+            );
+            return;
+        }
+
         if (outputFile == null) {
-            outputFile = new File(connector.getDefaultFileName(arguments.isAssessment()));
+            outputFile = new File(outputDirectory, connector.getDefaultFileName(arguments.isAssessment()));
         }
         if (arguments.isDryRun()) {
             String title = "Dry run: Printing task list for " + connector.getName();
