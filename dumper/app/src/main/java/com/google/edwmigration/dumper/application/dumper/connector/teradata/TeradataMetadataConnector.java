@@ -113,9 +113,14 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
                     TaskCategory.OPTIONAL,
                     "SELECT %s FROM DBC.StatsV " + whereDatabaseNameClause + " ;"));
 
-            out.add(new TeradataJdbcSelectTask(TableSizeVFormat.ZIP_ENTRY_NAME,
-                    TaskCategory.OPTIONAL,
-                    "SELECT %s FROM DBC.TableSizeV" + whereDataBaseNameClause + " ;")); // What's a VProc? (AMP, col 1)
+          // TableSizeV contains a row per each VProc/AMP, so it can grow significantly for large dbs.
+          // Hence, we aggregate before dumping.
+          // See recommended usage
+          // https://docs.teradata.com/r/Teradata-VantageTM-Data-Dictionary/March-2019/Views-Reference/TableSizeV-X/Examples-Using-TableSizeV
+          out.add(new TeradataJdbcSelectTask(TableSizeVFormat.ZIP_ENTRY_NAME,
+              TaskCategory.OPTIONAL,
+              "SELECT DataBaseName, AccountName, TableName, SUM(CurrentPerm) CurrentPerm, SUM(PeakPerm) PeakPerm FROM DBC.TableSizeV "
+                  + whereDataBaseNameClause + " GROUP BY 1,2,3;"));
 
             out.add(new TeradataJdbcSelectTask(AllTempTablesVXFormat.ZIP_ENTRY_NAME,
                 TaskCategory.OPTIONAL,
