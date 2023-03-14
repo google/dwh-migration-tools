@@ -99,6 +99,8 @@ public class ConnectorArguments extends DefaultArguments {
     public static final String OPT_SCHEMA = "schema";
     public static final String OPT_ASSESSMENT = "assessment";
     public static final String OPT_TERADATA_MAX_TABLESIZEV_ROWS = "max-tablesizev-rows";
+    public static final String OPT_TERADATA_MAX_DATABASESV_USER_ROWS = "max-databasesv-user-rows";
+    public static final String OPT_TERADATA_MAX_DATABASESV_DB_ROWS = "max-databasesv-db-rows";
     public static final String OPT_ORACLE_SID = "oracle-sid";
     public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
@@ -139,6 +141,16 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<Long> optionTeradataMaxTableSizeVRows =
         parser.accepts(OPT_TERADATA_MAX_TABLESIZEV_ROWS, TERADATA_MAX_TABLE_SIZE_V_ROWS_DESCRIPTION)
         .withRequiredArg().ofType(Long.class).describedAs("100000");
+    public static final String TERADATA_MAX_DATABASES_V_USER_ROWS_DESCRIPTION =
+        "Max number of user rows (DBKind='U') to extract from DBC.DatabasesV table (available for 'teradata' connector only)";
+    private final OptionSpec<Long> optionTeradataMaxDatabasesVUserRows =
+        parser.accepts(OPT_TERADATA_MAX_DATABASESV_USER_ROWS, TERADATA_MAX_DATABASES_V_USER_ROWS_DESCRIPTION)
+            .withRequiredArg().ofType(Long.class).describedAs("100000");
+    public static final String TERADATA_MAX_DATABASES_V_DB_ROWS_DESCRIPTION =
+        "Max number of database rows (DBKind='D') to extract from DBC.DatabasesV table (available for 'teradata' connector only)";
+    private final OptionSpec<Long> optionTeradataMaxDatabasesVDbRows =
+        parser.accepts(OPT_TERADATA_MAX_DATABASESV_DB_ROWS, TERADATA_MAX_DATABASES_V_DB_ROWS_DESCRIPTION)
+            .withRequiredArg().ofType(Long.class).describedAs("100000");
 
     private final OptionSpec<String> optionUser = parser.accepts(OPT_USER, "Database username").withRequiredArg().describedAs("admin");
     private final OptionSpec<String> optionPass = parser.accepts(OPT_PASSWORD, "Database password, prompted if not provided").withOptionalArg().describedAs("sekr1t");
@@ -427,10 +439,22 @@ public class ConnectorArguments extends DefaultArguments {
     }
 
     public Optional<Long> getTeradataMaxTableSizeVRows() {
-        if (!getOptions().has(optionTeradataMaxTableSizeVRows)) {
+        return optionAsOptional(optionTeradataMaxTableSizeVRows);
+    }
+
+    public Optional<Long> getTeradataMaxDatabasesVUserRows() {
+        return optionAsOptional(optionTeradataMaxDatabasesVUserRows);
+    }
+
+    public Optional<Long> getTeradataMaxDatabasesVDbRows() {
+        return optionAsOptional(optionTeradataMaxDatabasesVDbRows);
+    }
+
+    private <T> Optional<T> optionAsOptional(OptionSpec<T> spec) {
+        if (!getOptions().has(spec)) {
             return Optional.empty();
         }
-        return Optional.of(getOptions().valueOf(optionTeradataMaxTableSizeVRows));
+        return Optional.of(getOptions().valueOf(spec));
     }
 
     @Nonnull

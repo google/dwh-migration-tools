@@ -16,6 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_TERADATA_MAX_DATABASESV_DB_ROWS;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_TERADATA_MAX_DATABASESV_USER_ROWS;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_TERADATA_MAX_TABLESIZEV_ROWS;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -94,6 +99,29 @@ public class MetadataDumper {
         return new String(out);
     }
 
+    private static class ArgumentValidationException extends RuntimeException {
+        ArgumentValidationException(String message) {
+            super(message);
+        }
+    }
+
+    private static void validateArgumentGreaterThan(Optional<Long> valueMaybe, long minValue,
+        String argumentName) {
+        valueMaybe.ifPresent(value -> {
+            if(value <= minValue) {
+                throw new ArgumentValidationException(
+                    String.format("Argument for '%s' option must be greater than 0. Actual: '%s'.",
+                        argumentName, value));
+            }
+        });
+    }
+
+    private static void validateArguments(ConnectorArguments arguments) throws ArgumentValidationException {
+        validateArgumentGreaterThan(arguments.getTeradataMaxTableSizeVRows(), 0, OPT_TERADATA_MAX_TABLESIZEV_ROWS);
+        validateArgumentGreaterThan(arguments.getTeradataMaxDatabasesVUserRows(), 0, OPT_TERADATA_MAX_DATABASESV_USER_ROWS);
+        validateArgumentGreaterThan(arguments.getTeradataMaxDatabasesVDbRows(), 0, OPT_TERADATA_MAX_DATABASESV_DB_ROWS);
+    }
+
     public void run(@Nonnull String... args) throws Exception {
         ConnectorArguments arguments = new ConnectorArguments(args);
 
@@ -106,6 +134,13 @@ public class MetadataDumper {
         Connector connector = CONNECTORS.get(connectorName.toUpperCase());
         if (connector == null) {
             LOG.error("Target DBMS " + connectorName + " not supported; available are " + CONNECTORS.keySet() + ".");
+            return;
+        }
+
+        try {
+            validateArguments(arguments);
+        } catch (ArgumentValidationException ex) {
+            LOG.error("ERROR: Validation failed. {}", ex.getMessage());
             return;
         }
 
