@@ -20,24 +20,24 @@ import javax.annotation.CheckForNull;
 
 public interface Function {
 
-    @CheckForNull
-    public String getDatabaseName();
+  @CheckForNull
+  public String getDatabaseName();
 
-    @CheckForNull
-    public String getFunctionName();
+  @CheckForNull
+  public String getFunctionName();
 
-    @CheckForNull
-    public String getType();
+  @CheckForNull
+  public String getType();
 
-    @CheckForNull
-    public String getClassName();
+  @CheckForNull
+  public String getClassName();
 
-    @CheckForNull
-    public String getOwner();
+  @CheckForNull
+  public String getOwner();
 
-    @CheckForNull
-    public Integer getOwnerType();
+  @CheckForNull
+  public Integer getOwnerType();
 
-    @CheckForNull
-    public Integer getCreateTime();
+  @CheckForNull
+  public Integer getCreateTime();
 }

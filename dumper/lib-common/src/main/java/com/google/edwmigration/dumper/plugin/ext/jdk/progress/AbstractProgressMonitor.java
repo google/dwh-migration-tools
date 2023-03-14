@@ -18,16 +18,20 @@ package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
 import javax.annotation.Nonnull;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public abstract class AbstractProgressMonitor implements ProgressMonitor {
 
-    @Nonnull
-    protected static String newMemorySummary() {
-        Runtime runtime = Runtime.getRuntime();
-        long memoryUsed = runtime.totalMemory() - runtime.freeMemory();
-        return "mmax=" + (runtime.maxMemory() / MEMDIV) + ", mtot=" + (runtime.totalMemory() / MEMDIV) + ", mfree=" + (runtime.freeMemory() / MEMDIV) + ", mused=" + (memoryUsed / MEMDIV);
-    }
+  @Nonnull
+  protected static String newMemorySummary() {
+    Runtime runtime = Runtime.getRuntime();
+    long memoryUsed = runtime.totalMemory() - runtime.freeMemory();
+    return "mmax="
+        + (runtime.maxMemory() / MEMDIV)
+        + ", mtot="
+        + (runtime.totalMemory() / MEMDIV)
+        + ", mfree="
+        + (runtime.freeMemory() / MEMDIV)
+        + ", mused="
+        + (memoryUsed / MEMDIV);
+  }
 }

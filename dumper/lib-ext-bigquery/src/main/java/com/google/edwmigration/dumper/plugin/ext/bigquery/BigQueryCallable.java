@@ -19,13 +19,10 @@ package com.google.edwmigration.dumper.plugin.ext.bigquery;
 import com.google.cloud.bigquery.BigQueryException;
 import javax.annotation.Nonnull;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @FunctionalInterface
 public interface BigQueryCallable<T> {
 
-    @Nonnull
-    public T call() throws BigQueryException;
+  @Nonnull
+  public T call() throws BigQueryException;
 }

@@ -16,71 +16,68 @@
  */
 package com.google.edwmigration.dumper.application.dumper.io;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
+import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import javax.annotation.Nonnull;
-import com.google.edwmigration.dumper.test.TestUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.springframework.util.FileSystemUtils;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @RunWith(JUnit4.class)
 public class FileSystemOutputHandleFactoryTest {
 
-    private void testSinkFactory(@Nonnull FileSystemOutputHandleFactory factory) throws IOException {
+  private void testSinkFactory(@Nonnull FileSystemOutputHandleFactory factory) throws IOException {
 
-        {
-            OutputHandle handle = factory.newOutputFileHandle("temporary");
-            assertFalse("temporary exists before write", handle.exists());
-            handle.asTemporaryByteSink().write(Ints.toByteArray(1234));
-            assertFalse("temporary exists after write - before commit", handle.exists());
-            handle.commit();
-            assertTrue("temporary does not exist after commit", handle.exists());
-        }
-
-        {
-            OutputHandle handle = factory.newOutputFileHandle("direct");
-            assertFalse("direct exists before write", handle.exists());
-            handle.asByteSink().write(Ints.toByteArray(1234));
-            assertTrue("direct does not exist after commit", handle.exists());
-        }
+    {
+      OutputHandle handle = factory.newOutputFileHandle("temporary");
+      assertFalse("temporary exists before write", handle.exists());
+      handle.asTemporaryByteSink().write(Ints.toByteArray(1234));
+      assertFalse("temporary exists after write - before commit", handle.exists());
+      handle.commit();
+      assertTrue("temporary does not exist after commit", handle.exists());
     }
 
-    @Test
-    public void testFileSystemFile() throws Exception {
-        File root = TestUtils.newOutputDirectory("filesystem.dir");
-        FileSystemUtils.deleteRecursively(root);
-        root.mkdirs();
-        testSinkFactory(new FileSystemOutputHandleFactory(FileSystems.getDefault(), root.getAbsolutePath()));
-        assertTrue("Dir exists.", root.exists());
-        assertTrue("Dir is a directory.", root.isDirectory());
+    {
+      OutputHandle handle = factory.newOutputFileHandle("direct");
+      assertFalse("direct exists before write", handle.exists());
+      handle.asByteSink().write(Ints.toByteArray(1234));
+      assertTrue("direct does not exist after commit", handle.exists());
     }
+  }
 
-    @Test
-    public void testFileSystemZip() throws Exception {
-        File root = TestUtils.newOutputFile("filesystem.zip");
-        if (root.exists())
-            root.delete();
-        else
-            com.google.common.io.Files.createParentDirs(root);
-        root.delete();
-        URI uri = URI.create("jar:" + root.toURI());
-        try (FileSystem fs = FileSystems.newFileSystem(uri, ImmutableMap.of("create", "true"))) {
-            testSinkFactory(new FileSystemOutputHandleFactory(fs, "/"));
-        }
-        assertTrue("ZIP exists.", root.exists());
-        assertTrue("ZIP is a file.", root.isFile());
+  @Test
+  public void testFileSystemFile() throws Exception {
+    File root = TestUtils.newOutputDirectory("filesystem.dir");
+    FileSystemUtils.deleteRecursively(root);
+    root.mkdirs();
+    testSinkFactory(
+        new FileSystemOutputHandleFactory(FileSystems.getDefault(), root.getAbsolutePath()));
+    assertTrue("Dir exists.", root.exists());
+    assertTrue("Dir is a directory.", root.isDirectory());
+  }
+
+  @Test
+  public void testFileSystemZip() throws Exception {
+    File root = TestUtils.newOutputFile("filesystem.zip");
+    if (root.exists()) root.delete();
+    else com.google.common.io.Files.createParentDirs(root);
+    root.delete();
+    URI uri = URI.create("jar:" + root.toURI());
+    try (FileSystem fs = FileSystems.newFileSystem(uri, ImmutableMap.of("create", "true"))) {
+      testSinkFactory(new FileSystemOutputHandleFactory(fs, "/"));
     }
+    assertTrue("ZIP exists.", root.exists());
+    assertTrue("ZIP is a file.", root.isFile());
+  }
 }

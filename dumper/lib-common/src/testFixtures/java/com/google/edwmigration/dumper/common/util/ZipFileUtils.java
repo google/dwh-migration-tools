@@ -26,36 +26,37 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public class ZipFileUtils {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(ZipFileUtils.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(ZipFileUtils.class);
 
-    @CheckForNull
-    public static ZipArchiveEntry findZipEntry(@Nonnull ZipFile zip, @Nonnull String name) {
-        Preconditions.checkNotNull(zip, "ZipFile was null.");
-        Preconditions.checkNotNull(name, "ZipEntryName was null.");
+  @CheckForNull
+  public static ZipArchiveEntry findZipEntry(@Nonnull ZipFile zip, @Nonnull String name) {
+    Preconditions.checkNotNull(zip, "ZipFile was null.");
+    Preconditions.checkNotNull(name, "ZipEntryName was null.");
 
-        ROOT:
-        {
-            ZipArchiveEntry entry = zip.getEntry(name);
-            if (entry != null)
-                return entry;
-        }
-
-        // Once in a while, somebody messes with a zip file, and really fouls it up.
-        String suffix = "/" + name;
-        for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
-            if (StringUtils.endsWithIgnoreCase(entry.getName(), suffix)) {
-                LOG.warn("SUSPICIOUS ZIP FILE: ALL BETS ARE OFF: Found zip entry " + name + " located at " + entry.getName() + ", not at the root.");
-                return entry;
-            }
-        }
-
-        return null;
+    ROOT:
+    {
+      ZipArchiveEntry entry = zip.getEntry(name);
+      if (entry != null) return entry;
     }
+
+    // Once in a while, somebody messes with a zip file, and really fouls it up.
+    String suffix = "/" + name;
+    for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
+      if (StringUtils.endsWithIgnoreCase(entry.getName(), suffix)) {
+        LOG.warn(
+            "SUSPICIOUS ZIP FILE: ALL BETS ARE OFF: Found zip entry "
+                + name
+                + " located at "
+                + entry.getName()
+                + ", not at the root.");
+        return entry;
+      }
+    }
+
+    return null;
+  }
 }

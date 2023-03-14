@@ -16,16 +16,12 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/**
- *
- * @author matt
- */
+/** @author matt */
 public class MetadataDumperConstants {
 
-    public static final String FORMAT_ZIP_ENTRY_NAME = "compilerworks-format.txt";
-    public static final String ARGUMENTS_ZIP_ENTRY_NAME = "compilerworks-arguments.txt";
-    public static final String VERSION_ZIP_ENTRY_NAME = "compilerworks-version.txt";
+  public static final String FORMAT_ZIP_ENTRY_NAME = "compilerworks-format.txt";
+  public static final String ARGUMENTS_ZIP_ENTRY_NAME = "compilerworks-arguments.txt";
+  public static final String VERSION_ZIP_ENTRY_NAME = "compilerworks-version.txt";
 
-    private MetadataDumperConstants() {
-    }
+  private MetadataDumperConstants() {}
 }

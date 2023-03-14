@@ -25,64 +25,62 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public class FileSystemOutputHandle implements OutputHandle {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(FileSystemOutputHandle.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(FileSystemOutputHandle.class);
 
-    private final Path temporaryPath;
-    private final Path targetPath;
+  private final Path temporaryPath;
+  private final Path targetPath;
 
-    public FileSystemOutputHandle(@Nonnull Path rootPath, @Nonnull String targetPath) {
-        // Due to the semantics of prepare(), both of these must be within the same subdirectory.
-        this.targetPath = rootPath.resolve(targetPath);
-        this.temporaryPath = rootPath.resolve(targetPath + ".tmp");
-        // LOG.debug("Created " + this);
-    }
+  public FileSystemOutputHandle(@Nonnull Path rootPath, @Nonnull String targetPath) {
+    // Due to the semantics of prepare(), both of these must be within the same subdirectory.
+    this.targetPath = rootPath.resolve(targetPath);
+    this.temporaryPath = rootPath.resolve(targetPath + ".tmp");
+    // LOG.debug("Created " + this);
+  }
 
-    @Override
-    public boolean exists() throws IOException {
-        // LOG.debug("Looking for existence of " + targetPath);
-        return Files.exists(targetPath);
-    }
+  @Override
+  public boolean exists() throws IOException {
+    // LOG.debug("Looking for existence of " + targetPath);
+    return Files.exists(targetPath);
+  }
 
-    @Override
-    public ByteSink asByteSink() throws IOException {
-        // LOG.debug("As ByteSink: " + this + " = " + targetPath);
-        prepare();
-        return new FileSystemByteSink(targetPath);
-    }
+  @Override
+  public ByteSink asByteSink() throws IOException {
+    // LOG.debug("As ByteSink: " + this + " = " + targetPath);
+    prepare();
+    return new FileSystemByteSink(targetPath);
+  }
 
-    @Override
-    public ByteSink asTemporaryByteSink() throws IOException {
-        // LOG.debug("As Temporary ByteSink: " + this + " = " + temporaryPath);
-        prepare();
-        return new FileSystemByteSink(temporaryPath);
-    }
+  @Override
+  public ByteSink asTemporaryByteSink() throws IOException {
+    // LOG.debug("As Temporary ByteSink: " + this + " = " + temporaryPath);
+    prepare();
+    return new FileSystemByteSink(temporaryPath);
+  }
 
-    /**
-     * Ensures that the target file can be written.
-     *
-     * Must be called before calling openStream() on a ByteStream acquired from this object.
-     */
-    private void prepare() throws IOException {
-        // Ensures that the directory to which we want to write exists
-        Files.createDirectories(targetPath.getParent());
-    }
+  /**
+   * Ensures that the target file can be written.
+   *
+   * <p>Must be called before calling openStream() on a ByteStream acquired from this object.
+   */
+  private void prepare() throws IOException {
+    // Ensures that the directory to which we want to write exists
+    Files.createDirectories(targetPath.getParent());
+  }
 
-    @Override
-    public void commit() throws IOException {
-        if (!Files.exists(temporaryPath))
-            throw new FileNotFoundException("File does not exist: " + temporaryPath + "; cannot move to " + targetPath);
-        Files.move(temporaryPath, targetPath);
-    }
+  @Override
+  public void commit() throws IOException {
+    if (!Files.exists(temporaryPath))
+      throw new FileNotFoundException(
+          "File does not exist: " + temporaryPath + "; cannot move to " + targetPath);
+    Files.move(temporaryPath, targetPath);
+  }
 
-    @Override
-    public String toString() {
-        return "FileSystemOutputHandle(" + targetPath.getFileSystem() + "!" + targetPath + ")";
-    }
+  @Override
+  public String toString() {
+    return "FileSystemOutputHandle(" + targetPath.getFileSystem() + "!" + targetPath + ")";
+  }
 }

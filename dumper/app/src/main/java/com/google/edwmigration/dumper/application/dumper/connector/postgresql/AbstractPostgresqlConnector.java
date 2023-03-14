@@ -17,23 +17,20 @@
 package com.google.edwmigration.dumper.application.dumper.connector.postgresql;
 
 import com.google.common.collect.Iterables;
-import java.sql.Driver;
-import javax.sql.DataSource;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverClass;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import java.sql.Driver;
+import javax.sql.DataSource;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @RespectsArgumentDriver
 @RespectsArgumentDriverClass
 @RespectsArgumentHostUnlessUrl
@@ -42,26 +39,26 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 @RespectsArgumentUri
 public abstract class AbstractPostgresqlConnector extends AbstractJdbcConnector {
 
-    public static final int OPT_PORT_DEFAULT = 5432;
+  public static final int OPT_PORT_DEFAULT = 5432;
 
-    public AbstractPostgresqlConnector(String name) {
-        super(name);
+  public AbstractPostgresqlConnector(String name) {
+    super(name);
+  }
+
+  @Override
+  public Handle open(ConnectorArguments arguments) throws Exception {
+    String url = arguments.getUri();
+    if (url == null) {
+      String host = arguments.getHost("localhost");
+      int port = arguments.getPort(OPT_PORT_DEFAULT);
+      String database = Iterables.getFirst(arguments.getDatabases(), null);
+      url = "jdbc:postgresql://" + host + ":" + port + "/";
+      if (database != null) url = url + database;
     }
 
-    @Override
-    public Handle open(ConnectorArguments arguments) throws Exception {
-        String url = arguments.getUri();
-        if (url == null) {
-            String host = arguments.getHost("localhost");
-            int port = arguments.getPort(OPT_PORT_DEFAULT);
-            String database = Iterables.getFirst(arguments.getDatabases(), null);
-            url = "jdbc:postgresql://" + host + ":" + port + "/";
-            if (database != null)
-                url = url + database;
-        }
-
-        Driver driver = newDriver(arguments.getDriverPaths(), arguments.getDriverClass("org.postgresql.Driver"));
-        DataSource dataSource = newSimpleDataSource(driver, url, arguments);
-        return new JdbcHandle(dataSource);
-    }
+    Driver driver =
+        newDriver(arguments.getDriverPaths(), arguments.getDriverClass("org.postgresql.Driver"));
+    DataSource dataSource = newSimpleDataSource(driver, url, arguments);
+    return new JdbcHandle(dataSource);
+  }
 }

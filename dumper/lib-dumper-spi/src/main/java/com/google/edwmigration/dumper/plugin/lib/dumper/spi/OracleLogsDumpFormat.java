@@ -18,15 +18,15 @@ package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
 public interface OracleLogsDumpFormat {
 
-    public static final String FORMAT_NAME = "oracle.logs.zip";
+  public static final String FORMAT_NAME = "oracle.logs.zip";
 
-    String ZIP_ENTRY_FILENAME = "query_history.csv";
+  String ZIP_ENTRY_FILENAME = "query_history.csv";
 
-    enum Header {
-        QueryFullText,
-        CpuTimeMicroseconds,
-        ElapsedTimeMicroseconds,
-        DiskReads,
-        RuntimeMemory
-    }
+  enum Header {
+    QueryFullText,
+    CpuTimeMicroseconds,
+    ElapsedTimeMicroseconds,
+    DiskReads,
+    RuntimeMemory
+  }
 }

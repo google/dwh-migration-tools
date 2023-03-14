@@ -16,39 +16,47 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import java.io.File;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
+import java.io.File;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @RunWith(JUnit4.class)
-public class SnowflakeAccountUsageMetadataConnectorTest extends AbstractSnowflakeConnectorExecutionTest {
+public class SnowflakeAccountUsageMetadataConnectorTest
+    extends AbstractSnowflakeConnectorExecutionTest {
 
-    private final MetadataConnector connector = new SnowflakeAccountUsageMetadataConnector();
+  private final MetadataConnector connector = new SnowflakeAccountUsageMetadataConnector();
 
-    @Test
-    public void testExecution() throws Exception {
-        File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-metadata-au.zip");
-        if (!run(ARGS(connector, outputFile)))
-            return;
+  @Test
+  public void testExecution() throws Exception {
+    File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-metadata-au.zip");
+    if (!run(ARGS(connector, outputFile))) return;
 
-        ZipValidator validator = new ZipValidator()
-                .withFormat(SnowflakeMetadataDumpFormat.FORMAT_NAME);
+    ZipValidator validator = new ZipValidator().withFormat(SnowflakeMetadataDumpFormat.FORMAT_NAME);
 
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.DatabasesFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.SchemataFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.TablesFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.ViewsFormat.Header.class);
-        validator.withEntryValidator(SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.DatabasesFormat.Header.class);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.SchemataFormat.Header.class);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.TablesFormat.Header.class);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.ViewsFormat.Header.class);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
 
-        validator.run(outputFile);
-    }
+    validator.run(outputFile);
+  }
 }

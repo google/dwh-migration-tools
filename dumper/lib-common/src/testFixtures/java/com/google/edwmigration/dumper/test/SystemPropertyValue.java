@@ -23,34 +23,32 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public class SystemPropertyValue implements BooleanSupplier {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(SystemPropertyValue.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(SystemPropertyValue.class);
 
-    public static boolean get(@Nonnull String name) {
-        return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-            @Override
-            public Boolean run() {
-                boolean out = Boolean.getBoolean(name);
-                // LOG.debug("SystemPropertyValue {} -> {}", name, out);
-                return out;
-            }
+  public static boolean get(@Nonnull String name) {
+    return AccessController.doPrivileged(
+        new PrivilegedAction<Boolean>() {
+          @Override
+          public Boolean run() {
+            boolean out = Boolean.getBoolean(name);
+            // LOG.debug("SystemPropertyValue {} -> {}", name, out);
+            return out;
+          }
         });
-    }
+  }
 
-    private final boolean value;
+  private final boolean value;
 
-    public SystemPropertyValue(@Nonnull String name) {
-        this.value = get(name);
-    }
+  public SystemPropertyValue(@Nonnull String name) {
+    this.value = get(name);
+  }
 
-    @Override
-    public boolean getAsBoolean() {
-        return value;
-    }
+  @Override
+  public boolean getAsBoolean() {
+    return value;
+  }
 }

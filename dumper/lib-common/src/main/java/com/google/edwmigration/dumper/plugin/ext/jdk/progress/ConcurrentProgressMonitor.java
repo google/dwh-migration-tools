@@ -22,31 +22,31 @@ import javax.annotation.Nonnull;
 /**
  * A thread-safe progress monitor.
  *
- * All methods on this class except close() may safely be called with arbitrary concurrency.
+ * <p>All methods on this class except close() may safely be called with arbitrary concurrency.
  *
  * @author shevek
  */
 public interface ConcurrentProgressMonitor extends AutoCloseable {
 
-    /** The divisor for memory measurements: 1 Mb. */
-    public static final int MEMDIV = 1024 * 1024;
+  /** The divisor for memory measurements: 1 Mb. */
+  public static final int MEMDIV = 1024 * 1024;
 
-    @Nonnull
-    default public ConcurrentProgressMonitor withBlockSize(@Nonnegative int blockSize) {
-        return this;
-    }
+  @Nonnull
+  public default ConcurrentProgressMonitor withBlockSize(@Nonnegative int blockSize) {
+    return this;
+  }
 
-    /** Returns the current count. This may be a relatively slow operation. */
-    @Nonnegative
-    public long getCount();
+  /** Returns the current count. This may be a relatively slow operation. */
+  @Nonnegative
+  public long getCount();
 
-    public void count(@Nonnegative int delta);
+  public void count(@Nonnegative int delta);
 
-    /** Counts 1. */
-    default public void count() {
-        count(1);
-    }
+  /** Counts 1. */
+  public default void count() {
+    count(1);
+  }
 
-    @Override
-    public void close();
+  @Override
+  public void close();
 }

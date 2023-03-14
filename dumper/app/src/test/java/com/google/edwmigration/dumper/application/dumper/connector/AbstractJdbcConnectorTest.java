@@ -26,34 +26,27 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- *
- * @author ishmum
- */
+/** @author ishmum */
 @RunWith(JUnit4.class)
 public class AbstractJdbcConnectorTest extends AbstractConnectorTest {
 
-    private final ServiceLoader<AbstractJdbcConnector> connectors = ServiceLoader.load(
-        AbstractJdbcConnector.class
-    );
+  private final ServiceLoader<AbstractJdbcConnector> connectors =
+      ServiceLoader.load(AbstractJdbcConnector.class);
 
-    @Test
-    public void testFailsForInvalidQueryLogTimespan() throws IOException {
-        for (AbstractJdbcConnector connector : connectors) {
-            ConnectorArguments arguments = new ConnectorArguments(new String[]{
-                "--query-log-days", "0",
-                "--connector", connector.getName()
-            });
+  @Test
+  public void testFailsForInvalidQueryLogTimespan() throws IOException {
+    for (AbstractJdbcConnector connector : connectors) {
+      ConnectorArguments arguments =
+          new ConnectorArguments(
+              new String[] {"--query-log-days", "0", "--connector", connector.getName()});
 
-            MetadataDumperUsageException exception =
-                Assert.assertThrows(
-                    "No exception thrown from " + connector.getName(),
-                    MetadataDumperUsageException.class,
-                    () -> connector.addTasksTo(new ArrayList<>(), arguments));
-            Assert.assertTrue(exception.getMessage()
-                    .startsWith("At least one day of query logs should be exported")
-            );
-        }
+      MetadataDumperUsageException exception =
+          Assert.assertThrows(
+              "No exception thrown from " + connector.getName(),
+              MetadataDumperUsageException.class,
+              () -> connector.addTasksTo(new ArrayList<>(), arguments));
+      Assert.assertTrue(
+          exception.getMessage().startsWith("At least one day of query logs should be exported"));
     }
-
+  }
 }

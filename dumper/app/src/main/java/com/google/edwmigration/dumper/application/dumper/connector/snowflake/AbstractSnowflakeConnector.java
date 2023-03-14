@@ -17,12 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.common.base.Joiner;
-import java.sql.Driver;
-import java.util.ArrayList;
-import java.util.List;
-import javax.annotation.Nonnull;
-import javax.sql.DataSource;
-import org.apache.commons.lang3.StringUtils;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -36,64 +30,82 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import java.sql.Driver;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nonnull;
+import javax.sql.DataSource;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @RespectsArgumentHostUnlessUrl
 @RespectsArgumentUser
 @RespectsArgumentPassword
 @RespectsInputs({
-    // Although RespectsInput is @Repeatable, errorprone fails on it.
-    @RespectsInput(order = 450, arg = ConnectorArguments.OPT_ROLE, description = "The Snowflake role to use for authorization."),
-    @RespectsInput(order = 500, arg = ConnectorArguments.OPT_WAREHOUSE, description = "The Snowflake warehouse to use for processing metadata queries.")
+  // Although RespectsInput is @Repeatable, errorprone fails on it.
+  @RespectsInput(
+      order = 450,
+      arg = ConnectorArguments.OPT_ROLE,
+      description = "The Snowflake role to use for authorization."),
+  @RespectsInput(
+      order = 500,
+      arg = ConnectorArguments.OPT_WAREHOUSE,
+      description = "The Snowflake warehouse to use for processing metadata queries.")
 })
 @RespectsArgumentDatabaseForConnection
 @RespectsArgumentDriver
 @RespectsArgumentUri
 public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
-    public AbstractSnowflakeConnector(@Nonnull String name) {
-        super(name);
+  public AbstractSnowflakeConnector(@Nonnull String name) {
+    super(name);
+  }
+
+  @Nonnull
+  @Override
+  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
+    String url = arguments.getUri();
+    if (url == null) {
+      StringBuilder buf = new StringBuilder("jdbc:snowflake://");
+      String host = arguments.getHost("host.snowflakecomputing.com");
+      buf.append(host).append("/");
+      // FWIW we can/should totally use a Properties object here and pass it to
+      // SimpleDriverDataSource rather than messing with the URL.
+      List<String> optionalArguments = new ArrayList<>();
+      if (arguments.getWarehouse() != null)
+        optionalArguments.add("warehouse=" + arguments.getWarehouse());
+      if (!arguments.getDatabases().isEmpty())
+        optionalArguments.add("db=" + arguments.getDatabases().get(0));
+      if (arguments.getRole() != null) optionalArguments.add("role=" + arguments.getRole());
+      if (!optionalArguments.isEmpty())
+        buf.append("?").append(Joiner.on("&").join(optionalArguments));
+      url = buf.toString();
     }
 
-    @Nonnull
-    @Override
-    public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-        String url = arguments.getUri();
-        if (url == null) {
-            StringBuilder buf = new StringBuilder("jdbc:snowflake://");
-            String host = arguments.getHost("host.snowflakecomputing.com");
-            buf.append(host).append("/");
-            // FWIW we can/should totally use a Properties object here and pass it to SimpleDriverDataSource rather than messing with the URL.
-            List<String> optionalArguments = new ArrayList<>();
-            if (arguments.getWarehouse() != null)
-                optionalArguments.add("warehouse=" + arguments.getWarehouse());
-            if (!arguments.getDatabases().isEmpty())
-                optionalArguments.add("db=" + arguments.getDatabases().get(0));
-            if (arguments.getRole() != null)
-                optionalArguments.add("role=" + arguments.getRole());
-            if (!optionalArguments.isEmpty())
-                buf.append("?").append(Joiner.on("&").join(optionalArguments));
-            url = buf.toString();
-        }
+    Driver driver =
+        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
+    DataSource dataSource =
+        new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
+    return checkCurrentDatabaseExists(arguments, new JdbcHandle(dataSource));
+  }
 
-        Driver driver = newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-        DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
-        return checkCurrentDatabaseExists(arguments, new JdbcHandle(dataSource));
+  @Nonnull
+  private JdbcHandle checkCurrentDatabaseExists(
+      @Nonnull ConnectorArguments arguments, @Nonnull JdbcHandle jdbcHandle)
+      throws MetadataDumperUsageException {
+    JdbcTemplate jdbcTemplate = jdbcHandle.getJdbcTemplate();
+    String currentDatabase = jdbcTemplate.queryForObject("SELECT CURRENT_DATABASE()", String.class);
+    if (currentDatabase == null) {
+      List<String> dbNames =
+          jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
+      throw new MetadataDumperUsageException(
+          "Database name not found "
+              + arguments.getDatabases().get(0)
+              + ", use one of: "
+              + StringUtils.join(dbNames, ", "));
     }
-
-    @Nonnull
-    private JdbcHandle checkCurrentDatabaseExists(@Nonnull ConnectorArguments arguments, @Nonnull JdbcHandle jdbcHandle) throws MetadataDumperUsageException {
-        JdbcTemplate jdbcTemplate = jdbcHandle.getJdbcTemplate();
-        String currentDatabase = jdbcTemplate.queryForObject("SELECT CURRENT_DATABASE()", String.class);
-        if (currentDatabase == null) {
-            List<String> dbNames = jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
-            throw new MetadataDumperUsageException("Database name not found " + arguments.getDatabases().get(0) +", use one of: " + StringUtils.join(dbNames, ", "));
-        }
-        return jdbcHandle;
-    }
+    return jdbcHandle;
+  }
 }

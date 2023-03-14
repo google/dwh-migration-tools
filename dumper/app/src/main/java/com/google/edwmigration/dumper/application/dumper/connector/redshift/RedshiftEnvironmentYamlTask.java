@@ -44,9 +44,12 @@ public class RedshiftEnvironmentYamlTask extends AbstractJdbcTask<Void> {
 
   @CheckForNull
   @Override
-  protected Void doInConnection(@Nonnull TaskRunContext context,
+  protected Void doInConnection(
+      @Nonnull TaskRunContext context,
       @Nonnull JdbcHandle jdbcHandle,
-      @Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
+      @Nonnull ByteSink sink,
+      @Nonnull Connection connection)
+      throws SQLException {
     ResultSetExtractor<Void> rse = getRedshiftEnvironmentExtractor(sink);
     return doSelect(connection, rse, ENV_QUERY);
   }

@@ -27,92 +27,81 @@ import org.slf4j.LoggerFactory;
 
 public class TestUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TestUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestUtils.class);
 
-    @Nonnull
-    private static final String TEST_OUTPUTS_DIR = "build" + File.separator + "test-outputs";
+  @Nonnull private static final String TEST_OUTPUTS_DIR = "build" + File.separator + "test-outputs";
 
-    /**
-     * Returns a filename in build/test-outputs, ensuring that the parent directory exists.
-     */
-    @Nonnull
-    public static File newOutputFileSilent(@Nonnull String name) throws IOException {
-        File file = new File(TEST_OUTPUTS_DIR, name);
-        File parent = file.getParentFile();
-        if (parent != null)
-            FileUtils.forceMkdir(parent);
-        return file;
+  /** Returns a filename in build/test-outputs, ensuring that the parent directory exists. */
+  @Nonnull
+  public static File newOutputFileSilent(@Nonnull String name) throws IOException {
+    File file = new File(TEST_OUTPUTS_DIR, name);
+    File parent = file.getParentFile();
+    if (parent != null) FileUtils.forceMkdir(parent);
+    return file;
+  }
+
+  /** Returns a filename in build/test-outputs, ensuring that the parent directory exists. */
+  @Nonnull
+  public static File newOutputFile(@Nonnull String name) throws IOException {
+    File file = newOutputFileSilent(name);
+    LOG.info("Creating test output file " + file.getAbsolutePath());
+    return file;
+  }
+
+  /** Mostly for static or variable initializers. */
+  @Nonnull
+  public static File newOutputFileUnchecked(@Nonnull String name) throws RuntimeException {
+    try {
+      return newOutputFileSilent(name);
+    } catch (IOException e) {
+      throw new AssertionError("Failed to create output file " + name, e);
     }
+  }
 
-    /**
-     * Returns a filename in build/test-outputs, ensuring that the parent directory exists.
-     */
-    @Nonnull
-    public static File newOutputFile(@Nonnull String name) throws IOException {
-        File file = newOutputFileSilent(name);
-        LOG.info("Creating test output file " + file.getAbsolutePath());
-        return file;
+  @Nonnull
+  public static File newOutputDirectory(@Nonnull String name) throws IOException {
+    File file = newOutputFile(name);
+    try {
+      FileUtils.forceDelete(file);
+    } catch (FileNotFoundException fnfe) {
+      // Ignore; the directory doesn't exist, but we're going to create it next.
     }
+    FileUtils.forceMkdir(file);
+    return file;
+  }
 
-    /**
-     * Mostly for static or variable initializers.
-     */
-    @Nonnull
-    public static File newOutputFileUnchecked(@Nonnull String name) throws RuntimeException {
-        try {
-            return newOutputFileSilent(name);
-        } catch (IOException e) {
-            throw new AssertionError("Failed to create output file " + name, e);
-        }
+  /** Mostly for static or variable initializers. */
+  @Nonnull
+  public static File newOutputDirectoryUnchecked(@Nonnull String name) throws RuntimeException {
+    try {
+      return newOutputDirectory(name);
+    } catch (IOException e) {
+      throw new AssertionError("Failed to create output directory " + name, e);
     }
+  }
 
-    @Nonnull
-    public static File newOutputDirectory(@Nonnull String name) throws IOException {
-        File file = newOutputFile(name);
-        try {
-            FileUtils.forceDelete(file);
-        } catch (FileNotFoundException fnfe) {
-            // Ignore; the directory doesn't exist, but we're going to create it next.
-        }
-        FileUtils.forceMkdir(file);
-        return file;
+  @Nonnull
+  public static File getProjectRootDir() {
+    File cwd = SystemUtils.getUserDir().getAbsoluteFile();
+    File dir = cwd;
+    while (dir != null) {
+      File file = new File(dir, "settings.gradle");
+      if (file.exists()) {
+        LOG.debug("Project root dir is " + dir);
+        return dir;
+      }
+      dir = dir.getParentFile();
     }
+    throw new IllegalStateException("Cannot find root dir starting from " + cwd);
+  }
 
-    /**
-     * Mostly for static or variable initializers.
-     */
-    @Nonnull
-    public static File newOutputDirectoryUnchecked(@Nonnull String name) throws RuntimeException {
-        try {
-            return newOutputDirectory(name);
-        } catch (IOException e) {
-            throw new AssertionError("Failed to create output directory " + name, e);
-        }
+  @Nonnull
+  public static File getTestResourcesDir(String subproject) {
+    File moduleDir = new File(getProjectRootDir(), subproject);
+    File resourcesDir = new File(moduleDir, "build/resources/test");
+    if (resourcesDir == null) {
+      throw new IllegalStateException("Cannot find resources dir " + resourcesDir);
     }
-
-    @Nonnull
-    public static File getProjectRootDir() {
-        File cwd = SystemUtils.getUserDir().getAbsoluteFile();
-        File dir = cwd;
-        while (dir != null) {
-            File file = new File(dir, "settings.gradle");
-            if (file.exists()) {
-                LOG.debug("Project root dir is " + dir);
-                return dir;
-            }
-            dir = dir.getParentFile();
-        }
-        throw new IllegalStateException("Cannot find root dir starting from " + cwd);
-    }
-
-    @Nonnull
-    public static File getTestResourcesDir(String subproject) {
-        File moduleDir = new File(getProjectRootDir(), subproject);
-        File resourcesDir = new File(moduleDir, "build/resources/test");
-        if (resourcesDir == null) {
-            throw new IllegalStateException("Cannot find resources dir " + resourcesDir);
-        }
-        return resourcesDir;
-    }
-
+    return resourcesDir;
+  }
 }

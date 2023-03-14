@@ -16,24 +16,24 @@
  */
 package com.google.edwmigration.dumper.application.dumper.annotations;
 
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
-/**
- * @author paolo
- */
+/** @author paolo */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@RespectsInput(order = 2000, arg = ConnectorArguments.OPT_QUERY_LOG_START, description = RespectsArgumentQueryLogStart.DESCRIPTION)
+@RespectsInput(
+    order = 2000,
+    arg = ConnectorArguments.OPT_QUERY_LOG_START,
+    description = RespectsArgumentQueryLogStart.DESCRIPTION)
 public @interface RespectsArgumentQueryLogStart {
 
-    public static final String DESCRIPTION = "Start date for query history to dump";
-
+  public static final String DESCRIPTION = "Start date for query history to dump";
 }

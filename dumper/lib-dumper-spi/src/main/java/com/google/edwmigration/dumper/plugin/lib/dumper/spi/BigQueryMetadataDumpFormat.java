@@ -26,176 +26,157 @@ import java.io.IOException;
 import java.util.List;
 import javax.annotation.CheckForNull;
 
-/**
- *
- * @author matt
- */
+/** @author matt */
 public interface BigQueryMetadataDumpFormat {
 
-    public static final ObjectMapper MAPPER = new ObjectMapper()
-            .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-            .disable(SerializationFeature.INDENT_OUTPUT);
-    String FORMAT_NAME = "bigquery.dump.zip";
+  public static final ObjectMapper MAPPER =
+      new ObjectMapper()
+          .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+          .disable(SerializationFeature.INDENT_OUTPUT);
+  String FORMAT_NAME = "bigquery.dump.zip";
 
-    public static enum TimePartitioningType {
-        // See BQ's TimePartitioning.Type
-        HOUR,
-        DAY,
-        MONTH,
-        YEAR;
+  public static enum TimePartitioningType {
+    // See BQ's TimePartitioning.Type
+    HOUR,
+    DAY,
+    MONTH,
+    YEAR;
+  }
+
+  public static interface DatasetsTaskFormat {
+
+    String ZIP_ENTRY_NAME = "datasets.csv";
+
+    enum Header {
+      ProjectId,
+      DatasetId,
+      DatasetFriendlyName,
+      DatasetLocation
+    }
+  }
+
+  public static interface TablesJsonTaskFormat {
+
+    public static final String ZIP_ENTRY_NAME = "tables.jsonl";
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public static class Metadata {
+
+      @CheckForNull
+      public static Metadata fromJson(@CheckForNull String text) throws IOException {
+        if (text == null) return null;
+        if (text.isEmpty()) return null;
+        return MAPPER.readValue(text, Metadata.class);
+      }
+
+      @JsonIgnoreProperties(ignoreUnknown = true)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT)
+      public static class Field {
+
+        public static enum Mode {
+          NULLABLE,
+          REQUIRED,
+          REPEATED
+        }
+
+        public String name;
+        /** LegacySQLTypeName. */
+        public String type;
+
+        public List<Field> subFields;
+        public String mode;
+        public String description;
+      }
+
+      @CheckForNull public String project;
+      @CheckForNull public String dataset;
+      @CheckForNull public String table;
+      @CheckForNull public String friendlyName;
+      // TABLE, VIEW, EXTERNAL, (MODEL?)
+      @CheckForNull public String tableType;
+      @CheckForNull public List<Field> schema;
+      @CheckForNull public String timePartitioningField;
+      @CheckForNull public TimePartitioningType timePartitioningType = TimePartitioningType.DAY;
+      public boolean timePartitioningRequired;
+      @CheckForNull public String viewQuery;
+      /** In milliseconds, since the epoch. */
+      @CheckForNull public Long creationTime;
+      /** In milliseconds, since the epoch. Null means the table does not expire. */
+      @CheckForNull public Long expirationTime;
+    }
+  }
+
+  @Deprecated // Use TablesJsonTaskFormat.
+  public static interface TablesTaskFormat {
+
+    String ZIP_ENTRY_NAME = "tables.csv";
+
+    public static class Metadata {
+
+      @CheckForNull
+      public static Metadata fromJson(@CheckForNull String text) throws IOException {
+        if (text == null) return null;
+        if (text.isEmpty()) return null;
+        return MAPPER.readValue(text, Metadata.class);
+      }
+
+      @CheckForNull public String viewQuery;
+      @CheckForNull public String timePartitioningField;
+      @CheckForNull public TimePartitioningType timePartitioningType = TimePartitioningType.DAY;
+      public boolean timePartitioningRequired;
     }
 
-    public static interface DatasetsTaskFormat {
+    public static enum Header {
+      ProjectId,
+      DatasetId,
+      TableId,
+      TableFriendlyName,
+      TableType,
+      NumRows,
+      NumBytes,
+      TableMetadata
+    }
+  }
 
-        String ZIP_ENTRY_NAME = "datasets.csv";
+  @Deprecated // Use TablesJsonTaskFormat.
+  public static interface ColumnsTaskFormat {
 
-        enum Header {
-            ProjectId,
-            DatasetId,
-            DatasetFriendlyName,
-            DatasetLocation
-        }
+    String ZIP_ENTRY_NAME = "fields.csv";
+
+    /**
+     * This isn't actually much use on a column, because of the pseudo-fields _PARTITIONDATE and
+     * _PARTITIONTIME.
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public static class Metadata {
+
+      @CheckForNull
+      public static Metadata fromJson(@CheckForNull String text) throws IOException {
+        if (text == null) return null;
+        if (text.isEmpty()) return null;
+        return MAPPER.readValue(text, Metadata.class);
+      }
+
+      @JsonProperty @CheckForNull
+      public TimePartitioningType timePartitioningType = TimePartitioningType.DAY;
+
+      @JsonProperty public boolean timePartitioningRequired;
     }
 
-    public static interface TablesJsonTaskFormat {
-
-        public static final String ZIP_ENTRY_NAME = "tables.jsonl";
-
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        public static class Metadata {
-
-            @CheckForNull
-            public static Metadata fromJson(@CheckForNull String text) throws IOException {
-                if (text == null)
-                    return null;
-                if (text.isEmpty())
-                    return null;
-                return MAPPER.readValue(text, Metadata.class);
-            }
-
-            @JsonIgnoreProperties(ignoreUnknown = true)
-            @JsonInclude(JsonInclude.Include.NON_ABSENT)
-            public static class Field {
-
-                public static enum Mode {
-                    NULLABLE,
-                    REQUIRED,
-                    REPEATED
-                }
-
-                public String name;
-                /** LegacySQLTypeName. */
-                public String type;
-                public List<Field> subFields;
-                public String mode;
-                public String description;
-            }
-
-            @CheckForNull
-            public String project;
-            @CheckForNull
-            public String dataset;
-            @CheckForNull
-            public String table;
-            @CheckForNull
-            public String friendlyName;
-            // TABLE, VIEW, EXTERNAL, (MODEL?)
-            @CheckForNull
-            public String tableType;
-            @CheckForNull
-            public List<Field> schema;
-            @CheckForNull
-            public String timePartitioningField;
-            @CheckForNull
-            public TimePartitioningType timePartitioningType = TimePartitioningType.DAY;
-            public boolean timePartitioningRequired;
-            @CheckForNull
-            public String viewQuery;
-            /** In milliseconds, since the epoch. */
-            @CheckForNull
-            public Long creationTime;
-            /** In milliseconds, since the epoch. Null means the table does not expire. */
-            @CheckForNull
-            public Long expirationTime;
-        }
+    public static enum Header {
+      ProjectId,
+      DatasetId,
+      TableId,
+      TableFriendlyName,
+      TableType,
+      ColumnName,
+      ColumnType,
+      ColumnMode,
+      ColumnDescription,
+      /** A JSON-serialized instance of {@link Metadata}. */
+      ColumnMetadata
     }
-
-    @Deprecated // Use TablesJsonTaskFormat.
-    public static interface TablesTaskFormat {
-
-        String ZIP_ENTRY_NAME = "tables.csv";
-
-        public static class Metadata {
-
-            @CheckForNull
-            public static Metadata fromJson(@CheckForNull String text) throws IOException {
-                if (text == null)
-                    return null;
-                if (text.isEmpty())
-                    return null;
-                return MAPPER.readValue(text, Metadata.class);
-            }
-
-            @CheckForNull
-            public String viewQuery;
-            @CheckForNull
-            public String timePartitioningField;
-            @CheckForNull
-            public TimePartitioningType timePartitioningType = TimePartitioningType.DAY;
-            public boolean timePartitioningRequired;
-        }
-
-        public static enum Header {
-            ProjectId,
-            DatasetId,
-            TableId,
-            TableFriendlyName,
-            TableType,
-            NumRows,
-            NumBytes,
-            TableMetadata
-        }
-    }
-
-    @Deprecated // Use TablesJsonTaskFormat.
-    public static interface ColumnsTaskFormat {
-
-        String ZIP_ENTRY_NAME = "fields.csv";
-
-        /** This isn't actually much use on a column, because of the pseudo-fields _PARTITIONDATE and _PARTITIONTIME. */
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        public static class Metadata {
-
-            @CheckForNull
-            public static Metadata fromJson(@CheckForNull String text) throws IOException {
-                if (text == null)
-                    return null;
-                if (text.isEmpty())
-                    return null;
-                return MAPPER.readValue(text, Metadata.class);
-            }
-
-            @JsonProperty
-            @CheckForNull
-            public TimePartitioningType timePartitioningType = TimePartitioningType.DAY;
-            @JsonProperty
-            public boolean timePartitioningRequired;
-        }
-
-        public static enum Header {
-            ProjectId,
-            DatasetId,
-            TableId,
-            TableFriendlyName,
-            TableType,
-            ColumnName,
-            ColumnType,
-            ColumnMode,
-            ColumnDescription,
-            /** A JSON-serialized instance of {@link Metadata}. */
-            ColumnMetadata
-        }
-    }
+  }
 }

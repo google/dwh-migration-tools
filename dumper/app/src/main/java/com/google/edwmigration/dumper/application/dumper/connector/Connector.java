@@ -22,31 +22,27 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public interface Connector {
 
-    // Empty
-    public enum DefaultProperties implements ConnectorProperty {
-    }
+  // Empty
+  public enum DefaultProperties implements ConnectorProperty {}
 
-    @Nonnull
-    public String getName();
+  @Nonnull
+  public String getName();
 
-    @Nonnull
-    public String getDefaultFileName(boolean isAssessment);
+  @Nonnull
+  public String getDefaultFileName(boolean isAssessment);
 
-    @Nonnull
-    public void addTasksTo(@Nonnull List<? super Task<?>> out,
-        @Nonnull ConnectorArguments arguments) throws Exception;
+  @Nonnull
+  public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
+      throws Exception;
 
-    @Nonnull
-    public Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
+  @Nonnull
+  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
 
-    @Nonnull
-    default public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-        return DefaultProperties.class;
-    }
+  @Nonnull
+  public default Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return DefaultProperties.class;
+  }
 }

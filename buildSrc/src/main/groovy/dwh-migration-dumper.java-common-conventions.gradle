@@ -170,6 +170,7 @@ spotless {
 	// ratchetFrom 'origin/main' // Enables lazy copyright year updates.
 
 	java {
+        googleJavaFormat()
 		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java");
 		trimTrailingWhitespace();
         FileCollection files = files();

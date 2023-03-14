@@ -20,12 +20,12 @@ import javax.annotation.CheckForNull;
 
 public interface PartitionKey {
 
-    @CheckForNull
-    public String getPartitionKeyName();
+  @CheckForNull
+  public String getPartitionKeyName();
 
-    @CheckForNull
-    public String getType();
+  @CheckForNull
+  public String getType();
 
-    @CheckForNull
-    public String getComment();
+  @CheckForNull
+  public String getComment();
 }

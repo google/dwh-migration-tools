@@ -16,13 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.annotations;
 
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
 /**
  * The following hack is now possible:
@@ -37,9 +37,12 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@RespectsInput(order = 50, arg = ConnectorArguments.OPT_CLASS, description = RespectsArgumentDriverClass.DESCRIPTION)
+@RespectsInput(
+    order = 50,
+    arg = ConnectorArguments.OPT_CLASS,
+    description = RespectsArgumentDriverClass.DESCRIPTION)
 public @interface RespectsArgumentDriverClass {
 
-    public static final String DESCRIPTION = "Optionally overrides the vendor-specified JDBC driver class name.";
-
+  public static final String DESCRIPTION =
+      "Optionally overrides the vendor-specified JDBC driver class name.";
 }

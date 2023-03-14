@@ -21,16 +21,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @RunWith(JUnit4.class)
 public class VersionTaskTest extends AbstractTaskTest {
 
-    @Test
-    public void testTask() throws Exception {
-        MemoryByteSink sink = new MemoryByteSink();
-        new VersionTask().doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
-    }
+  @Test
+  public void testTask() throws Exception {
+    MemoryByteSink sink = new MemoryByteSink();
+    new VersionTask().doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
+  }
 }

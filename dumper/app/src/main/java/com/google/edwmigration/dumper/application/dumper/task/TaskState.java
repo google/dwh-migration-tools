@@ -18,15 +18,11 @@ package com.google.edwmigration.dumper.application.dumper.task;
 
 import javax.annotation.concurrent.Immutable;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @Immutable
 public enum TaskState {
-
-    NOT_STARTED,
-    SUCCEEDED,
-    FAILED,
-    SKIPPED;
+  NOT_STARTED,
+  SUCCEEDED,
+  FAILED,
+  SKIPPED;
 }

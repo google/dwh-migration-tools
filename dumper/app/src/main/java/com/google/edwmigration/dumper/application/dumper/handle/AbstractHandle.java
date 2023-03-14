@@ -18,13 +18,9 @@ package com.google.edwmigration.dumper.application.dumper.handle;
 
 import java.io.IOException;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public abstract class AbstractHandle implements Handle {
 
-    @Override
-    public void close() throws IOException {
-    }
+  @Override
+  public void close() throws IOException {}
 }

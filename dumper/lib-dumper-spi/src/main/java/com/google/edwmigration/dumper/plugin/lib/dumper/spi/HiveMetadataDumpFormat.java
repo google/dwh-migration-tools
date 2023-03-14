@@ -24,171 +24,149 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
 import java.util.List;
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 
-/**
- *
- * @author swapnil
- */
+/** @author swapnil */
 public interface HiveMetadataDumpFormat {
 
-    public static final ObjectMapper MAPPER = new ObjectMapper()
-            .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-            .disable(SerializationFeature.INDENT_OUTPUT);
+  public static final ObjectMapper MAPPER =
+      new ObjectMapper()
+          .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+          .disable(SerializationFeature.INDENT_OUTPUT);
 
-    public static final String FORMAT_NAME = "hiveql.dump.zip";
+  public static final String FORMAT_NAME = "hiveql.dump.zip";
 
-    interface SchemataFormat {
+  interface SchemataFormat {
 
-        String ZIP_ENTRY_NAME = "schemata.csv";
+    String ZIP_ENTRY_NAME = "schemata.csv";
 
-        enum Header {
-            SchemaName
-        }
+    enum Header {
+      SchemaName
     }
+  }
 
-    interface DatabasesFormat {
+  interface DatabasesFormat {
 
-        String ZIP_ENTRY_NAME = "databases.csv";
+    String ZIP_ENTRY_NAME = "databases.csv";
 
-        enum Header {
-            Name,
-            Description,
-            Owner,
-            OwnerType,
-            Location,
-        }
+    enum Header {
+      Name,
+      Description,
+      Owner,
+      OwnerType,
+      Location,
     }
+  }
 
-    public static interface TablesJsonTaskFormat {
+  public static interface TablesJsonTaskFormat {
 
-        public static final String ZIP_ENTRY_NAME = "tables.jsonl";
+    public static final String ZIP_ENTRY_NAME = "tables.jsonl";
 
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        public static class TableMetadata {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public static class TableMetadata {
 
-            @CheckForNull
-            public static HiveMetadataDumpFormat.TablesJsonTaskFormat.TableMetadata fromJson(@CheckForNull String text) throws IOException {
-                if (text == null)
-                    return null;
-                if (text.isEmpty())
-                    return null;
-                return MAPPER.readValue(text, HiveMetadataDumpFormat.TablesJsonTaskFormat.TableMetadata.class);
-            }
+      @CheckForNull
+      public static HiveMetadataDumpFormat.TablesJsonTaskFormat.TableMetadata fromJson(
+          @CheckForNull String text) throws IOException {
+        if (text == null) return null;
+        if (text.isEmpty()) return null;
+        return MAPPER.readValue(
+            text, HiveMetadataDumpFormat.TablesJsonTaskFormat.TableMetadata.class);
+      }
 
-            @JsonIgnoreProperties(ignoreUnknown = true)
-            @JsonInclude(JsonInclude.Include.NON_ABSENT)
-            public static class FieldMetadata {
-                public String name;
-                public String type;
-                public String comment;
-            }
+      @JsonIgnoreProperties(ignoreUnknown = true)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT)
+      public static class FieldMetadata {
+        public String name;
+        public String type;
+        public String comment;
+      }
 
-            @JsonIgnoreProperties(ignoreUnknown = true)
-            @JsonInclude(JsonInclude.Include.NON_ABSENT)
-            public static class PartitionKeyMetadata {
-                public String name;
-                public String type;
-                public String comment;
-            }
+      @JsonIgnoreProperties(ignoreUnknown = true)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT)
+      public static class PartitionKeyMetadata {
+        public String name;
+        public String type;
+        public String comment;
+      }
 
-            @JsonIgnoreProperties(ignoreUnknown = true)
-            @JsonInclude(JsonInclude.Include.NON_ABSENT)
-            public static class PartitionMetadata {
-                public String name;
-                public String location;
-                public Integer createTime;
-                public Integer lastAccessTime;
-                public Integer lastDdlTime;
-                public Long totalSize;
-                public Long rawSize;
-                public Long rowsCount;
-                public Integer filesCount;
-                public Boolean isCompressed;
-            }
+      @JsonIgnoreProperties(ignoreUnknown = true)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT)
+      public static class PartitionMetadata {
+        public String name;
+        public String location;
+        public Integer createTime;
+        public Integer lastAccessTime;
+        public Integer lastDdlTime;
+        public Long totalSize;
+        public Long rawSize;
+        public Long rowsCount;
+        public Integer filesCount;
+        public Boolean isCompressed;
+      }
 
-            @CheckForNull
-            public String schemaName;
-            @CheckForNull
-            public String name;
-            @CheckForNull
-            public String type;
-            @CheckForNull
-            public Integer createTime;
-            @CheckForNull
-            public Integer lastAccessTime;
-            @CheckForNull
-            public String owner;
-            @CheckForNull
-            public String viewText;
-            @CheckForNull
-            public String location;
-            @CheckForNull
-            public Integer lastDdlTime;
-            @CheckForNull
-            public Long totalSize;
-            @CheckForNull
-            public Long rawSize;
-            @CheckForNull
-            public Long rowsCount;
-            @CheckForNull
-            public Integer filesCount;
-            @CheckForNull
-            public Integer retention;
-            @CheckForNull
-            public Integer bucketsCount;
-            @CheckForNull
-            public Boolean isCompressed;
+      @CheckForNull public String schemaName;
+      @CheckForNull public String name;
+      @CheckForNull public String type;
+      @CheckForNull public Integer createTime;
+      @CheckForNull public Integer lastAccessTime;
+      @CheckForNull public String owner;
+      @CheckForNull public String viewText;
+      @CheckForNull public String location;
+      @CheckForNull public Integer lastDdlTime;
+      @CheckForNull public Long totalSize;
+      @CheckForNull public Long rawSize;
+      @CheckForNull public Long rowsCount;
+      @CheckForNull public Integer filesCount;
+      @CheckForNull public Integer retention;
+      @CheckForNull public Integer bucketsCount;
+      @CheckForNull public Boolean isCompressed;
 
-            @CheckForNull
-            public List<FieldMetadata> fields;
-            @CheckForNull
-            public List<PartitionKeyMetadata> partitionKeys;
-            @CheckForNull
-            public List<PartitionMetadata> partitions;
-        }
+      @CheckForNull public List<FieldMetadata> fields;
+      @CheckForNull public List<PartitionKeyMetadata> partitionKeys;
+      @CheckForNull public List<PartitionMetadata> partitions;
     }
+  }
 
-    @Deprecated // Use TablesJsonTaskFormat
-    interface TablesFormat {
+  @Deprecated // Use TablesJsonTaskFormat
+  interface TablesFormat {
 
-        String ZIP_ENTRY_NAME = "tables.csv";
+    String ZIP_ENTRY_NAME = "tables.csv";
 
-        enum Header {
-            TableSchema,
-            TableName
-        }
+    enum Header {
+      TableSchema,
+      TableName
     }
+  }
 
-    @Deprecated // Use TablesJsonTaskFormat
-    interface ColumnsFormat {
+  @Deprecated // Use TablesJsonTaskFormat
+  interface ColumnsFormat {
 
-        String ZIP_ENTRY_NAME = "columns.csv";
+    String ZIP_ENTRY_NAME = "columns.csv";
 
-        enum Header {
-            TableSchema,
-            TableName,
-            OrdinalPosition,
-            ColumnName,
-            DataType,
-            IsPartitionKey,
-            Comment
-        }
+    enum Header {
+      TableSchema,
+      TableName,
+      OrdinalPosition,
+      ColumnName,
+      DataType,
+      IsPartitionKey,
+      Comment
     }
+  }
 
-    interface FunctionsFormat {
+  interface FunctionsFormat {
 
-        String ZIP_ENTRY_NAME = "functions.csv";
+    String ZIP_ENTRY_NAME = "functions.csv";
 
-        enum Header {
-            FunctionSchema,
-            FunctionName,
-            FunctionType,
-            ClassName,
-            OwnerName,
-            OwnerType,
-            CreateTime
-        }
+    enum Header {
+      FunctionSchema,
+      FunctionName,
+      FunctionType,
+      ClassName,
+      OwnerName,
+      OwnerType,
+      CreateTime
     }
+  }
 }

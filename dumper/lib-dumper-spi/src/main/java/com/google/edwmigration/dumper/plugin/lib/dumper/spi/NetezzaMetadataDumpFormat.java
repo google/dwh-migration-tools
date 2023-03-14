@@ -16,45 +16,41 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public interface NetezzaMetadataDumpFormat {
 
-    public static final String FORMAT_NAME = "netezza.dump.zip";
+  public static final String FORMAT_NAME = "netezza.dump.zip";
 
-    public interface Views {
+  public interface Views {
 
-        public static final String ZIP_ENTRY_SUFFIX = "/nz.v_view.csv";
+    public static final String ZIP_ENTRY_SUFFIX = "/nz.v_view.csv";
 
-        // Not sure of a docref for this.
-        public static enum Header {
-            DATABASE,
-            SCHEMA,
-            VIEWNAME,
-            DEFINITION
-        }
+    // Not sure of a docref for this.
+    public static enum Header {
+      DATABASE,
+      SCHEMA,
+      VIEWNAME,
+      DEFINITION
     }
+  }
 
-    public interface DistMapFormat {
+  public interface DistMapFormat {
 
-        public static final String ZIP_ENTRY_SUFFIX = "/nz.v_table_dist_map.csv";
+    public static final String ZIP_ENTRY_SUFFIX = "/nz.v_table_dist_map.csv";
 
-        public static enum DistMapHeader {
-            OBJID,
-            TABLENAME,
-            OWNER,
-            CREATEDATE,
-            DISTSEQNO, // 1-based index
-            DISTATTNUM,
-            ATTNUM,
-            ATTNAME,
-            DATABASE,
-            OBJDB,
-            SCHEMA,
-            SCHEMAID
-        }
+    public static enum DistMapHeader {
+      OBJID,
+      TABLENAME,
+      OWNER,
+      CREATEDATE,
+      DISTSEQNO, // 1-based index
+      DISTATTNUM,
+      ATTNUM,
+      ATTNAME,
+      DATABASE,
+      OBJDB,
+      SCHEMA,
+      SCHEMAID
     }
-
+  }
 }

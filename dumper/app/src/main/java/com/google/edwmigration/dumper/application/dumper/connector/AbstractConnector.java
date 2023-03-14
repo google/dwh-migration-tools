@@ -19,21 +19,17 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import com.google.common.base.Preconditions;
 import javax.annotation.Nonnull;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public abstract class AbstractConnector implements Connector {
 
-    private final String name;
+  private final String name;
 
-    public AbstractConnector(@Nonnull String name) {
-        this.name = Preconditions.checkNotNull(name, "Name was null.");
-    }
+  public AbstractConnector(@Nonnull String name) {
+    this.name = Preconditions.checkNotNull(name, "Name was null.");
+  }
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
+  @Override
+  public String getName() {
+    return name;
+  }
 }

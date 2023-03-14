@@ -18,9 +18,5 @@ package com.google.edwmigration.dumper.application.dumper.handle;
 
 import java.io.Closeable;
 
-/**
- *
- * @author shevek
- */
-public interface Handle extends Closeable {
-}
+/** @author shevek */
+public interface Handle extends Closeable {}

@@ -21,18 +21,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @RunWith(JUnit4.class)
 public class SnowflakeLogsConnectorTest extends AbstractConnectorTest {
 
-    private final SnowflakeLogsConnector connector = new SnowflakeLogsConnector();
+  private final SnowflakeLogsConnector connector = new SnowflakeLogsConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
-
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
 }

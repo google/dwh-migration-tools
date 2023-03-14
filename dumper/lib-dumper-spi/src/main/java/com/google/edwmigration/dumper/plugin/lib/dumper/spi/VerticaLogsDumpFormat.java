@@ -18,29 +18,29 @@ package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
 public interface VerticaLogsDumpFormat {
 
-    String FORMAT_NAME = "vertica.logs.zip";
+  String FORMAT_NAME = "vertica.logs.zip";
 
-    String ZIP_ENTRY_PREFIX = "query_history_";
+  String ZIP_ENTRY_PREFIX = "query_history_";
 
-    /**
-     * Lowercase, because Vertica is a CASE_SMASH_LOWER dialect and these are
-     * not aliased by the Vertica logs dumper.
-     */
-    enum Header {
-        time,
-        node_name,
-        session_id,
-        user_id,
-        user_name,
-        transaction_id,
-        statement_id,
-        request_id,
-        request_type,
-        label,
-        client_label,
-        search_path,
-        query_start_epoch,
-        request,            // contains query text
-        is_retry
-    }
+  /**
+   * Lowercase, because Vertica is a CASE_SMASH_LOWER dialect and these are not aliased by the
+   * Vertica logs dumper.
+   */
+  enum Header {
+    time,
+    node_name,
+    session_id,
+    user_id,
+    user_name,
+    transaction_id,
+    statement_id,
+    request_id,
+    request_type,
+    label,
+    client_label,
+    search_path,
+    query_start_epoch,
+    request, // contains query text
+    is_retry
+  }
 }

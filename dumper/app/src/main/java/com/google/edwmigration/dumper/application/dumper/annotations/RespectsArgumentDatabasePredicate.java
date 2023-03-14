@@ -16,23 +16,21 @@
  */
 package com.google.edwmigration.dumper.application.dumper.annotations;
 
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@RespectsInput(order = 600, arg = ConnectorArguments.OPT_DATABASE, description = "The list of databases to dump, separated by commas.")
-public @interface RespectsArgumentDatabasePredicate {
-
-}
+@RespectsInput(
+    order = 600,
+    arg = ConnectorArguments.OPT_DATABASE,
+    description = "The list of databases to dump, separated by commas.")
+public @interface RespectsArgumentDatabasePredicate {}

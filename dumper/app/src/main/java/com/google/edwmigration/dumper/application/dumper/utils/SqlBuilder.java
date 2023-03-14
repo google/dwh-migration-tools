@@ -16,97 +16,92 @@
  */
 package com.google.edwmigration.dumper.application.dumper.utils;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 
-/**
- * And that's how .. dumper got emitter....
- */
+/** And that's how .. dumper got emitter.... */
 public class SqlBuilder {
 
-    private final List<String> projections = new ArrayList<>();
-    private final List<String> orderBy = new ArrayList<>();
-    private String fromTable = null;
-    private final List<String> whereClause = new ArrayList<>();
+  private final List<String> projections = new ArrayList<>();
+  private final List<String> orderBy = new ArrayList<>();
+  private String fromTable = null;
+  private final List<String> whereClause = new ArrayList<>();
 
-    @Nonnull
-    public SqlBuilder withProjections(@Nonnull String... proj) {
-        Collections.addAll(projections, proj);
-        return this;
+  @Nonnull
+  public SqlBuilder withProjections(@Nonnull String... proj) {
+    Collections.addAll(projections, proj);
+    return this;
+  }
+
+  @Nonnull
+  public SqlBuilder withFromTable(@Nonnull String fromTable) {
+    this.fromTable = Preconditions.checkNotNull(fromTable, "Table name was null.");
+    return this;
+  }
+
+  @Nonnull
+  public SqlBuilder withWhereInVals(@Nonnull String id, @CheckForNull List<? extends String> vals) {
+    Preconditions.checkArgument(id != null, "id was null.");
+    if (vals != null && !vals.isEmpty()) {
+      StringBuilder buf = new StringBuilder();
+      buf.append(id).append(" IN (");
+      Joiner.on(", ").appendTo(buf, Lists.transform(vals, s -> "'" + s + "'"));
+      buf.append(")");
+      whereClause.add(buf.toString());
+    }
+    return this;
+  }
+
+  @Nonnull
+  public SqlBuilder withOrderBy(@Nonnull String... orderBy) {
+    Collections.addAll(this.orderBy, orderBy);
+    return this;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("SELECT");
+
+    //  1. PROJECTIONS
+    if (projections.isEmpty()) sb.append(" *");
+    else Joiner.on(", ").appendTo(sb.append(' '), projections);
+
+    // 2. FROM
+    sb.append(" FROM ").append(fromTable);
+
+    // 3. WHERE  CLAUSES
+    if (!whereClause.isEmpty()) {
+      sb.append(" WHERE ");
+      Joiner.on(" AND ").appendTo(sb, whereClause);
     }
 
-    @Nonnull
-    public SqlBuilder withFromTable(@Nonnull String fromTable) {
-        this.fromTable = Preconditions.checkNotNull(fromTable, "Table name was null.");
-        return this;
+    // 4. ORDER BY
+    if (!orderBy.isEmpty()) {
+      sb.append(" ORDER BY ");
+      Joiner.on(", ").appendTo(sb, orderBy);
     }
 
-    @Nonnull
-    public SqlBuilder withWhereInVals(@Nonnull String id, @CheckForNull List<? extends String> vals) {
-        Preconditions.checkArgument(id != null, "id was null.");
-        if (vals != null && !vals.isEmpty()) {
-            StringBuilder buf = new StringBuilder();
-            buf.append(id).append(" IN (");
-            Joiner.on(", ").appendTo(buf, Lists.transform(vals, s -> "'" + s + "'"));
-            buf.append(")");
-            whereClause.add(buf.toString());
-        }
-        return this;
-    }
+    return sb.toString();
+  }
 
-    @Nonnull
-    public SqlBuilder withOrderBy(@Nonnull String... orderBy) {
-        Collections.addAll(this.orderBy, orderBy);
-        return this;
-    }
+  // a quick hack for only toWhereClause .
+  // to get little more cool-off time before changing all the selects.
+  @Nonnull
+  public String toWhereClause() {
+    if (whereClause.isEmpty()) return "";
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();
+    sb.append(" WHERE ");
+    Joiner.on(" AND ").appendTo(sb, whereClause);
 
-        sb.append("SELECT");
-
-        //  1. PROJECTIONS
-        if (projections.isEmpty())
-            sb.append(" *");
-        else
-            Joiner.on(", ").appendTo(sb.append(' '), projections);
-
-        // 2. FROM
-        sb.append(" FROM ").append(fromTable);
-
-        // 3. WHERE  CLAUSES
-        if (!whereClause.isEmpty()) {
-            sb.append(" WHERE ");
-            Joiner.on(" AND ").appendTo(sb, whereClause);
-        }
-
-        //4. ORDER BY
-        if (!orderBy.isEmpty()) {
-            sb.append(" ORDER BY ");
-            Joiner.on(", ").appendTo(sb, orderBy);
-        }
-
-        return sb.toString();
-    }
-
-    // a quick hack for only toWhereClause .
-    // to get little more cool-off time before changing all the selects.
-    @Nonnull
-    public String toWhereClause() {
-        if (whereClause.isEmpty())
-            return "";
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(" WHERE ");
-        Joiner.on(" AND ").appendTo(sb, whereClause);
-
-        return sb.toString();
-    }
+    return sb.toString();
+  }
 }

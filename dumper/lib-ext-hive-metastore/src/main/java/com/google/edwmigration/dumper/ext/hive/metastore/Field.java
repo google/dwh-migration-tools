@@ -20,12 +20,12 @@ import javax.annotation.CheckForNull;
 
 public interface Field {
 
-    @CheckForNull
-    public String getFieldName();
+  @CheckForNull
+  public String getFieldName();
 
-    @CheckForNull
-    public String getType();
+  @CheckForNull
+  public String getType();
 
-    @CheckForNull
-    public String getComment();
+  @CheckForNull
+  public String getComment();
 }

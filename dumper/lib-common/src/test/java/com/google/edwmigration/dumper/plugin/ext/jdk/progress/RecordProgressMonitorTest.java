@@ -16,40 +16,35 @@
  */
 package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
-import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @RunWith(JUnit4.class)
 public class RecordProgressMonitorTest {
 
-    @Test
-    public void testFast() {
-        int n = 187317;
-        RecordProgressMonitor monitor = new RecordProgressMonitor("fast", n);
-        for (int i = 0; i < n * 2; i++) // deliberate overflow
-            monitor.count();
-        monitor.count();
-        monitor.count();
-    }
+  @Test
+  public void testFast() {
+    int n = 187317;
+    RecordProgressMonitor monitor = new RecordProgressMonitor("fast", n);
+    for (int i = 0; i < n * 2; i++) // deliberate overflow
+    monitor.count();
+    monitor.count();
+    monitor.count();
+  }
 
-    @Ignore("ohmygodslow")
-    @Test
-    public void testSlow() throws Exception {
-        int n = 1827317;
-        RecordProgressMonitor monitor = new RecordProgressMonitor("fast", n);
-        for (int i = 0; i < n; i++) {
-            Thread.sleep(100);
-            monitor.count();
-        }
-        monitor.count();
-        monitor.count();
+  @Ignore("ohmygodslow")
+  @Test
+  public void testSlow() throws Exception {
+    int n = 1827317;
+    RecordProgressMonitor monitor = new RecordProgressMonitor("fast", n);
+    for (int i = 0; i < n; i++) {
+      Thread.sleep(100);
+      monitor.count();
     }
-
+    monitor.count();
+    monitor.count();
+  }
 }

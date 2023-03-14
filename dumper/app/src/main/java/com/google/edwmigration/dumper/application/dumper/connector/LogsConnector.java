@@ -21,18 +21,14 @@ import java.text.SimpleDateFormat;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public interface LogsConnector extends Connector {
 
-    @Nonnull
-    default String getDefaultFileName(boolean isAssessment) {
-        Format format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-        String timeSuffix = "-" + format.format(System.currentTimeMillis());
-        return String.format("dwh-migration-%s-logs%s.zip",
-            getName(), isAssessment ? timeSuffix : StringUtils.EMPTY);
-    }
-
+  @Nonnull
+  default String getDefaultFileName(boolean isAssessment) {
+    Format format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
+    String timeSuffix = "-" + format.format(System.currentTimeMillis());
+    return String.format(
+        "dwh-migration-%s-logs%s.zip", getName(), isAssessment ? timeSuffix : StringUtils.EMPTY);
+  }
 }
