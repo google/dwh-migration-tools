@@ -35,6 +35,7 @@ configurations {
         exclude group: 'commons-logging'	// Replaced by jcl-over-slf4j
         resolutionStrategy {
             force 'com.google.code.gson:gson:2.8.9' // 2.8.7 has a security issue
+            force 'com.google.protobuf:protobuf-java:3.19.6' // first non-vulnerable > 3.17.x
         }
     }
 }
@@ -73,8 +74,10 @@ dependencies {
         implementation "com.swrve:rate-limited-logger:2.0.0"
 
         // TODO: when we can upgrade google-cloud-bigquery to v2+ (involves
-        // addressing breaking changes), remove the forced 2.8.9 version
-        // for gson in resolutionStrategy above
+        // addressing breaking changes), remove the following forced versions
+        // from resolutionStrategy above:
+        // - gson
+        // - protobuf-java
         implementation "com.google.cloud:google-cloud-bigquery:1.137.2"
 
         runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
