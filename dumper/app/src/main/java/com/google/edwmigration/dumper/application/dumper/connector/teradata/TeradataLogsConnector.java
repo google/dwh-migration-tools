@@ -21,8 +21,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.errorprone.annotations.ForOverride;
 import java.io.IOException;
@@ -65,6 +67,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataAssessmentLogsJdbcTask.ASSESSMENT_DEF_LOG_TABLE;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 /**
  *
@@ -405,6 +408,21 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
             return getSql(predicate, EXPRESSIONS_FOR_ASSESSMENT);
         }
     }
+
+    private ImmutableList<TeradataJdbcSelectTask> createTimeSeriesTasks(ZonedInterval interval) {
+        return ImmutableList.of("ResUsageScpu","ResUsageSpma").stream().map(tableName ->
+            new TeradataJdbcSelectTask(createFilename("dbc."+tableName+"_", interval), TaskCategory.OPTIONAL,
+            String.format("SELECT %%s FROM DBC.%s WHERE TheTimestamp >= %s AND TheTimestamp < %s",
+                tableName,
+                interval.getStartUTC().toInstant().getEpochSecond(),
+                interval.getEndInclusiveUTC().toInstant().getEpochSecond())))
+            .collect(toImmutableList());
+    }
+
+    private String createFilename(String zipEntryPrefix, ZonedInterval interval) {
+        return zipEntryPrefix + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
+    }
+
     @Override
     public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) throws MetadataDumperUsageException {
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
@@ -434,11 +452,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector implements 
         LOG.info("Exporting query log for " + intervals);
         SharedState state = new SharedState();
         for (ZonedInterval interval : intervals) {
-            String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
+            String file = createFilename(ZIP_ENTRY_PREFIX, interval);
             if (isAssessment) {
                 List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
                 out.add(new TeradataAssessmentLogsJdbcTask(file, state, logTable, queryTable, conditions, interval, orderBy)
                         .withHeaderClass(HeaderForAssessment.class));
+                out.addAll(createTimeSeriesTasks(interval));
             } else {
                 conditions.add("L.UserName <> 'DBC'");
                 out.add(new TeradataLogsJdbcTask(file, state, logTable, queryTable, conditions, interval)
