@@ -18,12 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
-import javax.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
@@ -38,6 +32,12 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,10 +170,6 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
             lSqlConditions.add("ST.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp());
             logConditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
         }
-
-        final int daysToExport = arguments.getQueryLogDays(7);
-        if (daysToExport <= 0)
-            throw new MetadataDumperUsageException("At least one day of query logs should be exported; you specified: " + daysToExport);
 
         // Beware of Teradata SQLSTATE HY000. See issue #4126.
         // Most likely caused by some operation (equality?) being performed on a datum which is too long for a varchar.

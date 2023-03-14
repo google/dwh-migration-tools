@@ -34,4 +34,5 @@ public class SnowflakeLogsConnectorTest extends AbstractConnectorTest {
     public void testConnector() throws Exception {
         testConnectorDefaults(connector);
     }
+
 }

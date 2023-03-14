@@ -17,13 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.auto.service.AutoService;
-import com.google.errorprone.annotations.ForOverride;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
@@ -40,6 +33,13 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
+import com.google.errorprone.annotations.ForOverride;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -161,13 +161,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector implement
         out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
         out.add(new FormatTask(FORMAT_NAME));
 
-        String queryFormat = newQueryFormat(arguments);
-
-        final int daysToExport = arguments.getQueryLogDays(7);
-        if (daysToExport <= 0)
-            throw new MetadataDumperUsageException("At least one day of query logs should be exported; you specified: " + daysToExport);
-        LOG.info("Log entries within the last {} days will be exported in increments of 1 hour.", daysToExport);
-
         // (24 * 7) -> 7 trailing days == 168 hours
         // Actually, on Snowflake, 7 days ago starts at midnight in an unadvertised time zone. What the <deleted>.
         // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
@@ -175,7 +168,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector implement
         ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
         LOG.info("Exporting query log for " + intervals);
         for (ZonedInterval interval : intervals) {
-            String query = String.format(queryFormat, SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndInclusive()));
+            String query = String.format(newQueryFormat(arguments), SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndInclusive()));
             String file = ZIP_ENTRY_PREFIX + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
             out.add(new JdbcSelectTask(file, query).withHeaderClass(Header.class));
         }
