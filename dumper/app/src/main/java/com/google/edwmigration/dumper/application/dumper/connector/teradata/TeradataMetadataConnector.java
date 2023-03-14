@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import java.util.List;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
@@ -41,6 +42,8 @@ import org.slf4j.LoggerFactory;
 @Description("Dumps metadata from Teradata.")
 @RespectsArgumentDatabasePredicate
 @RespectsArgumentAssessment
+@RespectsInput(order = 450, arg = ConnectorArguments.OPT_TERADATA_MAX_TABLESIZEV_ROWS,
+    description = ConnectorArguments.TERADATA_MAX_TABLE_SIZE_V_ROWS_DESCRIPTION)
 public class TeradataMetadataConnector extends AbstractTeradataConnector implements MetadataConnector, TeradataMetadataDumpFormat {
 
     @SuppressWarnings("UnusedVariable")
@@ -113,14 +116,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
                     TaskCategory.OPTIONAL,
                     "SELECT %s FROM DBC.StatsV " + whereDatabaseNameClause + " ;"));
 
-          // TableSizeV contains a row per each VProc/AMP, so it can grow significantly for large dbs.
-          // Hence, we aggregate before dumping.
-          // See recommended usage
-          // https://docs.teradata.com/r/Teradata-VantageTM-Data-Dictionary/March-2019/Views-Reference/TableSizeV-X/Examples-Using-TableSizeV
-          out.add(new TeradataJdbcSelectTask(TableSizeVFormat.ZIP_ENTRY_NAME,
-              TaskCategory.OPTIONAL,
-              "SELECT DataBaseName, AccountName, TableName, SUM(CurrentPerm) CurrentPerm, SUM(PeakPerm) PeakPerm FROM DBC.TableSizeV "
-                  + whereDataBaseNameClause + " GROUP BY 1,2,3;"));
+            out.add(createTaskForTableSizeV(whereDataBaseNameClause, arguments));
 
             out.add(new TeradataJdbcSelectTask(AllTempTablesVXFormat.ZIP_ENTRY_NAME,
                 TaskCategory.OPTIONAL,
@@ -144,38 +140,25 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
         }
     }
 
+    private TeradataJdbcSelectTask createTaskForTableSizeV(
+        String whereDataBaseNameClause,
+        ConnectorArguments arguments) {
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT ");
+        arguments.getTeradataMaxTableSizeVRows().ifPresent(maxRows -> query.append("TOP ").append(maxRows));
+        // TableSizeV contains a row per each VProc/AMP, so it can grow significantly for large dbs.
+        // Hence, we aggregate before dumping.
+        // See recommended usage
+        // https://docs.teradata.com/r/Teradata-VantageTM-Data-Dictionary/March-2019/Views-Reference/TableSizeV-X/Examples-Using-TableSizeV
+        query.append(" DataBaseName, AccountName, TableName, SUM(CurrentPerm) CurrentPerm, SUM(PeakPerm) PeakPerm FROM DBC.TableSizeV ")
+            .append(whereDataBaseNameClause)
+            .append(" GROUP BY 1,2,3");
+        arguments.getTeradataMaxTableSizeVRows().ifPresent(unused -> query.append(" ORDER BY 4 DESC"));
+        query.append(';');
+        return new TeradataJdbcSelectTask(
+            TableSizeVFormat.ZIP_ENTRY_NAME,
+            TaskCategory.OPTIONAL,
+            query.toString());
+    }
+
 }
-
-
-/*
-14:44:43.475 [main] WARN  com.google.edwmigration.dumper.application.dumper.MetadataDumper - Task failed: Write dbc.ColumnsqV.csv from:
-SELECT * FROM DBC.ColumnsqV ORDER BY 1,2,3,4;: org.springframework.jdbc.UncategorizedSQLException: StatementCallback; uncategorized SQLException for SQL [SELECT * FROM DBC.ColumnsqV ORDER BY 1,2,3,4;]; SQL state [HY000]; error code [9719]; [Teradata Database] [TeraJDBC 16.20.00.12] [Error 9719] [SQLState HY000] QVCI feature is disabled.; nested exception is java.sql.SQLException: [Teradata Database] [TeraJDBC 16.20.00.12] [Error 9719] [SQLState HY000] QVCI feature is disabled.
-org.springframework.jdbc.UncategorizedSQLException: StatementCallback; uncategorized SQLException for SQL [SELECT * FROM DBC.ColumnsqV ORDER BY 1,2,3,4;]; SQL state [HY000]; error code [9719]; [Teradata Database] [TeraJDBC 16.20.00.12] [Er
-or 9719] [SQLState HY000] QVCI feature is disabled.; nested exception is java.sql.SQLException: [Teradata Database] [TeraJDBC 16.20.00.12] [Error 9719] [SQLState HY000] QVCI feature is disabled.
-at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:89)
-at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:81)
-at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:81)
-at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1414)
-at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:388)
-at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:452)
-at com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask.doRun(JdbcSelectTask.java:102)
-at com.google.edwmigration.dumper.application.dumper.task.AbstractTask.run(AbstractTask.java:63)
-at com.google.edwmigration.dumper.application.dumper.task.Task.run(Task.java:89)
-at com.google.edwmigration.dumper.application.dumper.MetadataDumper.run(MetadataDumper.java:130)
-at com.google.edwmigration.dumper.application.dumper.MetadataDumper.run(MetadataDumper.java:76)
-at com.google.edwmigration.dumper.application.dumper.MetadataDumper.main(MetadataDumper.java:167)
-Caused by: java.sql.SQLException: [Teradata Database] [TeraJDBC 16.20.00.12] [Error 9719] [SQLState HY000] QVCI feature is disabled.
-at com.teradata.jdbc.jdbc_4.util.ErrorFactory.makeDatabaseSQLException(ErrorFactory.java:309)
-at com.teradata.jdbc.jdbc_4.statemachine.ReceiveInitSubState.action(ReceiveInitSubState.java:103)
-at com.teradata.jdbc.jdbc_4.statemachine.StatementReceiveState.subStateMachine(StatementReceiveState.java:311)
-at com.teradata.jdbc.jdbc_4.statemachine.StatementReceiveState.action(StatementReceiveState.java:200)
-at com.teradata.jdbc.jdbc_4.statemachine.StatementController.runBody(StatementController.java:137)
-at com.teradata.jdbc.jdbc_4.statemachine.StatementController.run(StatementController.java:128)
-at com.teradata.jdbc.jdbc_4.TDStatement.executeStatement(TDStatement.java:389)
-at com.teradata.jdbc.jdbc_4.TDStatement.executeStatement(TDStatement.java:331)
-at com.teradata.jdbc.jdbc_4.TDStatement.doNonPrepExecuteQuery(TDStatement.java:319)
-at com.teradata.jdbc.jdbc_4.TDStatement.executeQuery(TDStatement.java:1121)
-at org.springframework.jdbc.core.JdbcTemplate$1QueryStatementCallback.doInStatement(JdbcTemplate.java:439)
-at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:376)
-... 7 common frames omitted
- */

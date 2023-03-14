@@ -46,6 +46,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -97,6 +98,7 @@ public class ConnectorArguments extends DefaultArguments {
     public static final String OPT_DATABASE = "database";
     public static final String OPT_SCHEMA = "schema";
     public static final String OPT_ASSESSMENT = "assessment";
+    public static final String OPT_TERADATA_MAX_TABLESIZEV_ROWS = "max-tablesizev-rows";
     public static final String OPT_ORACLE_SID = "oracle-sid";
     public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
@@ -131,6 +133,13 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<String> optionDatabase = parser.accepts(OPT_DATABASE, "Database(s) to export").withRequiredArg().ofType(String.class).withValuesSeparatedBy(',').describedAs("db0,db1,...");
     private final OptionSpec<String> optionSchema = parser.accepts(OPT_SCHEMA, "Schemata to export").withRequiredArg().ofType(String.class).withValuesSeparatedBy(',').describedAs("sch0,sch1,...");
     private final OptionSpec<Void> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Whether to create a dump for assessment (i.e., dump additional information).");
+
+    public static final String TERADATA_MAX_TABLE_SIZE_V_ROWS_DESCRIPTION =
+        "Max number of rows to extract from DBC.TableSizeV table (available for 'teradata' connector only)";
+    private final OptionSpec<Long> optionTeradataMaxTableSizeVRows =
+        parser.accepts(OPT_TERADATA_MAX_TABLESIZEV_ROWS, TERADATA_MAX_TABLE_SIZE_V_ROWS_DESCRIPTION)
+        .withRequiredArg().ofType(Long.class).describedAs("100000");
+
     private final OptionSpec<String> optionUser = parser.accepts(OPT_USER, "Database username").withRequiredArg().describedAs("admin");
     private final OptionSpec<String> optionPass = parser.accepts(OPT_PASSWORD, "Database password, prompted if not provided").withOptionalArg().describedAs("sekr1t");
     private final OptionSpec<String> optionRole = parser.accepts(OPT_ROLE, "Database role").withRequiredArg().describedAs("dumper");
@@ -415,6 +424,13 @@ public class ConnectorArguments extends DefaultArguments {
 
     public boolean isAssessment() {
         return getOptions().has(optionAssessment);
+    }
+
+    public Optional<Long> getTeradataMaxTableSizeVRows() {
+        if (!getOptions().has(optionTeradataMaxTableSizeVRows)) {
+            return Optional.empty();
+        }
+        return Optional.of(getOptions().valueOf(optionTeradataMaxTableSizeVRows));
     }
 
     @Nonnull
