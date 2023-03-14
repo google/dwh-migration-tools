@@ -42,8 +42,8 @@ import org.slf4j.LoggerFactory;
 @Description("Dumps metadata from Teradata.")
 @RespectsArgumentDatabasePredicate
 @RespectsArgumentAssessment
-@RespectsInput(order = 450, arg = ConnectorArguments.OPT_MAX_TABLESIZEV_ROWS,
-    description = "Max number of rows to extract from DBC.TableSizeV table (available for 'teradata' connector only)")
+@RespectsInput(order = 450, arg = ConnectorArguments.OPT_TERADATA_MAX_TABLESIZEV_ROWS,
+    description = ConnectorArguments.TERADATA_MAX_TABLE_SIZE_V_ROWS_DESCRIPTION)
 public class TeradataMetadataConnector extends AbstractTeradataConnector implements MetadataConnector, TeradataMetadataDumpFormat {
 
     @SuppressWarnings("UnusedVariable")
@@ -145,7 +145,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
         ConnectorArguments arguments) {
         StringBuilder query = new StringBuilder();
         query.append("SELECT ");
-        arguments.getMaxTableSizeVRows().ifPresent(maxRows -> query.append("TOP ").append(maxRows));
+        arguments.getTeradataMaxTableSizeVRows().ifPresent(maxRows -> query.append("TOP ").append(maxRows));
         // TableSizeV contains a row per each VProc/AMP, so it can grow significantly for large dbs.
         // Hence, we aggregate before dumping.
         // See recommended usage
@@ -153,7 +153,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector impleme
         query.append(" DataBaseName, AccountName, TableName, SUM(CurrentPerm) CurrentPerm, SUM(PeakPerm) PeakPerm FROM DBC.TableSizeV ")
             .append(whereDataBaseNameClause)
             .append(" GROUP BY 1,2,3");
-        arguments.getMaxTableSizeVRows().ifPresent(unused -> query.append(" ORDER BY 4 DESC"));
+        arguments.getTeradataMaxTableSizeVRows().ifPresent(unused -> query.append(" ORDER BY 4 DESC"));
         query.append(';');
         return new TeradataJdbcSelectTask(
             TableSizeVFormat.ZIP_ENTRY_NAME,
