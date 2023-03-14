@@ -33,6 +33,9 @@ configurations {
         exclude group: 'net.jcip', module: 'jcip-annotations'   // In google-findbugs-annotations.
         exclude group: 'org.springframework', module: 'spring-jcl'  // In jcl-over-slf4j
         exclude group: 'commons-logging'	// Replaced by jcl-over-slf4j
+        resolutionStrategy {
+            force 'com.google.code.gson:gson:2.8.9' // 2.8.7 has a security issue
+        }
     }
 }
 
@@ -68,6 +71,10 @@ dependencies {
         implementation "org.springframework:spring-jdbc:$springVersion"
         implementation "com.zaxxer:HikariCP:3.2.0"
         implementation "com.swrve:rate-limited-logger:2.0.0"
+
+        // TODO: when we can upgrade google-cloud-bigquery to v2+ (involves
+        // addressing breaking changes), remove the forced 2.8.9 version
+        // for gson in resolutionStrategy above
         implementation "com.google.cloud:google-cloud-bigquery:1.137.2"
 
         runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
