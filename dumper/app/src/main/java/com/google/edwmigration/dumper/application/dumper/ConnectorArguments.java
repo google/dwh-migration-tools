@@ -135,8 +135,7 @@ public class ConnectorArguments extends DefaultArguments {
     private final OptionSpec<Void> optionAssessment = parser.accepts(OPT_ASSESSMENT, "Whether to create a dump for assessment (i.e., dump additional information).");
 
     private final OptionSpec<Long> optionMaxTableSizeVRows = parser.accepts(OPT_MAX_TABLESIZEV_ROWS,
-        "Max number of rows that should be extracted from DBC.TableSizeV table (available for" +
-        " teradata-logs connector only)")
+        "Max number of rows to extract from DBC.TableSizeV table (available for 'teradata' connector only)")
         .withRequiredArg().ofType(Long.class).describedAs("100000");
 
     private final OptionSpec<String> optionUser = parser.accepts(OPT_USER, "Database username").withRequiredArg().describedAs("admin");

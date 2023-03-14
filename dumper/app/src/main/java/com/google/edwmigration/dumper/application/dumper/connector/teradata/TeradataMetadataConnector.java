@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import java.util.List;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
@@ -41,6 +42,8 @@ import org.slf4j.LoggerFactory;
 @Description("Dumps metadata from Teradata.")
 @RespectsArgumentDatabasePredicate
 @RespectsArgumentAssessment
+@RespectsInput(order = 450, arg = ConnectorArguments.OPT_MAX_TABLESIZEV_ROWS,
+    description = "Max number of rows to extract from DBC.TableSizeV table (available for 'teradata' connector only)")
 public class TeradataMetadataConnector extends AbstractTeradataConnector implements MetadataConnector, TeradataMetadataDumpFormat {
 
     @SuppressWarnings("UnusedVariable")
