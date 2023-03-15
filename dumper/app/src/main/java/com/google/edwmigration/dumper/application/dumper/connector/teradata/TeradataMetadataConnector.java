@@ -54,6 +54,10 @@ import org.slf4j.LoggerFactory;
     order = 450,
     arg = ConnectorArguments.OPT_TERADATA_MAX_DATABASESV_DB_ROWS,
     description = ConnectorArguments.TERADATA_MAX_DATABASES_V_DB_ROWS_DESCRIPTION)
+@RespectsInput(
+    order = 450,
+    arg = ConnectorArguments.OPT_TERADATA_MAX_DISKSPACEV_ROWS,
+    description = ConnectorArguments.TERADATA_MAX_DISK_SPACE_V_ROWS_DESCRIPTION)
 public class TeradataMetadataConnector extends AbstractTeradataConnector
     implements MetadataConnector, TeradataMetadataDumpFormat {
 
@@ -166,11 +170,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
               TaskCategory.OPTIONAL,
               "SELECT %s FROM DBC.AllTempTablesVX" + whereBDatabaseNameClause + " ;"));
 
-      out.add(
-          new TeradataJdbcSelectTask(
-              DiskSpaceVFormat.ZIP_ENTRY_NAME,
-              TaskCategory.OPTIONAL,
-              "SELECT %s FROM DBC.DiskSpaceV" + whereDataBaseNameClause + " ;"));
+      out.add(createTaskForDiskSpaceV(whereDataBaseNameClause, arguments));
 
       out.add(
           new TeradataJdbcSelectTask(
@@ -237,6 +237,20 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     query.append(';');
     return new TeradataJdbcSelectTask(
         TableSizeVFormat.ZIP_ENTRY_NAME, TaskCategory.OPTIONAL, formatQuery(query.toString()));
+  }
+
+  private TeradataJdbcSelectTask createTaskForDiskSpaceV(
+      String whereDataBaseNameClause, ConnectorArguments arguments) {
+    StringBuilder query = new StringBuilder();
+    query.append("SELECT %s FROM (");
+    appendSelect(
+        query,
+        arguments.getTeradataMaxDiskSpaceVRows(),
+        " * FROM DBC.DiskSpaceV " + whereDataBaseNameClause,
+        " ORDER BY CurrentPerm DESC ");
+    query.append(") AS t;");
+    return new TeradataJdbcSelectTask(
+        DiskSpaceVFormat.ZIP_ENTRY_NAME, TaskCategory.OPTIONAL, formatQuery(query.toString()));
   }
 
   private static String concatWhere(String whereClause, String condition) {
