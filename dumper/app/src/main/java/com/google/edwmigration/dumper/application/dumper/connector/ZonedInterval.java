@@ -16,9 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import static java.time.ZoneOffset.UTC;
+
 import com.google.common.base.Preconditions;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import javax.annotation.Nonnull;
@@ -31,8 +31,6 @@ import org.apache.commons.lang3.ObjectUtils;
  * @author shevek
  */
 public class ZonedInterval {
-
-  private static final ZoneId Z_UTC = ZoneOffset.UTC;
 
   private final ZonedDateTime start;
   private final ZonedDateTime endExclusive;
@@ -50,7 +48,7 @@ public class ZonedInterval {
 
   @Nonnull
   public ZonedDateTime getStartUTC() {
-    return getStart().withZoneSameInstant(Z_UTC);
+    return getStart().withZoneSameInstant(UTC);
   }
 
   @Nonnull
@@ -60,7 +58,7 @@ public class ZonedInterval {
 
   @Nonnull
   public ZonedDateTime getEndExclusiveUTC() {
-    return getEndExclusive().withZoneSameInstant(Z_UTC);
+    return getEndExclusive().withZoneSameInstant(UTC);
   }
 
   @Nonnull
@@ -70,7 +68,7 @@ public class ZonedInterval {
 
   @Nonnull
   public ZonedDateTime getEndInclusiveUTC() {
-    return getEndInclusive().withZoneSameInstant(Z_UTC);
+    return getEndInclusive().withZoneSameInstant(UTC);
   }
 
   @Nonnull
