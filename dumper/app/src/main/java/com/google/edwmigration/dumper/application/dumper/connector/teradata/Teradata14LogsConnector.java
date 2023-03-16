@@ -71,7 +71,7 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
         super("teradata14-logs");
     }
 
-    private static class LSqlQueryFactory extends TeradataLogsConnector.TeradataLogsJdbcTask {
+    private static class LSqlQueryFactory extends TeradataLogsJdbcTask {
 
         public LSqlQueryFactory(String targetPath, SharedState state, String logTable, String queryTable, List<String> conditions, ZonedInterval interval) {
             super(targetPath, state, logTable, queryTable, conditions, interval);
@@ -108,7 +108,7 @@ public class Teradata14LogsConnector extends TeradataLogsConnector {
 
     }
 
-    private static class LogQueryFactory extends TeradataLogsConnector.TeradataLogsJdbcTask {
+    private static class LogQueryFactory extends TeradataLogsJdbcTask {
 
         public LogQueryFactory(String targetPath, SharedState state, String logTable, String queryTable, List<String> conditions, ZonedInterval interval) {
             super(targetPath, state, logTable, queryTable, conditions, interval);

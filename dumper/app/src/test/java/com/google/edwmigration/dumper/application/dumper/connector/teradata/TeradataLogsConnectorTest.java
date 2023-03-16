@@ -16,9 +16,27 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask.setParameterValues;
+import static org.junit.Assert.assertEquals;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
+import com.google.edwmigration.dumper.application.dumper.ResourceLocation;
+import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
+import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
+import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ProgressMonitor;
+import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
+import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
@@ -34,20 +52,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.ArrayUtils;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
-import com.google.edwmigration.dumper.application.dumper.ResourceLocation;
-import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
-import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
-import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ProgressMonitor;
-import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
-import com.google.edwmigration.dumper.test.TestUtils;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,11 +66,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.util.FileSystemUtils;
-
-import static com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask.*;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
-import org.junit.Assert;
-import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -182,7 +182,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
         );
 
         // Rewrite validity queries from Teradata (SELECT TOP 1 ...) to PostgreSQL:
-        TeradataLogsConnector.TeradataLogsJdbcTask.EXPRESSION_VALIDITY_QUERY = "SELECT %s FROM %s FETCH FIRST 1 ROW ONLY";
+        TeradataLogsJdbcTask.EXPRESSION_VALIDITY_QUERY = "SELECT %s FROM %s FETCH FIRST 1 ROW ONLY";
 
         MetadataDumper dumper = new MetadataDumper();
         dumper.run(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
@@ -200,7 +200,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
     @Test
     public void testHeaderAndColumns() {
         checkNames(TeradataLogsDumpFormat.Header.values(),
-                TeradataLogsConnector.EXPRESSIONS);
+            TeradataLogsJdbcTask.EXPRESSIONS);
         checkNames(TeradataLogsDumpFormat.HeaderLSql.values(),
                 Teradata14LogsConnector.EXPRESSIONS_LSQL_TBL.toArray(new String[Teradata14LogsConnector.EXPRESSIONS_LSQL_TBL.size()]));
         checkNames(TeradataLogsDumpFormat.HeaderLog.values(),
