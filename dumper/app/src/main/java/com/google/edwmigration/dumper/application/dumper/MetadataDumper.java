@@ -317,7 +317,7 @@ public class MetadataDumper {
         .getOutputFile()
         .map(
             file -> {
-              String fileName = file.getName();
+              String fileName = file.getPath();
               if (StringUtils.endsWithIgnoreCase(fileName, ".zip")) return file;
               if (file.isFile()) {
                 throw new IllegalStateException(
