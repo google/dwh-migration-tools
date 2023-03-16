@@ -49,10 +49,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author matt
- *
- * TODO :Make a base class, and derive TeradataLogs and TeradataLogs14 from it
+ *     <p>TODO :Make a base class, and derive TeradataLogs and TeradataLogs14 from it
  */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Teradata version >=15.")
@@ -60,89 +58,101 @@ import org.slf4j.LoggerFactory;
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
 @RespectsArgumentAssessment
-public class TeradataLogsConnector extends AbstractTeradataConnector implements LogsConnector, TeradataLogsDumpFormat {
+public class TeradataLogsConnector extends AbstractTeradataConnector
+    implements LogsConnector, TeradataLogsDumpFormat {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
 
-    @VisibleForTesting
-    /* pp */ static final String DEF_LOG_TABLE = "dbc.DBQLogTbl";
-    /* pp */ static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
-    @VisibleForTesting
-    /* pp */ static final String DEF_QUERY_TABLE = "dbc.DBQLSQLTbl";
+  @VisibleForTesting /* pp */ static final String DEF_LOG_TABLE = "dbc.DBQLogTbl";
+  /* pp */ static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
+  @VisibleForTesting /* pp */ static final String DEF_QUERY_TABLE = "dbc.DBQLSQLTbl";
 
-    public TeradataLogsConnector() {
-        super("teradata-logs");
+  public TeradataLogsConnector() {
+    super("teradata-logs");
+  }
+
+  // to proxy for Terdata14LogsConnector
+  protected TeradataLogsConnector(@Nonnull String name) {
+    super(name);
+  }
+
+  /** This is shared between all instances of TeradataLogsJdbcTask. */
+  protected static class SharedState {
+
+    /**
+     * Whether a particular expression is valid against the particular target Teradata version. This
+     * is a concurrent Map of immutable objects, so is threadsafe overall.
+     */
+    protected final ConcurrentMap<String, Boolean> expressionValidity = new ConcurrentHashMap<>();
+  }
+
+  private ImmutableList<TeradataJdbcSelectTask> createTimeSeriesTasks(ZonedInterval interval) {
+    return ImmutableList.of("ResUsageScpu", "ResUsageSpma").stream()
+        .map(
+            tableName ->
+                new TeradataJdbcSelectTask(
+                    createFilename("dbc." + tableName + "_", interval),
+                    TaskCategory.OPTIONAL,
+                    String.format(
+                        "SELECT %%s FROM DBC.%s WHERE TheTimestamp >= %s AND TheTimestamp < %s",
+                        tableName,
+                        interval.getStartUTC().toInstant().getEpochSecond(),
+                        interval.getEndInclusiveUTC().toInstant().getEpochSecond())))
+        .collect(toImmutableList());
+  }
+
+  private String createFilename(String zipEntryPrefix, ZonedInterval interval) {
+    return zipEntryPrefix
+        + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
+        + ".csv";
+  }
+
+  @Override
+  public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
+
+    boolean isAssessment = arguments.isAssessment();
+    String logTable = isAssessment ? ASSESSMENT_DEF_LOG_TABLE : DEF_LOG_TABLE;
+    String queryTable = DEF_QUERY_TABLE;
+    List<String> alternates = arguments.getQueryLogAlternates();
+    if (!alternates.isEmpty()) {
+      if (alternates.size() != 2)
+        throw new MetadataDumperUsageException(
+            "Alternate query log tables must be given as a pair; you specified: " + alternates);
+      logTable = alternates.get(0);
+      queryTable = alternates.get(1);
     }
+    List<String> conditions = new ArrayList<>();
+    // if the user specifies an earliest start time there will be extraneous empty dump files
+    // because we always iterate over the full 7 trailing days; maybe it's worth
+    // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
+    // to parse and return an ISO instant, not a database-server-specific format.
+    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
+      conditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
 
-    // to proxy for Terdata14LogsConnector
-    protected TeradataLogsConnector(@Nonnull String name) {
-        super(name);
+    // Beware of Teradata SQLSTATE HY000. See issue #4126.
+    // Most likely caused by some operation (equality?) being performed on a datum which is too long
+    // for a varchar.
+    ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
+    LOG.info("Exporting query log for " + intervals);
+    SharedState state = new SharedState();
+    for (ZonedInterval interval : intervals) {
+      String file = createFilename(ZIP_ENTRY_PREFIX, interval);
+      if (isAssessment) {
+        List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
+        out.add(
+            new TeradataAssessmentLogsJdbcTask(
+                    file, state, logTable, queryTable, conditions, interval, orderBy)
+                .withHeaderClass(HeaderForAssessment.class));
+        out.addAll(createTimeSeriesTasks(interval));
+      } else {
+        conditions.add("L.UserName <> 'DBC'");
+        out.add(
+            new TeradataLogsJdbcTask(file, state, logTable, queryTable, conditions, interval)
+                .withHeaderClass(Header.class));
+      }
     }
-
-    /** This is shared between all instances of TeradataLogsJdbcTask. */
-    protected static class SharedState {
-
-        /**
-         * Whether a particular expression is valid against the particular target Teradata version.
-         * This is a concurrent Map of immutable objects, so is threadsafe overall.
-         */
-        protected final ConcurrentMap<String, Boolean> expressionValidity = new ConcurrentHashMap<>();
-    }
-
-    private ImmutableList<TeradataJdbcSelectTask> createTimeSeriesTasks(ZonedInterval interval) {
-        return ImmutableList.of("ResUsageScpu","ResUsageSpma").stream().map(tableName ->
-            new TeradataJdbcSelectTask(createFilename("dbc."+tableName+"_", interval), TaskCategory.OPTIONAL,
-            String.format("SELECT %%s FROM DBC.%s WHERE TheTimestamp >= %s AND TheTimestamp < %s",
-                tableName,
-                interval.getStartUTC().toInstant().getEpochSecond(),
-                interval.getEndInclusiveUTC().toInstant().getEpochSecond())))
-            .collect(toImmutableList());
-    }
-
-    private String createFilename(String zipEntryPrefix, ZonedInterval interval) {
-        return zipEntryPrefix + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + ".csv";
-    }
-
-    @Override
-    public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) throws MetadataDumperUsageException {
-        out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-        out.add(new FormatTask(FORMAT_NAME));
-
-        boolean isAssessment = arguments.isAssessment();
-        String logTable = isAssessment ? ASSESSMENT_DEF_LOG_TABLE : DEF_LOG_TABLE;
-        String queryTable = DEF_QUERY_TABLE;
-        List<String> alternates = arguments.getQueryLogAlternates();
-        if (!alternates.isEmpty()) {
-            if (alternates.size() != 2)
-                throw new MetadataDumperUsageException("Alternate query log tables must be given as a pair; you specified: " + alternates);
-            logTable = alternates.get(0);
-            queryTable = alternates.get(1);
-        }
-        List<String> conditions = new ArrayList<>();
-        // if the user specifies an earliest start time there will be extraneous empty dump files
-        // because we always iterate over the full 7 trailing days; maybe it's worth
-        // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
-        // to parse and return an ISO instant, not a database-server-specific format.
-        if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
-            conditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
-
-        // Beware of Teradata SQLSTATE HY000. See issue #4126.
-        // Most likely caused by some operation (equality?) being performed on a datum which is too long for a varchar.
-        ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
-        LOG.info("Exporting query log for " + intervals);
-        SharedState state = new SharedState();
-        for (ZonedInterval interval : intervals) {
-            String file = createFilename(ZIP_ENTRY_PREFIX, interval);
-            if (isAssessment) {
-                List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
-                out.add(new TeradataAssessmentLogsJdbcTask(file, state, logTable, queryTable, conditions, interval, orderBy)
-                        .withHeaderClass(HeaderForAssessment.class));
-                out.addAll(createTimeSeriesTasks(interval));
-            } else {
-                conditions.add("L.UserName <> 'DBC'");
-                out.add(new TeradataLogsJdbcTask(file, state, logTable, queryTable, conditions, interval)
-                        .withHeaderClass(Header.class));
-            }
-        }
-    }
+  }
 }
