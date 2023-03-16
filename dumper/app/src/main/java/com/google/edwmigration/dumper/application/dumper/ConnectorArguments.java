@@ -237,19 +237,12 @@ public class ConnectorArguments extends DefaultArguments {
   // specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
   private final OptionSpec<File> optionOutput =
       parser
-          .accepts("output", "Output file (cannot be used together with --output-dir)")
+          .accepts(
+              "output",
+              "Output file or directory name. If the file name, along with the `.zip` extension, is not provided dumper will attempt to create the zip file with default file name in the directory")
           .withRequiredArg()
           .ofType(File.class)
           .describedAs("cw-dump.zip");
-  private final OptionSpec<String> optionOutputDir =
-      parser
-          .accepts(
-              "output-dir",
-              "Output directory where the zip file with the default filename should be created (cannot be used together with --output option). If you want to specify the filename, use --output option instead.")
-          .withRequiredArg()
-          .ofType(String.class)
-          .defaultsTo("")
-          .describedAs("/home/user/my-dump-dir");
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
   // TODO: Make this be an ISO instant.
@@ -683,14 +676,8 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valuesOf(optionConfiguration);
   }
 
-  @CheckForNull
-  public File getOutputFile() {
-    return getOptions().valueOf(optionOutput);
-  }
-
-  @CheckForNull
-  public String getOutputDirectory() {
-    return getOptions().valueOf(optionOutputDir);
+  public Optional<File> getOutputFile() {
+    return optionAsOptional(optionOutput).filter(file -> !file.getName().isEmpty());
   }
 
   public boolean isOutputContinue() {
@@ -854,7 +841,6 @@ public class ConnectorArguments extends DefaultArguments {
         .add("user", getUser())
         .add("configuration", getConfiguration())
         .add("output", getOutputFile())
-        .add("output-dir", getOutputDirectory())
         .add("query-log-earliest-timestamp", getQueryLogEarliestTimestamp())
         .add("query-log-days", getQueryLogDays())
         .add("query-log-start", getQueryLogStart())

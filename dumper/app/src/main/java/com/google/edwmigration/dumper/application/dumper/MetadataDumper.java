@@ -44,7 +44,6 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
@@ -239,23 +238,8 @@ public class MetadataDumper {
     // The default output file is based on the connector.
     // We had a customer request to base it on the database, but that isn't well-defined,
     // as there may be 0 or N databases in a single file.
-    File outputFile = arguments.getOutputFile();
-    String outputDirectory = arguments.getOutputDirectory();
+    File outputFile = getOutputFile(connector, arguments);
 
-    boolean isDefaultPath = "".equals(outputDirectory);
-    if (!isDefaultPath && outputFile != null) {
-      System.out.println(
-          "**********************************************************\n"
-              + "* ERROR: Using both --output and --output-dir flags is not allowed.\n"
-              + "* Please use --help for more information.\n"
-              + "**********************************************************");
-      return;
-    }
-
-    if (outputFile == null) {
-      outputFile =
-          new File(outputDirectory, connector.getDefaultFileName(arguments.isAssessment()));
-    }
     if (arguments.isDryRun()) {
       String title = "Dry run: Printing task list for " + connector.getName();
       System.out.println(title);
@@ -271,48 +255,24 @@ public class MetadataDumper {
       LOG.info("Using " + connector);
       try (Closer closer = Closer.create()) {
 
-        final OutputHandleFactory sinkFactory;
-        if (StringUtils.endsWithIgnoreCase(outputFile.getName(), ".zip")) {
-          if (outputFile.exists()) {
-            // If it exists, it must be a file.
-            if (!outputFile.isFile())
-              throw new IllegalStateException("Cannot overwrite existing non-file with file.");
-            if (!arguments.isOutputContinue())
-              outputFile.delete(); // It's a simple file, and we were asked to overwrite it.
-          } else {
-            Files.createParentDirs(outputFile);
-          }
-
-          URI outputUri = URI.create("jar:" + outputFile.toURI());
-          // LOG.debug("Is a zip file: " + outputUri);
-          Map<String, Object> fileSystemProperties =
-              ImmutableMap.<String, Object>builder()
-                  .put("create", "true")
-                  .put("useTempFile", Boolean.TRUE)
-                  .build();
-          FileSystem fileSystem =
-              closer.register(FileSystems.newFileSystem(outputUri, fileSystemProperties));
-          sinkFactory =
-              new FileSystemOutputHandleFactory(fileSystem, "/"); // It's required to be "/"
+        if (outputFile.exists()) {
+          if (!arguments.isOutputContinue())
+            outputFile.delete(); // It's a simple file, and we were asked to overwrite it.
         } else {
-          if (outputFile.exists()) {
-            // If it exists, it must be an empty directory, OR we must have specified --continue. We
-            // never delete.
-            if (!outputFile.isDirectory())
-              throw new IllegalStateException(
-                  "Cannot overwrite existing non-directory with directory.");
-            if (!arguments.isOutputContinue() && !isNullOrEmpty(outputFile.list()))
-              throw new IllegalStateException(
-                  "Refusing to touch non-empty directory without --continue.");
-          } else {
-            // LOG.debug("Not a zip file: " + outputFile);
-            outputFile.mkdirs();
-            if (!outputFile.isDirectory())
-              throw new IOException("Unable to create directory " + outputFile);
-          }
-
-          sinkFactory = new FileSystemOutputHandleFactory(outputFile.toPath());
+          Files.createParentDirs(outputFile);
         }
+
+        URI outputUri = URI.create("jar:" + outputFile.toURI());
+        // LOG.debug("Is a zip file: " + outputUri);
+        Map<String, Object> fileSystemProperties =
+            ImmutableMap.<String, Object>builder()
+                .put("create", "true")
+                .put("useTempFile", Boolean.TRUE)
+                .build();
+        FileSystem fileSystem =
+            closer.register(FileSystems.newFileSystem(outputUri, fileSystemProperties));
+        OutputHandleFactory sinkFactory =
+            new FileSystemOutputHandleFactory(fileSystem, "/"); // It's required to be "/"
         LOG.debug("Target filesystem is " + sinkFactory);
 
         Handle handle = closer.register(connector.open(arguments));
@@ -346,6 +306,30 @@ public class MetadataDumper {
       logStatusSummary(state);
       System.out.println(STARS);
     }
+  }
+
+  private File getOutputFile(Connector connector, ConnectorArguments arguments) {
+    // The default output file is based on the connector.
+    // We had a customer request to base it on the database, but that isn't well-defined,
+    // as there may be 0 or N databases in a single file.
+    String defaultFileName = connector.getDefaultFileName(arguments.isAssessment());
+    return arguments
+        .getOutputFile()
+        .map(
+            file -> {
+              String fileName = file.getName();
+              if (StringUtils.endsWithIgnoreCase(fileName, ".zip")) return file;
+              if (file.isFile()) {
+                throw new IllegalStateException(
+                    String.format(
+                        "A file already exists at %1$s. "
+                            + "If you wished to create a directory, please remove/rename the file first. "
+                            + "If you meant to create %1$s.zip, please add the `.zip` extension manually",
+                        fileName));
+              }
+              return new File(fileName, defaultFileName);
+            })
+        .orElseGet(() -> new File(defaultFileName));
   }
 
   private void printDumperSummary(Connector connector, File outputFile) {
