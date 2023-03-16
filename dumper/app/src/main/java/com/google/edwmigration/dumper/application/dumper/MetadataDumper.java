@@ -323,11 +323,11 @@ public class MetadataDumper {
                 throw new IllegalStateException(
                     String.format(
                         "A file already exists at %1$s. "
-                            + "If you wished to create a directory, please remove/rename the file first. "
-                            + "If you meant to create %1$s.zip, please add the `.zip` extension manually",
+                            + "If you want to create a directory, please provide the path to the directory. "
+                            + "If you want to create %1$s.zip, please add the `.zip` extension manually.",
                         fileName));
               }
-              return new File(fileName, defaultFileName);
+              return new File(file, defaultFileName);
             })
         .orElseGet(() -> new File(defaultFileName));
   }

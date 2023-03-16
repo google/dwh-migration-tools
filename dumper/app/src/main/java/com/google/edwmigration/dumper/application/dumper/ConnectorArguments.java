@@ -239,7 +239,7 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(
               "output",
-              "Output file or directory name. If the file name, along with the `.zip` extension, is not provided dumper will attempt to create the zip file with default file name in the directory")
+              "Output file or directory name. If the file name, along with the `.zip` extension, is not provided dumper will attempt to create the zip file with the default file name in the directory.")
           .withRequiredArg()
           .ofType(File.class)
           .describedAs("cw-dump.zip");
