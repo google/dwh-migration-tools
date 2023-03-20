@@ -16,90 +16,87 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/**
- *
- * @author dave
- */
+/** @author dave */
 public interface SnowflakeMetadataDumpFormat {
 
-    public static final String FORMAT_NAME = "snowflake.dump.zip";
+  public static final String FORMAT_NAME = "snowflake.dump.zip";
 
-    interface DatabasesFormat {
+  interface DatabasesFormat {
 
-        String IS_ZIP_ENTRY_NAME = "databases.csv";
-        String AU_ZIP_ENTRY_NAME = "databases-au.csv";
+    String IS_ZIP_ENTRY_NAME = "databases.csv";
+    String AU_ZIP_ENTRY_NAME = "databases-au.csv";
 
-        enum Header {
-            DatabaseName,
-            DatabaseOwner
-        }
+    enum Header {
+      DatabaseName,
+      DatabaseOwner
     }
+  }
 
-    interface SchemataFormat {
+  interface SchemataFormat {
 
-        String IS_ZIP_ENTRY_NAME = "schemata.csv";
-        String AU_ZIP_ENTRY_NAME = "schemata-au.csv";
+    String IS_ZIP_ENTRY_NAME = "schemata.csv";
+    String AU_ZIP_ENTRY_NAME = "schemata-au.csv";
 
-        enum Header {
-            CatalogName,
-            SchemaName
-        }
+    enum Header {
+      CatalogName,
+      SchemaName
     }
+  }
 
-    interface TablesFormat {
+  interface TablesFormat {
 
-        String IS_ZIP_ENTRY_NAME = "tables.csv";
-        String AU_ZIP_ENTRY_NAME = "tables-au.csv";
+    String IS_ZIP_ENTRY_NAME = "tables.csv";
+    String AU_ZIP_ENTRY_NAME = "tables-au.csv";
 
-        enum Header {
-            TableCatalog,
-            TableSchema,
-            TableName,
-            TableType,
-            RowCount,
-            Bytes,
-            ClusteringKey
-        }
+    enum Header {
+      TableCatalog,
+      TableSchema,
+      TableName,
+      TableType,
+      RowCount,
+      Bytes,
+      ClusteringKey
     }
+  }
 
-    interface ColumnsFormat {
+  interface ColumnsFormat {
 
-        String IS_ZIP_ENTRY_NAME = "columns.csv";
-        String AU_ZIP_ENTRY_NAME = "columns-au.csv";
+    String IS_ZIP_ENTRY_NAME = "columns.csv";
+    String AU_ZIP_ENTRY_NAME = "columns-au.csv";
 
-        enum Header {
-            TableCatalog,
-            TableSchema,
-            TableName,
-            OrdinalPosition,
-            ColumnName,
-            DataType
-        }
+    enum Header {
+      TableCatalog,
+      TableSchema,
+      TableName,
+      OrdinalPosition,
+      ColumnName,
+      DataType
     }
+  }
 
-    interface ViewsFormat {
+  interface ViewsFormat {
 
-        String IS_ZIP_ENTRY_NAME = "views.csv";
-        String AU_ZIP_ENTRY_NAME = "views-au.csv";
+    String IS_ZIP_ENTRY_NAME = "views.csv";
+    String AU_ZIP_ENTRY_NAME = "views-au.csv";
 
-        enum Header {
-            TableCatalog,
-            TableSchema,
-            TableName,
-            ViewDefinition
-        }
+    enum Header {
+      TableCatalog,
+      TableSchema,
+      TableName,
+      ViewDefinition
     }
+  }
 
-    interface FunctionsFormat {
+  interface FunctionsFormat {
 
-        String IS_ZIP_ENTRY_NAME = "functions.csv";
-        String AU_ZIP_ENTRY_NAME = "functions-au.csv";
+    String IS_ZIP_ENTRY_NAME = "functions.csv";
+    String AU_ZIP_ENTRY_NAME = "functions-au.csv";
 
-        enum Header {
-            FunctionSchema,
-            FunctionName,
-            DataType,
-            ArgumentSignature
-        }
+    enum Header {
+      FunctionSchema,
+      FunctionName,
+      DataType,
+      ArgumentSignature
     }
+  }
 }

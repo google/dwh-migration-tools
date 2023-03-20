@@ -22,30 +22,28 @@ import java.nio.file.Path;
 import javax.annotation.Nonnull;
 import net.jcip.annotations.ThreadSafe;
 
-/**
- * @author shevek
- */
+/** @author shevek */
 @ThreadSafe
 public class FileSystemOutputHandleFactory implements OutputHandleFactory {
 
-    private final Path rootPath;
+  private final Path rootPath;
 
-    public FileSystemOutputHandleFactory(@Nonnull Path rootPath) {
-        this.rootPath = Preconditions.checkNotNull(rootPath, "Root path was null.");
-    }
+  public FileSystemOutputHandleFactory(@Nonnull Path rootPath) {
+    this.rootPath = Preconditions.checkNotNull(rootPath, "Root path was null.");
+  }
 
-    public FileSystemOutputHandleFactory(@Nonnull FileSystem fileSystem, @Nonnull String rootPath) {
-        this(fileSystem.getPath(rootPath));
-    }
+  public FileSystemOutputHandleFactory(@Nonnull FileSystem fileSystem, @Nonnull String rootPath) {
+    this(fileSystem.getPath(rootPath));
+  }
 
-    @Nonnull
-    @Override
-    public OutputHandle newOutputFileHandle(@Nonnull String targetPath) {
-        return new FileSystemOutputHandle(rootPath, targetPath);
-    }
+  @Nonnull
+  @Override
+  public OutputHandle newOutputFileHandle(@Nonnull String targetPath) {
+    return new FileSystemOutputHandle(rootPath, targetPath);
+  }
 
-    @Override
-    public String toString() {
-        return "FileSystemOutputHandleFactory(" + rootPath.getFileSystem() + "!" + rootPath + ")";
-    }
+  @Override
+  public String toString() {
+    return "FileSystemOutputHandleFactory(" + rootPath.getFileSystem() + "!" + rootPath + ")";
+  }
 }

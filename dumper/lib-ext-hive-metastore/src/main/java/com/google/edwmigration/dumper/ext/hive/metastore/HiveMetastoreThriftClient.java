@@ -19,8 +19,6 @@ package com.google.edwmigration.dumper.ext.hive.metastore;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import java.io.Closeable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnegative;
@@ -37,146 +35,164 @@ import org.slf4j.LoggerFactory;
 /**
  * A wrapper around a Hive metastore Thrift client.
  *
- * Implementations of this abstract class are not thread-safe because
- * they wrap an underlying Thrift client which itself is not thread-safe.
+ * <p>Implementations of this abstract class are not thread-safe because they wrap an underlying
+ * Thrift client which itself is not thread-safe.
  */
 @NotThreadSafe
 public abstract class HiveMetastoreThriftClient implements AutoCloseable {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(HiveMetastoreThriftClient.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(HiveMetastoreThriftClient.class);
 
-    public static class Builder {
+  public static class Builder {
 
-        private static final Map<String, HiveMetastoreThriftClientProvider> supportedVersionMappings = new ImmutableMap.Builder<String, HiveMetastoreThriftClientProvider>()
-                .put("2.3.6", HiveMetastoreThriftClient_v2_3_6::new)  // Matt tested locally in April 2021 with Hive v2.3.6 running atop Hadoop and MySQL
-                .build();
+    private static final Map<String, HiveMetastoreThriftClientProvider> supportedVersionMappings =
+        new ImmutableMap.Builder<String, HiveMetastoreThriftClientProvider>()
+            .put(
+                "2.3.6",
+                HiveMetastoreThriftClient_v2_3_6
+                    ::new) // Matt tested locally in April 2021 with Hive v2.3.6 running atop Hadoop
+            // and MySQL
+            .build();
 
-        @FunctionalInterface
-        private static interface HiveMetastoreThriftClientProvider {
-            HiveMetastoreThriftClient provide(@Nonnull String name, @Nonnull TProtocol protocol);
-        }
+    @FunctionalInterface
+    private static interface HiveMetastoreThriftClientProvider {
+      HiveMetastoreThriftClient provide(@Nonnull String name, @Nonnull TProtocol protocol);
+    }
 
-        public static enum UnavailableClientVersionBehavior {
-            FALLBACK,
-            THROW
-        }
+    public static enum UnavailableClientVersionBehavior {
+      FALLBACK,
+      THROW
+    }
 
-        @Nonnull
-        private final String requestedVersionString;
-        @Nonnull
-        private String name = "unnamed-thrift-client";
-        @Nonnull
-        private String host = "localhost";
-        @Nonnegative
-        private int port;
-        @Nonnull
-        private UnavailableClientVersionBehavior unavailableClientBehavior = UnavailableClientVersionBehavior.FALLBACK;
-        private boolean debug = false;
+    @Nonnull private final String requestedVersionString;
+    @Nonnull private String name = "unnamed-thrift-client";
+    @Nonnull private String host = "localhost";
+    @Nonnegative private int port;
 
-        public Builder(@Nonnull String version) {
-            this.requestedVersionString = version;
-        }
+    @Nonnull
+    private UnavailableClientVersionBehavior unavailableClientBehavior =
+        UnavailableClientVersionBehavior.FALLBACK;
 
-        /** Copy constructor. */
-        public Builder(@Nonnull Builder builder) {
-            this.requestedVersionString = builder.requestedVersionString;
-            this.name = builder.name;
-            this.host = builder.host;
-            this.port = builder.port;
-            this.unavailableClientBehavior = builder.unavailableClientBehavior;
-            this.debug = builder.debug;
-        }
+    private boolean debug = false;
 
-        @Nonnull
-        public Builder withName(@Nonnull String name) {
-            this.name = name;
-            return this;
-        }
+    public Builder(@Nonnull String version) {
+      this.requestedVersionString = version;
+    }
 
-        @Nonnull
-        public Builder withHost(@Nonnull String host) {
-            this.host = host;
-            return this;
-        }
-
-        @Nonnull
-        public Builder withPort(@Nonnegative int port) {
-            this.port = port;
-            return this;
-        }
-
-        @Nonnull
-        public Builder withUnavailableClientVersionBehavior(@Nonnull UnavailableClientVersionBehavior behavior) {
-            this.unavailableClientBehavior = behavior;
-            return this;
-        }
-
-        @Nonnull
-        public Builder withDebug(boolean value) {
-            this.debug = value;
-            return this;
-        }
-
-        @Nonnull
-        public HiveMetastoreThriftClient build() throws TTransportException {
-
-            // We used to support Kerberos authentication, but that was when we used the Hive metastore client
-            // wrapper around Thrift. Now that we are connecting via Thrift directly, we would need to wrap
-            // the TTransport here with a TSaslClientTransport parameterized accordingly. This hasn't been done yet
-            // in the interest of expediency.
-            TTransport transport = new TSocket(host, port);
-            TProtocol protocol = new TBinaryProtocol(transport);
-            transport.open();
-
-            final HiveMetastoreThriftClient client;
-            if (supportedVersionMappings.containsKey(requestedVersionString)) {
-                if (debug)
-                    LOG.debug("The request for Hive metastore Thrift client version '{}' is satisfiable; building it now.", requestedVersionString);
-                client = supportedVersionMappings.get(requestedVersionString).provide(name, protocol);
-            } else {
-                String messagePrefix = "The request for Hive metastore Thrift client version '" + requestedVersionString + "' is NOT satisfiable. "
-                                       + "Available versions are: [" + Joiner.on(",").join(supportedVersionMappings.keySet()) + "].";
-                if (unavailableClientBehavior == UnavailableClientVersionBehavior.FALLBACK) {
-                    LOG.warn(messagePrefix + " The caller requested fallback behavior, so a client compiled against a superset Thrift specification will be used instead. "
-                            + "If you encounter an error when using the fallback client, please contact CompilerWorks support and provide "
-                            + "the originally requested version number.");
-                    client = new HiveMetastoreThriftClient_Superset(name, protocol);
-                } else {
-                    throw new UnsupportedOperationException(messagePrefix + " Aborting now; the caller indicated that this is an irrecoverable condition.");
-                }
-            }
-
-            return client;
-        }
+    /** Copy constructor. */
+    public Builder(@Nonnull Builder builder) {
+      this.requestedVersionString = builder.requestedVersionString;
+      this.name = builder.name;
+      this.host = builder.host;
+      this.port = builder.port;
+      this.unavailableClientBehavior = builder.unavailableClientBehavior;
+      this.debug = builder.debug;
     }
 
     @Nonnull
-    private final String name;
-
-    public HiveMetastoreThriftClient(@Nonnull String name) {
-        this.name = Preconditions.checkNotNull(name, "name was null.");
+    public Builder withName(@Nonnull String name) {
+      this.name = name;
+      return this;
     }
 
     @Nonnull
-    public String getName() {
-        return name;
+    public Builder withHost(@Nonnull String host) {
+      this.host = host;
+      return this;
     }
 
     @Nonnull
-    public abstract List<? extends String> getAllDatabaseNames() throws Exception;
+    public Builder withPort(@Nonnegative int port) {
+      this.port = port;
+      return this;
+    }
 
     @Nonnull
-    public abstract Database getDatabase(@Nonnull String databaseName) throws Exception;
+    public Builder withUnavailableClientVersionBehavior(
+        @Nonnull UnavailableClientVersionBehavior behavior) {
+      this.unavailableClientBehavior = behavior;
+      return this;
+    }
 
     @Nonnull
-    public abstract List<? extends String> getAllTableNamesInDatabase(@Nonnull String databaseName) throws Exception;
+    public Builder withDebug(boolean value) {
+      this.debug = value;
+      return this;
+    }
 
     @Nonnull
-    public abstract Table getTable(
-            @Nonnull String databaseName,
-            @Nonnull String tableName) throws Exception;
+    public HiveMetastoreThriftClient build() throws TTransportException {
 
-    @Nonnull
-    public abstract List<? extends Function> getFunctions() throws Exception;
+      // We used to support Kerberos authentication, but that was when we used the Hive metastore
+      // client
+      // wrapper around Thrift. Now that we are connecting via Thrift directly, we would need to
+      // wrap
+      // the TTransport here with a TSaslClientTransport parameterized accordingly. This hasn't been
+      // done yet
+      // in the interest of expediency.
+      TTransport transport = new TSocket(host, port);
+      TProtocol protocol = new TBinaryProtocol(transport);
+      transport.open();
+
+      final HiveMetastoreThriftClient client;
+      if (supportedVersionMappings.containsKey(requestedVersionString)) {
+        if (debug)
+          LOG.debug(
+              "The request for Hive metastore Thrift client version '{}' is satisfiable; building it now.",
+              requestedVersionString);
+        client = supportedVersionMappings.get(requestedVersionString).provide(name, protocol);
+      } else {
+        String messagePrefix =
+            "The request for Hive metastore Thrift client version '"
+                + requestedVersionString
+                + "' is NOT satisfiable. "
+                + "Available versions are: ["
+                + Joiner.on(",").join(supportedVersionMappings.keySet())
+                + "].";
+        if (unavailableClientBehavior == UnavailableClientVersionBehavior.FALLBACK) {
+          LOG.warn(
+              messagePrefix
+                  + " The caller requested fallback behavior, so a client compiled against a superset Thrift specification will be used instead. "
+                  + "If you encounter an error when using the fallback client, please contact CompilerWorks support and provide "
+                  + "the originally requested version number.");
+          client = new HiveMetastoreThriftClient_Superset(name, protocol);
+        } else {
+          throw new UnsupportedOperationException(
+              messagePrefix
+                  + " Aborting now; the caller indicated that this is an irrecoverable condition.");
+        }
+      }
+
+      return client;
+    }
+  }
+
+  @Nonnull private final String name;
+
+  public HiveMetastoreThriftClient(@Nonnull String name) {
+    this.name = Preconditions.checkNotNull(name, "name was null.");
+  }
+
+  @Nonnull
+  public String getName() {
+    return name;
+  }
+
+  @Nonnull
+  public abstract List<? extends String> getAllDatabaseNames() throws Exception;
+
+  @Nonnull
+  public abstract Database getDatabase(@Nonnull String databaseName) throws Exception;
+
+  @Nonnull
+  public abstract List<? extends String> getAllTableNamesInDatabase(@Nonnull String databaseName)
+      throws Exception;
+
+  @Nonnull
+  public abstract Table getTable(@Nonnull String databaseName, @Nonnull String tableName)
+      throws Exception;
+
+  @Nonnull
+  public abstract List<? extends Function> getFunctions() throws Exception;
 }

@@ -21,33 +21,33 @@ import javax.annotation.Nonnull;
 
 public interface Partition {
 
-    @Nonnull
-    public String getPartitionName();
+  @Nonnull
+  public String getPartitionName();
 
-    @CheckForNull
-    public String getLocation();
+  @CheckForNull
+  public String getLocation();
 
-    @CheckForNull
-    public Integer getCreateTime();
+  @CheckForNull
+  public Integer getCreateTime();
 
-    @CheckForNull
-    public Integer getLastAccessTime();
+  @CheckForNull
+  public Integer getLastAccessTime();
 
-    @CheckForNull
-    public Integer getLastDdlTime();
+  @CheckForNull
+  public Integer getLastDdlTime();
 
-    @CheckForNull
-    public Long getTotalSize();
+  @CheckForNull
+  public Long getTotalSize();
 
-    @CheckForNull
-    public Long getRawSize();
+  @CheckForNull
+  public Long getRawSize();
 
-    @CheckForNull
-    public Long getRowsCount();
+  @CheckForNull
+  public Long getRowsCount();
 
-    @CheckForNull
-    public Integer getFilesCount();
+  @CheckForNull
+  public Integer getFilesCount();
 
-    @CheckForNull
-    public Boolean isCompressed();
+  @CheckForNull
+  public Boolean isCompressed();
 }

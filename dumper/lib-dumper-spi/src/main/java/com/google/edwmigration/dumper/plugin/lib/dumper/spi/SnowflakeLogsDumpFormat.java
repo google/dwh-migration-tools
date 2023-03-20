@@ -16,29 +16,26 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/**
- *
- * @author matt
- */
+/** @author matt */
 public interface SnowflakeLogsDumpFormat {
 
-    String FORMAT_NAME = "snowflake.logs.zip";
+  String FORMAT_NAME = "snowflake.logs.zip";
 
-    String ZIP_ENTRY_PREFIX = "query_history_";
+  String ZIP_ENTRY_PREFIX = "query_history_";
 
-    enum Header {
-        DatabaseName,
-        SchemaName,
-        UserName,
-        WarehouseName,
-        ExecutionStatus,
-        ErrorCode,
-        StartTime,
-        EndTime,
-        TotalElapsedTime,
-        BytesScanned,
-        RowsProduced,
-        CreditsUsedCloudServices,
-        QueryText
-    }
+  enum Header {
+    DatabaseName,
+    SchemaName,
+    UserName,
+    WarehouseName,
+    ExecutionStatus,
+    ErrorCode,
+    StartTime,
+    EndTime,
+    TotalElapsedTime,
+    BytesScanned,
+    RowsProduced,
+    CreditsUsedCloudServices,
+    QueryText
+  }
 }

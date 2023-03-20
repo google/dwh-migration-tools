@@ -22,63 +22,63 @@ import javax.annotation.Nonnull;
 
 public interface Table {
 
-    @CheckForNull
-    public String getDatabaseName();
+  @CheckForNull
+  public String getDatabaseName();
 
-    @CheckForNull
-    public String getTableName();
+  @CheckForNull
+  public String getTableName();
 
-    @CheckForNull
-    public String getTableType();
+  @CheckForNull
+  public String getTableType();
 
-    @CheckForNull
-    public Integer getCreateTime();
+  @CheckForNull
+  public Integer getCreateTime();
 
-    @CheckForNull
-    public Integer getLastAccessTime();
+  @CheckForNull
+  public Integer getLastAccessTime();
 
-    @CheckForNull
-    public String getOwner();
+  @CheckForNull
+  public String getOwner();
 
-    @CheckForNull
-    public String getOriginalViewText();
+  @CheckForNull
+  public String getOriginalViewText();
 
-    @CheckForNull
-    public String getExpandedViewText();
+  @CheckForNull
+  public String getExpandedViewText();
 
-    @CheckForNull
-    public String getLocation();
+  @CheckForNull
+  public String getLocation();
 
-    @CheckForNull
-    public Integer getLastDdlTime();
+  @CheckForNull
+  public Integer getLastDdlTime();
 
-    @CheckForNull
-    public Long getTotalSize();
+  @CheckForNull
+  public Long getTotalSize();
 
-    @CheckForNull
-    public Long getRawSize();
+  @CheckForNull
+  public Long getRawSize();
 
-    @CheckForNull
-    public Long getRowsCount();
+  @CheckForNull
+  public Long getRowsCount();
 
-    @CheckForNull
-    public Integer getFilesCount();
+  @CheckForNull
+  public Integer getFilesCount();
 
-    @CheckForNull
-    public Integer getRetention();
+  @CheckForNull
+  public Integer getRetention();
 
-    @CheckForNull
-    public Integer getBucketsCount();
+  @CheckForNull
+  public Integer getBucketsCount();
 
-    @CheckForNull
-    public Boolean isCompressed();
+  @CheckForNull
+  public Boolean isCompressed();
 
-    @Nonnull
-    public List<? extends Field> getFields() throws Exception;
+  @Nonnull
+  public List<? extends Field> getFields() throws Exception;
 
-    @Nonnull
-    public List<? extends PartitionKey> getPartitionKeys();
+  @Nonnull
+  public List<? extends PartitionKey> getPartitionKeys();
 
-    @Nonnull
-    public List<? extends Partition> getPartitions() throws Exception;
+  @Nonnull
+  public List<? extends Partition> getPartitions() throws Exception;
 }

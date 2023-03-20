@@ -181,7 +181,6 @@ spotless {
 
 	java {
                 googleJavaFormat()
-                ratchetFrom("v1.0.20")
 		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java");
 		trimTrailingWhitespace();
         FileCollection files = files();

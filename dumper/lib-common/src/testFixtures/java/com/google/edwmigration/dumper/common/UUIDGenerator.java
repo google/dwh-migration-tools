@@ -41,145 +41,138 @@ import org.slf4j.LoggerFactory;
  */
 public class UUIDGenerator {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UUIDGenerator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(UUIDGenerator.class);
 
-    private static class Inner {
+  private static class Inner {
 
-        private static final UUIDGenerator INSTANCE = new UUIDGenerator(Ticker.systemTicker());
+    private static final UUIDGenerator INSTANCE = new UUIDGenerator(Ticker.systemTicker());
+  }
+
+  @Nonnull
+  public static UUIDGenerator getInstance() {
+    return Inner.INSTANCE;
+  }
+
+  /**
+   * Attempts to return a hardware address from a "useful" interface on this system.
+   *
+   * <p>Whether this method returns null or throws SocketException on failure is not especially
+   * well-defined.
+   *
+   * @return A hardware address or null on (some forms of) error.
+   * @throws SocketException on other forms of error.
+   */
+  @CheckForNull
+  public static byte[] getMacOrNull() throws SocketException {
+    Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
+    if (ifaces == null) // This happens in no-network jails.
+    return null;
+
+    for (NetworkInterface iface : Collections.list(ifaces)) {
+      if (iface.isLoopback()) continue;
+      if (iface.isPointToPoint()) continue;
+      if (iface.isVirtual()) continue;
+      for (InetAddress addr : Collections.list(iface.getInetAddresses())) {
+        if (addr.isAnyLocalAddress()) continue;
+        if (addr.isLinkLocalAddress()) continue;
+        if (addr.isLoopbackAddress()) continue;
+        if (addr.isMulticastAddress()) continue;
+        byte[] hwaddr = iface.getHardwareAddress();
+        if (ArrayUtils.isEmpty(hwaddr)) continue;
+        return Arrays.copyOf(hwaddr, 6);
+      }
     }
 
-    @Nonnull
-    public static UUIDGenerator getInstance() {
-        return Inner.INSTANCE;
+    return null;
+  }
+
+  @Nonnull
+  private static byte[] getMac() {
+    IFACE:
+    try {
+      byte[] data = getMacOrNull();
+      if (data != null) return data;
+      break IFACE;
+    } catch (Exception e) {
+      // Notionally, this is an IOException, but it might also be an (unexpected) SecurityException
+      // or a NullPointerException if some security-aware component returned null instead of real
+      // data.
+      LOG.warn("Failed to get MAC from NetworkInterface address: " + e, e);
     }
 
-    /**
-     * Attempts to return a hardware address from a "useful" interface on this system.
-     *
-     * Whether this method returns null or throws SocketException on failure
-     * is not especially well-defined.
-     *
-     * @return A hardware address or null on (some forms of) error.
-     * @throws SocketException on other forms of error.
-     */
-    @CheckForNull
-    public static byte[] getMacOrNull() throws SocketException {
-        Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
-        if (ifaces == null) // This happens in no-network jails.
-            return null;
+    byte[] data = new byte[6];
+    Random r = new SecureRandom();
+    r.nextBytes(data);
+    return data;
+  }
 
-        for (NetworkInterface iface : Collections.list(ifaces)) {
-            if (iface.isLoopback())
-                continue;
-            if (iface.isPointToPoint())
-                continue;
-            if (iface.isVirtual())
-                continue;
-            for (InetAddress addr : Collections.list(iface.getInetAddresses())) {
-                if (addr.isAnyLocalAddress())
-                    continue;
-                if (addr.isLinkLocalAddress())
-                    continue;
-                if (addr.isLoopbackAddress())
-                    continue;
-                if (addr.isMulticastAddress())
-                    continue;
-                byte[] hwaddr = iface.getHardwareAddress();
-                if (ArrayUtils.isEmpty(hwaddr))
-                    continue;
-                return Arrays.copyOf(hwaddr, 6);
-            }
-        }
+  @Nonnull private final Ticker ticker;
+  private final byte[] mac = getMac();
+  private final long macWord =
+      Longs.fromBytes((byte) 0, (byte) 0, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  private final long initMillis = System.currentTimeMillis();
+  private final long initNanos;
+  private final AtomicInteger seq = new AtomicInteger();
 
-        return null;
+  public UUIDGenerator(@Nonnull Ticker ticker) {
+    this.ticker = ticker;
+    this.initNanos = ticker.read();
+  }
+
+  private long newTime() {
+    long deltaNanos = ticker.read() - initNanos;
+    long time = (initMillis * 1000 * 10) + (deltaNanos / 100);
+    // LOG.info("Time is           " + time);
+    return time;
+  }
+
+  private long newMsw() {
+    long word = 0;
+    // version = 1
+    word |= 1 << 12;
+
+    long time = newTime();
+    word |= (time >>> 48) & 0x0FFFL;
+    word |= ((time >>> 32) & 0xFFFFL) << 16;
+    word |= (time & 0xFFFFFFFFL) << 32;
+    return word;
+  }
+
+  private long newLsw() {
+    long word = 0;
+    // variant
+    word |= 2L << 62;
+    // sequence
+    word |= (seq.getAndIncrement() & 0x3FFFL) << 48;
+    // mac
+    word |= macWord;
+    return word;
+  }
+
+  @Nonnull
+  public UUID nextUUID() {
+    return new UUID(newMsw(), newLsw());
+  }
+
+  @Nonnull
+  public static byte[] toBytes(long msw, long lsw) {
+    byte[] out = new byte[16];
+
+    for (int i = 7; i >= 0; i--) {
+      out[i] = (byte) (msw & 0xFFL);
+      msw >>>= 8;
     }
 
-    @Nonnull
-    private static byte[] getMac() {
-        IFACE:
-        try {
-            byte[] data = getMacOrNull();
-            if (data != null)
-                return data;
-            break IFACE;
-        } catch (Exception e) {
-            // Notionally, this is an IOException, but it might also be an (unexpected) SecurityException
-            // or a NullPointerException if some security-aware component returned null instead of real data.
-            LOG.warn("Failed to get MAC from NetworkInterface address: " + e, e);
-        }
-
-        byte[] data = new byte[6];
-        Random r = new SecureRandom();
-        r.nextBytes(data);
-        return data;
-    }
-    @Nonnull
-    private final Ticker ticker;
-    private final byte[] mac = getMac();
-    private final long macWord = Longs.fromBytes((byte) 0, (byte) 0, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    private final long initMillis = System.currentTimeMillis();
-    private final long initNanos;
-    private final AtomicInteger seq = new AtomicInteger();
-
-    public UUIDGenerator(@Nonnull Ticker ticker) {
-        this.ticker = ticker;
-        this.initNanos = ticker.read();
+    for (int i = 7; i >= 0; i--) {
+      out[i + 8] = (byte) (lsw & 0xFFL);
+      lsw >>>= 8;
     }
 
-    private long newTime() {
-        long deltaNanos = ticker.read() - initNanos;
-        long time = (initMillis * 1000 * 10) + (deltaNanos / 100);
-        // LOG.info("Time is           " + time);
-        return time;
-    }
+    return out;
+  }
 
-    private long newMsw() {
-        long word = 0;
-        // version = 1
-        word |= 1 << 12;
-
-        long time = newTime();
-        word |= (time >>> 48) & 0x0FFFL;
-        word |= ((time >>> 32) & 0xFFFFL) << 16;
-        word |= (time & 0xFFFFFFFFL) << 32;
-        return word;
-    }
-
-    private long newLsw() {
-        long word = 0;
-        // variant
-        word |= 2L << 62;
-        // sequence
-        word |= (seq.getAndIncrement() & 0x3FFFL) << 48;
-        // mac
-        word |= macWord;
-        return word;
-    }
-
-    @Nonnull
-    public UUID nextUUID() {
-        return new UUID(newMsw(), newLsw());
-    }
-
-    @Nonnull
-    public static byte[] toBytes(long msw, long lsw) {
-        byte[] out = new byte[16];
-
-        for (int i = 7; i >= 0; i--) {
-            out[i] = (byte) (msw & 0xFFL);
-            msw >>>= 8;
-        }
-
-        for (int i = 7; i >= 0; i--) {
-            out[i + 8] = (byte) (lsw & 0xFFL);
-            lsw >>>= 8;
-        }
-
-        return out;
-    }
-
-    @Nonnull
-    public byte[] nextBytes() {
-        return toBytes(newMsw(), newLsw());
-    }
+  @Nonnull
+  public byte[] nextBytes() {
+    return toBytes(newMsw(), newLsw());
+  }
 }

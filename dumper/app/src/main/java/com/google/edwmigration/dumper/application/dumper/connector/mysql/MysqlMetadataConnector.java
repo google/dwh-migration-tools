@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.mysql;
 
 import com.google.auto.service.AutoService;
-import java.util.List;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
@@ -27,35 +26,47 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.MysqlMetadataDumpFormat;
+import java.util.List;
 
 /**
  * ./gradlew :compilerworks-application-dumper:installDist &&
  * ./compilerworks-application-dumper/build/install/compilerworks-application-dumper/bin/compilerworks-application-dumper
- * --connector mysql --driver /usr/share/java/mysql-connector-java-8.0.19.jar --user cw --password password
+ * --connector mysql --driver /usr/share/java/mysql-connector-java-8.0.19.jar --user cw --password
+ * password
  *
  * @author shevek
  */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from MySQL.")
-public class MysqlMetadataConnector extends AbstractMysqlConnector implements MetadataConnector, MysqlMetadataDumpFormat {
+public class MysqlMetadataConnector extends AbstractMysqlConnector
+    implements MetadataConnector, MysqlMetadataDumpFormat {
 
-    // WHERE lower(x) IN ...
-    private static final String SYSTEM_SCHEMAS = "('mysql', 'sys', 'information_schema', 'performance_schema')";
+  // WHERE lower(x) IN ...
+  private static final String SYSTEM_SCHEMAS =
+      "('mysql', 'sys', 'information_schema', 'performance_schema')";
 
-    public MysqlMetadataConnector() {
-        super("mysql");
-    }
+  public MysqlMetadataConnector() {
+    super("mysql");
+  }
 
-    @Override
-    // TODO: Split system tables into a separate dump, like Postgresql. Figure out a way to do it case insensitively.
-    public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
-        out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-        out.add(new FormatTask(FORMAT_NAME));
-        out.add(new JdbcSelectTask(SchemataFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.SCHEMATA"));
-        out.add(new JdbcSelectTask(TablesFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.TABLES"));
-        out.add(new JdbcSelectTask(ColumnsFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"));
-        out.add(new JdbcSelectTask(ViewsFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.VIEWS"));
-        out.add(new JdbcSelectTask(FunctionsFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.ROUTINES"));
-    }
-
+  @Override
+  // TODO: Split system tables into a separate dump, like Postgresql. Figure out a way to do it case
+  // insensitively.
+  public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
+    out.add(
+        new JdbcSelectTask(
+            SchemataFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.SCHEMATA"));
+    out.add(
+        new JdbcSelectTask(TablesFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.TABLES"));
+    out.add(
+        new JdbcSelectTask(
+            ColumnsFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"));
+    out.add(
+        new JdbcSelectTask(ViewsFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.VIEWS"));
+    out.add(
+        new JdbcSelectTask(
+            FunctionsFormat.ZIP_ENTRY_NAME, "SELECT * FROM INFORMATION_SCHEMA.ROUTINES"));
+  }
 }

@@ -24,16 +24,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import javax.annotation.Nonnull;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
 public @interface RespectsInputs {
 
-    @Nonnull
-    public RespectsInput[] value();
+  @Nonnull
+  public RespectsInput[] value();
 }

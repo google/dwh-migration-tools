@@ -87,16 +87,17 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
 
       // Populate Hive Metastore
       long total = setupStatements.stream().mapToLong(Collection::size).sum();
-      try (ConcurrentProgressMonitor monitor = new ConcurrentRecordProgressMonitor(
-          "Populating Hive instance.", total)) {
+      try (ConcurrentProgressMonitor monitor =
+          new ConcurrentRecordProgressMonitor("Populating Hive instance.", total)) {
         ExecutorService executor = Executors.newFixedThreadPool(HiveServerSupport.CONCURRENCY);
 
         for (List<String> statementList : setupStatements) {
-          executor.invokeAll(
-              Lists.partition(statementList, BATCH_SIZE).stream()
-                  .map(l -> getCallable(instanceSupport, l, monitor))
-                  .collect(Collectors.toList())
-          ).forEach(this::assertNoException);
+          executor
+              .invokeAll(
+                  Lists.partition(statementList, BATCH_SIZE).stream()
+                      .map(l -> getCallable(instanceSupport, l, monitor))
+                      .collect(Collectors.toList()))
+              .forEach(this::assertNoException);
         }
       }
 
@@ -108,10 +109,12 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
 
         try {
           MetadataDumper.main(
-              "--connector", "hiveql",
-              "--port", "" + instanceSupport.getMetastoreThriftPort(),
-              "--output", tmpFile.getAbsolutePath()
-          );
+              "--connector",
+              "hiveql",
+              "--port",
+              "" + instanceSupport.getMetastoreThriftPort(),
+              "--output",
+              tmpFile.getAbsolutePath());
 
           Assert.assertTrue(tmpFile.exists());
 
@@ -120,13 +123,13 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
 
             entries.forEach(e -> Assert.assertFalse(e.getName().contains("exception.txt")));
 
-            List<String> tables = IOUtils.readLines(
-                zipFile.getInputStream(zipFile.getEntry("tables.jsonl")),
-                StandardCharsets.UTF_8
-            );
+            List<String> tables =
+                IOUtils.readLines(
+                    zipFile.getInputStream(zipFile.getEntry("tables.jsonl")),
+                    StandardCharsets.UTF_8);
 
-            Assert.assertEquals("All tables should be present.",
-                NUM_SCHEMAS * NUM_TABLES, tables.size());
+            Assert.assertEquals(
+                "All tables should be present.", NUM_SCHEMAS * NUM_TABLES, tables.size());
 
             LOG.info("Dump verified.");
           }
@@ -151,14 +154,11 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
   }
 
   private Callable<Void> getCallable(
-      HiveServerSupport support,
-      List<String> batch,
-      ConcurrentProgressMonitor monitor) {
+      HiveServerSupport support, List<String> batch, ConcurrentProgressMonitor monitor) {
     return () -> {
-      support.execute(batch.toArray(new String[]{}));
+      support.execute(batch.toArray(new String[] {}));
       monitor.count(batch.size());
       return null;
     };
   }
-
 }

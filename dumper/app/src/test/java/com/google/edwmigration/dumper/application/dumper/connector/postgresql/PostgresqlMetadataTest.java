@@ -16,11 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.postgresql;
 
-import java.io.File;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.mysql.MysqlMetadataConnectorTest;
 import com.google.edwmigration.dumper.test.TestUtils;
+import java.io.File;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,41 +28,45 @@ import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- */
+/** */
 @RunWith(JUnit4.class)
 public class PostgresqlMetadataTest extends AbstractConnectorExecutionTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(MysqlMetadataConnectorTest.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(MysqlMetadataConnectorTest.class);
 
-    private final static String SUBPROJECT = "compilerworks-application-dumper";
+  private static final String SUBPROJECT = "compilerworks-application-dumper";
 
-    private final static File PG_DUMPER_TEST = new File(TestUtils.getTestResourcesDir(SUBPROJECT), "dumper-test/postgresql.sql");
+  private static final File PG_DUMPER_TEST =
+      new File(TestUtils.getTestResourcesDir(SUBPROJECT), "dumper-test/postgresql.sql");
 
-    private final MetadataConnector connector = new PostgresqlMetadataConnector();
+  private final MetadataConnector connector = new PostgresqlMetadataConnector();
 
-    @Test
-    public void testConnector() throws Exception {
-        testConnectorDefaults(connector);
-    }
+  @Test
+  public void testConnector() throws Exception {
+    testConnectorDefaults(connector);
+  }
 
-    @Test
-    public void testMetadata() throws Exception {
-        // Or should we run with postgrseql in jenkins too ?
-        Assume.assumeTrue(isDumperTest());
+  @Test
+  public void testMetadata() throws Exception {
+    // Or should we run with postgrseql in jenkins too ?
+    Assume.assumeTrue(isDumperTest());
 
-        File outputFile = TestUtils.newOutputFile("compilerworks-postgresql-metadata.zip");
-        LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+    File outputFile = TestUtils.newOutputFile("compilerworks-postgresql-metadata.zip");
+    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
 
-        runDumper("--connector", connector.getName(),
-                "--user", "cw",
-                "--password", "password",
-                "--output", outputFile.getAbsolutePath(),
-                "--sqlscript", PG_DUMPER_TEST.getAbsolutePath());
+    runDumper(
+        "--connector",
+        connector.getName(),
+        "--user",
+        "cw",
+        "--password",
+        "password",
+        "--output",
+        outputFile.getAbsolutePath(),
+        "--sqlscript",
+        PG_DUMPER_TEST.getAbsolutePath());
 
-        //TODO: load back, and confirm metadata with the content of postgresql.sql
-    }
-
+    // TODO: load back, and confirm metadata with the content of postgresql.sql
+  }
 }

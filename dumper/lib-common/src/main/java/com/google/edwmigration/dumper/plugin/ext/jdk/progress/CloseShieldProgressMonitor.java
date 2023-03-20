@@ -18,35 +18,32 @@ package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public class CloseShieldProgressMonitor extends AbstractProgressMonitor {
 
-    private final ProgressMonitor monitor;
+  private final ProgressMonitor monitor;
 
-    public CloseShieldProgressMonitor(ProgressMonitor monitor) {
-        this.monitor = monitor;
-    }
+  public CloseShieldProgressMonitor(ProgressMonitor monitor) {
+    this.monitor = monitor;
+  }
 
-    @Override
-    public long timeElapsed(TimeUnit desiredUnit) {
-        return monitor.timeElapsed(desiredUnit);
-    }
+  @Override
+  public long timeElapsed(TimeUnit desiredUnit) {
+    return monitor.timeElapsed(desiredUnit);
+  }
 
-    @Override
-    public long getCount() {
-        return monitor.getCount();
-    }
+  @Override
+  public long getCount() {
+    return monitor.getCount();
+  }
 
-    @Override
-    public long count(int delta) {
-        return monitor.count(delta);
-    }
+  @Override
+  public long count(int delta) {
+    return monitor.count(delta);
+  }
 
-    @Override
-    public void close() {
-        // Deliberate noop.
-    }
+  @Override
+  public void close() {
+    // Deliberate noop.
+  }
 }

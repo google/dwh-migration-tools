@@ -24,53 +24,52 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public interface CoreMetadataDumpFormat {
 
-    public static final YAMLFactory FACTORY = new YAMLFactory()
-            .enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
-            // .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-            .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-            .disable(YAMLGenerator.Feature.SPLIT_LINES);
-    public static final ObjectMapper MAPPER = new ObjectMapper(FACTORY)
-            // .registerModule(new GuavaModule())
-            // .registerModule(new JavaTimeModule())
-            // .registerModule(new JodaModule())
-            .enable(SerializationFeature.INDENT_OUTPUT)
-            .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+  public static final YAMLFactory FACTORY =
+      new YAMLFactory()
+          .enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
+          // .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+          .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+          .disable(YAMLGenerator.Feature.SPLIT_LINES);
+  public static final ObjectMapper MAPPER =
+      new ObjectMapper(FACTORY)
+          // .registerModule(new GuavaModule())
+          // .registerModule(new JavaTimeModule())
+          // .registerModule(new JodaModule())
+          .enable(SerializationFeature.INDENT_OUTPUT)
+          .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
-    public static interface CompilerWorksDumpMetadataTaskFormat {
+  public static interface CompilerWorksDumpMetadataTaskFormat {
 
-        public static final String ZIP_ENTRY_NAME = "compilerworks-metadata.yaml";
+    public static final String ZIP_ENTRY_NAME = "compilerworks-metadata.yaml";
 
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        public static class Product {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public static class Product {
 
-            public String version;
-            public String arguments;
-        }
-
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        public static class Root {
-
-            public String format;
-            /** In milliseconds since the epoch. */
-            public long timestamp;
-            public Product product;
-        }
-
+      public String version;
+      public String arguments;
     }
 
-    interface Group {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_ABSENT)
+    public static class Root {
 
-        enum Header {
-            TASK,
-            STATUS
-        }
+      public String format;
+      /** In milliseconds since the epoch. */
+      public long timestamp;
+
+      public Product product;
     }
+  }
+
+  interface Group {
+
+    enum Header {
+      TASK,
+      STATUS
+    }
+  }
 }

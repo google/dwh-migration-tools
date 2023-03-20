@@ -30,7 +30,8 @@ public class HiveTestSchemaBuilder {
   public static final List<String> PARTITION_NAMES = Lists.newArrayList("test_partition");
   public static final int PARTITION_SPLIT = 50;
 
-  public static List<List<String>> getStatements(int dbCount, int tblCount, int colCount, int pCount) {
+  public static List<List<String>> getStatements(
+      int dbCount, int tblCount, int colCount, int pCount) {
     List<List<String>> result = new ArrayList<>();
     result.add(createDatabases(dbCount));
     result.add(createTables(dbCount, tblCount, colCount));
@@ -59,45 +60,56 @@ public class HiveTestSchemaBuilder {
   }
 
   public static List<String> createDatabases(int dbCount) {
-    return IntStream.range(0, dbCount).mapToObj(HiveTestSchemaBuilder::createDatabase).collect(Collectors.toList());
+    return IntStream.range(0, dbCount)
+        .mapToObj(HiveTestSchemaBuilder::createDatabase)
+        .collect(Collectors.toList());
   }
 
-  public static List<String> createPartitions(int dbIndex, int tblIndex, int partitionCount, int partitionSplit) {
-    List<String> partitions = IntStream.range(0, partitionCount)
-        .mapToObj(HiveTestSchemaBuilder::getPartitionValue)
-        .collect(Collectors.toList());
+  public static List<String> createPartitions(
+      int dbIndex, int tblIndex, int partitionCount, int partitionSplit) {
+    List<String> partitions =
+        IntStream.range(0, partitionCount)
+            .mapToObj(HiveTestSchemaBuilder::getPartitionValue)
+            .collect(Collectors.toList());
 
     return Lists.partition(partitions, partitionSplit).stream()
         .map(l -> StringUtils.join(l, " "))
-        .map(p -> String.format("alter table %s%d.%s%d add %s", DATABASE_PREFIX, dbIndex, TABLE_PREFIX, tblIndex, p))
+        .map(
+            p ->
+                String.format(
+                    "alter table %s%d.%s%d add %s",
+                    DATABASE_PREFIX, dbIndex, TABLE_PREFIX, tblIndex, p))
         .collect(Collectors.toList());
   }
 
   public static String createTable(int dbIndex, int tblIndex, int colCount) {
-    return String.format("create table %s%d.%s%d (%s) partitioned by (%s)",
-        DATABASE_PREFIX, dbIndex, TABLE_PREFIX, tblIndex, getColumns(colCount), getPartitionsDefinition());
+    return String.format(
+        "create table %s%d.%s%d (%s) partitioned by (%s)",
+        DATABASE_PREFIX,
+        dbIndex,
+        TABLE_PREFIX,
+        tblIndex,
+        getColumns(colCount),
+        getPartitionsDefinition());
   }
 
   private static String getColumns(int colCount) {
     return IntStream.range(0, colCount)
-        .mapToObj(c ->"col_" + c + " int")
+        .mapToObj(c -> "col_" + c + " int")
         .collect(Collectors.joining(", "));
   }
 
   public static String createDatabase(int dbIndex) {
-    return String.format("create database %s%d",DATABASE_PREFIX, dbIndex);
+    return String.format("create database %s%d", DATABASE_PREFIX, dbIndex);
   }
 
   private static String getPartitionsDefinition() {
-    return PARTITION_NAMES.stream()
-        .map(p -> p + " int")
-        .collect(Collectors.joining(", "));
+    return PARTITION_NAMES.stream().map(p -> p + " int").collect(Collectors.joining(", "));
   }
 
   private static String getPartitionValue(int value) {
     return PARTITION_NAMES.stream()
-        .map(p -> String.format("partition (%s = %s)", p, value ))
+        .map(p -> String.format("partition (%s = %s)", p, value))
         .collect(Collectors.joining(", "));
   }
-
 }

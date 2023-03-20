@@ -17,20 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import com.google.auto.service.AutoService;
-import com.google.common.io.ByteSink;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.sql.Clob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import javax.annotation.Nonnull;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.io.IOUtils;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
@@ -38,34 +24,34 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleLogsDumpFormat;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.ResultSetExtractor;
+import java.util.List;
+import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps query logs from Oracle")
-public class OracleLogsConnector extends AbstractOracleConnector implements LogsConnector, OracleLogsDumpFormat {
+public class OracleLogsConnector extends AbstractOracleConnector
+    implements LogsConnector, OracleLogsDumpFormat {
 
-    public OracleLogsConnector() {
-        super("oracle-logs");
+  public OracleLogsConnector() {
+    super("oracle-logs");
+  }
+
+  /** Exists so we can extract query text CLOBs to Strings before they reach the CSVPrinter. */
+  private static class QueryHistoryTask extends JdbcSelectTask {
+
+    public QueryHistoryTask(@Nonnull String targetPath, @Nonnull String sql) {
+      super(targetPath, sql);
     }
+  }
 
-    /**
-     * Exists so we can extract query text CLOBs to Strings before they reach the CSVPrinter.
-     */
-    private static class QueryHistoryTask extends JdbcSelectTask {
-
-        public QueryHistoryTask(@Nonnull String targetPath, @Nonnull String sql) {
-            super(targetPath, sql);
-        }
-    }
-
-    @Override
-    public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) throws Exception {
-        out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-        // It's not clear to me whether we should be using v$sqlarea instead here.
-        String query = "SELECT sql_fulltext, cpu_time, elapsed_time, disk_reads, runtime_mem FROM v$sql";
-        out.add(new QueryHistoryTask(ZIP_ENTRY_FILENAME, query).withHeaderClass(Header.class));
-    }
+  @Override
+  public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
+      throws Exception {
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    // It's not clear to me whether we should be using v$sqlarea instead here.
+    String query =
+        "SELECT sql_fulltext, cpu_time, elapsed_time, disk_reads, runtime_mem FROM v$sql";
+    out.add(new QueryHistoryTask(ZIP_ENTRY_FILENAME, query).withHeaderClass(Header.class));
+  }
 }

@@ -25,25 +25,23 @@ import java.nio.file.Path;
 import javax.annotation.Nonnull;
 import net.jcip.annotations.ThreadSafe;
 
-/**
- * @author shevek
- */
+/** @author shevek */
 @ThreadSafe
 public class FileSystemByteSink extends ByteSink {
 
-    private final Path path;
+  private final Path path;
 
-    public FileSystemByteSink(@Nonnull Path path) {
-        this.path = Preconditions.checkNotNull(path, "Path was null.");
-    }
+  public FileSystemByteSink(@Nonnull Path path) {
+    this.path = Preconditions.checkNotNull(path, "Path was null.");
+  }
 
-    @Override
-    public OutputStream openStream() throws IOException {
-        return Files.newOutputStream(path);
-    }
+  @Override
+  public OutputStream openStream() throws IOException {
+    return Files.newOutputStream(path);
+  }
 
-    @Override
-    public String toString() {
-        return "FileSystemByteSink(" + path.getFileSystem() + "!" + path + ")";
-    }
+  @Override
+  public String toString() {
+    return "FileSystemByteSink(" + path.getFileSystem() + "!" + path + ")";
+  }
 }

@@ -44,8 +44,8 @@ import org.junit.Test;
 
 public class DriverClasspathTest {
 
-  private static final Path RESOURCES = Paths.get(
-      Resources.getResource("driver-classpath-test/").getPath());
+  private static final Path RESOURCES =
+      Paths.get(Resources.getResource("driver-classpath-test/").getPath());
 
   private static Path supportJarPath;
   private static Path driverJarPath;
@@ -79,9 +79,8 @@ public class DriverClasspathTest {
 
     List<String> options = classpath == null ? null : Lists.newArrayList("-classpath", classpath);
 
-    Iterable<? extends JavaFileObject> files = compiler
-        .getStandardFileManager(null, null, null)
-        .getJavaFileObjects(javaFilePath.toFile());
+    Iterable<? extends JavaFileObject> files =
+        compiler.getStandardFileManager(null, null, null).getJavaFileObjects(javaFilePath.toFile());
 
     CompilationTask task = compiler.getTask(null, null, null, options, null, files);
     task.call();
@@ -96,7 +95,6 @@ public class DriverClasspathTest {
     try (Handle ignored = new DummyConnector("dummy").open(new ConnectorArguments(args))) {
       Assert.assertTrue("Driver instantiated.", true);
     }
-
   }
 
   @Test
@@ -105,19 +103,21 @@ public class DriverClasspathTest {
     String driverPaths = driverJarPath.toString();
     String[] args = {"--connector", "ignored", "--driver", driverPaths};
 
-    SQLException exception = Assert.assertThrows(
-        SQLException.class,
-        () -> {
-          try (Handle ignored = new DummyConnector("dummy").open(new ConnectorArguments(args))) {
-            Assert.assertTrue("Driver instantiated.", true);
-          }
-        });
+    SQLException exception =
+        Assert.assertThrows(
+            SQLException.class,
+            () -> {
+              try (Handle ignored =
+                  new DummyConnector("dummy").open(new ConnectorArguments(args))) {
+                Assert.assertTrue("Driver instantiated.", true);
+              }
+            });
 
     Assert.assertTrue(exception.getCause() instanceof InvocationTargetException);
-    Throwable targetException = ((InvocationTargetException) exception.getCause()).getTargetException();
+    Throwable targetException =
+        ((InvocationTargetException) exception.getCause()).getTargetException();
     Assert.assertTrue(targetException instanceof NoClassDefFoundError);
     Assert.assertEquals("foo/baz/Support", targetException.getMessage());
-
   }
 
   private static class DummyConnector extends AbstractJdbcConnector {
@@ -133,17 +133,14 @@ public class DriverClasspathTest {
     }
 
     @Override
-    public void addTasksTo(@Nonnull List<? super Task<?>> out,
-        @Nonnull ConnectorArguments arguments) {
-    }
+    public void addTasksTo(
+        @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {}
 
     @Nonnull
     @Override
     public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
       newDriver(arguments.getDriverPaths(), "foo.bar.DummyDriver");
-      return () -> {
-      };
+      return () -> {};
     }
   }
-
 }

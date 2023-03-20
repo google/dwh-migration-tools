@@ -35,54 +35,59 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 public class JdbcHandle extends AbstractHandle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcHandle.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JdbcHandle.class);
 
-    @Nonnull
-    public static JdbcHandle newPooledJdbcHandle(@Nonnull DataSource dataSource, int threadPoolSize) throws SQLException {
-        HikariConfig config = new HikariConfig();
-        config.setDataSource(dataSource);
-        config.setMinimumIdle(0);
-        // Question: If a connection goes out to lunch, causing getConnection() to block for a thread, can that deadlock the dumper?
-        config.setMaximumPoolSize(threadPoolSize);
-        config.setConnectionTimeout(0); // 0 equals Integer.MAX_VALUE
-        return new JdbcHandle(new HikariDataSource(config));
+  @Nonnull
+  public static JdbcHandle newPooledJdbcHandle(@Nonnull DataSource dataSource, int threadPoolSize)
+      throws SQLException {
+    HikariConfig config = new HikariConfig();
+    config.setDataSource(dataSource);
+    config.setMinimumIdle(0);
+    // Question: If a connection goes out to lunch, causing getConnection() to block for a thread,
+    // can that deadlock the dumper?
+    config.setMaximumPoolSize(threadPoolSize);
+    config.setConnectionTimeout(0); // 0 equals Integer.MAX_VALUE
+    return new JdbcHandle(new HikariDataSource(config));
+  }
+
+  private final JdbcTemplate jdbcTemplate;
+
+  public JdbcHandle(@Nonnull DataSource dataSource) throws SQLException {
+    Preconditions.checkNotNull(dataSource, "DataSource was null.");
+    LOG.debug("Testing connection to database using " + dataSource + "...");
+    try (Connection connection = dataSource.getConnection()) {
+      Preconditions.checkNotNull(
+          connection,
+          "DataSource did not return a connection (Usually bad/mismatched JDBC URI?): %s",
+          dataSource);
+      LOG.debug("Connection test succeeded; obtained " + connection);
     }
+    this.jdbcTemplate = new JdbcTemplate(dataSource);
+    jdbcTemplate.setFetchSize(1024);
+  }
 
-    private final JdbcTemplate jdbcTemplate;
+  @Nonnull
+  public DataSource getDataSource() {
+    return getJdbcTemplate().getDataSource();
+  }
 
-    public JdbcHandle(@Nonnull DataSource dataSource) throws SQLException {
-        Preconditions.checkNotNull(dataSource, "DataSource was null.");
-        LOG.debug("Testing connection to database using " + dataSource + "...");
-        try (Connection connection = dataSource.getConnection()) {
-            Preconditions.checkNotNull(connection, "DataSource did not return a connection (Usually bad/mismatched JDBC URI?): %s", dataSource);
-            LOG.debug("Connection test succeeded; obtained " + connection);
-        }
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
-        jdbcTemplate.setFetchSize(1024);
+  @Nonnull
+  public JdbcTemplate getJdbcTemplate() {
+    return jdbcTemplate;
+  }
+
+  @Override
+  public void close() throws IOException {
+    DataSource ds = getDataSource();
+    if (ds instanceof AutoCloseable) {
+      try {
+        ((AutoCloseable) ds).close();
+      } catch (IOException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new IOException("Failed to close DataSource: " + e, e);
+      }
     }
-
-    @Nonnull
-    public DataSource getDataSource() {
-        return getJdbcTemplate().getDataSource();
-    }
-
-    @Nonnull
-    public JdbcTemplate getJdbcTemplate() {
-        return jdbcTemplate;
-    }
-
-    @Override
-    public void close() throws IOException {
-        DataSource ds = getDataSource();
-        if (ds instanceof AutoCloseable) {
-            try {
-                ((AutoCloseable) ds).close();
-            } catch (IOException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new IOException("Failed to close DataSource: " + e, e);
-            }
-        }
-        super.close();
-    }
+    super.close();
+  }
 }

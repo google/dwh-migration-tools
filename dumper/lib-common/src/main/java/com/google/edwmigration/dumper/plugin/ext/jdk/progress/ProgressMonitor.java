@@ -16,47 +16,38 @@
  */
 package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
-import java.util.concurrent.TimeUnit;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public interface ProgressMonitor extends AutoCloseable {
 
-    /** The divisor for memory measurements: 1 Mb. */
-    public static final int MEMDIV = 1024 * 1024;
+  /** The divisor for memory measurements: 1 Mb. */
+  public static final int MEMDIV = 1024 * 1024;
 
-    @Nonnull
-    default public BlockProgressMonitor withBlockSize(@Nonnegative int blockSize) {
-        return new BlockProgressMonitor(this, blockSize);
-    }
+  @Nonnull
+  public default BlockProgressMonitor withBlockSize(@Nonnegative int blockSize) {
+    return new BlockProgressMonitor(this, blockSize);
+  }
 
-    /** Returns the time elapsed since creation of this ProgressMonitor */
-    public long timeElapsed(TimeUnit desiredUnit);
+  /** Returns the time elapsed since creation of this ProgressMonitor */
+  public long timeElapsed(TimeUnit desiredUnit);
 
-    /** Returns the current count. */
-    @Nonnegative
-    default public long getCount() {
-        return count(0);
-    }
+  /** Returns the current count. */
+  @Nonnegative
+  public default long getCount() {
+    return count(0);
+  }
 
-    /**
-     * Adds delta to the current count.
-     * Returns the number counted so far, including this count.
-     */
-    public long count(@Nonnegative int delta);
+  /** Adds delta to the current count. Returns the number counted so far, including this count. */
+  public long count(@Nonnegative int delta);
 
-    /**
-     * Adds 1 to the current count.
-     * Returns the number counted so far, including this count.
-     */
-    default public long count() {
-        return count(1);
-    }
+  /** Adds 1 to the current count. Returns the number counted so far, including this count. */
+  public default long count() {
+    return count(1);
+  }
 
-    @Override
-    public void close();
+  @Override
+  public void close();
 }

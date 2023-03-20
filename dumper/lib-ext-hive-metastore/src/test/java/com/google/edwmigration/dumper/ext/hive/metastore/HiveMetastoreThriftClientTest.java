@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -24,39 +26,36 @@ import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertTrue;
-
 @RunWith(JUnit4.class)
 public class HiveMetastoreThriftClientTest {
 
-    @SuppressWarnings("UnusedVariable")
-    private static final Logger LOG = LoggerFactory.getLogger(HiveMetastoreThriftClientTest.class);
+  @SuppressWarnings("UnusedVariable")
+  private static final Logger LOG = LoggerFactory.getLogger(HiveMetastoreThriftClientTest.class);
 
-    @Ignore("For local execution only; Jenkins doesn't have a live Hive metastore running.")
-    @Test
-    public void testClientAgainstLiveMetastore_v2_3_6() throws Exception {
-        HiveMetastoreThriftClient client = new HiveMetastoreThriftClient.Builder("2.3.6")
-                .withHost("localhost")
-                .withPort(9083)
-                .build();
-        List<? extends String> databaseNames = client.getAllDatabaseNames();
-        LOG.info("Databases in metastore: {}", databaseNames);
-        assertTrue("Expected at least one database name.", databaseNames.size() > 0);
-    }
+  @Ignore("For local execution only; Jenkins doesn't have a live Hive metastore running.")
+  @Test
+  public void testClientAgainstLiveMetastore_v2_3_6() throws Exception {
+    HiveMetastoreThriftClient client =
+        new HiveMetastoreThriftClient.Builder("2.3.6").withHost("localhost").withPort(9083).build();
+    List<? extends String> databaseNames = client.getAllDatabaseNames();
+    LOG.info("Databases in metastore: {}", databaseNames);
+    assertTrue("Expected at least one database name.", databaseNames.size() > 0);
+  }
 
-    /**
-     * Ensures that we fallback to the superset Thrift specification when we request a client
-     * for a version which is unavailable or does not exist.
-     */
-    @Ignore("For local execution only; Jenkins doesn't have a live Hive metastore running.")
-    @Test
-    public void testClientAgainstLiveMetastore_Fallback() throws Exception {
-        HiveMetastoreThriftClient client = new HiveMetastoreThriftClient.Builder("100.200.300")
-                .withHost("localhost")
-                .withPort(9083)
-                .build();
-        List<? extends String> databaseNames = client.getAllDatabaseNames();
-        LOG.info("Databases in metastore: {}", databaseNames);
-        assertTrue("Expected at least one database name.", databaseNames.size() > 0);
-    }
+  /**
+   * Ensures that we fallback to the superset Thrift specification when we request a client for a
+   * version which is unavailable or does not exist.
+   */
+  @Ignore("For local execution only; Jenkins doesn't have a live Hive metastore running.")
+  @Test
+  public void testClientAgainstLiveMetastore_Fallback() throws Exception {
+    HiveMetastoreThriftClient client =
+        new HiveMetastoreThriftClient.Builder("100.200.300")
+            .withHost("localhost")
+            .withPort(9083)
+            .build();
+    List<? extends String> databaseNames = client.getAllDatabaseNames();
+    LOG.info("Databases in metastore: {}", databaseNames);
+    assertTrue("Expected at least one database name.", databaseNames.size() > 0);
+  }
 }

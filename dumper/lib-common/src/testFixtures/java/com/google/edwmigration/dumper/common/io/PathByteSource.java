@@ -19,12 +19,9 @@ package com.google.edwmigration.dumper.common.io;
 import com.google.common.io.ByteSource;
 import javax.annotation.Nonnull;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public abstract class PathByteSource extends ByteSource {
 
-    @Nonnull
-    public abstract String getPath();
+  @Nonnull
+  public abstract String getPath();
 }

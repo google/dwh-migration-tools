@@ -16,26 +16,28 @@
  */
 package com.google.edwmigration.dumper.application.dumper.annotations;
 
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@RespectsInput(order = 100, arg = ConnectorArguments.OPT_HOST, description = RespectsArgumentHostUnlessUrl.DESCRIPTION, required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL, defaultValue = ConnectorArguments.OPT_HOST_DEFAULT)
+@RespectsInput(
+    order = 100,
+    arg = ConnectorArguments.OPT_HOST,
+    description = RespectsArgumentHostUnlessUrl.DESCRIPTION,
+    required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
+    defaultValue = ConnectorArguments.OPT_HOST_DEFAULT)
 public @interface RespectsArgumentHostUnlessUrl {
 
-    public static final String DESCRIPTION = "The hostname of the database server.";
+  public static final String DESCRIPTION = "The hostname of the database server.";
 
-    // public static final String EXAMPLES[] = {};
+  // public static final String EXAMPLES[] = {};
 }

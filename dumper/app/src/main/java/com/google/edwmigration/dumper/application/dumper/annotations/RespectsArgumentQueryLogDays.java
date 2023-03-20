@@ -16,25 +16,24 @@
  */
 package com.google.edwmigration.dumper.application.dumper.annotations;
 
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@RespectsInput(order = 2000, arg = ConnectorArguments.OPT_QUERY_LOG_DAYS, description = RespectsArgumentQueryLogDays.DESCRIPTION)
+@RespectsInput(
+    order = 2000,
+    arg = ConnectorArguments.OPT_QUERY_LOG_DAYS,
+    description = RespectsArgumentQueryLogDays.DESCRIPTION)
 public @interface RespectsArgumentQueryLogDays {
 
-    public static final String DESCRIPTION = "The number of days of query history to dump.";
-
+  public static final String DESCRIPTION = "The number of days of query history to dump.";
 }

@@ -16,25 +16,25 @@
  */
 package com.google.edwmigration.dumper.application.dumper.annotations;
 
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@RespectsInput(order = 0, arg = ConnectorArguments.OPT_DRIVER, description = RespectsArgumentDriver.DESCRIPTION)
+@RespectsInput(
+    order = 0,
+    arg = ConnectorArguments.OPT_DRIVER,
+    description = RespectsArgumentDriver.DESCRIPTION)
 public @interface RespectsArgumentDriver {
 
-    public static final String DESCRIPTION = "The vendor-supplied driver JARs to use for this connector.";
-
+  public static final String DESCRIPTION =
+      "The vendor-supplied driver JARs to use for this connector.";
 }

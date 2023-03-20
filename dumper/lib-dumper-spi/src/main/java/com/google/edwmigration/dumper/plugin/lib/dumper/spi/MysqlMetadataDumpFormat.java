@@ -16,153 +16,149 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/**
- *
- * @author shevek
- */
+/** @author shevek */
 public interface MysqlMetadataDumpFormat {
 
-    public static final String FORMAT_NAME = "mysql.dump.zip";
+  public static final String FORMAT_NAME = "mysql.dump.zip";
 
-    /*
-    interface DatabasesFormat {
+  /*
+  interface DatabasesFormat {
 
-        String ZIP_ENTRY_NAME = "databases.csv";
+      String ZIP_ENTRY_NAME = "databases.csv";
 
-        enum Header {
-            DatabaseName,
-            DatabaseOwner
-        }
+      enum Header {
+          DatabaseName,
+          DatabaseOwner
+      }
+  }
+   */
+  interface SchemataFormat {
+
+    String ZIP_ENTRY_NAME = "schemata.csv";
+
+    enum Header {
+      CATALOG_NAME,
+      SCHEMA_NAME,
+      DEFAULT_CHARACTER_SET_NAME,
+      DEFAULT_COLLATION_NAME,
+      SQL_PATH,
+      DEFAULT_ENCRYPTION,
     }
-     */
-    interface SchemataFormat {
+  }
 
-        String ZIP_ENTRY_NAME = "schemata.csv";
+  interface TablesFormat {
 
-        enum Header {
-            CATALOG_NAME,
-            SCHEMA_NAME,
-            DEFAULT_CHARACTER_SET_NAME,
-            DEFAULT_COLLATION_NAME,
-            SQL_PATH,
-            DEFAULT_ENCRYPTION,
-        }
+    String ZIP_ENTRY_NAME = "tables.csv";
+
+    enum Header {
+      TABLE_CATALOG,
+      TABLE_SCHEMA,
+      TABLE_NAME,
+      TABLE_TYPE,
+      ENGINE,
+      VERSION,
+      ROW_FORMAT,
+      TABLE_ROWS,
+      AVG_ROW_LENGTH,
+      DATA_LENGTH,
+      MAX_DATA_LENGTH,
+      INDEX_LENGTH,
+      DATA_FREE,
+      AUTO_INCREMENT,
+      CREATE_TIME,
+      UPDATE_TIME,
+      CHECK_TIME,
+      TABLE_COLLATION,
+      CHECKSUM,
+      CREATE_OPTIONS,
+      TABLE_COMMENT,
     }
+  }
 
-    interface TablesFormat {
+  interface ColumnsFormat {
 
-        String ZIP_ENTRY_NAME = "tables.csv";
+    String ZIP_ENTRY_NAME = "columns.csv";
 
-        enum Header {
-            TABLE_CATALOG,
-            TABLE_SCHEMA,
-            TABLE_NAME,
-            TABLE_TYPE,
-            ENGINE,
-            VERSION,
-            ROW_FORMAT,
-            TABLE_ROWS,
-            AVG_ROW_LENGTH,
-            DATA_LENGTH,
-            MAX_DATA_LENGTH,
-            INDEX_LENGTH,
-            DATA_FREE,
-            AUTO_INCREMENT,
-            CREATE_TIME,
-            UPDATE_TIME,
-            CHECK_TIME,
-            TABLE_COLLATION,
-            CHECKSUM,
-            CREATE_OPTIONS,
-            TABLE_COMMENT,
-        }
+    enum Header {
+      TABLE_CATALOG,
+      TABLE_SCHEMA,
+      TABLE_NAME,
+      COLUMN_NAME,
+      ORDINAL_POSITION,
+      COLUMN_DEFAULT,
+      IS_NULLABLE,
+      DATA_TYPE,
+      CHARACTER_MAXIMUM_LENGTH,
+      CHARACTER_OCTET_LENGTH,
+      NUMERIC_PRECISION,
+      NUMERIC_SCALE,
+      DATETIME_PRECISION,
+      CHARACTER_SET_NAME,
+      COLLATION_NAME,
+      COLUMN_TYPE,
+      COLUMN_KEY,
+      EXTRA,
+      PRIVILEGES,
+      COLUMN_COMMENT,
+      GENERATION_EXPRESSION,
+      SRS_ID,
     }
+  }
 
-    interface ColumnsFormat {
+  interface ViewsFormat {
 
-        String ZIP_ENTRY_NAME = "columns.csv";
+    String ZIP_ENTRY_NAME = "views.csv";
 
-        enum Header {
-
-            TABLE_CATALOG,
-            TABLE_SCHEMA,
-            TABLE_NAME,
-            COLUMN_NAME,
-            ORDINAL_POSITION,
-            COLUMN_DEFAULT,
-            IS_NULLABLE,
-            DATA_TYPE,
-            CHARACTER_MAXIMUM_LENGTH,
-            CHARACTER_OCTET_LENGTH,
-            NUMERIC_PRECISION,
-            NUMERIC_SCALE,
-            DATETIME_PRECISION,
-            CHARACTER_SET_NAME,
-            COLLATION_NAME,
-            COLUMN_TYPE,
-            COLUMN_KEY,
-            EXTRA,
-            PRIVILEGES,
-            COLUMN_COMMENT,
-            GENERATION_EXPRESSION,
-            SRS_ID,
-        }
+    enum Header {
+      TABLE_CATALOG,
+      TABLE_SCHEMA,
+      TABLE_NAME,
+      VIEW_DEFINITION,
+      CHECK_OPTION,
+      IS_UPDATABLE,
+      DEFINER,
+      SECURITY_TYPE,
+      CHARACTER_SET_CLIENT,
+      COLLATION_CONNECTION,
     }
+  }
 
-    interface ViewsFormat {
+  interface FunctionsFormat {
 
-        String ZIP_ENTRY_NAME = "views.csv";
+    String ZIP_ENTRY_NAME = "functions.csv";
 
-        enum Header {
-            TABLE_CATALOG,
-            TABLE_SCHEMA,
-            TABLE_NAME,
-            VIEW_DEFINITION,
-            CHECK_OPTION,
-            IS_UPDATABLE,
-            DEFINER,
-            SECURITY_TYPE,
-            CHARACTER_SET_CLIENT,
-            COLLATION_CONNECTION,
-        }
+    enum Header {
+      SPECIFIC_NAME,
+      ROUTINE_CATALOG,
+      ROUTINE_SCHEMA,
+      ROUTINE_NAME,
+      ROUTINE_TYPE,
+      DATA_TYPE,
+      CHARACTER_MAXIMUM_LENGTH,
+      CHARACTER_OCTET_LENGTH,
+      NUMERIC_PRECISION,
+      NUMERIC_SCALE,
+      DATETIME_PRECISION,
+      CHARACTER_SET_NAME,
+      COLLATION_NAME,
+      DTD_IDENTIFIER,
+      ROUTINE_BODY,
+      ROUTINE_DEFINITION,
+      EXTERNAL_NAME,
+      EXTERNAL_LANGUAGE,
+      PARAMETER_STYLE,
+      IS_DETERMINISTIC,
+      SQL_DATA_ACCESS,
+      SQL_PATH,
+      SECURITY_TYPE,
+      CREATED,
+      LAST_ALTERED,
+      SQL_MODE,
+      ROUTINE_COMMENT,
+      DEFINER,
+      CHARACTER_SET_CLIENT,
+      COLLATION_CONNECTION,
+      DATABASE_COLLATION,
     }
-
-    interface FunctionsFormat {
-
-        String ZIP_ENTRY_NAME = "functions.csv";
-
-        enum Header {
-            SPECIFIC_NAME,
-            ROUTINE_CATALOG,
-            ROUTINE_SCHEMA,
-            ROUTINE_NAME,
-            ROUTINE_TYPE,
-            DATA_TYPE,
-            CHARACTER_MAXIMUM_LENGTH,
-            CHARACTER_OCTET_LENGTH,
-            NUMERIC_PRECISION,
-            NUMERIC_SCALE,
-            DATETIME_PRECISION,
-            CHARACTER_SET_NAME,
-            COLLATION_NAME,
-            DTD_IDENTIFIER,
-            ROUTINE_BODY,
-            ROUTINE_DEFINITION,
-            EXTERNAL_NAME,
-            EXTERNAL_LANGUAGE,
-            PARAMETER_STYLE,
-            IS_DETERMINISTIC,
-            SQL_DATA_ACCESS,
-            SQL_PATH,
-            SECURITY_TYPE,
-            CREATED,
-            LAST_ALTERED,
-            SQL_MODE,
-            ROUTINE_COMMENT,
-            DEFINER,
-            CHARACTER_SET_CLIENT,
-            COLLATION_CONNECTION,
-            DATABASE_COLLATION,
-        }
-    }
+  }
 }

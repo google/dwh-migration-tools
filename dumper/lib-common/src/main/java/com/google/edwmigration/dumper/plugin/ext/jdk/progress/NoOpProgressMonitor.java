@@ -20,18 +20,16 @@ import java.util.concurrent.TimeUnit;
 
 public class NoOpProgressMonitor extends AbstractProgressMonitor {
 
-    @Override
-    public long timeElapsed(TimeUnit desiredUnit) {
-        return 0;
-    }
+  @Override
+  public long timeElapsed(TimeUnit desiredUnit) {
+    return 0;
+  }
 
-    @Override
-    public long count(int delta) {
-        return 0;
-    }
+  @Override
+  public long count(int delta) {
+    return 0;
+  }
 
-    @Override
-    public void close() {
-
-    }
+  @Override
+  public void close() {}
 }
