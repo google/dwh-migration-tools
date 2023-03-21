@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -103,5 +106,25 @@ public class JsonResponseFileTest {
         JsonResponseFile.to_arguments(
                 new ObjectMapper().writeValueAsString(JsonResponseFile.from_arguments(args)))
             .toArray(new String[] {}));
+  }
+
+  @Test
+  public void addResponseFiles_emptyArray() throws IOException {
+    // Act
+    String[] result = JsonResponseFile.addResponseFiles(new String[0]);
+
+    // Assert
+    assertEquals(0, result.length);
+  }
+
+  @Test
+  public void addResponseFiles_emptyElement() throws IOException {
+    String[] args = new String[] {""};
+
+    // Act
+    String[] result = JsonResponseFile.addResponseFiles(args);
+
+    // Assert
+    assertArrayEquals(args, result);
   }
 }

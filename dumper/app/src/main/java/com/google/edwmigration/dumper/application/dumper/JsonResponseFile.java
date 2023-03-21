@@ -55,16 +55,13 @@ public class JsonResponseFile {
   @Nonnull
   public static String[] addResponseFiles(@Nonnull @NonNull String @NonNull [] args)
       throws IOException {
-    boolean hasResponseFile = true;
-    for (int j = 0; hasResponseFile && j < args.length; j++)
-      if (args[j].charAt(0) == '@') hasResponseFile = true;
-    if (!hasResponseFile) return args;
-
-    // Now convert...
     List<String> ret = new ArrayList<>();
-    for (int j = 0; j < args.length; j++) {
-      if (args[j].charAt(0) != '@') ret.add(args[j]);
-      else ret.addAll(to_arguments(new File(args[j].substring(1))));
+    for (String argument : args) {
+      if (argument.startsWith("@")) {
+        ret.addAll(to_arguments(new File(argument.substring(1))));
+      } else {
+        ret.add(argument);
+      }
     }
     return ret.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
   }
