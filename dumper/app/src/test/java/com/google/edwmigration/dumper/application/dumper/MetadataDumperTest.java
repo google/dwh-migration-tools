@@ -16,7 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQueryLogsConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
+import java.io.File;
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -25,10 +30,61 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class MetadataDumperTest {
 
+  private File FILE;
+
+  @After
+  public void tearDown() {
+    if (FILE.exists()) FILE.delete();
+  }
+
   @Test
   public void testInstantiate() throws Exception {
     MetadataDumper dumper = new MetadataDumper();
-    // dumper.run("--help");    // Calls System.exit(1)
     dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
+  }
+
+  @Test
+  public void testCreatesDefaultOutputZip() throws Exception {
+    // Arrange
+    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+    Connector connector = new HiveMetadataConnector();
+    String name = connector.getDefaultFileName(false);
+    FILE = new File(name);
+
+    // Act
+    dumper.run("--connector", connector.getName());
+
+    // Assert
+    Assert.assertTrue(FILE.exists());
+  }
+
+  @Test
+  public void testCreatesDefaultOutputZipInProvidedDirectory() throws Exception {
+    // Arrange
+    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+    Connector connector = new HiveMetadataConnector();
+    String name = connector.getDefaultFileName(false);
+    FILE = new File("test/dir", name);
+
+    // Act
+    dumper.run("--connector", connector.getName(), "--output", "test/dir");
+
+    // Assert
+    Assert.assertTrue(FILE.exists());
+  }
+
+  @Test
+  public void testCreatesZipWithGivenName() throws Exception {
+    // Arrange
+    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+    Connector connector = new HiveMetadataConnector();
+    String name = "test.zip";
+    FILE = new File(name);
+
+    // Act
+    dumper.run("--connector", connector.getName(), "--output", name);
+
+    // Assert
+    Assert.assertTrue(FILE.exists());
   }
 }
