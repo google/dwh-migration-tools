@@ -74,6 +74,7 @@ shadowJar {
     relocate 'org.junit', 'shadow.org.junit'
     relocate 'com.facebook', 'shadow.com.facebook'
     relocate 'org.apache.commons.lang3', 'shadow.org.apache.commons.lang3'
+    relocate 'com.fasterxml', 'shadow.com.fasterxml'
 
 }
 
