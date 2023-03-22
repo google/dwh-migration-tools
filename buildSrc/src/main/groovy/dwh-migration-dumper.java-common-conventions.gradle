@@ -53,7 +53,7 @@ dependencies {
         def guavaVersion =  '31.1-jre'
         implementation "com.google.guava:guava:$guavaVersion"
         testFixturesImplementation "com.google.guava:guava:$guavaVersion"
-        def jacksonVersion = '2.15.0-rc1' // first version to use snakeyaml v2+ for vulnerability fix
+        def jacksonVersion = '2.14.2'
         implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
         implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion"
 
@@ -70,6 +70,8 @@ dependencies {
         implementation "com.swrve:rate-limited-logger:2.0.0"
 
         implementation "com.google.cloud:google-cloud-bigquery:2.23.2"
+
+        implementation "org.yaml:snakeyaml:2.0" // 1.x has multiple vulnerabilities
 
         runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
         runtimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
