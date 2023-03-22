@@ -41,7 +41,7 @@ dependencies {
     hive312RuntimeOnly "org.apache.hive:hive-jdbc:$hiveVersion"
     // For HiveServer2
     hive312RuntimeOnly "org.apache.tez:tez-common:0.9.1"
-    hive312RuntimeOnly "org.apache.tez:tez-dag:0.9.1"
+    hive312RuntimeOnly "org.apache.tez:tez-dag:0.10.2"
     // Starting from version 1.8 the binding mechanics changed
     hive312RuntimeOnly("org.slf4j:slf4j-api") {
         version {
