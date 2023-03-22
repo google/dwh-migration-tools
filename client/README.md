@@ -27,7 +27,7 @@ SQL files to/from GCS.
 
 ```shell
 # Clone the repo.
-git clone git@github.com:google/dwh-migration-tools.git
+git clone https://github.com/google/dwh-migration-tools.git
 
 # Copy the example project directory to a project directory of your own 
 # (preferably outside of the source tree to make pulling source updates easier).
