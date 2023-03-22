@@ -30,7 +30,7 @@ sourceSets {
 }
 
 dependencies {
-    api "org.apache.thrift:libthrift:0.14.1"
+    api "org.apache.thrift:libthrift:0.16.0"
     implementation "com.google.guava:guava"
 
     def hiveVersion = '3.1.2'
