@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
-import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.SharedState;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -80,7 +80,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Void> {
       };
 
   private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
-  @VisibleForTesting public static String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
+  @VisibleForTesting /* pp */ static String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
   protected final SharedState state;
   protected final String logTable;
   protected final String queryTable;

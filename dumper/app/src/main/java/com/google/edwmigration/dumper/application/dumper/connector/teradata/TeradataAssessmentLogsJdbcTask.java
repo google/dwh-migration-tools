@@ -17,7 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
-import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.SharedState;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import java.util.List;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
