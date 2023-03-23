@@ -16,18 +16,13 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore.utils;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,28 +53,22 @@ public final class PartitionNameGenerator {
    * href="https://github.com/apache/hive/blob/rel/release-2.3.6/metastore/src/java/org/apache/hadoop/hive/metastore/Warehouse.java#L315">source</a>}
    */
   public static String makePartitionName(List<String> partitionKeys, List<String> partitionValues) {
-    ImmutableMap<String, String> partitionSpec = Streams.zip(partitionKeys.stream(),
-            partitionValues.stream(), Maps::immutableEntry)
-        .collect(toImmutableMap(Entry::getKey, Entry::getValue));
+    return Streams.zip(partitionKeys.stream(),
+            partitionValues.stream(), PartitionNameGenerator::constructPartitionName)
+        .flatMap(Function.identity()).collect(Collectors.joining("/"));
+  }
 
-    ImmutableList<String> partitionParts =
-        partitionSpec.entrySet().stream()
-            .map(
-                entry -> {
-                  if (entry.getValue() == null || entry.getValue().length() == 0) {
-                    // This is unexpected and the original code throws an exception here.
-                    LOG.warn(String.format(
-                        "Got empty partition value for the key %s, will ignore it.",
-                        entry.getKey()));
-                    return "";
-                  }
-                  return escapePartitionPart(entry.getKey()) + "=" + escapePartitionPart(
-                      entry.getValue());
-                })
-            .filter(part -> !part.isEmpty())
-            .collect(toImmutableList());
-
-    return Joiner.on('/').join(partitionParts);
+  private static Stream<String> constructPartitionName(String partitionKey,
+      String partitionValue) {
+    if (partitionValue == null || partitionValue.length() == 0) {
+      // This is unexpected and the original code throws an exception here.
+      LOG.warn(String.format(
+          "Got empty partition value for the key %s, will ignore it.",
+          partitionKey));
+      return Stream.empty();
+    }
+    return Stream.of(escapePartitionPart(partitionKey) + "=" + escapePartitionPart(
+        partitionValue));
   }
 
   private static String escapePartitionPart(String partitionPart) {
