@@ -26,13 +26,10 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Utility method to generate Hive partition names.
- */
+/** Utility method to generate Hive partition names. */
 public final class PartitionNameGenerator {
 
-  private PartitionNameGenerator() {
-  }
+  private PartitionNameGenerator() {}
 
   private static final Logger LOG = LoggerFactory.getLogger(PartitionNameGenerator.class);
 
@@ -40,35 +37,34 @@ public final class PartitionNameGenerator {
    * Constructs partition name from the list of partition keys and values. It:
    *
    * <ul>
-   *   <li>Escapes special symbols in key and value</li>
-   *   <li>Joins key and value with "="</li>
-   *   <li>Joins key-value pairs with "/"</li>
+   *   <li>Escapes special symbols in key and value
+   *   <li>Joins key and value with "="
+   *   <li>Joins key-value pairs with "/"
    * </ul>
    *
    * Resulting partition name has a form similar to "partKey1=partValue1/partKey2=partValue2"
    *
    * <p>It copies most of the logic of the original Hive metastore function for creating partition
-   * name:
-   * {@link <a
+   * name: {@link <a
    * href="https://github.com/apache/hive/blob/rel/release-2.3.6/metastore/src/java/org/apache/hadoop/hive/metastore/Warehouse.java#L315">source</a>}
    */
   public static String makePartitionName(List<String> partitionKeys, List<String> partitionValues) {
-    return Streams.zip(partitionKeys.stream(),
-            partitionValues.stream(), PartitionNameGenerator::constructPartitionName)
-        .flatMap(Function.identity()).collect(Collectors.joining("/"));
+    return Streams.zip(
+            partitionKeys.stream(),
+            partitionValues.stream(),
+            PartitionNameGenerator::constructPartitionName)
+        .flatMap(Function.identity())
+        .collect(Collectors.joining("/"));
   }
 
-  private static Stream<String> constructPartitionName(String partitionKey,
-      String partitionValue) {
+  private static Stream<String> constructPartitionName(String partitionKey, String partitionValue) {
     if (partitionValue == null || partitionValue.length() == 0) {
       // This is unexpected and the original code throws an exception here.
-      LOG.warn(String.format(
-          "Got empty partition value for the key %s, will ignore it.",
-          partitionKey));
+      LOG.warn(
+          String.format("Got empty partition value for the key %s, will ignore it.", partitionKey));
       return Stream.empty();
     }
-    return Stream.of(escapePartitionPart(partitionKey) + "=" + escapePartitionPart(
-        partitionValue));
+    return Stream.of(escapePartitionPart(partitionKey) + "=" + escapePartitionPart(partitionValue));
   }
 
   private static String escapePartitionPart(String partitionPart) {

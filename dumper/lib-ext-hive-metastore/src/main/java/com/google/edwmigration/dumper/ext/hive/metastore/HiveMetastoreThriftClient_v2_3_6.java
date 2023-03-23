@@ -24,21 +24,14 @@ import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstan
 import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.TOTAL_SIZE;
 import static com.google.edwmigration.dumper.ext.hive.metastore.utils.PartitionNameGenerator.makePartitionName;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Streams;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.FieldSchema;
-import com.google.edwmigration.dumper.ext.hive.metastore.utils.PartitionNameGenerator;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -52,8 +45,8 @@ import org.slf4j.LoggerFactory;
  * Uses the Thrift specification confirmed present in Hive v2.3.6, according to the Apache Hive
  * GitHub repo.
  *
- * <p>This class is not thread-safe because it wraps an underlying Thrift client which itself is
- * not thread-safe.
+ * <p>This class is not thread-safe because it wraps an underlying Thrift client which itself is not
+ * thread-safe.
  */
 @NotThreadSafe
 public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient {
@@ -63,7 +56,7 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
 
   @Nonnull
   private final com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6
-      .ThriftHiveMetastore.Client
+          .ThriftHiveMetastore.Client
       client;
 
   // Deliberately not public
@@ -323,21 +316,19 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
       @Nonnull
       @Override
       public List<? extends Partition> getPartitions() throws Exception {
-        ImmutableList<String> partitionKeys = table.getPartitionKeys().stream()
-            .map(FieldSchema::getName)
-            .collect(
-                toImmutableList());
-        List<com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.Partition> partitionsMetadata = client.get_partitions(
-            databaseName, tableName, (short) -1);
+        ImmutableList<String> partitionKeys =
+            table.getPartitionKeys().stream().map(FieldSchema::getName).collect(toImmutableList());
+        List<com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.Partition>
+            partitionsMetadata = client.get_partitions(databaseName, tableName, (short) -1);
 
-        return partitionsMetadata.stream().map(
-            partition -> {
-              String partitionName = makePartitionName(partitionKeys, partition.getValues());
-              Map<String, String> partitionParameters =
-                  partition.isSetParameters() ? partition.getParameters() : ImmutableMap.of();
+        return partitionsMetadata.stream()
+            .map(
+                partition -> {
+                  String partitionName = makePartitionName(partitionKeys, partition.getValues());
+                  Map<String, String> partitionParameters =
+                      partition.isSetParameters() ? partition.getParameters() : ImmutableMap.of();
 
-              return
-                  new Partition() {
+                  return new Partition() {
                     @Nonnull
                     @Override
                     public String getPartitionName() {
@@ -410,7 +401,8 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
                       return partition.isSetSd() && partition.getSd().isCompressed();
                     }
                   };
-            }).collect(toImmutableList());
+                })
+            .collect(toImmutableList());
       }
     };
   }
