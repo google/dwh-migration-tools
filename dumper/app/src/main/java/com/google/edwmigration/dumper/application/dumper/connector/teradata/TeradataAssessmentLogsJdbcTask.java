@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.createTimestampExpression;
+
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.SharedState;
 import java.util.List;
@@ -23,6 +25,8 @@ import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 
 public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
+
+  private static final String QUERY_LOG_TABLE_ALIAS = "L";
   static final String[] EXPRESSIONS =
       new String[] {
         "L.QueryID",
@@ -42,7 +46,7 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
         "L.CheckpointNum",
         "L.ClientAddr",
         "L.ClientID",
-        "L.CollectTimeStamp AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"CollectTimeStamp\"",
+        createTimestampExpression(QUERY_LOG_TABLE_ALIAS, "CollectTimeStamp"),
         "L.CPUDecayLevel",
         "L.DataCollectAlg",
         "L.DBQLStatus",
@@ -56,8 +60,8 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
         "L.EstProcTime",
         "L.EstResultRows",
         "L.ExpandAcctString",
-        "L.FirstRespTime AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"FirstRespTime\"",
-        "L.FirstStepTime AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"FirstStepTime\"",
+        createTimestampExpression(QUERY_LOG_TABLE_ALIAS, "FirstRespTime"),
+        createTimestampExpression(QUERY_LOG_TABLE_ALIAS, "FirstStepTime"),
         "L.FlexThrottle",
         "L.ImpactSpool",
         "L.InternalRequestNum",
@@ -68,7 +72,7 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
         "L.LockDelay",
         "L.LockLevel",
         "L.LogicalHostID",
-        "L.LogonDateTime AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"LogonDateTime\"",
+        createTimestampExpression(QUERY_LOG_TABLE_ALIAS, "LogonDateTime"),
         "L.LogonSource",
         "L.LSN",
         "L.MaxAMPCPUTime",
@@ -118,7 +122,7 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
         "L.SessionID",
         "L.SessionTemporalQualifier",
         "L.SpoolUsage",
-        "L.StartTime AT TIME ZONE INTERVAL '0:00' HOUR TO MINUTE AS \"StartTime\"",
+        createTimestampExpression(QUERY_LOG_TABLE_ALIAS, "StartTime"),
         "L.StatementGroup",
         "L.Statements",
         "L.StatementType",

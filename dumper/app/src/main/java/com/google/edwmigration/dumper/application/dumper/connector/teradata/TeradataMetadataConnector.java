@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
@@ -255,9 +257,5 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         maxRowCount -> query.append(" TOP ").append(maxRowCount).append(' '));
     query.append(selectBody);
     maxRowCountMaybe.ifPresent(unused -> query.append(orderBy));
-  }
-
-  private static String formatQuery(String query) {
-    return query.replaceAll("\\s+", " ").replaceAll("\\( ", "(").replaceAll(" \\)", ")").trim();
   }
 }
