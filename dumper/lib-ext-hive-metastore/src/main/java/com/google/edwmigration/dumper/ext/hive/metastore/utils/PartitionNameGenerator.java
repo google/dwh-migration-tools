@@ -20,7 +20,9 @@ import com.google.common.collect.Streams;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.annotation.CheckForNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,19 +53,21 @@ public final class PartitionNameGenerator {
             partitionKeys.stream(),
             partitionValues.stream(),
             PartitionNameGenerator::constructPartitionName)
-        .filter(part -> !part.isEmpty())
+        .filter(Objects::nonNull)
         .collect(Collectors.joining("/"));
   }
 
+  @CheckForNull
   private static String constructPartitionName(String partitionKey, String partitionValue) {
     if (partitionValue == null || partitionValue.length() == 0) {
       // This is unexpected and the original code throws an exception here.
       LOG.warn(
           String.format("Got empty partition value for the key %s, will ignore it.", partitionKey));
-      return "";
+      return null;
     }
     return escapePartitionPart(partitionKey) + "=" + escapePartitionPart(partitionValue);
   }
+
 
   private static String escapePartitionPart(String partitionPart) {
     try {
