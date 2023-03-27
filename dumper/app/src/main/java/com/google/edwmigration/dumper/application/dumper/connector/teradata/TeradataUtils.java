@@ -21,19 +21,35 @@ import java.util.Optional;
 
 class TeradataUtils {
 
+  /**
+   * Formats the query by:
+   *
+   * <ul>
+   *   <li>replacing consecutive whitespace characters with a single space,
+   *   <li>removing the whitespace immediately following the opening bracket "(" and immediately
+   *       preceding the closing bracket ")",
+   *   <li>removing the whitespace at the beginning and at the end of the query.
+   * </ul>
+   *
+   * <h3>Remark about string literals</h3>
+   *
+   * <p>The formatting is applied across the whole query, including string literals. If the input
+   * query contains string literals with whitespace, they will be modified, which might be
+   * undesirable. This method should not be used in such cases.
+   */
   static String formatQuery(String query) {
     return query.replaceAll("\\s+", " ").replaceAll("\\( ", "(").replaceAll(" \\)", ")").trim();
   }
 
   static String createTimestampExpression(String tableAlias, String columnName) {
-    return createTimestampExpression(columnName, Optional.of(tableAlias));
+    return createTimestampExpression(Optional.of(tableAlias), columnName);
   }
 
   static String createTimestampExpression(String columnName) {
-    return createTimestampExpression(columnName, Optional.empty());
+    return createTimestampExpression(/* tableAlias= */ Optional.empty(), columnName);
   }
 
-  private static String createTimestampExpression(String columnName, Optional<String> tableAlias) {
+  private static String createTimestampExpression(Optional<String> tableAlias, String columnName) {
     Preconditions.checkArgument(!columnName.isEmpty(), "Column name must not be empty.");
     Preconditions.checkArgument(
         tableAlias.map(alias -> !alias.isEmpty()).orElse(true), "Alias must not be empty.");
