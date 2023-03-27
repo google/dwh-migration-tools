@@ -26,15 +26,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RunWith(JUnit4.class)
 public class MetadataDumperTest {
 
-  private File FILE;
+  private File file;
 
   @After
   public void tearDown() {
-    if (FILE.exists()) FILE.delete();
+    if (file != null && file.exists()) file.delete();
   }
 
   @Test
@@ -49,13 +51,13 @@ public class MetadataDumperTest {
     MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
     Connector connector = new HiveMetadataConnector();
     String name = connector.getDefaultFileName(false);
-    FILE = new File(name);
+    file = new File(name);
 
     // Act
     dumper.run("--connector", connector.getName());
 
     // Assert
-    Assert.assertTrue(FILE.exists());
+    Assert.assertTrue(file.exists());
   }
 
   @Test
@@ -64,13 +66,13 @@ public class MetadataDumperTest {
     MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
     Connector connector = new HiveMetadataConnector();
     String name = connector.getDefaultFileName(false);
-    FILE = new File("test/dir", name);
+    file = new File("test/dir", name);
 
     // Act
     dumper.run("--connector", connector.getName(), "--output", "test/dir");
 
     // Assert
-    Assert.assertTrue(FILE.exists());
+    Assert.assertTrue(file.exists());
   }
 
   @Test
@@ -79,12 +81,85 @@ public class MetadataDumperTest {
     MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
     Connector connector = new HiveMetadataConnector();
     String name = "test.zip";
-    FILE = new File(name);
+    file = new File(name);
 
     // Act
     dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
-    Assert.assertTrue(FILE.exists());
+    Assert.assertTrue(file.exists());
+  }
+
+  @Test
+  public void testOverridesZipWithGivenName() throws Exception {
+    // Arrange
+    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+    Connector connector = new HiveMetadataConnector();
+    String name = "test-dir/test.zip";
+    file = new File(name);
+
+    // Act
+    dumper.run("--connector", connector.getName(), "--output", name);
+
+    // Assert
+    Assert.assertTrue(file.exists());
+  }
+
+  @Test
+  public void testOverridesZipWithDefaultName() throws Exception {
+    // Arrange
+    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+    Connector connector = new HiveMetadataConnector();
+    String name = "test-dir";
+    file = new File(name);
+
+    // Act
+    dumper.run("--connector", connector.getName(), "--output", name);
+
+    // Assert
+    Assert.assertTrue(file.exists());
+  }
+
+  @Test
+  public void testDoesNotOverrideDirectoryEndingWithZip() throws Exception {
+    // Arrange
+    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+    Connector connector = new HiveMetadataConnector();
+    String name = "test-dir/dir.zip";
+    File folder = new File(name);
+
+    // Act & Assert
+    IllegalStateException exception =
+        Assert.assertThrows(
+            "No exception thrown from " + dumper.getClass().getSimpleName(),
+            IllegalStateException.class,
+            () -> dumper.run("--connector", connector.getName(), "--output", name));
+
+    // Assert
+    Assert.assertTrue(
+        exception.getMessage().startsWith("A folder already exists at test-dir/dir.zip"));
+    Assert.assertTrue(folder.exists());
+    Assert.assertTrue(folder.isDirectory());
+  }
+
+  @Test
+  public void testDoesNotOverrideFileWithDirectory() {
+    // Arrange
+    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+    Connector connector = new HiveMetadataConnector();
+    String name = "test-dir/test";
+    File file = new File(name);
+
+    // Act & Assert
+    IllegalStateException exception =
+        Assert.assertThrows(
+            "No exception thrown from " + dumper.getClass().getSimpleName(),
+            IllegalStateException.class,
+            () -> dumper.run("--connector", connector.getName(), "--output", name));
+
+    // Assert
+    Assert.assertTrue(exception.getMessage().startsWith("A file already exists at test-dir/test"));
+    Assert.assertTrue(file.exists());
+    Assert.assertTrue(file.isFile());
   }
 }

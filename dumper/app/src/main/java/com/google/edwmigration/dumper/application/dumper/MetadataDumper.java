@@ -65,7 +65,9 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author miguel */
+/**
+ * @author miguel
+ */
 public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
@@ -318,14 +320,18 @@ public class MetadataDumper {
         .map(
             file -> {
               String fileName = file.getPath();
-              if (StringUtils.endsWithIgnoreCase(fileName, ".zip")) return file;
+              String errorMessage =
+                  "A %1$s already exists at %2$s. If you want to create a directory, please"
+                      + " provide the path to the directory. If you want to create %2$s.zip,"
+                      + " please add the `.zip` extension manually.";
+              if (StringUtils.endsWithIgnoreCase(fileName, ".zip")) {
+                if (file.isDirectory()) {
+                  throw new IllegalStateException(String.format(errorMessage, "folder", fileName));
+                }
+                return file;
+              }
               if (file.isFile()) {
-                throw new IllegalStateException(
-                    String.format(
-                        "A file already exists at %1$s. "
-                            + "If you want to create a directory, please provide the path to the directory. "
-                            + "If you want to create %1$s.zip, please add the `.zip` extension manually.",
-                        fileName));
+                throw new IllegalStateException(String.format(errorMessage, "file", fileName));
               }
               return new File(file, defaultFileName);
             })
