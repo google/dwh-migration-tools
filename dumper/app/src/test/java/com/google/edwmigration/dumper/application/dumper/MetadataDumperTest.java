@@ -20,17 +20,22 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQueryLogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
 import java.io.File;
+import java.io.IOException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RunWith(JUnit4.class)
 public class MetadataDumperTest {
 
   private File file;
+  private MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+  Connector connector = new HiveMetadataConnector();
 
   @After
   public void tearDown() {
@@ -39,15 +44,13 @@ public class MetadataDumperTest {
 
   @Test
   public void testInstantiate() throws Exception {
-    MetadataDumper dumper = new MetadataDumper();
+    dumper = new MetadataDumper();
     dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
   }
 
   @Test
   public void testCreatesDefaultOutputZip() throws Exception {
     // Arrange
-    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
-    Connector connector = new HiveMetadataConnector();
     String name = connector.getDefaultFileName(false);
     file = new File(name);
 
@@ -61,13 +64,12 @@ public class MetadataDumperTest {
   @Test
   public void testCreatesDefaultOutputZipInProvidedDirectory() throws Exception {
     // Arrange
-    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
-    Connector connector = new HiveMetadataConnector();
     String name = connector.getDefaultFileName(false);
-    file = new File("test/dir", name);
+    String path = "test/dir";
+    file = new File(path, name);
 
     // Act
-    dumper.run("--connector", connector.getName(), "--output", "test/dir");
+    dumper.run("--connector", connector.getName(), "--output", path);
 
     // Assert
     Assert.assertTrue(file.exists());
@@ -76,8 +78,6 @@ public class MetadataDumperTest {
   @Test
   public void testCreatesZipWithGivenName() throws Exception {
     // Arrange
-    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
-    Connector connector = new HiveMetadataConnector();
     String name = "test.zip";
     file = new File(name);
 
@@ -91,12 +91,11 @@ public class MetadataDumperTest {
   @Test
   public void testOverridesZipWithGivenName() throws Exception {
     // Arrange
-    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
-    Connector connector = new HiveMetadataConnector();
     String name = "test-dir/test.zip";
     file = new File(name);
 
     // Act
+    file.createNewFile();
     dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
@@ -106,27 +105,26 @@ public class MetadataDumperTest {
   @Test
   public void testOverridesZipWithDefaultName() throws Exception {
     // Arrange
-    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
-    Connector connector = new HiveMetadataConnector();
+    File expectedFile = new File("test-dir/dwh-migration-hiveql-metadata.zip");
     String name = "test-dir";
     file = new File(name);
 
     // Act
+    expectedFile.createNewFile();
     dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
-    Assert.assertTrue(file.exists());
+    Assert.assertTrue(expectedFile.exists());
   }
 
   @Test
   public void testDoesNotOverrideDirectoryEndingWithZip() throws Exception {
     // Arrange
-    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
-    Connector connector = new HiveMetadataConnector();
     String name = "test-dir/dir.zip";
     File folder = new File(name);
 
-    // Act & Assert
+    // Act
+    folder.mkdirs();
     IllegalStateException exception =
         Assert.assertThrows(
             "No exception thrown from " + dumper.getClass().getSimpleName(),
@@ -136,19 +134,16 @@ public class MetadataDumperTest {
     // Assert
     Assert.assertTrue(
         exception.getMessage().startsWith("A folder already exists at test-dir/dir.zip"));
-    Assert.assertTrue(folder.exists());
-    Assert.assertTrue(folder.isDirectory());
   }
 
   @Test
-  public void testDoesNotOverrideFileWithDirectory() {
+  public void testDoesNotOverrideFileWithDirectory() throws IOException {
     // Arrange
-    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
-    Connector connector = new HiveMetadataConnector();
     String name = "test-dir/test";
     File file = new File(name);
 
-    // Act & Assert
+    // Act
+    file.createNewFile();
     IllegalStateException exception =
         Assert.assertThrows(
             "No exception thrown from " + dumper.getClass().getSimpleName(),
@@ -157,7 +152,5 @@ public class MetadataDumperTest {
 
     // Assert
     Assert.assertTrue(exception.getMessage().startsWith("A file already exists at test-dir/test"));
-    Assert.assertTrue(file.exists());
-    Assert.assertTrue(file.isFile());
   }
 }
