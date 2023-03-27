@@ -220,7 +220,9 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Void> {
       return Boolean.TRUE;
     } catch (DataAccessException e) {
       LOG.info(
-          "Attribute '{}' is absent, will use NULL in projection: {}", expression, e.getMessage());
+          "Projection expression '{}' is not valid, will use NULL in projection: {}",
+          expression,
+          e.getMessage());
       return Boolean.FALSE;
     }
   }
