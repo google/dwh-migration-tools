@@ -16,12 +16,17 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.DDL_TIME;
 import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.FILES_COUNT;
 import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.RAW_SIZE;
 import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.ROWS_COUNT;
 import static com.google.edwmigration.dumper.ext.hive.metastore.MetastoreConstants.TOTAL_SIZE;
+import static com.google.edwmigration.dumper.ext.hive.metastore.utils.PartitionNameGenerator.makePartitionName;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.FieldSchema;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -311,90 +316,93 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
       @Nonnull
       @Override
       public List<? extends Partition> getPartitions() throws Exception {
-        List<Partition> out = new ArrayList<>();
-        for (String partitionName :
-            client.get_partition_names(databaseName, tableName, (short) -1)) {
-          com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.Partition partition =
-              client.get_partition_by_name(databaseName, tableName, partitionName);
-          Map<String, String> parameters =
-              partition.isSetParameters() ? partition.getParameters() : new HashMap<>();
+        ImmutableList<String> partitionKeys =
+            table.getPartitionKeys().stream().map(FieldSchema::getName).collect(toImmutableList());
+        List<com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.Partition>
+            partitionsMetadata = client.get_partitions(databaseName, tableName, (short) -1);
 
-          out.add(
-              new Partition() {
-                @Nonnull
-                @Override
-                public String getPartitionName() {
-                  return partitionName;
-                }
+        return partitionsMetadata.stream()
+            .map(
+                partition -> {
+                  String partitionName = makePartitionName(partitionKeys, partition.getValues());
+                  Map<String, String> partitionParameters =
+                      partition.isSetParameters() ? partition.getParameters() : ImmutableMap.of();
 
-                @CheckForNull
-                @Override
-                public String getLocation() {
-                  return (partition.isSetSd() && partition.getSd().isSetLocation()
-                      ? partition.getSd().getLocation()
-                      : null);
-                }
+                  return new Partition() {
+                    @Nonnull
+                    @Override
+                    public String getPartitionName() {
+                      return partitionName;
+                    }
 
-                @CheckForNull
-                @Override
-                public Integer getCreateTime() {
-                  return partition.getCreateTime();
-                }
+                    @CheckForNull
+                    @Override
+                    public String getLocation() {
+                      return (partition.isSetSd() && partition.getSd().isSetLocation()
+                          ? partition.getSd().getLocation()
+                          : null);
+                    }
 
-                @CheckForNull
-                @Override
-                public Integer getLastAccessTime() {
-                  return partition.getLastAccessTime();
-                }
+                    @CheckForNull
+                    @Override
+                    public Integer getCreateTime() {
+                      return partition.getCreateTime();
+                    }
 
-                @CheckForNull
-                @Override
-                public Integer getLastDdlTime() {
-                  return parameters.containsKey(DDL_TIME)
-                      ? Integer.parseInt(parameters.get(DDL_TIME))
-                      : null;
-                }
+                    @CheckForNull
+                    @Override
+                    public Integer getLastAccessTime() {
+                      return partition.getLastAccessTime();
+                    }
 
-                @CheckForNull
-                @Override
-                public Long getTotalSize() {
-                  return parameters.containsKey(TOTAL_SIZE)
-                      ? Long.parseLong(parameters.get(TOTAL_SIZE))
-                      : null;
-                }
+                    @CheckForNull
+                    @Override
+                    public Integer getLastDdlTime() {
+                      return partitionParameters.containsKey(DDL_TIME)
+                          ? Integer.parseInt(partitionParameters.get(DDL_TIME))
+                          : null;
+                    }
 
-                @CheckForNull
-                @Override
-                public Long getRawSize() {
-                  return parameters.containsKey(RAW_SIZE)
-                      ? Long.parseLong(parameters.get(RAW_SIZE))
-                      : null;
-                }
+                    @CheckForNull
+                    @Override
+                    public Long getTotalSize() {
+                      return partitionParameters.containsKey(TOTAL_SIZE)
+                          ? Long.parseLong(partitionParameters.get(TOTAL_SIZE))
+                          : null;
+                    }
 
-                @CheckForNull
-                @Override
-                public Long getRowsCount() {
-                  return parameters.containsKey(ROWS_COUNT)
-                      ? Long.parseLong(parameters.get(ROWS_COUNT))
-                      : null;
-                }
+                    @CheckForNull
+                    @Override
+                    public Long getRawSize() {
+                      return partitionParameters.containsKey(RAW_SIZE)
+                          ? Long.parseLong(partitionParameters.get(RAW_SIZE))
+                          : null;
+                    }
 
-                @CheckForNull
-                @Override
-                public Integer getFilesCount() {
-                  return parameters.containsKey(FILES_COUNT)
-                      ? Integer.parseInt(parameters.get(FILES_COUNT))
-                      : null;
-                }
+                    @CheckForNull
+                    @Override
+                    public Long getRowsCount() {
+                      return partitionParameters.containsKey(ROWS_COUNT)
+                          ? Long.parseLong(partitionParameters.get(ROWS_COUNT))
+                          : null;
+                    }
 
-                @CheckForNull
-                @Override
-                public Boolean isCompressed() {
-                  return partition.isSetSd() && partition.getSd().isCompressed();
-                }
-              });
-        }
-        return out;
+                    @CheckForNull
+                    @Override
+                    public Integer getFilesCount() {
+                      return partitionParameters.containsKey(FILES_COUNT)
+                          ? Integer.parseInt(partitionParameters.get(FILES_COUNT))
+                          : null;
+                    }
+
+                    @CheckForNull
+                    @Override
+                    public Boolean isCompressed() {
+                      return partition.isSetSd() && partition.getSd().isCompressed();
+                    }
+                  };
+                })
+            .collect(toImmutableList());
       }
     };
   }
