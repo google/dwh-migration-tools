@@ -95,10 +95,6 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_DATABASE = "database";
   public static final String OPT_SCHEMA = "schema";
   public static final String OPT_ASSESSMENT = "assessment";
-  public static final String OPT_TERADATA_MAX_TABLESIZEV_ROWS = "max-tablesizev-rows";
-  public static final String OPT_TERADATA_MAX_DATABASESV_USER_ROWS = "max-databasesv-user-rows";
-  public static final String OPT_TERADATA_MAX_DATABASESV_DB_ROWS = "max-databasesv-db-rows";
-  public static final String OPT_TERADATA_MAX_DISKSPACEV_ROWS = "max-diskspacev-rows";
   public static final String OPT_ORACLE_SID = "oracle-sid";
   public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
@@ -177,41 +173,6 @@ public class ConnectorArguments extends DefaultArguments {
       parser.accepts(
           OPT_ASSESSMENT,
           "Whether to create a dump for assessment (i.e., dump additional information).");
-
-  public static final String TERADATA_MAX_TABLE_SIZE_V_ROWS_DESCRIPTION =
-      "Max number of rows to extract from DBC.TableSizeV table (available for 'teradata' connector only)";
-  private final OptionSpec<Long> optionTeradataMaxTableSizeVRows =
-      parser
-          .accepts(OPT_TERADATA_MAX_TABLESIZEV_ROWS, TERADATA_MAX_TABLE_SIZE_V_ROWS_DESCRIPTION)
-          .withRequiredArg()
-          .ofType(Long.class)
-          .describedAs("100000");
-  public static final String TERADATA_MAX_DATABASES_V_USER_ROWS_DESCRIPTION =
-      "Max number of user rows (DBKind='U') to extract from DBC.DatabasesV table (available for 'teradata' connector only)";
-  private final OptionSpec<Long> optionTeradataMaxDatabasesVUserRows =
-      parser
-          .accepts(
-              OPT_TERADATA_MAX_DATABASESV_USER_ROWS, TERADATA_MAX_DATABASES_V_USER_ROWS_DESCRIPTION)
-          .withRequiredArg()
-          .ofType(Long.class)
-          .describedAs("100000");
-  public static final String TERADATA_MAX_DATABASES_V_DB_ROWS_DESCRIPTION =
-      "Max number of database rows (DBKind='D') to extract from DBC.DatabasesV table (available for 'teradata' connector only)";
-  private final OptionSpec<Long> optionTeradataMaxDatabasesVDbRows =
-      parser
-          .accepts(
-              OPT_TERADATA_MAX_DATABASESV_DB_ROWS, TERADATA_MAX_DATABASES_V_DB_ROWS_DESCRIPTION)
-          .withRequiredArg()
-          .ofType(Long.class)
-          .describedAs("100000");
-  public static final String TERADATA_MAX_DISK_SPACE_V_ROWS_DESCRIPTION =
-      "Max number of rows to extract from DBC.DiskSpaceV table (available for 'teradata' connector only)";
-  private final OptionSpec<Long> optionTeradataMaxDiskSpaceVRows =
-      parser
-          .accepts(OPT_TERADATA_MAX_DISKSPACEV_ROWS, TERADATA_MAX_DISK_SPACE_V_ROWS_DESCRIPTION)
-          .withRequiredArg()
-          .ofType(Long.class)
-          .describedAs("100000");
 
   private final OptionSpec<String> optionUser =
       parser.accepts(OPT_USER, "Database username").withRequiredArg().describedAs("admin");
@@ -622,22 +583,6 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isAssessment() {
     return getOptions().has(optionAssessment);
-  }
-
-  public Optional<Long> getTeradataMaxTableSizeVRows() {
-    return optionAsOptional(optionTeradataMaxTableSizeVRows);
-  }
-
-  public Optional<Long> getTeradataMaxDatabasesVUserRows() {
-    return optionAsOptional(optionTeradataMaxDatabasesVUserRows);
-  }
-
-  public Optional<Long> getTeradataMaxDatabasesVDbRows() {
-    return optionAsOptional(optionTeradataMaxDatabasesVDbRows);
-  }
-
-  public Optional<Long> getTeradataMaxDiskSpaceVRows() {
-    return optionAsOptional(optionTeradataMaxDiskSpaceVRows);
   }
 
   private <T> Optional<T> optionAsOptional(OptionSpec<T> spec) {
