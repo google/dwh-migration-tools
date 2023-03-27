@@ -68,7 +68,6 @@ public final class PartitionNameGenerator {
     return escapePartitionPart(partitionKey) + "=" + escapePartitionPart(partitionValue);
   }
 
-
   private static String escapePartitionPart(String partitionPart) {
     try {
       return URLEncoder.encode(partitionPart, "UTF-8");
