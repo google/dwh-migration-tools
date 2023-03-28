@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
@@ -39,6 +40,7 @@ import java.util.Base64;
 import javax.annotation.CheckForNull;
 import javax.annotation.CheckForSigned;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -52,7 +54,9 @@ import org.springframework.jdbc.core.StatementCreatorUtils;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.support.JdbcUtils;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @SuppressWarnings("UnusedVariable")
@@ -88,7 +92,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
                 "Fatal Error. ResultSet does not have the expected column count: "
                     + headerClass.getEnumConstants().length,
                 Arrays.asList(
-                    "If a custom query has been specified please confirm the selected columns match the following: ",
+                    "If a custom query has been specified please confirm the selected columns match"
+                        + " the following: ",
                     StringUtils.join(headerClass.getEnumConstants(), ", "))));
     } else {
       format = format.withHeader(rs);
@@ -97,8 +102,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   }
 
   @Nonnull
-  protected ResultSetExtractor<Void> newCsvResultSetExtractor(
-      @Nonnull ByteSink sink, @CheckForSigned long count) {
+  protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
+      @Nonnull ByteSink sink, @CheckForSigned long count, @Nullable ZonedInterval interval) {
     return rs -> {
       CSVFormat format = newCsvFormat(rs);
       try (RecordProgressMonitor monitor =
@@ -125,7 +130,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
           }
           printer.println();
         }
-        return null;
+        return new Summary(monitor.getCount(), interval);
       } catch (IOException e) {
         throw new SQLException(e);
       }

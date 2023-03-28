@@ -145,8 +145,9 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
       // SVL_QUERY_METRICS already gives us "scan_row_count", but doesn't tell us anything about
       // bytes scanned.
       String queryTemplateScan =
-          " SELECT Q.query as \"QueryID\", min(Q.starttime) as starttime, sum(QS.rows) as stl_scan_sum_rows, sum(QS.bytes) as stl_scan_sum_bytes "
-              + " FROM STL_QUERY Q USING STL_SCAN QS USING (query) WHERE ## GROUP BY Q.query";
+          " SELECT Q.query as \"QueryID\", min(Q.starttime) as starttime, sum(QS.rows) as"
+              + " stl_scan_sum_rows, sum(QS.bytes) as stl_scan_sum_bytes  FROM STL_QUERY Q USING"
+              + " STL_SCAN QS USING (query) WHERE ## GROUP BY Q.query";
 
       makeTasks(
           arguments,
@@ -192,7 +193,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
           filePrefix
               + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
               + RedshiftLogsDumpFormat.ZIP_ENTRY_SUFFIX;
-      out.addTask(new JdbcSelectTask(file, query));
+      out.addTask(new JdbcSelectTask(file, query, interval));
     }
   }
 }

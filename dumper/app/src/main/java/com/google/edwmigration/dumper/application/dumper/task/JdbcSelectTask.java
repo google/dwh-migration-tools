@@ -17,25 +17,34 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** @author shevek */
-public class JdbcSelectTask extends AbstractJdbcTask<Void> {
+public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
 
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTask.class);
 
   @Nonnull private final String sql;
+  @Nullable private final ZonedInterval interval;
 
-  public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
+  public JdbcSelectTask(
+      @Nonnull String targetPath, @Nonnull String sql, @Nullable ZonedInterval interval) {
     super(targetPath);
     this.sql = sql;
+    this.interval = interval;
+  }
+
+  public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
+    this(targetPath, sql, null);
   }
 
   @Nonnull
@@ -44,13 +53,13 @@ public class JdbcSelectTask extends AbstractJdbcTask<Void> {
   }
 
   @Override
-  protected Void doInConnection(
+  protected Summary doInConnection(
       @Nonnull TaskRunContext context,
       @Nonnull JdbcHandle jdbcHandle,
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
-    ResultSetExtractor<Void> rse = newCsvResultSetExtractor(sink, -1);
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1, interval);
     return doSelect(connection, rse, sql);
   }
 

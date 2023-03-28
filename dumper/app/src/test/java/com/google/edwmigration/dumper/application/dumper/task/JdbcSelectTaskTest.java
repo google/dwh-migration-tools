@@ -16,7 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
@@ -89,7 +90,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
     MemoryByteSink sink = new MemoryByteSink();
     final MutableObject<CSVFormat> formatHolder = new MutableObject<>();
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-      AbstractJdbcTask<Void> task =
+      AbstractJdbcTask<Summary> task =
           new JdbcSelectTask("(memory)", sql) {
             @Override
             protected CSVFormat newCsvFormat(ResultSet rs) throws SQLException {
