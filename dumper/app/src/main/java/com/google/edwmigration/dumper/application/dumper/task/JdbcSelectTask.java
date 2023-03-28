@@ -23,7 +23,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
@@ -35,17 +34,17 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
   private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTask.class);
 
   @Nonnull private final String sql;
-  @Nullable private final ZonedInterval interval;
+  private final Optional<ZonedInterval> interval;
 
   public JdbcSelectTask(
-      @Nonnull String targetPath, @Nonnull String sql, @Nullable ZonedInterval interval) {
+      @Nonnull String targetPath, @Nonnull String sql, Optional<ZonedInterval> interval) {
     super(targetPath);
     this.sql = sql;
     this.interval = interval;
   }
 
   public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
-    this(targetPath, sql, null);
+    this(targetPath, sql, Optional.empty());
   }
 
   @Nonnull
@@ -60,7 +59,7 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
-    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1, Optional.ofNullable(interval));
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1, interval);
     return doSelect(connection, rse, sql);
   }
 
