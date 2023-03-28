@@ -16,20 +16,20 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import com.google.common.io.Files;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQueryLogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
 import java.io.File;
 import java.io.IOException;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * @author shevek
- */
+/** @author shevek */
 @RunWith(JUnit4.class)
 public class MetadataDumperTest {
 
@@ -38,8 +38,10 @@ public class MetadataDumperTest {
   Connector connector = new HiveMetadataConnector();
 
   @After
-  public void tearDown() {
-    if (file != null && file.exists()) file.delete();
+  public void tearDown() throws IOException {
+    if (file == null || !file.exists()) return;
+    if (file.isDirectory()) FileUtils.deleteDirectory(file);
+    else file.delete();
   }
 
   @Test
@@ -65,7 +67,7 @@ public class MetadataDumperTest {
   public void testCreatesDefaultOutputZipInProvidedDirectory() throws Exception {
     // Arrange
     String name = connector.getDefaultFileName(false);
-    String path = "test/dir";
+    String path = "dir";
     file = new File(path, name);
 
     // Act
@@ -95,6 +97,7 @@ public class MetadataDumperTest {
     file = new File(name);
 
     // Act
+    Files.createParentDirs(file);
     file.createNewFile();
     dumper.run("--connector", connector.getName(), "--output", name);
 
@@ -110,7 +113,7 @@ public class MetadataDumperTest {
     file = new File(name);
 
     // Act
-    expectedFile.createNewFile();
+    file.mkdirs();
     dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
@@ -118,29 +121,25 @@ public class MetadataDumperTest {
   }
 
   @Test
-  public void testDoesNotOverrideDirectoryEndingWithZip() throws Exception {
+  public void testCreatesFileInsideFolderNameWithZip() throws Exception {
     // Arrange
-    String name = "test-dir/dir.zip";
-    File folder = new File(name);
+    File expectedFile = new File("dir.zip/dwh-migration-hiveql-metadata.zip");
+    String name = "dir.zip";
+    file = new File(name);
 
     // Act
-    folder.mkdirs();
-    IllegalStateException exception =
-        Assert.assertThrows(
-            "No exception thrown from " + dumper.getClass().getSimpleName(),
-            IllegalStateException.class,
-            () -> dumper.run("--connector", connector.getName(), "--output", name));
+    file.mkdirs();
+    dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
-    Assert.assertTrue(
-        exception.getMessage().startsWith("A folder already exists at test-dir/dir.zip"));
+    Assert.assertTrue(expectedFile.exists());
   }
 
   @Test
   public void testDoesNotOverrideFileWithDirectory() throws IOException {
     // Arrange
-    String name = "test-dir/test";
-    File file = new File(name);
+    String name = "test";
+    file = new File(name);
 
     // Act
     file.createNewFile();
@@ -151,6 +150,6 @@ public class MetadataDumperTest {
             () -> dumper.run("--connector", connector.getName(), "--output", name));
 
     // Assert
-    Assert.assertTrue(exception.getMessage().startsWith("A file already exists at test-dir/test"));
+    Assert.assertTrue(exception.getMessage().startsWith("A file already exists at test"));
   }
 }

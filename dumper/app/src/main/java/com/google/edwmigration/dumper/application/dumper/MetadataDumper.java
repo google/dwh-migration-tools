@@ -321,21 +321,17 @@ public class MetadataDumper {
 
   private File getVerifiedFile(String defaultFileName, File file) {
     String fileName = file.getPath();
-    String errorMessage =
-        "A %1$s already exists at %2$s. If you want to create a directory, please"
-            + " provide the path to the directory. If you want to create %2$s.zip,"
-            + " please add the `.zip` extension manually.";
-    boolean zipFileWanted = StringUtils.endsWithIgnoreCase(fileName, ".zip");
+    boolean isZipFile = StringUtils.endsWithIgnoreCase(fileName, ".zip");
 
-    if (file.isDirectory()) {
-      if (zipFileWanted)
-        throw new IllegalStateException(String.format(errorMessage, "folder", fileName));
-      return new File(file, defaultFileName);
-    } else {
-      if (!zipFileWanted)
-        throw new IllegalStateException(String.format(errorMessage, "file", fileName));
-      return file;
-    }
+    if (file.exists() && file.isFile() && !isZipFile)
+      throw new IllegalStateException(
+          String.format(
+              "A file already exists at %1$s. If you want to create a directory, please"
+                  + " provide the path to the directory. If you want to create %1$s.zip,"
+                  + " please add the `.zip` extension manually.",
+              fileName));
+
+    return file.isDirectory() || !isZipFile ? new File(file, defaultFileName) : file;
   }
 
   private void printDumperSummary(Connector connector, File outputFile) {
