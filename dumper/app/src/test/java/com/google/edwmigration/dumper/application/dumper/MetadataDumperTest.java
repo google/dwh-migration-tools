@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import com.google.common.io.Files;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQueryLogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
@@ -33,9 +32,11 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class MetadataDumperTest {
 
+  // TODO(ishmum): `testOverridesZipWithGivenName` with content check
   private File file;
   private MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
-  Connector connector = new HiveMetadataConnector();
+  private final Connector connector = new HiveMetadataConnector();
+  private final String defaultFileName = "dwh-migration-hiveql-metadata.zip";
 
   @After
   public void tearDown() throws IOException {
@@ -53,8 +54,7 @@ public class MetadataDumperTest {
   @Test
   public void testCreatesDefaultOutputZip() throws Exception {
     // Arrange
-    String name = connector.getDefaultFileName(false);
-    file = new File(name);
+    file = new File(defaultFileName);
 
     // Act
     dumper.run("--connector", connector.getName());
@@ -66,9 +66,8 @@ public class MetadataDumperTest {
   @Test
   public void testCreatesDefaultOutputZipInProvidedDirectory() throws Exception {
     // Arrange
-    String name = connector.getDefaultFileName(false);
     String path = "dir";
-    file = new File(path, name);
+    file = new File(path, defaultFileName);
 
     // Act
     dumper.run("--connector", connector.getName(), "--output", path);
@@ -91,24 +90,9 @@ public class MetadataDumperTest {
   }
 
   @Test
-  public void testOverridesZipWithGivenName() throws Exception {
-    // Arrange
-    String name = "test-dir/test.zip";
-    file = new File(name);
-
-    // Act
-    Files.createParentDirs(file);
-    file.createNewFile();
-    dumper.run("--connector", connector.getName(), "--output", name);
-
-    // Assert
-    Assert.assertTrue(file.exists());
-  }
-
-  @Test
   public void testOverridesZipWithDefaultName() throws Exception {
     // Arrange
-    File expectedFile = new File("test-dir/dwh-migration-hiveql-metadata.zip");
+    File expectedFile = new File("test-dir/" + defaultFileName);
     String name = "test-dir";
     file = new File(name);
 
@@ -123,7 +107,7 @@ public class MetadataDumperTest {
   @Test
   public void testCreatesFileInsideFolderNameWithZip() throws Exception {
     // Arrange
-    File expectedFile = new File("dir.zip/dwh-migration-hiveql-metadata.zip");
+    File expectedFile = new File("dir.zip/" + defaultFileName);
     String name = "dir.zip";
     file = new File(name);
 
