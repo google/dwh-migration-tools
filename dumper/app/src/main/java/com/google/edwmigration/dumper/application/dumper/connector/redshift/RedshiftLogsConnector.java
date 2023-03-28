@@ -38,6 +38,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDump
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,7 +194,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
           filePrefix
               + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
               + RedshiftLogsDumpFormat.ZIP_ENTRY_SUFFIX;
-      out.addTask(new JdbcSelectTask(file, query, interval));
+      out.addTask(new JdbcSelectTask(file, query, Optional.of(interval)));
     }
   }
 }
