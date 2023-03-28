@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -151,6 +153,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Void> {
   /* pp */ String getSql(@Nonnull Predicate<? super String> predicate) {
     return getSql(predicate, EXPRESSIONS);
   }
+
   /* pp */ String getSql(Predicate<? super String> predicate, String[] expressions) {
     StringBuilder buf = new StringBuilder("SELECT ");
     String separator = "";
@@ -159,7 +162,9 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Void> {
       buf.append(separator);
       if (predicate.test(expression)) {
         buf.append(expression);
-        if (isQueryTable(expression)) queryTableIncluded = true;
+        if (isQueryTable(expression)) {
+          queryTableIncluded = true;
+        }
       } else {
         buf.append("NULL");
       }
@@ -208,14 +213,16 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Void> {
   @Nonnull
   private Boolean isValid(@Nonnull JdbcTemplate template, @Nonnull String expression) {
     String table = isQueryTable(expression) ? queryTable + " ST" : logTable + " L";
-    String sql = String.format(EXPRESSION_VALIDITY_QUERY, expression, table);
+    String sql = formatQuery(String.format(EXPRESSION_VALIDITY_QUERY, expression, table));
     LOG.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
     try {
       template.query(sql, rs -> {});
       return Boolean.TRUE;
     } catch (DataAccessException e) {
       LOG.info(
-          "Attribute '{}' is absent, will use NULL in projection: {}", expression, e.getMessage());
+          "Projection expression '{}' is not valid, will use NULL in projection: {}",
+          expression,
+          e.getMessage());
       return Boolean.FALSE;
     }
   }

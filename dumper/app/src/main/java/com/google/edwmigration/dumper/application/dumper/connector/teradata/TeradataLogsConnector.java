@@ -67,6 +67,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
   /* pp */ static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
   @VisibleForTesting /* pp */ static final String DEF_QUERY_TABLE = "dbc.DBQLSQLTbl";
 
+  private static final String DEF_UTILITY_TABLE = "dbc.DBQLUtilityTbl";
+
   public TeradataLogsConnector() {
     super("teradata-logs");
   }
@@ -118,9 +120,10 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     String queryTable = DEF_QUERY_TABLE;
     List<String> alternates = arguments.getQueryLogAlternates();
     if (!alternates.isEmpty()) {
-      if (alternates.size() != 2)
+      if (alternates.size() != 2) {
         throw new MetadataDumperUsageException(
             "Alternate query log tables must be given as a pair; you specified: " + alternates);
+      }
       logTable = alternates.get(0);
       queryTable = alternates.get(1);
     }
@@ -129,28 +132,37 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     // because we always iterate over the full 7 trailing days; maybe it's worth
     // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
     // to parse and return an ISO instant, not a database-server-specific format.
-    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
+    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp())) {
       conditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
+    }
 
     // Beware of Teradata SQLSTATE HY000. See issue #4126.
     // Most likely caused by some operation (equality?) being performed on a datum which is too long
     // for a varchar.
     ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
     LOG.info("Exporting query log for " + intervals);
-    SharedState state = new SharedState();
+    SharedState queryLogsState = new SharedState();
+    SharedState utilityLogsState = new SharedState();
     for (ZonedInterval interval : intervals) {
       String file = createFilename(ZIP_ENTRY_PREFIX, interval);
       if (isAssessment) {
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
         out.add(
             new TeradataAssessmentLogsJdbcTask(
-                    file, state, logTable, queryTable, conditions, interval, orderBy)
+                    file, queryLogsState, logTable, queryTable, conditions, interval, orderBy)
                 .withHeaderClass(HeaderForAssessment.class));
         out.addAll(createTimeSeriesTasks(interval));
+        out.add(
+            new TeradataUtilityLogsJdbcTask(
+                createFilename("utility_logs_", interval),
+                utilityLogsState,
+                DEF_UTILITY_TABLE,
+                interval));
       } else {
         conditions.add("L.UserName <> 'DBC'");
         out.add(
-            new TeradataLogsJdbcTask(file, state, logTable, queryTable, conditions, interval)
+            new TeradataLogsJdbcTask(
+                    file, queryLogsState, logTable, queryTable, conditions, interval)
                 .withHeaderClass(Header.class));
       }
     }
