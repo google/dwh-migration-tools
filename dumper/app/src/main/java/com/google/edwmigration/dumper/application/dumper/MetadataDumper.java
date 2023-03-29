@@ -315,21 +315,24 @@ public class MetadataDumper {
     String defaultFileName = connector.getDefaultFileName(arguments.isAssessment());
     return arguments
         .getOutputFile()
-        .map(
-            file -> {
-              String fileName = file.getPath();
-              if (StringUtils.endsWithIgnoreCase(fileName, ".zip")) return file;
-              if (file.isFile()) {
-                throw new IllegalStateException(
-                    String.format(
-                        "A file already exists at %1$s. "
-                            + "If you want to create a directory, please provide the path to the directory. "
-                            + "If you want to create %1$s.zip, please add the `.zip` extension manually.",
-                        fileName));
-              }
-              return new File(file, defaultFileName);
-            })
+        .map(file -> getVerifiedFile(defaultFileName, file))
         .orElseGet(() -> new File(defaultFileName));
+  }
+
+  private File getVerifiedFile(String defaultFileName, File file) {
+    String fileName = file.getPath();
+    boolean isZipFile = StringUtils.endsWithIgnoreCase(fileName, ".zip");
+
+    if (file.isFile() && !isZipFile) {
+      throw new IllegalStateException(
+          String.format(
+              "A file already exists at %1$s. If you want to create a directory, please"
+                  + " provide the path to the directory. If you want to create %1$s.zip,"
+                  + " please add the `.zip` extension manually.",
+              fileName));
+    }
+
+    return file.isDirectory() || !isZipFile ? new File(file, defaultFileName) : file;
   }
 
   private void printDumperSummary(Connector connector, File outputFile) {
