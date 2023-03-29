@@ -20,10 +20,11 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -33,32 +34,54 @@ import com.google.edwmigration.dumper.application.dumper.utils.SqlBuilder;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataMetadataDumpFormat;
 import java.util.List;
-import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.OptionalLong;
+import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 
 /** @author miguel */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Teradata.")
 @RespectsArgumentDatabasePredicate
 @RespectsArgumentAssessment
-@RespectsInput(
-    order = 450,
-    arg = ConnectorArguments.OPT_TERADATA_MAX_TABLESIZEV_ROWS,
-    description = ConnectorArguments.TERADATA_MAX_TABLE_SIZE_V_ROWS_DESCRIPTION)
-@RespectsInput(
-    order = 450,
-    arg = ConnectorArguments.OPT_TERADATA_MAX_DATABASESV_USER_ROWS,
-    description = ConnectorArguments.TERADATA_MAX_DATABASES_V_USER_ROWS_DESCRIPTION)
-@RespectsInput(
-    order = 450,
-    arg = ConnectorArguments.OPT_TERADATA_MAX_DATABASESV_DB_ROWS,
-    description = ConnectorArguments.TERADATA_MAX_DATABASES_V_DB_ROWS_DESCRIPTION)
 public class TeradataMetadataConnector extends AbstractTeradataConnector
     implements MetadataConnector, TeradataMetadataDumpFormat {
 
-  @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataMetadataConnector.class);
+  public enum TeradataMetadataConnectorProperties implements ConnectorProperty {
+    TABLE_SIZE_V_MAX_ROWS(
+        "tablesizev.max-rows", "Max number of rows to extract from dbc.TableSizeV table."),
+    DISK_SPACE_V_MAX_ROWS(
+        "diskspacev.max-rows", "Max number of rows to extract from dbc.DiskSpaceV table."),
+    DATABASES_V_USERS_MAX_ROWS(
+        "databasesv.users.max-rows",
+        "Max number of user rows (rows with DBKind='U') to extract from dbc.DatabasesV table."),
+    DATABASES_V_DBS_MAX_ROWS(
+        "databasesv.dbs.max-rows",
+        "Max number of database rows (rows with DBKind='D') to extract from dbc.DatabasesV table.");
+
+    private final String name;
+    private final String description;
+
+    TeradataMetadataConnectorProperties(String name, String description) {
+      this.name = "teradata.metadata." + name;
+      this.description = description;
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
+  }
+
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return TeradataMetadataConnectorProperties.class;
+  }
 
   public TeradataMetadataConnector() {
     super("teradata");
@@ -68,8 +91,8 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
    * QuotedIdentifiers are needed to make the queries work in PG.
    * It looks like quoted teradata identifiers are also case insensitive, so this should be ok. */
   @Override
-  public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
-
+  public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
     String whereDatabaseNameClause =
         new SqlBuilder()
             .withWhereInVals("\"DatabaseName\"", arguments.getDatabases())
@@ -166,11 +189,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
               TaskCategory.OPTIONAL,
               "SELECT %s FROM DBC.AllTempTablesVX" + whereBDatabaseNameClause + " ;"));
 
-      out.add(
-          new TeradataJdbcSelectTask(
-              DiskSpaceVFormat.ZIP_ENTRY_NAME,
-              TaskCategory.OPTIONAL,
-              "SELECT %s FROM DBC.DiskSpaceV" + whereDataBaseNameClause + " ;"));
+      out.add(createTaskForDiskSpaceV(whereDataBaseNameClause, arguments));
 
       out.add(
           new TeradataJdbcSelectTask(
@@ -193,10 +212,13 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   }
 
   private TeradataJdbcSelectTask createTaskForDatabasesV(
-      String whereDatabaseNameClause, ConnectorArguments arguments) {
+      String whereDatabaseNameClause, ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
     StringBuilder query = new StringBuilder();
-    Optional<Long> userRows = arguments.getTeradataMaxDatabasesVUserRows();
-    Optional<Long> dbRows = arguments.getTeradataMaxDatabasesVDbRows();
+    OptionalLong userRows =
+        parseMaxRows(arguments, TeradataMetadataConnectorProperties.DATABASES_V_USERS_MAX_ROWS);
+    OptionalLong dbRows =
+        parseMaxRows(arguments, TeradataMetadataConnectorProperties.DATABASES_V_DBS_MAX_ROWS);
     query.append("SELECT %s FROM ");
     if (!userRows.isPresent() && !dbRows.isPresent()) {
       query.append(" DBC.DatabasesV ").append(whereDatabaseNameClause);
@@ -221,7 +243,8 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   }
 
   private TeradataJdbcSelectTask createTaskForTableSizeV(
-      String whereDataBaseNameClause, ConnectorArguments arguments) {
+      String whereDataBaseNameClause, ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
     StringBuilder query = new StringBuilder();
     // TableSizeV contains a row per each VProc/AMP, so it can grow significantly for large dbs.
     // Hence, we aggregate before dumping.
@@ -229,7 +252,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     // https://docs.teradata.com/r/Teradata-VantageTM-Data-Dictionary/March-2019/Views-Reference/TableSizeV-X/Examples-Using-TableSizeV
     appendSelect(
         query,
-        arguments.getTeradataMaxTableSizeVRows(),
+        parseMaxRows(arguments, TeradataMetadataConnectorProperties.TABLE_SIZE_V_MAX_ROWS),
         " DataBaseName, AccountName, TableName, SUM(CurrentPerm) CurrentPerm, SUM(PeakPerm) PeakPerm FROM DBC.TableSizeV "
             + whereDataBaseNameClause
             + " GROUP BY 1,2,3 ",
@@ -237,6 +260,46 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     query.append(';');
     return new TeradataJdbcSelectTask(
         TableSizeVFormat.ZIP_ENTRY_NAME, TaskCategory.OPTIONAL, formatQuery(query.toString()));
+  }
+
+  private TeradataJdbcSelectTask createTaskForDiskSpaceV(
+      String whereDataBaseNameClause, ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    StringBuilder query = new StringBuilder();
+    query.append("SELECT %s FROM (");
+    appendSelect(
+        query,
+        parseMaxRows(arguments, TeradataMetadataConnectorProperties.DISK_SPACE_V_MAX_ROWS),
+        " * FROM DBC.DiskSpaceV " + whereDataBaseNameClause,
+        " ORDER BY CurrentPerm DESC ");
+    query.append(") AS t;");
+    return new TeradataJdbcSelectTask(
+        DiskSpaceVFormat.ZIP_ENTRY_NAME, TaskCategory.OPTIONAL, formatQuery(query.toString()));
+  }
+
+  private static OptionalLong parseMaxRows(
+      ConnectorArguments arguments, TeradataMetadataConnectorProperties property)
+      throws MetadataDumperUsageException {
+    String stringValue = arguments.getDefinition(property);
+    if (StringUtils.isEmpty(stringValue)) {
+      return OptionalLong.empty();
+    }
+    long value;
+    try {
+      value = Long.parseLong(stringValue);
+    } catch (NumberFormatException ex) {
+      throw new MetadataDumperUsageException(
+          String.format(
+              "ERROR: Option '%s' accepts only positive integers. Actual: '%s'.",
+              property.name, stringValue));
+    }
+    if (value <= 0) {
+      throw new MetadataDumperUsageException(
+          String.format(
+              "ERROR: Option '%s' accepts only positive integers. Actual: '%s'.",
+              property.name, stringValue));
+    }
+    return OptionalLong.of(value);
   }
 
   private static String concatWhere(String whereClause, String condition) {
@@ -251,7 +314,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   }
 
   private static void appendSelect(
-      StringBuilder query, Optional<Long> maxRowCountMaybe, String selectBody, String orderBy) {
+      StringBuilder query, OptionalLong maxRowCountMaybe, String selectBody, String orderBy) {
     query.append(" SELECT ");
     maxRowCountMaybe.ifPresent(
         maxRowCount -> query.append(" TOP ").append(maxRowCount).append(' '));
