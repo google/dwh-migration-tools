@@ -474,14 +474,14 @@ requests = ["requests (>=2.20.0,<3.0.0dev)"]
 
 [[package]]
 name = "google-cloud-bigquery-migration"
-version = "0.7.2"
-description = ""
+version = "0.11.0"
+description = "Google Cloud Bigquery Migration API client library"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google-cloud-bigquery-migration-0.7.2.tar.gz", hash = "sha256:655d94138e6f241f4e6c7cefae18acca5a6be63c314b1bbfa7fb6d1c5884b9cd"},
-    {file = "google_cloud_bigquery_migration-0.7.2-py2.py3-none-any.whl", hash = "sha256:0b1d149c7b8c8738e3629b2854a3fd4263cc87d2729b6070305b323bf5579d57"},
+    {file = "google-cloud-bigquery-migration-0.11.0.tar.gz", hash = "sha256:79fc23937a9392fa9dad67dcd942486a8fe94d7974287ec427bbd93dec13f947"},
+    {file = "google_cloud_bigquery_migration-0.11.0-py2.py3-none-any.whl", hash = "sha256:76a47675d9c8157494bfdb4e05d8f90fc2823fbb3df1c476f644bc7ec94b1f6a"},
 ]
 
 [package.dependencies]
