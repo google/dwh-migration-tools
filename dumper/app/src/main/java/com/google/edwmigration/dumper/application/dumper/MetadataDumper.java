@@ -323,13 +323,14 @@ public class MetadataDumper {
     String fileName = file.getPath();
     boolean isZipFile = StringUtils.endsWithIgnoreCase(fileName, ".zip");
 
-    if (file.isFile() && !isZipFile)
+    if (file.isFile() && !isZipFile) {
       throw new IllegalStateException(
           String.format(
               "A file already exists at %1$s. If you want to create a directory, please"
                   + " provide the path to the directory. If you want to create %1$s.zip,"
                   + " please add the `.zip` extension manually.",
               fileName));
+    }
 
     return file.isDirectory() || !isZipFile ? new File(file, defaultFileName) : file;
   }
