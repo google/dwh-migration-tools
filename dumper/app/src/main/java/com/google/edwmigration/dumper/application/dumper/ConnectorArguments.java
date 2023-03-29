@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
@@ -557,7 +559,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   @Nonnull
   public List<String> getDatabases() {
-    return getOptions().valuesOf(optionDatabase);
+    return getOptions().valuesOf(optionDatabase).stream()
+        .map(String::trim)
+        .filter(StringUtils::isNotEmpty)
+        .collect(toImmutableList());
   }
 
   @Nonnull
