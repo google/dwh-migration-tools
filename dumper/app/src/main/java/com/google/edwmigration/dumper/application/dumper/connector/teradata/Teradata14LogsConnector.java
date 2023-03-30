@@ -18,9 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
-import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
@@ -30,29 +27,19 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
-import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** */
 @AutoService({Connector.class, LogsConnector.class})
@@ -60,8 +47,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
-public class Teradata14LogsConnector extends AbstractTeradataConnector
-    implements LogsConnector, TeradataLogsDumpFormat {
+public class Teradata14LogsConnector extends TeradataLogsConnector {
 
   private static final Logger LOG = LoggerFactory.getLogger(Teradata14LogsConnector.class);
 
@@ -84,95 +70,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     super("teradata14-logs");
   }
 
-  private abstract static class Teradata14LogsJdbcTask extends AbstractJdbcTask<Void> {
-
-    protected static String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
-
-    protected final SharedState state;
-    protected final String logTable;
-    protected final String queryTable;
-    protected final List<String> conditions;
-    protected final ZonedInterval interval;
-    protected final List<String> orderBy;
-
-    public Teradata14LogsJdbcTask(
-        @Nonnull String targetPath,
-        SharedState state,
-        String logTable,
-        String queryTable,
-        List<String> conditions,
-        ZonedInterval interval) {
-      this(targetPath, state, logTable, queryTable, conditions, interval, Collections.emptyList());
-    }
-
-    protected Teradata14LogsJdbcTask(
-        @Nonnull String targetPath,
-        SharedState state,
-        String logTable,
-        String queryTable,
-        List<String> conditions,
-        ZonedInterval interval,
-        List<String> orderBy) {
-      super(targetPath);
-      this.state = Preconditions.checkNotNull(state, "SharedState was null.");
-      this.logTable = logTable;
-      this.queryTable = queryTable;
-      this.conditions = conditions;
-      this.interval = interval;
-      this.orderBy = orderBy;
-    }
-
-    @Override
-    protected Void doInConnection(
-        TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
-        throws SQLException {
-      String sql = getSql(jdbcHandle);
-      ResultSetExtractor<Void> rse = newCsvResultSetExtractor(sink, -1);
-      return doSelect(connection, rse, sql);
-    }
-
-    @Nonnull
-    private String getSql(@Nonnull JdbcHandle handle) {
-      Function<String, Boolean> validator =
-          expression -> isValid(handle.getJdbcTemplate(), expression);
-      Predicate<String> predicate =
-          expression -> state.expressionValidity.computeIfAbsent(expression, validator);
-      String sql = getSql(predicate);
-      // LOG.debug("SQL is " + sql);
-      return sql;
-    }
-
-    @Nonnull
-    protected abstract String getSql(@Nonnull Predicate<? super String> predicate);
-
-    /**
-     * Runs a test query to check whether a given projection expression is legal on this Teradata
-     * instance.
-     */
-    @Nonnull
-    private Boolean isValid(@Nonnull JdbcTemplate template, @Nonnull String expression) {
-      String table = isQueryTable(expression) ? queryTable + " ST" : logTable + " L";
-      String sql = String.format(EXPRESSION_VALIDITY_QUERY, expression, table);
-      LOG.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
-      try {
-        template.query(sql, rs -> {});
-        return Boolean.TRUE;
-      } catch (DataAccessException e) {
-        LOG.info(
-            "Attribute '{}' is absent, will use NULL in projection: {}",
-            expression,
-            e.getMessage());
-        return Boolean.FALSE;
-      }
-    }
-
-    @Override
-    public String toString() {
-      return getSql(Predicates.alwaysTrue());
-    }
-  }
-
-  private static class LSqlQueryFactory extends Teradata14LogsJdbcTask {
+  private static class LSqlQueryFactory extends TeradataLogsJdbcTask {
 
     public LSqlQueryFactory(
         String targetPath,
@@ -186,7 +84,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
 
     @Override
     @Nonnull
-    protected String getSql(@Nonnull Predicate<? super String> predicate) {
+    String getSql(@Nonnull Predicate<? super String> predicate) {
       StringBuilder buf = new StringBuilder("SELECT ");
 
       String separator = "";
@@ -217,7 +115,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     }
   }
 
-  private static class LogQueryFactory extends Teradata14LogsJdbcTask {
+  private static class LogQueryFactory extends TeradataLogsJdbcTask {
 
     public LogQueryFactory(
         String targetPath,
@@ -231,7 +129,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
 
     @Override
     @Nonnull
-    protected String getSql(@Nonnull Predicate<? super String> predicate) {
+    String getSql(@Nonnull Predicate<? super String> predicate) {
       StringBuilder buf = new StringBuilder("SELECT ");
 
       String separator = "";
