@@ -110,7 +110,10 @@ public class BigQueryAccessor {
       out.setStatus(JobStatus.fromPb(jobPb.getStatus()));
     }
     if (jobPb.getStatistics() != null) {
-      out.setStatistics(JobStatistics_fromPb(jobPb));
+      JobStatistics statistics = JobStatistics_fromPb(jobPb);
+      if (statistics != null) {
+        out.setStatistics(statistics);
+      }
     }
     out.setUserEmail(jobPb.getUserEmail());
     if (jobPb.getConfiguration() != null) {
