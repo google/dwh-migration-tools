@@ -98,8 +98,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                     String.format(
                         "SELECT %%s FROM DBC.%s WHERE TheTimestamp >= %s AND TheTimestamp < %s",
                         tableName,
-                        interval.getStartUTC().toInstant().getEpochSecond(),
-                        interval.getEndInclusiveUTC().toInstant().getEpochSecond())))
+                        interval.getStart().toEpochSecond(),
+                        interval.getEndExclusive().toEpochSecond())))
         .collect(toImmutableList());
   }
 

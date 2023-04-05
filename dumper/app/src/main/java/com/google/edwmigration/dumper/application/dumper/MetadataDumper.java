@@ -16,10 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_TERADATA_MAX_DATABASESV_DB_ROWS;
-import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_TERADATA_MAX_DATABASESV_USER_ROWS;
-import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_TERADATA_MAX_TABLESIZEV_ROWS;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
@@ -53,7 +49,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -96,35 +91,6 @@ public class MetadataDumper {
     return new String(out);
   }
 
-  private static class ArgumentValidationException extends RuntimeException {
-    ArgumentValidationException(String message) {
-      super(message);
-    }
-  }
-
-  private static void validateArgumentGreaterThan(
-      Optional<Long> valueMaybe, long minValue, String argumentName) {
-    valueMaybe.ifPresent(
-        value -> {
-          if (value <= minValue) {
-            throw new ArgumentValidationException(
-                String.format(
-                    "Argument for '%s' option must be greater than 0. Actual: '%s'.",
-                    argumentName, value));
-          }
-        });
-  }
-
-  private static void validateArguments(ConnectorArguments arguments)
-      throws ArgumentValidationException {
-    validateArgumentGreaterThan(
-        arguments.getTeradataMaxTableSizeVRows(), 0, OPT_TERADATA_MAX_TABLESIZEV_ROWS);
-    validateArgumentGreaterThan(
-        arguments.getTeradataMaxDatabasesVUserRows(), 0, OPT_TERADATA_MAX_DATABASESV_USER_ROWS);
-    validateArgumentGreaterThan(
-        arguments.getTeradataMaxDatabasesVDbRows(), 0, OPT_TERADATA_MAX_DATABASESV_DB_ROWS);
-  }
-
   public void run(@Nonnull String... args) throws Exception {
     ConnectorArguments arguments = new ConnectorArguments(args);
 
@@ -142,13 +108,6 @@ public class MetadataDumper {
               + " not supported; available are "
               + CONNECTORS.keySet()
               + ".");
-      return;
-    }
-
-    try {
-      validateArguments(arguments);
-    } catch (ArgumentValidationException ex) {
-      LOG.error("ERROR: Validation failed. {}", ex.getMessage());
       return;
     }
 
@@ -315,21 +274,24 @@ public class MetadataDumper {
     String defaultFileName = connector.getDefaultFileName(arguments.isAssessment());
     return arguments
         .getOutputFile()
-        .map(
-            file -> {
-              String fileName = file.getPath();
-              if (StringUtils.endsWithIgnoreCase(fileName, ".zip")) return file;
-              if (file.isFile()) {
-                throw new IllegalStateException(
-                    String.format(
-                        "A file already exists at %1$s. "
-                            + "If you want to create a directory, please provide the path to the directory. "
-                            + "If you want to create %1$s.zip, please add the `.zip` extension manually.",
-                        fileName));
-              }
-              return new File(file, defaultFileName);
-            })
+        .map(file -> getVerifiedFile(defaultFileName, file))
         .orElseGet(() -> new File(defaultFileName));
+  }
+
+  private File getVerifiedFile(String defaultFileName, File file) {
+    String fileName = file.getPath();
+    boolean isZipFile = StringUtils.endsWithIgnoreCase(fileName, ".zip");
+
+    if (file.isFile() && !isZipFile) {
+      throw new IllegalStateException(
+          String.format(
+              "A file already exists at %1$s. If you want to create a directory, please"
+                  + " provide the path to the directory. If you want to create %1$s.zip,"
+                  + " please add the `.zip` extension manually.",
+              fileName));
+    }
+
+    return file.isDirectory() || !isZipFile ? new File(file, defaultFileName) : file;
   }
 
   private void printDumperSummary(Connector connector, File outputFile) {

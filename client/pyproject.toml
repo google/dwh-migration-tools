@@ -10,7 +10,7 @@ bqms-run = 'bqms_run.main:main'
 [tool.poetry.dependencies]
 python = "^3.7.2"
 google-cloud-storage = "^2.5.0"
-google-cloud-bigquery-migration = "^0.7.0"
+google-cloud-bigquery-migration = "^0.11.0"
 PyYAML = "^6.0"
 marshmallow = "^3.17.1"
 cloudpathlib = "^0.10.0"
