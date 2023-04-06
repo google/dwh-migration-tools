@@ -22,7 +22,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
-import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.SharedState;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
