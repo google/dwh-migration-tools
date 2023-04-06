@@ -1,0 +1,73 @@
+/*
+ * Copyright 2022-2023 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.google.edwmigration.dumper.application.dumper.task;
+
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
+import java.io.IOException;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+@RunWith(JUnit4.class)
+public class SummaryTest {
+
+  private final ZonedDateTime SEVEN_DAYS_AGO = getTimeSubtractingDays(7);
+  private final ZonedDateTime FIVE_DAYS_AGO = getTimeSubtractingDays(5);
+  private final ZonedDateTime THREE_DAYS_AGO = getTimeSubtractingDays(3);
+  private final ZonedDateTime ONE_DAY_AGO = getTimeSubtractingDays(1);
+
+  @Test
+  public void testCombine_CombinesTwoSummaries() throws IOException {
+    // Arrange
+    ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
+    ZonedInterval latestInterval = new ZonedInterval(THREE_DAYS_AGO, ONE_DAY_AGO);
+    ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
+    Summary s1 = new Summary(5, earliestInterval);
+    Summary s2 = new Summary(12, latestInterval);
+    Summary expectedSummary = new Summary(17, expectedInterval);
+
+    // Act
+    Summary resultingSummary = Summary.COMBINER.apply(s1, s2);
+
+    //  Assert
+    Assert.assertEquals(expectedSummary, resultingSummary);
+  }
+
+  @Test
+  public void testCombine_CombinesEmptyAndNonEmptySummary() throws IOException {
+    // Arrange
+    ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
+    Summary s1 = new Summary(10, null);
+    Summary s2 = new Summary(12, expectedInterval);
+    Summary expectedSummary = new Summary(22, expectedInterval);
+
+    // Act
+    Summary resultingSummary = Summary.COMBINER.apply(s1, s2);
+
+    //  Assert
+    Assert.assertEquals(expectedSummary, resultingSummary);
+  }
+
+  private static ZonedDateTime getTimeSubtractingDays(int days) {
+    ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
+    return nowAtUTC.minusDays(days).truncatedTo(ChronoUnit.HOURS);
+  }
+}

@@ -57,4 +57,16 @@ public class Summary {
   public Optional<ZonedInterval> interval() {
     return interval;
   }
+
+  @Override
+  public String toString() {
+    return "Summary(" + rowCount() + ", " + interval() + ")";
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Summary)) return false;
+    Summary summary = (Summary) obj;
+    return summary.rowCount() == rowCount() && summary.interval().equals(interval());
+  }
 }
