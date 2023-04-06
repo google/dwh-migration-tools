@@ -313,7 +313,7 @@ public class MetadataDumper {
       DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
       if (summary.rowCount() > 0) {
         List<String> lines = new ArrayList<>();
-        lines.add("Logs have been saved to" + outputFile);
+        lines.add("Logs have been saved to " + outputFile);
         summary
             .interval()
             .ifPresent(
