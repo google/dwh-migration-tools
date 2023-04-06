@@ -87,7 +87,6 @@ public class ZonedInterval {
   public boolean equals(Object obj) {
     if (!(obj instanceof ZonedInterval)) return false;
     ZonedInterval interval = (ZonedInterval) obj;
-    return interval.getStart().isEqual(getStart())
-        && interval.getEndExclusive().isEqual(getEndExclusive());
+    return interval.start.isEqual(start) && interval.endExclusive.isEqual(endExclusive);
   }
 }

@@ -37,7 +37,7 @@ public class ZonedIntervalTest {
   private final ZonedDateTime ONE_DAY_AGO = getTimeSubtractingDays(1);
 
   @Test
-  public void test_equals_trueWhenStartAndEndTimeAreEqual() {
+  public void equals_trueWhenStartAndEndTimeAreEqual() {
     // Arrange
     ZonedInterval i1 = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
     ZonedInterval i2 = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
@@ -47,7 +47,7 @@ public class ZonedIntervalTest {
   }
 
   @Test
-  public void test_equals_falseWhenStartTimeIsDifferent() {
+  public void equals_falseWhenStartTimeIsDifferent() {
     // Arrange
     ZonedInterval i1 = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
     ZonedInterval i2 = new ZonedInterval(FIVE_DAYS_AGO, THREE_DAYS_AGO);
@@ -57,7 +57,7 @@ public class ZonedIntervalTest {
   }
 
   @Test
-  public void test_equals_falseWhenEndTimeIsDifferent() {
+  public void equals_falseWhenEndTimeIsDifferent() {
     // Arrange
     ZonedInterval i1 = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
     ZonedInterval i2 = new ZonedInterval(SEVEN_DAYS_AGO, THREE_DAYS_AGO);
@@ -67,7 +67,7 @@ public class ZonedIntervalTest {
   }
 
   @Test
-  public void test_inclusiveEnd_isSmallerThanExclusiveEnd() {
+  public void inclusiveEnd_isSmallerThanExclusiveEnd() {
     // Arrange
     ZonedInterval interval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
 
@@ -78,7 +78,7 @@ public class ZonedIntervalTest {
   }
 
   @Test
-  public void test_span_combinesDisjointInterval() {
+  public void span_combinesDisjointInterval() {
     // Arrange
     ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
     ZonedInterval latestInterval = new ZonedInterval(THREE_DAYS_AGO, ONE_DAY_AGO);
@@ -92,7 +92,7 @@ public class ZonedIntervalTest {
   }
 
   @Test
-  public void test_span_combinesOverlappingInterval() {
+  public void span_combinesOverlappingInterval() {
     // Arrange
     ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, THREE_DAYS_AGO);
     ZonedInterval latestInterval = new ZonedInterval(FIVE_DAYS_AGO, ONE_DAY_AGO);
@@ -106,7 +106,7 @@ public class ZonedIntervalTest {
   }
 
   @Test
-  public void test_span_combinesSubsetInterval() {
+  public void span_combinesSubsetInterval() {
     // Arrange
     ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
     ZonedInterval latestInterval = new ZonedInterval(FIVE_DAYS_AGO, THREE_DAYS_AGO);
@@ -120,7 +120,7 @@ public class ZonedIntervalTest {
   }
 
   @Test
-  public void test_intervalCreationValidation() {
+  public void intervalCreationValidation() {
     // Arrange & Act
     IllegalArgumentException exception =
         Assert.assertThrows(
