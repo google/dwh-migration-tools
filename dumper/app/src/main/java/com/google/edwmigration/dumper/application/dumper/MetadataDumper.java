@@ -30,6 +30,8 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
@@ -45,6 +47,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.sql.SQLException;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -260,7 +264,7 @@ public class MetadataDumper {
       }
 
       printTaskResults(state);
-      printDumperSummary(connector, outputFile);
+      printDumperSummary(connector, outputFile, arguments, state);
       checkRequiredTaskSuccess(state, outputFile);
       logStatusSummary(state);
       System.out.println(STARS);
@@ -294,11 +298,39 @@ public class MetadataDumper {
     return file.isDirectory() || !isZipFile ? new File(file, defaultFileName) : file;
   }
 
-  private void printDumperSummary(Connector connector, File outputFile) {
+  private void printDumperSummary(
+      Connector connector, File outputFile, ConnectorArguments arguments, TaskSetState.Impl state) {
     if (connector instanceof MetadataConnector) {
       log("Metadata has been saved to " + outputFile);
     } else if (connector instanceof LogsConnector) {
-      log("Logs have been saved to " + outputFile);
+      Summary summary =
+          state.getTaskResultMap().entrySet().stream()
+              .filter(entry -> entry.getKey() instanceof JdbcSelectTask)
+              .map(entry -> (Summary) entry.getValue().getValue())
+              .reduce(Summary.COMBINER)
+              .orElse(Summary.EMPTY);
+
+      DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
+      if (summary.rowCount() > 0) {
+        List<String> lines = new ArrayList<>();
+        lines.add("Logs have been saved to" + outputFile);
+        summary
+            .interval()
+            .ifPresent(
+                interval -> {
+                  lines.add("Earliest row found at " + formatter.format(interval.getStart()));
+                  lines.add("Latest row found at " + formatter.format(interval.getEndExclusive()));
+                });
+        lines.add("Total number of rows dumped " + summary.rowCount());
+        log(lines);
+      } else {
+        log(
+            String.format(
+                "Warning: No rows were found in the range of %s - %s. Please retry after"
+                    + " increasing the time range.",
+                formatter.format(arguments.getQueryLogStart()),
+                formatter.format(arguments.getQueryLogEndOrDefault())));
+      }
     }
   }
 
