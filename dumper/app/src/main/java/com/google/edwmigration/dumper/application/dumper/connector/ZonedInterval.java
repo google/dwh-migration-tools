@@ -93,9 +93,6 @@ public class ZonedInterval {
 
   @Override
   public int hashCode() {
-    return new HashCodeBuilder()
-        .append(start.hashCode())
-        .append(endExclusive.hashCode())
-        .build();
+    return new HashCodeBuilder().append(start.hashCode()).append(endExclusive.hashCode()).build();
   }
 }
