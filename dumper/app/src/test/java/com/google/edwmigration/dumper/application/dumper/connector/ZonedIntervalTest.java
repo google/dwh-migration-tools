@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.time.ZoneOffset;
@@ -36,7 +37,37 @@ public class ZonedIntervalTest {
   private final ZonedDateTime ONE_DAY_AGO = getTimeSubtractingDays(1);
 
   @Test
-  public void testInclusiveEndIsSmallerThanExclusiveEnd() {
+  public void equals_trueWhenStartAndEndTimeAreEqual() {
+    // Arrange
+    ZonedInterval i1 = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
+    ZonedInterval i2 = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
+
+    // Assert
+    assertEquals("Intervals should be equal", i1, i2);
+  }
+
+  @Test
+  public void equals_falseWhenStartTimeIsDifferent() {
+    // Arrange
+    ZonedInterval i1 = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
+    ZonedInterval i2 = new ZonedInterval(FIVE_DAYS_AGO, THREE_DAYS_AGO);
+
+    // Assert
+    assertNotEquals("Intervals should not be equal", i1, i2);
+  }
+
+  @Test
+  public void equals_falseWhenEndTimeIsDifferent() {
+    // Arrange
+    ZonedInterval i1 = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
+    ZonedInterval i2 = new ZonedInterval(SEVEN_DAYS_AGO, THREE_DAYS_AGO);
+
+    // Assert
+    assertNotEquals("Intervals should not be equal", i1, i2);
+  }
+
+  @Test
+  public void inclusiveEnd_isSmallerThanExclusiveEnd() {
     // Arrange
     ZonedInterval interval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
 
@@ -47,49 +78,49 @@ public class ZonedIntervalTest {
   }
 
   @Test
-  public void testDisjointInterval() {
+  public void span_combinesDisjointInterval() {
     // Arrange
     ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
     ZonedInterval latestInterval = new ZonedInterval(THREE_DAYS_AGO, ONE_DAY_AGO);
+    ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
 
     // Act
-    ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
+    ZonedInterval resultingInterval = earliestInterval.span(latestInterval);
 
     // Assert
-    assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
-    assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
+    assertEquals(expectedInterval, resultingInterval);
   }
 
   @Test
-  public void testOverlappingInterval() {
+  public void span_combinesOverlappingInterval() {
     // Arrange
     ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, THREE_DAYS_AGO);
     ZonedInterval latestInterval = new ZonedInterval(FIVE_DAYS_AGO, ONE_DAY_AGO);
+    ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
 
     // Act
-    ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
+    ZonedInterval resultingInterval = earliestInterval.span(latestInterval);
 
     // Assert
-    assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
-    assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
+    assertEquals(expectedInterval, resultingInterval);
   }
 
   @Test
-  public void testSubsetInterval() {
+  public void span_combinesSubsetInterval() {
     // Arrange
     ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
     ZonedInterval latestInterval = new ZonedInterval(FIVE_DAYS_AGO, THREE_DAYS_AGO);
+    ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
 
     // Act
-    ZonedInterval obtainedInterval = earliestInterval.span(latestInterval);
+    ZonedInterval resultingInterval = earliestInterval.span(latestInterval);
 
     // Assert
-    assertEquals("Wrong start time", SEVEN_DAYS_AGO, obtainedInterval.getStart());
-    assertEquals("Wrong end time", ONE_DAY_AGO, obtainedInterval.getEndExclusive());
+    assertEquals(expectedInterval, resultingInterval);
   }
 
   @Test
-  public void testIntervalCreationValidation() {
+  public void intervalCreationValidation() {
     // Arrange & Act
     IllegalArgumentException exception =
         Assert.assertThrows(

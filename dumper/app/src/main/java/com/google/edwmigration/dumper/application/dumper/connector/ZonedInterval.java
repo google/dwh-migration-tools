@@ -23,6 +23,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * A zoned interval represents an interval of time delimited by an inclusive start zoned datetime
@@ -81,5 +82,17 @@ public class ZonedInterval {
   @Override
   public String toString() {
     return "[" + getStart() + ".." + getEndExclusive() + ")";
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof ZonedInterval)) return false;
+    ZonedInterval otherInterval = (ZonedInterval) obj;
+    return otherInterval.start.isEqual(start) && otherInterval.endExclusive.isEqual(endExclusive);
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder().append(start.hashCode()).append(endExclusive.hashCode()).build();
   }
 }
