@@ -28,8 +28,6 @@ SQL files to/from GCS.
 ```shell
 # Clone the repo.
 git clone https://github.com/google/dwh-migration-tools.git
-# required dependency
-sudo apt install -y libicu-dev
 
 # Copy the example project directory to a project directory of your own 
 # (preferably outside of the source tree to make pulling source updates easier).
@@ -65,7 +63,9 @@ export BQMS_GCS_BUCKET="<YOUR_GCS_BUCKET>"
 
 ## Installation
 
-Prerequisites: Python >= 3.7.2.
+Prerequisites:
+- Python >= 3.7.2.
+- package `pkg-config` and `libicu-dev`
 
 Preferred OS: Linux or MacOS.
 
