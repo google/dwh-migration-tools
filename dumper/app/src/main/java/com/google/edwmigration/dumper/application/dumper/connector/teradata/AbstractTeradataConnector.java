@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -36,7 +37,11 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
@@ -76,6 +81,10 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractTeradataConnector.class);
 
   public static final int OPT_PORT_DEFAULT = 1025;
+  protected static final DateTimeFormatter SQL_FORMAT =
+      DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
+  @VisibleForTesting /* pp */ static final String DEF_LOG_TABLE = "dbc.DBQLogTbl";
+  @VisibleForTesting /* pp */ static final String DEF_QUERY_TABLE = "dbc.DBQLSQLTbl";
 
   protected static class TeradataJdbcSelectTask extends JdbcSelectTask {
 
@@ -130,6 +139,19 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
       ResultSetExtractor<Void> rse = newCountedResultSetExtractor(sink, connection);
       return doSelect(connection, rse, getSql());
     }
+  }
+
+  /** This is shared between all instances of TeradataLogsJdbcTask. */
+  protected static class SharedState {
+    /**
+     * Whether a particular expression is valid against the particular target Teradata version. This
+     * is a concurrent Map of immutable objects, so is threadsafe overall.
+     */
+    protected final ConcurrentMap<String, Boolean> expressionValidity = new ConcurrentHashMap<>();
+  }
+
+  protected static boolean isQueryTable(@Nonnull String expression) {
+    return expression.startsWith("ST.");
   }
 
   /* pp */ AbstractTeradataConnector(@Nonnull String name) {

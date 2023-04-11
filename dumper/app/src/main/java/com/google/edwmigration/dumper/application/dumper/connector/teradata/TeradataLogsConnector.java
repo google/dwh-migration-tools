@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.auto.service.AutoService;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -41,8 +40,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -62,30 +59,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     implements LogsConnector, TeradataLogsDumpFormat {
 
   private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
-
-  @VisibleForTesting /* pp */ static final String DEF_LOG_TABLE = "dbc.DBQLogTbl";
-  /* pp */ static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
-  @VisibleForTesting /* pp */ static final String DEF_QUERY_TABLE = "dbc.DBQLSQLTbl";
+  private static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
 
   private static final String DEF_UTILITY_TABLE = "dbc.DBQLUtilityTbl";
 
   public TeradataLogsConnector() {
     super("teradata-logs");
-  }
-
-  // to proxy for Terdata14LogsConnector
-  protected TeradataLogsConnector(@Nonnull String name) {
-    super(name);
-  }
-
-  /** This is shared between all instances of TeradataLogsJdbcTask. */
-  protected static class SharedState {
-
-    /**
-     * Whether a particular expression is valid against the particular target Teradata version. This
-     * is a concurrent Map of immutable objects, so is threadsafe overall.
-     */
-    protected final ConcurrentMap<String, Boolean> expressionValidity = new ConcurrentHashMap<>();
   }
 
   private ImmutableList<TeradataJdbcSelectTask> createTimeSeriesTasks(ZonedInterval interval) {
