@@ -1,36 +1,64 @@
 # BigQuery Migration Service Batch SQL Translator CLI
 
-The [BigQuery Migration Service][BQMS] includes a product known as the
-[batch SQL translator][batch SQL translator] that supports translation of a
-wide variety of SQL dialects to Google Standard SQL. This command line tool
-simplifies the process of using the batch SQL translator by providing a
-framework for pre and postprocessing of SQL files as well as upload/download of
-SQL files to/from GCS.
+This directory contains the Batch SQL Translator CLI, a command line client
+that simplifies the process of using the [batch SQL translator][batch SQL translator]
+of the [BigQuery Migration Service][BQMS] to translate from a wide variety of
+SQL dialects to Google Standard SQL. This client provides a framework that
+handles pre and postprocessing of SQL files, upload/download of SQL files
+to/from GCS, and invoking the GCP SQL translation API.
 
-- [Quickstart](#quickstart)
+Read in the Google Cloud documentation [how to submit a translation job using
+this client][how to submit].
+
 - [Installation](#installation)
-- [Basic Usage](#basic-usage)
+- [Quickstart](#quickstart)
+- [Running Using `run.sh`](#running-using-runsh)
+- [Running Using `bqms-run` Directly](#running-using-bqms-run-directly)
   - [Environment Variables](#environment-variables)
-  - [config.yaml](#configyaml)
-  - [Recommended Usage](#recommended-usage)
+- [config.yaml](#configyaml)
 - [Metadata Lookup](#metadata-lookup)
   - [DDL and Metadata Dump](#ddl-and-metadata-dump)
   - [Unqualified References](#unqualified-references)
 - [Pre and Postprocessing](#pre-and-postprocessing)
   - [Handling Macro/Templating Languages](#handling-macrotemplating-languages)
+  - [Extraction of Heredoc SQL Statements from KSH Inputs](#extraction-of-heredoc-sql-statements-from-ksh-inputs)
   - [Custom Pre and Postprocessing Logic](#custom-pre-and-postprocessing-logic)
 - [Renaming SQL Identifiers](#renaming-sql-identifiers)
 - [Deploying to Cloud Run](#deploying-to-cloud-run)
 - [Performance](#performance)
 
-## Quickstart
+## Installation
+
+Preferred OS: Linux or macOS. Windows usage may be possible through PowerShell,
+but it is not officially supported.
+
+**Download and extract the latest release zip `dwh-migration-tools-vX.X.X.zip`
+from [the Releases page](https://github.com/google/dwh-migration-tools/releases).**
+
+Python &ge; 3.7.2 is required, as well as the additional local dependencies
+`pkg-config` and `libicu-dev`. Typical commands for installing these
+dependencies on Linux would be:
 
 ```shell
-# Clone the repo.
-git clone https://github.com/google/dwh-migration-tools.git
-# required dependency
-sudo apt install -y libicu-dev
+sudo apt update
+sudo apt install -y python3-pip python3-venv pkg-config libicu-dev
+```
 
+You can check whether you have a recent enough version of Python installed by
+running the command `python3 --version`.
+
+You need a GCP project and a Google Cloud Storage bucket to use for uploading
+your input SQL files and downloading the translated output. [Learn how to
+create a GCS bucket manually][creating buckets], or see the [instructions for
+using `provision.sh`](#running-using-runsh) to automatically provision a
+bucket for translation.
+
+## Quickstart
+
+1. [Download a release and install the prerequisite dependencies.](#installation)
+2. Run the following commands, making the appropriate substitutions.
+
+```shell
 # Copy the example project directory to a project directory of your own 
 # (preferably outside of the source tree to make pulling source updates easier).
 cp -R dwh-migration-tools/client/examples/teradata/sql <YOUR_PROJECT_DIRECTORY>
@@ -45,15 +73,14 @@ pip install ../dwh-migration-tools/client
 
 # Remove the example input files from the input directory.
 rm -rf input/*
-
 # Copy the files you would like to translate into the input directory.
 cp <YOUR_INPUT_FILES> input/
 
-# Edit the config/config.yaml file appropriately as described in the Basic Usage
-# section below.
+# Edit the config/config.yaml file appropriately as described in the
+# "config.yaml" section below.
 
-# Set the appropriate environment variables as described in the Basic Usage
-# section below.
+# Set the appropriate environment variables as described in the
+# "Running Using `run.sh`" section below.
 export BQMS_VERBOSE="False"
 export BQMS_MULTITHREADED="True"
 export BQMS_PROJECT="<YOUR_GCP_PROJECT>"
@@ -63,30 +90,108 @@ export BQMS_GCS_BUCKET="<YOUR_GCS_BUCKET>"
 ./run.sh
 ```
 
-## Installation
+## Running Using `run.sh`
 
-Prerequisites: Python >= 3.7.2.
+There are two ways to run the CLI: via the wrapping `run.sh` script or
+directly. Using the `run.sh` wrapper is recommended unless you have advanced
+usage requirements. Basic usage for running via `run.sh` is shown in the
+[quickstart](#quickstart) above.
 
-Preferred OS: Linux or MacOS.
+The `examples` directory includes a recommended directory structure for using
+the CLI:
 
-```shell
-pip install .
+```
+> tree examples/teradata/sql
+.
+├── clean.sh
+├── config
+│     ├── config.yaml
+│     ├── macros_mapping.yaml
+│     └── object_name_mapping.json
+├── deprovision.sh
+├── input
+│     ├── case-sensitivity.sql
+│     ├── create-procedures.sql
+│     ...
+│     ├── metadata
+│     │     └── compilerworks-teradata-metadata.zip
+│     ├── subdir
+│     │     ├── test0.sql
+│     │     ...
+|     ...
+├── provision.sh
+└── run.sh
 ```
 
-## Basic Usage
+This directory structure is meant to be used in conjunction with the `run.sh`
+script within the directory. Doing so provides the following benefits over
+[running using `bqms-run` directly](#running-using-bqms-run-directly):
 
-There are two ways to run the CLI: directly and via a wrapping  `run.sh` script.
+- Automatic setting of most [environment variables](#environment-variables)
+  based on the recommended directory structure. Modifying the
+  [config.yaml](#configyaml) file is still required.
+- Downloading of intermediate pre and postprocessed files from GCS for
+  debugging as described in [Pre and Postprocessing](#pre-and-postprocessing).
+- Execution via Cloud Run as described in
+  [Deploying to Cloud Run](#deploying-to-cloud-run).
 
-Direct execution requires setting
+The `run.sh` script accepts the following environment variables when
+run locally:
+
+- `BQMS_PROJECT` **(required)**: The project that the translation job will be
+  run in.
+- `BQMS_GCS_BUCKET` **(required)**: The GCS bucket where preprocessed and
+  translated code will be written to.
+- `BQMS_SYNC_INTERMEDIATE_FILES`: Set to `True` to enable syncing of
+  intermediate files from GCS e.g. preprocessed files. This is useful for
+  debugging pre and postprocessing logic but also requires additional GCS
+  downloads.
+- `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
+  pre/postprocessing and uploads/downloads.
+- `BQMS_VERBOSE`: Set to `True` to enable debug logging.
+
+For a list of environment variables accepted by the `run.sh` script when using
+Cloud Run, see [Deploying to Cloud Run](#deploying-to-cloud-run).
+
+In addition to the `run.sh` script, the example directory also contains the
+following shell scripts for convenience:
+
+- `provision.sh`: Creates the `BQMS_PROJECT`, creates the `BQMS_GCS_BUCKET`,
+  enables the necessary services and grants the necessary permissions to
+  the `BQMS_DEVELOPER_EMAIL`. Example execution:
+
+  ```shell
+  export BQMS_PROJECT="<YOUR_DESIRED_GCP_PROJECT>"
+  export BQMS_DEVELOPER_EMAIL="<YOUR_EMAIL>"
+  export BQMS_GCS_BUCKET="<YOUR_DESIRED_GCS_BUCKET>"
+  export BQMS_GCS_BUCKET_LOCATION="<YOUR_DESIRED_GCS_BUCKET_LOCATION>"
+  ./provision.sh
+  ```
+
+- `deprovision.sh`: Deletes the `BQMS_PROJECT`.
+- `clean.sh`: Removes local `preprocessed`, `translated` and `postprocessed`
+  directories.
+
+
+## Running Using `bqms-run` Directly
+
+Direct execution is suitable for advanced use cases. It requires setting
 [environment variables](#environment-variables) and modifying a
-[config.yaml](#configyaml) file.
+[config.yaml](#configyaml) file, then running the `bqms-run` command
+installed by this repository's `pip` package.
 
-`run.sh` execution is described in detail in
-[Recommended Usage](#recommended-usage).
+A Docker container of `bqms-run` with all the necessary dependencies can be
+built by running:
+
+```shell
+sudo docker build -t bqms-run client
+```
+
+See also the instructions for [deploying to Cloud Run](#deploying-to-cloud-run).
 
 ### Environment Variables
 
-The CLI accepts the following environment variables:
+`bqms-run` accepts the following environment variables:
 
 - `BQMS_PROJECT` **(required)**: The project that the translation job will be
   run in. All GCS paths must reside in this project.
@@ -119,14 +224,17 @@ The CLI accepts the following environment variables:
    out-of-band process which is highly discouraged.
 - `BQMS_VERBOSE`: Set to `True` to enable debug logging.
 
-### config.yaml
+## config.yaml
 
-The CLI requires a `config.yaml` file be passed as the `BQMS_CONFIG_PATH`
-environment variable. This file specifies the translation type (i.e. source and
-target dialects), translation location and default values for
+The `config.yaml` file specifies the translation type (i.e. source and target
+dialects), translation location and default values for
 [unqualified references](#unqualified-references).
 
-Example:
+The `run.sh` wrapper script looks for `config.yaml` in the `config` directory
+in which it is running. If you are using `bqms-run` directly instead, it
+requires a file path be passed as the `BQMS_CONFIG_PATH` environment variable.
+
+Example `config.yaml` file:
 
 ```yaml
 # The type of translation to perform e.g. Teradata to BigQuery. Doc:
@@ -147,83 +255,6 @@ schema_search_path:
   - foo
 ```
 
-### Recommended Usage
-
-The `examples` directory includes a recommended directory structure for using
-the CLI:
-
-```shell
-> tree examples/teradata/sql
-.
-├── clean.sh
-├── config
-│     ├── config.yaml
-│     ├── macros_mapping.yaml
-│     └── object_name_mapping.json
-├── deprovision.sh
-├── input
-│     ├── case-sensitivity.sql
-│     ├── create-procedures.sql
-│     ...
-│     ├── metadata
-│     │     └── compilerworks-teradata-metadata.zip
-│     ├── subdir
-│     │     ├── test0.sql
-│     │     ...
-|     ...
-├── provision.sh
-└── run.sh
-```
-
-This directory structure is meant to be used in conjunction with the `run.sh`
-script within the directory instead of executing the CLI directly. Doing so
-provides the following benefits:
-
-- Automatic setting of most [environment variables](#environment-variables)
-  based on the recommended directory structure. Modifying the
-  [config.yaml](#configyaml) file is still required.
-- Downloading of intermediate pre and postprocessed files from GCS for
-  debugging as described in [Pre and Postprocessing](#pre-and-postprocessing).
-- Execution via Cloud Run as  described in
-  [Deploying to Cloud Run](#deploying-to-cloud-run).
-
-The `run.sh` script accepts the following environment variables when
-run locally:
-
-- `BQMS_PROJECT` **(required)**: The project that the translation job will be
-  run in.
-- `BQMS_GCS_BUCKET` **(required)**: The GCS bucket where preprocessed and
-  translated code will be written to.
-- `BQMS_SYNC_INTERMEDIATE_FILES`: Set to `True` to enable syncing of
-  intermediate files from GCS e.g. preprocessed files. This is useful for
-  debugging pre and postprocessing logic but also requires additional GCS
-  downloads.
-- `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
-  pre/postprocessing and uploads/downloads.
-- `BQMS_VERBOSE`: Set to `True` to enable debug logging.
-
-For a list of environment variables accepted by the `run.sh` script when using
-Cloud Run, please see [Deploying to Cloud Run](#deploying-to-cloud-run).
-
-In addition to the `run.sh` script, the example directory also contains the
-following shell scripts for convenience:
-
-- `provision.sh`: Creates the `BQMS_PROJECT`, creates the `BQMS_GCS_BUCKET`,
-  enables the necessary services and grants the necessary permissions to
-  the `BQMS_DEVELOPER_EMAIL`. Example execution:
-
-  ```shell
-  export BQMS_PROJECT="<YOUR_DESIRED_GCP_PROJECT>"
-  export BQMS_DEVELOPER_EMAIL="<YOUR_EMAIL>"
-  export BQMS_GCS_BUCKET="<YOUR_DESIRED_GCS_BUCKET>"
-  export BQMS_GCS_BUCKET_LOCATION="<YOUR_DESIRED_GCS_BUCKET_LOCATION>"
-  ./provision.sh
-  ```
-
-- `deprovision.sh`: Deletes the `BQMS_PROJECT`.
-- `clean.sh`: Removes local `preprocessed`, `translated` and `postprocessed`
-  directories.
-
 ## Metadata Lookup
 
 In order to properly translate DML and queries, the batch SQL translator needs
@@ -232,11 +263,11 @@ information can be provided either via DDL or a metadata dump.
 
 ### DDL and Metadata Dump
 
-If DDL scripts are available, please include them in the `BQMS_INPUT_PATH`
-directory along with the DML and queries to be translated. If DDL scripts are
-not available, please
-[generate a metadata dump as described in the docs][dumper] and include it in
-the `BQMS_INPUT_PATH` directory along with the DML and queries to be translated.
+If DDL scripts are available, include them in the `BQMS_INPUT_PATH` directory
+along with the DML and queries to be translated. If DDL scripts are
+not available, [generate a metadata dump as described in the docs][dumper] and
+include it in the `BQMS_INPUT_PATH` directory along with the DML and queries to
+be translated.
 
 ### Unqualified References
 
@@ -256,7 +287,7 @@ more details on these configuration values, please see their docs:
 ### Handling Macro/Templating Languages
 
 Currently, the batch SQL translator only accepts syntactically valid SQL and
-Teradata BTEQ. Often, SQL and BTEQ files contain syntactically invalid macors
+Teradata BTEQ. Often, SQL and BTEQ files contain syntactically invalid macros
 or template variables such as [Jinja variables][jinja] or
 [environment variables][env_vars]. These macros/template variables must be
 replaced with syntactically valid values. This is accomplished using a YAML
@@ -357,12 +388,12 @@ The batch SQL translator supports renaming SQL identifiers via a feature called
 object name mapping. This feature can be configured by setting the
 `BQMS_OBJECT_NAME_MAPPING_PATH` environment variable to the path of a JSON file
 that contains name mapping rules. Please see the
-[official object name mapping docs][ONM] for details on how to specify name
-mapping rules via JSON.
+[object name mapping docs][ONM] for details on how to specify name mapping
+rules via JSON.
 
 ## Deploying to Cloud Run
 
-The `examples` directory discussed in [Recommended Usage](#recommended-usage)
+The `examples` directory discussed in [Running Using `run.sh`](#running-using-runsh)
 provides `provision.sh` and `run.sh` scripts to simplify the process of
 executing the CLI on Cloud Run.
 
@@ -568,6 +599,8 @@ pytest \
 
 [BQMS]: https://cloud.google.com/bigquery/docs/migration-intro
 [batch SQL translator]: https://cloud.google.com/bigquery/docs/batch-sql-translator
+[how to submit]: https://cloud.google.com/bigquery/docs/batch-sql-translator#submit_a_translation_job
+[creating buckets]: https://cloud.google.com/storage/docs/creating-buckets
 [ONM]: https://cloud.google.com/bigquery/docs/output-name-mapping
 [dumper]: https://cloud.google.com/bigquery/docs/generate-metadata
 [default_database]: https://cloud.google.com/bigquery/docs/output-name-mapping#default_database
