@@ -22,12 +22,17 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import javax.annotation.Nonnull;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class DumperTestUtils {
 
   private static final String JDBC_URL_PREFIX = "jdbc:sqlite:";
@@ -40,6 +45,12 @@ public class DumperTestUtils {
   @Nonnull
   public static File newJdbcFile(@Nonnull String name) {
     return TestUtils.newOutputFileUnchecked("dumper/" + name + ".db");
+  }
+
+  @Nonnull
+  public static ZonedDateTime getTimeSubtractingDays(int days) {
+    ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
+    return nowAtUTC.minusDays(days).truncatedTo(ChronoUnit.HOURS);
   }
 
   @Nonnull

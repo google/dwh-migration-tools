@@ -16,11 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.getTimeSubtractingDays;
+
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
-import java.io.IOException;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,14 +35,11 @@ public class SummaryTest {
   private final ZonedDateTime ONE_DAY_AGO = getTimeSubtractingDays(1);
 
   @Test
-  public void testCombine_CombinesTwoSummaries() throws IOException {
+  public void testCombine_CombinesTwoSummaries() {
     // Arrange
-    ZonedInterval earliestInterval = new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO);
-    ZonedInterval latestInterval = new ZonedInterval(THREE_DAYS_AGO, ONE_DAY_AGO);
-    ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
-    Summary s1 = new Summary(5, earliestInterval);
-    Summary s2 = new Summary(12, latestInterval);
-    Summary expectedSummary = new Summary(17, expectedInterval);
+    Summary s1 = new Summary(5, getOptionalInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO));
+    Summary s2 = new Summary(12, getOptionalInterval(THREE_DAYS_AGO, ONE_DAY_AGO));
+    Summary expectedSummary = new Summary(17, getOptionalInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO));
 
     // Act
     Summary resultingSummary = Summary.COMBINER.apply(s1, s2);
@@ -52,9 +49,9 @@ public class SummaryTest {
   }
 
   @Test
-  public void testCombine_CombinesEmptyAndNonEmptySummary() throws IOException {
+  public void testCombine_CombinesEmptyAndNonEmptySummary() {
     // Arrange
-    ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
+    Optional<ZonedInterval> expectedInterval = getOptionalInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
     Summary s1 = new Summary(10, null);
     Summary s2 = new Summary(12, expectedInterval);
     Summary expectedSummary = new Summary(22, expectedInterval);
@@ -66,8 +63,8 @@ public class SummaryTest {
     Assert.assertEquals(expectedSummary, resultingSummary);
   }
 
-  private static ZonedDateTime getTimeSubtractingDays(int days) {
-    ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
-    return nowAtUTC.minusDays(days).truncatedTo(ChronoUnit.HOURS);
+  private static Optional<ZonedInterval> getOptionalInterval(
+      ZonedDateTime start, ZonedDateTime end) {
+    return Optional.of(new ZonedInterval(start, end));
   }
 }
