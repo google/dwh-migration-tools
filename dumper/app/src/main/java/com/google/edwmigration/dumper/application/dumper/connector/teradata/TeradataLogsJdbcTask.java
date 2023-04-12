@@ -36,6 +36,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
@@ -127,7 +128,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     String sql = getSql(jdbcHandle);
-    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1, interval);
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1, Optional.ofNullable(interval));
     return doSelect(connection, rse, sql);
   }
 

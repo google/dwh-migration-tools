@@ -21,6 +21,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
@@ -59,7 +60,7 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
-    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1, interval);
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1, Optional.ofNullable(interval));
     return doSelect(connection, rse, sql);
   }
 

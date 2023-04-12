@@ -37,10 +37,10 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Optional;
 import javax.annotation.CheckForNull;
 import javax.annotation.CheckForSigned;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -103,7 +103,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @Nonnull
   protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
-      @Nonnull ByteSink sink, @CheckForSigned long count, @Nullable ZonedInterval interval) {
+      @Nonnull ByteSink sink, @CheckForSigned long count, Optional<ZonedInterval> interval) {
     return rs -> {
       CSVFormat format = newCsvFormat(rs);
       try (RecordProgressMonitor monitor =

@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
-import javax.annotation.Nullable;
 
 public class Summary {
 
@@ -33,20 +32,20 @@ public class Summary {
         Optional<ZonedInterval> interval1 = s1.interval();
         Optional<ZonedInterval> interval2 = s2.interval();
 
-        if (!interval1.isPresent()) return new Summary(rowCount, interval2.orElse(null));
+        if (!interval1.isPresent()) return new Summary(rowCount, interval2);
         return interval2
             .map(interval1.get()::span)
-            .map(span -> new Summary(rowCount, span))
-            .orElseGet(() -> new Summary(rowCount, interval1.orElse(null)));
+            .map(span -> new Summary(rowCount, Optional.of(span)))
+            .orElseGet(() -> new Summary(rowCount, interval1));
       };
 
-  public static final Summary EMPTY = new Summary(0, null);
+  public static final Summary EMPTY = new Summary(0, Optional.empty());
 
   private final long rowCount;
 
-  @Nullable private final ZonedInterval interval;
+  private final Optional<ZonedInterval> interval;
 
-  /* pp */ Summary(long rowCount, @Nullable ZonedInterval interval) {
+  /* pp */ Summary(long rowCount, Optional<ZonedInterval> interval) {
     this.rowCount = rowCount;
     this.interval = interval;
   }
@@ -56,6 +55,6 @@ public class Summary {
   }
 
   public Optional<ZonedInterval> interval() {
-    return Optional.ofNullable(interval);
+    return interval;
   }
 }
