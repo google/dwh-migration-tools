@@ -52,7 +52,7 @@ public class SummaryTest {
   public void testCombine_CombinesEmptyAndNonEmptySummary() {
     // Arrange
     Optional<ZonedInterval> expectedInterval = getOptionalInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
-    Summary s1 = new Summary(10, null);
+    Summary s1 = new Summary(10, Optional.empty());
     Summary s2 = new Summary(12, expectedInterval);
     Summary expectedSummary = new Summary(22, expectedInterval);
 
