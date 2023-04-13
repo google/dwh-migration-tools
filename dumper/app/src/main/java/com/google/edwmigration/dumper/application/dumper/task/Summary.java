@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+import javax.annotation.Nonnull;
 
 public class Summary {
 
@@ -32,22 +33,26 @@ public class Summary {
         Optional<ZonedInterval> interval1 = s1.interval();
         Optional<ZonedInterval> interval2 = s2.interval();
 
-        if (!interval1.isPresent()) return new Summary(rowCount, interval2);
-        return interval2
-            .map(interval1.get()::span)
-            .map(span -> new Summary(rowCount, Optional.of(span)))
-            .orElseGet(() -> new Summary(rowCount, interval1));
+        Summary summary = new Summary(rowCount);
+        return interval1
+            .map(
+                interval ->
+                    interval2
+                        .map(interval::span)
+                        .map(summary::withInterval)
+                        .orElseGet(() -> summary.withInterval(interval)))
+            .orElseGet(() -> interval2.map(summary::withInterval).orElse(summary));
       };
 
-  public static final Summary EMPTY = new Summary(0, Optional.empty());
+  public static final Summary EMPTY = new Summary(0);
 
   private final long rowCount;
 
-  private final Optional<ZonedInterval> interval;
+  private Optional<ZonedInterval> interval;
 
-  /* pp */ Summary(long rowCount, Optional<ZonedInterval> interval) {
+  /* pp */ Summary(long rowCount) {
     this.rowCount = rowCount;
-    this.interval = interval;
+    this.interval = Optional.empty();
   }
 
   public long rowCount() {
@@ -56,6 +61,11 @@ public class Summary {
 
   public Optional<ZonedInterval> interval() {
     return interval;
+  }
+
+  public Summary withInterval(@Nonnull ZonedInterval interval) {
+    this.interval = Optional.of(interval);
+    return this;
   }
 
   @Override

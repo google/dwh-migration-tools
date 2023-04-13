@@ -29,6 +29,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectIntervalTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.ParallelTaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -38,7 +39,6 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDump
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -194,7 +194,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
           filePrefix
               + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
               + RedshiftLogsDumpFormat.ZIP_ENTRY_SUFFIX;
-      out.addTask(new JdbcSelectTask(file, query, Optional.of(interval)));
+      out.addTask(new JdbcSelectIntervalTask(file, query, interval));
     }
   }
 }

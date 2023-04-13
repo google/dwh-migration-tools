@@ -37,7 +37,6 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Optional;
 import javax.annotation.CheckForNull;
 import javax.annotation.CheckForSigned;
 import javax.annotation.Nonnull;
@@ -100,8 +99,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   }
 
   @Nonnull
-  protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
-      @Nonnull ByteSink sink, @CheckForSigned long count, Optional<ZonedInterval> interval) {
+  protected ExtendableResultSetExtractor newCsvResultSetExtractor(
+      @Nonnull ByteSink sink, @CheckForSigned long count) {
     return rs -> {
       CSVFormat format = newCsvFormat(rs);
       try (RecordProgressMonitor monitor =
@@ -128,11 +127,17 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
           }
           printer.println();
         }
-        return new Summary(monitor.getCount(), interval);
+        return new Summary(monitor.getCount());
       } catch (IOException e) {
         throw new SQLException(e);
       }
     };
+  }
+
+  public interface ExtendableResultSetExtractor extends ResultSetExtractor<Summary> {
+    default ResultSetExtractor<Summary> withInterval(ZonedInterval interval) {
+      return rs -> extractData(rs).withInterval(interval);
+    }
   }
 
   public static void setParameterValues(@Nonnull PreparedStatement statement, Object... arguments)

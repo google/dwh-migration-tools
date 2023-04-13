@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
@@ -185,10 +184,10 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
   private static final String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
   private final SharedState state;
   private final String utilityTable;
-  private final ZonedInterval interval;
+  @Nonnull private final ZonedInterval interval;
 
   protected TeradataUtilityLogsJdbcTask(
-      String targetPath, SharedState state, String utilityTable, ZonedInterval interval) {
+      String targetPath, SharedState state, String utilityTable, @Nonnull ZonedInterval interval) {
     super(targetPath);
     this.state = state;
     this.utilityTable = utilityTable;
@@ -200,8 +199,7 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     String sql = getSql(jdbcHandle);
-    ResultSetExtractor<Summary> rse =
-        newCsvResultSetExtractor(sink, -1, Optional.ofNullable(interval));
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1).withInterval(interval);
     return doSelect(connection, rse, sql);
   }
 

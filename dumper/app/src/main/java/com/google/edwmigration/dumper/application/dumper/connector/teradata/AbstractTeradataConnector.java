@@ -41,7 +41,6 @@ import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
@@ -119,7 +118,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
         Long result = DataAccessUtils.nullableSingleResult(results);
         if (result != null) count = result;
       }
-      return newCsvResultSetExtractor(sink, count, Optional.empty());
+      return newCsvResultSetExtractor(sink, count);
     }
 
     @Override

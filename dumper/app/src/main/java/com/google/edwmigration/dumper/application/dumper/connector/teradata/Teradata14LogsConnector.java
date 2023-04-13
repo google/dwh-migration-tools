@@ -45,7 +45,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
@@ -132,7 +131,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
         @Nonnull Connection connection)
         throws SQLException {
       String sql = getSql(jdbcHandle);
-      ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1, Optional.of(interval));
+      ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1).withInterval(interval);
       return doSelect(connection, rse, sql);
     }
 

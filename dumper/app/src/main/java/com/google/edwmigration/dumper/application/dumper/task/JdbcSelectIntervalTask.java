@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -25,22 +26,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
-/** @author shevek */
-public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
+/** @author ishmum */
+public class JdbcSelectIntervalTask extends JdbcSelectTask {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTask.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectIntervalTask.class);
 
-  @Nonnull private final String sql;
+  @Nonnull private final ZonedInterval interval;
 
-  public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
-    super(targetPath);
-    this.sql = sql;
-  }
-
-  @Nonnull
-  public String getSql() {
-    return sql;
+  public JdbcSelectIntervalTask(
+      @Nonnull String targetPath, @Nonnull String sql, @Nonnull ZonedInterval interval) {
+    super(targetPath, sql);
+    this.interval = interval;
   }
 
   @Override
@@ -50,14 +47,7 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
-    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1);
-    return doSelect(connection, rse, sql);
-  }
-
-  @Override
-  public String toString() {
-    // This is called in a situation where we have a variable amount of indentation. See
-    // MetadataDumper.
-    return "Write " + getTargetPath() + " from:\n        " + getSql();
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1).withInterval(interval);
+    return doSelect(connection, rse, getSql());
   }
 }

@@ -20,7 +20,6 @@ import static com.google.edwmigration.dumper.application.dumper.test.DumperTestU
 
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import java.time.ZonedDateTime;
-import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,9 +36,10 @@ public class SummaryTest {
   @Test
   public void testCombine_CombinesTwoSummaries() {
     // Arrange
-    Summary s1 = new Summary(5, getOptionalInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO));
-    Summary s2 = new Summary(12, getOptionalInterval(THREE_DAYS_AGO, ONE_DAY_AGO));
-    Summary expectedSummary = new Summary(17, getOptionalInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO));
+    Summary s1 = new Summary(5).withInterval(new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO));
+    Summary s2 = new Summary(12).withInterval(new ZonedInterval(THREE_DAYS_AGO, ONE_DAY_AGO));
+    Summary expectedSummary =
+        new Summary(17).withInterval(new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO));
 
     // Act
     Summary resultingSummary = Summary.COMBINER.apply(s1, s2);
@@ -51,20 +51,15 @@ public class SummaryTest {
   @Test
   public void testCombine_CombinesEmptyAndNonEmptySummary() {
     // Arrange
-    Optional<ZonedInterval> expectedInterval = getOptionalInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
-    Summary s1 = new Summary(10, Optional.empty());
-    Summary s2 = new Summary(12, expectedInterval);
-    Summary expectedSummary = new Summary(22, expectedInterval);
+    ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
+    Summary s1 = new Summary(10);
+    Summary s2 = new Summary(12).withInterval(expectedInterval);
+    Summary expectedSummary = new Summary(22).withInterval(expectedInterval);
 
     // Act
     Summary resultingSummary = Summary.COMBINER.apply(s1, s2);
 
     //  Assert
     Assert.assertEquals(expectedSummary, resultingSummary);
-  }
-
-  private static Optional<ZonedInterval> getOptionalInterval(
-      ZonedDateTime start, ZonedDateTime end) {
-    return Optional.of(new ZonedInterval(start, end));
   }
 }
