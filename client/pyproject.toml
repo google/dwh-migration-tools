@@ -15,7 +15,10 @@ PyYAML = "^6.0"
 marshmallow = "^3.17.1"
 cloudpathlib = "^0.10.0"
 typing-extensions = "^4.4.0"
-PyICU = "^2.10.2"
+PyICU = { version = "^2.10.2", optional = true }
+
+[tool.poetry.extras]
+icu = ["PyICU"]
 
 [tool.poetry.dev-dependencies]
 black = "22.6.0"
