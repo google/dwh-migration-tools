@@ -4,8 +4,7 @@
 This project contains a collection of tools related to the [BigQuery Migration
 Service](https://cloud.google.com/bigquery/docs/migration-intro).
 
-**Download the latest cross-platform release zip `dwh-migration-tools-vX.X.X.zip`
-from [the Releases page](https://github.com/google/dwh-migration-tools/releases).**
+**[Download the latest cross-platform release zip `dwh-migration-tools-vX.X.X.zip`.](https://github.com/google/dwh-migration-tools/releases/latest)**
 
 The currently available tools are:
 

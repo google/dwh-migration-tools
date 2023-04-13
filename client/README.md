@@ -12,10 +12,10 @@ this client][how to submit].
 
 - [Installation](#installation)
 - [Quickstart](#quickstart)
+- [config.yaml](#configyaml)
 - [Running Using `run.sh`](#running-using-runsh)
 - [Running Using `bqms-run` Directly](#running-using-bqms-run-directly)
   - [Environment Variables](#environment-variables)
-- [config.yaml](#configyaml)
 - [Metadata Lookup](#metadata-lookup)
   - [DDL and Metadata Dump](#ddl-and-metadata-dump)
   - [Unqualified References](#unqualified-references)
@@ -32,12 +32,11 @@ this client][how to submit].
 Preferred OS: Linux or macOS. Windows usage may be possible through PowerShell,
 but it is not officially supported.
 
-**Download and extract the latest release zip `dwh-migration-tools-vX.X.X.zip`
-from [the Releases page](https://github.com/google/dwh-migration-tools/releases).**
+**Download and extract [the latest release zip `dwh-migration-tools-vX.X.X.zip`](https://github.com/google/dwh-migration-tools/releases/latest).**
 
 Python &ge; 3.7.2 is required, as well as the additional local dependencies
 `pkg-config` and `libicu-dev`. Typical commands for installing these
-dependencies on Linux would be:
+dependencies on a Debian-based Linux distribution such as Ubuntu would be:
 
 ```shell
 sudo apt update
@@ -88,6 +87,37 @@ export BQMS_GCS_BUCKET="<YOUR_GCS_BUCKET>"
 
 # Run the translation.
 ./run.sh
+```
+
+## config.yaml
+
+The `config.yaml` file specifies the translation type (i.e. source and target
+dialects), translation location and default values for
+[unqualified references](#unqualified-references).
+
+The `run.sh` wrapper script looks for `config.yaml` in the `config` directory
+in which it is running. If you are using `bqms-run` directly instead, it
+requires a file path be passed as the `BQMS_CONFIG_PATH` environment variable.
+
+Example `config.yaml` file:
+
+```yaml
+# The type of translation to perform e.g. Teradata to BigQuery. Doc:
+# https://cloud.google.com/bigquery/docs/reference/migration/rest/v2/projects.locations.workflows#migrationtask
+translation_type: Translation_Teradata2BQ
+
+# The region where the translation job will run.
+location: 'us'
+
+# Default database and schemas to use when looking up unqualified references:
+
+# https://cloud.google.com/bigquery/docs/output-name-mapping#default_database
+default_database: default_db
+
+# https://cloud.google.com/bigquery/docs/output-name-mapping#default_schema
+schema_search_path:
+  - library
+  - foo
 ```
 
 ## Running Using `run.sh`
@@ -223,37 +253,6 @@ See also the instructions for [deploying to Cloud Run](#deploying-to-cloud-run).
    not set this as it is only required if GCS files are being manipulated by an
    out-of-band process which is highly discouraged.
 - `BQMS_VERBOSE`: Set to `True` to enable debug logging.
-
-## config.yaml
-
-The `config.yaml` file specifies the translation type (i.e. source and target
-dialects), translation location and default values for
-[unqualified references](#unqualified-references).
-
-The `run.sh` wrapper script looks for `config.yaml` in the `config` directory
-in which it is running. If you are using `bqms-run` directly instead, it
-requires a file path be passed as the `BQMS_CONFIG_PATH` environment variable.
-
-Example `config.yaml` file:
-
-```yaml
-# The type of translation to perform e.g. Teradata to BigQuery. Doc:
-# https://cloud.google.com/bigquery/docs/reference/migration/rest/v2/projects.locations.workflows#migrationtask
-translation_type: Translation_Teradata2BQ
-
-# The region where the translation job will run.
-location: 'us'
-
-# Default database and schemas to use when looking up unqualified references:
-
-# https://cloud.google.com/bigquery/docs/output-name-mapping#default_database
-default_database: default_db
-
-# https://cloud.google.com/bigquery/docs/output-name-mapping#default_schema
-schema_search_path:
-  - library
-  - foo
-```
 
 ## Metadata Lookup
 
