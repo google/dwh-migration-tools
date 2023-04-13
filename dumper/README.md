@@ -5,9 +5,7 @@ connecting to an existing database and generating an archive of DDL metadata or
 logs. This tool generates archives in a format suitable for consumption by the
 [BigQuery Migration Service's][BQMS] Assessment or Translation Service.
 
-The Dumper is a Java tool. **Download the latest cross-platform release zip
-`dwh-migration-tools-vX.X.X.zip` from
-[the Releases page](https://github.com/google/dwh-migration-tools/releases).**
+The Dumper is a Java tool. **[Download the latest cross-platform release zip `dwh-migration-tools-vX.X.X.zip`.](https://github.com/google/dwh-migration-tools/releases/latest)**
 
 To get started using the Dumper, read
 [the documentation](https://cloud.google.com/bigquery/docs/generate-metadata).
