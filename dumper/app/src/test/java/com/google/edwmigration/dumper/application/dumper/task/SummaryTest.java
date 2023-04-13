@@ -34,7 +34,7 @@ public class SummaryTest {
   private final ZonedDateTime ONE_DAY_AGO = getTimeSubtractingDays(1);
 
   @Test
-  public void testCombine_CombinesTwoSummaries() {
+  public void testCombine_combinesTwoSummaries() {
     // Arrange
     Summary s1 = new Summary(5).withInterval(new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO));
     Summary s2 = new Summary(12).withInterval(new ZonedInterval(THREE_DAYS_AGO, ONE_DAY_AGO));
@@ -49,12 +49,26 @@ public class SummaryTest {
   }
 
   @Test
-  public void testCombine_CombinesEmptyAndNonEmptySummary() {
+  public void testCombine_combinesEmptyAndNonEmptySummary() {
     // Arrange
     ZonedInterval expectedInterval = new ZonedInterval(SEVEN_DAYS_AGO, ONE_DAY_AGO);
     Summary s1 = new Summary(10);
     Summary s2 = new Summary(12).withInterval(expectedInterval);
     Summary expectedSummary = new Summary(22).withInterval(expectedInterval);
+
+    // Act
+    Summary resultingSummary = Summary.COMBINER.apply(s1, s2);
+
+    //  Assert
+    Assert.assertEquals(expectedSummary, resultingSummary);
+  }
+
+  @Test
+  public void testCombine_combinesTwoEmptySummaries() {
+    // Arrange
+    Summary s1 = new Summary(10);
+    Summary s2 = new Summary(12);
+    Summary expectedSummary = new Summary(22);
 
     // Act
     Summary resultingSummary = Summary.COMBINER.apply(s1, s2);
