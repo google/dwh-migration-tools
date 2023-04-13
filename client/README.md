@@ -34,17 +34,37 @@ but it is not officially supported.
 
 **Download and extract [the latest release zip `dwh-migration-tools-vX.X.X.zip`](https://github.com/google/dwh-migration-tools/releases/latest).**
 
-Python &ge; 3.7.2 is required, as well as the additional local dependencies
-`pkg-config` and `libicu-dev`. Typical commands for installing these
-dependencies on a Debian-based Linux distribution such as Ubuntu would be:
+### Python
 
-```shell
-sudo apt update
-sudo apt install -y python3-pip python3-venv pkg-config libicu-dev
-```
-
+Python &ge; 3.7.2 is required.
 You can check whether you have a recent enough version of Python installed by
 running the command `python3 --version`.
+
+You must also have the Python `pip` and `venv` modules installed. Altogether,
+the distribution-specific commands to install these are:
+
+* Debian-based distros: `sudo apt install python3-pip python3-venv`
+* Red Hat-based distros: `sudo yum install python38 python38-pip` (for e.g. Python
+  3.8)
+
+### Support for Encodings other than UTF-8
+
+If all of the files you wish to translate are UTF-8 encoded
+(this is commonly the case), you can skip this section.
+Otherwise, you will need to install additional system dependencies:
+
+* Debian-based distros: `sudo apt install pkg-config libicu-dev`
+* RedHat-based distros: `sudo yum install gcc gcc-c++ libicu-devel
+  python38-devel`
+
+**You must also remember**, upon reaching the step to `pip install` further down
+in the Quickstart section below, to use this command instead:
+
+```shell
+pip install ../dwh-migration-tools/client[icu]
+```
+
+### GCP
 
 You need a GCP project and a Google Cloud Storage bucket to use for uploading
 your input SQL files and downloading the translated output. [Learn how to
