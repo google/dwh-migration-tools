@@ -34,6 +34,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
@@ -84,7 +85,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     super("teradata14-logs");
   }
 
-  private abstract static class Teradata14LogsJdbcTask extends AbstractJdbcTask<Void> {
+  private abstract static class Teradata14LogsJdbcTask extends AbstractJdbcTask<Summary> {
 
     protected static String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
 
@@ -123,11 +124,14 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     }
 
     @Override
-    protected Void doInConnection(
-        TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
+    protected Summary doInConnection(
+        @Nonnull TaskRunContext context,
+        @Nonnull JdbcHandle jdbcHandle,
+        @Nonnull ByteSink sink,
+        @Nonnull Connection connection)
         throws SQLException {
       String sql = getSql(jdbcHandle);
-      ResultSetExtractor<Void> rse = newCsvResultSetExtractor(sink, -1);
+      ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1).withInterval(interval);
       return doSelect(connection, rse, sql);
     }
 
@@ -137,9 +141,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
           expression -> isValid(handle.getJdbcTemplate(), expression);
       Predicate<String> predicate =
           expression -> state.expressionValidity.computeIfAbsent(expression, validator);
-      String sql = getSql(predicate);
-      // LOG.debug("SQL is " + sql);
-      return sql;
+      return getSql(predicate);
     }
 
     @Nonnull

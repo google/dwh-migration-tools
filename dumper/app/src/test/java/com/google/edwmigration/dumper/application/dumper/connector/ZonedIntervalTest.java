@@ -16,13 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.getTimeSubtractingDays;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -128,10 +127,5 @@ public class ZonedIntervalTest {
 
     // Assert
     assertEquals("Start date must be before end date", exception.getMessage());
-  }
-
-  private static ZonedDateTime getTimeSubtractingDays(int days) {
-    ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
-    return nowAtUTC.minusDays(days).truncatedTo(ChronoUnit.HOURS);
   }
 }

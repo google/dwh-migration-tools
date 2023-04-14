@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcC
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.sql.Connection;
@@ -105,7 +106,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
     // This works to execute the count SQL on the same connection as the data SQL,
     // because it's called from doInConnection, when we already have one connection open.
     @Nonnull
-    private ResultSetExtractor<Void> newCountedResultSetExtractor(
+    private ResultSetExtractor<Summary> newCountedResultSetExtractor(
         @Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
       long count = -1;
       if (sqlCount != null) {
@@ -121,7 +122,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
     }
 
     @Override
-    protected Void doInConnection(
+    protected Summary doInConnection(
         TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
         throws SQLException {
       try {
@@ -136,7 +137,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
         // This puts the transaction in an aborted state unless we rollback here.
         connection.rollback();
       }
-      ResultSetExtractor<Void> rse = newCountedResultSetExtractor(sink, connection);
+      ResultSetExtractor<Summary> rse = newCountedResultSetExtractor(sink, connection);
       return doSelect(connection, rse, getSql());
     }
   }

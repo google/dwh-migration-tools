@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.errorprone.annotations.ForOverride;
 import java.sql.Connection;
@@ -44,7 +45,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
-public class TeradataLogsJdbcTask extends AbstractJdbcTask<Void> {
+public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
 
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
@@ -122,11 +123,11 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Void> {
   }
 
   @Override
-  protected Void doInConnection(
+  protected Summary doInConnection(
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     String sql = getSql(jdbcHandle);
-    ResultSetExtractor<Void> rse = newCsvResultSetExtractor(sink, -1);
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1).withInterval(interval);
     return doSelect(connection, rse, sql);
   }
 
