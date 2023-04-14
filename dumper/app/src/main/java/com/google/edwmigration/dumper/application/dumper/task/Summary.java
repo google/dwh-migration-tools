@@ -23,6 +23,14 @@ import javax.annotation.Nonnull;
 
 public class Summary {
 
+  /*
+   * This merges overlapping intervals without accounting duplication.
+   * No connector currently executes queries in overlapping intervals,
+   * which could have resulted in duplicate rows.
+   * The only case where we would merge two overlapping intervals is when
+   * other threads have merged intervals having gaps between them.
+   * This would later on be filled up by the overlap
+   * */
   public static final BinaryOperator<Summary> COMBINER =
       (s1, s2) -> {
         if (s1.rowCount() == 0) return s2;
