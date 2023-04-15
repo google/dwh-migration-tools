@@ -77,7 +77,7 @@ bucket for translation.
 1. Download the repo from [google/dwh-migration-tools] in your choice of 
 preference. If you download a zip, make sure to change the name of the 
 folder to "dwh-migration-tools".
-3. Run the following commands, making the appropriate substitutions.
+2. Run the following commands, making the appropriate substitutions.
 
 ```shell
 # Copy the example project directory to a project directory of your own 
