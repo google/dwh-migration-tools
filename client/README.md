@@ -74,7 +74,9 @@ bucket for translation.
 
 ## Quickstart
 
-1. [Download a release and install the prerequisite dependencies.](#installation)
+1. Download the repo from [google/dwh-migration-tools] in your choice of 
+preference. If you download a zip, make sure to change the name of the 
+folder to "dwh-migration-tools".
 2. Run the following commands, making the appropriate substitutions.
 
 ```shell
@@ -622,6 +624,7 @@ pytest \
 [creating buckets]: https://cloud.google.com/storage/docs/creating-buckets
 [ONM]: https://cloud.google.com/bigquery/docs/output-name-mapping
 [dumper]: https://cloud.google.com/bigquery/docs/generate-metadata
+[google/dwh-migration-tools]: https://github.com/google/dwh-migration-tools
 [default_database]: https://cloud.google.com/bigquery/docs/output-name-mapping#default_database
 [schema_search_path]: https://cloud.google.com/bigquery/docs/output-name-mapping#default_schema
 [jinja]: https://docs.getdbt.com/docs/build/jinja-macros
