@@ -1,0 +1,31 @@
+FROM redhat/ubi9
+
+# See https://cloud.google.com/sdk/docs/install
+COPY tests/packaging/redhat-google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
+RUN dnf install -y \
+    google-cloud-cli \
+    python3 \
+    python3-pip
+
+WORKDIR /workspace
+COPY . /workspace/dwh-migration-tools/client
+COPY examples/teradata/sql /workspace/project
+
+ARG ICU_ENABLED=false
+RUN if [ "$ICU_ENABLED" = "true" ]; then \
+        dnf install -y \
+            gcc \
+            gcc-c++ \
+            libicu-devel \
+            python3-devel \
+        && python3 -m pip install dwh-migration-tools/client[icu] ; \
+    else \
+        python3 -m pip install dwh-migration-tools/client ; \
+    fi
+
+RUN dnf clean all -y && rm -rf /var/cache
+WORKDIR /workspace/project
+ENV BQMS_VERBOSE="True"
+ENV BQMS_MULTITHREADED="True"
+
+ENTRYPOINT [ "/workspace/project/run.sh" ]

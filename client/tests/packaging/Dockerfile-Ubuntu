@@ -1,0 +1,32 @@
+FROM ubuntu:22.04
+
+RUN apt-get update -y && apt-get install -y \
+    curl \
+    python3-pip
+# See https://cloud.google.com/sdk/docs/install
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" \
+    | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+    | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - \
+    && apt-get update -y \
+    && apt-get install -y google-cloud-cli
+
+WORKDIR /workspace
+COPY . /workspace/dwh-migration-tools/client
+COPY examples/teradata/sql /workspace/project
+
+ARG ICU_ENABLED=false
+RUN if [ "$ICU_ENABLED" = "true" ]; then \
+        apt-get install -y \
+            libicu-dev \
+            pkg-config \
+        && python3 -m pip install dwh-migration-tools/client[icu] ; \
+    else \
+        python3 -m pip install dwh-migration-tools/client ; \
+    fi
+
+RUN rm -rf /var/lib/apt/lists/*
+WORKDIR /workspace/project
+ENV BQMS_VERBOSE="True"
+ENV BQMS_MULTITHREADED="True"
+
+ENTRYPOINT [ "/workspace/project/run.sh" ]

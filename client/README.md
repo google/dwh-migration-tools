@@ -47,6 +47,21 @@ the distribution-specific commands to install these are:
 * Red Hat-based distros: `sudo yum install python38 python38-pip` (for e.g. Python
   3.8)
 
+### GCP
+
+You need the Google Cloud CLI client `gcloud` installed. [Read installation
+steps for the `gcloud` CLI package.](https://cloud.google.com/sdk/docs/install)
+
+You need to have credentials configured locally for a GCP user with suitable
+permissions to perform batch translation. [Read how `gcloud` searches for
+application default credentials.](https://cloud.google.com/docs/authentication/application-default-credentials)
+
+You need a GCP project and a Google Cloud Storage bucket to use for uploading
+your input SQL files and downloading the translated output. [Learn how to
+create a GCS bucket manually][creating buckets], or see the [instructions for
+using `provision.sh`](#running-using-runsh) to automatically provision a
+bucket for translation.
+
 ### Support for Encodings other than UTF-8
 
 If all of the files you wish to translate are UTF-8 encoded
@@ -54,7 +69,7 @@ If all of the files you wish to translate are UTF-8 encoded
 Otherwise, you will need to install additional system dependencies:
 
 * Debian-based distros: `sudo apt install pkg-config libicu-dev`
-* RedHat-based distros: `sudo yum install gcc gcc-c++ libicu-devel
+* Red Hat-based distros: `sudo yum install gcc gcc-c++ libicu-devel
   python38-devel`
 
 **You must also remember**, upon reaching the step to `pip install` further down
@@ -63,14 +78,6 @@ in the Quickstart section below, to use this command instead:
 ```shell
 pip install ../dwh-migration-tools/client[icu]
 ```
-
-### GCP
-
-You need a GCP project and a Google Cloud Storage bucket to use for uploading
-your input SQL files and downloading the translated output. [Learn how to
-create a GCS bucket manually][creating buckets], or see the [instructions for
-using `provision.sh`](#running-using-runsh) to automatically provision a
-bucket for translation.
 
 ## Quickstart
 
