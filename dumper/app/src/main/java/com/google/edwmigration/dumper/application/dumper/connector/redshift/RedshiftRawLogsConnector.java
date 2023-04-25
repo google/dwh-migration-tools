@@ -125,7 +125,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
     List<String> queryTemplateOrderBy = new ArrayList<>();
 
     if (arguments.isAssessment()) {
-      queryTemplateColumns.add("aborted");
+      queryTemplateColumns.addAll(ImmutableList.of("aborted", "trim(database) as database"));
       queryTemplateOrderBy.addAll(ImmutableList.of("starttime", "query", "sequence"));
     }
 
