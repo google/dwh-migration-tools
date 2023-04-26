@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
@@ -88,7 +89,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
                 "Fatal Error. ResultSet does not have the expected column count: "
                     + headerClass.getEnumConstants().length,
                 Arrays.asList(
-                    "If a custom query has been specified please confirm the selected columns match the following: ",
+                    "If a custom query has been specified please confirm the selected columns match"
+                        + " the following: ",
                     StringUtils.join(headerClass.getEnumConstants(), ", "))));
     } else {
       format = format.withHeader(rs);
@@ -97,7 +99,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   }
 
   @Nonnull
-  protected ResultSetExtractor<Void> newCsvResultSetExtractor(
+  protected ExtendableResultSetExtractor newCsvResultSetExtractor(
       @Nonnull ByteSink sink, @CheckForSigned long count) {
     return rs -> {
       CSVFormat format = newCsvFormat(rs);
@@ -125,11 +127,17 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
           }
           printer.println();
         }
-        return null;
+        return new Summary(monitor.getCount());
       } catch (IOException e) {
         throw new SQLException(e);
       }
     };
+  }
+
+  public interface ExtendableResultSetExtractor extends ResultSetExtractor<Summary> {
+    default ResultSetExtractor<Summary> withInterval(ZonedInterval interval) {
+      return rs -> extractData(rs).withInterval(interval);
+    }
   }
 
   public static void setParameterValues(@Nonnull PreparedStatement statement, Object... arguments)

@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
@@ -65,13 +66,13 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     super("oracle");
   }
 
-  private static interface GroupTask extends Task<Void> {
+  private static interface GroupTask<T> extends Task<T> {
 
     @CheckForNull
     public Exception getException();
   }
 
-  private static class SelectTask extends JdbcSelectTask implements GroupTask {
+  private static class SelectTask extends JdbcSelectTask implements GroupTask<Summary> {
 
     private Exception throwable;
 
@@ -91,7 +92,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     }
   }
 
-  private static class SelectXmlTask extends AbstractJdbcTask<Void> implements GroupTask {
+  private static class SelectXmlTask extends AbstractJdbcTask<Void> implements GroupTask<Void> {
 
     private final String rowSql;
     private final String xmlSql;
@@ -223,8 +224,8 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   }
 
   private static void addAtLeastOneOf(
-      @Nonnull List<? super Task<?>> out, @Nonnull GroupTask... tasks) {
-    for (GroupTask task : tasks) out.add(Preconditions.checkNotNull(task));
+      @Nonnull List<? super Task<?>> out, @Nonnull GroupTask<?>... tasks) {
+    for (GroupTask<?> task : tasks) out.add(Preconditions.checkNotNull(task));
     MessageTask msg_task = new MessageTask(tasks);
     msg_task.onlyIfAllFailed(tasks);
     out.add(msg_task);

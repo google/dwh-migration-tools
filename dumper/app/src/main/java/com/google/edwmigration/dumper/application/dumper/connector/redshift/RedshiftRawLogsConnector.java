@@ -33,6 +33,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectIntervalTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.ParallelTaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -91,7 +92,8 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
     // DDL TEXT is simple ...
     // min() as there is no ANY() or SOME()
     String queryTemplateDDL =
-        "SELECT userid, xid, pid, trim(label) as label, starttime, endtime, sequence, text FROM STL_DDLTEXT WHERE ##";
+        "SELECT userid, xid, pid, trim(label) as label, starttime, endtime, sequence, text FROM"
+            + " STL_DDLTEXT WHERE ##";
 
     if (arguments.isAssessment()) {
       queryTemplateDDL += " ORDER BY starttime, xid, pid, sequence";
@@ -123,13 +125,14 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
     List<String> queryTemplateOrderBy = new ArrayList<>();
 
     if (arguments.isAssessment()) {
-      queryTemplateColumns.add("aborted");
+      queryTemplateColumns.addAll(ImmutableList.of("aborted", "trim(database) as database"));
       queryTemplateOrderBy.addAll(ImmutableList.of("starttime", "query", "sequence"));
     }
 
     String queryTemplateQuery =
         String.format(
-            "SELECT %s FROM STL_QUERY join STL_QUERYTEXT using (userid, xid, pid, query) WHERE ##%s",
+            "SELECT %s FROM STL_QUERY join STL_QUERYTEXT using (userid, xid, pid, query) WHERE"
+                + " ##%s",
             Joiner.on(", ").join(queryTemplateColumns),
             queryTemplateOrderBy.isEmpty()
                 ? ""
@@ -174,9 +177,9 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
 
       String wlmQueryTemplateQuery =
           "SELECT userid, xid, task, query, service_class, slot_count, service_class_start_time,"
-              + " queue_start_time, queue_end_time, total_queue_time, exec_start_time, exec_end_time,"
-              + " total_exec_time, service_class_end_time, final_state, query_priority"
-              + " FROM STL_WLM_QUERY WHERE ##";
+              + " queue_start_time, queue_end_time, total_queue_time, exec_start_time,"
+              + " exec_end_time, total_exec_time, service_class_end_time, final_state,"
+              + " query_priority FROM STL_WLM_QUERY WHERE ##";
       makeTasks(
           arguments,
           intervals,
@@ -221,7 +224,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
           filePrefix
               + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
               + RedshiftRawLogsDumpFormat.ZIP_ENTRY_SUFFIX;
-      out.addTask(new JdbcSelectTask(file, query));
+      out.addTask(new JdbcSelectIntervalTask(file, query, interval));
     }
   }
 }

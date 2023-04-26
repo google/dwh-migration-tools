@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
@@ -286,7 +288,9 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(
               "query-log-alternates",
-              "pair of alternate query log tables to export (teradata-logs only)")
+              "pair of alternate query log tables to export (teradata-logs only), by default "
+                  + "logTable=dbc.DBQLogTbl and queryTable=dbc.DBQLSQLTbl, if --assessment flag"
+                  + " is enabled, then logTable=dbc.QryLogV and queryTable=dbc.DBQLSQLTbl.")
           .withRequiredArg()
           .ofType(String.class)
           .withValuesSeparatedBy(',')
@@ -557,7 +561,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   @Nonnull
   public List<String> getDatabases() {
-    return getOptions().valuesOf(optionDatabase);
+    return getOptions().valuesOf(optionDatabase).stream()
+        .map(String::trim)
+        .filter(StringUtils::isNotEmpty)
+        .collect(toImmutableList());
   }
 
   @Nonnull

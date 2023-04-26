@@ -139,6 +139,14 @@ class _TranslationTypeSchema(Schema):
                 bigquery_dialect=bigquery_migration_v2.BigQueryDialect()
             ),
         },
+        "Translation_BQ2SparkSQL": {
+            "source": bigquery_migration_v2.Dialect(
+                bigquery_dialect=bigquery_migration_v2.BigQueryDialect()
+            ),
+            "target": bigquery_migration_v2.Dialect(
+                sparksql_dialect=bigquery_migration_v2.SparkSQLDialect()
+            ),
+        },
     }
 
     name = fields.String(
