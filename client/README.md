@@ -61,12 +61,10 @@ Otherwise, you will need to install additional system dependencies:
 in the Quickstart section below, to use this command instead:
 
 ```shell
-
 pip install ../dwh-migration-tools/client[icu]
 ```
 
 ### GCP
-
 
 You need a GCP project and a Google Cloud Storage bucket to use for uploading
 your input SQL files and downloading the translated output. [Learn how to
@@ -113,9 +111,7 @@ export BQMS_GCS_BUCKET="<YOUR_GCS_BUCKET>"
 ./run.sh
 ```
 
-
 ## config.yaml
-
 
 The `config.yaml` file specifies the translation type (i.e. source and target
 dialects), translation location and default values for
