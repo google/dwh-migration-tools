@@ -159,11 +159,10 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(String.class);
   private final OptionSpec<String> optionDatabase =
       parser
-          .accepts(OPT_DATABASE, "Database(s) to export")
+          .accepts(OPT_DATABASE, "Usage varies depending on connector.")
           .withRequiredArg()
           .ofType(String.class)
-          .withValuesSeparatedBy(',')
-          .describedAs("db0,db1,...");
+          .withValuesSeparatedBy(',');
   private final OptionSpec<String> optionSchema =
       parser
           .accepts(OPT_SCHEMA, "Schemata to export")
