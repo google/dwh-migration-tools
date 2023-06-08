@@ -47,6 +47,16 @@ the distribution-specific commands to install these are:
 * Red Hat-based distros: `sudo yum install python38 python38-pip` (for e.g. Python
   3.8)
 
+For MacOS, install python from https://www.python.org/downloads/macos/. For Windows,
+install python from https://www.python.org/downloads/windows/. Run
+`python3 -m pip install --upgrade pip` to install pip.
+
+### Gcloud CLI
+
+Gcloud is required.
+You can install from https://cloud.google.com/sdk/docs/install-sdk.
+Run `gcloud init` and `gcloud auth application-default login` to initialize and authorize.
+
 ### Support for Encodings other than UTF-8
 
 If all of the files you wish to translate are UTF-8 encoded
