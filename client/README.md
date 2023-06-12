@@ -87,7 +87,10 @@ bucket for translation.
 1. Download the repo from [google/dwh-migration-tools] in your choice of 
 preference. If you download a zip, make sure to change the name of the 
 folder to "dwh-migration-tools".
-2. Run the following commands, making the appropriate substitutions.
+2. It's optional, but strongly recommended to use the
+[Metadata and Log Dumper](https://github.com/google/dwh-migration-tools/tree/main/dumper)
+first to get the metadata into the input directory before using the python client for translation.
+Run the following commands, making the appropriate substitutions.
 
 ```shell
 # Copy the example project directory to a project directory of your own 
