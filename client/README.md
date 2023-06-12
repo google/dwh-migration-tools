@@ -32,7 +32,7 @@ this client][how to submit].
 Preferred OS: Linux or macOS. Windows usage may be possible through PowerShell,
 but it is not officially supported.
 
-**Download and extract [the latest release zip `dwh-migration-tools-vX.X.X.zip`](https://github.com/google/dwh-migration-tools/releases/latest).** It's recommended to use the pre-built binary unless you want to change the python code.
+**Download and extract [the latest release zip `dwh-migration-tools-vX.X.X.zip`](https://github.com/google/dwh-migration-tools/releases/latest).**
 
 ### Python
 
