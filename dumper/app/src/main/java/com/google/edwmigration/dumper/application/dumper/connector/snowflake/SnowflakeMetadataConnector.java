@@ -21,9 +21,11 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
@@ -122,20 +124,26 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task) {
-    Task<?> t0 =
+      @Nonnull TaskVariant au_task,
+      ConnectorArguments arguments) {
+    AbstractJdbcTask<Summary> is_jdbcTask =
         new JdbcSelectTask(
                 is_task.zipEntryName,
                 String.format(format, is_task.schemaName, is_task.whereClause))
             .withHeaderClass(header);
-    Task<?> t1 =
+
+    AbstractJdbcTask<Summary> au_jdbcTask =
         new JdbcSelectTask(
                 au_task.zipEntryName,
                 String.format(format, au_task.schemaName, au_task.whereClause))
-            .withHeaderClass(header)
-            .onlyIfFailed(t0);
-    out.add(t0);
-    out.add(t1);
+            .withHeaderClass(header);
+
+    if (arguments.isAssessment()) {
+      out.add(au_jdbcTask);
+    } else {
+      out.add(is_jdbcTask);
+      out.add(au_jdbcTask.onlyIfFailed(is_jdbcTask));
+    }
   }
 
   @Override
@@ -165,7 +173,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataConnectorProperties.DATABASES_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(
-            SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+            SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments);
 
     addSqlTasks(
         out,
@@ -176,36 +185,34 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataConnectorProperties.SCHEMATA_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.SCHEMATA_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(
-            SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+        new TaskVariant(SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments);
 
     addSqlTasks(
         out,
         SnowflakeMetadataDumpFormat.TablesFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM %1$s.TABLES%2$s",
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+                + " clustering_key FROM %1$s.TABLES%2$s",
             SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.TablesFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(
-            SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME,
-            AU,
-            AU_WHERE)); // Painfully slow.
+        new TaskVariant(SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments); // Painfully slow.
 
     addSqlTasks(
         out,
         SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type FROM %1$s.COLUMNS%2$s",
+            "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name,"
+                + " data_type FROM %1$s.COLUMNS%2$s",
             SnowflakeMetadataConnectorProperties.COLUMNS_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.COLUMNS_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.ColumnsFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(
-            SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME,
-            AU,
-            AU_WHERE)); // Very fast.
+        new TaskVariant(SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments); // Very fast.
 
     addSqlTasks(
         out,
@@ -216,19 +223,22 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataConnectorProperties.VIEWS_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.VIEWS_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.ViewsFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+        new TaskVariant(SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments);
 
     addSqlTasks(
         out,
         SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT function_schema, function_name, data_type, argument_signature FROM %1$s.FUNCTIONS%2$s",
+            "SELECT function_schema, function_name, data_type, argument_signature FROM"
+                + " %1$s.FUNCTIONS%2$s",
             SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.FunctionsFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(
-            SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+            SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments);
   }
 
   private String getOverrideableQuery(
