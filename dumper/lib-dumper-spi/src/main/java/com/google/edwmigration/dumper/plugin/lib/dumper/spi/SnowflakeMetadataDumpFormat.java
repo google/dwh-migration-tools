@@ -99,4 +99,22 @@ public interface SnowflakeMetadataDumpFormat {
       ArgumentSignature
     }
   }
+
+  interface WarehouseEventsHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "warehouse_events-au.csv";
+
+    enum Header {
+      Timestamp,
+      WarehouseId,
+      WarehouseName,
+      ClusterNumber,
+      EventName,
+      EventReason,
+      EventState,
+      UserName,
+      RoleName,
+      QueryId
+    }
+  }
 }
