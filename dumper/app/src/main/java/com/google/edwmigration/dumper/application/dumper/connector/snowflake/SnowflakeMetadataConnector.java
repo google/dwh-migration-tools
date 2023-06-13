@@ -136,14 +136,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         new JdbcSelectTask(
                 au_task.zipEntryName,
                 String.format(format, au_task.schemaName, au_task.whereClause))
-            .withHeaderClass(header);
-
-    if (arguments.isAssessment()) {
-      out.add(au_jdbcTask);
-    } else {
-      out.add(is_jdbcTask);
-      out.add(au_jdbcTask.onlyIfFailed(is_jdbcTask));
-    }
+            .withHeaderClass(header)
+            .onlyIfFailed(t0);
+    out.add(t0);
+    out.add(t1);
   }
 
   @Override
@@ -237,8 +233,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.FunctionsFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(
-            SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        arguments);
+            SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
   }
 
   private String getOverrideableQuery(
