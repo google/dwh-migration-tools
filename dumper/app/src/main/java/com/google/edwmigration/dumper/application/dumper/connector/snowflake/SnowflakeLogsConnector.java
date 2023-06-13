@@ -101,7 +101,54 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       throws MetadataDumperUsageException {
     // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
     // Per the docref, Snowflake only retains/returns seven trailing days of logs.
-    String overrideQuery = getOvverrideQuery(arguments);
+    return arguments.isAssessment()
+        ? createQueryFromAccountUsage(arguments)
+        : createQueryFromInformationSchema(arguments);
+  }
+
+  protected String createQueryFromAccountUsage(ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    String overrideQuery = getOverrideQuery(arguments);
+    if (overrideQuery != null) return overrideQuery;
+
+    String overrideWhere = getOverrideWhere(arguments);
+
+    @SuppressWarnings("OrphanedFormatString")
+    StringBuilder queryBuilder =
+        new StringBuilder(
+            "SELECT database_name, \n"
+                + "schema_name, \n"
+                + "user_name, \n"
+                + "warehouse_name, \n"
+                + "execution_status, \n"
+                + "error_code, \n"
+                + "start_time, \n"
+                + "end_time, \n"
+                + "total_elapsed_time, \n"
+                + "bytes_scanned, \n"
+                + "rows_produced, \n"
+                + "credits_used_cloud_services, \n"
+                + "query_text \n"
+                + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
+                + "WHERE end_time >= to_timestamp_ltz('%s')\n"
+                + "AND end_time <= to_timestamp_ltz('%s')\n");
+    // if the user specifies an earliest start time there will be extraneous empty dump files
+    // because we always iterate over the full 7 trailing days; maybe it's worth
+    // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
+    // to parse and return an ISO instant, not a database-server-specific format.
+    // TODO: Use ZonedIntervalIterable.forConnectorArguments()
+    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
+      queryBuilder
+          .append("AND start_time >= ")
+          .append(arguments.getQueryLogEarliestTimestamp())
+          .append("\n");
+    if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
+    return queryBuilder.toString().replace('\n', ' ');
+  }
+
+  protected String createQueryFromInformationSchema(ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    String overrideQuery = getOverrideQuery(arguments);
     if (overrideQuery != null) return overrideQuery;
 
     String overrideWhere = getOverrideWhere(arguments);
@@ -145,13 +192,14 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   }
 
   @CheckForNull
-  protected String getOvverrideQuery(@Nonnull ConnectorArguments arguments)
+  protected String getOverrideQuery(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     String overrideQuery = arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_QUERY);
     if (overrideQuery != null) {
       if (StringUtils.countMatches(overrideQuery, "%s") != 2)
         throw new MetadataDumperUsageException(
-            "Custom query for log dump needs two \"%s\" expansions, they will be expanded to end_time lower and upper boundaries.");
+            "Custom query for log dump needs two \"%s\" expansions, they will be expanded to"
+                + " end_time lower and upper boundaries.");
       return overrideQuery;
     }
     return null;
