@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.auto.service.AutoService;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
@@ -39,7 +40,8 @@ public class SnowflakeInformationSchemaMetadataConnector extends SnowflakeMetada
       Class<? extends Enum<?>> header,
       String format,
       TaskVariant is_task,
-      TaskVariant au_task) {
+      TaskVariant au_task,
+      ConnectorArguments arguments) {
     Task<?> t0 =
         new JdbcSelectTask(
                 is_task.zipEntryName,
