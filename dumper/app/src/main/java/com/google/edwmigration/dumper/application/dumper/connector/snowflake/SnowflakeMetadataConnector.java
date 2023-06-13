@@ -138,11 +138,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 String.format(format, au_task.schemaName, au_task.whereClause))
             .withHeaderClass(header);
 
-    Task<?> t0 = arguments.isAssessment() ? au_jdbcTask : is_jdbcTask;
-    Task<?> t1 = (arguments.isAssessment() ? is_jdbcTask : au_jdbcTask).onlyIfFailed(t0);
-
-    out.add(t0);
-    out.add(t1);
+    if (arguments.isAssessment()) {
+      out.add(au_jdbcTask);
+    } else {
+      out.add(is_jdbcTask);
+      out.add(au_jdbcTask.onlyIfFailed(is_jdbcTask));
+    }
   }
 
   @Override
