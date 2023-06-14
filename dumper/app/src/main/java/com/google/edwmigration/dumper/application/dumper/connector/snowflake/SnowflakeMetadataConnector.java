@@ -154,10 +154,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull TaskVariant task) {
-    out.add(new JdbcSelectTask(
-        task.zipEntryName,
-        String.format(format, task.schemaName, task.whereClause))
-        .withHeaderClass(header));
+    out.add(
+        new JdbcSelectTask(
+                task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
+            .withHeaderClass(header));
   }
 
   @Override
@@ -255,7 +255,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         arguments);
 
     if (arguments.isAssessment()) {
-      addSingleSqlTask(out, SnowflakeMetadataDumpFormat.WarehouseEventsHistoryFormat.Header.class,
+      addSingleSqlTask(
+          out,
+          SnowflakeMetadataDumpFormat.WarehouseEventsHistoryFormat.Header.class,
           getOverrideableQuery(
               arguments,
               "SELECT * FROM %1$s.WAREHOUSE_EVENTS_HISTORY%2$s",
