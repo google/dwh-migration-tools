@@ -60,7 +60,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     VIEWS_OVERRIDE_QUERY,
     VIEWS_OVERRIDE_WHERE,
     FUNCTIONS_OVERRIDE_QUERY,
-    FUNCTIONS_OVERRIDE_WHERE;
+    FUNCTIONS_OVERRIDE_WHERE,
+    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY,
+    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_WHERE;
 
     private final String name;
     private final String description;
@@ -144,6 +146,18 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       out.add(is_jdbcTask);
       out.add(au_jdbcTask.onlyIfFailed(is_jdbcTask));
     }
+  }
+
+  @ForOverride
+  protected void addSingleSqlTask(
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull TaskVariant task) {
+    out.add(new JdbcSelectTask(
+        task.zipEntryName,
+        String.format(format, task.schemaName, task.whereClause))
+        .withHeaderClass(header));
   }
 
   @Override
@@ -239,6 +253,17 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         new TaskVariant(
             SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
+
+    if (arguments.isAssessment()) {
+      addSingleSqlTask(out, SnowflakeMetadataDumpFormat.WarehouseEventsHistoryFormat.Header.class,
+          getOverrideableQuery(
+              arguments,
+              "SELECT * FROM %1$s.WAREHOUSE_EVENTS_HISTORY%2$s",
+              SnowflakeMetadataConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY,
+              SnowflakeMetadataConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_WHERE),
+          new TaskVariant(
+              SnowflakeMetadataDumpFormat.WarehouseEventsHistoryFormat.AU_ZIP_ENTRY_NAME, AU));
+    }
   }
 
   private String getOverrideableQuery(
