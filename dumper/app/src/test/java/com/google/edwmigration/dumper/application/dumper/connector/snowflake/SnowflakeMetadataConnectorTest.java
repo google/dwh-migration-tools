@@ -30,9 +30,7 @@ import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author shevek
- */
+/** @author shevek */
 @RunWith(JUnit4.class)
 public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorExecutionTest {
 
