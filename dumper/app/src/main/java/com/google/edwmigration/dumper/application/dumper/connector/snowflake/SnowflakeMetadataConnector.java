@@ -446,7 +446,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ShowWarehousesFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT * FROM %1$s.SHOW_WAREHOUSES%2$s",
+            "SELECT * FROM (SHOW WAREHOUSES)%2$s",
             SnowflakeMetadataConnectorProperties.SHOW_WAREHOUSES_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.SHOW_WAREHOUSES_OVERRIDE_WHERE),
         new TaskVariant(ShowWarehousesFormat.AU_ZIP_ENTRY_NAME, accountUsage));
