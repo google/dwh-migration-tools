@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import javax.annotation.Nonnull;
@@ -144,8 +145,8 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
           SnowflakeMetadataDumpFormat.WarehouseMeteringHistoryFormat.AU_ZIP_ENTRY_NAME,
           SnowflakeMetadataDumpFormat.WarehouseMeteringHistoryFormat.Header.class);
       validator.withEntryValidator(
-          SnowflakeMetadataDumpFormat.ShowWarehousesFormat.AU_ZIP_ENTRY_NAME,
-          SnowflakeMetadataDumpFormat.ShowWarehousesFormat.Header.class);
+          WarehousesFormat.AU_ZIP_ENTRY_NAME,
+          WarehousesFormat.Header.class);
       validator.run(outputFile);
     }
   }

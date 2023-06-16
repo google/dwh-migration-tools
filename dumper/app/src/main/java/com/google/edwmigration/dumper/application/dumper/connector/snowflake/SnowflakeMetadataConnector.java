@@ -83,8 +83,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_WHERE,
     SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY,
     SERVERLESS_TASK_HISTORY_OVERRIDE_WHERE,
-    SHOW_WAREHOUSES_OVERRIDE_QUERY,
-    SHOW_WAREHOUSES_OVERRIDE_WHERE,
+    WAREHOUSES_OVERRIDE_QUERY,
+    WAREHOUSES_OVERRIDE_WHERE,
     TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
     TABLE_STORAGE_METRICS_OVERRIDE_WHERE,
     TASK_HISTORY_OVERRIDE_QUERY,
@@ -443,13 +443,13 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     addSingleSqlTask(
         out,
-        ShowWarehousesFormat.Header.class,
+        WarehousesFormat.Header.class,
         getOverrideableQuery(
             arguments,
             "SELECT * FROM (SHOW WAREHOUSES)%2$s",
-            SnowflakeMetadataConnectorProperties.SHOW_WAREHOUSES_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.SHOW_WAREHOUSES_OVERRIDE_WHERE),
-        new TaskVariant(ShowWarehousesFormat.AU_ZIP_ENTRY_NAME, accountUsage));
+            SnowflakeMetadataConnectorProperties.WAREHOUSES_OVERRIDE_QUERY,
+            SnowflakeMetadataConnectorProperties.WAREHOUSES_OVERRIDE_WHERE),
+        new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, accountUsage));
   }
 
   private String getOverrideableQuery(

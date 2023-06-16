@@ -426,9 +426,9 @@ public interface SnowflakeMetadataDumpFormat {
     }
   }
 
-  interface ShowWarehousesFormat {
+  interface WarehousesFormat {
 
-    String AU_ZIP_ENTRY_NAME = "show_warehouses-au.csv";
+    String AU_ZIP_ENTRY_NAME = "warehouses-au.csv";
 
     enum Header {
       name,
