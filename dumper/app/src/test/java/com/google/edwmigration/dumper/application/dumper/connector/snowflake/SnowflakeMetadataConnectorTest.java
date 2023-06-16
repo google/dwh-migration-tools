@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import javax.annotation.Nonnull;
@@ -31,7 +30,9 @@ import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RunWith(JUnit4.class)
 public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorExecutionTest {
 
@@ -144,9 +145,6 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
       validator.withEntryValidator(
           SnowflakeMetadataDumpFormat.WarehouseMeteringHistoryFormat.AU_ZIP_ENTRY_NAME,
           SnowflakeMetadataDumpFormat.WarehouseMeteringHistoryFormat.Header.class);
-      validator.withEntryValidator(
-          WarehousesFormat.AU_ZIP_ENTRY_NAME,
-          WarehousesFormat.Header.class);
       validator.run(outputFile);
     }
   }

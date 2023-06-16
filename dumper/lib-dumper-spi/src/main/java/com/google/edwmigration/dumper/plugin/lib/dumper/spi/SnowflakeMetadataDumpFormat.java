@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author dave */
+/**
+ * @author dave
+ */
 public interface SnowflakeMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "snowflake.dump.zip";
@@ -125,10 +127,15 @@ public interface SnowflakeMetadataDumpFormat {
     enum Header {
       StartTime,
       EndTime,
-      TableName,
       CreditsUsed,
       NumBytesReclustered,
-      NumRowsReclustered
+      NumRowsReclustered,
+      TableId,
+      TableName,
+      SchemaId,
+      SchemaName,
+      DatabaseId,
+      DatabaseName
     }
   }
 
@@ -150,13 +157,17 @@ public interface SnowflakeMetadataDumpFormat {
       ErrorCount,
       ErrorLimit,
       Status,
-      TableCatalogName,
-      TableSchemaName,
+      TableId,
       TableName,
+      TableSchemaId,
+      TableSchemaName,
+      TableCatalogId,
+      TableCatalogName,
       PipeCatalogName,
       PipeSchemaName,
       PipeName,
-      PipeReceivedTime
+      PipeReceivedTime,
+      FirstCommitTime
     }
   }
 
@@ -168,6 +179,7 @@ public interface SnowflakeMetadataDumpFormat {
       StartTime,
       EndTime,
       DatabaseName,
+      DatabaseId,
       CreditsUsed,
       BytesTransferred
     }
@@ -178,7 +190,6 @@ public interface SnowflakeMetadataDumpFormat {
     String AU_ZIP_ENTRY_NAME = "login_history-au.csv";
 
     enum Header {
-      ReaderAccountName,
       EventId,
       EventTimestamp,
       EventType,
@@ -202,16 +213,12 @@ public interface SnowflakeMetadataDumpFormat {
 
     enum Header {
       ServiceType,
-      OrganizationName,
-      AccountName,
-      AccountLocator,
       UsageDate,
       CreditsUsedCompute,
       CreditsUsedCloudServices,
       CreditsUsed,
       CreditsAdjustmentCloudServices,
-      CreditsBilled,
-      Region
+      CreditsBilled
     }
   }
 
@@ -220,9 +227,10 @@ public interface SnowflakeMetadataDumpFormat {
     String AU_ZIP_ENTRY_NAME = "pipe_usage_history-au.csv";
 
     enum Header {
+      PipeId,
+      PipeName,
       StartTime,
       EndTime,
-      PipeName,
       CreditsUsed,
       BytesInserted,
       FilesInserted
@@ -237,9 +245,8 @@ public interface SnowflakeMetadataDumpFormat {
       StartTime,
       EndTime,
       CreditsUsed,
-      WarehouseName,
-      NumFilesScanned,
-      NumBytesScanned
+      WarehouseId,
+      WarehouseName
     }
   }
 
@@ -248,7 +255,6 @@ public interface SnowflakeMetadataDumpFormat {
     String AU_ZIP_ENTRY_NAME = "query_history-au.csv";
 
     enum Header {
-      ReaderAccountName,
       QueryId,
       QueryText,
       DatabaseId,
@@ -312,10 +318,8 @@ public interface SnowflakeMetadataDumpFormat {
       QueryAccelerationBytesScanned,
       QueryAccelerationPartitionsScanned,
       QueryAccelerationUpperLimitScaleFactor,
-      ChildQueriesWaitTime,
-      Owner,
-      OwnerRoleType,
       TransactionId,
+      ChildQueriesWaitTime,
       RoleType
     }
   }
@@ -328,6 +332,7 @@ public interface SnowflakeMetadataDumpFormat {
       StartTime,
       EndTime,
       ReplicationGroupName,
+      ReplicationGroupId,
       CreditsUsed,
       BytesTransferred
     }
@@ -340,8 +345,13 @@ public interface SnowflakeMetadataDumpFormat {
     enum Header {
       StartTime,
       EndTime,
+      CreditsUsed,
+      TaskId,
       TaskName,
-      CreditsUsed
+      SchemaId,
+      SchemaName,
+      DatabaseId,
+      DatabaseName
     }
   }
 
@@ -350,23 +360,26 @@ public interface SnowflakeMetadataDumpFormat {
     String AU_ZIP_ENTRY_NAME = "table_storage_metrics-au.csv";
 
     enum Header {
-      TableCatalog,
-      TableSchema,
-      TableName,
       Id,
+      TableName,
+      TableSchemaId,
+      TableSchema,
+      TableCatalogId,
+      TableCatalog,
       CloneGroupId,
       IsTransient,
       ActiveBytes,
       TimeTravelBytes,
       FailsafeBytes,
       RetainedForCloneBytes,
+      Deleted,
       TableCreated,
       TableDropped,
       TableEnteredFailsafe,
-      CatalogCreated,
-      CatalogDropped,
       SchemaCreated,
       SchemaDropped,
+      CatalogCreated,
+      CatalogDropped,
       Comment
     }
   }
@@ -376,23 +389,24 @@ public interface SnowflakeMetadataDumpFormat {
     String AU_ZIP_ENTRY_NAME = "task_history-au.csv";
 
     enum Header {
-      QueryId,
       Name,
-      DatabaseName,
-      SchemaName,
       QueryText,
       ConditionText,
+      SchemaName,
+      TaskSchemaId,
+      DatabaseName,
+      TaskDatabaseId,
+      ScheduledTime,
+      CompletedTime,
       State,
+      ReturnValue,
+      QueryId,
+      QueryStartTime,
       ErrorCode,
       ErrorMessage,
-      ScheduledTime,
-      QueryStartTime,
-      NextScheduledTime,
-      CompletedTime,
-      RootTaskId,
       GraphVersion,
       RunId,
-      ReturnValue,
+      RootTaskId,
       ScheduledFrom
     }
   }
@@ -404,6 +418,7 @@ public interface SnowflakeMetadataDumpFormat {
     enum Header {
       StartTime,
       EndTime,
+      WarehouseId,
       WarehouseName,
       AvgRunning,
       AvgQueuedLoad,
@@ -419,44 +434,11 @@ public interface SnowflakeMetadataDumpFormat {
     enum Header {
       StartTime,
       EndTime,
+      WarehouseId,
       WarehouseName,
       CreditsUsed,
       CreditsUsedCompute,
       CreditsUsedCloudServices
-    }
-  }
-
-  interface WarehousesFormat {
-
-    String AU_ZIP_ENTRY_NAME = "warehouses-au.csv";
-
-    enum Header {
-      Name,
-      State,
-      Type,
-      Size,
-      MinClusterCount,
-      MaxClusterCount,
-      StartedClusters,
-      Running,
-      Queued,
-      IsDefault,
-      IsCurrent,
-      AutoSuspend,
-      AutoResume,
-      Available,
-      Provisioning,
-      Quiescing,
-      Other,
-      CreatedOn,
-      ResumedOn,
-      UpdatedOn,
-      Owner,
-      Comment,
-      EnableQueryAcceleration,
-      QueryAccelerationMaxScaleFactor,
-      ResourceMonitor,
-      ScalingPolicy
     }
   }
 }

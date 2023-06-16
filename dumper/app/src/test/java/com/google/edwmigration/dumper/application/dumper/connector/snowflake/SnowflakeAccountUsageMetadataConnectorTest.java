@@ -18,14 +18,15 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RunWith(JUnit4.class)
 public class SnowflakeAccountUsageMetadataConnectorTest
     extends AbstractSnowflakeConnectorExecutionTest {
@@ -102,9 +103,6 @@ public class SnowflakeAccountUsageMetadataConnectorTest
     validator.withEntryValidator(
         SnowflakeMetadataDumpFormat.WarehouseMeteringHistoryFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.WarehouseMeteringHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        WarehousesFormat.AU_ZIP_ENTRY_NAME,
-        WarehousesFormat.Header.class);
     validator.run(outputFile);
   }
 }
