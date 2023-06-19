@@ -61,36 +61,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     VIEWS_OVERRIDE_WHERE,
     FUNCTIONS_OVERRIDE_QUERY,
     FUNCTIONS_OVERRIDE_WHERE,
-    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY,
-    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_WHERE,
-    AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY,
-    AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_WHERE,
-    COPY_HISTORY_OVERRIDE_QUERY,
-    COPY_HISTORY_OVERRIDE_WHERE,
-    DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY,
-    DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_WHERE,
-    LOGIN_HISTORY_OVERRIDE_QUERY,
-    LOGIN_HISTORY_OVERRIDE_WHERE,
-    METERING_DAILY_HISTORY_OVERRIDE_QUERY,
-    METERING_DAILY_HISTORY_OVERRIDE_WHERE,
-    PIPE_USAGE_HISTORY_OVERRIDE_QUERY,
-    PIPE_USAGE_HISTORY_OVERRIDE_WHERE,
-    QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY,
-    QUERY_ACCELERATION_HISTORY_OVERRIDE_WHERE,
     QUERY_HISTORY_OVERRIDE_QUERY,
     QUERY_HISTORY_OVERRIDE_WHERE,
-    REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY,
-    REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_WHERE,
-    SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY,
-    SERVERLESS_TASK_HISTORY_OVERRIDE_WHERE,
     TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
-    TABLE_STORAGE_METRICS_OVERRIDE_WHERE,
-    TASK_HISTORY_OVERRIDE_QUERY,
-    TASK_HISTORY_OVERRIDE_WHERE,
-    WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY,
-    WAREHOUSE_LOAD_HISTORY_OVERRIDE_WHERE,
-    WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY,
-    WAREHOUSE_METERING_HISTORY_OVERRIDE_WHERE;
+    TABLE_STORAGE_METRICS_OVERRIDE_WHERE;
 
     private final String name;
     private final String description;
@@ -291,86 +265,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       List<? super Task<?>> out, ConnectorArguments arguments, String accountUsage) {
     addSingleSqlTask(
         out,
-        WarehouseEventsHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.WAREHOUSE_EVENTS_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(WarehouseEventsHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        AutomaticClusteringHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.AUTOMATIC_CLUSTERING_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(AutomaticClusteringHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        CopyHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.COPY_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.COPY_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.COPY_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(CopyHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        DatabaseReplicationUsageHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.DATABASE_REPLICATION_USAGE_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(DatabaseReplicationUsageHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        LoginHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.LOGIN_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.LOGIN_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.LOGIN_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(LoginHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        MeteringDailyHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.METERING_DAILY_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(MeteringDailyHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        PipeUsageHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.PIPE_USAGE_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(PipeUsageHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        QueryAccelerationHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.QUERY_ACCELERATION_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(QueryAccelerationHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
         QueryHistoryFormat.Header.class,
         getOverrideableQuery(
             arguments,
@@ -381,26 +275,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     addSingleSqlTask(
         out,
-        ReplicationGroupUsageHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.REPLICATION_GROUP_USAGE_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(ReplicationGroupUsageHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        ServerlessTaskHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.SERVERLESS_TASK_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(ServerlessTaskHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
         TableStorageMetricsFormat.Header.class,
         getOverrideableQuery(
             arguments,
@@ -408,36 +282,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
         new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        TaskHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.TASK_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.TASK_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.TASK_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(TaskHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        WarehouseLoadHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.WAREHOUSE_LOAD_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(WarehouseLoadHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        WarehouseMeteringHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.WAREHOUSE_METERING_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(WarehouseMeteringHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
   }
 
   private String getOverrideableQuery(

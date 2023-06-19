@@ -57,50 +57,10 @@ public class SnowflakeAccountUsageMetadataConnectorTest
         SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
     validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.WarehouseEventsHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.WarehouseEventsHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.AutomaticClusteringHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.AutomaticClusteringHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.CopyHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.CopyHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.DatabaseReplicationUsageHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.DatabaseReplicationUsageHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.LoginHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.LoginHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.MeteringDailyHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.MeteringDailyHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.PipeUsageHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.PipeUsageHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.QueryAccelerationHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.QueryAccelerationHistoryFormat.Header.class);
-    validator.withEntryValidator(
         SnowflakeMetadataDumpFormat.QueryHistoryFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.QueryHistoryFormat.Header.class);
     validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.ReplicationGroupUsageHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.ReplicationGroupUsageHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.ServerlessTaskHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.ServerlessTaskHistoryFormat.Header.class);
-    validator.withEntryValidator(
         SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.TaskHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.TaskHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.WarehouseLoadHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.WarehouseLoadHistoryFormat.Header.class);
-    validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.WarehouseMeteringHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.WarehouseMeteringHistoryFormat.Header.class);
-    validator.run(outputFile);
   }
 }

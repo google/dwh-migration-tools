@@ -38,4 +38,241 @@ public interface SnowflakeLogsDumpFormat {
     CreditsUsedCloudServices,
     QueryText
   }
+
+  interface WarehouseEventsHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "warehouse_events-au.csv";
+
+    enum Header {
+      Timestamp,
+      WarehouseId,
+      WarehouseName,
+      ClusterNumber,
+      EventName,
+      EventReason,
+      EventState,
+      UserName,
+      RoleName,
+      QueryId
+    }
+  }
+
+  interface AutomaticClusteringHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "automatic_clustering_history-au.csv";
+
+    enum Header {
+      StartTime,
+      EndTime,
+      CreditsUsed,
+      NumBytesReclustered,
+      NumRowsReclustered,
+      TableId,
+      TableName,
+      SchemaId,
+      SchemaName,
+      DatabaseId,
+      DatabaseName
+    }
+  }
+
+  interface CopyHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "copy_history-au.csv";
+
+    enum Header {
+      FileName,
+      StageLocation,
+      LastLoadTime,
+      RowCount,
+      RowParsed,
+      FileSize,
+      FirstErrorMessage,
+      FirstErrorLineNumber,
+      FirstErrorCharacterPos,
+      FirstErrorColumnName,
+      ErrorCount,
+      ErrorLimit,
+      Status,
+      TableId,
+      TableName,
+      TableSchemaId,
+      TableSchemaName,
+      TableCatalogId,
+      TableCatalogName,
+      PipeCatalogName,
+      PipeSchemaName,
+      PipeName,
+      PipeReceivedTime,
+      FirstCommitTime
+    }
+  }
+
+  interface DatabaseReplicationUsageHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "database_replication_usage_history-au.csv";
+
+    enum Header {
+      StartTime,
+      EndTime,
+      DatabaseName,
+      DatabaseId,
+      CreditsUsed,
+      BytesTransferred
+    }
+  }
+
+  interface LoginHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "login_history-au.csv";
+
+    enum Header {
+      EventId,
+      EventTimestamp,
+      EventType,
+      UserName,
+      ClientIp,
+      ReportedClientType,
+      ReportedClientVersion,
+      FirstAuthenticationFactor,
+      SecondAuthenticationFactor,
+      IsSuccess,
+      ErrorCode,
+      ErrorMessage,
+      RelatedEventId,
+      Connection
+    }
+  }
+
+  interface MeteringDailyHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "metering_daily_history-au.csv";
+
+    enum Header {
+      ServiceType,
+      UsageDate,
+      CreditsUsedCompute,
+      CreditsUsedCloudServices,
+      CreditsUsed,
+      CreditsAdjustmentCloudServices,
+      CreditsBilled
+    }
+  }
+
+  interface PipeUsageHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "pipe_usage_history-au.csv";
+
+    enum Header {
+      PipeId,
+      PipeName,
+      StartTime,
+      EndTime,
+      CreditsUsed,
+      BytesInserted,
+      FilesInserted
+    }
+  }
+
+  interface QueryAccelerationHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "query_acceleration_history-au.csv";
+
+    enum Header {
+      StartTime,
+      EndTime,
+      CreditsUsed,
+      WarehouseId,
+      WarehouseName
+    }
+  }
+
+  interface ReplicationGroupUsageHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "replication_group_usage_history-au.csv";
+
+    enum Header {
+      StartTime,
+      EndTime,
+      ReplicationGroupName,
+      ReplicationGroupId,
+      CreditsUsed,
+      BytesTransferred
+    }
+  }
+
+  interface ServerlessTaskHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "serverless_task_history-au.csv";
+
+    enum Header {
+      StartTime,
+      EndTime,
+      CreditsUsed,
+      TaskId,
+      TaskName,
+      SchemaId,
+      SchemaName,
+      DatabaseId,
+      DatabaseName
+    }
+  }
+
+  interface TaskHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "task_history-au.csv";
+
+    enum Header {
+      Name,
+      QueryText,
+      ConditionText,
+      SchemaName,
+      TaskSchemaId,
+      DatabaseName,
+      TaskDatabaseId,
+      ScheduledTime,
+      CompletedTime,
+      State,
+      ReturnValue,
+      QueryId,
+      QueryStartTime,
+      ErrorCode,
+      ErrorMessage,
+      GraphVersion,
+      RunId,
+      RootTaskId,
+      ScheduledFrom
+    }
+  }
+
+  interface WarehouseLoadHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "warehouse_load_history-au.csv";
+
+    enum Header {
+      StartTime,
+      EndTime,
+      WarehouseId,
+      WarehouseName,
+      AvgRunning,
+      AvgQueuedLoad,
+      AvgQueuedProvisioning,
+      AvgBlocked
+    }
+  }
+
+  interface WarehouseMeteringHistoryFormat {
+
+    String AU_ZIP_ENTRY_NAME = "warehouse_metering_history-au.csv";
+
+    enum Header {
+      StartTime,
+      EndTime,
+      WarehouseId,
+      WarehouseName,
+      CreditsUsed,
+      CreditsUsedCompute,
+      CreditsUsedCloudServices
+    }
+  }
 }
