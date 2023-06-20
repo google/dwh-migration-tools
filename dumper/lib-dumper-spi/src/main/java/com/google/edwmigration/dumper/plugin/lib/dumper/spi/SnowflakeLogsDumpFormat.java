@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 public interface SnowflakeLogsDumpFormat {
 
   String FORMAT_NAME = "snowflake.logs.zip";
@@ -41,7 +43,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface WarehouseEventsHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "warehouse_events_history.csv";
+    String ZIP_ENTRY_PREFIX = "warehouse_events_history_";
 
     enum Header {
       Timestamp,
@@ -59,7 +61,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface AutomaticClusteringHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "automatic_clustering_history.csv";
+    String ZIP_ENTRY_PREFIX = "automatic_clustering_history_";
 
     enum Header {
       StartTime,
@@ -78,7 +80,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface CopyHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "copy_history.csv";
+    String ZIP_ENTRY_PREFIX = "copy_history_";
 
     enum Header {
       FileName,
@@ -110,7 +112,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface DatabaseReplicationUsageHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "database_replication_usage_history.csv";
+    String ZIP_ENTRY_PREFIX = "database_replication_usage_history_";
 
     enum Header {
       StartTime,
@@ -124,7 +126,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface LoginHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "login_history.csv";
+    String ZIP_ENTRY_PREFIX = "login_history_";
 
     enum Header {
       EventId,
@@ -146,7 +148,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface MeteringDailyHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "metering_daily_history.csv";
+    String ZIP_ENTRY_PREFIX = "metering_daily_history_";
 
     enum Header {
       ServiceType,
@@ -161,7 +163,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface PipeUsageHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "pipe_usage_history.csv";
+    String ZIP_ENTRY_PREFIX = "pipe_usage_history_";
 
     enum Header {
       PipeId,
@@ -176,7 +178,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface QueryAccelerationHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "query_acceleration_history.csv";
+    String ZIP_ENTRY_PREFIX = "query_acceleration_history_";
 
     enum Header {
       StartTime,
@@ -189,7 +191,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface ReplicationGroupUsageHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "replication_group_usage_history.csv";
+    String ZIP_ENTRY_PREFIX = "replication_group_usage_history_";
 
     enum Header {
       StartTime,
@@ -203,7 +205,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface ServerlessTaskHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "serverless_task_history.csv";
+    String ZIP_ENTRY_PREFIX = "serverless_task_history_";
 
     enum Header {
       StartTime,
@@ -220,7 +222,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface TaskHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "task_history.csv";
+    String ZIP_ENTRY_PREFIX = "task_history_";
 
     enum Header {
       Name,
@@ -247,7 +249,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface WarehouseLoadHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "warehouse_load_history.csv";
+    String ZIP_ENTRY_PREFIX = "warehouse_load_history_";
 
     enum Header {
       StartTime,
@@ -263,7 +265,7 @@ public interface SnowflakeLogsDumpFormat {
 
   interface WarehouseMeteringHistoryFormat {
 
-    String AU_ZIP_ENTRY_NAME = "warehouse_metering_history.csv";
+    String ZIP_ENTRY_PREFIX = "warehouse_metering_history_";
 
     enum Header {
       StartTime,
