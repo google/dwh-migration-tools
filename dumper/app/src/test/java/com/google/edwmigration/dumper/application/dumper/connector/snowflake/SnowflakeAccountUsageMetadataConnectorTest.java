@@ -57,9 +57,6 @@ public class SnowflakeAccountUsageMetadataConnectorTest
         SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
     validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.QueryHistoryFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.QueryHistoryFormat.Header.class);
-    validator.withEntryValidator(
         SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.Header.class);
   }

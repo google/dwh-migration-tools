@@ -61,8 +61,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     VIEWS_OVERRIDE_WHERE,
     FUNCTIONS_OVERRIDE_QUERY,
     FUNCTIONS_OVERRIDE_WHERE,
-    QUERY_HISTORY_OVERRIDE_QUERY,
-    QUERY_HISTORY_OVERRIDE_WHERE,
     TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
     TABLE_STORAGE_METRICS_OVERRIDE_WHERE;
 
@@ -257,31 +255,16 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         arguments);
 
     if (arguments.isAssessment()) {
-      addAssessmentTasks(out, arguments, AU);
+      addSingleSqlTask(
+          out,
+          TableStorageMetricsFormat.Header.class,
+          getOverrideableQuery(
+              arguments,
+              "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
+              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
+              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
+          new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU));
     }
-  }
-
-  private void addAssessmentTasks(
-      List<? super Task<?>> out, ConnectorArguments arguments, String accountUsage) {
-    addSingleSqlTask(
-        out,
-        QueryHistoryFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.QUERY_HISTORY%2$s",
-            SnowflakeMetadataConnectorProperties.QUERY_HISTORY_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.QUERY_HISTORY_OVERRIDE_WHERE),
-        new TaskVariant(QueryHistoryFormat.AU_ZIP_ENTRY_NAME, accountUsage));
-
-    addSingleSqlTask(
-        out,
-        TableStorageMetricsFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
-            SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
-        new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, accountUsage));
   }
 
   private String getOverrideableQuery(
