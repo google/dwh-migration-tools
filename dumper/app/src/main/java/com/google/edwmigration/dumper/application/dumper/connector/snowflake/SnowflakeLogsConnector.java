@@ -42,11 +42,14 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Snowflake.")
 @RespectsArgumentQueryLogDays
@@ -75,63 +78,37 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         "snowflake.logs.where", "Custom where condition to append to query for log dump."),
 
     WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for warehouse events history dump"),
-    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.query",
-        "Custom where condition to append to for warehouse events history dump"),
+        "snowflake.warehouse_events_history.query",
+        "Custom query for warehouse events history dump"),
     AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for automatic clustering history dump"),
-    AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where",
-        "Custom where condition to append to for automatic clustering history dump"),
-    COPY_HISTORY_OVERRIDE_QUERY("snowflake.logs.query", "Custom query for copy history dump"),
-    COPY_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where", "Custom where condition to append to for copy history dump"),
+        "snowflake.automatic_clustering_history.query",
+        "Custom query for automatic clustering history dump"),
+    COPY_HISTORY_OVERRIDE_QUERY(
+        "snowflake.copy_history.query", "Custom query for copy history dump"),
     DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for database replication usage history dump"),
-    DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where",
-        "Custom where condition to append to for database replication usage history dump"),
-    LOGIN_HISTORY_OVERRIDE_QUERY("snowflake.logs.query", "Custom query for login history dump"),
-    LOGIN_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where", "Custom where condition to append to for login history dump"),
+        "snowflake.database_replication_usage_history.query",
+        "Custom query for database replication usage history dump"),
+    LOGIN_HISTORY_OVERRIDE_QUERY(
+        "snowflake.login_history.query", "Custom query for login history dump"),
     METERING_DAILY_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for metering daily history dump"),
-    METERING_DAILY_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where",
-        "Custom where condition to append to for metering daily history dump"),
+        "snowflake.metering_daily_history.query", "Custom query for metering daily history dump"),
     PIPE_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for pipe usage history dump"),
-    PIPE_USAGE_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where", "Custom where condition to append to for pipe usage history dump"),
+        "snowflake.pipe_usage_history.query", "Custom query for pipe usage history dump"),
     QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for query acceleration history dump"),
-    QUERY_ACCELERATION_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where",
-        "Custom where condition to append to for query acceleration history dump"),
+        "snowflake.query_acceleration_history.query",
+        "Custom query for query acceleration history dump"),
     REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for replication group usage history dump"),
-    REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where",
-        "Custom where condition to append to for replication group usage history dump"),
+        "snowflake.replication_group_usage_history.query",
+        "Custom query for replication group usage history dump"),
     SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for serverless task history dump"),
-    SERVERLESS_TASK_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where",
-        "Custom where condition to append to for serverless task history dump"),
-    TASK_HISTORY_OVERRIDE_QUERY("snowflake.logs.query", "Custom query for task history dump"),
-    TASK_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where", "Custom where condition to append to for task history dump"),
+        "snowflake.serverless_task_history.query", "Custom query for serverless task history dump"),
+    TASK_HISTORY_OVERRIDE_QUERY(
+        "snowflake.task_history.query", "Custom query for task history dump"),
     WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for warehouse load history dump"),
-    WAREHOUSE_LOAD_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where",
-        "Custom where condition to append to for warehouse load history dump"),
+        "snowflake.warehouse_load_history.query", "Custom query for warehouse load history dump"),
     WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY(
-        "snowflake.logs.query", "Custom query for warehouse metering history dump"),
-    WAREHOUSE_METERING_HISTORY_OVERRIDE_WHERE(
-        "snowflake.logs.where",
-        "Custom where condition to append to for warehouse metering history dump");
+        "snowflake.warehouse_metering_history.query",
+        "Custom query for warehouse metering history dump");
 
     private final String name;
     private final String description;
@@ -304,19 +281,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     }
   }
 
-  private String getOverrideableQuery(
-      @Nonnull ConnectorArguments arguments,
-      @Nonnull String defaultSql,
-      @Nonnull SnowflakeLogConnectorProperties queryProperty,
-      @Nonnull SnowflakeLogConnectorProperties whereProperty) {
-
-    String overrideQuery = arguments.getDefinition(queryProperty);
-    if (overrideQuery != null) return overrideQuery;
-
-    String overrideWhere = arguments.getDefinition(whereProperty);
-    if (overrideWhere != null) return defaultSql + " WHERE " + overrideWhere;
-
-    return defaultSql;
+  private String getOverrideableQuery(@Nullable String overrideQuery, @Nonnull String defaultSql) {
+    return overrideQuery != null ? overrideQuery : defaultSql;
   }
 
   private List<AbstractJdbcTask<Summary>> createAssessmentTasks(ConnectorArguments arguments) {
@@ -325,108 +291,96 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         new JdbcSelectTask(
                 WarehouseEventsHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "WAREHOUSE_EVENTS_HISTORY",
-                    SnowflakeLogConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "WAREHOUSE_EVENTS_HISTORY"))
             .withHeaderClass(WarehouseEventsHistoryFormat.Header.class),
         new JdbcSelectTask(
                 AutomaticClusteringHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "AUTOMATIC_CLUSTERING_HISTORY",
-                    SnowflakeLogConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties
+                            .AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "AUTOMATIC_CLUSTERING_HISTORY"))
             .withHeaderClass(AutomaticClusteringHistoryFormat.Header.class),
         new JdbcSelectTask(
                 CopyHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "COPY_HISTORY",
-                    SnowflakeLogConnectorProperties.COPY_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.COPY_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.COPY_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "COPY_HISTORY"))
             .withHeaderClass(CopyHistoryFormat.Header.class),
         new JdbcSelectTask(
                 DatabaseReplicationUsageHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "DATABASE_REPLICATION_USAGE_HISTORY",
-                    SnowflakeLogConnectorProperties
-                        .DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties
-                        .DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties
+                            .DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "DATABASE_REPLICATION_USAGE_HISTORY"))
             .withHeaderClass(DatabaseReplicationUsageHistoryFormat.Header.class),
         new JdbcSelectTask(
                 LoginHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "LOGIN_HISTORY",
-                    SnowflakeLogConnectorProperties.LOGIN_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.LOGIN_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.LOGIN_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "LOGIN_HISTORY"))
             .withHeaderClass(LoginHistoryFormat.Header.class),
         new JdbcSelectTask(
                 MeteringDailyHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "METERING_DAILY_HISTORY",
-                    SnowflakeLogConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "METERING_DAILY_HISTORY"))
             .withHeaderClass(MeteringDailyHistoryFormat.Header.class),
         new JdbcSelectTask(
                 PipeUsageHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "PIPE_USAGE_HISTORY",
-                    SnowflakeLogConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "PIPE_USAGE_HISTORY"))
             .withHeaderClass(PipeUsageHistoryFormat.Header.class),
         new JdbcSelectTask(
                 QueryAccelerationHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "QUERY_ACCELERATION_HISTORY",
-                    SnowflakeLogConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "QUERY_ACCELERATION_HISTORY"))
             .withHeaderClass(QueryAccelerationHistoryFormat.Header.class),
         new JdbcSelectTask(
                 ReplicationGroupUsageHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "REPLICATION_GROUP_USAGE_HISTORY",
-                    SnowflakeLogConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties
+                            .REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "REPLICATION_GROUP_USAGE_HISTORY"))
             .withHeaderClass(ReplicationGroupUsageHistoryFormat.Header.class),
         new JdbcSelectTask(
                 ServerlessTaskHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "SERVERLESS_TASK_HISTORY",
-                    SnowflakeLogConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "SERVERLESS_TASK_HISTORY"))
             .withHeaderClass(ServerlessTaskHistoryFormat.Header.class),
         new JdbcSelectTask(
                 TaskHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "TASK_HISTORY",
-                    SnowflakeLogConnectorProperties.TASK_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.TASK_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.TASK_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "TASK_HISTORY"))
             .withHeaderClass(TaskHistoryFormat.Header.class),
         new JdbcSelectTask(
                 WarehouseLoadHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "WAREHOUSE_LOAD_HISTORY",
-                    SnowflakeLogConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "WAREHOUSE_LOAD_HISTORY"))
             .withHeaderClass(WarehouseLoadHistoryFormat.Header.class),
         new JdbcSelectTask(
                 WarehouseMeteringHistoryFormat.AU_ZIP_ENTRY_NAME,
                 getOverrideableQuery(
-                    arguments,
-                    queryPrefix + "WAREHOUSE_METERING_HISTORY",
-                    SnowflakeLogConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY,
-                    SnowflakeLogConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_WHERE))
+                    arguments.getDefinition(
+                        SnowflakeLogConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY),
+                    queryPrefix + "WAREHOUSE_METERING_HISTORY"))
             .withHeaderClass(WarehouseMeteringHistoryFormat.Header.class));
   }
 }
