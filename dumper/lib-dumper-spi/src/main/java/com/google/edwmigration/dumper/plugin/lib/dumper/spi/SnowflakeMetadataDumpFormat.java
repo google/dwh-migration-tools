@@ -102,7 +102,7 @@ public interface SnowflakeMetadataDumpFormat {
 
   interface TableStorageMetricsFormat {
 
-    String AU_ZIP_ENTRY_NAME = "table_storage_metrics.csv";
+    String AU_ZIP_ENTRY_NAME = "table_storage_metrics-au.csv";
 
     enum Header {
       Id,
