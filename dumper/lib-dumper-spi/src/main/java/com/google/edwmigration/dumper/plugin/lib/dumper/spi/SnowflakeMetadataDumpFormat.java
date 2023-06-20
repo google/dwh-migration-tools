@@ -100,21 +100,32 @@ public interface SnowflakeMetadataDumpFormat {
     }
   }
 
-  interface WarehouseEventsHistoryFormat {
+  interface TableStorageMetricsFormat {
 
-    String AU_ZIP_ENTRY_NAME = "warehouse_events-au.csv";
+    String AU_ZIP_ENTRY_NAME = "table_storage_metrics-au.csv";
 
     enum Header {
-      Timestamp,
-      WarehouseId,
-      WarehouseName,
-      ClusterNumber,
-      EventName,
-      EventReason,
-      EventState,
-      UserName,
-      RoleName,
-      QueryId
+      Id,
+      TableName,
+      TableSchemaId,
+      TableSchema,
+      TableCatalogId,
+      TableCatalog,
+      CloneGroupId,
+      IsTransient,
+      ActiveBytes,
+      TimeTravelBytes,
+      FailsafeBytes,
+      RetainedForCloneBytes,
+      Deleted,
+      TableCreated,
+      TableDropped,
+      TableEnteredFailsafe,
+      SchemaCreated,
+      SchemaDropped,
+      CatalogCreated,
+      CatalogDropped,
+      Comment
     }
   }
 }

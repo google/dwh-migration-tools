@@ -61,8 +61,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     VIEWS_OVERRIDE_WHERE,
     FUNCTIONS_OVERRIDE_QUERY,
     FUNCTIONS_OVERRIDE_WHERE,
-    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY,
-    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_WHERE;
+    TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
+    TABLE_STORAGE_METRICS_OVERRIDE_WHERE;
 
     private final String name;
     private final String description;
@@ -257,14 +257,13 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (arguments.isAssessment()) {
       addSingleSqlTask(
           out,
-          SnowflakeMetadataDumpFormat.WarehouseEventsHistoryFormat.Header.class,
+          TableStorageMetricsFormat.Header.class,
           getOverrideableQuery(
               arguments,
-              "SELECT * FROM %1$s.WAREHOUSE_EVENTS_HISTORY%2$s",
-              SnowflakeMetadataConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY,
-              SnowflakeMetadataConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_WHERE),
-          new TaskVariant(
-              SnowflakeMetadataDumpFormat.WarehouseEventsHistoryFormat.AU_ZIP_ENTRY_NAME, AU));
+              "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
+              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
+              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
+          new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU));
     }
   }
 
