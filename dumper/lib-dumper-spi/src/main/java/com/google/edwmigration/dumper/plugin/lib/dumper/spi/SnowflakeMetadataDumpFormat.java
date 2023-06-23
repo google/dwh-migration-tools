@@ -128,4 +128,43 @@ public interface SnowflakeMetadataDumpFormat {
       Comment
     }
   }
+
+  interface WarehousesFormat {
+
+    String AU_ZIP_ENTRY_NAME = "warehouses.csv";
+
+    enum Header {
+      Name,
+      State,
+      Type,
+      Size,
+      MinClusterCount,
+      MaxClusterCount,
+      StartedClusters,
+      Running,
+      Queued,
+      IsDefault,
+      IsCurrent,
+      AutoSuspend,
+      AutoResume,
+      Available,
+      Provisioning,
+      Quiescing,
+      Other,
+      CreatedOn,
+      ResumedOn,
+      UpdatedOn,
+      Owner,
+      Comment,
+      EnableQueryAcceleration,
+      QueryAccelerationMaxScaleFactor,
+      ResourceMonitor,
+      Actives,
+      Pendings,
+      Failed,
+      Suspended,
+      Uuid,
+      ScalingPolicy,
+    }
+  }
 }
