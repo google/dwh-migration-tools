@@ -73,12 +73,10 @@
 			"moduleName": ".*"
 		},
 		{
-			"moduleLicense": "The Go license",
+			"moduleLicense": "Go License",
 			"notes": "This is another BSD license.",
 			"moduleName": ".*"
 		},
-
-
 		{
 			"moduleLicense": "Apache License",
 			"moduleName": "org.apache.httpcomponents:httpclient"

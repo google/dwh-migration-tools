@@ -207,13 +207,17 @@ public class ConnectorArguments extends DefaultArguments {
   // private final OptionSpec<String> optionDatabase = parser.accepts("database", "database (can be
   // repeated; all if not
   // specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
-  private final OptionSpec<File> optionOutput =
+  private final OptionSpec<String> optionOutput =
       parser
           .accepts(
               "output",
-              "Output file or directory name. If the file name, along with the `.zip` extension, is not provided dumper will attempt to create the zip file with the default file name in the directory.")
+              "Output file, directory name, or GCS path. If the file name, along with "
+                  + "the `.zip` extension, is not provided dumper will attempt to create the zip "
+                  + "file with the default file name in the directory. To use GCS, use the format "
+                  + "gs://<BUCKET>/<PATH>. This requires Google Cloud credentials. See "
+                  + "https://cloud.google.com/docs/authentication/client-libraries for details.")
           .withRequiredArg()
-          .ofType(File.class)
+          .ofType(String.class)
           .describedAs("cw-dump.zip");
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
@@ -641,8 +645,8 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valuesOf(optionConfiguration);
   }
 
-  public Optional<File> getOutputFile() {
-    return optionAsOptional(optionOutput).filter(file -> !file.getName().isEmpty());
+  public Optional<String> getOutputFile() {
+    return optionAsOptional(optionOutput).filter(file -> !Strings.isNullOrEmpty(file));
   }
 
   public boolean isOutputContinue() {

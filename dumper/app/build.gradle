@@ -51,6 +51,7 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
     implementation "com.google.cloud:google-cloud-bigquery"
+    implementation "com.google.cloud:google-cloud-nio:0.126.15"
 
     runtimeOnly "ch.qos.logback:logback-classic"
     runtimeOnly "org.slf4j:jcl-over-slf4j"
