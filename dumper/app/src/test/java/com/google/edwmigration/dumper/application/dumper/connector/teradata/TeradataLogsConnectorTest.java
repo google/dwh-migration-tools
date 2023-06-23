@@ -213,7 +213,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
     TeradataLogsJdbcTask.EXPRESSION_VALIDITY_QUERY = "SELECT %s FROM %s FETCH FIRST 1 ROW ONLY";
 
     MetadataDumper dumper = new MetadataDumper();
-    dumper.run(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+    dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
 
     // TODO: Use ZipValidator to assert that all N_QUERY_LOGS entries are present.
   }

@@ -371,7 +371,7 @@ public class ConnectorArguments extends DefaultArguments {
   // and if not given, asked at the console.
   private String askedPassword;
 
-  public ConnectorArguments(@Nonnull String[] args) throws IOException {
+  public ConnectorArguments(@Nonnull String... args) throws IOException {
     super(args);
   }
 
