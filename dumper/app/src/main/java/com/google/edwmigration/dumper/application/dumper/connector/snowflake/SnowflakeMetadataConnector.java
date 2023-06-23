@@ -119,7 +119,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  /** Adds the INFORMATION_SCHEMA task, with a fallback to the ACCOUNT_USAGE task. */
+  /**
+   * Adds the INFORMATION_SCHEMA task, with a fallback to the ACCOUNT_USAGE task.
+   */
   @ForOverride
   protected void addSqlTasks(
       @Nonnull List<? super Task<?>> out,
@@ -130,14 +132,14 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       ConnectorArguments arguments) {
     AbstractJdbcTask<Summary> is_jdbcTask =
         new JdbcSelectTask(
-                is_task.zipEntryName,
-                String.format(format, is_task.schemaName, is_task.whereClause))
+            is_task.zipEntryName,
+            String.format(format, is_task.schemaName, is_task.whereClause))
             .withHeaderClass(header);
 
     AbstractJdbcTask<Summary> au_jdbcTask =
         new JdbcSelectTask(
-                au_task.zipEntryName,
-                String.format(format, au_task.schemaName, au_task.whereClause))
+            au_task.zipEntryName,
+            String.format(format, au_task.schemaName, au_task.whereClause))
             .withHeaderClass(header);
 
     if (arguments.isAssessment()) {
@@ -156,7 +158,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull TaskVariant task) {
     out.add(
         new JdbcSelectTask(
-                task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
+            task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
             .withHeaderClass(header));
   }
 
@@ -264,6 +266,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
               SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
               SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
           new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU));
+
+      addSingleSqlTask(
+          out,
+          WarehousesFormat.Header.class,
+          "SHOW WAREHOUSES",
+          new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU));
     }
   }
 
@@ -274,10 +282,14 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull SnowflakeMetadataConnectorProperties whereProperty) {
 
     String overrideQuery = arguments.getDefinition(queryProperty);
-    if (overrideQuery != null) return overrideQuery;
+    if (overrideQuery != null) {
+      return overrideQuery;
+    }
 
     String overrideWhere = arguments.getDefinition(whereProperty);
-    if (overrideWhere != null) return defaultSql + " WHERE " + overrideWhere;
+    if (overrideWhere != null) {
+      return defaultSql + " WHERE " + overrideWhere;
+    }
 
     return defaultSql;
   }
