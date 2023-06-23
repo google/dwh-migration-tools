@@ -119,9 +119,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  /**
-   * Adds the INFORMATION_SCHEMA task, with a fallback to the ACCOUNT_USAGE task.
-   */
+  /** Adds the INFORMATION_SCHEMA task, with a fallback to the ACCOUNT_USAGE task. */
   @ForOverride
   protected void addSqlTasks(
       @Nonnull List<? super Task<?>> out,
@@ -132,14 +130,14 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       ConnectorArguments arguments) {
     AbstractJdbcTask<Summary> is_jdbcTask =
         new JdbcSelectTask(
-            is_task.zipEntryName,
-            String.format(format, is_task.schemaName, is_task.whereClause))
+                is_task.zipEntryName,
+                String.format(format, is_task.schemaName, is_task.whereClause))
             .withHeaderClass(header);
 
     AbstractJdbcTask<Summary> au_jdbcTask =
         new JdbcSelectTask(
-            au_task.zipEntryName,
-            String.format(format, au_task.schemaName, au_task.whereClause))
+                au_task.zipEntryName,
+                String.format(format, au_task.schemaName, au_task.whereClause))
             .withHeaderClass(header);
 
     if (arguments.isAssessment()) {
@@ -158,7 +156,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull TaskVariant task) {
     out.add(
         new JdbcSelectTask(
-            task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
+                task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
             .withHeaderClass(header));
   }
 
