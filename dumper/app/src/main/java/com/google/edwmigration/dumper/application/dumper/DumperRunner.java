@@ -86,11 +86,27 @@ public class DumperRunner {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private boolean exitOnError = true;
+  private final boolean exitOnError;
 
-  public DumperRunner withExitOnError(boolean state) {
-    exitOnError = state;
-    return this;
+  private DumperRunner(boolean exitOnError) {
+    this.exitOnError = exitOnError;
+  }
+
+  public static DumperRunner getInstance() {
+    return new DumperRunner(/* exitOnError= */ true);
+  }
+
+  public static class Builder {
+    private boolean exitOnError = false;
+
+    public Builder withExitOnError(boolean exitOnError) {
+      this.exitOnError = exitOnError;
+      return this;
+    }
+
+    public DumperRunner build() {
+      return new DumperRunner(exitOnError);
+    }
   }
 
   @Nonnull
@@ -100,9 +116,7 @@ public class DumperRunner {
     return new String(out);
   }
 
-  public void run(@Nonnull String... args) throws Exception {
-    ConnectorArguments arguments = new ConnectorArguments(args);
-
+  public void run(@Nonnull ConnectorArguments arguments) throws Exception {
     String connectorName = arguments.getConnectorName();
     if (connectorName == null) {
       LOG.error("Target DBMS is required");
@@ -119,12 +133,7 @@ public class DumperRunner {
               + ".");
       return;
     }
-
-    try {
-      run(connector, arguments);
-    } finally {
-      if (arguments.saveResponseFile()) JsonResponseFile.save(arguments);
-    }
+    run(connector, arguments);
   }
 
   @CheckForNull
@@ -401,19 +410,4 @@ public class DumperRunner {
     lines.stream().map(s -> "* " + s).forEach(System.out::println);
   }
 
-  public static void main(String... args) throws Exception {
-    try {
-      MetadataDumper main = new MetadataDumper();
-      args = JsonResponseFile.addResponseFiles(args);
-      // LOG.debug("Arguments are: [" + String.join("] [", args) + "]");
-      // Without this, the dumper prints "Missing required arguments:[connector]"
-      if (args.length == 0) {
-        args = new String[] {"--help"};
-      }
-      main.run(args);
-    } catch (MetadataDumperUsageException e) {
-      LOG.error(e.getMessage());
-      for (String msg : e.getMessages()) LOG.error(msg);
-    }
-  }
 }

@@ -23,7 +23,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
+import com.google.edwmigration.dumper.application.dumper.DumperRunner;
 import com.google.edwmigration.dumper.application.dumper.ResourceLocation;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -51,7 +51,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
@@ -212,8 +211,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
     // Rewrite validity queries from Teradata (SELECT TOP 1 ...) to PostgreSQL:
     TeradataLogsJdbcTask.EXPRESSION_VALIDITY_QUERY = "SELECT %s FROM %s FETCH FIRST 1 ROW ONLY";
 
-    MetadataDumper dumper = new MetadataDumper();
-    dumper.run(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+    DumperRunner.getInstance().run(new ConnectorArguments());
 
     // TODO: Use ZipValidator to assert that all N_QUERY_LOGS entries are present.
   }
