@@ -150,9 +150,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       throws MetadataDumperUsageException {
     // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
     // Per the docref, Snowflake only retains/returns seven trailing days of logs.
-    return arguments.isAssessment()
-        ? createQueryFromAccountUsage(arguments)
-        : createQueryFromInformationSchema(arguments);
+    return createQueryFromInformationSchema(arguments);
   }
 
   protected String createQueryFromAccountUsage(ConnectorArguments arguments)
@@ -169,6 +167,9 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "schema_name, \n"
                 + "user_name, \n"
                 + "warehouse_name, \n"
+                + "query_id, \n"
+                + "session_id, \n"
+                + "query_type, \n"
                 + "execution_status, \n"
                 + "error_code, \n"
                 + "start_time, \n"
@@ -181,11 +182,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
                 + "WHERE end_time >= to_timestamp_ltz('%s')\n"
                 + "AND end_time <= to_timestamp_ltz('%s')\n");
-    // if the user specifies an earliest start time there will be extraneous empty dump files
-    // because we always iterate over the full 7 trailing days; maybe it's worth
-    // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
-    // to parse and return an ISO instant, not a database-server-specific format.
-    // TODO: Use ZonedIntervalIterable.forConnectorArguments()
     if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
       queryBuilder
           .append("AND start_time >= ")
@@ -197,6 +193,9 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
   protected String createQueryFromInformationSchema(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
+    // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
+    // Per the docref, Snowflake only retains/returns seven trailing days of logs in
+    // INFORMATION_SCHEMA.
     String overrideQuery = getOverrideQuery(arguments);
     if (overrideQuery != null) return overrideQuery;
 
@@ -209,6 +208,9 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "schema_name, \n"
                 + "user_name, \n"
                 + "warehouse_name, \n"
+                + "query_id, \n"
+                + "session_id, \n"
+                + "query_type, \n"
                 + "execution_status, \n"
                 + "error_code, \n"
                 + "start_time, \n"
@@ -240,6 +242,72 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     return queryBuilder.toString().replace('\n', ' ');
   }
 
+  protected String createExtendedQueryFromAccountUsage(ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    String overrideQuery = getOverrideQuery(arguments);
+    if (overrideQuery != null) return overrideQuery;
+
+    String overrideWhere = getOverrideWhere(arguments);
+
+    @SuppressWarnings("OrphanedFormatString")
+    StringBuilder queryBuilder =
+        new StringBuilder(
+            "SELECT query_id, \n"
+                + "query_text, \n"
+                + "database_name, \n"
+                + "schema_name, \n"
+                + "query_type, \n"
+                + "session_id, \n"
+                + "user_name, \n"
+                + "warehouse_name, \n"
+                + "cluster_number, \n"
+                + "query_tag, \n"
+                + "execution_status, \n"
+                + "error_code, \n"
+                + "error_message, \n"
+                + "start_time, \n"
+                + "end_time, \n"
+                + "bytes_scanned, \n"
+                + "percentage_scanned_from_cache, \n"
+                + "bytes_written, \n"
+                + "rows_produced, \n"
+                + "rows_inserted, \n"
+                + "rows_updated, \n"
+                + "rows_deleted, \n"
+                + "rows_unloaded, \n"
+                + "bytes_deleted, \n"
+                + "partitions_scanned, \n"
+                + "partitions_total, \n"
+                + "bytes_spilled_to_local_storage, \n"
+                + "bytes_spilled_to_remote_storage, \n"
+                + "bytes_sent_over_the_network, \n"
+                + "total_elapsed_time, \n"
+                + "compilation_time, \n"
+                + "execution_time, \n"
+                + "queued_provisioning_time, \n"
+                + "queued_repair_time, \n"
+                + "queued_overload_time, \n"
+                + "transaction_blocked_time, \n"
+                + "list_external_files_time, \n"
+                + "credits_used_cloud_services, \n"
+                + "query_load_percent, \n"
+                + "query_acceleration_bytes_scanned, \n"
+                + "query_acceleration_partitions_scanned, \n"
+                + "child_queries_wait_time, \n"
+                + "transaction_id \n"
+                + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
+                + "WHERE end_time >= to_timestamp_ltz('%s')\n"
+                + "AND end_time <= to_timestamp_ltz('%s')\n"
+                + "AND is_client_generated_statement = FALSE\n");
+    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
+      queryBuilder
+          .append("AND start_time >= ")
+          .append(arguments.getQueryLogEarliestTimestamp())
+          .append("\n");
+    if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
+    return queryBuilder.toString().replace('\n', ' ');
+  }
+
   @CheckForNull
   protected String getOverrideQuery(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
@@ -267,8 +335,15 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     out.add(new FormatTask(FORMAT_NAME));
 
     List<TaskDescription> tasks = new ArrayList<>();
-
-    tasks.add(new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class));
+    if (arguments.isAssessment()) {
+      tasks.add(
+          new TaskDescription(
+              QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
+              createExtendedQueryFromAccountUsage(arguments),
+              QueryHistoryExtendedFormat.Header.class));
+    } else {
+      tasks.add(new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class));
+    }
 
     if (arguments.isAssessment()) {
       tasks.addAll(createTaskDescriptions(arguments));
