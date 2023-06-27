@@ -35,7 +35,7 @@ public class SnowflakeInformationSchemaMetadataConnector extends SnowflakeMetada
   }
 
   @Override
-  protected void addSqlTasks(
+  protected void addSqlTasksWithInfoSchemaFallback(
       List<? super Task<?>> out,
       Class<? extends Enum<?>> header,
       String format,
