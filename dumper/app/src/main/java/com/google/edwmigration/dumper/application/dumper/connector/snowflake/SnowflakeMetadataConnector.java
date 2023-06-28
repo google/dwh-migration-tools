@@ -119,9 +119,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  /** Adds the INFORMATION_SCHEMA task, with a fallback to the ACCOUNT_USAGE task. */
+  /** Adds the ACCOUNT_USAGE task, with a fallback to the INFORMATION_SCHEMA task. */
   @ForOverride
-  protected void addSqlTasks(
+  protected void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
@@ -143,8 +143,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (arguments.isAssessment()) {
       out.add(au_jdbcTask);
     } else {
-      out.add(is_jdbcTask);
-      out.add(au_jdbcTask.onlyIfFailed(is_jdbcTask));
+      out.add(au_jdbcTask);
+      out.add(is_jdbcTask.onlyIfFailed(au_jdbcTask));
     }
   }
 
@@ -177,7 +177,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     // https://docs.snowflake.net/manuals/sql-reference/account-usage.html
     // https://docs.snowflake.net/manuals/user-guide/data-share-consumers.html
     // You must: GRANT IMPORTED PRIVILEGES ON DATABASE snowflake TO ROLE <SOMETHING>;
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.DatabasesFormat.Header.class,
         getOverrideableQuery(
@@ -190,7 +190,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.SchemataFormat.Header.class,
         getOverrideableQuery(
@@ -202,7 +202,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         new TaskVariant(SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.TablesFormat.Header.class,
         getOverrideableQuery(
@@ -215,7 +215,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         new TaskVariant(SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments); // Painfully slow.
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class,
         getOverrideableQuery(
@@ -228,7 +228,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         new TaskVariant(SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments); // Very fast.
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.ViewsFormat.Header.class,
         getOverrideableQuery(
@@ -240,7 +240,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         new TaskVariant(SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class,
         getOverrideableQuery(
