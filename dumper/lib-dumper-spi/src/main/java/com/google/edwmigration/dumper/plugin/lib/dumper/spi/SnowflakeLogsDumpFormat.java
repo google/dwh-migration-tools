@@ -43,7 +43,7 @@ public interface SnowflakeLogsDumpFormat {
   }
 
   interface QueryHistoryExtendedFormat {
-    String ZIP_ENTRY_PREFIX = "query_history_";
+    String ZIP_ENTRY_PREFIX = "query_history-au_";
 
     enum Header {
       QueryId,
