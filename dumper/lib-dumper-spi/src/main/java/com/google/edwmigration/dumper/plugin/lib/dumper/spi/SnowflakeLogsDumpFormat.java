@@ -28,6 +28,9 @@ public interface SnowflakeLogsDumpFormat {
     SchemaName,
     UserName,
     WarehouseName,
+    QueryId,
+    SessionId,
+    QueryType,
     ExecutionStatus,
     ErrorCode,
     StartTime,
@@ -37,6 +40,56 @@ public interface SnowflakeLogsDumpFormat {
     RowsProduced,
     CreditsUsedCloudServices,
     QueryText
+  }
+
+  interface QueryHistoryExtendedFormat {
+    String ZIP_ENTRY_PREFIX = "query_history_";
+
+    enum Header {
+      QueryId,
+      QueryText,
+      DatabaseName,
+      SchemaName,
+      QueryType,
+      SessionId,
+      UserName,
+      WarehouseName,
+      ClusterNumber,
+      QueryTag,
+      ExecutionStatus,
+      ErrorCode,
+      ErrorMessage,
+      StartTime,
+      EndTime,
+      BytesScanned,
+      PercentageScannedFromCache,
+      BytesWritten,
+      RowsProduced,
+      RowsInserted,
+      RowsUpdated,
+      RowsDeleted,
+      RowsUnloaded,
+      BytesDeleted,
+      PartitionsScanned,
+      PartitionsTotal,
+      BytesSpilledToLocalStorage,
+      BytesSpilledToRemoteStorage,
+      BytesSentOverTheNetwork,
+      TotalElapsedTime,
+      CompilationTime,
+      ExecutionTime,
+      QueuedProvisioningTime,
+      QueuedRepairTime,
+      QueuedOverloadTime,
+      TransactionBlockedTime,
+      ListExternalFilesTime,
+      CreditsUsedCloudServices,
+      QueryLoadPercent,
+      QueryAccelerationBytesScanned,
+      QueryAccelerationPartitionsScanned,
+      ChildQueriesWaitTime,
+      TransactionId,
+    }
   }
 
   interface WarehouseEventsHistoryFormat {
