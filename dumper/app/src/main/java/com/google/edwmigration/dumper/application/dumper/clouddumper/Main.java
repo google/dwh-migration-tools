@@ -16,13 +16,22 @@
  */
 package com.google.edwmigration.dumper.application.dumper.clouddumper;
 
+import com.google.cloud.kms.v1.CryptoKeyName;
+import com.google.cloud.kms.v1.DecryptResponse;
+import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.gson.Gson;
+import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +52,12 @@ public class Main {
   }
 
   void run() throws Exception {
+    Optional<CryptoKeyName> keyName =
+        metadataRetriever.getAttribute("dwh_key").map(CryptoKeyName::parse);
     ExtractorConfiguration config =
         metadataRetriever
             .getAttribute("dwh_extractor_configuration")
+            .map(s -> decrypt(keyName, s))
             .map(s -> GSON.fromJson(s, ExtractorConfiguration.class))
             .orElseThrow(
                 () ->
@@ -84,6 +96,22 @@ public class Main {
   static class ConnectorConfiguration {
 
     private String connector;
+
     private List<String> args;
+  }
+
+  private static final String decrypt(Optional<CryptoKeyName> keyName, String input) {
+    if (!keyName.isPresent()) {
+      LOG.info("Got no decryption key. Using input as is.");
+      return input;
+    }
+    LOG.info("Using key {} to decrypt.", keyName);
+    ByteString ciphertext = ByteString.copyFrom(Base64.decodeBase64(input));
+    try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
+      DecryptResponse response = client.decrypt(keyName.get(), ciphertext);
+      return response.getPlaintext().toString(StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 }
