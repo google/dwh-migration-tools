@@ -86,10 +86,10 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private boolean exitOnError = true;
+  private boolean exitOnError = false;
 
-  public MetadataDumper withExitOnError(boolean state) {
-    exitOnError = state;
+  public MetadataDumper withExitOnError(boolean exitOnError) {
+    this.exitOnError = exitOnError;
     return this;
   }
 
@@ -100,9 +100,7 @@ public class MetadataDumper {
     return new String(out);
   }
 
-  public void run(@Nonnull String... args) throws Exception {
-    ConnectorArguments arguments = new ConnectorArguments(args);
-
+  public void run(@Nonnull ConnectorArguments arguments) throws Exception {
     String connectorName = arguments.getConnectorName();
     if (connectorName == null) {
       LOG.error("Target DBMS is required");
@@ -119,12 +117,7 @@ public class MetadataDumper {
               + ".");
       return;
     }
-
-    try {
-      run(connector, arguments);
-    } finally {
-      if (arguments.saveResponseFile()) JsonResponseFile.save(arguments);
-    }
+    run(connector, arguments);
   }
 
   @CheckForNull
@@ -399,21 +392,5 @@ public class MetadataDumper {
   private void log(List<String> lines) {
     System.out.println(STARS);
     lines.stream().map(s -> "* " + s).forEach(System.out::println);
-  }
-
-  public static void main(String... args) throws Exception {
-    try {
-      MetadataDumper main = new MetadataDumper();
-      args = JsonResponseFile.addResponseFiles(args);
-      // LOG.debug("Arguments are: [" + String.join("] [", args) + "]");
-      // Without this, the dumper prints "Missing required arguments:[connector]"
-      if (args.length == 0) {
-        args = new String[] {"--help"};
-      }
-      main.run(args);
-    } catch (MetadataDumperUsageException e) {
-      LOG.error(e.getMessage());
-      for (String msg : e.getMessages()) LOG.error(msg);
-    }
   }
 }

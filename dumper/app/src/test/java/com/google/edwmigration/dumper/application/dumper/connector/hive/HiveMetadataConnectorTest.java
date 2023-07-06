@@ -17,7 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
 import com.google.common.collect.Lists;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
+import com.google.edwmigration.dumper.application.dumper.Main;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.support.HiveServerSupport;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.support.HiveTestSchemaBuilder;
@@ -108,7 +108,7 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
         File tmpFile = tmpPath.toFile();
 
         try {
-          MetadataDumper.main(
+          Main.main(
               "--connector",
               "hiveql",
               "--port",

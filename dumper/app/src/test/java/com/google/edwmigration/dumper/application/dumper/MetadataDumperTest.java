@@ -34,7 +34,7 @@ public class MetadataDumperTest {
 
   // TODO(ishmum): `testOverridesZipWithGivenName` with content check
   private File file;
-  private MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+  private Main dumper = new Main(new MetadataDumper().withExitOnError(false));
   private final Connector connector = new HiveMetadataConnector();
   private final String defaultFileName = "dwh-migration-hiveql-metadata.zip";
 
@@ -47,7 +47,7 @@ public class MetadataDumperTest {
 
   @Test
   public void testInstantiate() throws Exception {
-    dumper = new MetadataDumper();
+    dumper = new Main(new MetadataDumper());
     dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
   }
 

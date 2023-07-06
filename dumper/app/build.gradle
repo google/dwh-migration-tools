@@ -81,7 +81,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'com.google.edwmigration.dumper.application.dumper.MetadataDumper'
+    mainClass = 'com.google.edwmigration.dumper.application.dumper.Main'
     applicationName = 'dwh-migration-dumper'
 }
 

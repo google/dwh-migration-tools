@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
 import com.google.common.primitives.Ints;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
 import com.google.edwmigration.dumper.application.dumper.ResourceLocation;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
@@ -275,13 +276,13 @@ public class TeradataMetadataConnectorTest extends AbstractConnectorExecutionTes
 
     MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
 
-    dumper.run(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+    dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
 
     CONTINUE:
     {
       // Prove that --continue is doing its thing.
       Stopwatch stopwatch = Stopwatch.createStarted();
-      dumper.run(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+      dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
       assertTrue(
           "Second run of dumper was too slow.",
           stopwatch.elapsed(TimeUnit.SECONDS)
