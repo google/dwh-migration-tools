@@ -27,11 +27,13 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,10 +47,15 @@ public class Main {
 
   private final Supplier<MetadataDumper> metadataDumperSupplier;
   private final MetadataRetriever metadataRetriever;
+  private final DriverRetriever driverRetriever;
 
-  Main(Supplier<MetadataDumper> metadataDumperSupplier, MetadataRetriever metadataRetriever) {
+  Main(
+      Supplier<MetadataDumper> metadataDumperSupplier,
+      MetadataRetriever metadataRetriever,
+      DriverRetriever driverRetriever) {
     this.metadataDumperSupplier = metadataDumperSupplier;
     this.metadataRetriever = metadataRetriever;
+    this.driverRetriever = driverRetriever;
   }
 
   void run() throws Exception {
@@ -71,6 +78,13 @@ public class Main {
       ArrayList<String> args = new ArrayList<>();
       args.add("--connector");
       args.add(connectorConfiguration.connector);
+      driverRetriever
+          .getDriver(connectorConfiguration.connector)
+          .ifPresent(
+              driverPath -> {
+                args.add("--driver");
+                args.add(driverPath.toString());
+              });
       args.addAll(connectorConfiguration.args);
       ConnectorArguments arguments = new ConnectorArguments(args.toArray(new String[args.size()]));
       metadataDumperSupplier.get().run(arguments);
@@ -78,10 +92,11 @@ public class Main {
   }
 
   public static void main(String... args) throws Exception {
-    try {
+    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
       new Main(
               () -> new MetadataDumper(),
-              new HttpClientMetadataRetriever(HttpClients.createDefault()))
+              new HttpClientMetadataRetriever(httpClient),
+              DriverRetriever.create(httpClient, Files.createTempDirectory("clouddumper")))
           .run();
     } catch (MetadataDumperUsageException e) {
       LOG.error(e.getMessage(), e);
