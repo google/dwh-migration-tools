@@ -33,8 +33,13 @@ configurations {
 }
 
 def mockitoVersion = '4.11.0'
+def autoValueVersion = '1.10.2'
 
 dependencies {
+    compileOnly "com.google.auto.value:auto-value-annotations:${autoValueVersion}"
+
+    annotationProcessor "com.google.auto.value:auto-value:${autoValueVersion}"
+
     implementation project(':dumper:lib-common')
     implementation project(':dumper:lib-dumper-spi')
     implementation project(':dumper:lib-ext-bigquery')
