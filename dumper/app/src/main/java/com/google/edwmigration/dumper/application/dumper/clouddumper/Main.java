@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.clouddumper;
 import com.google.cloud.kms.v1.CryptoKeyName;
 import com.google.cloud.kms.v1.DecryptResponse;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.gson.Gson;
@@ -88,8 +87,7 @@ public class Main {
                 args.add(driverPath.toString());
               });
       args.addAll(connectorConfiguration.args);
-      ConnectorArguments arguments = new ConnectorArguments(args.toArray(new String[args.size()]));
-      metadataDumperSupplier.get().run(arguments);
+      metadataDumperSupplier.get().run(args.toArray(new String[args.size()]));
     }
   }
 

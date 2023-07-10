@@ -32,20 +32,12 @@ public class Main {
   }
 
   public void run(@Nonnull String... args) throws Exception {
-    ConnectorArguments arguments = new ConnectorArguments(args);
-    try {
-      metadataDumper.run(arguments);
-    } finally {
-      if (arguments.saveResponseFile()) {
-        JsonResponseFile.save(arguments);
-      }
-    }
+    metadataDumper.run(args);
   }
 
   public static void main(String... args) throws Exception {
     try {
       Main main = new Main(new MetadataDumper());
-      args = JsonResponseFile.addResponseFiles(args);
       // LOG.debug("Arguments are: [" + String.join("] [", args) + "]");
       // Without this, the dumper prints "Missing required arguments:[connector]"
       if (args.length == 0) {
