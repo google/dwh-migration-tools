@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static org.apache.commons.lang3.StringUtils.repeat;
+
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -59,7 +61,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
@@ -91,13 +92,6 @@ public class MetadataDumper {
   public MetadataDumper withExitOnError(boolean exitOnError) {
     this.exitOnError = exitOnError;
     return this;
-  }
-
-  @Nonnull
-  private static String repeat(@Nonnull char c, @Nonnegative int n) {
-    char[] out = new char[n];
-    Arrays.fill(out, c);
-    return new String(out);
   }
 
   public void run(@Nonnull ConnectorArguments arguments) throws Exception {
@@ -179,7 +173,7 @@ public class MetadataDumper {
   }
 
   private void print(@Nonnull Task<?> task, int indent) {
-    System.out.println(StringUtils.repeat("  ", indent) + task);
+    System.out.println(repeat(' ', indent * 2) + task);
     if (task instanceof TaskGroup) {
       for (Task<?> subtask : ((TaskGroup) task).getTasks()) print(subtask, indent + 1);
     }
