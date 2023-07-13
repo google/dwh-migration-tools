@@ -17,13 +17,16 @@
 package com.google.edwmigration.dumper.application.dumper.clouddumper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.util.Optional;
-import org.junit.Before;
+import java.util.function.Supplier;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,21 +41,16 @@ public class MainTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private MetadataDumper metadataDumper;
   @Mock private MetadataRetriever metadataRetriever;
 
-  private Main underTest;
-
-  @Before
-  public void setUp() {
-    underTest = new Main(metadataDumper, metadataRetriever);
-  }
-
   @Test
-  public void run_success() throws Exception {
-    when(metadataRetriever.getAttribute("dwh_connector")).thenReturn(Optional.of("test-db"));
+  public void run_successSingleConnector() throws Exception {
+    MetadataDumper metadataDumper = mock(MetadataDumper.class);
+    Main underTest = new Main(() -> metadataDumper, metadataRetriever);
     when(metadataRetriever.getAttribute("dwh_extractor_configuration"))
-        .thenReturn(Optional.of("{\"args\": [\"--port\", \"2222\"]}"));
+        .thenReturn(
+            Optional.of(
+                "{\"connectors\": [{\"connector\": \"test-db\", \"args\": [\"--port\", \"2222\"]}]}"));
 
     // Act
     underTest.run();
@@ -64,5 +62,56 @@ public class MainTest {
     ConnectorArguments connectorArguments = connectorArgumentsCaptor.getValue();
     assertEquals(Integer.valueOf(2222), connectorArguments.getPort());
     assertEquals("test-db", connectorArguments.getConnectorName());
+  }
+
+  @Test
+  public void run_successMultipleConnectors() throws Exception {
+    MetadataDumper metadataDumper1 = mock(MetadataDumper.class);
+    MetadataDumper metadataDumper2 = mock(MetadataDumper.class);
+    Supplier<MetadataDumper> metadataDumperSupplier = mock(Supplier.class);
+    when(metadataDumperSupplier.get()).thenReturn(metadataDumper1, metadataDumper2);
+    Main underTest = new Main(metadataDumperSupplier, metadataRetriever);
+    when(metadataRetriever.getAttribute("dwh_extractor_configuration"))
+        .thenReturn(
+            Optional.of(
+                "{\"connectors\": ["
+                    + "{\"connector\": \"test-db\", \"args\": [\"--port\", \"2222\"]},"
+                    + "{\"connector\": \"test-db-logs\", \"args\": [\"--port\", \"2223\"]}]}"));
+
+    // Act
+    underTest.run();
+
+    // Verify
+    {
+      ArgumentCaptor<ConnectorArguments> connectorArgumentsCaptor =
+          ArgumentCaptor.forClass(ConnectorArguments.class);
+      verify(metadataDumper1).run(connectorArgumentsCaptor.capture());
+      ConnectorArguments connectorArguments = connectorArgumentsCaptor.getValue();
+      assertEquals(Integer.valueOf(2222), connectorArguments.getPort());
+      assertEquals("test-db", connectorArguments.getConnectorName());
+    }
+    {
+      ArgumentCaptor<ConnectorArguments> connectorArgumentsCaptor =
+          ArgumentCaptor.forClass(ConnectorArguments.class);
+      verify(metadataDumper2).run(connectorArgumentsCaptor.capture());
+      ConnectorArguments connectorArguments = connectorArgumentsCaptor.getValue();
+      assertEquals(Integer.valueOf(2223), connectorArguments.getPort());
+      assertEquals("test-db-logs", connectorArguments.getConnectorName());
+    }
+  }
+
+  @Test
+  public void run_failsOnMissingConnectorConfiguration() throws Exception {
+    MetadataDumper metadataDumper = mock(MetadataDumper.class);
+    Main underTest = new Main(() -> metadataDumper, metadataRetriever);
+    when(metadataRetriever.getAttribute("dwh_extractor_configuration"))
+        .thenReturn(Optional.of("{}"));
+
+    // Act
+    MetadataDumperUsageException e =
+        assertThrows(MetadataDumperUsageException.class, () -> underTest.run());
+
+    // Verify
+    assertEquals("Extractor configuration must provide at least one connector.", e.getMessage());
   }
 }

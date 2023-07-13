@@ -22,6 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,45 +34,56 @@ public class Main {
 
   private static final Gson GSON = new Gson();
 
-  private final MetadataDumper metadataDumper;
+  private final Supplier<MetadataDumper> metadataDumperSupplier;
   private final MetadataRetriever metadataRetriever;
 
-  Main(MetadataDumper metadataDumper, MetadataRetriever metadataRetriever) {
-    this.metadataDumper = metadataDumper;
+  Main(Supplier<MetadataDumper> metadataDumperSupplier, MetadataRetriever metadataRetriever) {
+    this.metadataDumperSupplier = metadataDumperSupplier;
     this.metadataRetriever = metadataRetriever;
   }
 
   void run() throws Exception {
-    String connectorName =
-        metadataRetriever
-            .getAttribute("dwh_connector")
-            .orElseThrow(() -> new IllegalStateException("Attribute connector is not defined."));
-    DumperConfiguration dumperConfig =
+    ExtractorConfiguration config =
         metadataRetriever
             .getAttribute("dwh_extractor_configuration")
-            .map(s -> GSON.fromJson(s, DumperConfiguration.class))
+            .map(s -> GSON.fromJson(s, ExtractorConfiguration.class))
             .orElseThrow(
                 () ->
-                    new IllegalStateException(
+                    new MetadataDumperUsageException(
                         ("Attribute dwh_extractor_configuration is not defined.")));
-    ArrayList<String> args = new ArrayList<>();
-    args.add("--connector");
-    args.add(connectorName);
-    args.addAll(dumperConfig.args);
-    ConnectorArguments arguments = new ConnectorArguments(args.toArray(new String[args.size()]));
-    metadataDumper.run(arguments);
+    if (config.connectors == null || config.connectors.isEmpty()) {
+      throw new MetadataDumperUsageException(
+          "Extractor configuration must provide at least one connector.");
+    }
+    for (ConnectorConfiguration connectorConfiguration : config.connectors) {
+      ArrayList<String> args = new ArrayList<>();
+      args.add("--connector");
+      args.add(connectorConfiguration.connector);
+      args.addAll(connectorConfiguration.args);
+      ConnectorArguments arguments = new ConnectorArguments(args.toArray(new String[args.size()]));
+      metadataDumperSupplier.get().run(arguments);
+    }
   }
 
   public static void main(String... args) throws Exception {
     try {
-      new Main(new MetadataDumper(), new HttpClientMetadataRetriever(HttpClients.createDefault()))
+      new Main(
+              () -> new MetadataDumper(),
+              new HttpClientMetadataRetriever(HttpClients.createDefault()))
           .run();
     } catch (MetadataDumperUsageException e) {
       LOG.error(e.getMessage(), e);
     }
   }
 
-  static class DumperConfiguration {
+  static class ExtractorConfiguration {
+
+    private List<ConnectorConfiguration> connectors;
+  }
+
+  static class ConnectorConfiguration {
+
+    private String connector;
     private List<String> args;
   }
 }
