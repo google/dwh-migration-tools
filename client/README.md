@@ -214,6 +214,7 @@ run locally:
 - `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
   pre/postprocessing and uploads/downloads.
 - `BQMS_VERBOSE`: Set to `True` to enable debug logging.
+- `BQMS_CLEANUP_FILES`: Set to `True` to cleanup GCS directory after transaltion.
 
 For a list of environment variables accepted by the `run.sh` script when using
 Cloud Run, see [Deploying to Cloud Run](#deploying-to-cloud-run).

@@ -251,4 +251,10 @@ else
     fi
 fi
 
+if [[ -n "${BQMS_CLEANUP_FILES}" ]] 
+then
+    log_exec "Cleaining gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}." \
+            "Could not clean gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}." \
+                gsutil ${MULTITHREADED:+ -m} rm -rf "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}"
+fi
 log_info "Preprocessing, translation and postprocessing has completed successfully."
