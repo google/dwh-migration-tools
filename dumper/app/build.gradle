@@ -151,9 +151,9 @@ distributions {
 		distributionBaseName = "dwh-migration-dumper"
 		contents {
 			from installDist
-            from (cloudExtractorStartScripts) {
-                into "bin"
-            }
+			from (cloudExtractorStartScripts) {
+				into "bin"
+			}
 			from(generateLicenseReport) {
 				into "docs/licenses"
 			}

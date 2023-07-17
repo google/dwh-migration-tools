@@ -3,6 +3,7 @@
 set -e
 set -o pipefail
 
+CLOUD_LOG='launcher'
 dwh_url_default='https://github.com/google/dwh-migration-tools/releases/download/v@dumper_version@/dwh-migration-tools-v@dumper_version@.zip'
 
 get_metadata() {
@@ -19,19 +20,32 @@ get_attribute() {
   fi
 }
 
+log() {
+  echo "$1 - $2" > /dev/stderr
+  gcloud logging write "${CLOUD_LOG}" "$2" --severity="$1" || true
+}
+
+die() {
+  log ERROR "$1"
+  exit 1
+}
+
 stop() {
   case "$(get_attribute dwh_onfinish)" in
   delete)
-    echo "Deleting instance"
+    log INFO 'Deleting instance'
     gcloud --quiet compute instances delete "$(get_metadata name)" --zone="$(get_metadata zone)"
     ;;
   stop)
-    echo "Stopping instance"
+    log INFO 'Stopping instance'
     gcloud --quiet compute instances stop "$(get_metadata name)" --zone="$(get_metadata zone)"
     ;;
   suspend)
-    echo "Pausing instance"
+    log INFO 'Pausing instance'
     gcloud --quiet compute instances suspend "$(get_metadata name)" --zone="$(get_metadata zone)"
+    ;;
+  *)
+    log INFO 'Keeping instance.'
     ;;
   esac
 }
@@ -40,14 +54,18 @@ trap 'stop' EXIT
 
 install_dependencies() {
   if which apt-get > /dev/null; then
+    log INFO 'Installing dependencies if necessary using apt-get.'
     which unzip > /dev/null || sudo apt-get install -y -q unzip
     which java > /dev/null || sudo apt-get install -y -q default-jre
+  else
+    log WARN 'Could not find apt-get. Skipping installing dependencies.'
   fi
 }
 
 download() {
   local url="$1"
   local target="$2"
+  log INFO "Downloading '${url}' to '${target}."
   if [[ ! -e "${target}" ]]; then
     if [[ "${url}" = gs://* ]]; then
       gsutil cp "${url}" "${target}"
@@ -83,30 +101,31 @@ main() {
 
   dwh_url="$(get_attribute dwh_download_url)"
 
+  log INFO 'Downloading the dumper.'
   download "${dwh_url:-${dwh_url_default}}" "${dwh_zip}"
 
   unzip -o "${dwh_zip}" -d "${dwh_tmp}"
-  dwh_home="$(find "${dwh_tmp}" -maxdepth 1 -name dwh-migration-tools -o -name dwh-migration-tools-*)"
+  dwh_home="$(find "${dwh_tmp}" -maxdepth 1 -name 'dwh-migration-tools' -o -name 'dwh-migration-tools-*')"
   if [[ -z "${dwh_home}" ]]; then
-    echo "ZIP file did not contain dwh-migration-tools." > /dev/stderr
-    exit 1
+    die "ZIP file did not contain dwh-migration-tools."
   fi
 
   dwh_cloud_extractor="${dwh_home}/bin/dwh-cloud-extractor"
   if [[ ! -x "${dwh_cloud_extractor}" ]]; then
-    echo "Could not find cloud extractor bin. Got no executable '${dwh_cloud_extractor}'." > /dev/stderr
-    exit 1
+    die "Could not find cloud extractor bin. Got no executable '${dwh_cloud_extractor}'."
   fi
 
+  log INFO 'Launching the dumper.'
   "${dwh_cloud_extractor}"
+  log INFO "Dumper exited with code $?."
 }
 
 
 export TMPDIR="${TMPDIR:-/tmp}"
 
 if ! validate_instance; then
-  echo 'This script is meant to be run on a GCE instance as a launch script.' > /dev/stderr
-  exit 2
+  die 'This script is meant to be run on a GCE instance as a launch script.'
 fi
+log INFO 'Preparing cloud extractor.'
 
 main
