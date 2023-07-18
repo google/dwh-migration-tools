@@ -33,8 +33,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.core5.util.TimeValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +94,12 @@ public class Main {
   }
 
   public static void main(String... args) throws Exception {
-    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+    try (CloseableHttpClient httpClient =
+        HttpClientBuilder.create()
+            .setRetryStrategy(
+                new DefaultHttpRequestRetryStrategy(
+                    /* maxRetries= */ 3, /* defaultRetryInterval= */ TimeValue.ofSeconds(1L)))
+            .build()) {
       new Main(
               () -> new MetadataDumper(),
               new HttpClientMetadataRetriever(httpClient),
