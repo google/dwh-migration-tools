@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.clouddumper;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.Optional;
 
@@ -25,15 +24,13 @@ import java.util.Optional;
 public abstract class DriverInformation {
 
   public static DriverInformation.Builder builder(String name, URI uri) {
-    return new AutoValue_DriverInformation.Builder().setName(name).setUri(uri).setAliases();
+    return new AutoValue_DriverInformation.Builder().setName(name).setUri(uri);
   }
 
   @AutoValue.Builder
   public abstract static class Builder {
 
     public abstract Builder setName(String name);
-
-    public abstract Builder setAliases(String... aliases);
 
     public abstract Builder setUri(URI uri);
 
@@ -43,8 +40,6 @@ public abstract class DriverInformation {
   }
 
   public abstract String name();
-
-  public abstract ImmutableList<String> aliases();
 
   public abstract URI uri();
 
