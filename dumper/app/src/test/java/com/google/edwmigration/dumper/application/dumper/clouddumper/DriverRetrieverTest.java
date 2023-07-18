@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
+import com.google.edwmigration.dumper.application.dumper.clouddumper.DriverRetriever.DriverInformationMapBuilder;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,19 +65,15 @@ public class DriverRetrieverTest {
         new DriverRetriever(
             httpClient,
             driverOutputPath,
-            ImmutableList.<DriverInformation>of(
-                DriverInformation.builder("test", new URI("http://test.google.com/my/driver.jar"))
-                    .setAliases("test_alias")
-                    .build(),
-                DriverInformation.builder(
-                        "test_with_checksum",
-                        new URI("http://test.google.com/my/checked_driver.jar"))
-                    .setChecksum(
-                        BaseEncoding.base16()
-                            .lowerCase()
-                            .decode(
-                                "202d40302f856f7f6ec75335254169c600549427e13d712de10f8029854ca99a"))
-                    .build()));
+            new DriverInformationMapBuilder()
+                .addDriver("test", new URI("http://test.google.com/my/driver.jar"), "test_alias")
+                .addDriver(
+                    "test_with_checksum",
+                    new URI("http://test.google.com/my/checked_driver.jar"),
+                    BaseEncoding.base16()
+                        .lowerCase()
+                        .decode("202d40302f856f7f6ec75335254169c600549427e13d712de10f8029854ca99a"))
+                .build());
   }
 
   @Test
