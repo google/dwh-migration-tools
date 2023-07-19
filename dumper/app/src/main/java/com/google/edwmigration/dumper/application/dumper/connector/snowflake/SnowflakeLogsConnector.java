@@ -36,6 +36,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFor
 import com.google.errorprone.annotations.ForOverride;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +47,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Snowflake.")
 @RespectsArgumentQueryLogDays
@@ -351,7 +354,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // <deleted>.
     // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
     // 7-day window allowed by the server-side function.
-    ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
+    ZonedIntervalIterable intervals =
+        ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.DAYS);
     LOG.info("Exporting query log for " + intervals);
     for (ZonedInterval interval : intervals) {
       tasks.forEach(
