@@ -27,20 +27,18 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
 
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterable.class);
-
-  private static final List<ChronoUnit> SUPPORTED_UNITS =
-      Arrays.asList(ChronoUnit.DAYS, ChronoUnit.HOURS);
 
   private final ZonedDateTime start;
   private final ZonedDateTime end;
@@ -94,8 +92,8 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
    * end ).
    *
    * @param arguments connector arguments
-   * @param timeUnit the length of the intervals. Only supports {@value #SUPPORTED_UNITS} at the
-   *     moment
+   * @param timeUnit the length of the intervals. Only supports {@link ChronoUnit#HOURS} & {@link
+   *     ChronoUnit#DAYS} at the moment
    * @return a nonnull ZonedIntervalIterable
    * @throws MetadataDumperUsageException in case of arguments incompatibility or missing arguments
    * @throws IllegalArgumentException if any {@link ChronoUnit} other than `HOURS` or `DAYS` is
@@ -105,20 +103,8 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   public static ZonedIntervalIterable forConnectorArguments(
       @Nonnull ConnectorArguments arguments, @Nonnull ChronoUnit timeUnit)
       throws MetadataDumperUsageException {
-    int unitsInADay;
-
-    switch (timeUnit) {
-      case DAYS:
-        unitsInADay = 1;
-        break;
-      case HOURS:
-        unitsInADay = 24;
-        break;
-      default:
-        throw new IllegalArgumentException(
-            String.format(
-                "`timeUnit=%s` is not supported. Only allowed units are: %s",
-                timeUnit, SUPPORTED_UNITS));
+    if (!Arrays.asList(ChronoUnit.DAYS, ChronoUnit.HOURS).contains(timeUnit)) {
+      throw new IllegalArgumentException("Only allowed units are: DAYS or HOURS");
     }
 
     if (arguments.getQueryLogStart() != null || arguments.getQueryLogEnd() != null) {
@@ -154,7 +140,9 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
         daysToExport,
         timeUnit);
 
-    return ZonedIntervalIterable.forTimeUnitsUntilNow(unitsInADay * daysToExport, timeUnit);
+    int multiplicationFactor = timeUnit.equals(ChronoUnit.HOURS) ? 24 : 1;
+    return ZonedIntervalIterable.forTimeUnitsUntilNow(
+        multiplicationFactor * daysToExport, timeUnit);
   }
 
   private ZonedIntervalIterable(
