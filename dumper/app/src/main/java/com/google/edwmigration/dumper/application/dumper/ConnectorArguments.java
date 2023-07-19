@@ -334,8 +334,9 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(
               OPT_THREAD_POOL_SIZE,
-              "Set thread pool size (affects connection pool size). Defaults to "
-                  + OPT_THREAD_POOL_SIZE_DEFAULT)
+              "Set thread pool size (affects connection pool size)."
+                  + " If the --assessment flag is enabled, this option is"
+                  + " ignored and thread pool size is set to 1.")
           .withRequiredArg()
           .ofType(Integer.class)
           .defaultsTo(OPT_THREAD_POOL_SIZE_DEFAULT);
@@ -742,6 +743,9 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   public int getThreadPoolSize() {
+    if (isAssessment()) {
+      return 1;
+    }
     return getOptions().valueOf(optionThreadPoolSize);
   }
 
