@@ -744,6 +744,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   public int getThreadPoolSize() {
     if (isAssessment()) {
+      // Dumping in a single thread lowers the probability that the dumper will put too much
+      // pressure on the Redshift cluster, which could cause other issues. The dumper should use
+      // less memory with a single thread only, thus lowering the probability of OOM. Even though
+      // the dumping may take longer, the execution is more robust (less likely to fail).
       return 1;
     }
     return getOptions().valueOf(optionThreadPoolSize);
