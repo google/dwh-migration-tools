@@ -342,9 +342,15 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
               QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
               createExtendedQueryFromAccountUsage(arguments),
               QueryHistoryExtendedFormat.Header.class));
-      tasks.addAll(createTaskDescriptions(arguments));
     } else {
       tasks.add(new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class));
+    }
+
+    ChronoUnit intervalUnit = ChronoUnit.HOURS;
+    
+    if (arguments.isAssessment()) {
+      tasks.addAll(createTaskDescriptions(arguments));
+      intervalUnit = ChronoUnit.DAYS;
     }
 
     // (24 * 7) -> 7 trailing days == 168 hours
@@ -353,7 +359,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
     // 7-day window allowed by the server-side function.
     ZonedIntervalIterable intervals =
-        ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.DAYS);
+        ZonedIntervalIterable.forConnectorArguments(arguments, intervalUnit);
     LOG.info("Exporting query log for " + intervals);
     for (ZonedInterval interval : intervals) {
       tasks.forEach(

@@ -33,7 +33,9 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
 
   @SuppressWarnings("UnusedVariable")
@@ -105,9 +107,20 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   public static ZonedIntervalIterable forConnectorArguments(
       @Nonnull ConnectorArguments arguments, @Nonnull ChronoUnit timeUnit)
       throws MetadataDumperUsageException {
-    if (!SUPPORTED_UNITS.contains(timeUnit)) {
-      throw new IllegalArgumentException(
-          String.format("Only allowed units are: %s", SUPPORTED_UNITS));
+    int unitsInADay;
+
+    switch (timeUnit) {
+      case DAYS:
+        unitsInADay = 1;
+        break;
+      case HOURS:
+        unitsInADay = 24;
+        break;
+      default:
+        throw new IllegalArgumentException(
+            String.format(
+                "`timeUnit=%s` is not supported. Only allowed units are: %s",
+                timeUnit, SUPPORTED_UNITS));
     }
 
     if (arguments.getQueryLogStart() != null || arguments.getQueryLogEnd() != null) {
@@ -143,22 +156,7 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
         daysToExport,
         timeUnit);
 
-    int multiplicationFactor;
-
-    switch (timeUnit) {
-      case DAYS:
-        multiplicationFactor = 1;
-        break;
-      case HOURS:
-        multiplicationFactor = 24;
-        break;
-      default:
-        throw new IllegalStateException(
-            String.format("`timeUnit` should within %s", SUPPORTED_UNITS));
-    }
-
-    return ZonedIntervalIterable.forTimeUnitsUntilNow(
-        multiplicationFactor * daysToExport, timeUnit);
+    return ZonedIntervalIterable.forTimeUnitsUntilNow(unitsInADay * daysToExport, timeUnit);
   }
 
   private ZonedIntervalIterable(
