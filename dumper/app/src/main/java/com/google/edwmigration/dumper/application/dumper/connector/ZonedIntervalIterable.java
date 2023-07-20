@@ -27,6 +27,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -37,6 +38,9 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
 
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterable.class);
+
+  private static final List<ChronoUnit> SUPPORTED_UNITS =
+      Arrays.asList(ChronoUnit.DAYS, ChronoUnit.HOURS);
 
   private final ZonedDateTime start;
   private final ZonedDateTime end;
@@ -90,8 +94,8 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
    * end ).
    *
    * @param arguments connector arguments
-   * @param timeUnit the length of the intervals. Only supports {@link ChronoUnit#HOURS} & {@link
-   *     ChronoUnit#DAYS} at the moment
+   * @param timeUnit the length of the intervals. Only supports {@value #SUPPORTED_UNITS} at the
+   *     moment
    * @return a nonnull ZonedIntervalIterable
    * @throws MetadataDumperUsageException in case of arguments incompatibility or missing arguments
    * @throws IllegalArgumentException if any {@link ChronoUnit} other than `HOURS` or `DAYS` is
@@ -101,8 +105,9 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   public static ZonedIntervalIterable forConnectorArguments(
       @Nonnull ConnectorArguments arguments, @Nonnull ChronoUnit timeUnit)
       throws MetadataDumperUsageException {
-    if (!Arrays.asList(ChronoUnit.DAYS, ChronoUnit.HOURS).contains(timeUnit)) {
-      throw new IllegalArgumentException("Only allowed units are: DAYS or HOURS");
+    if (!SUPPORTED_UNITS.contains(timeUnit)) {
+      throw new IllegalArgumentException(
+          String.format("Only allowed units are: %s", SUPPORTED_UNITS));
     }
 
     if (arguments.getQueryLogStart() != null || arguments.getQueryLogEnd() != null) {
@@ -138,7 +143,20 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
         daysToExport,
         timeUnit);
 
-    int multiplicationFactor = timeUnit.equals(ChronoUnit.HOURS) ? 24 : 1;
+    int multiplicationFactor;
+
+    switch (timeUnit) {
+      case DAYS:
+        multiplicationFactor = 1;
+        break;
+      case HOURS:
+        multiplicationFactor = 24;
+        break;
+      default:
+        throw new IllegalStateException(
+            String.format("`timeUnit` should within %s", SUPPORTED_UNITS));
+    }
+
     return ZonedIntervalIterable.forTimeUnitsUntilNow(
         multiplicationFactor * daysToExport, timeUnit);
   }
