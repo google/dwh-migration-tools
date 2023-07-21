@@ -341,12 +341,9 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
               QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
               createExtendedQueryFromAccountUsage(arguments),
               QueryHistoryExtendedFormat.Header.class));
+      tasks.addAll(createTaskDescriptions(arguments));
     } else {
       tasks.add(new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class));
-    }
-
-    if (arguments.isAssessment()) {
-      tasks.addAll(createTaskDescriptions(arguments));
     }
 
     // (24 * 7) -> 7 trailing days == 168 hours
