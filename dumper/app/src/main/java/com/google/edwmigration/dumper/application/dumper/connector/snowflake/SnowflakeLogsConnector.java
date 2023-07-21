@@ -37,7 +37,6 @@ import com.google.errorprone.annotations.ForOverride;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.CheckForNull;
@@ -335,47 +334,48 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
-    List<TaskDescription> tasks = new ArrayList<>();
-    if (arguments.isAssessment()) {
-      tasks.add(
-          new TaskDescription(
-              QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
-              createExtendedQueryFromAccountUsage(arguments),
-              QueryHistoryExtendedFormat.Header.class));
-    } else {
-      tasks.add(new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class));
-    }
-
-    ChronoUnit intervalUnit = ChronoUnit.HOURS;
-    
-    if (arguments.isAssessment()) {
-      tasks.addAll(createTaskDescriptions(arguments));
-      intervalUnit = ChronoUnit.DAYS;
-    }
-
     // (24 * 7) -> 7 trailing days == 168 hours
     // Actually, on Snowflake, 7 days ago starts at midnight in an unadvertised time zone. What the
     // <deleted>.
     // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
     // 7-day window allowed by the server-side function.
-    ZonedIntervalIterable intervals =
-        ZonedIntervalIterable.forConnectorArguments(arguments, intervalUnit);
+    ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
     LOG.info("Exporting query log for " + intervals);
-    for (ZonedInterval interval : intervals) {
-      tasks.forEach(
-          task -> {
-            String query =
-                String.format(
-                    task.unformattedQuery,
-                    SQL_FORMAT.format(interval.getStart()),
-                    SQL_FORMAT.format(interval.getEndInclusive()));
-            String file =
-                task.zipPrefix
-                    + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
-                    + ".csv";
-            out.add(new JdbcSelectTask(file, query).withHeaderClass(task.headerClass));
-          });
+    for (ZonedInterval zonedInterval : intervals) {
+      TaskDescription taskDescription;
+      if (arguments.isAssessment()) {
+        taskDescription =
+            new TaskDescription(
+                QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
+                createExtendedQueryFromAccountUsage(arguments),
+                QueryHistoryExtendedFormat.Header.class);
+        addJdbcTask(out, zonedInterval, taskDescription);
+      } else {
+        taskDescription =
+            new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
+      }
+      addJdbcTask(out, zonedInterval, taskDescription);
     }
+
+    if (arguments.isAssessment()) {
+      List<TaskDescription> tasks = createTaskDescriptions(arguments);
+      ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.DAYS)
+          .forEach(interval -> tasks.forEach(task -> addJdbcTask(out, interval, task)));
+    }
+  }
+
+  private static void addJdbcTask(
+      List<? super Task<?>> out, ZonedInterval interval, TaskDescription task) {
+    String query =
+        String.format(
+            task.unformattedQuery,
+            SQL_FORMAT.format(interval.getStart()),
+            SQL_FORMAT.format(interval.getEndInclusive()));
+    String file =
+        task.zipPrefix
+            + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
+            + ".csv";
+    out.add(new JdbcSelectTask(file, query).withHeaderClass(task.headerClass));
   }
 
   private String getOverrideableQuery(
