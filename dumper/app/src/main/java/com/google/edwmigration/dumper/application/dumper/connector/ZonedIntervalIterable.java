@@ -21,9 +21,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.AbstractIterator;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -33,7 +35,9 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
 
   @SuppressWarnings("UnusedVariable")
@@ -49,28 +53,28 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   @Nonnull
   @VisibleForTesting
   /* pp */ static ZonedIntervalIterable forDateTimeRange(
-      @Nonnull ZonedDateTime start, @Nonnull ZonedDateTime end, @Nonnull ChronoUnit unit) {
-    return new ZonedIntervalIterable(start, end, unit);
+      @Nonnull ZonedDateTime start, @Nonnull ZonedDateTime end, @Nonnull Duration duration) {
+    return new ZonedIntervalIterable(start, end, convert(duration));
   }
 
   @Nonnull
   @VisibleForTesting
   /* pp */ static ZonedIntervalIterable forTimeUnitsUntil(
-      @Nonnull ZonedDateTime now, @Nonnegative int unitCount, @Nonnull ChronoUnit unit) {
+      @Nonnull ZonedDateTime now, @Nonnegative int unitCount, @Nonnull Duration duration) {
+    TemporalUnit unit = convert(duration);
     return forDateTimeRange(
         now.minus(unitCount, unit),
-        now.plus(
-            1,
-            unit), // view comment in ZonedIntervalIterableTest, adding .minus(1, ChronoUnit.MILLIS)
+        now.plus(1, unit), // view comment in ZonedIntervalIterableTest, adding .minus(1,
+        // ChronoUnit.MILLIS)
         // only fixes cases when now is padded at xx:00:00
-        unit);
+        duration);
   }
 
   @Nonnull
   @VisibleForTesting
   /* pp */ static ZonedIntervalIterable forTimeUnitsUntilNow(
-      @Nonnegative int unitCount, @Nonnull ChronoUnit unit) {
-    return forTimeUnitsUntil(ZonedDateTime.now(ZoneOffset.UTC), unitCount, unit);
+      @Nonnegative int unitCount, @Nonnull Duration duration) {
+    return forTimeUnitsUntil(ZonedDateTime.now(ZoneOffset.UTC), unitCount, duration);
   }
 
   /**
@@ -85,7 +89,42 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   @Nonnull
   public static ZonedIntervalIterable forConnectorArguments(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    return ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.HOURS);
+    return ZonedIntervalIterable.forConnectorArguments(arguments, Duration.ofHours(1));
+  }
+
+  @Nonnull
+  private static TemporalUnit convert(@Nonnull Duration duration) {
+    return new TemporalUnit() {
+      @Override
+      public Duration getDuration() {
+        return duration;
+      }
+
+      @Override
+      public boolean isDurationEstimated() {
+        return false;
+      }
+
+      @Override
+      public boolean isDateBased() {
+        return false;
+      }
+
+      @Override
+      public boolean isTimeBased() {
+        return true;
+      }
+
+      @Override
+      public <R extends Temporal> R addTo(R temporal, long amount) {
+        return (R) temporal.plus(duration);
+      }
+
+      @Override
+      public long between(Temporal temporal1Inclusive, Temporal temporal2Exclusive) {
+        return temporal1Inclusive.until(temporal2Exclusive, convert(duration));
+      }
+    };
   }
 
   /**
@@ -94,31 +133,20 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
    * end ).
    *
    * @param arguments connector arguments
-   * @param timeUnit the length of the intervals. Only supports {@value #SUPPORTED_UNITS} at the
-   *     moment
+   * @param duration the length of the intervals
    * @return a nonnull ZonedIntervalIterable
    * @throws MetadataDumperUsageException in case of arguments incompatibility or missing arguments
-   * @throws IllegalArgumentException if any {@link ChronoUnit} other than `HOURS` or `DAYS` is
-   *     passed
+   * @throws IllegalArgumentException if then {@link Duration} is more than a day or does not divide
+   *     a day evenly
    */
   @Nonnull
   public static ZonedIntervalIterable forConnectorArguments(
-      @Nonnull ConnectorArguments arguments, @Nonnull ChronoUnit timeUnit)
+      @Nonnull ConnectorArguments arguments, @Nonnull Duration duration)
       throws MetadataDumperUsageException {
-    int unitsInADay;
-
-    switch (timeUnit) {
-      case DAYS:
-        unitsInADay = 1;
-        break;
-      case HOURS:
-        unitsInADay = 24;
-        break;
-      default:
-        throw new IllegalArgumentException(
-            String.format(
-                "`timeUnit=%s` is not supported. Only allowed units are: %s",
-                timeUnit, SUPPORTED_UNITS));
+    if (!isValidDuration(duration)) {
+      throw new IllegalArgumentException(
+          "Invalid `duration` provided. Please make sure the duration is less than a day and"
+              + " divides a 24 hour period evenly.");
     }
 
     if (arguments.getQueryLogStart() != null || arguments.getQueryLogEnd() != null) {
@@ -136,12 +164,12 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
                 + arguments.getQueryLogEndOrDefault());
 
       LOG.info(
-          "Log entries from {} to {} will be exported in increments of 1 {}.",
+          "Log entries from {} to {} will be exported in increments of {} seconds.",
           arguments.getQueryLogStart(),
           arguments.getQueryLogEndOrDefault(),
-          timeUnit);
+          duration.getSeconds());
       return ZonedIntervalIterable.forDateTimeRange(
-          arguments.getQueryLogStart(), arguments.getQueryLogEndOrDefault(), timeUnit);
+          arguments.getQueryLogStart(), arguments.getQueryLogEndOrDefault(), duration);
     }
 
     final int daysToExport = arguments.getQueryLogDays(7);
@@ -150,11 +178,21 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
           "At least one day of query logs should be exported; you specified: " + daysToExport);
 
     LOG.info(
-        "Log entries within the last {} days will be exported in increments of 1 {}.",
+        "Log entries within the last {} days will be exported in increments of {} seconds.",
         daysToExport,
-        timeUnit);
+        duration.getSeconds());
 
-    return ZonedIntervalIterable.forTimeUnitsUntilNow(unitsInADay * daysToExport, timeUnit);
+    int chunksInADay = Math.toIntExact(Duration.ofDays(1).getSeconds() / duration.getSeconds());
+    return ZonedIntervalIterable.forTimeUnitsUntilNow(chunksInADay * daysToExport, duration);
+  }
+
+  private static boolean isValidDuration(Duration duration) {
+    if (duration.isNegative() || duration.isZero()) {
+      return false;
+    }
+    boolean atMostADay = duration.toDays() <= 1;
+    boolean dividesADayEvenly = Duration.ofDays(1).getSeconds() % duration.getSeconds() == 0;
+    return atMostADay && dividesADayEvenly;
   }
 
   private ZonedIntervalIterable(
