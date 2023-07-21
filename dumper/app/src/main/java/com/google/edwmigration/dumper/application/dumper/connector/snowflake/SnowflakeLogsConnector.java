@@ -341,27 +341,24 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // 7-day window allowed by the server-side function.
     ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
     LOG.info("Exporting query log for " + intervals);
-    for (ZonedInterval zonedInterval : intervals) {
-      TaskDescription taskDescription;
-      if (arguments.isAssessment()) {
-        taskDescription =
-            new TaskDescription(
-                QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
-                createExtendedQueryFromAccountUsage(arguments),
-                QueryHistoryExtendedFormat.Header.class);
-        addJdbcTask(out, zonedInterval, taskDescription);
-      } else {
-        taskDescription =
-            new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
-      }
-      addJdbcTask(out, zonedInterval, taskDescription);
+
+    if (!arguments.isAssessment()) {
+      TaskDescription taskDescription =
+          new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
+      intervals.forEach(interval -> addJdbcTask(out, interval, taskDescription));
+      return;
     }
 
-    if (arguments.isAssessment()) {
-      List<TaskDescription> tasks = createTaskDescriptions(arguments);
-      ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.DAYS)
-          .forEach(interval -> tasks.forEach(task -> addJdbcTask(out, interval, task)));
-    }
+    TaskDescription taskDescription =
+        new TaskDescription(
+            QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
+            createExtendedQueryFromAccountUsage(arguments),
+            QueryHistoryExtendedFormat.Header.class);
+    intervals.forEach(interval -> addJdbcTask(out, interval, taskDescription));
+
+    List<TaskDescription> tasks = createTaskDescriptions(arguments);
+    ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.DAYS)
+        .forEach(interval -> tasks.forEach(task -> addJdbcTask(out, interval, task)));
   }
 
   private static void addJdbcTask(
