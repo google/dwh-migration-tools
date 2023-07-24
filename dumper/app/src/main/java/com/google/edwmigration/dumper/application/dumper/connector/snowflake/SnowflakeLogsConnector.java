@@ -48,9 +48,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author shevek
- */
+/** @author shevek */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Snowflake.")
 @RespectsArgumentQueryLogDays

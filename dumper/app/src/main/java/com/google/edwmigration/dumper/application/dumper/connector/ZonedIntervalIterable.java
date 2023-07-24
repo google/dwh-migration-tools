@@ -31,9 +31,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author shevek
- */
+/** @author shevek */
 public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
 
   @SuppressWarnings("UnusedVariable")
@@ -167,8 +165,8 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
         queryLogStart,
         queryLogEnd);
 
-    this.start = queryLogStart;
-    this.end = truncate(queryLogStart, queryLogEnd, duration);
+    this.start = queryLogStart.truncatedTo(ChronoUnit.SECONDS);
+    this.end = truncate(start, queryLogEnd, duration);
 
     if (!end.equals(queryLogEnd)) {
       LOG.warn("End time has been truncated to {}", end);
@@ -176,13 +174,12 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   }
 
   private ZonedDateTime truncate(
-      @Nonnull ZonedDateTime queryLogStart,
+      @Nonnull ZonedDateTime start,
       @Nonnull ZonedDateTime queryLogEnd,
       @Nonnull Duration duration) {
     long numberOfUnits =
-        Math.floorDiv(
-            Duration.between(queryLogStart, queryLogEnd).getSeconds(), duration.getSeconds());
-    return queryLogStart.plus(Duration.ofSeconds(numberOfUnits * duration.getSeconds()));
+        Math.floorDiv(Duration.between(start, queryLogEnd).getSeconds(), duration.getSeconds());
+    return start.plus(Duration.ofSeconds(numberOfUnits * duration.getSeconds()));
   }
 
   @Nonnull
