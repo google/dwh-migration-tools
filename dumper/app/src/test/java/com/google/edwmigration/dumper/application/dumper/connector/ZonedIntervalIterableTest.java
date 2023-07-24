@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -27,7 +28,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.Locale;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -58,7 +59,7 @@ public class ZonedIntervalIterableTest {
     int actualCount = 0;
     for (ZonedInterval interval : iterable) {
       LOG.debug("Interval is {}", interval);
-      assertOneHourExclusive(interval, iterable.getUnit());
+      assertOneHourExclusive(interval, iterable.getDuration());
       actualCount++;
     }
     assertEquals(expectCount, actualCount);
@@ -68,11 +69,8 @@ public class ZonedIntervalIterableTest {
    * Check that every interval length is one millisecond shorter than temporal unit and that the
    * start of interval is truncated to unit, i.e.: interval = [start, start + 1 unit)
    */
-  private void assertOneHourExclusive(ZonedInterval interval, TemporalUnit unit) {
-    Assert.assertEquals(
-        unit.getDuration().minusMillis(1).toMillis(),
-        interval.getStart().until(interval.getEndInclusive(), ChronoUnit.MILLIS));
-    assertEquals(interval.getStart().truncatedTo(unit), interval.getStart());
+  private void assertOneHourExclusive(ZonedInterval interval, TemporalAmount amount) {
+    Assert.assertEquals(amount, Duration.between(interval.getStart(), interval.getEndInclusive()));
   }
 
   // I'm not entirely sure with the behaviour of this over time-zone shifts:
@@ -89,19 +87,19 @@ public class ZonedIntervalIterableTest {
       int expected, @Nonnull String from, @Nonnull String to, ChronoUnit chronoUnit) {
     ZonedIntervalIterable iterable =
         ZonedIntervalIterable.forDateTimeRange(
-            zonedParserStart.convert(from), zonedParserEnd.convert(to), chronoUnit);
+            zonedParserStart.convert(from), zonedParserEnd.convert(to), chronoUnit.getDuration());
     testIterable(expected, iterable);
   }
 
   @Test
   public void testHours() {
-    testIterable(169, ZonedIntervalIterable.forTimeUnitsUntilNow(24 * 7, ChronoUnit.DAYS));
-    testIterable(8, ZonedIntervalIterable.forTimeUnitsUntilNow(7, ChronoUnit.DAYS));
+    testIterable(169, ZonedIntervalIterable.forTimeUnitsUntilNow(24 * 7, Duration.ofDays(1)));
+    testIterable(8, ZonedIntervalIterable.forTimeUnitsUntilNow(7, Duration.ofDays(1)));
 
     testIterable(
         2,
         ZonedIntervalIterable.forTimeUnitsUntil(
-            ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")), 1, ChronoUnit.HOURS));
+            ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")), 1, Duration.ofHours(1)));
     // Testing from 2019-12-31T23:00Z[UTC] to 2020-01-01T01:00Z[UTC] every Hours
     // Interval is 2019-12-31T23:00Z[UTC]...2019-12-31T23:59:59.999Z[UTC]
     // Interval is 2020-01-01T00:00Z[UTC]...2020-01-01T00:59:59.999Z[UTC]
@@ -115,7 +113,7 @@ public class ZonedIntervalIterableTest {
     // next dump, assuming nightly dumps at midnight + some seconds/minutes
     int daysToExport = 1;
     testIterable(
-        25, ZonedIntervalIterable.forTimeUnitsUntilNow(24 * daysToExport, ChronoUnit.HOURS));
+        25, ZonedIntervalIterable.forTimeUnitsUntilNow(24 * daysToExport, Duration.ofHours(1)));
   }
 
   @Test

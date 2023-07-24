@@ -35,9 +35,9 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
 import com.google.errorprone.annotations.ForOverride;
+import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,7 +48,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Snowflake.")
 @RespectsArgumentQueryLogDays
@@ -360,7 +362,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
 
     List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
-    ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.DAYS)
+    ZonedIntervalIterable.forConnectorArguments(arguments, Duration.ofDays(1))
         .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
   }
 
