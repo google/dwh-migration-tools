@@ -125,7 +125,8 @@ public interface SnowflakeLogsDumpFormat {
       SchemaId,
       SchemaName,
       DatabaseId,
-      DatabaseName
+      DatabaseName,
+      InstanceId
     }
   }
 
@@ -267,7 +268,8 @@ public interface SnowflakeLogsDumpFormat {
       SchemaId,
       SchemaName,
       DatabaseId,
-      DatabaseName
+      DatabaseName,
+      InstanceId
     }
   }
 
@@ -294,7 +296,10 @@ public interface SnowflakeLogsDumpFormat {
       GraphVersion,
       RunId,
       RootTaskId,
-      ScheduledFrom
+      ScheduledFrom,
+      InstanceId,
+      AttemptNumber,
+      Config
     }
   }
 
