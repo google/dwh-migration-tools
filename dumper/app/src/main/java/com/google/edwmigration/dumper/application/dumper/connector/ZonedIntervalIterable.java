@@ -28,6 +28,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,10 +121,10 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
                 + arguments.getQueryLogEndOrDefault());
 
       LOG.info(
-          "Log entries from {} to {} will be exported in increments of {} seconds.",
+          "Log entries from {} to {} will be exported in increments of {}.",
           arguments.getQueryLogStart(),
           arguments.getQueryLogEndOrDefault(),
-          duration.getSeconds());
+          DurationFormatUtils.formatDuration(duration.toMillis(), "**H:mm:ss**", true));
       return ZonedIntervalIterable.forDateTimeRange(
           arguments.getQueryLogStart(), arguments.getQueryLogEndOrDefault(), duration);
     }
@@ -136,7 +137,7 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
     LOG.info(
         "Log entries within the last {} days will be exported in increments of {} seconds.",
         daysToExport,
-        duration.getSeconds());
+        DurationFormatUtils.formatDuration(duration.toMillis(), "**H:mm:ss**", true));
 
     int chunksInADay = Math.toIntExact(Duration.ofDays(1).getSeconds() / duration.getSeconds());
     return ZonedIntervalIterable.forTimeUnitsUntilNow(chunksInADay * daysToExport, duration);
@@ -226,6 +227,8 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
 
   @Override
   public String toString() {
-    return String.format("from %s to %s every %s", start, end, duration);
+    return String.format(
+        "from %s to %s every %s",
+        start, end, DurationFormatUtils.formatDuration(duration.toMillis(), "**H:mm:ss**", true));
   }
 }
