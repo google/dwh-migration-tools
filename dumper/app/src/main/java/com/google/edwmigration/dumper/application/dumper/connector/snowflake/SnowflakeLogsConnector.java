@@ -339,26 +339,27 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // <deleted>.
     // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
     // 7-day window allowed by the server-side function.
-    ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
-    LOG.info("Exporting query log for " + intervals);
+    ZonedIntervalIterable queryLogIntervals =
+        ZonedIntervalIterable.forConnectorArguments(arguments);
+    LOG.info("Exporting query log for " + queryLogIntervals);
 
     if (!arguments.isAssessment()) {
-      TaskDescription taskDescription =
+      TaskDescription queryHistoryTask =
           new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
-      intervals.forEach(interval -> addJdbcTask(out, interval, taskDescription));
+      queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
       return;
     }
 
-    TaskDescription taskDescription =
+    TaskDescription queryHistoryTask =
         new TaskDescription(
             QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
             createExtendedQueryFromAccountUsage(arguments),
             QueryHistoryExtendedFormat.Header.class);
-    intervals.forEach(interval -> addJdbcTask(out, interval, taskDescription));
+    queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
 
-    List<TaskDescription> tasks = createTaskDescriptions(arguments);
+    List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
     ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.DAYS)
-        .forEach(interval -> tasks.forEach(task -> addJdbcTask(out, interval, task)));
+        .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
   }
 
   private static void addJdbcTask(
@@ -388,7 +389,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         + " <= to_timestamp_ltz('%s')";
   }
 
-  private List<TaskDescription> createTaskDescriptions(ConnectorArguments arguments) {
+  private List<TaskDescription> createTimeSeriesTasks(ConnectorArguments arguments) {
     String queryPrefix = "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.";
     return Arrays.asList(
         new TaskDescription(
