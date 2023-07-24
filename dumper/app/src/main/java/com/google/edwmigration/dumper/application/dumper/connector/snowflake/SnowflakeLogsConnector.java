@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.CaseFormat;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
@@ -39,6 +40,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -389,15 +391,25 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         + " <= to_timestamp_ltz('%s')";
   }
 
+  private String parseColumnsFromHeader(Class<? extends Enum<?>> headerClass) {
+    return Arrays.stream(headerClass.getEnumConstants())
+        .map(Enum::name)
+        .map(name -> CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, name))
+        .collect(Collectors.joining(", "));
+  }
+
   private List<TaskDescription> createTimeSeriesTasks(ConnectorArguments arguments) {
-    String queryPrefix = "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.";
+    String queryPrefix = "SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.%s";
     return Arrays.asList(
         new TaskDescription(
             WarehouseEventsHistoryFormat.ZIP_ENTRY_PREFIX,
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "WAREHOUSE_EVENTS_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(WarehouseEventsHistoryFormat.Header.class),
+                    "WAREHOUSE_EVENTS_HISTORY"),
                 "TIMESTAMP"),
             WarehouseEventsHistoryFormat.Header.class),
         new TaskDescription(
@@ -405,7 +417,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "AUTOMATIC_CLUSTERING_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(AutomaticClusteringHistoryFormat.Header.class),
+                    "AUTOMATIC_CLUSTERING_HISTORY"),
                 "END_TIME"),
             AutomaticClusteringHistoryFormat.Header.class),
         new TaskDescription(
@@ -413,7 +428,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.COPY_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "COPY_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(CopyHistoryFormat.Header.class),
+                    "COPY_HISTORY"),
                 "LAST_LOAD_TIME"),
             CopyHistoryFormat.Header.class),
         new TaskDescription(
@@ -422,7 +440,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties
                         .DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "DATABASE_REPLICATION_USAGE_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(DatabaseReplicationUsageHistoryFormat.Header.class),
+                    "DATABASE_REPLICATION_USAGE_HISTORY"),
                 "END_TIME"),
             DatabaseReplicationUsageHistoryFormat.Header.class),
         new TaskDescription(
@@ -430,7 +451,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.LOGIN_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "LOGIN_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(LoginHistoryFormat.Header.class),
+                    "LOGIN_HISTORY"),
                 "EVENT_TIMESTAMP"),
             LoginHistoryFormat.Header.class),
         new TaskDescription(
@@ -438,7 +462,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "METERING_DAILY_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(MeteringDailyHistoryFormat.Header.class),
+                    "METERING_DAILY_HISTORY"),
                 "USAGE_DATE"),
             MeteringDailyHistoryFormat.Header.class),
         new TaskDescription(
@@ -446,7 +473,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "PIPE_USAGE_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(PipeUsageHistoryFormat.Header.class),
+                    "PIPE_USAGE_HISTORY"),
                 "END_TIME"),
             PipeUsageHistoryFormat.Header.class),
         new TaskDescription(
@@ -454,7 +484,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "QUERY_ACCELERATION_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(QueryAccelerationHistoryFormat.Header.class),
+                    "QUERY_ACCELERATION_HISTORY"),
                 "END_TIME"),
             QueryAccelerationHistoryFormat.Header.class),
         new TaskDescription(
@@ -462,7 +495,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "REPLICATION_GROUP_USAGE_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(ReplicationGroupUsageHistoryFormat.Header.class),
+                    "REPLICATION_GROUP_USAGE_HISTORY"),
                 "END_TIME"),
             ReplicationGroupUsageHistoryFormat.Header.class),
         new TaskDescription(
@@ -470,7 +506,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "SERVERLESS_TASK_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(ServerlessTaskHistoryFormat.Header.class),
+                    "SERVERLESS_TASK_HISTORY"),
                 "END_TIME"),
             ServerlessTaskHistoryFormat.Header.class),
         new TaskDescription(
@@ -478,7 +517,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.TASK_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "TASK_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(TaskHistoryFormat.Header.class),
+                    "TASK_HISTORY"),
                 "COMPLETED_TIME"),
             TaskHistoryFormat.Header.class),
         new TaskDescription(
@@ -486,7 +528,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "WAREHOUSE_LOAD_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(WarehouseLoadHistoryFormat.Header.class),
+                    "WAREHOUSE_LOAD_HISTORY"),
                 "END_TIME"),
             WarehouseLoadHistoryFormat.Header.class),
         new TaskDescription(
@@ -494,7 +539,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             getOverrideableQuery(
                 arguments.getDefinition(
                     SnowflakeLogConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY),
-                queryPrefix + "WAREHOUSE_METERING_HISTORY",
+                String.format(
+                    queryPrefix,
+                    parseColumnsFromHeader(WarehouseMeteringHistoryFormat.Header.class),
+                    "WAREHOUSE_METERING_HISTORY"),
                 "END_TIME"),
             WarehouseMeteringHistoryFormat.Header.class));
   }
