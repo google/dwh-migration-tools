@@ -34,7 +34,7 @@ configurations {
 	}
 }
 
-def mockitoVersion = '4.11.0'
+def mockitoVersion = '5.4.0'
 def autoValueVersion = '1.10.2'
 
 dependencies {
