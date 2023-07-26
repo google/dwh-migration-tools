@@ -100,11 +100,10 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   public static ZonedIntervalIterable forConnectorArguments(
       @Nonnull ConnectorArguments arguments, @Nonnull Duration duration)
       throws MetadataDumperUsageException {
-    if (!isValidDuration(duration)) {
-      throw new IllegalArgumentException(
-          "Invalid `duration` provided. Please make sure the duration is less than a day and"
-              + " divides a 24 hour period evenly.");
-    }
+    Preconditions.checkArgument(
+        isValidDuration(duration),
+        "Invalid `duration` provided. Please make sure the duration is less than a day and"
+            + " divides a 24 hour period evenly.");
 
     if (arguments.getQueryLogStart() != null || arguments.getQueryLogEnd() != null) {
       if (arguments.getQueryLogDays() != null)
