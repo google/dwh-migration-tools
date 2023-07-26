@@ -14,6 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.apache.tools.ant.filters.ReplaceTokens
+
 buildscript {
     dependencies {
         classpath 'com.github.jk1:gradle-license-report:1.17'
@@ -91,6 +93,13 @@ application {
     applicationName = 'dwh-migration-dumper'
 }
 
+task cloudExtractorStartScripts(type: CreateStartScripts) {
+    outputDir = layout.buildDirectory.dir('install/cloud-extractor/bin').get().asFile
+    classpath = tasks.startScripts.classpath
+    mainClass = 'com.google.edwmigration.dumper.application.dumper.clouddumper.Main'
+    applicationName = 'dwh-cloud-extractor'
+}
+
 licenseReport {
     // onlyIf { ! gradle.startParameter.offline }
     filters = [
@@ -127,6 +136,13 @@ tasks.register('generateSourceMirror', Copy) {
 	outputs.dir "mirror/sources"
 }
 
+tasks.register('copyGceLauncher', Copy) {
+    from 'src/main/sh/cloud_extractor/gce_launcher.sh'
+    into layout.buildDirectory.dir('cloud_extractor/launcher')
+    filter(ReplaceTokens, tokens: [dumper_version: '1.0.27'])
+    filteringCharset = 'UTF-8'
+}
+
 distributions {
 	main {
 		distributionBaseName = "app"
@@ -135,6 +151,9 @@ distributions {
 		distributionBaseName = "dwh-migration-dumper"
 		contents {
 			from installDist
+			from (cloudExtractorStartScripts) {
+				into "bin"
+			}
 			from(generateLicenseReport) {
 				into "docs/licenses"
 			}
