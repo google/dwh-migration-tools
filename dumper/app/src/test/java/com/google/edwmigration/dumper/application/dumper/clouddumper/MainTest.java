@@ -42,11 +42,12 @@ public class MainTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private MetadataRetriever metadataRetriever;
+  @Mock private DriverRetriever driverRetriever;
 
   @Test
   public void run_successSingleConnector() throws Exception {
     MetadataDumper metadataDumper = mock(MetadataDumper.class);
-    Main underTest = new Main(() -> metadataDumper, metadataRetriever);
+    Main underTest = new Main(() -> metadataDumper, metadataRetriever, driverRetriever);
     when(metadataRetriever.getAttribute("dwh_extractor_configuration"))
         .thenReturn(
             Optional.of(
@@ -70,7 +71,7 @@ public class MainTest {
     MetadataDumper metadataDumper2 = mock(MetadataDumper.class);
     Supplier<MetadataDumper> metadataDumperSupplier = mock(Supplier.class);
     when(metadataDumperSupplier.get()).thenReturn(metadataDumper1, metadataDumper2);
-    Main underTest = new Main(metadataDumperSupplier, metadataRetriever);
+    Main underTest = new Main(metadataDumperSupplier, metadataRetriever, driverRetriever);
     when(metadataRetriever.getAttribute("dwh_extractor_configuration"))
         .thenReturn(
             Optional.of(
@@ -103,7 +104,7 @@ public class MainTest {
   @Test
   public void run_failsOnMissingConnectorConfiguration() throws Exception {
     MetadataDumper metadataDumper = mock(MetadataDumper.class);
-    Main underTest = new Main(() -> metadataDumper, metadataRetriever);
+    Main underTest = new Main(() -> metadataDumper, metadataRetriever, driverRetriever);
     when(metadataRetriever.getAttribute("dwh_extractor_configuration"))
         .thenReturn(Optional.of("{}"));
 
