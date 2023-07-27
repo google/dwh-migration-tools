@@ -68,9 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
-/**
- * @author shevek
- */
+/** @author shevek */
 public class ConnectorArguments extends DefaultArguments {
 
   private static final Logger LOG = LoggerFactory.getLogger(ConnectorArguments.class);
