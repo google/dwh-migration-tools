@@ -16,11 +16,19 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.ChronoUnit.HALF_DAYS;
+import static java.time.temporal.ChronoUnit.HOURS;
+import static java.time.temporal.ChronoUnit.MONTHS;
+import static java.time.temporal.ChronoUnit.WEEKS;
+import static java.time.temporal.ChronoUnit.YEARS;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -39,7 +47,9 @@ import org.anarres.jdiagnostics.ProductMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class DefaultArguments {
 
   @SuppressWarnings("UnusedVariable")
@@ -74,6 +84,31 @@ public class DefaultArguments {
       buf.append('/');
       joiner.appendTo(buf, V_FALSE);
       return buf.toString();
+    }
+  }
+
+  public static class ChronoUnitValueConverter implements ValueConverter<ChronoUnit> {
+
+    private final ChronoUnit[] ALLOWED_UNITS = {HOURS, HALF_DAYS, DAYS, WEEKS, MONTHS, YEARS};
+
+    public static ChronoUnitValueConverter INSTANCE = new ChronoUnitValueConverter();
+
+    private ChronoUnitValueConverter() {}
+
+    @Override
+    public ChronoUnit convert(String value) {
+      for (ChronoUnit unit : ALLOWED_UNITS) if (unit.name().equalsIgnoreCase(value)) return unit;
+      throw new ValueConversionException("Not a valid unit of interval: " + value);
+    }
+
+    @Override
+    public Class<? extends ChronoUnit> valueType() {
+      return ChronoUnit.class;
+    }
+
+    @Override
+    public String valuePattern() {
+      return Arrays.stream(ALLOWED_UNITS).map(Enum::name).collect(Collectors.joining("/"));
     }
   }
 

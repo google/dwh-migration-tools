@@ -39,6 +39,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +68,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ConnectorArguments extends DefaultArguments {
 
   private static final Logger LOG = LoggerFactory.getLogger(ConnectorArguments.class);
@@ -106,6 +109,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
   public static final String OPT_QUERY_LOG_DAYS = "query-log-days";
+  public static final String OPT_QUERY_LOG_INTERVAL = "query-log-interval";
   public static final String OPT_QUERY_LOG_START = "query-log-start";
   public static final String OPT_QUERY_LOG_END = "query-log-end";
   public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
@@ -228,6 +232,7 @@ public class ConnectorArguments extends DefaultArguments {
           .describedAs("cw-dump.zip");
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
+
   // TODO: Make this be an ISO instant.
   @Deprecated
   private final OptionSpec<String> optionQueryLogEarliestTimestamp =
@@ -238,7 +243,9 @@ public class ConnectorArguments extends DefaultArguments {
                   + OPT_QUERY_LOG_START
                   + " and "
                   + OPT_QUERY_LOG_END
-                  + "] Accepts a SQL expression that will be compared to the execution timestamp of each query log entry; entries with timestamps occurring before this expression will not be exported")
+                  + "] Accepts a SQL expression that will be compared to the execution timestamp of"
+                  + " each query log entry; entries with timestamps occurring before this"
+                  + " expression will not be exported")
           .withRequiredArg()
           .ofType(String.class);
 
@@ -248,6 +255,14 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(Integer.class)
           .describedAs("N");
+
+  private final OptionSpec<ChronoUnit> optionQueryLogInterval =
+      parser
+          .accepts(OPT_QUERY_LOG_INTERVAL, "The interval between each query log dump")
+          .withOptionalArg()
+          .ofType(ChronoUnit.class)
+          .withValuesConvertedBy(ChronoUnitValueConverter.INSTANCE)
+          .defaultsTo(ChronoUnit.HOURS);
 
   private final OptionSpec<ZonedDateTime> optionQueryLogStart =
       parser
@@ -698,6 +713,10 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public Integer getQueryLogDays() {
     return getOptions().valueOf(optionQueryLogDays);
+  }
+
+  public ChronoUnit getQueryLogInterval() {
+    return getOptions().valueOf(optionQueryLogInterval);
   }
 
   @Nonnegative
