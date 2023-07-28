@@ -107,7 +107,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
   public static final String OPT_QUERY_LOG_DAYS = "query-log-days";
-  public static final String OPT_QUERY_LOG_INTERVAL = "query-log-interval";
+  public static final String OPT_QUERY_LOG_ROTATION_FREQUENCY = "query-log-rotation-frequency";
   public static final String OPT_QUERY_LOG_START = "query-log-start";
   public static final String OPT_QUERY_LOG_END = "query-log-end";
   public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
@@ -254,9 +254,9 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(Integer.class)
           .describedAs("N");
 
-  private final OptionSpec<ChronoUnit> optionQueryLogInterval =
+  private final OptionSpec<ChronoUnit> optionQueryLogRotationFrequency =
       parser
-          .accepts(OPT_QUERY_LOG_INTERVAL, "The interval between each query log dump")
+          .accepts(OPT_QUERY_LOG_ROTATION_FREQUENCY, "The interval for rotating query log files")
           .withOptionalArg()
           .ofType(ChronoUnit.class)
           .withValuesConvertedBy(ChronoUnitValueConverter.INSTANCE)
@@ -713,8 +713,8 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionQueryLogDays);
   }
 
-  public ChronoUnit getQueryLogInterval() {
-    return getOptions().valueOf(optionQueryLogInterval);
+  public ChronoUnit getQueryLogRotationFrequency() {
+    return getOptions().valueOf(optionQueryLogRotationFrequency);
   }
 
   @Nonnegative

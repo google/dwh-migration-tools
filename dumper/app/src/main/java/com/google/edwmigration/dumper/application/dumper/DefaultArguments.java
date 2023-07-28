@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.HALF_DAYS;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MONTHS;
 import static java.time.temporal.ChronoUnit.WEEKS;
@@ -87,7 +86,19 @@ public class DefaultArguments {
 
   public static class ChronoUnitValueConverter implements ValueConverter<ChronoUnit> {
 
-    private final ChronoUnit[] ALLOWED_UNITS = {HOURS, HALF_DAYS, DAYS, WEEKS, MONTHS, YEARS};
+    private enum AllowedUnits {
+      HOURLY(HOURS),
+      DAILY(DAYS),
+      WEEKLY(WEEKS),
+      MONTHLY(MONTHS),
+      YEARLY(YEARS);
+
+      private final ChronoUnit chronoUnit;
+
+      AllowedUnits(ChronoUnit chronoUnit) {
+        this.chronoUnit = chronoUnit;
+      }
+    }
 
     public static ChronoUnitValueConverter INSTANCE = new ChronoUnitValueConverter();
 
@@ -95,7 +106,8 @@ public class DefaultArguments {
 
     @Override
     public ChronoUnit convert(String value) {
-      for (ChronoUnit unit : ALLOWED_UNITS) if (unit.name().equalsIgnoreCase(value)) return unit;
+      for (AllowedUnits unit : AllowedUnits.values())
+        if (unit.name().equalsIgnoreCase(value)) return unit.chronoUnit;
       throw new ValueConversionException("Not a valid unit of interval: " + value);
     }
 
@@ -106,7 +118,10 @@ public class DefaultArguments {
 
     @Override
     public String valuePattern() {
-      return Arrays.stream(ALLOWED_UNITS).map(Enum::name).collect(Collectors.joining("/"));
+      return Arrays.stream(AllowedUnits.values())
+          .map(Enum::name)
+          .map(String::toLowerCase)
+          .collect(Collectors.joining("/"));
     }
   }
 
