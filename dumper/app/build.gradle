@@ -93,6 +93,10 @@ dependencies {
     sources "ch.qos.logback:logback-classic:1.2.11@sources"
 }
 
+startScripts {
+    classpath = files( '$APP_HOME/lib/*' )
+}
+
 application {
     // Define the main class for the application.
     mainClass = 'com.google.edwmigration.dumper.application.dumper.Main'
