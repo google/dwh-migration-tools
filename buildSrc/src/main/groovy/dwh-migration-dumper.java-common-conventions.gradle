@@ -32,7 +32,7 @@ configurations {
         exclude group: 'findbugs', module: 'annotations'
         exclude group: 'net.jcip', module: 'jcip-annotations'   // In google-findbugs-annotations.
         exclude group: 'org.springframework', module: 'spring-jcl'  // In jcl-over-slf4j
-        exclude group: 'commons-logging'	// Replaced by jcl-over-slf4j
+        exclude group: 'commons-logging'    // Replaced by jcl-over-slf4j
     }
 }
 
@@ -123,8 +123,8 @@ dependencies {
 }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_1_8
-	targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks.named('test') {
@@ -168,19 +168,19 @@ tasks.named('test') {
 }
 
 spotless {
-	// In an ideal world we would use $YEAR in the HEADER templates, but that
-	// breaks some internal tooling. So we also can't use:
-	// ratchetFrom 'origin/main' // Enables lazy copyright year updates.
+    // In an ideal world we would use $YEAR in the HEADER templates, but that
+    // breaks some internal tooling. So we also can't use:
+    // ratchetFrom 'origin/main' // Enables lazy copyright year updates.
 
-	java {
-                googleJavaFormat()
-		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java");
-		trimTrailingWhitespace();
+    java {
+        googleJavaFormat()
+        licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java");
+        trimTrailingWhitespace();
         FileCollection files = files();
         for (SourceSet sourceSet : sourceSets)
             files = files.plus(sourceSet.allJava)
         files = files.filter { f ->
-			// println "Filtering " + f;
+            // println "Filtering " + f;
             String path = f.path;
             // Ignore generated sources.
             if (path.contains('/build/'))
@@ -190,28 +190,29 @@ spotless {
             return true;
         }
         target files;
-	}
+    }
 
-	format('gradle', com.diffplug.gradle.spotless.FormatExtension.class) {
-		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java"), '(?i:[a-z])'
-		trimTrailingWhitespace();
-		target files('build.gradle');
-	}
+    format('gradle', com.diffplug.gradle.spotless.FormatExtension.class) {
+        licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java"), '(?i:[a-z])'
+        trimTrailingWhitespace();
+        indentWithSpaces(4);
+        target files('build.gradle');
+    }
 
-	sql {
-		// Or use: '(?i:create|drop|insert|select)';
-		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.sql"), '(?i:[a-z])'
-		trimTrailingWhitespace();
+    sql {
+        // Or use: '(?i:create|drop|insert|select)';
+        licenseHeaderFile rootProject.file("gradle/codequality/HEADER.sql"), '(?i:[a-z])'
+        trimTrailingWhitespace();
 
-		FileCollection files = files();
-		for (SourceSet sourceSet : sourceSets)
-			files = files.plus(sourceSet.resources)
-		files = files.filter { f ->
-			// println "Filtering " + f;
-			if (!f.name.endsWith(".sql"))
-				return false;
-			return true;
-		}
-		target files;
-	}
+        FileCollection files = files();
+        for (SourceSet sourceSet : sourceSets)
+            files = files.plus(sourceSet.resources)
+        files = files.filter { f ->
+            // println "Filtering " + f;
+            if (!f.name.endsWith(".sql"))
+                return false;
+            return true;
+        }
+        target files;
+    }
 }
