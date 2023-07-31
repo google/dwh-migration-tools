@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
@@ -58,7 +59,43 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
   private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
   private static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
 
-  private static final String DEF_UTILITY_TABLE = "dbc.DBQLUtilityTbl";
+  public enum TeradataLogsConnectorProperty implements ConnectorProperty {
+    UTILITY_LOGS_TABLE(
+        "utility-logs-table",
+        "The name of the table to dump utility logs from.",
+        "dbc.DBQLUtilityTbl");
+
+    private final String name;
+    private final String description;
+    private final String defaultValue;
+
+    TeradataLogsConnectorProperty(String name, String description, String defaultValue) {
+      this.name = "teradata-logs." + name;
+      this.description = description;
+      this.defaultValue = defaultValue;
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
+
+    @Nonnull
+    public String getDefaultValue() {
+      return defaultValue;
+    }
+  }
+
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return TeradataLogsConnectorProperty.class;
+  }
 
   public TeradataLogsConnector() {
     super("teradata-logs");
@@ -119,6 +156,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     LOG.info("Exporting query logs for '{}'", intervals);
     SharedState queryLogsState = new SharedState();
     SharedState utilityLogsState = new SharedState();
+    String utilityLogsTable =
+        arguments.getDefinitionOrDefault(TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
     for (ZonedInterval interval : intervals) {
       String file = createFilename(ZIP_ENTRY_PREFIX, interval);
       if (isAssessment) {
@@ -132,7 +171,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
             new TeradataUtilityLogsJdbcTask(
                 createFilename("utility_logs_", interval),
                 utilityLogsState,
-                DEF_UTILITY_TABLE,
+                utilityLogsTable,
                 interval));
       } else {
         conditions.add("L.UserName <> 'DBC'");

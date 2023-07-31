@@ -19,12 +19,14 @@ package com.google.edwmigration.dumper.application.dumper;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataLogsConnectorProperty;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.Console;
 import java.io.File;
@@ -831,23 +833,42 @@ public class ConnectorArguments extends DefaultArguments {
   public String toString() {
     // We do not include password here b/c as of this writing,
     // this string representation is logged out to file by ArgumentsTask.
-    return MoreObjects.toStringHelper(this)
-        .add("connector", getConnectorName())
-        .add("driver", getDriverPaths())
-        .add("host", getHost())
-        .add("port", getPort())
-        .add("warehouse", getWarehouse())
-        .add("database", getDatabases())
-        .add("user", getUser())
-        .add("configuration", getConfiguration())
-        .add("output", getOutputFile())
-        .add("query-log-earliest-timestamp", getQueryLogEarliestTimestamp())
-        .add("query-log-days", getQueryLogDays())
-        .add("query-log-start", getQueryLogStart())
-        .add("query-log-end", getQueryLogEnd())
-        .add("query-log-alternates", getQueryLogAlternates())
-        .add("assessment", isAssessment())
-        .toString();
+    ToStringHelper toStringHelper =
+        MoreObjects.toStringHelper(this)
+            .add("connector", getConnectorName())
+            .add("driver", getDriverPaths())
+            .add("host", getHost())
+            .add("port", getPort())
+            .add("warehouse", getWarehouse())
+            .add("database", getDatabases())
+            .add("user", getUser())
+            .add("configuration", getConfiguration())
+            .add("output", getOutputFile())
+            .add("query-log-earliest-timestamp", getQueryLogEarliestTimestamp())
+            .add("query-log-days", getQueryLogDays())
+            .add("query-log-start", getQueryLogStart())
+            .add("query-log-end", getQueryLogEnd())
+            .add("query-log-alternates", getQueryLogAlternates())
+            .add("assessment", isAssessment());
+    for (Connector connector : ServiceLoader.load(Connector.class)) {
+      if (connector.getName().equals("teradata-logs")) {
+        for (Enum<? extends ConnectorProperty> enumConstant :
+            connector.getConnectorProperties().getEnumConstants()) {
+          toStringHelper.add(
+              ((ConnectorProperty) enumConstant).getName(),
+              getDefinitionOrDefault((TeradataLogsConnectorProperty) enumConstant));
+        }
+      }
+    }
+    return toStringHelper.toString();
+  }
+
+  public String getDefinitionOrDefault(TeradataLogsConnectorProperty property) {
+    String stringValue = getDefinition(property);
+    if (StringUtils.isEmpty(stringValue)) {
+      return property.getDefaultValue();
+    }
+    return stringValue;
   }
 
   public static class ZonedParser implements ValueConverter<ZonedDateTime> {
