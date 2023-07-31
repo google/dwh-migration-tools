@@ -29,9 +29,9 @@ plugins {
 apply plugin: 'com.github.jk1.dependency-license-report'
 
 configurations {
-	sources {
-		transitive = true
-	}
+    sources {
+        transitive = true
+    }
 }
 
 def mockitoVersion = '4.11.0'
@@ -124,7 +124,7 @@ licenseReport {
 }
 
 tasks.named('check') {
-	dependsOn 'checkLicense'
+    dependsOn 'checkLicense'
 }
 
 tasks.register('generateSourceMirror', Copy) {
@@ -143,7 +143,7 @@ tasks.register('generateSourceMirror', Copy) {
             }
     }
     into layout.buildDirectory.dir('mirror/sources')
-	outputs.dir "mirror/sources"
+    outputs.dir "mirror/sources"
 }
 
 tasks.register('copyGceLauncher', Copy) {
@@ -154,22 +154,22 @@ tasks.register('copyGceLauncher', Copy) {
 }
 
 distributions {
-	main {
-		distributionBaseName = "app"
-	}
-	published {
-		distributionBaseName = "dwh-migration-dumper"
-		contents {
-			from installDist
-			from (cloudExtractorStartScripts) {
-				into "bin"
-			}
-			from(generateLicenseReport) {
-				into "docs/licenses"
-			}
-			from(generateSourceMirror) {
-				into "docs/sources"
-			}
-		}
-	}
+    main {
+        distributionBaseName = "app"
+    }
+    published {
+        distributionBaseName = "dwh-migration-dumper"
+        contents {
+            from installDist
+            from (cloudExtractorStartScripts) {
+                into "bin"
+            }
+            from(generateLicenseReport) {
+                into "docs/licenses"
+            }
+            from(generateSourceMirror) {
+                into "docs/sources"
+            }
+        }
+    }
 }
