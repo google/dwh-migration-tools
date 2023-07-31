@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author dave */
+/**
+ * @author dave
+ */
 public interface SnowflakeMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "snowflake.dump.zip";
@@ -106,22 +108,22 @@ public interface SnowflakeMetadataDumpFormat {
 
     enum Header {
       CreatedOn,
-      SchemaName,
-      IsAggregate,
-      MinNumArguments,
-      Arguments,
-      CatalogName,
-      ValidForClustering,
-      IsExternalFunction,
-      IsMemoizable,
       Name,
+      SchemaName,
       IsBuiltin,
+      IsAggregate,
       IsAnsi,
+      MinNumArguments,
       MaxNumArguments,
+      Arguments,
       Description,
+      CatalogName,
       IsTableFunction,
+      ValidForClustering,
       IsSecure,
+      IsExternalFunction,
       Language,
+      IsMemoizable,
     }
   }
 
