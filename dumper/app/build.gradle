@@ -118,7 +118,8 @@ licenseReport {
     renderers = [
         // new com.github.jk1.license.render.XmlReportRenderer("licenses.xml", "Licenses of Third Party Dependencies"),
         new com.github.jk1.license.render.CsvReportRenderer(),
-        new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
+        new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies"),
+        new com.github.jk1.license.render.TextReportRenderer(),
     ]
     allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
 }
@@ -146,11 +147,31 @@ tasks.register('generateSourceMirror', Copy) {
     outputs.dir "mirror/sources"
 }
 
+tasks.register('copyLicenseReport', Copy) {
+    from generateLicenseReport {
+        include 'THIRD-PARTY-NOTICES.txt'
+    }
+    into layout.buildDirectory.dir('generated/resources/licenses')
+}
+
+tasks.named('processResources') {
+    dependsOn 'copyLicenseReport'
+}
+
 tasks.register('copyGceLauncher', Copy) {
     from 'src/main/sh/cloud_extractor/gce_launcher.sh'
     into layout.buildDirectory.dir('cloud_extractor/launcher')
     filter(ReplaceTokens, tokens: [dumper_version: '1.0.27'])
     filteringCharset = 'UTF-8'
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir 'src/main/resources'
+            srcDir  layout.buildDirectory.dir('generated/resources')
+        }
+    }
 }
 
 distributions {

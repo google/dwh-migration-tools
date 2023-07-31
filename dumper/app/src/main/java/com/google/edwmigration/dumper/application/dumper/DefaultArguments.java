@@ -19,8 +19,10 @@ package com.google.edwmigration.dumper.application.dumper;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
+import com.google.common.io.Resources;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -56,8 +58,16 @@ public class DefaultArguments {
 
     @Override
     public Boolean convert(String value) {
-      for (String s : V_TRUE) if (value.equalsIgnoreCase(s)) return Boolean.TRUE;
-      for (String s : V_FALSE) if (value.equalsIgnoreCase(s)) return Boolean.FALSE;
+      for (String s : V_TRUE) {
+        if (value.equalsIgnoreCase(s)) {
+          return Boolean.TRUE;
+        }
+      }
+      for (String s : V_FALSE) {
+        if (value.equalsIgnoreCase(s)) {
+          return Boolean.FALSE;
+        }
+      }
       throw new ValueConversionException("Not a valid boolean value: " + value);
     }
 
@@ -85,6 +95,8 @@ public class DefaultArguments {
       parser.accepts("help", "Displays command-line help.").forHelp();
   private final OptionSpec<?> versionOption =
       parser.accepts("version", "Displays the product version and exits.").forHelp();
+  private final OptionSpec<?> licenseOption =
+      parser.accepts("license", "Displays third party license information.").forHelp();
   private final String[] args;
   private OptionSet options;
 
@@ -139,6 +151,12 @@ public class DefaultArguments {
       System.err.println(
           new ProductMetadata().getModule(PRODUCT_GROUP + ":" + PRODUCT_CORE_MODULE));
       System.exit(1);
+    }
+    if (o.has(licenseOption)) {
+      Resources.asCharSource(
+              Resources.getResource("licenses/THIRD-PARTY-NOTICES.txt"), StandardCharsets.UTF_8)
+          .forEachLine(System.out::println);
+      System.exit(0);
     }
     return o;
   }
