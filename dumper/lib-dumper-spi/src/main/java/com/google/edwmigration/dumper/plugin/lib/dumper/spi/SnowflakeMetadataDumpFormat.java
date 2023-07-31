@@ -201,24 +201,24 @@ public interface SnowflakeMetadataDumpFormat {
 
     enum Header {
       CreatedOn,
-      DatabaseName,
-      Invalid,
-      Owner,
-      Stage,
-      FileFormatName,
-      Cloud,
-      NotificationChannel,
-      TableFormat,
-      OwnerRoleType,
       Name,
+      DatabaseName,
       SchemaName,
+      Invalid,
       InvalidReason,
+      Owner,
       Comment,
+      Stage,
       Location,
+      FileFormatName,
       FileFormatType,
+      Cloud,
       Region,
+      NotificationChannel,
       LastRefreshDetails,
+      TableFormat,
       LastRefreshedOn,
+      OwnerRoleType,
     }
   }
 }
