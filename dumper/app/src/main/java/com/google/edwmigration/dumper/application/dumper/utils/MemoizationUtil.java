@@ -16,33 +16,16 @@
  */
 package com.google.edwmigration.dumper.application.dumper.utils;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import org.apache.commons.io.function.IOFunction;
 
 /** Utility class for memoization. */
 public class MemoizationUtil {
-
-  private static class Memoizer<T, R> implements IOFunction<T, R> {
-
-    private final IOFunction<T, R> delegate;
-    private final Map<T, R> cache = new HashMap<>();
-
-    public Memoizer(IOFunction<T, R> delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public R apply(T t) throws IOException {
-      if (cache.containsKey(t)) {
-        return cache.get(t);
-      }
-      R result = delegate.apply(t);
-      cache.put(t, result);
-      return result;
-    }
-  }
 
   /**
    * Creates a memoizer that stores results in a map using the key created by the key function. When
@@ -51,7 +34,32 @@ public class MemoizationUtil {
    * stored.
    */
   public static <T, R> IOFunction<T, R> createMemoizer(IOFunction<T, R> delegate) {
-    return new Memoizer<>(delegate);
+    LoadingCache<T, R> cache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<T, R>() {
+                  public R load(T t) throws IOException {
+                    return delegate.apply(t);
+                  }
+                });
+    return t -> {
+      try {
+        return cache.get(t);
+      } catch (UncheckedExecutionException e) {
+        if (e instanceof RuntimeException) {
+          throw (RuntimeException) e.getCause();
+        } else {
+          throw new RuntimeException("Got unexpected UncheckedExecutionException.", e);
+        }
+      } catch (ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof IOException) {
+          throw (IOException) cause;
+        } else {
+          throw new RuntimeException("Got unexpected ExecutionException.", e);
+        }
+      }
+    };
   }
 
   private MemoizationUtil() {}
