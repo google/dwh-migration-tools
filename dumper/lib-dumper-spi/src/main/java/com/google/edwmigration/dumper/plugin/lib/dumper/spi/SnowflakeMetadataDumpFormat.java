@@ -16,9 +16,7 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/**
- * @author dave
- */
+/** @author dave */
 public interface SnowflakeMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "snowflake.dump.zip";
@@ -104,7 +102,7 @@ public interface SnowflakeMetadataDumpFormat {
 
   interface FunctionsViewFormat {
 
-    String AU_ZIP_ENTRY_NAME = "functions_view-au.csv";
+    String AU_ZIP_ENTRY_NAME = "functions_view.csv";
 
     enum Header {
       CreatedOn,
