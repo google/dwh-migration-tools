@@ -85,6 +85,7 @@ public class ConnectorArguments extends DefaultArguments {
           + "At no point are the contents of user databases themselves queried.\n"
           + "\n";
 
+  public static final String OPT_CONNECTOR = "connector";
   public static final String OPT_DRIVER = "driver";
   public static final String OPT_CLASS = "jdbcDriverClass";
   public static final String OPT_URI = "url";
@@ -98,6 +99,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_WAREHOUSE = "warehouse";
   public static final String OPT_DATABASE = "database";
   public static final String OPT_SCHEMA = "schema";
+  public static final String OPT_OUTPUT = "output";
+  public static final String OPT_CONFIG = "config";
   public static final String OPT_ASSESSMENT = "assessment";
   public static final String OPT_ORACLE_SID = "oracle-sid";
   public static final String OPT_ORACLE_SERVICE = "oracle-service";
@@ -105,6 +108,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_DAYS = "query-log-days";
   public static final String OPT_QUERY_LOG_START = "query-log-start";
   public static final String OPT_QUERY_LOG_END = "query-log-end";
+  public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
+  public static final String OPT_QUERY_LOG_ALTERNATES = "query-log-alternates";
 
   // redshift.
   public static final String OPT_IAM_ACCESSKEYID = "iam-accesskeyid";
@@ -125,7 +130,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
 
   private final OptionSpec<String> connectorNameOption =
-      parser.accepts("connector", "Target DBMS connector name").withRequiredArg().required();
+      parser.accepts(OPT_CONNECTOR, "Target DBMS connector name").withRequiredArg().required();
   private final OptionSpec<String> optionDriver =
       parser
           .accepts(
@@ -201,7 +206,7 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(String.class);
   private final OptionSpec<String> optionConfiguration =
       parser
-          .accepts("config", "Configuration for DB connector")
+          .accepts(OPT_CONFIG, "Configuration for DB connector")
           .withRequiredArg()
           .ofType(String.class)
           .withValuesSeparatedBy(';')
@@ -212,7 +217,7 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<String> optionOutput =
       parser
           .accepts(
-              "output",
+              OPT_OUTPUT,
               "Output file, directory name, or GCS path. If the file name, along with "
                   + "the `.zip` extension, is not provided dumper will attempt to create the zip "
                   + "file with the default file name in the directory. To use GCS, use the format "
@@ -228,7 +233,7 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<String> optionQueryLogEarliestTimestamp =
       parser
           .accepts(
-              "query-log-earliest-timestamp",
+              OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
               "UNDOCUMENTED: [Deprecated: Use "
                   + OPT_QUERY_LOG_START
                   + " and "
@@ -293,7 +298,7 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<String> optionQueryLogAlternates =
       parser
           .accepts(
-              "query-log-alternates",
+              OPT_QUERY_LOG_ALTERNATES,
               "pair of alternate query log tables to export (teradata-logs only), by default "
                   + "logTable=dbc.DBQLogTbl and queryTable=dbc.DBQLSQLTbl, if --assessment flag"
                   + " is enabled, then logTable=dbc.QryLogV and queryTable=dbc.DBQLSQLTbl.")
@@ -835,21 +840,21 @@ public class ConnectorArguments extends DefaultArguments {
     // this string representation is logged out to file by ArgumentsTask.
     ToStringHelper toStringHelper =
         MoreObjects.toStringHelper(this)
-            .add("connector", getConnectorName())
-            .add("driver", getDriverPaths())
-            .add("host", getHost())
-            .add("port", getPort())
-            .add("warehouse", getWarehouse())
-            .add("database", getDatabases())
-            .add("user", getUser())
-            .add("configuration", getConfiguration())
-            .add("output", getOutputFile())
-            .add("query-log-earliest-timestamp", getQueryLogEarliestTimestamp())
-            .add("query-log-days", getQueryLogDays())
-            .add("query-log-start", getQueryLogStart())
-            .add("query-log-end", getQueryLogEnd())
-            .add("query-log-alternates", getQueryLogAlternates())
-            .add("assessment", isAssessment());
+            .add(OPT_CONNECTOR, getConnectorName())
+            .add(OPT_DRIVER, getDriverPaths())
+            .add(OPT_HOST, getHost())
+            .add(OPT_PORT, getPort())
+            .add(OPT_WAREHOUSE, getWarehouse())
+            .add(OPT_DATABASE, getDatabases())
+            .add(OPT_USER, getUser())
+            .add(OPT_CONFIG, getConfiguration())
+            .add(OPT_OUTPUT, getOutputFile())
+            .add(OPT_QUERY_LOG_EARLIEST_TIMESTAMP, getQueryLogEarliestTimestamp())
+            .add(OPT_QUERY_LOG_DAYS, getQueryLogDays())
+            .add(OPT_QUERY_LOG_START, getQueryLogStart())
+            .add(OPT_QUERY_LOG_END, getQueryLogEnd())
+            .add(OPT_QUERY_LOG_ALTERNATES, getQueryLogAlternates())
+            .add(OPT_ASSESSMENT, isAssessment());
     for (Connector connector : ServiceLoader.load(Connector.class)) {
       if (connector.getName().equals("teradata-logs")) {
         for (Enum<? extends ConnectorProperty> enumConstant :
