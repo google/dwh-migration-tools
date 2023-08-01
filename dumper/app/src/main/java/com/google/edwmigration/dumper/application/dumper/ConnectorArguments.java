@@ -391,8 +391,12 @@ public class ConnectorArguments extends DefaultArguments {
 
     @Nonnull
     public Category getCategory() {
-      if (!Strings.isNullOrEmpty(annotation.arg())) return Category.Arg;
-      if (!Strings.isNullOrEmpty(annotation.env())) return Category.Env;
+      if (!Strings.isNullOrEmpty(annotation.arg())) {
+        return Category.Arg;
+      }
+      if (!Strings.isNullOrEmpty(annotation.env())) {
+        return Category.Env;
+      }
       return Category.Other;
     }
 
@@ -421,13 +425,18 @@ public class ConnectorArguments extends DefaultArguments {
       StringBuilder buf = new StringBuilder();
       String key = getKey();
       buf.append(key).append(StringUtils.repeat(' ', 12 - key.length()));
-      if (getCategory() == Category.Env) buf.append(" (environment variable)");
+      if (getCategory() == Category.Env) {
+        buf.append(" (environment variable)");
+      }
       String defaultValue = annotation.defaultValue();
-      if (!Strings.isNullOrEmpty(defaultValue))
+      if (!Strings.isNullOrEmpty(defaultValue)) {
         buf.append(" (default: ").append(defaultValue).append(")");
+      }
       buf.append(" ").append(annotation.description());
       String required = annotation.required();
-      if (!Strings.isNullOrEmpty(required)) buf.append(" (Required ").append(required).append(".)");
+      if (!Strings.isNullOrEmpty(required)) {
+        buf.append(" (Required ").append(required).append(".)");
+      }
       return buf.toString();
     }
   }
@@ -478,10 +487,13 @@ public class ConnectorArguments extends DefaultArguments {
       throws IOException {
     Description description = connector.getClass().getAnnotation(Description.class);
     out.append("* " + connector.getName());
-    if (description != null) out.append(" - ").append(description.value());
+    if (description != null) {
+      out.append(" - ").append(description.value());
+    }
     out.append("\n");
-    for (InputDescriptor descriptor : getAcceptsInputs(connector))
+    for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
       out.append("        ").append(descriptor.toString()).append("\n");
+    }
     for (Enum<? extends ConnectorProperty> enumConstant :
         connector.getConnectorProperties().getEnumConstants()) {
       ConnectorProperty property = (ConnectorProperty) enumConstant;
@@ -538,7 +550,9 @@ public class ConnectorArguments extends DefaultArguments {
   @Nonnegative
   public int getPort(@Nonnegative int defaultPort) {
     Integer customPort = getPort();
-    if (customPort != null) return customPort.intValue();
+    if (customPort != null) {
+      return customPort.intValue();
+    }
     return defaultPort;
   }
 
@@ -559,7 +573,9 @@ public class ConnectorArguments extends DefaultArguments {
 
   @Nonnull
   private static Predicate<String> toPredicate(@CheckForNull List<String> in) {
-    if (in == null || in.isEmpty()) return Predicates.alwaysTrue();
+    if (in == null || in.isEmpty()) {
+      return Predicates.alwaysTrue();
+    }
     return Predicates.in(new HashSet<>(in));
   }
 
@@ -583,8 +599,11 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDatabaseSingleName() {
     List<String> databases = getDatabases();
-    if (databases.size() == 1) return databases.get(0);
-    else return null;
+    if (databases.size() == 1) {
+      return databases.get(0);
+    } else {
+      return null;
+    }
   }
 
   @Nonnull
@@ -617,11 +636,17 @@ public class ConnectorArguments extends DefaultArguments {
   // should be asked from command line
   @CheckForNull
   public String getPassword() {
-    if (!getOptions().has(optionPass)) return null;
+    if (!getOptions().has(optionPass)) {
+      return null;
+    }
     String pass = getOptions().valueOf(optionPass);
-    if (pass != null) return pass;
+    if (pass != null) {
+      return pass;
+    }
     // Else need to ask & save.
-    if (askedPassword != null) return askedPassword;
+    if (askedPassword != null) {
+      return askedPassword;
+    }
 
     Console console = System.console();
     if (console == null) {
@@ -671,7 +696,9 @@ public class ConnectorArguments extends DefaultArguments {
   @Nonnegative
   public int getQueryLogDays(@Nonnegative int defaultQueryLogDays) {
     Integer out = getQueryLogDays();
-    if (out != null) return out.intValue();
+    if (out != null) {
+      return out.intValue();
+    }
     return defaultQueryLogDays;
   }
 
@@ -717,7 +744,9 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isTestFlag(char c) {
     String flags = getOptions().valueOf(optionFlags);
-    if (flags == null) return false;
+    if (flags == null) {
+      return false;
+    }
     return flags.indexOf(c) >= 0;
   }
 
@@ -775,7 +804,9 @@ public class ConnectorArguments extends DefaultArguments {
 
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
-    if (definitionMap == null) searchDefinitions();
+    if (definitionMap == null) {
+      searchDefinitions();
+    }
     String result = definitionMap.get(property.getName());
     LOG.info(
         "Retrieving {} from key {} - got: {}",
@@ -836,13 +867,16 @@ public class ConnectorArguments extends DefaultArguments {
 
       TemporalAccessor result = parser.parseBest(value, LocalDateTime::from, LocalDate::from);
 
-      if (result instanceof LocalDateTime) return ((LocalDateTime) result).atZone(ZoneOffset.UTC);
+      if (result instanceof LocalDateTime) {
+        return ((LocalDateTime) result).atZone(ZoneOffset.UTC);
+      }
 
-      if (result instanceof LocalDate)
+      if (result instanceof LocalDate) {
         return ((LocalDate) result)
             .plusDays(dayOffset.getValue())
             .atTime(LocalTime.MIDNIGHT)
             .atZone(ZoneOffset.UTC);
+      }
 
       throw new ValueConversionException(
           "Value " + value + " cannot be parsed to date or datetime");

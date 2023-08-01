@@ -45,10 +45,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author matt
- *     <p>TODO :Make a base class, and derive TeradataLogs and TeradataLogs14 from it
- */
+/** @author matt */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Teradata version >=15.")
 @RespectsArgumentQueryLogDays
