@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+import static java.util.stream.Collectors.toList;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -103,7 +104,9 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
             .toWhereClause();
     String whereBDatabaseNameClause =
         new SqlBuilder()
-            .withWhereInVals("\"B_DatabaseName\"", arguments.getDatabases())
+            .withWhereInVals(
+                "\"B_DatabaseName\"",
+                arguments.getDatabases().stream().map(String::toUpperCase).collect(toList()))
             .toWhereClause();
     String whereChildDBClause =
         new SqlBuilder().withWhereInVals("\"ChildDB\"", arguments.getDatabases()).toWhereClause();

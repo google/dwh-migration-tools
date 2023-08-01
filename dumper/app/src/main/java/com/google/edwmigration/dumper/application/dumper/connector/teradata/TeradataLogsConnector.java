@@ -116,7 +116,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     // Most likely caused by some operation (equality?) being performed on a datum which is too long
     // for a varchar.
     ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
-    LOG.info("Exporting query log for " + intervals);
+    LOG.info("Exporting query logs for '{}'", intervals);
     SharedState queryLogsState = new SharedState();
     SharedState utilityLogsState = new SharedState();
     for (ZonedInterval interval : intervals) {
