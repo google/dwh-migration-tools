@@ -270,6 +270,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
           WarehousesFormat.Header.class,
           "SHOW WAREHOUSES",
           new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU));
+
+      addSingleSqlTask(
+          out,
+          FunctionsViewFormat.Header.class,
+          "SHOW FUNCTIONS",
+          new TaskVariant(FunctionsViewFormat.AU_ZIP_ENTRY_NAME, AU));
     }
   }
 

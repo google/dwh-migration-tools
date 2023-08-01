@@ -100,6 +100,31 @@ public interface SnowflakeMetadataDumpFormat {
     }
   }
 
+  interface FunctionsViewFormat {
+
+    String AU_ZIP_ENTRY_NAME = "functions_view.csv";
+
+    enum Header {
+      CreatedOn,
+      Name,
+      SchemaName,
+      IsBuiltin,
+      IsAggregate,
+      IsAnsi,
+      MinNumArguments,
+      MaxNumArguments,
+      Arguments,
+      Description,
+      CatalogName,
+      IsTableFunction,
+      ValidForClustering,
+      IsSecure,
+      IsExternalFunction,
+      Language,
+      IsMemoizable,
+    }
+  }
+
   interface TableStorageMetricsFormat {
 
     String AU_ZIP_ENTRY_NAME = "table_storage_metrics-au.csv";
