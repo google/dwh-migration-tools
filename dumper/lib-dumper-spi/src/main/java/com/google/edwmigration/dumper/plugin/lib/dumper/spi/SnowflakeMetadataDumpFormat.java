@@ -192,4 +192,31 @@ public interface SnowflakeMetadataDumpFormat {
       ScalingPolicy,
     }
   }
+
+  interface ExternalTablesFormat {
+
+    String AU_ZIP_ENTRY_NAME = "external_tables.csv";
+
+    enum Header {
+      CreatedOn,
+      Name,
+      DatabaseName,
+      SchemaName,
+      Invalid,
+      InvalidReason,
+      Owner,
+      Comment,
+      Stage,
+      Location,
+      FileFormatName,
+      FileFormatType,
+      Cloud,
+      Region,
+      NotificationChannel,
+      LastRefreshDetails,
+      TableFormat,
+      LastRefreshedOn,
+      OwnerRoleType,
+    }
+  }
 }
