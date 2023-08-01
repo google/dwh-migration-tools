@@ -33,6 +33,7 @@ public class Main {
 
   public void run(@Nonnull String... args) throws Exception {
     ConnectorArguments arguments = new ConnectorArguments(args);
+    arguments.initialize();
     try {
       metadataDumper.run(arguments);
     } finally {

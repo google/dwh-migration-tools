@@ -16,13 +16,21 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static autovalue.shaded.com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.Maps.immutableEntry;
+import static java.util.Arrays.stream;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -372,7 +380,7 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(String.class)
           .describedAs("define");
-  private Map<String, String> definitionMap = null;
+  private Map<String, String> definitionMap;
 
   // because of quoting of special characeters on command line... the -password is made optional,
   // and if not given, asked at the console.
@@ -380,6 +388,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   public ConnectorArguments(@Nonnull String... args) throws IOException {
     super(args);
+  }
+
+  public void initialize() {
+    searchDefinitions();
   }
 
   private static class InputDescriptor implements Comparable<InputDescriptor> {
@@ -816,21 +828,18 @@ public class ConnectorArguments extends DefaultArguments {
     }
     String result = definitionMap.get(property.getName());
     LOG.info(
-        "Retrieving {} from key {} - got: {}",
-        property.getName(),
+        "Retrieving {} from key '{}' - got: '{}'",
         property.getDescription(),
+        property.getName(),
         MoreObjects.firstNonNull(result, "[not found]"));
     return result;
   }
 
   public void searchDefinitions() {
-    definitionMap = new HashMap<>();
-    for (String definition : getOptions().valuesOf(definitionOption)) {
-      if (definition.contains("=")) {
-        int idx = definition.indexOf("=");
-        definitionMap.put(definition.substring(0, idx), definition.substring(idx + 1));
-      }
-    }
+    definitionMap =
+        new DefinitionPropertiesParser()
+            .parse(getOptions().valuesOf(definitionOption)).stream()
+                .collect(toImmutableMap(DefinitionProperty::name, DefinitionProperty::value));
   }
 
   @Override
@@ -931,6 +940,68 @@ public class ConnectorArguments extends DefaultArguments {
       public long getValue() {
         return value;
       }
+    }
+  }
+
+  private class DefinitionPropertiesParser {
+
+    private String connectorName;
+    private ImmutableSetMultimap<String, String> propertyNameToConnectors;
+
+    ImmutableList<DefinitionProperty> parse(Collection<String> definitions) {
+      connectorName = getConnectorName();
+      propertyNameToConnectors = createPropertyNameToConnectorsMapping();
+      return definitions.stream().map(this::parse).collect(toImmutableList());
+    }
+
+    DefinitionProperty parse(String definition) {
+      int idx = definition.indexOf('=');
+      Preconditions.checkArgument(
+          idx >= 0,
+          "Failed to parse '-D%s'. Command-line option '-D' requires a key and a value."
+              + " Use the format: -Dkey=value",
+          definition);
+      String propertyName = definition.substring(0, idx);
+      String propertyValue = definition.substring(idx + 1);
+      Preconditions.checkArgument(
+          propertyNameToConnectors.containsKey(propertyName),
+          "Unrecognized command-line option '-D%s'.",
+          propertyName);
+      ImmutableSet<String> compatibleConnectors = propertyNameToConnectors.get(propertyName);
+      Preconditions.checkArgument(
+          compatibleConnectors.contains(connectorName),
+          "Command-line option '-D%s' cannot be used with connector '%s'."
+              + " Compatible connector(s): '%s'.",
+          propertyName,
+          connectorName,
+          compatibleConnectors);
+      return DefinitionProperty.create(propertyName, propertyValue);
+    }
+
+    private ImmutableSetMultimap<String, String> createPropertyNameToConnectorsMapping() {
+      return ConnectorsHolder.getAllConnectors().stream()
+          .flatMap(
+              connector ->
+                  stream(connector.getConnectorProperties().getEnumConstants())
+                      .map(
+                          enumConstant ->
+                              immutableEntry(
+                                  ((ConnectorProperty) enumConstant).getName(),
+                                  connector.getName())))
+          .collect(
+              ImmutableSetMultimap.toImmutableSetMultimap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+  }
+
+  @AutoValue
+  abstract static class DefinitionProperty {
+
+    abstract String name();
+
+    abstract String value();
+
+    static DefinitionProperty create(String name, String value) {
+      return new AutoValue_ConnectorArguments_DefinitionProperty(name, value);
     }
   }
 }
