@@ -100,9 +100,9 @@ public interface SnowflakeMetadataDumpFormat {
     }
   }
 
-  interface FunctionsViewFormat {
+  interface FunctionInfoFormat {
 
-    String AU_ZIP_ENTRY_NAME = "functions_view.csv";
+    String AU_ZIP_ENTRY_NAME = "function_info.csv";
 
     enum Header {
       CreatedOn,
