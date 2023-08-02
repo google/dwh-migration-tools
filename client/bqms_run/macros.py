@@ -156,6 +156,7 @@ class PatternMacroExpander(MacroExpander):
         self.unmapped: Dict[Path, Set[str]] = {}
 
     def _substitution(self, path: Path, match: Match[str]) -> str:
+
         macro_name = match.group(1)
         full_match = match.group(0)
         if self.mapping and macro_name in self.mapping:
@@ -212,6 +213,92 @@ class PatternMacroExpander(MacroExpander):
             text = result[0]
         return text
 
+class ParameterAwareMacroExpander(MacroExpander):
+    """Handles expanding and un-expanding macros from custom templating to valid parametrized script."""
+
+    def __init__(
+        self,
+        pattern: str,
+        value_stripper: str,
+        mapping: Mapping[str, str],
+        source_bind_generator: Optional[Callable[[Path, str], str]] = None,
+        target_bind_generator: Optional[Callable[[Path, str, str], str]] = None,
+    ) -> None:
+        """
+        Args:
+            pattern: A regular expression that should match the macros in the
+                input paths. The expression should have a group that matches the
+                name of the macro.
+            mapping: An optional mapping of macro names to their expanded value
+            value_stripper: Regex to trim obfuscated value in order to detect type
+            source_bind_generator: A function that format parameter in a way that it's detected as bind parameter in source dialect
+            target_bind_generator: A function that format parameter in a way that it's detected as bind parameter in target dialect
+        """
+        super().__init__(mapping)
+        # what if we have mapping and wrap it here.
+        pattern = f"([=\\(, \\[]?){pattern}"
+        self.pattern = re.compile(pattern, re.I)
+        self.source_bind_generator = source_bind_generator
+        self.target_bind_generator = target_bind_generator
+        # path -> unmapped macros
+        self.unmapped: Dict[Path, Set[str]] = {}
+        self.value_stripper = re.compile(value_stripper)
+
+    def _substitution(self, path: Path, match: Match[str]) -> str:
+        prefix = match.group(1)
+        macro_name = match.group(2)
+        full_match = match.group(0)
+        if self.mapping and macro_name in self.mapping:
+            replacement = self.mapping[macro_name]
+            stripped_replacement = self.value_stripper.match(replacement).group(1)
+            if stripped_replacement.isnumeric() and prefix:
+                generated = '{}{}'.format(prefix, self.source_bind_generator(self.mapping[macro_name]))
+                reverse_search = '{}{}'.format(prefix, self.target_bind_generator(self.mapping[macro_name]))
+            else:
+                generated = '{}{}'.format(prefix,self.mapping[macro_name])
+                reverse_search = '{}{}'.format(prefix,self.mapping[macro_name])
+        else:
+            self.warn_log(
+                "Could not expand '{0}' as it is not "
+                + "present in the mapping",
+                full_match,
+            )
+            generated = full_match
+            reverse_search = full_match
+        self._update_reverse_map(path, reverse_search, full_match)
+        return generated
+
+    def expand(self, path: Path, text: str) -> str:
+        """
+        Expands all macros in the given input text
+        Args:
+            path: The path that the 'text' comes from
+            text: The text containing macro uses
+        Returns: 'text' with its macro uses expanded
+        """
+        return self.pattern.sub(lambda match: self._substitution(path, match), text)
+
+    def un_expand(self, path: Path, text: str) -> str:
+        """
+        Reverses the macro expansion done by 'expand'.
+        Args:
+            path: The path that the 'text' comes from.
+            text: The text resulting from invoking this expander on some input.
+        Returns: 'text' with the macro expansions undone.
+        """
+        if path not in self.reverse:
+            return text
+        self._sanity_check(path)
+        for replacement, original in self.reverse[path].items():
+            original_text = original[1].pop()
+            result = re.subn(
+                    re.escape(replacement),
+                    original_text,
+                    text,
+                    flags=re.I,
+            )
+            text = result[0]
+        return text
 
 class MacroExpanderRouter(RecordingLogger):
     """
