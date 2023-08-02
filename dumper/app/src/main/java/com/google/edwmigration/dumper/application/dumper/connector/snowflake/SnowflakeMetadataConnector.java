@@ -279,9 +279,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
       addSingleSqlTask(
           out,
-          FunctionsViewFormat.Header.class,
+          FunctionInfoFormat.Header.class,
           "SHOW FUNCTIONS",
-          new TaskVariant(FunctionsViewFormat.AU_ZIP_ENTRY_NAME, AU));
+          new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU));
     }
   }
 
