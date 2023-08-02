@@ -156,7 +156,6 @@ class PatternMacroExpander(MacroExpander):
         self.unmapped: Dict[Path, Set[str]] = {}
 
     def _substitution(self, path: Path, match: Match[str]) -> str:
-
         macro_name = match.group(1)
         full_match = match.group(0)
         if self.mapping and macro_name in self.mapping:
