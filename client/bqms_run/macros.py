@@ -156,6 +156,7 @@ class PatternMacroExpander(MacroExpander):
         self.unmapped: Dict[Path, Set[str]] = {}
 
     def _substitution(self, path: Path, match: Match[str]) -> str:
+
         macro_name = match.group(1)
         full_match = match.group(0)
         if self.mapping and macro_name in self.mapping:
@@ -250,7 +251,7 @@ class ParameterAwareMacroExpander(MacroExpander):
         if self.mapping and macro_name in self.mapping:
             replacement = self.mapping[macro_name]
             stripped_replacement = self.value_stripper.match(replacement).group(1)
-            if stripped_replacement.isnumeric() and prefix:
+            if (stripped_replacement.isnumeric() or stripped_replacement.lower() in ("true", "false")) and prefix:
                 generated = '{}{}'.format(prefix, self.source_bind_generator(self.mapping[macro_name]))
                 reverse_search = '{}{}'.format(prefix, self.target_bind_generator(self.mapping[macro_name]))
             else:
