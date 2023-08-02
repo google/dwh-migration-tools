@@ -149,7 +149,7 @@ tasks.register('generateSourceMirror', Copy) {
 tasks.register('copyGceLauncher', Copy) {
     from 'src/main/sh/cloud_extractor/gce_launcher.sh'
     into layout.buildDirectory.dir('cloud_extractor/launcher')
-    filter(ReplaceTokens, tokens: [dumper_version: '1.0.27'])
+    filter(ReplaceTokens, tokens: [dumper_version: project.version])
     filteringCharset = 'UTF-8'
 }
 
