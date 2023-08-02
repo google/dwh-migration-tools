@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,8 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
 
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
+  protected static final DateTimeFormatter SQL_DATE_FORMAT =
+      DateTimeFormatter.ISO_OFFSET_DATE.withZone(ZoneOffset.UTC);
   // Docref: https://docs.teradata.com/reader/wada1XMYPkZVTqPKz2CNaw/F7f64mU9~e4s03UAdorEHw
   // According to one customer, the attributes "SQLTextInfo", "LastRespTime",
   // "RequestMode", and "Statements" are all absent from DBQLogTbl in version 14.10.07.10,
@@ -89,6 +92,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   protected final String queryTable;
   protected final List<String> conditions;
   protected final ZonedInterval interval;
+  @CheckForNull private final String logDateColumn;
   protected final List<String> orderBy;
 
   public TeradataLogsJdbcTask(
@@ -98,7 +102,15 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       String queryTable,
       List<String> conditions,
       ZonedInterval interval) {
-    this(targetPath, state, logTable, queryTable, conditions, interval, Collections.emptyList());
+    this(
+        targetPath,
+        state,
+        logTable,
+        queryTable,
+        conditions,
+        interval,
+        /* logDateColumn= */ null,
+        Collections.emptyList());
   }
 
   protected TeradataLogsJdbcTask(
@@ -108,6 +120,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       String queryTable,
       List<String> conditions,
       ZonedInterval interval,
+      @CheckForNull String logDateColumn,
       List<String> orderBy) {
     super(targetPath);
     this.state = Preconditions.checkNotNull(state, "SharedState was null.");
@@ -115,6 +128,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     this.queryTable = queryTable;
     this.conditions = conditions;
     this.interval = interval;
+    this.logDateColumn = logDateColumn;
     this.orderBy = orderBy;
   }
 
@@ -137,9 +151,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
         expression -> isValid(handle.getJdbcTemplate(), expression);
     Predicate<String> predicate =
         expression -> state.expressionValidity.computeIfAbsent(expression, validator);
-    String sql = getSql(predicate);
-    // LOG.debug("SQL is " + sql);
-    return sql;
+    return getSql(predicate);
   }
 
   /**
@@ -195,6 +207,18 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
                 + "AND L.StartTime >= CAST('%s' AS TIMESTAMP)\n"
                 + "AND L.StartTime < CAST('%s' AS TIMESTAMP)\n",
             SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
+
+    if (logDateColumn != null) {
+      String date = "CAST('" + SQL_DATE_FORMAT.format(interval.getStart()) + "' AS DATE)";
+      buf.append(" AND L.")
+          .append(logDateColumn)
+          .append(" = ")
+          .append(date)
+          .append(" AND ST.")
+          .append(logDateColumn)
+          .append(" = ")
+          .append(date);
+    }
 
     for (String condition : conditions) {
       buf.append(" AND ").append(condition);

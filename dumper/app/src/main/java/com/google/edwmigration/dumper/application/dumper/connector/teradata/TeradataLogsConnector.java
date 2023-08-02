@@ -63,7 +63,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     UTILITY_LOGS_TABLE(
         "utility-logs-table",
         "The name of the table to dump utility logs from.",
-        "dbc.DBQLUtilityTbl");
+        "dbc.DBQLUtilityTbl"),
+    LOG_DATE_COLUMN(
+        "log-date-column",
+        "The name of the column of type DATE to include in the WHERE clause when dumping"
+            + " query log tables (see --query-log-alternates for query log table names).",
+        /* defaultValue= */ null);
 
     private final String name;
     private final String description;
@@ -85,7 +90,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       return description;
     }
 
-    @Nonnull
     public String getDefaultValue() {
       return defaultValue;
     }
@@ -158,13 +162,21 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     SharedState utilityLogsState = new SharedState();
     String utilityLogsTable =
         arguments.getDefinitionOrDefault(TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
+    String logDateColumn = arguments.getDefinition(TeradataLogsConnectorProperty.LOG_DATE_COLUMN);
     for (ZonedInterval interval : intervals) {
       String file = createFilename(ZIP_ENTRY_PREFIX, interval);
       if (isAssessment) {
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
         out.add(
             new TeradataAssessmentLogsJdbcTask(
-                    file, queryLogsState, logTable, queryTable, conditions, interval, orderBy)
+                    file,
+                    queryLogsState,
+                    logTable,
+                    queryTable,
+                    conditions,
+                    interval,
+                    logDateColumn,
+                    orderBy)
                 .withHeaderClass(HeaderForAssessment.class));
         out.addAll(createTimeSeriesTasks(interval));
         out.add(

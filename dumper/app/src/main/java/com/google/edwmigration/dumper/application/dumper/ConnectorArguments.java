@@ -868,6 +868,7 @@ public class ConnectorArguments extends DefaultArguments {
     return toStringHelper.toString();
   }
 
+  @CheckForNull
   public String getDefinitionOrDefault(TeradataLogsConnectorProperty property) {
     String stringValue = getDefinition(property);
     if (StringUtils.isEmpty(stringValue)) {
