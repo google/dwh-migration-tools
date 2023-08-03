@@ -70,6 +70,7 @@ dependencies {
     runtimeOnly "org.postgresql:postgresql"
     runtimeOnly "net.snowflake:snowflake-jdbc"
     runtimeOnly "com.amazon.redshift:redshift-jdbc42"
+    runtimeOnly "com.amazonaws:aws-java-sdk-redshift"
 
     testFixturesApi testFixtures(project(':dumper:lib-common'))
 
@@ -94,7 +95,7 @@ dependencies {
 }
 
 startScripts {
-    classpath = files( '$APP_HOME/lib/*' )
+    classpath = files('$APP_HOME/lib/*')
 }
 
 application {
@@ -131,8 +132,8 @@ tasks.register('generateSourceMirror', Copy) {
     from {
         dependencies.createArtifactResolutionQuery()
             .forComponents(
-                 configurations.runtimeClasspath.incoming.resolutionResult
-                     .allDependencies.collect { it.selected.id }
+                configurations.runtimeClasspath.incoming.resolutionResult
+                    .allDependencies.collect { it.selected.id }
             )
             .withArtifacts(JvmLibrary, SourcesArtifact)
             .execute()
@@ -161,7 +162,7 @@ distributions {
         distributionBaseName = "dwh-migration-dumper"
         contents {
             from installDist
-            from (cloudExtractorStartScripts) {
+            from(cloudExtractorStartScripts) {
                 into "bin"
             }
             from(generateLicenseReport) {
