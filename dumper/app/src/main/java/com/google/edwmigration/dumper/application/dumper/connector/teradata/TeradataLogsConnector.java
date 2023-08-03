@@ -67,7 +67,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     LOG_DATE_COLUMN(
         "log-date-column",
         "The name of the column of type DATE to include in the WHERE clause when dumping"
-            + " query log tables (see --query-log-alternates for query log table names).",
+            + " query log tables. The column must exist in both tables."
+            + " See --query-log-alternates for query log table names.",
         /* defaultValue= */ null);
 
     private final String name;

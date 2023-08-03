@@ -190,7 +190,12 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       // "QueryID is a system-wide unique field; you can use QueryID
       // to join DBQL tables ... without needing ProcID as an additional join field."
       // (https://docs.teradata.com/reader/B7Lgdw6r3719WUyiCSJcgw/YIKoBz~QQgv2Aw5dF339kA)
-      buf.append(" LEFT OUTER JOIN ").append(queryTable).append(" ST ON L.QueryID=ST.QueryID");
+      buf.append(" LEFT OUTER JOIN ").append(queryTable).append(" ST ON (L.QueryID=ST.QueryID");
+
+      if (logDateColumn != null) {
+        buf.append(" AND L.").append(logDateColumn).append("=ST.").append(logDateColumn);
+      }
+      buf.append(')');
 
       // Notwithstanding the above: could this offer improved perf due to use of indices?:
       // http://elsasoft.com/samples/teradata/Teradata.127.0.0.1.DBC/table_DBQLSqlTbl.htm
@@ -209,15 +214,12 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
             SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
 
     if (logDateColumn != null) {
-      String date = "CAST('" + SQL_DATE_FORMAT.format(interval.getStart()) + "' AS DATE)";
       buf.append(" AND L.")
           .append(logDateColumn)
           .append(" = ")
-          .append(date)
-          .append(" AND ST.")
-          .append(logDateColumn)
-          .append(" = ")
-          .append(date);
+          .append("CAST('")
+          .append(SQL_DATE_FORMAT.format(interval.getStart()))
+          .append("' AS DATE)");
     }
 
     for (String condition : conditions) {
