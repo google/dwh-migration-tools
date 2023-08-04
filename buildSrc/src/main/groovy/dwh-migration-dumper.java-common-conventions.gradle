@@ -50,7 +50,7 @@ dependencies {
 
     constraints {
         // Define dependency versions as constraints
-        def guavaVersion =  '31.1-jre'
+        def guavaVersion = '31.1-jre'
         implementation "com.google.guava:guava:$guavaVersion"
         testFixturesImplementation "com.google.guava:guava:$guavaVersion"
         def jacksonVersion = '2.14.2'
@@ -78,7 +78,8 @@ dependencies {
 
         runtimeOnly "org.postgresql:postgresql:42.5.4"
         runtimeOnly "net.snowflake:snowflake-jdbc:3.13.20"
-        runtimeOnly "com.amazon.redshift:redshift-jdbc42:2.1.0.8"
+        runtimeOnly "com.amazon.redshift:redshift-jdbc42:2.1.0.18"
+        runtimeOnly "com.amazonaws:aws-java-sdk-redshift:1.12.520"
 
         testFixturesApi "org.apache.commons:commons-compress:1.18"
         testFixturesApi "commons-io:commons-io:2.11.0"
@@ -142,7 +143,7 @@ tasks.named('test') {
             else if (k.equals("test.parameter"))
                 systemProperty k, v
             else if (k.equals("test.verbose"))
-                    systemProperty k, v
+                systemProperty k, v
         }
     }
     if (Boolean.getBoolean('test.debug'))
