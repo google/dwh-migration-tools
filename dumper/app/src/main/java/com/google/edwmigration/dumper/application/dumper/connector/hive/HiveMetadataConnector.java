@@ -20,7 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentSchemaPredicate;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -47,7 +47,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RespectsArgumentSchemaPredicate
+@RespectsArgumentDatabasePredicate
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hive metastore via Thrift.")
 public class HiveMetadataConnector extends AbstractHiveConnector
@@ -58,24 +58,24 @@ public class HiveMetadataConnector extends AbstractHiveConnector
 
   private abstract static class AbstractHiveMetadataTask extends AbstractHiveTask {
 
-    private final Predicate<String> schemaPredicate;
+    private final Predicate<String> databasePredicate;
 
     private AbstractHiveMetadataTask(
-        String targetPath, @Nonnull Predicate<String> schemaPredicate) {
+        String targetPath, @Nonnull Predicate<String> databasePredicate) {
       super(targetPath);
-      this.schemaPredicate =
-          Preconditions.checkNotNull(schemaPredicate, "Schema predicate was null.");
+      this.databasePredicate =
+          Preconditions.checkNotNull(databasePredicate, "Database predicate was null.");
     }
 
-    protected boolean isIncludedSchema(@Nonnull String schema) {
-      return schemaPredicate.test(schema);
+    protected boolean isIncludedDatabase(@Nonnull String database) {
+      return databasePredicate.test(database);
     }
   }
 
   private static class SchemataTask extends AbstractHiveMetadataTask implements SchemataFormat {
 
-    private SchemataTask(@Nonnull Predicate<String> schemaPredicate) {
-      super(ZIP_ENTRY_NAME, schemaPredicate);
+    private SchemataTask(@Nonnull Predicate<String> databasePredicate) {
+      super(ZIP_ENTRY_NAME, databasePredicate);
     }
 
     @Override
@@ -101,8 +101,8 @@ public class HiveMetadataConnector extends AbstractHiveConnector
 
   private static class DatabasesTask extends AbstractHiveMetadataTask implements DatabasesFormat {
 
-    private DatabasesTask(@Nonnull Predicate<String> schemaPredicate) {
-      super(ZIP_ENTRY_NAME, schemaPredicate);
+    private DatabasesTask(@Nonnull Predicate<String> databasePredicate) {
+      super(ZIP_ENTRY_NAME, databasePredicate);
     }
 
     @Override
@@ -139,9 +139,9 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     private final boolean isHiveMetastorePartitionMetadataDumpingEnabled;
 
     private TablesJsonTask(
-        @Nonnull Predicate<String> schemaPredicate,
+        @Nonnull Predicate<String> databasePredicate,
         boolean isHiveMetastorePartitionMetadataDumpingEnabled) {
-      super(ZIP_ENTRY_NAME, schemaPredicate);
+      super(ZIP_ENTRY_NAME, databasePredicate);
       this.isHiveMetastorePartitionMetadataDumpingEnabled =
           isHiveMetastorePartitionMetadataDumpingEnabled;
     }
@@ -155,12 +155,12 @@ public class HiveMetadataConnector extends AbstractHiveConnector
             thriftClient -> {
               List<? extends String> allDatabases = thriftClient.getAllDatabaseNames();
               for (String databaseName : allDatabases) {
-                if (isIncludedSchema(databaseName)) {
+                if (isIncludedDatabase(databaseName)) {
                   List<? extends String> allTables =
                       thriftClient.getAllTableNamesInDatabase(databaseName);
                   try (ConcurrentProgressMonitor monitor =
                       new ConcurrentRecordProgressMonitor(
-                          "Writing tables in schema '" + databaseName + "' to " + getTargetPath(),
+                          "Writing tables in database '" + databaseName + "' to " + getTargetPath(),
                           allTables.size())) {
                     for (String tableName : allTables) {
                       dumpTable(monitor, writer, clientPool, databaseName, tableName);
@@ -265,8 +265,8 @@ public class HiveMetadataConnector extends AbstractHiveConnector
 
   private static class FunctionsTask extends AbstractHiveMetadataTask implements FunctionsFormat {
 
-    private FunctionsTask(@Nonnull Predicate<String> schemaPredicate) {
-      super(ZIP_ENTRY_NAME, schemaPredicate);
+    private FunctionsTask(@Nonnull Predicate<String> databasePredicate) {
+      super(ZIP_ENTRY_NAME, databasePredicate);
     }
 
     @Override
@@ -278,7 +278,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               new RecordProgressMonitor("Writing functions to " + getTargetPath())) {
         try (CSVPrinter printer = FORMAT.withHeader(Header.class).print(writer)) {
           for (Function function : client.getFunctions()) {
-            if (isIncludedSchema(MoreObjects.firstNonNull(function.getDatabaseName(), ""))) {
+            if (isIncludedDatabase(MoreObjects.firstNonNull(function.getDatabaseName(), ""))) {
               monitor.count();
               printer.printRecord(
                   function.getDatabaseName(),
@@ -308,16 +308,16 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
-    Predicate<String> schemaPredicate = arguments.getSchemaPredicate();
+    Predicate<String> databasePredicate = arguments.getDatabasePredicate();
     boolean shouldDumpPartitions =
         arguments.isHiveMetastorePartitionMetadataDumpingEnabled() || arguments.isAssessment();
 
-    out.add(new SchemataTask(schemaPredicate));
-    out.add(new TablesJsonTask(schemaPredicate, shouldDumpPartitions));
-    out.add(new FunctionsTask(schemaPredicate));
+    out.add(new SchemataTask(databasePredicate));
+    out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
+    out.add(new FunctionsTask(databasePredicate));
 
     if (arguments.isAssessment()) {
-      out.add(new DatabasesTask(schemaPredicate));
+      out.add(new DatabasesTask(databasePredicate));
     }
   }
 }
