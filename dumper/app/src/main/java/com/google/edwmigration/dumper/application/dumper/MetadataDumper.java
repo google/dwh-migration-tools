@@ -55,7 +55,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,15 +72,6 @@ public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
 
-  private static final ImmutableMap<String, Connector> CONNECTORS;
-
-  static {
-    ImmutableMap.Builder<String, Connector> builder = ImmutableMap.builder();
-    for (Connector connector : ServiceLoader.load(Connector.class))
-      builder.put(connector.getName().toUpperCase(), connector);
-    CONNECTORS = builder.build();
-  }
-
   private static final String STARS =
       "*******************************************************************";
 
@@ -96,22 +87,16 @@ public class MetadataDumper {
 
   public void run(@Nonnull ConnectorArguments arguments) throws Exception {
     String connectorName = arguments.getConnectorName();
-    if (connectorName == null) {
-      LOG.error("Target DBMS is required");
-      return;
-    }
 
-    Connector connector = CONNECTORS.get(connectorName.toUpperCase());
-    if (connector == null) {
+    Optional<Connector> connector = ConnectorsHolder.getConnector(connectorName);
+    if (!connector.isPresent()) {
       LOG.error(
-          "Target DBMS "
-              + connectorName
-              + " not supported; available are "
-              + CONNECTORS.keySet()
-              + ".");
+          "Target DBMS '{}' not supported; available are '{}'",
+          connectorName,
+          ConnectorsHolder.getConnectorNames());
       return;
     }
-    run(connector, arguments);
+    run(connector.get(), arguments);
   }
 
   @CheckForNull
@@ -143,13 +128,18 @@ public class MetadataDumper {
       }
     } catch (Exception e) {
       // MetadataDumperUsageException should be fatal.
-      if (e instanceof MetadataDumperUsageException) throw (MetadataDumperUsageException) e;
-      if (e instanceof SQLException && e.getCause() instanceof MetadataDumperUsageException)
+      if (e instanceof MetadataDumperUsageException) {
+        throw (MetadataDumperUsageException) e;
+      }
+      if (e instanceof SQLException && e.getCause() instanceof MetadataDumperUsageException) {
         throw (MetadataDumperUsageException) e.getCause();
+      }
       // TaskGroup is an attempt to get rid of this condition.
       // We might need an additional TaskRunner / TaskSupport with an overrideable handleException
       // method instead of this runTask() method.
-      if (!task.handleException(e)) LOG.warn("Task failed: " + task + ": " + e, e);
+      if (!task.handleException(e)) {
+        LOG.warn("Task failed: " + task + ": " + e, e);
+      }
       state.setTaskException(task, TaskState.FAILED, e);
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
@@ -168,14 +158,18 @@ public class MetadataDumper {
 
   @EnsuresNonNullIf(expression = "#1", result = false)
   private static boolean isNullOrEmpty(@CheckForNull Object[] in) {
-    if (in == null) return true;
+    if (in == null) {
+      return true;
+    }
     return in.length == 0;
   }
 
   private void print(@Nonnull Task<?> task, int indent) {
     System.out.println(repeat(' ', indent * 2) + task);
     if (task instanceof TaskGroup) {
-      for (Task<?> subtask : ((TaskGroup) task).getTasks()) print(subtask, indent + 1);
+      for (Task<?> subtask : ((TaskGroup) task).getTasks()) {
+        print(subtask, indent + 1);
+      }
     }
   }
 
@@ -213,7 +207,9 @@ public class MetadataDumper {
     tasks.add(new ArgumentsTask(arguments));
     {
       File sqlScript = arguments.getSqlScript();
-      if (sqlScript != null) tasks.add(new JdbcRunSQLScript(sqlScript));
+      if (sqlScript != null) {
+        tasks.add(new JdbcRunSQLScript(sqlScript));
+      }
     }
     connector.addTasksTo(tasks, arguments);
 
