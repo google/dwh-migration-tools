@@ -60,7 +60,7 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
     implementation "com.google.cloud:google-cloud-bigquery"
-    implementation "com.google.cloud:google-cloud-nio:0.126.15"
+    implementation "com.google.cloud:google-cloud-nio:0.127.1"
     implementation "com.google.cloud:google-cloud-kms:2.23.0"
     implementation "org.apache.httpcomponents.client5:httpclient5:5.2.1"
 
