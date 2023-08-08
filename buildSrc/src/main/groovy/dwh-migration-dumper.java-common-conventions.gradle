@@ -188,6 +188,8 @@ spotless {
                 return false;
             if (path.contains('hive/support/HiveServerSupport.java'))
                 return false; // Additional copyright credits
+	    if (path.contains('/gen-java/'))
+	        return false
             return true;
         }
         target files;
