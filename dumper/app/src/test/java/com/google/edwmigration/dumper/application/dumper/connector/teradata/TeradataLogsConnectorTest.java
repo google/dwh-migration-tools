@@ -54,6 +54,7 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -91,6 +92,11 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   private final TeradataLogsConnector connector = new TeradataLogsConnector();
+
+  @Before
+  public void setUp() {
+    System.setProperty("user.timezone", "UTC");
+  }
 
   @Test
   public void testConnector() throws Exception {

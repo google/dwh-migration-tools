@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.teradata.Abst
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,6 +38,11 @@ public class TeradataAssessmentLogsJdbcTaskTest {
       new ZonedInterval(
           ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneId.systemDefault()),
           ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneId.systemDefault()));
+
+  @Before
+  public void setUp() {
+    System.setProperty("user.timezone", "UTC");
+  }
 
   @Test
   public void getSql_success() {
