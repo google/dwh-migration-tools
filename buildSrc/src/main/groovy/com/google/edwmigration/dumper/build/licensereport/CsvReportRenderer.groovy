@@ -1,5 +1,7 @@
 package com.google.edwmigration.dumper.build.licensereport
 
+import org.gradle.api.tasks.Internal
+
 import static com.github.jk1.license.render.LicenseDataCollector.singleModuleLicenseInfo
 
 import org.gradle.api.tasks.Input
@@ -21,7 +23,9 @@ import java.util.stream.Collectors
  * projects where the license is not declared in a POM or manifest.
  **/
 class CsvReportRenderer implements ReportRenderer {
+    @Internal
     String[] header = ["artifact", "project url", "module license", "module license url"]
+    @Internal
     CSVFormat csvFormat = CSVFormat.EXCEL.builder().setHeader(header).build()
 
     @Input
