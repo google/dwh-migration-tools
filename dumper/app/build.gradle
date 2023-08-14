@@ -180,3 +180,7 @@ distributions {
         }
     }
 }
+
+['publishedDistZip', 'publishedDistTar', 'installPublishedDist'].collect(tasks::named).each {
+    it.configure { dependsOn('checkLicense') }
+}
