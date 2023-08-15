@@ -22,7 +22,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.util.Optional;
@@ -57,12 +56,11 @@ public class MainTest {
     underTest.run();
 
     // Verify
-    ArgumentCaptor<ConnectorArguments> connectorArgumentsCaptor =
-        ArgumentCaptor.forClass(ConnectorArguments.class);
+    ArgumentCaptor<String[]> connectorArgumentsCaptor = ArgumentCaptor.forClass(String[].class);
     verify(metadataDumper).run(connectorArgumentsCaptor.capture());
-    ConnectorArguments connectorArguments = connectorArgumentsCaptor.getValue();
-    assertEquals(Integer.valueOf(2222), connectorArguments.getPort());
-    assertEquals("test-db", connectorArguments.getConnectorName());
+    assertEquals(
+        new String[] {"--connector", "test-db", "--port", "2222"},
+        connectorArgumentsCaptor.getValue());
   }
 
   @Test
@@ -84,20 +82,18 @@ public class MainTest {
 
     // Verify
     {
-      ArgumentCaptor<ConnectorArguments> connectorArgumentsCaptor =
-          ArgumentCaptor.forClass(ConnectorArguments.class);
+      ArgumentCaptor<String[]> connectorArgumentsCaptor = ArgumentCaptor.forClass(String[].class);
       verify(metadataDumper1).run(connectorArgumentsCaptor.capture());
-      ConnectorArguments connectorArguments = connectorArgumentsCaptor.getValue();
-      assertEquals(Integer.valueOf(2222), connectorArguments.getPort());
-      assertEquals("test-db", connectorArguments.getConnectorName());
+      assertEquals(
+          new String[] {"--connector", "test-db", "--port", "2222"},
+          connectorArgumentsCaptor.getValue());
     }
     {
-      ArgumentCaptor<ConnectorArguments> connectorArgumentsCaptor =
-          ArgumentCaptor.forClass(ConnectorArguments.class);
+      ArgumentCaptor<String[]> connectorArgumentsCaptor = ArgumentCaptor.forClass(String[].class);
       verify(metadataDumper2).run(connectorArgumentsCaptor.capture());
-      ConnectorArguments connectorArguments = connectorArgumentsCaptor.getValue();
-      assertEquals(Integer.valueOf(2223), connectorArguments.getPort());
-      assertEquals("test-db-logs", connectorArguments.getConnectorName());
+      assertEquals(
+          new String[] {"--connector", "test-db-logs", "--port", "2223"},
+          connectorArgumentsCaptor.getValue());
     }
   }
 

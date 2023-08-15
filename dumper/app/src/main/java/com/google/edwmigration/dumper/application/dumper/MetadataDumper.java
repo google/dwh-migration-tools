@@ -94,6 +94,17 @@ public class MetadataDumper {
     return this;
   }
 
+  public void run(String... args) throws Exception {
+    ConnectorArguments arguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
+    try {
+      run(arguments);
+    } finally {
+      if (arguments.saveResponseFile()) {
+        JsonResponseFile.save(arguments);
+      }
+    }
+  }
+
   public void run(@Nonnull ConnectorArguments arguments) throws Exception {
     String connectorName = arguments.getConnectorName();
     if (connectorName == null) {
