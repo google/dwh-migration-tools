@@ -83,7 +83,7 @@ dependencies {
 
         testFixturesApi "org.apache.commons:commons-compress:1.18"
         testFixturesApi "commons-io:commons-io:2.11.0"
-        testImplementation "org.xerial:sqlite-jdbc:3.32.3"
+        testImplementation "org.xerial:sqlite-jdbc:3.42.0.0"
         testImplementation "com.github.stefanbirkner:system-rules:1.18.0"
         testImplementation "org.postgresql:postgresql:42.5.4"
         testImplementation "joda-time:joda-time:2.3"
