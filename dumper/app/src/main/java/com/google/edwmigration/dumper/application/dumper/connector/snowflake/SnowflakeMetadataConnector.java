@@ -148,16 +148,11 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  @ForOverride
-  protected void addSingleSqlTask(
-      @Nonnull List<? super Task<?>> out,
-      @Nonnull Class<? extends Enum<?>> header,
-      @Nonnull String format,
-      @Nonnull TaskVariant task) {
+  private void addSingleSqlTask(
+      @Nonnull List<? super Task<?>> out, @Nonnull String format, @Nonnull TaskVariant task) {
     out.add(
         new JdbcSelectTask(
-                task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
-            .withHeaderClass(header));
+            task.zipEntryName, String.format(format, task.schemaName, task.whereClause)));
   }
 
   @Override
@@ -257,7 +252,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (arguments.isAssessment()) {
       addSingleSqlTask(
           out,
-          TableStorageMetricsFormat.Header.class,
           getOverrideableQuery(
               arguments,
               "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
@@ -266,22 +260,13 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
           new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU));
 
       addSingleSqlTask(
-          out,
-          WarehousesFormat.Header.class,
-          "SHOW WAREHOUSES",
-          new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU));
+          out, "SHOW WAREHOUSES", new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU));
 
       addSingleSqlTask(
-          out,
-          ExternalTablesFormat.Header.class,
-          "SHOW EXTERNAL TABLES",
-          new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU));
+          out, "SHOW EXTERNAL TABLES", new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU));
 
       addSingleSqlTask(
-          out,
-          FunctionInfoFormat.Header.class,
-          "SHOW FUNCTIONS",
-          new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU));
+          out, "SHOW FUNCTIONS", new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU));
     }
   }
 
