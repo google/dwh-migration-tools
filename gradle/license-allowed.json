@@ -100,6 +100,10 @@
 		{
 			"moduleLicense": null,
 			"moduleName": "com.fasterxml.jackson:jackson-bom"
+		},
+		{
+			"moduleLicense": null,
+			"moduleName": "com.google.guava:guava-parent"
 		}
 	]
 }
