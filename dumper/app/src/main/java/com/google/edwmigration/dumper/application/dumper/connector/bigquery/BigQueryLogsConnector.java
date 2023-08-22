@@ -39,6 +39,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -99,7 +100,8 @@ public class BigQueryLogsConnector extends AbstractBigQueryConnector
       List<? extends String> projectIds = arguments.getDatabases();
       if (projectIds.isEmpty()) projectIds = ImmutableList.of(bigQuery.getOptions().getProjectId());
 
-      ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
+      ZonedIntervalIterable intervals =
+          ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
 
       // Currently uses Jobs API to get list of query jobs
       // (https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/list)
@@ -173,7 +175,8 @@ public class BigQueryLogsConnector extends AbstractBigQueryConnector
         if (statistics == null) {
           if (DEBUG)
             LOG_LIMITED.debug(
-                "No JobStatistics in {}. Skipping. You need bigquery.jobs.listAll permission or bigquery.admin role to list all jobs.",
+                "No JobStatistics in {}. Skipping. You need bigquery.jobs.listAll permission or"
+                    + " bigquery.admin role to list all jobs.",
                 jobId);
           continue;
         }
@@ -355,7 +358,8 @@ public class BigQueryLogsConnector extends AbstractBigQueryConnector
   }
 
   @Override
-  // TODO: Use ZonedIntervalIterable.forConnectorArguments() to generate N tasks here, each for a
+  // TODO: Use ZonedIntervalIterableGenerator.forConnectorArguments() to generate N tasks here, each
+  // for a
   // window, rather than just using one task with arguments.
   public void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {

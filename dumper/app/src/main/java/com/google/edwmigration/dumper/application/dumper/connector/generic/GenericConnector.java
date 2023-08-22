@@ -24,6 +24,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -125,7 +126,8 @@ public class GenericConnector extends AbstractJdbcConnector implements LogsConne
     out.add(new FormatTask("generic.dump.zip"));
 
     if (multiMode) {
-      ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
+      ZonedIntervalIterable intervals =
+          ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
       for (ZonedInterval interval : intervals) {
         String finalQuery =
             this.query

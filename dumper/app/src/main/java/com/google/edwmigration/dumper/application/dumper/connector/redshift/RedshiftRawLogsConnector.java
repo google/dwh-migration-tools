@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectIntervalTask;
@@ -87,7 +88,8 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
         new JdbcSelectTask(
             RedshiftMetadataDumpFormat.PgUser.ZIP_ENTRY_NAME, "select * from pg_user"));
 
-    ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
+    ZonedIntervalIterable intervals =
+        ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
 
     // DDL TEXT is simple ...
     // min() as there is no ANY() or SOME()

@@ -45,6 +45,9 @@ public class ZonedIntervalIterableTest {
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterableTest.class);
 
+  private static final TimeTruncator TRUNCATOR =
+      TimeTruncator.basedOnChronoUnit(ChronoUnit.SECONDS);
+
   ConnectorArguments.ZonedParser zonedParserStart =
       new ConnectorArguments.ZonedParser(
           ConnectorArguments.ZonedParser.DEFAULT_PATTERN,
@@ -89,20 +92,26 @@ public class ZonedIntervalIterableTest {
   private void assertIterations(
       int expected, @Nonnull String from, @Nonnull String to, ChronoUnit chronoUnit) {
     ZonedIntervalIterable iterable =
-        ZonedIntervalIterable.forDateTimeRange(
+        new ZonedIntervalIterable(
             zonedParserStart.convert(from), zonedParserEnd.convert(to), chronoUnit.getDuration());
     testIterable(expected, iterable);
   }
 
   @Test
   public void testHours() {
-    testIterable(169, ZonedIntervalIterable.forTimeUnitsUntilNow(24 * 7, Duration.ofDays(1)));
-    testIterable(8, ZonedIntervalIterable.forTimeUnitsUntilNow(7, Duration.ofDays(1)));
+    testIterable(
+        169,
+        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24 * 7, Duration.ofDays(1), TRUNCATOR));
+    testIterable(
+        8, ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, Duration.ofDays(1), TRUNCATOR));
 
     testIterable(
         2,
-        ZonedIntervalIterable.forTimeUnitsUntil(
-            ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")), 1, Duration.ofHours(1)));
+        ZonedIntervalIterableGenerator.forTimeUnitsUntil(
+            ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")),
+            1,
+            Duration.ofHours(1),
+            TRUNCATOR));
     // Testing from 2019-12-31T23:00Z[UTC] to 2020-01-01T01:00Z[UTC] every Hours
     // Interval is 2019-12-31T23:00Z[UTC]...2019-12-31T23:59:59.999Z[UTC]
     // Interval is 2020-01-01T00:00Z[UTC]...2020-01-01T00:59:59.999Z[UTC]
@@ -116,7 +125,9 @@ public class ZonedIntervalIterableTest {
     // next dump, assuming nightly dumps at midnight + some seconds/minutes
     int daysToExport = 1;
     testIterable(
-        25, ZonedIntervalIterable.forTimeUnitsUntilNow(24 * daysToExport, Duration.ofHours(1)));
+        25,
+        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(
+            24 * daysToExport, Duration.ofHours(1), TRUNCATOR));
   }
 
   @Test
@@ -225,7 +236,8 @@ public class ZonedIntervalIterableTest {
   private void checkIntervalForArguments(
       ZonedDateTime expectedStart, ZonedDateTime expectedEnd, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    ZonedIntervalIterable interval = ZonedIntervalIterable.forConnectorArguments(arguments);
+    ZonedIntervalIterable interval =
+        ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
     assertEquals("Wrong start time", expectedStart, interval.getStart());
     assertEquals("Wrong end time", expectedEnd, interval.getEnd());
   }

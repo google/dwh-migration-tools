@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectIntervalTask;
@@ -175,7 +176,8 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
               "%s >= CAST( '%s' as TIMESTAMP)",
               startField, arguments.getQueryLogEarliestTimestamp()));
 
-    ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
+    ZonedIntervalIterable intervals =
+        ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
 
     LOG.info("Exporting query log for " + intervals);
     for (ZonedInterval interval : intervals) {
