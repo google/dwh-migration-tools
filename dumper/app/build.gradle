@@ -91,7 +91,7 @@ dependencies {
     testRuntimeOnly "org.datanucleus:datanucleus-rdbms:4.1.19"
 
     sources "org.slf4j:jcl-over-slf4j:1.7.14@sources"
-    sources "ch.qos.logback:logback-classic:1.2.11@sources"
+    sources "ch.qos.logback:logback-classic:1.4.11@sources"
 }
 
 startScripts {
