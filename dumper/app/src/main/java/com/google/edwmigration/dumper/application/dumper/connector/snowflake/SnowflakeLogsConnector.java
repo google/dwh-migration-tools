@@ -364,7 +364,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
     ZonedIntervalIterableGenerator.forConnectorArguments(
-            arguments, Duration.ofDays(1), TimeTruncator.basedOnChronoUnit(ChronoUnit.SECONDS))
+            arguments, Duration.ofDays(1), TimeTruncator.createBasedOnChronoUnit(ChronoUnit.DAYS))
         .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
   }
 

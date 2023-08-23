@@ -27,7 +27,7 @@ public interface TimeTruncator extends Function<ZonedDateTime, ZonedDateTime> {
   @Nonnull
   ZonedDateTime apply(ZonedDateTime time);
 
-  static TimeTruncator basedOnChronoUnit(ChronoUnit unit) {
+  static TimeTruncator createBasedOnChronoUnit(ChronoUnit unit) {
     return new TimeTruncator() {
       @Nonnull
       @Override

@@ -37,21 +37,16 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   private final Duration duration;
 
   /* pp */ ZonedIntervalIterable(
-      @Nonnull ZonedDateTime queryLogStart,
-      @Nonnull ZonedDateTime queryLogEnd,
-      @Nonnull Duration duration) {
+      @Nonnull ZonedDateTime start, @Nonnull ZonedDateTime end, @Nonnull Duration duration) {
     this.duration = Preconditions.checkNotNull(duration, "Duration was null.");
-    Preconditions.checkNotNull(queryLogStart, "Query log start was null.");
-    Preconditions.checkNotNull(queryLogEnd, "Query log end was null.");
+    Preconditions.checkNotNull(start, "Start was null.");
+    Preconditions.checkNotNull(end, "End was null.");
 
     Preconditions.checkState(
-        queryLogStart.isBefore(queryLogEnd),
-        "Start date %s must precede end date %s",
-        queryLogStart,
-        queryLogEnd);
+        start.isBefore(end), "Start date %s must precede end date %s", start, end);
 
-    this.start = queryLogStart;
-    this.end = queryLogEnd;
+    this.start = start;
+    this.end = end;
   }
 
   @Nonnull
@@ -82,9 +77,9 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
       if (current.isEqual(end) || current.isAfter(end)) return endOfData();
 
       ZonedDateTime next = current.plus(duration);
-      if (next.isAfter(end)) next = end;
-      ZonedInterval result = new ZonedInterval(current, next);
+      if (next.isAfter(end)) return endOfData();
 
+      ZonedInterval result = new ZonedInterval(current, next);
       current = next;
       return result;
     }
@@ -100,6 +95,6 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   public String toString() {
     return String.format(
         "from %s to %s every %s",
-        start, end, DurationFormatUtils.formatDuration(duration.toMillis(), "**H:mm:ss**", true));
+        start, end, DurationFormatUtils.formatDurationWords(duration.toMillis(), true, true));
   }
 }
