@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
@@ -45,10 +46,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author matt
- *     <p>TODO :Make a base class, and derive TeradataLogs and TeradataLogs14 from it
- */
+/** @author matt */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Teradata version >=15.")
 @RespectsArgumentQueryLogDays
@@ -61,7 +59,48 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
   private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
   private static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
 
-  private static final String DEF_UTILITY_TABLE = "dbc.DBQLUtilityTbl";
+  public enum TeradataLogsConnectorProperty implements ConnectorProperty {
+    UTILITY_LOGS_TABLE(
+        "utility-logs-table",
+        "The name of the table to dump utility logs from.",
+        "dbc.DBQLUtilityTbl"),
+    LOG_DATE_COLUMN(
+        "log-date-column",
+        "The name of the column of type DATE to include in the WHERE clause when dumping"
+            + " query log tables. The column must exist in both tables."
+            + " See --query-log-alternates for query log table names.",
+        /* defaultValue= */ null);
+
+    private final String name;
+    private final String description;
+    private final String defaultValue;
+
+    TeradataLogsConnectorProperty(String name, String description, String defaultValue) {
+      this.name = "teradata-logs." + name;
+      this.description = description;
+      this.defaultValue = defaultValue;
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
+
+    public String getDefaultValue() {
+      return defaultValue;
+    }
+  }
+
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return TeradataLogsConnectorProperty.class;
+  }
 
   public TeradataLogsConnector() {
     super("teradata-logs");
@@ -119,23 +158,33 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     // Most likely caused by some operation (equality?) being performed on a datum which is too long
     // for a varchar.
     ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
-    LOG.info("Exporting query log for " + intervals);
+    LOG.info("Exporting query logs for '{}'", intervals);
     SharedState queryLogsState = new SharedState();
     SharedState utilityLogsState = new SharedState();
+    String utilityLogsTable =
+        arguments.getDefinitionOrDefault(TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
+    String logDateColumn = arguments.getDefinition(TeradataLogsConnectorProperty.LOG_DATE_COLUMN);
     for (ZonedInterval interval : intervals) {
       String file = createFilename(ZIP_ENTRY_PREFIX, interval);
       if (isAssessment) {
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
         out.add(
             new TeradataAssessmentLogsJdbcTask(
-                    file, queryLogsState, logTable, queryTable, conditions, interval, orderBy)
+                    file,
+                    queryLogsState,
+                    logTable,
+                    queryTable,
+                    conditions,
+                    interval,
+                    logDateColumn,
+                    orderBy)
                 .withHeaderClass(HeaderForAssessment.class));
         out.addAll(createTimeSeriesTasks(interval));
         out.add(
             new TeradataUtilityLogsJdbcTask(
                 createFilename("utility_logs_", interval),
                 utilityLogsState,
-                DEF_UTILITY_TABLE,
+                utilityLogsTable,
                 interval));
       } else {
         conditions.add("L.UserName <> 'DBC'");

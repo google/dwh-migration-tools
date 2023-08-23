@@ -19,8 +19,8 @@ plugins {
 }
 
 dependencies {
-	api "com.google.guava:guava"
+    api "com.google.guava:guava"
     testFixturesApi "org.apache.commons:commons-compress"
     testFixturesApi "commons-io:commons-io"
-	testFixturesImplementation "org.apache.commons:commons-lang3"
+    testFixturesImplementation "org.apache.commons:commons-lang3"
 }

@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static org.apache.commons.lang3.StringUtils.repeat;
+
+import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
@@ -40,10 +43,13 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,9 +57,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
@@ -77,23 +84,28 @@ public class MetadataDumper {
   private static final String STARS =
       "*******************************************************************";
 
-  private boolean exitOnError = true;
+  private static final Pattern GCS_PATH_PATTERN =
+      Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  public MetadataDumper withExitOnError(boolean state) {
-    exitOnError = state;
+  private boolean exitOnError = false;
+
+  public MetadataDumper withExitOnError(boolean exitOnError) {
+    this.exitOnError = exitOnError;
     return this;
   }
 
-  @Nonnull
-  private static String repeat(@Nonnull char c, @Nonnegative int n) {
-    char[] out = new char[n];
-    Arrays.fill(out, c);
-    return new String(out);
+  public void run(String... args) throws Exception {
+    ConnectorArguments arguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
+    try {
+      run(arguments);
+    } finally {
+      if (arguments.saveResponseFile()) {
+        JsonResponseFile.save(arguments);
+      }
+    }
   }
 
-  public void run(@Nonnull String... args) throws Exception {
-    ConnectorArguments arguments = new ConnectorArguments(args);
-
+  public void run(@Nonnull ConnectorArguments arguments) throws Exception {
     String connectorName = arguments.getConnectorName();
     if (connectorName == null) {
       LOG.error("Target DBMS is required");
@@ -110,12 +122,7 @@ public class MetadataDumper {
               + ".");
       return;
     }
-
-    try {
-      run(connector, arguments);
-    } finally {
-      if (arguments.saveResponseFile()) JsonResponseFile.save(arguments);
-    }
+    run(connector, arguments);
   }
 
   @CheckForNull
@@ -177,9 +184,36 @@ public class MetadataDumper {
   }
 
   private void print(@Nonnull Task<?> task, int indent) {
-    System.out.println(StringUtils.repeat("  ", indent) + task);
+    System.out.println(repeat(' ', indent * 2) + task);
     if (task instanceof TaskGroup) {
       for (Task<?> subtask : ((TaskGroup) task).getTasks()) print(subtask, indent + 1);
+    }
+  }
+
+  private Path prepareOutputPath(
+      @Nonnull String fileName, @Nonnull Closer closer, @Nonnull ConnectorArguments arguments)
+      throws IOException {
+    Matcher matcher = GCS_PATH_PATTERN.matcher(fileName);
+    if (matcher.matches()) {
+      String bucket = matcher.group("bucket");
+      String path = matcher.group("path");
+      LOG.debug(
+          String.format(
+              "Setting up CloudStorageFileSystem with bucket '%s' and path '%s'.", bucket, path));
+      CloudStorageFileSystem cloudStorageFileSystem =
+          closer.register(CloudStorageFileSystem.forBucket(bucket));
+      return cloudStorageFileSystem.getPath(path);
+    } else {
+      Path path = Paths.get(fileName);
+      File file = path.toFile();
+      if (file.exists()) {
+        if (!arguments.isOutputContinue()) {
+          file.delete(); // It's a simple file, and we were asked to overwrite it.
+        }
+      } else {
+        Files.createParentDirs(file);
+      }
+      return path;
     }
   }
 
@@ -197,13 +231,13 @@ public class MetadataDumper {
     // The default output file is based on the connector.
     // We had a customer request to base it on the database, but that isn't well-defined,
     // as there may be 0 or N databases in a single file.
-    File outputFile = getOutputFile(connector, arguments);
+    String outputFileLocation = getOutputFileLocation(connector, arguments);
 
     if (arguments.isDryRun()) {
       String title = "Dry run: Printing task list for " + connector.getName();
       System.out.println(title);
       System.out.println(repeat('=', title.length()));
-      System.out.println("Writing to " + outputFile);
+      System.out.println("Writing to " + outputFileLocation);
       for (Task<?> task : tasks) {
         print(task, 1);
       }
@@ -213,15 +247,9 @@ public class MetadataDumper {
 
       LOG.info("Using " + connector);
       try (Closer closer = Closer.create()) {
+        Path outputPath = prepareOutputPath(outputFileLocation, closer, arguments);
 
-        if (outputFile.exists()) {
-          if (!arguments.isOutputContinue())
-            outputFile.delete(); // It's a simple file, and we were asked to overwrite it.
-        } else {
-          Files.createParentDirs(outputFile);
-        }
-
-        URI outputUri = URI.create("jar:" + outputFile.toURI());
+        URI outputUri = URI.create("jar:" + outputPath.toUri());
         // LOG.debug("Is a zip file: " + outputUri);
         Map<String, Object> fileSystemProperties =
             ImmutableMap.<String, Object>builder()
@@ -255,19 +283,22 @@ public class MetadataDumper {
 
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
-        if (outputFile.isFile()) LOG.debug("Dumper wrote " + outputFile.length() + " bytes.");
+        File outputFile = new File(outputFileLocation);
+        if (outputFile.isFile()) {
+          LOG.debug("Dumper wrote " + outputFile.length() + " bytes.");
+        }
         LOG.debug("Dumper took " + stopwatch + ".");
       }
 
       printTaskResults(state);
-      printDumperSummary(connector, outputFile);
-      checkRequiredTaskSuccess(state, outputFile);
+      printDumperSummary(connector, outputFileLocation);
+      checkRequiredTaskSuccess(state, outputFileLocation);
       logStatusSummary(state);
       System.out.println(STARS);
     }
   }
 
-  private File getOutputFile(Connector connector, ConnectorArguments arguments) {
+  private String getOutputFileLocation(Connector connector, ConnectorArguments arguments) {
     // The default output file is based on the connector.
     // We had a customer request to base it on the database, but that isn't well-defined,
     // as there may be 0 or N databases in a single file.
@@ -275,30 +306,42 @@ public class MetadataDumper {
     return arguments
         .getOutputFile()
         .map(file -> getVerifiedFile(defaultFileName, file))
-        .orElseGet(() -> new File(defaultFileName));
+        .orElseGet(() -> defaultFileName);
   }
 
-  private File getVerifiedFile(String defaultFileName, File file) {
-    String fileName = file.getPath();
-    boolean isZipFile = StringUtils.endsWithIgnoreCase(fileName, ".zip");
+  private String getVerifiedFile(String defaultFileName, String fileName) {
+    Matcher gcsPathMatcher = GCS_PATH_PATTERN.matcher(fileName);
 
-    if (file.isFile() && !isZipFile) {
-      throw new IllegalStateException(
-          String.format(
-              "A file already exists at %1$s. If you want to create a directory, please"
-                  + " provide the path to the directory. If you want to create %1$s.zip,"
-                  + " please add the `.zip` extension manually.",
-              fileName));
+    if (gcsPathMatcher.matches()) {
+      LOG.debug("Got GCS target with bucket '{}'.", gcsPathMatcher.group("bucket"));
+      if (StringUtils.endsWithIgnoreCase(fileName, ".zip")) {
+        return fileName;
+      }
+      if (fileName.endsWith("/")) {
+        return fileName + defaultFileName;
+      }
+      return fileName + "/" + defaultFileName;
+    } else {
+      Path path = Paths.get(fileName);
+      boolean isZipFile =
+          StringUtils.endsWithIgnoreCase(fileName, ".zip") && !path.toFile().isDirectory();
+      if (path.toFile().isFile() && !isZipFile) {
+        throw new IllegalStateException(
+            String.format(
+                "A file already exists at %1$s. If you want to create a directory, please"
+                    + " provide the path to the directory. If you want to create %1$s.zip,"
+                    + " please add the `.zip` extension manually.",
+                fileName));
+      }
+      return isZipFile ? fileName : path.resolve(defaultFileName).toString();
     }
-
-    return file.isDirectory() || !isZipFile ? new File(file, defaultFileName) : file;
   }
 
-  private void printDumperSummary(Connector connector, File outputFile) {
+  private void printDumperSummary(Connector connector, String outputFileName) {
     if (connector instanceof MetadataConnector) {
-      log("Metadata has been saved to " + outputFile);
+      log("Metadata has been saved to " + outputFileName);
     } else if (connector instanceof LogsConnector) {
-      log("Logs have been saved to " + outputFile);
+      log("Logs have been saved to " + outputFileName);
     }
   }
 
@@ -321,7 +364,7 @@ public class MetadataDumper {
     log(lines);
   }
 
-  private void checkRequiredTaskSuccess(Impl state, File outputFile) {
+  private void checkRequiredTaskSuccess(Impl state, String outputFileName) {
     long requiredTasksNotSucceeded =
         state.getTaskResultMap().entrySet().stream()
             .filter(e -> TaskCategory.REQUIRED.equals(e.getKey().getCategory()))
@@ -330,7 +373,7 @@ public class MetadataDumper {
     if (requiredTasksNotSucceeded > 0) {
       log(
           "ERROR: " + requiredTasksNotSucceeded + " required task[s] failed.",
-          "Output, including debugging information, has been saved to " + outputFile);
+          "Output, including debugging information, has been saved to " + outputFileName);
       if (exitOnError) {
         System.out.println(STARS);
         System.exit(1);
@@ -354,21 +397,5 @@ public class MetadataDumper {
   private void log(List<String> lines) {
     System.out.println(STARS);
     lines.stream().map(s -> "* " + s).forEach(System.out::println);
-  }
-
-  public static void main(String... args) throws Exception {
-    try {
-      MetadataDumper main = new MetadataDumper();
-      args = JsonResponseFile.addResponseFiles(args);
-      // LOG.debug("Arguments are: [" + String.join("] [", args) + "]");
-      // Without this, the dumper prints "Missing required arguments:[connector]"
-      if (args.length == 0) {
-        args = new String[] {"--help"};
-      }
-      main.run(args);
-    } catch (MetadataDumperUsageException e) {
-      LOG.error(e.getMessage());
-      for (String msg : e.getMessages()) LOG.error(msg);
-    }
   }
 }

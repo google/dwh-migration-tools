@@ -54,6 +54,7 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -91,6 +92,11 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   private final TeradataLogsConnector connector = new TeradataLogsConnector();
+
+  @Before
+  public void setUp() {
+    System.setProperty("user.timezone", "UTC");
+  }
 
   @Test
   public void testConnector() throws Exception {
@@ -213,7 +219,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
     TeradataLogsJdbcTask.EXPRESSION_VALIDITY_QUERY = "SELECT %s FROM %s FETCH FIRST 1 ROW ONLY";
 
     MetadataDumper dumper = new MetadataDumper();
-    dumper.run(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+    dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
 
     // TODO: Use ZipValidator to assert that all N_QUERY_LOGS entries are present.
   }

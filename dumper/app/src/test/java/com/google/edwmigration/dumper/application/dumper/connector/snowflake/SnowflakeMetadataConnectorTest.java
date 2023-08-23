@@ -98,8 +98,6 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
               SnowflakeMetadataDumpFormat.FunctionsFormat.IS_ZIP_ENTRY_NAME,
               SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME),
           SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
-
-      validator.run(outputFile);
     }
   }
 

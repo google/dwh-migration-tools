@@ -14,16 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-buildscript {
-    dependencies {
-        classpath 'org.anarres.gradle:gradle-thrift-plugin:1.0.1'
-    }
-}
+import java.nio.file.Files
+import java.util.stream.Collectors
+
 plugins {
     id 'dwh-migration-dumper.java-library-conventions'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
-apply plugin: 'org.anarres.thrift'
 
 sourceSets {
     hive312 // build a runtime to run Hive 3.1.2 metastore/server
@@ -78,15 +75,25 @@ shadowJar {
 
 }
 
-generateThriftSource {
-    generators {
-        java {
-            out file('build/generated-sources/thrift/main')
-            // option 'java5'
+tasks.register("generateThrift") {
+    def thriftFiles = Files.list(projectDir.toPath().resolve('src/main/thrift'))
+        .filter { it.toString().endsWith('.thrift') }
+        .collect(Collectors.toList())
+    def outputPath = project.projectDir.toPath().resolve("src/main/gen-java")
+    inputs.files(thriftFiles)
+    outputs.dir(outputPath)
+
+    doFirst {
+        project.delete(outputPath)
+        thriftFiles.each { thriftPath ->
+            project.exec {
+                workingDir project.projectDir.toPath().resolve('src/main')
+                commandLine 'thrift', '-r', '--gen', 'java', thriftPath
+            }
         }
     }
 }
 
 sourceSets.main.java {
-    srcDir file('build/generated-sources/thrift/main')
+    srcDir file('src/main/gen-java')
 }

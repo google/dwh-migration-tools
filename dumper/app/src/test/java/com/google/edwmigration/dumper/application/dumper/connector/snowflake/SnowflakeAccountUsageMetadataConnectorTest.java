@@ -56,7 +56,8 @@ public class SnowflakeAccountUsageMetadataConnectorTest
     validator.withEntryValidator(
         SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
-
-    validator.run(outputFile);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.Header.class);
   }
 }

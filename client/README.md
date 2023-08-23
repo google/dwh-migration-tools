@@ -47,6 +47,16 @@ the distribution-specific commands to install these are:
 * Red Hat-based distros: `sudo yum install python38 python38-pip` (for e.g. Python
   3.8)
 
+For MacOS, install python from https://www.python.org/downloads/macos/. For Windows,
+install python from https://www.python.org/downloads/windows/. Run
+`python3 -m pip install --upgrade pip` to install pip.
+
+### Gcloud CLI
+
+Gcloud is required.
+You can install from https://cloud.google.com/sdk/docs/install-sdk.
+Run `gcloud init` and `gcloud auth application-default login` to initialize and authorize.
+
 ### Support for Encodings other than UTF-8
 
 If all of the files you wish to translate are UTF-8 encoded
@@ -77,7 +87,10 @@ bucket for translation.
 1. Download the repo from [google/dwh-migration-tools] in your choice of 
 preference. If you download a zip, make sure to change the name of the 
 folder to "dwh-migration-tools".
-2. Run the following commands, making the appropriate substitutions.
+2. It's optional, but strongly recommended to use the
+[Metadata and Log Dumper](https://github.com/google/dwh-migration-tools/tree/main/dumper)
+first to get the metadata into the input directory before using the python client for translation.
+Run the following commands, making the appropriate substitutions.
 
 ```shell
 # Copy the example project directory to a project directory of your own 
@@ -201,6 +214,7 @@ run locally:
 - `BQMS_MULTITHREADED`: Set to `True` to enable multithreaded
   pre/postprocessing and uploads/downloads.
 - `BQMS_VERBOSE`: Set to `True` to enable debug logging.
+- `BQMS_CLEANUP_FILES`: Set to `True` to cleanup GCS directory after transaltion.
 
 For a list of environment variables accepted by the `run.sh` script when using
 Cloud Run, see [Deploying to Cloud Run](#deploying-to-cloud-run).

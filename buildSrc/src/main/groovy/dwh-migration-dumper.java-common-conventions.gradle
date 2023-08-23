@@ -32,7 +32,7 @@ configurations {
         exclude group: 'findbugs', module: 'annotations'
         exclude group: 'net.jcip', module: 'jcip-annotations'   // In google-findbugs-annotations.
         exclude group: 'org.springframework', module: 'spring-jcl'  // In jcl-over-slf4j
-        exclude group: 'commons-logging'	// Replaced by jcl-over-slf4j
+        exclude group: 'commons-logging'    // Replaced by jcl-over-slf4j
     }
 }
 
@@ -50,7 +50,7 @@ dependencies {
 
     constraints {
         // Define dependency versions as constraints
-        def guavaVersion =  '31.1-jre'
+        def guavaVersion = '32.1.2-jre'
         implementation "com.google.guava:guava:$guavaVersion"
         testFixturesImplementation "com.google.guava:guava:$guavaVersion"
         def jacksonVersion = '2.14.2'
@@ -78,11 +78,12 @@ dependencies {
 
         runtimeOnly "org.postgresql:postgresql:42.5.4"
         runtimeOnly "net.snowflake:snowflake-jdbc:3.13.20"
-        runtimeOnly "com.amazon.redshift:redshift-jdbc42:2.1.0.8"
+        runtimeOnly "com.amazon.redshift:redshift-jdbc42:2.1.0.18"
+        runtimeOnly "com.amazonaws:aws-java-sdk-redshift:1.12.520"
 
         testFixturesApi "org.apache.commons:commons-compress:1.18"
         testFixturesApi "commons-io:commons-io:2.11.0"
-        testImplementation "org.xerial:sqlite-jdbc:3.32.3"
+        testImplementation "org.xerial:sqlite-jdbc:3.42.0.0"
         testImplementation "com.github.stefanbirkner:system-rules:1.18.0"
         testImplementation "org.postgresql:postgresql:42.5.4"
         testImplementation "joda-time:joda-time:2.3"
@@ -123,8 +124,8 @@ dependencies {
 }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_1_8
-	targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks.named('test') {
@@ -142,7 +143,7 @@ tasks.named('test') {
             else if (k.equals("test.parameter"))
                 systemProperty k, v
             else if (k.equals("test.verbose"))
-                    systemProperty k, v
+                systemProperty k, v
         }
     }
     if (Boolean.getBoolean('test.debug'))
@@ -168,50 +169,53 @@ tasks.named('test') {
 }
 
 spotless {
-	// In an ideal world we would use $YEAR in the HEADER templates, but that
-	// breaks some internal tooling. So we also can't use:
-	// ratchetFrom 'origin/main' // Enables lazy copyright year updates.
+    // In an ideal world we would use $YEAR in the HEADER templates, but that
+    // breaks some internal tooling. So we also can't use:
+    // ratchetFrom 'origin/main' // Enables lazy copyright year updates.
 
-	java {
-                googleJavaFormat()
-		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java");
-		trimTrailingWhitespace();
+    java {
+        googleJavaFormat()
+        licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java");
+        trimTrailingWhitespace();
         FileCollection files = files();
         for (SourceSet sourceSet : sourceSets)
             files = files.plus(sourceSet.allJava)
         files = files.filter { f ->
-			// println "Filtering " + f;
+            // println "Filtering " + f;
             String path = f.path;
             // Ignore generated sources.
             if (path.contains('/build/'))
                 return false;
             if (path.contains('hive/support/HiveServerSupport.java'))
                 return false; // Additional copyright credits
+	    if (path.contains('/gen-java/'))
+	        return false
             return true;
         }
         target files;
-	}
+    }
 
-	format('gradle', com.diffplug.gradle.spotless.FormatExtension.class) {
-		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java"), '(?i:[a-z])'
-		trimTrailingWhitespace();
-		target files('build.gradle');
-	}
+    format('gradle', com.diffplug.gradle.spotless.FormatExtension.class) {
+        licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java"), '(?i:[a-z])'
+        trimTrailingWhitespace();
+        indentWithSpaces(4);
+        target files('build.gradle');
+    }
 
-	sql {
-		// Or use: '(?i:create|drop|insert|select)';
-		licenseHeaderFile rootProject.file("gradle/codequality/HEADER.sql"), '(?i:[a-z])'
-		trimTrailingWhitespace();
+    sql {
+        // Or use: '(?i:create|drop|insert|select)';
+        licenseHeaderFile rootProject.file("gradle/codequality/HEADER.sql"), '(?i:[a-z])'
+        trimTrailingWhitespace();
 
-		FileCollection files = files();
-		for (SourceSet sourceSet : sourceSets)
-			files = files.plus(sourceSet.resources)
-		files = files.filter { f ->
-			// println "Filtering " + f;
-			if (!f.name.endsWith(".sql"))
-				return false;
-			return true;
-		}
-		target files;
-	}
+        FileCollection files = files();
+        for (SourceSet sourceSet : sourceSets)
+            files = files.plus(sourceSet.resources)
+        files = files.filter { f ->
+            // println "Filtering " + f;
+            if (!f.name.endsWith(".sql"))
+                return false;
+            return true;
+        }
+        target files;
+    }
 }

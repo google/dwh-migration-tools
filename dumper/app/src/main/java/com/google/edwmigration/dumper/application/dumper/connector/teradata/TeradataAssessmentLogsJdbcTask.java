@@ -22,6 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import java.util.List;
 import java.util.function.Predicate;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
@@ -160,8 +161,9 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
       String queryTable,
       List<String> conditions,
       ZonedInterval interval,
+      @CheckForNull String logDateColumn,
       List<String> orderBy) {
-    super(targetPath, state, logTable, queryTable, conditions, interval, orderBy);
+    super(targetPath, state, logTable, queryTable, conditions, interval, logDateColumn, orderBy);
   }
 
   @Nonnull

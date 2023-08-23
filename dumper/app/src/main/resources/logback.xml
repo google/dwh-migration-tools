@@ -11,6 +11,7 @@
 	<logger name="org.springframework.jdbc.datasource" level="info" />
 	<logger name="org.springframework" level="info"/>
 	<logger name="com.zaxxer.hikari" level="info"/>
+	<logger name="org.apache.hc.client5.http" level="info"/>
 
 	<root level="${LOG_LEVEL:-debug}">
 		<appender-ref ref="CONSOLE" />

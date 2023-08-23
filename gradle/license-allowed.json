@@ -73,12 +73,10 @@
 			"moduleName": ".*"
 		},
 		{
-			"moduleLicense": "The Go license",
+			"moduleLicense": "Go License",
 			"notes": "This is another BSD license.",
 			"moduleName": ".*"
 		},
-
-
 		{
 			"moduleLicense": "Apache License",
 			"moduleName": "org.apache.httpcomponents:httpclient"
@@ -102,6 +100,10 @@
 		{
 			"moduleLicense": null,
 			"moduleName": "com.fasterxml.jackson:jackson-bom"
+		},
+		{
+			"moduleLicense": null,
+			"moduleName": "com.google.guava:guava-parent"
 		}
 	]
 }

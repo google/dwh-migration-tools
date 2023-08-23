@@ -21,9 +21,11 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
@@ -58,7 +60,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     VIEWS_OVERRIDE_QUERY,
     VIEWS_OVERRIDE_WHERE,
     FUNCTIONS_OVERRIDE_QUERY,
-    FUNCTIONS_OVERRIDE_WHERE;
+    FUNCTIONS_OVERRIDE_WHERE,
+    TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
+    TABLE_STORAGE_METRICS_OVERRIDE_WHERE;
 
     private final String name;
     private final String description;
@@ -115,27 +119,45 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  /** Adds the INFORMATION_SCHEMA task, with a fallback to the ACCOUNT_USAGE task. */
+  /** Adds the ACCOUNT_USAGE task, with a fallback to the INFORMATION_SCHEMA task. */
   @ForOverride
-  protected void addSqlTasks(
+  protected void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task) {
-    Task<?> t0 =
+      @Nonnull TaskVariant au_task,
+      ConnectorArguments arguments) {
+    AbstractJdbcTask<Summary> is_jdbcTask =
         new JdbcSelectTask(
                 is_task.zipEntryName,
                 String.format(format, is_task.schemaName, is_task.whereClause))
             .withHeaderClass(header);
-    Task<?> t1 =
+
+    AbstractJdbcTask<Summary> au_jdbcTask =
         new JdbcSelectTask(
                 au_task.zipEntryName,
                 String.format(format, au_task.schemaName, au_task.whereClause))
-            .withHeaderClass(header)
-            .onlyIfFailed(t0);
-    out.add(t0);
-    out.add(t1);
+            .withHeaderClass(header);
+
+    if (arguments.isAssessment()) {
+      out.add(au_jdbcTask);
+    } else {
+      out.add(au_jdbcTask);
+      out.add(is_jdbcTask.onlyIfFailed(au_jdbcTask));
+    }
+  }
+
+  @ForOverride
+  protected void addSingleSqlTask(
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull TaskVariant task) {
+    out.add(
+        new JdbcSelectTask(
+                task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
+            .withHeaderClass(header));
   }
 
   @Override
@@ -155,7 +177,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     // https://docs.snowflake.net/manuals/sql-reference/account-usage.html
     // https://docs.snowflake.net/manuals/user-guide/data-share-consumers.html
     // You must: GRANT IMPORTED PRIVILEGES ON DATABASE snowflake TO ROLE <SOMETHING>;
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.DatabasesFormat.Header.class,
         getOverrideableQuery(
@@ -165,9 +187,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataConnectorProperties.DATABASES_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(
-            SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+            SnowflakeMetadataDumpFormat.DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments);
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.SchemataFormat.Header.class,
         getOverrideableQuery(
@@ -176,38 +199,36 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataConnectorProperties.SCHEMATA_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.SCHEMATA_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(
-            SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+        new TaskVariant(SnowflakeMetadataDumpFormat.SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments);
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.TablesFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM %1$s.TABLES%2$s",
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+                + " clustering_key FROM %1$s.TABLES%2$s",
             SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.TablesFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(
-            SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME,
-            AU,
-            AU_WHERE)); // Painfully slow.
+        new TaskVariant(SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments); // Painfully slow.
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type FROM %1$s.COLUMNS%2$s",
+            "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name,"
+                + " data_type FROM %1$s.COLUMNS%2$s",
             SnowflakeMetadataConnectorProperties.COLUMNS_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.COLUMNS_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.ColumnsFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(
-            SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME,
-            AU,
-            AU_WHERE)); // Very fast.
+        new TaskVariant(SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments); // Very fast.
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.ViewsFormat.Header.class,
         getOverrideableQuery(
@@ -216,19 +237,52 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             SnowflakeMetadataConnectorProperties.VIEWS_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.VIEWS_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.ViewsFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+        new TaskVariant(SnowflakeMetadataDumpFormat.ViewsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments);
 
-    addSqlTasks(
+    addSqlTasksWithInfoSchemaFallback(
         out,
         SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT function_schema, function_name, data_type, argument_signature FROM %1$s.FUNCTIONS%2$s",
+            "SELECT function_schema, function_name, data_type, argument_signature FROM"
+                + " %1$s.FUNCTIONS%2$s",
             SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_QUERY,
             SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_WHERE),
         new TaskVariant(SnowflakeMetadataDumpFormat.FunctionsFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(
-            SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+            SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        arguments);
+
+    if (arguments.isAssessment()) {
+      addSingleSqlTask(
+          out,
+          TableStorageMetricsFormat.Header.class,
+          getOverrideableQuery(
+              arguments,
+              "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
+              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
+              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
+          new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU));
+
+      addSingleSqlTask(
+          out,
+          WarehousesFormat.Header.class,
+          "SHOW WAREHOUSES",
+          new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU));
+
+      addSingleSqlTask(
+          out,
+          ExternalTablesFormat.Header.class,
+          "SHOW EXTERNAL TABLES",
+          new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU));
+
+      addSingleSqlTask(
+          out,
+          FunctionInfoFormat.Header.class,
+          "SHOW FUNCTIONS",
+          new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU));
+    }
   }
 
   private String getOverrideableQuery(
@@ -238,10 +292,14 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull SnowflakeMetadataConnectorProperties whereProperty) {
 
     String overrideQuery = arguments.getDefinition(queryProperty);
-    if (overrideQuery != null) return overrideQuery;
+    if (overrideQuery != null) {
+      return overrideQuery;
+    }
 
     String overrideWhere = arguments.getDefinition(whereProperty);
-    if (overrideWhere != null) return defaultSql + " WHERE " + overrideWhere;
+    if (overrideWhere != null) {
+      return defaultSql + " WHERE " + overrideWhere;
+    }
 
     return defaultSql;
   }

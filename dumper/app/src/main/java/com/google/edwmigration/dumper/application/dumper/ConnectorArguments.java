@@ -19,12 +19,14 @@ package com.google.edwmigration.dumper.application.dumper;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataLogsConnectorProperty;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.Console;
 import java.io.File;
@@ -83,6 +85,7 @@ public class ConnectorArguments extends DefaultArguments {
           + "At no point are the contents of user databases themselves queried.\n"
           + "\n";
 
+  public static final String OPT_CONNECTOR = "connector";
   public static final String OPT_DRIVER = "driver";
   public static final String OPT_CLASS = "jdbcDriverClass";
   public static final String OPT_URI = "url";
@@ -96,6 +99,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_WAREHOUSE = "warehouse";
   public static final String OPT_DATABASE = "database";
   public static final String OPT_SCHEMA = "schema";
+  public static final String OPT_OUTPUT = "output";
+  public static final String OPT_CONFIG = "config";
   public static final String OPT_ASSESSMENT = "assessment";
   public static final String OPT_ORACLE_SID = "oracle-sid";
   public static final String OPT_ORACLE_SERVICE = "oracle-service";
@@ -103,6 +108,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_DAYS = "query-log-days";
   public static final String OPT_QUERY_LOG_START = "query-log-start";
   public static final String OPT_QUERY_LOG_END = "query-log-end";
+  public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
+  public static final String OPT_QUERY_LOG_ALTERNATES = "query-log-alternates";
 
   // redshift.
   public static final String OPT_IAM_ACCESSKEYID = "iam-accesskeyid";
@@ -123,7 +130,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
 
   private final OptionSpec<String> connectorNameOption =
-      parser.accepts("connector", "Target DBMS connector name").withRequiredArg().required();
+      parser.accepts(OPT_CONNECTOR, "Target DBMS connector name").withRequiredArg().required();
   private final OptionSpec<String> optionDriver =
       parser
           .accepts(
@@ -199,7 +206,7 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(String.class);
   private final OptionSpec<String> optionConfiguration =
       parser
-          .accepts("config", "Configuration for DB connector")
+          .accepts(OPT_CONFIG, "Configuration for DB connector")
           .withRequiredArg()
           .ofType(String.class)
           .withValuesSeparatedBy(';')
@@ -207,13 +214,17 @@ public class ConnectorArguments extends DefaultArguments {
   // private final OptionSpec<String> optionDatabase = parser.accepts("database", "database (can be
   // repeated; all if not
   // specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
-  private final OptionSpec<File> optionOutput =
+  private final OptionSpec<String> optionOutput =
       parser
           .accepts(
-              "output",
-              "Output file or directory name. If the file name, along with the `.zip` extension, is not provided dumper will attempt to create the zip file with the default file name in the directory.")
+              OPT_OUTPUT,
+              "Output file, directory name, or GCS path. If the file name, along with "
+                  + "the `.zip` extension, is not provided dumper will attempt to create the zip "
+                  + "file with the default file name in the directory. To use GCS, use the format "
+                  + "gs://<BUCKET>/<PATH>. This requires Google Cloud credentials. See "
+                  + "https://cloud.google.com/docs/authentication/client-libraries for details.")
           .withRequiredArg()
-          .ofType(File.class)
+          .ofType(String.class)
           .describedAs("cw-dump.zip");
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
@@ -222,7 +233,7 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<String> optionQueryLogEarliestTimestamp =
       parser
           .accepts(
-              "query-log-earliest-timestamp",
+              OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
               "UNDOCUMENTED: [Deprecated: Use "
                   + OPT_QUERY_LOG_START
                   + " and "
@@ -287,7 +298,7 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<String> optionQueryLogAlternates =
       parser
           .accepts(
-              "query-log-alternates",
+              OPT_QUERY_LOG_ALTERNATES,
               "pair of alternate query log tables to export (teradata-logs only), by default "
                   + "logTable=dbc.DBQLogTbl and queryTable=dbc.DBQLSQLTbl, if --assessment flag"
                   + " is enabled, then logTable=dbc.QryLogV and queryTable=dbc.DBQLSQLTbl.")
@@ -367,7 +378,7 @@ public class ConnectorArguments extends DefaultArguments {
   // and if not given, asked at the console.
   private String askedPassword;
 
-  public ConnectorArguments(@Nonnull String[] args) throws IOException {
+  public ConnectorArguments(@Nonnull String... args) throws IOException {
     super(args);
   }
 
@@ -387,8 +398,12 @@ public class ConnectorArguments extends DefaultArguments {
 
     @Nonnull
     public Category getCategory() {
-      if (!Strings.isNullOrEmpty(annotation.arg())) return Category.Arg;
-      if (!Strings.isNullOrEmpty(annotation.env())) return Category.Env;
+      if (!Strings.isNullOrEmpty(annotation.arg())) {
+        return Category.Arg;
+      }
+      if (!Strings.isNullOrEmpty(annotation.env())) {
+        return Category.Env;
+      }
       return Category.Other;
     }
 
@@ -417,13 +432,18 @@ public class ConnectorArguments extends DefaultArguments {
       StringBuilder buf = new StringBuilder();
       String key = getKey();
       buf.append(key).append(StringUtils.repeat(' ', 12 - key.length()));
-      if (getCategory() == Category.Env) buf.append(" (environment variable)");
+      if (getCategory() == Category.Env) {
+        buf.append(" (environment variable)");
+      }
       String defaultValue = annotation.defaultValue();
-      if (!Strings.isNullOrEmpty(defaultValue))
+      if (!Strings.isNullOrEmpty(defaultValue)) {
         buf.append(" (default: ").append(defaultValue).append(")");
+      }
       buf.append(" ").append(annotation.description());
       String required = annotation.required();
-      if (!Strings.isNullOrEmpty(required)) buf.append(" (Required ").append(required).append(".)");
+      if (!Strings.isNullOrEmpty(required)) {
+        buf.append(" (Required ").append(required).append(".)");
+      }
       return buf.toString();
     }
   }
@@ -474,10 +494,13 @@ public class ConnectorArguments extends DefaultArguments {
       throws IOException {
     Description description = connector.getClass().getAnnotation(Description.class);
     out.append("* " + connector.getName());
-    if (description != null) out.append(" - ").append(description.value());
+    if (description != null) {
+      out.append(" - ").append(description.value());
+    }
     out.append("\n");
-    for (InputDescriptor descriptor : getAcceptsInputs(connector))
+    for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
       out.append("        ").append(descriptor.toString()).append("\n");
+    }
     for (Enum<? extends ConnectorProperty> enumConstant :
         connector.getConnectorProperties().getEnumConstants()) {
       ConnectorProperty property = (ConnectorProperty) enumConstant;
@@ -534,7 +557,9 @@ public class ConnectorArguments extends DefaultArguments {
   @Nonnegative
   public int getPort(@Nonnegative int defaultPort) {
     Integer customPort = getPort();
-    if (customPort != null) return customPort.intValue();
+    if (customPort != null) {
+      return customPort.intValue();
+    }
     return defaultPort;
   }
 
@@ -555,7 +580,9 @@ public class ConnectorArguments extends DefaultArguments {
 
   @Nonnull
   private static Predicate<String> toPredicate(@CheckForNull List<String> in) {
-    if (in == null || in.isEmpty()) return Predicates.alwaysTrue();
+    if (in == null || in.isEmpty()) {
+      return Predicates.alwaysTrue();
+    }
     return Predicates.in(new HashSet<>(in));
   }
 
@@ -579,8 +606,11 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDatabaseSingleName() {
     List<String> databases = getDatabases();
-    if (databases.size() == 1) return databases.get(0);
-    else return null;
+    if (databases.size() == 1) {
+      return databases.get(0);
+    } else {
+      return null;
+    }
   }
 
   @Nonnull
@@ -613,11 +643,17 @@ public class ConnectorArguments extends DefaultArguments {
   // should be asked from command line
   @CheckForNull
   public String getPassword() {
-    if (!getOptions().has(optionPass)) return null;
+    if (!getOptions().has(optionPass)) {
+      return null;
+    }
     String pass = getOptions().valueOf(optionPass);
-    if (pass != null) return pass;
+    if (pass != null) {
+      return pass;
+    }
     // Else need to ask & save.
-    if (askedPassword != null) return askedPassword;
+    if (askedPassword != null) {
+      return askedPassword;
+    }
 
     Console console = System.console();
     if (console == null) {
@@ -641,8 +677,8 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valuesOf(optionConfiguration);
   }
 
-  public Optional<File> getOutputFile() {
-    return optionAsOptional(optionOutput).filter(file -> !file.getName().isEmpty());
+  public Optional<String> getOutputFile() {
+    return optionAsOptional(optionOutput).filter(file -> !Strings.isNullOrEmpty(file));
   }
 
   public boolean isOutputContinue() {
@@ -667,7 +703,9 @@ public class ConnectorArguments extends DefaultArguments {
   @Nonnegative
   public int getQueryLogDays(@Nonnegative int defaultQueryLogDays) {
     Integer out = getQueryLogDays();
-    if (out != null) return out.intValue();
+    if (out != null) {
+      return out.intValue();
+    }
     return defaultQueryLogDays;
   }
 
@@ -713,7 +751,9 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isTestFlag(char c) {
     String flags = getOptions().valueOf(optionFlags);
-    if (flags == null) return false;
+    if (flags == null) {
+      return false;
+    }
     return flags.indexOf(c) >= 0;
   }
 
@@ -771,7 +811,9 @@ public class ConnectorArguments extends DefaultArguments {
 
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
-    if (definitionMap == null) searchDefinitions();
+    if (definitionMap == null) {
+      searchDefinitions();
+    }
     String result = definitionMap.get(property.getName());
     LOG.info(
         "Retrieving {} from key {} - got: {}",
@@ -796,23 +838,43 @@ public class ConnectorArguments extends DefaultArguments {
   public String toString() {
     // We do not include password here b/c as of this writing,
     // this string representation is logged out to file by ArgumentsTask.
-    return MoreObjects.toStringHelper(this)
-        .add("connector", getConnectorName())
-        .add("driver", getDriverPaths())
-        .add("host", getHost())
-        .add("port", getPort())
-        .add("warehouse", getWarehouse())
-        .add("database", getDatabases())
-        .add("user", getUser())
-        .add("configuration", getConfiguration())
-        .add("output", getOutputFile())
-        .add("query-log-earliest-timestamp", getQueryLogEarliestTimestamp())
-        .add("query-log-days", getQueryLogDays())
-        .add("query-log-start", getQueryLogStart())
-        .add("query-log-end", getQueryLogEnd())
-        .add("query-log-alternates", getQueryLogAlternates())
-        .add("assessment", isAssessment())
-        .toString();
+    ToStringHelper toStringHelper =
+        MoreObjects.toStringHelper(this)
+            .add(OPT_CONNECTOR, getConnectorName())
+            .add(OPT_DRIVER, getDriverPaths())
+            .add(OPT_HOST, getHost())
+            .add(OPT_PORT, getPort())
+            .add(OPT_WAREHOUSE, getWarehouse())
+            .add(OPT_DATABASE, getDatabases())
+            .add(OPT_USER, getUser())
+            .add(OPT_CONFIG, getConfiguration())
+            .add(OPT_OUTPUT, getOutputFile())
+            .add(OPT_QUERY_LOG_EARLIEST_TIMESTAMP, getQueryLogEarliestTimestamp())
+            .add(OPT_QUERY_LOG_DAYS, getQueryLogDays())
+            .add(OPT_QUERY_LOG_START, getQueryLogStart())
+            .add(OPT_QUERY_LOG_END, getQueryLogEnd())
+            .add(OPT_QUERY_LOG_ALTERNATES, getQueryLogAlternates())
+            .add(OPT_ASSESSMENT, isAssessment());
+    for (Connector connector : ServiceLoader.load(Connector.class)) {
+      if (connector.getName().equals("teradata-logs")) {
+        for (Enum<? extends ConnectorProperty> enumConstant :
+            connector.getConnectorProperties().getEnumConstants()) {
+          toStringHelper.add(
+              ((ConnectorProperty) enumConstant).getName(),
+              getDefinitionOrDefault((TeradataLogsConnectorProperty) enumConstant));
+        }
+      }
+    }
+    return toStringHelper.toString();
+  }
+
+  @CheckForNull
+  public String getDefinitionOrDefault(TeradataLogsConnectorProperty property) {
+    String stringValue = getDefinition(property);
+    if (StringUtils.isEmpty(stringValue)) {
+      return property.getDefaultValue();
+    }
+    return stringValue;
   }
 
   public static class ZonedParser implements ValueConverter<ZonedDateTime> {
@@ -832,13 +894,16 @@ public class ConnectorArguments extends DefaultArguments {
 
       TemporalAccessor result = parser.parseBest(value, LocalDateTime::from, LocalDate::from);
 
-      if (result instanceof LocalDateTime) return ((LocalDateTime) result).atZone(ZoneOffset.UTC);
+      if (result instanceof LocalDateTime) {
+        return ((LocalDateTime) result).atZone(ZoneOffset.UTC);
+      }
 
-      if (result instanceof LocalDate)
+      if (result instanceof LocalDate) {
         return ((LocalDate) result)
             .plusDays(dayOffset.getValue())
             .atTime(LocalTime.MIDNIGHT)
             .atZone(ZoneOffset.UTC);
+      }
 
       throw new ValueConversionException(
           "Value " + value + " cannot be parsed to date or datetime");

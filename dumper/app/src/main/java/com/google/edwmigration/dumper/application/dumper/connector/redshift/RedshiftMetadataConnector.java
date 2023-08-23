@@ -146,7 +146,6 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
             RedshiftMetadataDumpFormat.PgUser.ZIP_ENTRY_NAME, "select * from pg_user"));
 
     if (arguments.isAssessment()) {
-      selStar(parallelTask, "SVV_DISKUSAGE");
       selStar(parallelTask, "STV_MV_INFO");
       selStar(parallelTask, "STV_WLM_SERVICE_CLASS_CONFIG");
       selStar(parallelTask, "STV_WLM_SERVICE_CLASS_STATE");
