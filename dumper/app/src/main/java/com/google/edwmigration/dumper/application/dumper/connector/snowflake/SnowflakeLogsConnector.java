@@ -26,8 +26,10 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.TimeTruncator;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
@@ -35,6 +37,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
 import com.google.errorprone.annotations.ForOverride;
+import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -232,7 +235,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // because we always iterate over the full 7 trailing days; maybe it's worth
     // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
     // to parse and return an ISO instant, not a database-server-specific format.
-    // TODO: Use ZonedIntervalIterable.forConnectorArguments()
+    // TODO: Use ZonedIntervalIterableGenerator.forConnectorArguments()
     boolean appendStartTime = !StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp());
     if (appendStartTime)
       queryBuilder
@@ -342,7 +345,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
     // 7-day window allowed by the server-side function.
     ZonedIntervalIterable queryLogIntervals =
-        ZonedIntervalIterable.forConnectorArguments(arguments);
+        ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
     LOG.info("Exporting query log for " + queryLogIntervals);
 
     if (!arguments.isAssessment()) {
@@ -360,7 +363,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
 
     List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
-    ZonedIntervalIterable.forConnectorArguments(arguments, ChronoUnit.DAYS)
+    ZonedIntervalIterableGenerator.forConnectorArguments(
+            arguments, Duration.ofDays(1), TimeTruncator.createBasedOnChronoUnit(ChronoUnit.DAYS))
         .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
   }
 

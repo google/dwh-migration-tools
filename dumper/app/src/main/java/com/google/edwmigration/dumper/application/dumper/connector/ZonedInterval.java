@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import static java.time.ZoneOffset.UTC;
 
 import com.google.common.base.Preconditions;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import javax.annotation.Nonnull;
@@ -70,6 +71,11 @@ public class ZonedInterval {
   @Nonnull
   public ZonedDateTime getEndInclusiveUTC() {
     return getEndInclusive().withZoneSameInstant(UTC);
+  }
+
+  @Nonnull
+  public Duration getDuration() {
+    return Duration.between(start, endExclusive);
   }
 
   @Nonnull

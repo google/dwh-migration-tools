@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProp
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -157,7 +158,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     // Beware of Teradata SQLSTATE HY000. See issue #4126.
     // Most likely caused by some operation (equality?) being performed on a datum which is too long
     // for a varchar.
-    ZonedIntervalIterable intervals = ZonedIntervalIterable.forConnectorArguments(arguments);
+    ZonedIntervalIterable intervals =
+        ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
     LOG.info("Exporting query logs for '{}'", intervals);
     SharedState queryLogsState = new SharedState();
     SharedState utilityLogsState = new SharedState();
