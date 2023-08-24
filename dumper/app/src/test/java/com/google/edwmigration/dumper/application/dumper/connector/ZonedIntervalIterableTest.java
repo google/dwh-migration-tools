@@ -31,7 +31,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -47,8 +46,7 @@ public class ZonedIntervalIterableTest {
   private static final TimeTruncator TRUNCATOR =
       TimeTruncator.createBasedOnChronoUnit(ChronoUnit.SECONDS);
 
-  private static final ZonedDateTime START_TIME =
-      ZonedDateTime.parse("2007-12-03T10:15:30+01:00[Europe/Warsaw]");
+  private static final ZonedDateTime START_TIME = ZonedDateTime.parse("2007-12-03T10:15:30+00:00");
 
   private static final ConnectorArguments.ZonedParser zonedParserStart =
       new ConnectorArguments.ZonedParser(
@@ -64,7 +62,7 @@ public class ZonedIntervalIterableTest {
     int actualCount = 0;
     for (ZonedInterval interval : iterable) {
       LOG.debug("Interval is {}", interval);
-      Assert.assertEquals(iterable.getDuration(), interval.getDuration());
+      assertEquals(iterable.getDuration(), interval.getDuration());
       actualCount++;
     }
     assertEquals(expectCount, actualCount);
@@ -221,7 +219,7 @@ public class ZonedIntervalIterableTest {
 
   @Test
   public void testTimeTruncator_MinuteBased() {
-    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T10:15:00+01:00[Europe/Warsaw]");
+    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T10:15:00+00:00");
 
     ZonedDateTime result =
         TimeTruncator.createBasedOnChronoUnit(ChronoUnit.MINUTES).apply(START_TIME);
@@ -231,7 +229,7 @@ public class ZonedIntervalIterableTest {
 
   @Test
   public void testTimeTruncator_HourBased() {
-    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T10:00:00+01:00[Europe/Warsaw]");
+    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T10:00:00+00:00");
 
     ZonedDateTime result =
         TimeTruncator.createBasedOnChronoUnit(ChronoUnit.HOURS).apply(START_TIME);
@@ -241,7 +239,7 @@ public class ZonedIntervalIterableTest {
 
   @Test
   public void testTimeTruncator_DayBased() {
-    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T00:00:00+01:00[Europe/Warsaw]");
+    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T00:00:00+00:00");
 
     ZonedDateTime result = TimeTruncator.createBasedOnChronoUnit(ChronoUnit.DAYS).apply(START_TIME);
 

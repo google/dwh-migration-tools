@@ -129,7 +129,7 @@ public class ZonedIntervalIterableGenerator {
           "At least one day of query logs should be exported; you specified: " + daysToExport);
 
     LOG.info(
-        "Log entries within the last {} days will be exported in increments of {} seconds.",
+        "Log entries within the last {} days will be exported in increments of {}.",
         daysToExport,
         DurationFormatUtils.formatDurationWords(duration.toMillis(), true, true));
 
