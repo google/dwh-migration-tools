@@ -24,6 +24,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -81,7 +82,7 @@ public class DefaultArguments {
     }
   }
 
-  public static class ChronoUnitValueConverter implements ValueConverter<ChronoUnit> {
+  public static class DurationValueConverter implements ValueConverter<Duration> {
 
     private enum AllowedUnits {
       HOUR(HOURS, "hourly"),
@@ -96,20 +97,20 @@ public class DefaultArguments {
       }
     }
 
-    public static ChronoUnitValueConverter INSTANCE = new ChronoUnitValueConverter();
+    public static DurationValueConverter INSTANCE = new DurationValueConverter();
 
-    private ChronoUnitValueConverter() {}
+    private DurationValueConverter() {}
 
     @Override
-    public ChronoUnit convert(String value) {
+    public Duration convert(String value) {
       for (AllowedUnits unit : AllowedUnits.values())
-        if (unit.commandLineFlag.equals(value)) return unit.chronoUnit;
+        if (unit.commandLineFlag.equals(value)) return unit.chronoUnit.getDuration();
       throw new ValueConversionException("Not a valid unit of interval: " + value);
     }
 
     @Override
-    public Class<? extends ChronoUnit> valueType() {
-      return ChronoUnit.class;
+    public Class<? extends Duration> valueType() {
+      return Duration.class;
     }
 
     @Override

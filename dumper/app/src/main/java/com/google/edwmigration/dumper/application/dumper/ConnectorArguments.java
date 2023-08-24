@@ -32,6 +32,7 @@ import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -254,13 +255,13 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(Integer.class)
           .describedAs("N");
 
-  private final OptionSpec<ChronoUnit> optionQueryLogRotationFrequency =
+  private final OptionSpec<Duration> optionQueryLogRotationFrequency =
       parser
           .accepts(OPT_QUERY_LOG_ROTATION_FREQUENCY, "The interval for rotating query log files")
           .withOptionalArg()
-          .ofType(ChronoUnit.class)
-          .withValuesConvertedBy(ChronoUnitValueConverter.INSTANCE)
-          .defaultsTo(ChronoUnit.HOURS);
+          .ofType(String.class)
+          .withValuesConvertedBy(DurationValueConverter.INSTANCE)
+          .defaultsTo(ChronoUnit.HOURS.getDuration());
 
   private final OptionSpec<ZonedDateTime> optionQueryLogStart =
       parser
@@ -713,7 +714,7 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionQueryLogDays);
   }
 
-  public ChronoUnit getQueryLogRotationFrequency() {
+  public Duration getQueryLogRotationFrequency() {
     return getOptions().valueOf(optionQueryLogRotationFrequency);
   }
 
