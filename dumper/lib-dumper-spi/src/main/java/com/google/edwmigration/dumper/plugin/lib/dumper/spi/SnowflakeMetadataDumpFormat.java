@@ -101,28 +101,7 @@ public interface SnowflakeMetadataDumpFormat {
   }
 
   interface FunctionInfoFormat {
-
     String AU_ZIP_ENTRY_NAME = "function_info.csv";
-
-    enum Header {
-      CreatedOn,
-      Name,
-      SchemaName,
-      IsBuiltin,
-      IsAggregate,
-      IsAnsi,
-      MinNumArguments,
-      MaxNumArguments,
-      Arguments,
-      Description,
-      CatalogName,
-      IsTableFunction,
-      ValidForClustering,
-      IsSecure,
-      IsExternalFunction,
-      Language,
-      IsMemoizable,
-    }
   }
 
   interface TableStorageMetricsFormat {
@@ -155,68 +134,10 @@ public interface SnowflakeMetadataDumpFormat {
   }
 
   interface WarehousesFormat {
-
     String AU_ZIP_ENTRY_NAME = "warehouses.csv";
-
-    enum Header {
-      Name,
-      State,
-      Type,
-      Size,
-      MinClusterCount,
-      MaxClusterCount,
-      StartedClusters,
-      Running,
-      Queued,
-      IsDefault,
-      IsCurrent,
-      AutoSuspend,
-      AutoResume,
-      Available,
-      Provisioning,
-      Quiescing,
-      Other,
-      CreatedOn,
-      ResumedOn,
-      UpdatedOn,
-      Owner,
-      Comment,
-      EnableQueryAcceleration,
-      QueryAccelerationMaxScaleFactor,
-      ResourceMonitor,
-      Actives,
-      Pendings,
-      Failed,
-      Suspended,
-      Uuid,
-      ScalingPolicy,
-    }
   }
 
   interface ExternalTablesFormat {
-
     String AU_ZIP_ENTRY_NAME = "external_tables.csv";
-
-    enum Header {
-      CreatedOn,
-      Name,
-      DatabaseName,
-      SchemaName,
-      Invalid,
-      InvalidReason,
-      Owner,
-      Comment,
-      Stage,
-      Location,
-      FileFormatName,
-      FileFormatType,
-      Cloud,
-      Region,
-      NotificationChannel,
-      LastRefreshDetails,
-      TableFormat,
-      LastRefreshedOn,
-      OwnerRoleType,
-    }
   }
 }
