@@ -22,6 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -36,8 +37,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.function.Function;
-import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,26 +158,22 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull List<? super Task<?>> out,
       @Nonnull String format,
       @Nonnull TaskVariant task,
-      @Nonnull Function<ResultSet, String[]> transformer) {
+      @Nonnull ResultSetTransformer<String[]> transformer) {
     out.add(
         new JdbcSelectTask(
                 task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
             .withHeaderTransformer(transformer));
   }
 
-  @CheckReturnValue
-  private String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat) {
-    try {
-      ResultSetMetaData metaData = rs.getMetaData();
-      int columnCount = metaData.getColumnCount();
-      String[] columns = new String[columnCount];
-      for (int i = 0; i < columnCount; i++) {
-        columns[i] = baseFormat.to(CaseFormat.UPPER_CAMEL, metaData.getColumnLabel(i + 1));
-      }
-      return columns;
-    } catch (SQLException e) {
-      return null;
+  private String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
+      throws SQLException {
+    ResultSetMetaData metaData = rs.getMetaData();
+    int columnCount = metaData.getColumnCount();
+    String[] columns = new String[columnCount];
+    for (int i = 0; i < columnCount; i++) {
+      columns[i] = baseFormat.to(CaseFormat.UPPER_CAMEL, metaData.getColumnLabel(i + 1));
     }
+    return columns;
   }
 
   @Override
@@ -284,7 +279,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
           new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
           rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE));
 
-      Function<ResultSet, String[]> lowerUnderscoreTransformer =
+      ResultSetTransformer<String[]> lowerUnderscoreTransformer =
           rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE);
       addSingleSqlTask(
           out,

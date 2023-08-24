@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -37,7 +38,6 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.function.Function;
 import javax.annotation.CheckForNull;
 import javax.annotation.CheckForSigned;
 import javax.annotation.Nonnull;
@@ -61,7 +61,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcTask.class);
 
   @CheckForNull private Class<? extends Enum<?>> headerClass;
-  @CheckForNull private Function<ResultSet, String[]> headerTransformer;
+  @CheckForNull private ResultSetTransformer<String[]> headerTransformer;
 
   public AbstractJdbcTask(@Nonnull String targetPath) {
     super(targetPath);
@@ -80,7 +80,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @Nonnull
   public AbstractJdbcTask<T> withHeaderTransformer(
-      @Nonnull Function<ResultSet, String[]> headerTransformer) {
+      @Nonnull ResultSetTransformer<String[]> headerTransformer) {
     this.headerTransformer = headerTransformer;
     return this;
   }
@@ -101,10 +101,10 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
                     "If a custom query has been specified please confirm the selected columns match"
                         + " the following: ",
                     StringUtils.join(headerClass.getEnumConstants(), ", "))));
-    } else if (headerTransformer == null || headerTransformer.apply(rs) == null) {
-      format = format.withHeader(rs);
+    } else if (headerTransformer != null) {
+      format = format.withHeader(headerTransformer.transform(rs));
     } else {
-      format = format.withHeader(headerTransformer.apply(rs));
+      format = format.withHeader(rs);
     }
     return format;
   }
