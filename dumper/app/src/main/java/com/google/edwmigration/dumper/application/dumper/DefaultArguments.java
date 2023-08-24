@@ -103,8 +103,11 @@ public class DefaultArguments {
 
     @Override
     public Duration convert(String value) {
-      for (AllowedUnits unit : AllowedUnits.values())
-        if (unit.commandLineFlag.equals(value)) return unit.chronoUnit.getDuration();
+      for (AllowedUnits unit : AllowedUnits.values()) {
+        if (unit.commandLineFlag.equals(value)) {
+          return unit.chronoUnit.getDuration();
+        }
+      }
       throw new ValueConversionException("Not a valid unit of interval: " + value);
     }
 
@@ -118,7 +121,7 @@ public class DefaultArguments {
       return Arrays.stream(AllowedUnits.values())
           .map(unit -> unit.commandLineFlag)
           .map(String::toLowerCase)
-          .collect(Collectors.joining("/"));
+          .collect(Collectors.joining(", "));
     }
   }
 
