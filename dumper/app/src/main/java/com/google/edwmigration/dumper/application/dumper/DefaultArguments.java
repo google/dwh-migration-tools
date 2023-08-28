@@ -120,7 +120,6 @@ public class DefaultArguments {
     public String valuePattern() {
       return Arrays.stream(AllowedUnits.values())
           .map(unit -> unit.commandLineFlag)
-          .map(String::toLowerCase)
           .collect(Collectors.joining(", "));
     }
   }
