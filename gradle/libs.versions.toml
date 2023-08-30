@@ -1,5 +1,5 @@
 # TO FORMAT: run ./gradlew versionCatalogFormat
-# TO UPGRADE: run ./gradlew versionCatalogUpdate (accepts an --interative flag)
+# TO UPGRADE: run ./gradlew versionCatalogUpdate (accepts an --interactive flag)
 [versions]
 apache-commons-compress = "1.18"
 apache-commons-csv = "1.9.0"
