@@ -37,90 +37,77 @@ configurations {
 }
 
 dependencies {
-    def autoserviceVersion = '1.0.1'
-    def autoValueVersion = '1.8.1'
-    def checkerFrameworkVersion = '3.19.0'
-    def jclOverSlf4jVersion = '1.7.14'
-    def jsr305Version = '3.0.2'
-    def junitVersion = '4.13.2'
-    def log4jOverSlf4jVersion = '1.7.14'
-    def scJcipVersion = '1.0-1'
-    def slf4jVersion = '1.7.30'
-    def logbackVersion = '1.2.11'
 
     constraints {
         // Define dependency versions as constraints
-        def guavaVersion = '32.1.2-jre'
-        implementation "com.google.guava:guava:$guavaVersion"
-        testFixturesImplementation "com.google.guava:guava:$guavaVersion"
-        def jacksonVersion = '2.14.2'
-        implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
-        implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion"
+        implementation libs.guava
+        testFixturesImplementation libs.guava
+        implementation libs.jackson.databind
+        implementation libs.jackson.dataformat.yaml
 
-        implementation "net.sf.jopt-simple:jopt-simple:5.0.4"
-        implementation "org.anarres.jdiagnostics:jdiagnostics:1.0.7"
-        implementation "commons-io:commons-io:2.11.0"
-        implementation "org.apache.commons:commons-csv:1.9.0"
-        implementation "org.apache.commons:commons-lang3:3.8.1"
-        testFixturesImplementation "org.apache.commons:commons-lang3:3.8.1"
-        def springVersion = '5.3.25'
-        implementation "org.springframework:spring-core:$springVersion"
-        implementation "org.springframework:spring-jdbc:$springVersion"
-        implementation "com.zaxxer:HikariCP:3.2.0"
-        implementation "com.swrve:rate-limited-logger:2.0.0"
+        implementation libs.jopt.simple
+        implementation libs.jdiagnostics
+        implementation libs.commons.io
+        implementation libs.apache.commons.csv
+        implementation libs.apache.commons.lang3
+        testFixturesImplementation libs.apache.commons.lang3
+        implementation libs.spring.core
+        implementation libs.spring.jdbc
+        implementation libs.hikaricp
+        implementation libs.rate.limited.logger
 
-        implementation "com.google.cloud:google-cloud-bigquery:2.23.2"
+        implementation libs.google.cloud.bigquery
 
-        implementation "org.yaml:snakeyaml:2.0" // 1.x has multiple vulnerabilities
+        implementation libs.snakeyaml
 
-        runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
-        runtimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
+        runtimeOnly libs.logback.classic
+        runtimeOnly libs.jcl.over.slf4j
 
-        runtimeOnly "org.postgresql:postgresql:42.5.4"
-        runtimeOnly "net.snowflake:snowflake-jdbc:3.13.20"
-        runtimeOnly "com.amazon.redshift:redshift-jdbc42:2.1.0.18"
-        runtimeOnly "com.amazonaws:aws-java-sdk-redshift:1.12.520"
+        runtimeOnly libs.postgresql
+        runtimeOnly libs.snowflake.jdbc
+        runtimeOnly libs.redshift.jdbc
+        runtimeOnly libs.aws.java.sdk.redshift
 
-        testFixturesApi "org.apache.commons:commons-compress:1.18"
-        testFixturesApi "commons-io:commons-io:2.11.0"
-        testImplementation "org.xerial:sqlite-jdbc:3.42.0.0"
-        testImplementation "com.github.stefanbirkner:system-rules:1.18.0"
-        testImplementation "org.postgresql:postgresql:42.5.4"
-        testImplementation "joda-time:joda-time:2.3"
+        testFixturesApi libs.apache.commons.compress
+        testFixturesApi libs.commons.io
+        testImplementation libs.sqlite.jdbc
+        testImplementation libs.system.rules
+        testImplementation libs.postgresql
+        testImplementation libs.joda.time
     }
 
-    implementation "org.slf4j:slf4j-api:$slf4jVersion"
-    testFixturesApi "org.slf4j:slf4j-api:$slf4jVersion"
-    implementation "com.google.code.findbugs:jsr305:$jsr305Version"
-    testFixturesImplementation "com.google.code.findbugs:jsr305:$jsr305Version"
-    testImplementation "com.google.code.findbugs:jsr305:$jsr305Version"
-    implementation "com.github.stephenc.jcip:jcip-annotations:$scJcipVersion"
-    testFixturesImplementation "com.github.stephenc.jcip:jcip-annotations:$scJcipVersion"
-    testImplementation "com.github.stephenc.jcip:jcip-annotations:$scJcipVersion"
+    implementation libs.slf4j.api
+    testFixturesApi libs.slf4j.api
+    implementation libs.jsr305
+    testFixturesImplementation libs.jsr305
+    testImplementation libs.jsr305
+    implementation libs.jcip.annotations
+    testFixturesImplementation libs.jcip.annotations
+    testImplementation libs.jcip.annotations
     // Ideally, implementation, but this annotation is preserved/exposed.
-    implementation "org.checkerframework:checker-qual:$checkerFrameworkVersion"
-    testFixturesImplementation "org.checkerframework:checker-qual:$checkerFrameworkVersion"
-    testImplementation "org.checkerframework:checker-qual:$checkerFrameworkVersion"
+    implementation libs.checker.qual
+    testFixturesImplementation libs.checker.qual
+    testImplementation libs.checker.qual
 
-    compileOnly "com.google.auto.value:auto-value-annotations:$autoValueVersion"
-    annotationProcessor "com.google.auto.value:auto-value:$autoValueVersion";
-    testFixturesCompileOnly "com.google.auto.value:auto-value-annotations:$autoValueVersion"
-    testFixturesAnnotationProcessor "com.google.auto.value:auto-value:$autoValueVersion";
-    testCompileOnly "com.google.auto.value:auto-value-annotations:$autoValueVersion"
-    testAnnotationProcessor "com.google.auto.value:auto-value:$autoValueVersion";
+    compileOnly libs.auto.value.annotations
+    annotationProcessor libs.auto.value
+    testFixturesCompileOnly libs.auto.value.annotations
+    testFixturesAnnotationProcessor libs.auto.value
+    testCompileOnly libs.auto.value.annotations
+    testAnnotationProcessor libs.auto.value
 
-    compileOnly "com.google.auto.service:auto-service:$autoserviceVersion"
-    annotationProcessor "com.google.auto.service:auto-service:$autoserviceVersion"
-    testFixturesCompileOnly "com.google.auto.service:auto-service:$autoserviceVersion"
-    testFixturesAnnotationProcessor "com.google.auto.service:auto-service:$autoserviceVersion"
-    testCompileOnly "com.google.auto.service:auto-service:$autoserviceVersion"
-    testAnnotationProcessor "com.google.auto.service:auto-service:$autoserviceVersion"
+    compileOnly libs.auto.service
+    annotationProcessor libs.auto.service
+    testFixturesCompileOnly libs.auto.service
+    testFixturesAnnotationProcessor libs.auto.service
+    testCompileOnly libs.auto.service
+    testAnnotationProcessor libs.auto.service
 
-    testImplementation "junit:junit:$junitVersion"
-    testRuntimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
-    testRuntimeOnly "org.slf4j:jul-to-slf4j:$slf4jVersion"
-    testRuntimeOnly "org.slf4j:log4j-over-slf4j:$log4jOverSlf4jVersion"
-    testRuntimeOnly "org.slf4j:jcl-over-slf4j:$jclOverSlf4jVersion"
+    testImplementation libs.junit
+    testRuntimeOnly libs.logback.classic
+    testRuntimeOnly libs.jul.to.slf4j
+    testRuntimeOnly libs.log4j.over.slf4j
+    testRuntimeOnly libs.jcl.over.slf4j
 }
 
 java {

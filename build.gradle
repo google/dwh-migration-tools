@@ -1,6 +1,7 @@
 plugins {
     id 'java-library-distribution'
-    id "com.github.ben-manes.versions" version "0.46.0"
+    alias libs.plugins.ben.manes.versions
+    alias libs.plugins.version.catalog.update
 }
 
 distributions {
@@ -18,5 +19,16 @@ distributions {
                 from it.tasks.installPublishedDist
             }
         }
+    }
+}
+
+versionCatalogUpdate {
+    sortByKey = true
+    pin {
+    }
+    keep {
+        keepUnusedVersions = true
+        keepUnusedLibraries = true
+        keepUnusedPlugins = true
     }
 }
