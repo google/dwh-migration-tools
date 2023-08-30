@@ -24,6 +24,16 @@ distributions {
 
 versionCatalogUpdate {
     sortByKey = true
+    def isNonStable = { String version -> // from the examples in ben-manes plugin; may need adjustment for the particular dependencies of this repo
+        def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { k -> version.toUpperCase().contains(k) }
+        def regex = /^[0-9,.v-]+(-r)?$/
+        return !stableKeyword && !(version ==~ regex)
+    }
+    tasks.named("dependencyUpdates").configure {
+        rejectVersionIf {
+            isNonStable(it.candidate.version)
+        }
+    }
     pin {
     }
     keep {
