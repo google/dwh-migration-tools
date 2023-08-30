@@ -9,8 +9,8 @@ repositories {
 }
 
 dependencies {
-    implementation "com.diffplug.spotless:spotless-plugin-gradle:6.4.1"
-    implementation "com.netflix.nebula:gradle-info-plugin:11.4.1"
-    implementation "com.github.jk1:gradle-license-report:1.17"
-    implementation "org.apache.commons:commons-csv:1.10.0"
+    implementation libs.spotless.plugin.gradle
+    implementation libs.gradle.info.plugin
+    implementation libs.gradle.license.report
+    implementation libs.apache.commons.csv
 }

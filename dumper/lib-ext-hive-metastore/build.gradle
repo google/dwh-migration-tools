@@ -19,7 +19,7 @@ import java.util.stream.Collectors
 
 plugins {
     id 'dwh-migration-dumper.java-library-conventions'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    alias libs.plugins.shadow
 }
 
 sourceSets {
@@ -27,18 +27,17 @@ sourceSets {
 }
 
 dependencies {
-    api "org.apache.thrift:libthrift:0.16.0"
-    implementation "com.google.guava:guava"
+    api libs.libthrift
+    implementation libs.guava
 
-    def hiveVersion = '3.1.2'
-    hive312RuntimeOnly "org.apache.hive:hive-common:$hiveVersion"
-    hive312RuntimeOnly "org.apache.hive:hive-exec:$hiveVersion"
-    hive312RuntimeOnly "org.apache.hive:hive-service:$hiveVersion"
-    hive312RuntimeOnly "org.apache.hive:hive-metastore:$hiveVersion"
-    hive312RuntimeOnly "org.apache.hive:hive-jdbc:$hiveVersion"
+    hive312RuntimeOnly libs.hive.common
+    hive312RuntimeOnly libs.hive.exec
+    hive312RuntimeOnly libs.hive.service
+    hive312RuntimeOnly libs.hive.metastore
+    hive312RuntimeOnly libs.hive.jdbc
     // For HiveServer2
-    hive312RuntimeOnly "org.apache.tez:tez-common:0.9.1"
-    hive312RuntimeOnly "org.apache.tez:tez-dag:0.9.1"
+    hive312RuntimeOnly libs.tez.common
+    hive312RuntimeOnly libs.tez.dag
     // Starting from version 1.8 the binding mechanics changed
     hive312RuntimeOnly("org.slf4j:slf4j-api") {
         version {

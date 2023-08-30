@@ -18,7 +18,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 buildscript {
     dependencies {
-        classpath 'com.github.jk1:gradle-license-report:1.17'
+        classpath libs.gradle.license.report
     }
 }
 
@@ -34,64 +34,61 @@ configurations {
     }
 }
 
-def mockitoVersion = '4.11.0'
-def autoValueVersion = '1.10.2'
-
 dependencies {
-    compileOnly "com.google.auto.value:auto-value-annotations:${autoValueVersion}"
+    compileOnly libs.auto.value.annotations
 
-    annotationProcessor "com.google.auto.value:auto-value:${autoValueVersion}"
+    annotationProcessor libs.auto.value
 
     implementation project(':dumper:lib-common')
     implementation project(':dumper:lib-dumper-spi')
     implementation project(':dumper:lib-ext-bigquery')
     implementation project(':dumper:lib-ext-hive-metastore')
 
-    implementation "com.google.guava:guava"
-    implementation "net.sf.jopt-simple:jopt-simple"
-    implementation "org.anarres.jdiagnostics:jdiagnostics"
-    implementation "commons-io:commons-io"
-    implementation "org.apache.commons:commons-csv"
-    implementation "org.apache.commons:commons-lang3"
-    implementation "org.springframework:spring-core"
-    implementation "org.springframework:spring-jdbc"
-    implementation "com.zaxxer:HikariCP"
-    implementation "com.swrve:rate-limited-logger"
-    implementation "com.fasterxml.jackson.core:jackson-databind"
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    implementation "com.google.cloud:google-cloud-bigquery"
-    implementation "com.google.cloud:google-cloud-nio:0.127.1"
-    implementation "com.google.cloud:google-cloud-kms:2.23.0"
-    implementation "org.apache.httpcomponents.client5:httpclient5:5.2.1"
+    implementation libs.guava
+    implementation libs.jopt.simple
+    implementation libs.jdiagnostics
+    implementation libs.commons.io
+    implementation libs.apache.commons.csv
+    implementation libs.apache.commons.lang3
+    implementation libs.spring.core
+    implementation libs.spring.jdbc
+    implementation libs.hikaricp
+    implementation libs.rate.limited.logger
+    implementation libs.jackson.databind
+    implementation libs.jackson.dataformat.yaml
+    implementation libs.google.cloud.bigquery
+    implementation libs.google.cloud.nio
+    implementation libs.google.cloud.kms
+    implementation libs.httpclient5
 
-    runtimeOnly "ch.qos.logback:logback-classic"
-    runtimeOnly "org.slf4j:jcl-over-slf4j"
+    runtimeOnly libs.logback.classic
+    runtimeOnly libs.jcl.over.slf4j
 
-    runtimeOnly "org.postgresql:postgresql"
-    runtimeOnly "net.snowflake:snowflake-jdbc"
-    runtimeOnly "com.amazon.redshift:redshift-jdbc42"
-    runtimeOnly "com.amazonaws:aws-java-sdk-redshift"
+    runtimeOnly libs.postgresql
+    runtimeOnly libs.snowflake.jdbc
+    runtimeOnly libs.redshift.jdbc
+    runtimeOnly libs.aws.java.sdk.redshift
 
     testFixturesApi testFixtures(project(':dumper:lib-common'))
 
-    testImplementation "org.xerial:sqlite-jdbc"
-    testImplementation "org.postgresql:postgresql"
-    testImplementation "com.github.stefanbirkner:system-rules"
-    testImplementation "joda-time:joda-time"
-    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
-    testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+    testImplementation libs.sqlite.jdbc
+    testImplementation libs.postgresql
+    testImplementation libs.system.rules
+    testImplementation libs.joda.time
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.junit.jupiter
 
 
     // Test Hive 3.1.2
     testImplementation project(path: ':dumper:lib-ext-hive-metastore', configuration: 'shadow')
     // Excluded during shadowJar step, same versions as exclusions
-    testRuntimeOnly "org.datanucleus:datanucleus-api-jdo:4.2.4"
-    testRuntimeOnly "org.datanucleus:datanucleus-core:4.1.17"
-    testRuntimeOnly "org.datanucleus:javax.jdo:3.2.0-m3"
-    testRuntimeOnly "org.datanucleus:datanucleus-rdbms:4.1.19"
+    testRuntimeOnly libs.datanucleus.api.jdo
+    testRuntimeOnly libs.datanucleus.core
+    testRuntimeOnly libs.datanucleus.javax.jdo
+    testRuntimeOnly libs.datanucleus.rdbms
 
-    sources "org.slf4j:jcl-over-slf4j:1.7.14@sources"
-    sources "ch.qos.logback:logback-classic:1.2.11@sources"
+    sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}@sources"
+    sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
 }
 
 startScripts {

@@ -1,0 +1,112 @@
+# TO FORMAT: run ./gradlew versionCatalogFormat
+# TO UPGRADE: run ./gradlew versionCatalogUpdate (accepts an --interative flag)
+
+[versions]
+ben-manes-versions-plugin = '0.46.0'
+auto-service = '1.0.1'
+auto-value = '1.10.2'
+guava = '32.1.2-jre'
+snakeyaml = '2.0' # 1.x has multiple vulnerabilities
+checkerframework = '3.19.0'
+jcl-over-slf4j = '1.7.14'
+system-rules = '1.18.0'
+jackson = '2.14.2'
+spring = '5.3.25'
+jsr305 = '3.0.2'
+junit = '4.13.2'
+log4j-over-slf4j = '1.7.14'
+jcip = '1.0-1'
+slf4j = '1.7.30'
+logback = '1.2.11'
+httpclient5 = '5.2.1'
+mockito = '4.11.0'
+google-cloud-bigquery = '2.23.2'
+google-cloud-nio = '0.127.1'
+google-cloud-kms = '2.23.0'
+postgresql = "42.5.4"
+snowflake = "3.13.20"
+apache-commons-csv = '1.9.0'
+joda-time = '2.3'
+apache-commons-lang3 = '3.8.1'
+jopt-simple = '5.0.4'
+sqlite-jdbc = '3.42.0.0'
+jdiagnostics = '1.0.7'
+tez = '0.9.1'
+commons-io = '2.11.0'
+hikaricp = '3.2.0'
+rate-limited-logger = '2.0.0'
+redshift-jdbc = '2.1.0.18'
+aws-java-sdk = '1.12.520'
+apache-commons-compress = '1.18'
+version-catalog-update-plugin = '0.8.1'
+datanucleus-api-jdo = '4.2.4'
+datanucleus-core = '4.1.17'
+datanucleus-javax-jdo = '3.2.0-m3'
+datanucleus-rdbms = '4.1.19'
+spotless-plugin-gradle = '6.4.1'
+gradle-info-plugin = '11.4.1'
+gradle-license-report = '1.17'
+hive = '3.1.2'
+shadow-plugin = '8.1.1'
+thrift = '0.16.0'
+
+[libraries]
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+auto-service = { group = "com.google.auto.service", name = "auto-service", version.ref = "auto-service"}
+jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305"}
+jcip-annotations =  {group = "com.github.stephenc.jcip", name = "jcip-annotations", version.ref = "jcip"}
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j"}
+checker-qual = { group = "org.checkerframework", name = "checker-qual", version.ref = "checkerframework" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+auto-value-annotations = { group = "com.google.auto.value", name = "auto-value-annotations", version.ref = "auto-value" }
+auto-value = { group = "com.google.auto.value", name = "auto-value", version.ref = "auto-value" }
+logback-classic = {group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+jul-to-slf4j = { group = "org.slf4j", name = "jul-to-slf4j", version.ref = "slf4j" }
+log4j-over-slf4j = { group = "org.slf4j", name = "log4j-over-slf4j", version.ref = "log4j-over-slf4j" }
+jcl-over-slf4j = { group = "org.slf4j", name = "jcl-over-slf4j", version.ref = "jcl-over-slf4j" }
+jackson-databind = { group = "com.fasterxml.jackson.core", name="jackson-databind", version.ref= "jackson" }
+jackson-dataformat-yaml = { group = "com.fasterxml.jackson.dataformat", name="jackson-dataformat-yaml", version.ref= "jackson" }
+spring-core = { group = "org.springframework", name = "spring-core", version.ref = "spring" }
+spring-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "spring" }
+snakeyaml = { group = "org.yaml", name = "snakeyaml", version.ref = "snakeyaml" }
+google-cloud-bigquery = { group = "com.google.cloud", name = "google-cloud-bigquery", version.ref = "google-cloud-bigquery" }
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+snowflake-jdbc = { group ="net.snowflake", name = "snowflake-jdbc", version.ref = "snowflake" }
+apache-commons-csv = {group = "org.apache.commons", name = "commons-csv", version.ref = "apache-commons-csv" }
+apache-commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version.ref = "apache-commons-lang3" }
+jopt-simple = { group = "net.sf.jopt-simple", name = "jopt-simple", version.ref = "jopt-simple" }
+jdiagnostics = {group = "org.anarres.jdiagnostics", name = "jdiagnostics", version.ref = "jdiagnostics" }
+commons-io = {group = "commons-io", name = "commons-io", version.ref = "commons-io"}
+hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikaricp" }
+rate-limited-logger = {group = "com.swrve", name = "rate-limited-logger", version.ref = "rate-limited-logger"}
+redshift-jdbc = { group = "com.amazon.redshift", name = "redshift-jdbc42", version.ref = "redshift-jdbc" }
+aws-java-sdk-redshift = { group = "com.amazonaws", name = "aws-java-sdk-redshift", version.ref = "aws-java-sdk" }
+apache-commons-compress = { group = "org.apache.commons", name = "commons-compress", version.ref = "apache-commons-compress" }
+joda-time = { group = "joda-time", name = "joda-time", version.ref = "joda-time" }
+sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref= "sqlite-jdbc" }
+system-rules = {group = "com.github.stefanbirkner", name = "system-rules", version.ref = "system-rules" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito"}
+mockito-junit-jupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito"}
+google-cloud-nio = { group = "com.google.cloud", name = "google-cloud-nio", version.ref = "google-cloud-nio" }
+google-cloud-kms = { group = "com.google.cloud", name = "google-cloud-kms", version.ref = "google-cloud-kms" }
+httpclient5= { group = "org.apache.httpcomponents.client5", name = "httpclient5", version.ref = "httpclient5" }
+datanucleus-api-jdo = { group = "org.datanucleus", name = "datanucleus-api-jdo", version.ref = "datanucleus-api-jdo" }
+datanucleus-core = { group = "org.datanucleus", name = "datanucleus-core", version.ref = "datanucleus-core" }
+datanucleus-javax-jdo = { group = "org.datanucleus", name = "javax.jdo", version.ref = "datanucleus-javax-jdo" }
+datanucleus-rdbms = { group = "org.datanucleus", name = "datanucleus-rdbms", version.ref = "datanucleus-rdbms" }
+spotless-plugin-gradle = {group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless-plugin-gradle"}
+gradle-info-plugin = {group = "com.netflix.nebula", name = "gradle-info-plugin", version.ref = "gradle-info-plugin"}
+gradle-license-report = {group = "com.github.jk1", name = "gradle-license-report", version.ref = "gradle-license-report"}
+hive-common = {group = "org.apache.hive", name = "hive-common", version.ref = "hive" }
+hive-exec = {group = "org.apache.hive", name = "hive-exec", version.ref = "hive" }
+hive-service = {group = "org.apache.hive", name = "hive-service", version.ref = "hive" }
+hive-metastore = {group = "org.apache.hive", name = "hive-metastore", version.ref = "hive" }
+hive-jdbc = {group = "org.apache.hive", name = "hive-jdbc", version.ref = "hive" }
+libthrift = { group = "org.apache.thrift", name = "libthrift", version.ref = "thrift" }
+tez-common = {group = "org.apache.tez", name = "tez-common", version.ref = "tez" }
+tez-dag = {group = "org.apache.tez", name = "tez-dag", version.ref = "tez" }
+
+[plugins]
+ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions-plugin" }
+shadow = {id = 'com.github.johnrengelman.shadow', version.ref = "shadow-plugin" }
+version-catalog-update = {id = "nl.littlerobots.version-catalog-update", version.ref = "version-catalog-update-plugin" }
