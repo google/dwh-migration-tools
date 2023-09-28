@@ -29,6 +29,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.TimeTruncator;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
@@ -42,6 +43,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -89,7 +91,10 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
             RedshiftMetadataDumpFormat.PgUser.ZIP_ENTRY_NAME, "select * from pg_user"));
 
     ZonedIntervalIterable intervals =
-        ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
+        ZonedIntervalIterableGenerator.forConnectorArguments(
+            arguments,
+            arguments.getQueryLogRotationFrequency(),
+            TimeTruncator.createBasedOnChronoUnit(ChronoUnit.HOURS));
 
     // DDL TEXT is simple ...
     // min() as there is no ANY() or SOME()
