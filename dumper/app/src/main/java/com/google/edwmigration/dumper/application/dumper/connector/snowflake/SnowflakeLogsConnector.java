@@ -345,7 +345,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
     // 7-day window allowed by the server-side function.
     ZonedIntervalIterable queryLogIntervals =
-        ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
+        ZonedIntervalIterableGenerator.forConnectorArguments(
+            arguments,
+            arguments.getQueryLogRotationFrequency(),
+            TimeTruncator.createBasedOnChronoUnit(ChronoUnit.HOURS));
     LOG.info("Exporting query log for " + queryLogIntervals);
 
     if (!arguments.isAssessment()) {
