@@ -258,7 +258,7 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<Duration> optionQueryLogRotationFrequency =
       parser
           .accepts(OPT_QUERY_LOG_ROTATION_FREQUENCY, "The interval for rotating query log files")
-          .withOptionalArg()
+          .withRequiredArg()
           .ofType(String.class)
           .withValuesConvertedBy(DurationValueConverter.INSTANCE)
           .defaultsTo(ChronoUnit.HOURS.getDuration());
