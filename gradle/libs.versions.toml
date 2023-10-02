@@ -2,7 +2,7 @@
 # TO UPGRADE: run ./gradlew versionCatalogUpdate (accepts an --interactive flag)
 [versions]
 apache-commons-compress = "1.18"
-apache-commons-csv = "1.9.0"
+apache-commons-csv = "1.10.0"
 apache-commons-lang3 = "3.8.1"
 auto-service = "1.0.1"
 auto-value = "1.10.2"
