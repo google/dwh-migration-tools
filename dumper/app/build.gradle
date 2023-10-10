@@ -298,15 +298,21 @@ licenseReport {
             ],
             "com.google.errorprone:error_prone_annotations": [
                 projectUrl: "https://github.com/google/error-prone",
+                licenseUrl: "https://raw.githubusercontent.com/google/error-prone/master/COPYING",
             ],
             "com.google.flatbuffers:flatbuffers-java": [
                 licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
+            ],
+            "com.google.guava:guava": [
+                    licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
             ],
             "com.google.guava:failureaccess": [
                 projectUrl: "https://github.com/google/guava",
                 licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
             ],
-            "com.google.guava:guava": [
+            "com.google.guava:guava-parent": [
+                projectUrl: "https://github.com/google/guava",
+                licenseName: "Apache License, Version 2.0",
                 licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
             ],
             "com.google.guava:listenablefuture": [
