@@ -277,8 +277,9 @@ public class MetadataDumper {
               }
             };
         TASK:
-        for (Task<?> task : tasks) {
-          runTask(runContext, state, task);
+        for (int i = 0; i < tasks.size(); i++) {
+          runTask(runContext, state, tasks.get(i));
+          log("Finished " + (i + 1) + " out of " + tasks.size() + " tasks");
         }
 
       } finally {
