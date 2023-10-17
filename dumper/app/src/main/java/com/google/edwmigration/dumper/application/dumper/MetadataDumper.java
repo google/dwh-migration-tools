@@ -71,6 +71,7 @@ import org.slf4j.LoggerFactory;
 public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
+  private static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
   private static final ImmutableMap<String, Connector> CONNECTORS;
 
@@ -279,7 +280,7 @@ public class MetadataDumper {
         TASK:
         for (int i = 0; i < tasks.size(); i++) {
           runTask(runContext, state, tasks.get(i));
-          LOG.info("Finished " + (i + 1) + " out of " + tasks.size() + " tasks");
+          PROGRESS_LOG.info("Finished " + (i + 1) + " out of " + tasks.size() + " tasks");
         }
 
       } finally {
