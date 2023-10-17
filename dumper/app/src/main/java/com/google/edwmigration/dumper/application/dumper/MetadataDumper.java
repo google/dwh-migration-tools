@@ -90,6 +90,10 @@ public class MetadataDumper {
 
   private boolean exitOnError = false;
 
+  private int totalNumberOfTasks = 0;
+  private int numberOfCompletedTasks = 0;
+  long startTimeInMilliseconds = 0;
+
   public MetadataDumper withExitOnError(boolean exitOnError) {
     this.exitOnError = exitOnError;
     return this;
@@ -129,6 +133,32 @@ public class MetadataDumper {
   @CheckForNull
   private <T> T runTask(
       @Nonnull TaskRunContext context, @Nonnull TaskSetState.Impl state, Task<T> task)
+      throws MetadataDumperUsageException {
+    T t = executeTask(context, state, task);
+
+    numberOfCompletedTasks += 1;
+
+    long averageTimePerTaskInMillisecond =
+        (System.currentTimeMillis() - startTimeInMilliseconds) / numberOfCompletedTasks;
+
+    int percentFinished = numberOfCompletedTasks * 100 / totalNumberOfTasks;
+    String progressMessage = percentFinished + "% Completed";
+    PROGRESS_LOG.info(progressMessage);
+    LOG.info(progressMessage);
+
+    int remainingTasks = totalNumberOfTasks - numberOfCompletedTasks;
+    long estimatedTimeInMinutes = averageTimePerTaskInMillisecond * remainingTasks / (60 * 1000);
+
+    if (estimatedTimeInMinutes > 0 && numberOfCompletedTasks > 10) {
+      String estimationMessage = estimatedTimeInMinutes + " minutes remaining";
+      PROGRESS_LOG.info(estimationMessage);
+      LOG.info(estimationMessage);
+    }
+
+    return t;
+  }
+
+  private static <T> T executeTask(TaskRunContext context, Impl state, Task<T> task)
       throws MetadataDumperUsageException {
     try {
       CHECK:
@@ -278,9 +308,14 @@ public class MetadataDumper {
               }
             };
         TASK:
-        for (int i = 0; i < tasks.size(); i++) {
-          runTask(runContext, state, tasks.get(i));
-          PROGRESS_LOG.info("Finished " + (i + 1) + " out of " + tasks.size() + " tasks");
+        {
+          totalNumberOfTasks = countTasks(tasks);
+          startTimeInMilliseconds = System.currentTimeMillis();
+          numberOfCompletedTasks = 0;
+
+          for (Task<?> task : tasks) {
+            runTask(runContext, state, task);
+          }
         }
 
       } finally {
@@ -298,6 +333,13 @@ public class MetadataDumper {
       logStatusSummary(state);
       System.out.println(STARS);
     }
+  }
+
+  private int countTasks(List<Task<?>> tasks) {
+    return tasks.stream()
+        .map(task -> task instanceof TaskGroup ? countTasks(((TaskGroup) task).getTasks()) : 1)
+        .reduce(Integer::sum)
+        .orElse(0);
   }
 
   private String getOutputFileLocation(Connector connector, ConnectorArguments arguments) {
