@@ -22,6 +22,7 @@
 
 	<root level="${LOG_LEVEL:-debug}">
 		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="FILE" />
 	</root>
 
 </configuration>

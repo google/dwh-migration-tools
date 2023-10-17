@@ -19,3 +19,4 @@ node_modules
 /*.zip
 /*.tmp
 .DS_Store
+/dumper.log
