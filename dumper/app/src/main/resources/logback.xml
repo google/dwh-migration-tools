@@ -17,7 +17,7 @@
 		<appender-ref ref="CONSOLE" />
 	</root>
 
-	<timestamp key="currentTime" datePattern="HH:mm:ss_SSS"/>
+	<timestamp key="currentTime" datePattern="yyyy-MM-dd_HHmmss"/>
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
 		<file>progress.log.${currentTime}</file>
 		<encoder>
