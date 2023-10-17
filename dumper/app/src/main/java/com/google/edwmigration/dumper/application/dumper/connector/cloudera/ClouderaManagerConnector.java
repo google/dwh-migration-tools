@@ -16,6 +16,8 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractConne
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
+import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.util.List;
@@ -27,6 +29,7 @@ import javax.annotation.Nonnull;
 @RespectsArgumentPassword
 @RespectsArgumentUri
 public class ClouderaManagerConnector extends AbstractConnector {
+  public static final String FORMAT_NAME = "cloudera-manager.dump.zip";
 
   public ClouderaManagerConnector() {
     super("cloudera-manager");
@@ -42,7 +45,10 @@ public class ClouderaManagerConnector extends AbstractConnector {
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
     out.add(new ClouderaHostsTask());
+    out.add(new ClouderaClustersTask());
   }
 
   @Nonnull

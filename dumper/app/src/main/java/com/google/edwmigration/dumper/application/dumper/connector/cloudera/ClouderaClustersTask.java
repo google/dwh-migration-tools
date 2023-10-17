@@ -1,9 +1,9 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 
 import com.cloudera.api.swagger.AllHostsResourceApi;
+import com.cloudera.api.swagger.ClustersResourceApi;
 import com.cloudera.api.swagger.HostsResourceApi;
-import com.cloudera.api.swagger.client.ApiClient;
-import com.cloudera.api.swagger.model.ApiHost;
+import com.cloudera.api.swagger.model.ApiClusterList;
 import com.cloudera.api.swagger.model.ApiHostList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -14,10 +14,10 @@ import java.nio.charset.StandardCharsets;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-public class ClouderaHostsTask extends AbstractClouderaTask{
+public class ClouderaClustersTask extends AbstractClouderaTask{
 
-  public ClouderaHostsTask() {
-    super("hosts.json");
+  public ClouderaClustersTask() {
+    super("clusters.json");
   }
 
   @CheckForNull
@@ -25,9 +25,9 @@ public class ClouderaHostsTask extends AbstractClouderaTask{
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
     ClouderaHandle h = (ClouderaHandle) handle;
-    HostsResourceApi api = new HostsResourceApi(h.getClient());
+    ClustersResourceApi api = new ClustersResourceApi(h.getClient());
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      ApiHostList list = api.readHosts(null, null, null);
+      ApiClusterList list = api.readClusters(null, null);
       CoreMetadataDumpFormat.MAPPER.writeValue(writer, list);
     }
     return null;
