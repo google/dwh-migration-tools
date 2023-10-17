@@ -279,7 +279,7 @@ public class MetadataDumper {
         TASK:
         for (int i = 0; i < tasks.size(); i++) {
           runTask(runContext, state, tasks.get(i));
-          log("Finished " + (i + 1) + " out of " + tasks.size() + " tasks");
+          LOG.info("Finished " + (i + 1) + " out of " + tasks.size() + " tasks");
         }
 
       } finally {
