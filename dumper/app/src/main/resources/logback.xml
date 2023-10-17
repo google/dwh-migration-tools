@@ -17,4 +17,16 @@
 		<appender-ref ref="CONSOLE" />
 	</root>
 
+	<timestamp key="currentTime" datePattern="yyyy-MM-dd_HHmmss"/>
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<file>progress.log.${currentTime}</file>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="progress-logger" additivity="false">
+		<appender-ref ref="FILE" />
+	</logger>
+
 </configuration>
