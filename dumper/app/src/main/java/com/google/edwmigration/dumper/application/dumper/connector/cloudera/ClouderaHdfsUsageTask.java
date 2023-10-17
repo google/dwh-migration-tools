@@ -1,10 +1,12 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 
-import com.cloudera.api.swagger.AllHostsResourceApi;
 import com.cloudera.api.swagger.ClustersResourceApi;
-import com.cloudera.api.swagger.HostsResourceApi;
+import com.cloudera.api.swagger.ServicesResourceApi;
+import com.cloudera.api.swagger.model.ApiCluster;
 import com.cloudera.api.swagger.model.ApiClusterList;
-import com.cloudera.api.swagger.model.ApiHostList;
+import com.cloudera.api.swagger.model.ApiHdfsUsageReport;
+import com.cloudera.api.swagger.model.ApiService;
+import com.cloudera.api.swagger.model.ApiServiceList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -14,9 +16,9 @@ import java.nio.charset.StandardCharsets;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-public class ClouderaClustersTask extends AbstractClouderaTask{
+public class ClouderaHdfsUsageTask extends AbstractClouderaTask{
 
-  public ClouderaClustersTask() {
+  public ClouderaHdfsUsageTask() {
     super("clusters.json");
   }
 
@@ -25,9 +27,17 @@ public class ClouderaClustersTask extends AbstractClouderaTask{
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
     ClouderaHandle h = (ClouderaHandle) handle;
-    ApiClusterList list = getClusters(h);
+    ApiClusterList clusters = getClusters(h);
+    ServicesResourceApi api = new ServicesResourceApi(h.getClient());
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      CoreMetadataDumpFormat.MAPPER.writeValue(writer, list);
+      for (ApiCluster cluster : clusters.getItems()) {
+        ApiServiceList services = api.readServices(cluster.getName(), null);
+        for (ApiService service : services.getItems()) {
+          ApiHdfsUsageReport report = api.getHdfsUsageReport(cluster.getName(), service.getName(), null, null, null, null);
+          // TODO: Dump JSONL.
+        }
+      }
+      // CoreMetadataDumpFormat.MAPPER.writeValue(writer, list);
     }
     return null;
   }

@@ -49,6 +49,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new FormatTask(FORMAT_NAME));
     out.add(new ClouderaHostsTask());
     out.add(new ClouderaClustersTask());
+    out.add(new ClouderaHdfsUsageTask());
   }
 
   @Nonnull

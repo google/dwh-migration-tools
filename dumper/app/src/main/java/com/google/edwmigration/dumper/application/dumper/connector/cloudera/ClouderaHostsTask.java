@@ -26,8 +26,8 @@ public class ClouderaHostsTask extends AbstractClouderaTask{
       throws Exception {
     ClouderaHandle h = (ClouderaHandle) handle;
     HostsResourceApi api = new HostsResourceApi(h.getClient());
+    ApiHostList list = api.readHosts(null, null, null);
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      ApiHostList list = api.readHosts(null, null, null);
       CoreMetadataDumpFormat.MAPPER.writeValue(writer, list);
     }
     return null;
