@@ -25,7 +25,7 @@
 		</encoder>
 	</appender>
 
-	<logger name="progress-logger" additivity="false">
+	<logger name="progress-logger">
 		<appender-ref ref="FILE" />
 	</logger>
 

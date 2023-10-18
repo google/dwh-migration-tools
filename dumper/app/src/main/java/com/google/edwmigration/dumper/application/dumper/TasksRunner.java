@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
@@ -30,7 +31,11 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +45,9 @@ public class TasksRunner {
   private static final Logger LOG = LoggerFactory.getLogger(TasksRunner.class);
   private static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
+  private AtomicInteger atomicNumberOfCompletedTasks;
   private final int totalNumberOfTasks;
-  private final long startTimeInMilliseconds;
+  private final Stopwatch stopwatch;
 
   private final TaskRunContext context;
   private final TaskSetState.Impl state;
@@ -54,10 +60,11 @@ public class TasksRunner {
       @Nonnull TaskSetState.Impl state,
       List<Task<?>> tasks) {
     context = createContext(sinkFactory, handle, threadPoolSize, state);
-    totalNumberOfTasks = countTasks(tasks);
-    startTimeInMilliseconds = System.currentTimeMillis();
     this.state = state;
     this.tasks = tasks;
+    totalNumberOfTasks = countTasks(tasks);
+    stopwatch = Stopwatch.createStarted();
+    atomicNumberOfCompletedTasks = new AtomicInteger();
   }
 
   private TaskRunContext createContext(
@@ -70,37 +77,47 @@ public class TasksRunner {
 
       @Override
       public <T> T runChildTask(Task<T> task) throws MetadataDumperUsageException {
-        return runTask(task);
+        return handleTask(task);
       }
     };
   }
 
   public void run() throws MetadataDumperUsageException {
-    int numberOfCompletedTasks = 0;
-
     for (Task<?> task : tasks) {
-      runTask(task);
-      numberOfCompletedTasks += 1;
-      logProgress(numberOfCompletedTasks);
+      handleTask(task);
     }
   }
 
-  private void logProgress(int numberOfCompletedTasks) {
+  @CheckForNull
+  private <T> T handleTask(Task<T> task) throws MetadataDumperUsageException {
+    T t = runTask(task);
+    if (!(task instanceof TaskGroup)) {
+      atomicNumberOfCompletedTasks.getAndIncrement();
+    }
+    logProgress();
+    return t;
+  }
+
+  private void logProgress() {
+    int numberOfCompletedTasks = atomicNumberOfCompletedTasks.get();
+
     long averageTimePerTaskInMillisecond =
-        (System.currentTimeMillis() - startTimeInMilliseconds) / numberOfCompletedTasks;
+        stopwatch.elapsed(TimeUnit.MILLISECONDS) / numberOfCompletedTasks;
 
     int percentFinished = numberOfCompletedTasks * 100 / totalNumberOfTasks;
     String progressMessage = percentFinished + "% Completed";
-    PROGRESS_LOG.info(progressMessage);
-    LOG.info(progressMessage);
 
     int remainingTasks = totalNumberOfTasks - numberOfCompletedTasks;
-    long estimatedTimeInMinutes = averageTimePerTaskInMillisecond * remainingTasks / (60 * 1000);
+    long remainingTimeInMillis = averageTimePerTaskInMillisecond * remainingTasks;
 
-    if (estimatedTimeInMinutes > 0 && numberOfCompletedTasks > 10) {
-      String estimationMessage = estimatedTimeInMinutes + " minutes remaining";
-      PROGRESS_LOG.info(estimationMessage);
-      LOG.info(estimationMessage);
+    if (numberOfCompletedTasks > 10) {
+      String estimationMessage =
+          "Approximately "
+              + DurationFormatUtils.formatDurationWords(remainingTimeInMillis, true, true)
+              + " remaining";
+      PROGRESS_LOG.info(progressMessage + "; " + estimationMessage);
+    } else {
+      PROGRESS_LOG.info(progressMessage);
     }
   }
 
@@ -155,8 +172,7 @@ public class TasksRunner {
 
   private int countTasks(List<Task<?>> tasks) {
     return tasks.stream()
-        .map(task -> task instanceof TaskGroup ? countTasks(((TaskGroup) task).getTasks()) : 1)
-        .reduce(Integer::sum)
-        .orElse(0);
+        .mapToInt(task -> task instanceof TaskGroup ? countTasks(((TaskGroup) task).getTasks()) : 1)
+        .sum();
   }
 }
