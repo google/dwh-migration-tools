@@ -115,7 +115,7 @@ public class TasksRunner {
     if (numberOfCompletedTasks > 10) {
       progressMessage =
           progressMessage
-              + ". ETA: "
+              + ". ETC: "
               + DurationFormatUtils.formatDurationWords(remainingTimeInMillis, true, true);
     }
     PROGRESS_LOG.info(progressMessage);
