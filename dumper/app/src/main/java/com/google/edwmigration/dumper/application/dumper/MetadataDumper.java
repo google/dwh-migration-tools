@@ -64,7 +64,6 @@ import org.slf4j.LoggerFactory;
 public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
-  private static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
   private static final ImmutableMap<String, Connector> CONNECTORS;
 
@@ -82,10 +81,6 @@ public class MetadataDumper {
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
   private boolean exitOnError = false;
-
-  private int totalNumberOfTasks = 0;
-  private int numberOfCompletedTasks = 0;
-  long startTimeInMilliseconds = 0;
 
   public MetadataDumper withExitOnError(boolean exitOnError) {
     this.exitOnError = exitOnError;
@@ -182,7 +177,6 @@ public class MetadataDumper {
         print(task, 1);
       }
     } else {
-
       Stopwatch stopwatch = Stopwatch.createStarted();
       TaskSetState.Impl state = new TaskSetState.Impl();
 

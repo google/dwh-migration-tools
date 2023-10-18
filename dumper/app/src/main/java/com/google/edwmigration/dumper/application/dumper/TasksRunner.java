@@ -45,7 +45,7 @@ public class TasksRunner {
   private static final Logger LOG = LoggerFactory.getLogger(TasksRunner.class);
   private static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
-  private AtomicInteger atomicNumberOfCompletedTasks;
+  private AtomicInteger numberOfCompletedTasks;
   private final int totalNumberOfTasks;
   private final Stopwatch stopwatch;
 
@@ -64,7 +64,7 @@ public class TasksRunner {
     this.tasks = tasks;
     totalNumberOfTasks = countTasks(tasks);
     stopwatch = Stopwatch.createStarted();
-    atomicNumberOfCompletedTasks = new AtomicInteger();
+    numberOfCompletedTasks = new AtomicInteger();
   }
 
   private TaskRunContext createContext(
@@ -92,17 +92,19 @@ public class TasksRunner {
   private <T> T handleTask(Task<T> task) throws MetadataDumperUsageException {
     T t = runTask(task);
     if (!(task instanceof TaskGroup)) {
-      atomicNumberOfCompletedTasks.getAndIncrement();
+      numberOfCompletedTasks.getAndIncrement();
     }
     logProgress();
     return t;
   }
 
   private void logProgress() {
-    int numberOfCompletedTasks = atomicNumberOfCompletedTasks.get();
+    int numberOfCompletedTasks = this.numberOfCompletedTasks.get();
 
     long averageTimePerTaskInMillisecond =
-        stopwatch.elapsed(TimeUnit.MILLISECONDS) / numberOfCompletedTasks;
+        numberOfCompletedTasks == 0
+            ? 0
+            : stopwatch.elapsed(TimeUnit.MILLISECONDS) / numberOfCompletedTasks;
 
     int percentFinished = numberOfCompletedTasks * 100 / totalNumberOfTasks;
     String progressMessage = percentFinished + "% Completed";
@@ -111,14 +113,12 @@ public class TasksRunner {
     long remainingTimeInMillis = averageTimePerTaskInMillisecond * remainingTasks;
 
     if (numberOfCompletedTasks > 10) {
-      String estimationMessage =
-          "Approximately "
-              + DurationFormatUtils.formatDurationWords(remainingTimeInMillis, true, true)
-              + " remaining";
-      PROGRESS_LOG.info(progressMessage + "; " + estimationMessage);
-    } else {
-      PROGRESS_LOG.info(progressMessage);
+      progressMessage =
+          progressMessage
+              + ". ETA: "
+              + DurationFormatUtils.formatDurationWords(remainingTimeInMillis, true, true);
     }
+    PROGRESS_LOG.info(progressMessage);
   }
 
   private <T> T runTask(Task<T> task) throws MetadataDumperUsageException {
