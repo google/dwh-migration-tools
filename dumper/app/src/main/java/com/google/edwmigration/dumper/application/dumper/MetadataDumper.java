@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
@@ -29,7 +28,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
@@ -37,7 +35,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskResult;
-import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
@@ -45,12 +42,10 @@ import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,10 +55,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +64,6 @@ import org.slf4j.LoggerFactory;
 public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
-  private static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
   private static final ImmutableMap<String, Connector> CONNECTORS;
 
@@ -124,64 +116,6 @@ public class MetadataDumper {
       return;
     }
     run(connector, arguments);
-  }
-
-  @CheckForNull
-  private <T> T runTask(
-      @Nonnull TaskRunContext context, @Nonnull TaskSetState.Impl state, Task<T> task)
-      throws MetadataDumperUsageException {
-    try {
-      CHECK:
-      {
-        TaskState ts = state.getTaskState(task);
-        Preconditions.checkState(
-            ts == TaskState.NOT_STARTED, "TaskState was bad: " + ts + " for " + task);
-      }
-
-      PRECONDITION:
-      for (Task.Condition condition : task.getConditions()) {
-        if (!condition.evaluate(state)) {
-          LOG.debug("Skipped " + task.getName() + " because " + condition.toSkipReason());
-          state.setTaskResult(task, TaskState.SKIPPED, null);
-          return null;
-        }
-      }
-
-      RUN:
-      {
-        T value = task.run(context);
-        state.setTaskResult(task, TaskState.SUCCEEDED, value);
-        return value;
-      }
-    } catch (Exception e) {
-      // MetadataDumperUsageException should be fatal.
-      if (e instanceof MetadataDumperUsageException) throw (MetadataDumperUsageException) e;
-      if (e instanceof SQLException && e.getCause() instanceof MetadataDumperUsageException)
-        throw (MetadataDumperUsageException) e.getCause();
-      // TaskGroup is an attempt to get rid of this condition.
-      // We might need an additional TaskRunner / TaskSupport with an overrideable handleException
-      // method instead of this runTask() method.
-      if (!task.handleException(e)) LOG.warn("Task failed: " + task + ": " + e, e);
-      state.setTaskException(task, TaskState.FAILED, e);
-      try {
-        OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
-        sink.asCharSink(StandardCharsets.UTF_8)
-            .writeLines(
-                Arrays.asList(
-                    task.toString(),
-                    "******************************",
-                    String.valueOf(new DumperDiagnosticQuery(e).call())));
-      } catch (Exception f) {
-        LOG.warn("Exception-recorder failed:  " + f, f);
-      }
-    }
-    return null;
-  }
-
-  @EnsuresNonNullIf(expression = "#1", result = false)
-  private static boolean isNullOrEmpty(@CheckForNull Object[] in) {
-    if (in == null) return true;
-    return in.length == 0;
   }
 
   private void print(@Nonnull Task<?> task, int indent) {
@@ -265,24 +199,7 @@ public class MetadataDumper {
 
         Handle handle = closer.register(connector.open(arguments));
 
-        TaskRunContext runContext =
-            new TaskRunContext(sinkFactory, handle, arguments.getThreadPoolSize()) {
-              @Override
-              public TaskState getTaskState(Task<?> task) {
-                return state.getTaskState(task);
-              }
-
-              @Override
-              public <T> T runChildTask(Task<T> task) throws MetadataDumperUsageException {
-                return runTask(this, state, task);
-              }
-            };
-        TASK:
-        for (int i = 0; i < tasks.size(); i++) {
-          runTask(runContext, state, tasks.get(i));
-          PROGRESS_LOG.info("Finished " + (i + 1) + " out of " + tasks.size() + " tasks");
-        }
-
+        new TasksRunner(sinkFactory, handle, arguments.getThreadPoolSize(), state, tasks).run();
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);
