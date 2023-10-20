@@ -113,7 +113,7 @@ public class TasksRunner {
     int remainingTasks = totalNumberOfTasks - numberOfCompletedTasks;
     long remainingTimeInMillis = averageTimePerTaskInMillisecond * remainingTasks;
 
-    if (numberOfCompletedTasks > 10) {
+    if (numberOfCompletedTasks > 10 && remainingTasks > 0) {
       progressMessage += ". ETC: ~" + formatDuration(remainingTimeInMillis);
     }
 
