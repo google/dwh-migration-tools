@@ -114,7 +114,7 @@ public class TasksRunner {
     long remainingTimeInMillis = averageTimePerTaskInMillisecond * remainingTasks;
 
     if (numberOfCompletedTasks > 10) {
-      progressMessage += ". ETC: " + formatDuration(remainingTimeInMillis);
+      progressMessage += ". ETC: ~" + formatDuration(remainingTimeInMillis);
     }
 
     PROGRESS_LOG.info(progressMessage);
@@ -122,7 +122,7 @@ public class TasksRunner {
 
   private String formatDuration(long durationMillis) {
     String duration = DurationFormatUtils.formatDuration(durationMillis, "''H' hours 'm' minutes'");
-    duration = StringUtils.replaceOnce(duration, "0 hours 0 minutes", "less than a minute");
+    duration = StringUtils.replaceOnce(duration, "0 hours 0 minutes", "less than one minute");
     duration = StringUtils.replaceOnce(duration, "0 hours ", StringUtils.EMPTY);
     duration = StringUtils.replaceOnce(duration, " 0 minutes", StringUtils.EMPTY);
     duration = StringUtils.replaceOnce(duration, "1 hours", "1 hour");
