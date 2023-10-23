@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,13 +113,21 @@ public class TasksRunner {
     int remainingTasks = totalNumberOfTasks - numberOfCompletedTasks;
     long remainingTimeInMillis = averageTimePerTaskInMillisecond * remainingTasks;
 
-    if (numberOfCompletedTasks > 10) {
-      progressMessage =
-          progressMessage
-              + ". ETA: "
-              + DurationFormatUtils.formatDurationWords(remainingTimeInMillis, true, true);
+    if (numberOfCompletedTasks > 10 && remainingTasks > 0) {
+      progressMessage += ". ETC: ~" + formatDuration(remainingTimeInMillis);
     }
+
     PROGRESS_LOG.info(progressMessage);
+  }
+
+  private String formatDuration(long durationMillis) {
+    String duration = DurationFormatUtils.formatDuration(durationMillis, "''H' hours 'm' minutes'");
+    duration = StringUtils.replaceOnce(duration, "0 hours 0 minutes", "less than one minute");
+    duration = StringUtils.replaceOnce(duration, "0 hours ", StringUtils.EMPTY);
+    duration = StringUtils.replaceOnce(duration, " 0 minutes", StringUtils.EMPTY);
+    duration = StringUtils.replaceOnce(duration, "1 hours", "1 hour");
+    duration = StringUtils.replaceOnce(duration, "1 minutes", "1 minute");
+    return duration;
   }
 
   private <T> T runTask(Task<T> task) throws MetadataDumperUsageException {
