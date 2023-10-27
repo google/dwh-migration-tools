@@ -37,7 +37,10 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   private final Duration duration;
 
   /* pp */ ZonedIntervalIterable(
-      @Nonnull ZonedDateTime start, @Nonnull ZonedDateTime end, @Nonnull Duration duration) {
+      @Nonnull ZonedDateTime start,
+      @Nonnull ZonedDateTime end,
+      @Nonnull Duration duration,
+      TimeTruncator truncator) {
     this.duration = Preconditions.checkNotNull(duration, "Duration was null.");
     Preconditions.checkNotNull(start, "Start was null.");
     Preconditions.checkNotNull(end, "End was null.");
@@ -45,8 +48,10 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
     Preconditions.checkState(
         start.isBefore(end), "Start date %s must precede end date %s", start, end);
 
-    this.start = start;
-    this.end = end;
+    ZonedInterval expandedInterval = truncator.apply(new ZonedInterval(start, end));
+
+    this.start = expandedInterval.getStart();
+    this.end = expandedInterval.getEndExclusive();
   }
 
   @Nonnull

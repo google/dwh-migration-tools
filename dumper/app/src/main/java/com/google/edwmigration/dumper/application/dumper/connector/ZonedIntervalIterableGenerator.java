@@ -70,8 +70,9 @@ public class ZonedIntervalIterableGenerator {
   @Nonnull
   public static ZonedIntervalIterable forConnectorArguments(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
+    Duration duration = Duration.ofHours(1);
     return ZonedIntervalIterableGenerator.forConnectorArguments(
-        arguments, Duration.ofHours(1), TimeTruncator.createBasedOnChronoUnit(ChronoUnit.HOURS));
+        arguments, duration, TimeTruncator.createBasedOnDuration(duration));
   }
 
   /**
@@ -139,7 +140,7 @@ public class ZonedIntervalIterableGenerator {
 
   private static ZonedIntervalIterable createZonedIntervals(
       ZonedDateTime start, ZonedDateTime end, Duration duration, TimeTruncator truncator) {
-    return new ZonedIntervalIterable(truncator.apply(start), truncator.apply(end), duration);
+    return new ZonedIntervalIterable(start, end, duration, truncator);
   }
 
   private static boolean isValidDuration(Duration duration) {

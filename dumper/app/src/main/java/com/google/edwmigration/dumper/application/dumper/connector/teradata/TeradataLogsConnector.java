@@ -39,8 +39,8 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -160,11 +160,10 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     // Beware of Teradata SQLSTATE HY000. See issue #4126.
     // Most likely caused by some operation (equality?) being performed on a datum which is too long
     // for a varchar.
+    Duration rotationDuration = arguments.getQueryLogRotationFrequency();
     ZonedIntervalIterable intervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(
-            arguments,
-            arguments.getQueryLogRotationFrequency(),
-            TimeTruncator.createBasedOnChronoUnit(ChronoUnit.HOURS));
+            arguments, rotationDuration, TimeTruncator.createBasedOnDuration(rotationDuration));
     LOG.info("Exporting query logs for '{}'", intervals);
     SharedState queryLogsState = new SharedState();
     SharedState utilityLogsState = new SharedState();

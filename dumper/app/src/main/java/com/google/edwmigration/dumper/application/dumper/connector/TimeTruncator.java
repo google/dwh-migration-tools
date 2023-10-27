@@ -16,23 +16,36 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /** @author ishmum */
-public interface TimeTruncator extends Function<ZonedDateTime, ZonedDateTime> {
+public interface TimeTruncator extends Function<ZonedInterval, ZonedInterval> {
 
   @Nonnull
-  ZonedDateTime apply(ZonedDateTime time);
+  ZonedInterval apply(ZonedInterval interval);
 
-  static TimeTruncator createBasedOnChronoUnit(ChronoUnit unit) {
+  static TimeTruncator createBasedOnDuration(Duration duration) {
     return new TimeTruncator() {
       @Nonnull
       @Override
-      public ZonedDateTime apply(ZonedDateTime time) {
-        return time.truncatedTo(unit);
+      public ZonedInterval apply(ZonedInterval interval) {
+        ChronoUnit chronoUnit = convert(duration);
+        ZonedDateTime endTime = interval.getEndInclusive().truncatedTo(chronoUnit);
+        endTime = endTime == interval.getEndInclusive() ? endTime : endTime.plus(duration);
+        return new ZonedInterval(interval.getStart().truncatedTo(chronoUnit), endTime);
+      }
+
+      private ChronoUnit convert(Duration duration) {
+        return Stream.of(ChronoUnit.HOURS, ChronoUnit.DAYS)
+            .filter(unit -> Objects.equals(unit.getDuration(), duration))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Unsupported duration: " + duration));
       }
     };
   }
