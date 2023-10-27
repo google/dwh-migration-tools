@@ -16,6 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +39,25 @@ public class Main {
     metadataDumper.run(args);
   }
 
+  private static void printErrorMessages(Throwable e) {
+    new SummaryPrinter()
+        .printSummarySection(
+            linePrinter -> {
+              linePrinter.println("ERROR");
+              ImmutableList<String> errorMessages =
+                  Throwables.getCausalChain(e).stream()
+                      .map(Throwable::getMessage)
+                      .collect(toImmutableList());
+              for (int i = 0; i < errorMessages.size(); i++) {
+                String errorMessage = errorMessages.get(i);
+                if (i > 0) {
+                  errorMessage = "Caused by: " + errorMessage;
+                }
+                linePrinter.println(errorMessage);
+              }
+            });
+  }
+
   public static void main(String... args) throws Exception {
     try {
       Main main = new Main(new MetadataDumper());
@@ -46,7 +69,12 @@ public class Main {
       main.run(args);
     } catch (MetadataDumperUsageException e) {
       LOG.error(e.getMessage());
-      for (String msg : e.getMessages()) LOG.error(msg);
+      for (String msg : e.getMessages()) {
+        LOG.error(msg);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      printErrorMessages(e);
     }
   }
 }

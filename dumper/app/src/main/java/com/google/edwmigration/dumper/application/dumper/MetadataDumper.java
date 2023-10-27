@@ -47,7 +47,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -69,13 +68,11 @@ public class MetadataDumper {
 
   static {
     ImmutableMap.Builder<String, Connector> builder = ImmutableMap.builder();
-    for (Connector connector : ServiceLoader.load(Connector.class))
+    for (Connector connector : ServiceLoader.load(Connector.class)) {
       builder.put(connector.getName().toUpperCase(), connector);
+    }
     CONNECTORS = builder.build();
   }
-
-  private static final String STARS =
-      "*******************************************************************";
 
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
@@ -121,7 +118,9 @@ public class MetadataDumper {
   private void print(@Nonnull Task<?> task, int indent) {
     System.out.println(repeat(' ', indent * 2) + task);
     if (task instanceof TaskGroup) {
-      for (Task<?> subtask : ((TaskGroup) task).getTasks()) print(subtask, indent + 1);
+      for (Task<?> subtask : ((TaskGroup) task).getTasks()) {
+        print(subtask, indent + 1);
+      }
     }
   }
 
@@ -159,7 +158,9 @@ public class MetadataDumper {
     tasks.add(new ArgumentsTask(arguments));
     {
       File sqlScript = arguments.getSqlScript();
-      if (sqlScript != null) tasks.add(new JdbcRunSQLScript(sqlScript));
+      if (sqlScript != null) {
+        tasks.add(new JdbcRunSQLScript(sqlScript));
+      }
     }
     connector.addTasksTo(tasks, arguments);
 
@@ -209,11 +210,11 @@ public class MetadataDumper {
         LOG.debug("Dumper took " + stopwatch + ".");
       }
 
-      printTaskResults(state);
-      printDumperSummary(connector, outputFileLocation);
-      checkRequiredTaskSuccess(state, outputFileLocation);
-      logStatusSummary(state);
-      System.out.println(STARS);
+      SummaryPrinter summaryPrinter = new SummaryPrinter();
+      printTaskResults(summaryPrinter, state);
+      printDumperSummary(summaryPrinter, connector, outputFileLocation);
+      checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
+      logStatusSummary(summaryPrinter, state);
     }
   }
 
@@ -256,65 +257,61 @@ public class MetadataDumper {
     }
   }
 
-  private void printDumperSummary(Connector connector, String outputFileName) {
+  private void printDumperSummary(
+      SummaryPrinter summaryPrinter, Connector connector, String outputFileName) {
     if (connector instanceof MetadataConnector) {
-      log("Metadata has been saved to " + outputFileName);
+      summaryPrinter.printSummarySection("Metadata has been saved to " + outputFileName);
     } else if (connector instanceof LogsConnector) {
-      log("Logs have been saved to " + outputFileName);
+      summaryPrinter.printSummarySection("Logs have been saved to " + outputFileName);
     }
   }
 
-  private void printTaskResults(TaskSetState.Impl state) {
-    List<String> lines = new ArrayList<>();
-    lines.add("Task Summary:");
-    state
-        .getTaskResultMap()
-        .forEach(
-            (task, result) ->
-                lines.add(
-                    String.format(
-                        "Task %s (%s) %s%s",
-                        result.getState(),
-                        task.getCategory(),
-                        task,
-                        (result.getException() == null)
-                            ? ""
-                            : String.format(": %s", result.getException()))));
-    log(lines);
+  private void printTaskResults(SummaryPrinter summaryPrinter, TaskSetState.Impl state) {
+    summaryPrinter.printSummarySection(
+        linePrinter -> {
+          linePrinter.println("Task Summary:");
+          state
+              .getTaskResultMap()
+              .forEach(
+                  (task, result) ->
+                      linePrinter.println(
+                          "Task %s (%s) %s%s",
+                          result.getState(),
+                          task.getCategory(),
+                          task,
+                          (result.getException() == null)
+                              ? ""
+                              : String.format(": %s", result.getException())));
+        });
   }
 
-  private void checkRequiredTaskSuccess(Impl state, String outputFileName) {
+  private void checkRequiredTaskSuccess(
+      SummaryPrinter summaryPrinter, Impl state, String outputFileName) {
     long requiredTasksNotSucceeded =
         state.getTaskResultMap().entrySet().stream()
             .filter(e -> TaskCategory.REQUIRED.equals(e.getKey().getCategory()))
             .filter(e -> TaskState.FAILED.equals(e.getValue().getState()))
             .count();
     if (requiredTasksNotSucceeded > 0) {
-      log(
-          "ERROR: " + requiredTasksNotSucceeded + " required task[s] failed.",
-          "Output, including debugging information, has been saved to " + outputFileName);
+      summaryPrinter.printSummarySection(
+          linePrinter -> {
+            linePrinter.println("ERROR: %s required task[s] failed.", requiredTasksNotSucceeded);
+            linePrinter.println(
+                "Output, including debugging information, has been saved to '%s'.", outputFileName);
+          });
       if (exitOnError) {
-        System.out.println(STARS);
         System.exit(1);
       }
     }
   }
 
-  private void logStatusSummary(TaskSetState.Impl state) {
-    List<String> lines = new ArrayList<>();
-    state.getTaskResultMap().values().stream()
-        .map(TaskResult::getState)
-        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-        .forEach((key, value) -> lines.add(String.format("%d TASKS %s", value, key)));
-    log(lines);
-  }
-
-  private void log(String... lines) {
-    log(Arrays.asList(lines));
-  }
-
-  private void log(List<String> lines) {
-    System.out.println(STARS);
-    lines.stream().map(s -> "* " + s).forEach(System.out::println);
+  private void logStatusSummary(SummaryPrinter summaryPrinter, TaskSetState.Impl state) {
+    summaryPrinter.printSummarySection(
+        linePrinter -> {
+          state.getTaskResultMap().values().stream()
+              .map(TaskResult::getState)
+              .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+              .forEach((key, value) -> linePrinter.println("%d TASKS %s", value, key));
+        });
   }
 }
