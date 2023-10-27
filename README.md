@@ -4,6 +4,9 @@
 This project contains a collection of tools related to the [BigQuery Migration
 Service](https://cloud.google.com/bigquery/docs/migration-intro).
 
+For an end-to-end migration BigQuery migration solution, use [Data Migration Tool (DMT)](https://github.com/GoogleCloudPlatform/data-migration-tool).
+DMT currently supports Redshift, TeraData, Hive, and Oracle as data sources and BigQuery as the destination.
+
 **[Download the latest cross-platform release zip `dwh-migration-tools-vX.X.X.zip`.](https://github.com/google/dwh-migration-tools/releases/latest)**
 
 The currently available tools are:
