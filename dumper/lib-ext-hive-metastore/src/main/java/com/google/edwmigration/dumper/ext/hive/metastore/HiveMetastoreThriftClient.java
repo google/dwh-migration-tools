@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
+import org.apache.thrift.TConfiguration;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
@@ -131,7 +132,14 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       // the TTransport here with a TSaslClientTransport parameterized accordingly. This hasn't been
       // done yet
       // in the interest of expediency.
-      TTransport transport = new TSocket(host, port);
+      TTransport transport =
+          new TSocket(
+              new TConfiguration(
+                  Integer.MAX_VALUE,
+                  TConfiguration.DEFAULT_MAX_FRAME_SIZE,
+                  TConfiguration.DEFAULT_RECURSION_DEPTH),
+              host,
+              port);
       TProtocol protocol = new TBinaryProtocol(transport);
       transport.open();
 
@@ -139,7 +147,8 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       if (supportedVersionMappings.containsKey(requestedVersionString)) {
         if (debug)
           LOG.debug(
-              "The request for Hive metastore Thrift client version '{}' is satisfiable; building it now.",
+              "The request for Hive metastore Thrift client version '{}' is satisfiable; building"
+                  + " it now.",
               requestedVersionString);
         client = supportedVersionMappings.get(requestedVersionString).provide(name, protocol);
       } else {
@@ -153,9 +162,10 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
         if (unavailableClientBehavior == UnavailableClientVersionBehavior.FALLBACK) {
           LOG.warn(
               messagePrefix
-                  + " The caller requested fallback behavior, so a client compiled against a superset Thrift specification will be used instead. "
-                  + "If you encounter an error when using the fallback client, please contact CompilerWorks support and provide "
-                  + "the originally requested version number.");
+                  + " The caller requested fallback behavior, so a client compiled against a"
+                  + " superset Thrift specification will be used instead. If you encounter an error"
+                  + " when using the fallback client, please contact CompilerWorks support and"
+                  + " provide the originally requested version number.");
           client = new HiveMetastoreThriftClient_Superset(name, protocol);
         } else {
           throw new UnsupportedOperationException(
