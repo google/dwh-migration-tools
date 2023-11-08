@@ -24,9 +24,9 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
- * Expands a given interval based on conditions. MUST enclose the original interval i.e. -
- * resultingInterval.getStart() <= originalInterval.getStart() && originalInterval.getEnd() <=
- * resultingInterval.getEnd()
+ * Expands a given interval based on conditions. MUST enclose the original interval i.e. -<br>
+ * resultingInterval.getStart() <= originalInterval.getStart() &&<br>
+ * originalInterval.getEnd() <= resultingInterval.getEnd()
  *
  * @author ishmum
  */
@@ -41,12 +41,12 @@ public interface IntervalExpander extends Function<ZonedInterval, ZonedInterval>
    * <p>start time - 11 pm Saturday<br>
    * end time - 1 am Sunday<br>
    * rotation basis - daily<br>
-   * actual dump - 2 files => all of Saturday + all of Sunday<br>
+   * actual dump - 2 files => all of Saturday + all of Sunday
    *
    * <p>start time - 11 pm Saturday<br>
    * end time - 1 am Sunday<br>
    * rotation basis - hourly<br>
-   * actual dump - 2 files => (11 pm -> 12 am) of Saturday + (12 am -> 1 am) of Sunday<br>
+   * actual dump - 2 files => (11 pm -> 12 am) of Saturday + (12 am -> 1 am) of Sunday
    */
   static IntervalExpander createBasedOnDuration(Duration duration) {
     return new IntervalExpander() {
