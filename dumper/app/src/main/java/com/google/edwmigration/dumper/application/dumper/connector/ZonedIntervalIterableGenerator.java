@@ -42,7 +42,7 @@ public class ZonedIntervalIterableGenerator {
       @Nonnull ZonedDateTime now,
       @Nonnegative long unitCount,
       @Nonnull Duration duration,
-      @Nonnull TimeTruncator truncator) {
+      @Nonnull IntervalExpander truncator) {
     return createZonedIntervals(
         now.minus(Duration.ofSeconds(unitCount * duration.getSeconds())), now, duration, truncator);
   }
@@ -51,7 +51,9 @@ public class ZonedIntervalIterableGenerator {
   @Nonnull
   @VisibleForTesting
   /* pp */ static ZonedIntervalIterable forTimeUnitsUntilNow(
-      @Nonnegative long unitCount, @Nonnull Duration duration, @Nonnull TimeTruncator truncator) {
+      @Nonnegative long unitCount,
+      @Nonnull Duration duration,
+      @Nonnull IntervalExpander truncator) {
     return forTimeUnitsUntil(ZonedDateTime.now(ZoneOffset.UTC), unitCount, duration, truncator);
   }
 
@@ -69,7 +71,7 @@ public class ZonedIntervalIterableGenerator {
       throws MetadataDumperUsageException {
     Duration duration = Duration.ofHours(1);
     return ZonedIntervalIterableGenerator.forConnectorArguments(
-        arguments, duration, TimeTruncator.createBasedOnDuration(duration));
+        arguments, duration, IntervalExpander.createBasedOnDuration(duration));
   }
 
   /**
@@ -88,7 +90,7 @@ public class ZonedIntervalIterableGenerator {
   public static ZonedIntervalIterable forConnectorArguments(
       @Nonnull ConnectorArguments arguments,
       @Nonnull Duration duration,
-      @Nonnull TimeTruncator truncator)
+      @Nonnull IntervalExpander truncator)
       throws MetadataDumperUsageException {
     Preconditions.checkArgument(
         isValidDuration(duration),
@@ -136,7 +138,7 @@ public class ZonedIntervalIterableGenerator {
   }
 
   private static ZonedIntervalIterable createZonedIntervals(
-      ZonedDateTime start, ZonedDateTime end, Duration duration, TimeTruncator truncator) {
+      ZonedDateTime start, ZonedDateTime end, Duration duration, IntervalExpander truncator) {
     return new ZonedIntervalIterable(start, end, duration, truncator);
   }
 

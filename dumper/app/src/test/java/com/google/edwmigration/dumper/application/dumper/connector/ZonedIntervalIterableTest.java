@@ -81,17 +81,17 @@ public class ZonedIntervalIterableTest {
             zonedParserStart.convert(from),
             zonedParserEnd.convert(to),
             duration,
-            TimeTruncator.createBasedOnDuration(duration));
+            IntervalExpander.createBasedOnDuration(duration));
     testIterable(expected, iterable);
   }
 
   @Test
   public void testHours() {
     Duration durationOfDay = Duration.ofDays(1);
-    TimeTruncator dayTruncator = TimeTruncator.createBasedOnDuration(durationOfDay);
+    IntervalExpander dayTruncator = IntervalExpander.createBasedOnDuration(durationOfDay);
 
     Duration durationOfHour = Duration.ofDays(1);
-    TimeTruncator hourTruncator = TimeTruncator.createBasedOnDuration(durationOfDay);
+    IntervalExpander hourTruncator = IntervalExpander.createBasedOnDuration(durationOfDay);
 
     testIterable(
         169,
@@ -140,6 +140,9 @@ public class ZonedIntervalIterableTest {
     // Log warning on truncation
     assertIterations(37, "2020-01-01", "2020-01-02 12:15:00.999", ChronoUnit.HOURS);
     assertIterations(37, "2020-01-01 00:12:04.500", "2020-01-02 12:15:00.999", ChronoUnit.HOURS);
+
+    assertIterations(2, "2020-01-01", "2020-01-02 12:15:00.999", ChronoUnit.DAYS);
+    assertIterations(2, "2020-01-01 23:59:59.500", "2020-01-02 12:15:00.999", ChronoUnit.DAYS);
   }
 
   @Test(expected = IllegalStateException.class)
@@ -231,7 +234,8 @@ public class ZonedIntervalIterableTest {
     ZonedInterval expandedInterval = new ZonedInterval(expandedStartTime, expandedEndTime);
 
     // Act
-    ZonedInterval result = TimeTruncator.createBasedOnDuration(Duration.ofHours(1)).apply(interval);
+    ZonedInterval result =
+        IntervalExpander.createBasedOnDuration(Duration.ofHours(1)).apply(interval);
 
     // Assert
     assertEquals(expandedInterval, result);
@@ -248,7 +252,8 @@ public class ZonedIntervalIterableTest {
     ZonedInterval expandedInterval = new ZonedInterval(expandedStartTime, expandedEndTime);
 
     // Act
-    ZonedInterval result = TimeTruncator.createBasedOnDuration(Duration.ofDays(1)).apply(interval);
+    ZonedInterval result =
+        IntervalExpander.createBasedOnDuration(Duration.ofDays(1)).apply(interval);
 
     // Assert
     assertEquals(expandedInterval, result);

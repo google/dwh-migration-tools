@@ -28,8 +28,8 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.IntervalExpander;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.TimeTruncator;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
@@ -93,7 +93,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
     Duration rotationDuration = arguments.getQueryLogRotationFrequency();
     ZonedIntervalIterable intervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(
-            arguments, rotationDuration, TimeTruncator.createBasedOnDuration(rotationDuration));
+            arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
 
     // DDL TEXT is simple ...
     // min() as there is no ANY() or SOME()

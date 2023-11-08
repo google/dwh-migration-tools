@@ -40,7 +40,7 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
       @Nonnull ZonedDateTime start,
       @Nonnull ZonedDateTime end,
       @Nonnull Duration duration,
-      TimeTruncator truncator) {
+      IntervalExpander truncator) {
     this.duration = Preconditions.checkNotNull(duration, "Duration was null.");
     Preconditions.checkNotNull(start, "Start was null.");
     Preconditions.checkNotNull(end, "End was null.");

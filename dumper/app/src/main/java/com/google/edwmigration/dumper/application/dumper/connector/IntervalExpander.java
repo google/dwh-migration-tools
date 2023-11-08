@@ -19,31 +19,49 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
-/** @author ishmum */
-public interface TimeTruncator extends Function<ZonedInterval, ZonedInterval> {
+/**
+ * Expands a given interval based on conditions. MUST engulf the original interval i.e. -
+ * resultingInterval.getStart() <= originalInterval.getStart() && originalInterval.getEnd() <=
+ * resultingInterval.getEnd()
+ *
+ * @author ishmum
+ */
+public interface IntervalExpander extends Function<ZonedInterval, ZonedInterval> {
 
   @Nonnull
   ZonedInterval apply(ZonedInterval interval);
 
-  static TimeTruncator createBasedOnDuration(Duration duration) {
-    return new TimeTruncator() {
+  /**
+   * Expands to match the duration. e.g. :
+   *
+   * <p>start time - 11 pm Saturday<br>
+   * end time - 1 am Sunday<br>
+   * rotation basis - daily<br>
+   * actual dump - 2 files => all of Saturday + all of Sunday<br>
+   *
+   * <p>start time - 11 pm Saturday<br>
+   * end time - 1 am Sunday<br>
+   * rotation basis - hourly<br>
+   * actual dump - 2 files => (11 pm -> 12 am) of Saturday + (12 am -> 1 am) of Sunday<br>
+   */
+  static IntervalExpander createBasedOnDuration(Duration duration) {
+    return new IntervalExpander() {
       @Nonnull
       @Override
       public ZonedInterval apply(ZonedInterval interval) {
         ChronoUnit chronoUnit = convert(duration);
         ZonedDateTime endTime = interval.getEndInclusive().truncatedTo(chronoUnit);
-        endTime = endTime == interval.getEndInclusive() ? endTime : endTime.plus(duration);
+        endTime = endTime.equals(interval.getEndInclusive()) ? endTime : endTime.plus(duration);
         return new ZonedInterval(interval.getStart().truncatedTo(chronoUnit), endTime);
       }
 
       private ChronoUnit convert(Duration duration) {
         return Stream.of(ChronoUnit.HOURS, ChronoUnit.DAYS)
-            .filter(unit -> Objects.equals(unit.getDuration(), duration))
+            .filter(unit -> duration.equals(unit.getDuration()))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Unsupported duration: " + duration));
       }
