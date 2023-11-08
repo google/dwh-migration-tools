@@ -44,10 +44,7 @@ public class ZonedIntervalIterableGenerator {
       @Nonnull Duration duration,
       @Nonnull TimeTruncator truncator) {
     return createZonedIntervals(
-        now.minus(Duration.ofSeconds(unitCount * duration.getSeconds())),
-        now.plus(duration),
-        duration,
-        truncator);
+        now.minus(Duration.ofSeconds(unitCount * duration.getSeconds())), now, duration, truncator);
   }
 
   /** Returns an Iterable after truncating current time with `TimeTruncator` */

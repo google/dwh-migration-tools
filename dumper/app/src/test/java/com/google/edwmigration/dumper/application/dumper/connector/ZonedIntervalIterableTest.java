@@ -94,13 +94,13 @@ public class ZonedIntervalIterableTest {
     TimeTruncator hourTruncator = TimeTruncator.createBasedOnDuration(durationOfDay);
 
     testIterable(
-        170,
+        169,
         ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24 * 7, durationOfDay, dayTruncator));
     testIterable(
-        9, ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, durationOfDay, dayTruncator));
+        8, ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, durationOfDay, dayTruncator));
 
     testIterable(
-        2,
+        1,
         ZonedIntervalIterableGenerator.forTimeUnitsUntil(
             ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")),
             1,
@@ -119,7 +119,7 @@ public class ZonedIntervalIterableTest {
     // next dump, assuming nightly dumps at midnight + some seconds/minutes
     int daysToExport = 1;
     testIterable(
-        26,
+        25,
         ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(
             24 * daysToExport, durationOfHour, hourTruncator));
   }
@@ -149,13 +149,11 @@ public class ZonedIntervalIterableTest {
 
   @Test
   public void testForLogStartAndLogEnd() throws Throwable {
-    LocalDate fourDaysAgo = LocalDate.now().minusDays(4);
-
-    int daysExpected = 2;
-    LocalDate requestedStart = fourDaysAgo;
-    LocalDate requestedEnd = requestedStart.plusDays(daysExpected);
+    LocalDate requestedStart = LocalDate.now().minusDays(4);
+    LocalDate requestedEnd = requestedStart.plusDays(2);
     ZonedDateTime expectedStart = requestedStart.atStartOfDay(ZoneOffset.UTC);
     ZonedDateTime expectedEnd = requestedEnd.plusDays(1).atStartOfDay(ZoneOffset.UTC);
+
     ConnectorArguments arguments =
         new ConnectorArguments(
             new String[] {
@@ -166,6 +164,7 @@ public class ZonedIntervalIterableTest {
               "--connector",
               "foobar"
             });
+
     checkIntervalForArguments(expectedStart, expectedEnd, arguments);
   }
 
@@ -202,8 +201,7 @@ public class ZonedIntervalIterableTest {
     int daysExpected = 5;
     ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
     ZonedDateTime expectedStart = nowAtUTC.minusDays(daysExpected).truncatedTo(ChronoUnit.HOURS);
-    ZonedDateTime expectedEnd =
-        nowAtUTC.truncatedTo(ChronoUnit.HOURS).plusHours(2).truncatedTo(ChronoUnit.HOURS);
+    ZonedDateTime expectedEnd = nowAtUTC.plusHours(1).truncatedTo(ChronoUnit.HOURS);
     ConnectorArguments arguments =
         new ConnectorArguments(
             new String[] {"--query-log-days", "" + daysExpected, "--connector", "foobar"});
@@ -216,7 +214,7 @@ public class ZonedIntervalIterableTest {
     int daysExpected = 7;
     ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
     ZonedDateTime expectedStart = nowAtUTC.minusDays(daysExpected).truncatedTo(ChronoUnit.HOURS);
-    ZonedDateTime expectedEnd = nowAtUTC.plusHours(2).truncatedTo(ChronoUnit.HOURS);
+    ZonedDateTime expectedEnd = nowAtUTC.plusHours(1).truncatedTo(ChronoUnit.HOURS);
     ConnectorArguments arguments = new ConnectorArguments(new String[] {"--connector", "foobar"});
 
     checkIntervalForArguments(expectedStart, expectedEnd, arguments);
