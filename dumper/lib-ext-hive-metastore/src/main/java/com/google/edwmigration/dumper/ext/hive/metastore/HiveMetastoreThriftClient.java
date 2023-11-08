@@ -147,8 +147,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       if (supportedVersionMappings.containsKey(requestedVersionString)) {
         if (debug)
           LOG.debug(
-              "The request for Hive metastore Thrift client version '{}' is satisfiable; building"
-                  + " it now.",
+              "The request for Hive metastore Thrift client version '{}' is satisfiable; building it now.",
               requestedVersionString);
         client = supportedVersionMappings.get(requestedVersionString).provide(name, protocol);
       } else {
@@ -162,10 +161,9 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
         if (unavailableClientBehavior == UnavailableClientVersionBehavior.FALLBACK) {
           LOG.warn(
               messagePrefix
-                  + " The caller requested fallback behavior, so a client compiled against a"
-                  + " superset Thrift specification will be used instead. If you encounter an error"
-                  + " when using the fallback client, please contact CompilerWorks support and"
-                  + " provide the originally requested version number.");
+                  + " The caller requested fallback behavior, so a client compiled against a superset Thrift specification will be used instead. "
+                  + "If you encounter an error when using the fallback client, please contact CompilerWorks support and provide "
+                  + "the originally requested version number.");
           client = new HiveMetastoreThriftClient_Superset(name, protocol);
         } else {
           throw new UnsupportedOperationException(
