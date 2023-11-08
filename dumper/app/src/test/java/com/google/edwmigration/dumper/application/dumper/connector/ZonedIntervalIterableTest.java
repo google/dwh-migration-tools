@@ -88,16 +88,16 @@ public class ZonedIntervalIterableTest {
   @Test
   public void testHours() {
     Duration durationOfDay = Duration.ofDays(1);
-    IntervalExpander dayTruncator = IntervalExpander.createBasedOnDuration(durationOfDay);
+    IntervalExpander dayExpander = IntervalExpander.createBasedOnDuration(durationOfDay);
 
     Duration durationOfHour = Duration.ofDays(1);
-    IntervalExpander hourTruncator = IntervalExpander.createBasedOnDuration(durationOfDay);
+    IntervalExpander hourExpander = IntervalExpander.createBasedOnDuration(durationOfDay);
 
     testIterable(
         169,
-        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24 * 7, durationOfDay, dayTruncator));
+        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24 * 7, durationOfDay, dayExpander));
     testIterable(
-        8, ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, durationOfDay, dayTruncator));
+        8, ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, durationOfDay, dayExpander));
 
     testIterable(
         1,
@@ -105,7 +105,7 @@ public class ZonedIntervalIterableTest {
             ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")),
             1,
             durationOfHour,
-            hourTruncator));
+            hourExpander));
     // Testing from 2019-12-31T23:00Z[UTC] to 2020-01-01T01:00Z[UTC] every Hours
     // Interval is 2019-12-31T23:00Z[UTC]...2019-12-31T23:59:59.999Z[UTC]
     // Interval is 2020-01-01T00:00Z[UTC]...2020-01-01T00:59:59.999Z[UTC]
@@ -121,7 +121,7 @@ public class ZonedIntervalIterableTest {
     testIterable(
         25,
         ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(
-            24 * daysToExport, durationOfHour, hourTruncator));
+            24 * daysToExport, durationOfHour, hourExpander));
   }
 
   @Test
