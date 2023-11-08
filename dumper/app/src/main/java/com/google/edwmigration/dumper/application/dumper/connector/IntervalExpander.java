@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /**
- * Expands a given interval based on conditions. MUST engulf the original interval i.e. -
+ * Expands a given interval based on conditions. MUST enclose the original interval i.e. -
  * resultingInterval.getStart() <= originalInterval.getStart() && originalInterval.getEnd() <=
  * resultingInterval.getEnd()
  *
