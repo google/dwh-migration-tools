@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.edwmigration.dumper.application.dumper.DurationFormatter.formatApproximateDuration;
+import static java.lang.Math.max;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -29,14 +32,12 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,32 +103,19 @@ public class TasksRunner {
   private void logProgress() {
     int numberOfCompletedTasks = this.numberOfCompletedTasks.get();
 
-    long averageTimePerTaskInMillisecond =
-        numberOfCompletedTasks == 0
-            ? 0
-            : stopwatch.elapsed(TimeUnit.MILLISECONDS) / numberOfCompletedTasks;
+    Duration averageTimePerTask = stopwatch.elapsed().dividedBy(max(1, numberOfCompletedTasks));
 
     int percentFinished = numberOfCompletedTasks * 100 / totalNumberOfTasks;
     String progressMessage = percentFinished + "% Completed";
 
     int remainingTasks = totalNumberOfTasks - numberOfCompletedTasks;
-    long remainingTimeInMillis = averageTimePerTaskInMillisecond * remainingTasks;
+    Duration remainingTime = averageTimePerTask.multipliedBy(remainingTasks);
 
     if (numberOfCompletedTasks > 10 && remainingTasks > 0) {
-      progressMessage += ". ETC: ~" + formatDuration(remainingTimeInMillis);
+      progressMessage += ". ETA: " + formatApproximateDuration(remainingTime);
     }
 
     PROGRESS_LOG.info(progressMessage);
-  }
-
-  private String formatDuration(long durationMillis) {
-    String duration = DurationFormatUtils.formatDuration(durationMillis, "''H' hours 'm' minutes'");
-    duration = StringUtils.replaceOnce(duration, "0 hours 0 minutes", "less than one minute");
-    duration = StringUtils.replaceOnce(duration, "0 hours ", StringUtils.EMPTY);
-    duration = StringUtils.replaceOnce(duration, " 0 minutes", StringUtils.EMPTY);
-    duration = StringUtils.replaceOnce(duration, "1 hours", "1 hour");
-    duration = StringUtils.replaceOnce(duration, "1 minutes", "1 minute");
-    return duration;
   }
 
   private <T> T runTask(Task<T> task) throws MetadataDumperUsageException {
