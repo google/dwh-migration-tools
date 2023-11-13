@@ -25,8 +25,8 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
+import com.google.edwmigration.dumper.application.dumper.connector.IntervalExpander;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.TimeTruncator;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
@@ -40,7 +40,6 @@ import com.google.errorprone.annotations.ForOverride;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -344,11 +343,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // <deleted>.
     // Snowflake will refuse (CURRENT_TIMESTAMP - 168 hours) because it is beyond the
     // 7-day window allowed by the server-side function.
+    Duration rotationDuration = arguments.getQueryLogRotationFrequency();
     ZonedIntervalIterable queryLogIntervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(
-            arguments,
-            arguments.getQueryLogRotationFrequency(),
-            TimeTruncator.createBasedOnChronoUnit(ChronoUnit.HOURS));
+            arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
     LOG.info("Exporting query log for " + queryLogIntervals);
 
     if (!arguments.isAssessment()) {
@@ -366,8 +364,9 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
 
     List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
+    Duration duration = Duration.ofDays(1);
     ZonedIntervalIterableGenerator.forConnectorArguments(
-            arguments, Duration.ofDays(1), TimeTruncator.createBasedOnChronoUnit(ChronoUnit.DAYS))
+            arguments, duration, IntervalExpander.createBasedOnDuration(duration))
         .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
   }
 

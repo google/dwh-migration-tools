@@ -43,11 +43,6 @@ public class ZonedIntervalIterableTest {
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterableTest.class);
 
-  private static final TimeTruncator TRUNCATOR =
-      TimeTruncator.createBasedOnChronoUnit(ChronoUnit.SECONDS);
-
-  private static final ZonedDateTime START_TIME = ZonedDateTime.parse("2007-12-03T10:15:30+00:00");
-
   private static final ConnectorArguments.ZonedParser zonedParserStart =
       new ConnectorArguments.ZonedParser(
           ConnectorArguments.ZonedParser.DEFAULT_PATTERN,
@@ -80,27 +75,37 @@ public class ZonedIntervalIterableTest {
 
   private void assertIterations(
       int expected, @Nonnull String from, @Nonnull String to, ChronoUnit chronoUnit) {
+    Duration duration = chronoUnit.getDuration();
     ZonedIntervalIterable iterable =
         new ZonedIntervalIterable(
-            zonedParserStart.convert(from), zonedParserEnd.convert(to), chronoUnit.getDuration());
+            zonedParserStart.convert(from),
+            zonedParserEnd.convert(to),
+            duration,
+            IntervalExpander.createBasedOnDuration(duration));
     testIterable(expected, iterable);
   }
 
   @Test
   public void testHours() {
-    testIterable(
-        169,
-        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24 * 7, Duration.ofDays(1), TRUNCATOR));
-    testIterable(
-        8, ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, Duration.ofDays(1), TRUNCATOR));
+    Duration durationOfDay = Duration.ofDays(1);
+    IntervalExpander dayExpander = IntervalExpander.createBasedOnDuration(durationOfDay);
+
+    Duration durationOfHour = Duration.ofDays(1);
+    IntervalExpander hourExpander = IntervalExpander.createBasedOnDuration(durationOfDay);
 
     testIterable(
-        2,
+        169,
+        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24 * 7, durationOfDay, dayExpander));
+    testIterable(
+        8, ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, durationOfDay, dayExpander));
+
+    testIterable(
+        1,
         ZonedIntervalIterableGenerator.forTimeUnitsUntil(
             ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")),
             1,
-            Duration.ofHours(1),
-            TRUNCATOR));
+            durationOfHour,
+            hourExpander));
     // Testing from 2019-12-31T23:00Z[UTC] to 2020-01-01T01:00Z[UTC] every Hours
     // Interval is 2019-12-31T23:00Z[UTC]...2019-12-31T23:59:59.999Z[UTC]
     // Interval is 2020-01-01T00:00Z[UTC]...2020-01-01T00:59:59.999Z[UTC]
@@ -116,7 +121,7 @@ public class ZonedIntervalIterableTest {
     testIterable(
         25,
         ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(
-            24 * daysToExport, Duration.ofHours(1), TRUNCATOR));
+            24 * daysToExport, durationOfHour, hourExpander));
   }
 
   @Test
@@ -133,8 +138,11 @@ public class ZonedIntervalIterableTest {
     assertIterations(36, "2020-01-01", "2020-01-02 12:00:00", ChronoUnit.HOURS);
 
     // Log warning on truncation
-    assertIterations(36, "2020-01-01", "2020-01-02 12:15:00.999", ChronoUnit.HOURS);
-    assertIterations(36, "2020-01-01 00:12:04.500", "2020-01-02 12:15:00.999", ChronoUnit.HOURS);
+    assertIterations(37, "2020-01-01", "2020-01-02 12:15:00.999", ChronoUnit.HOURS);
+    assertIterations(37, "2020-01-01 00:12:04.500", "2020-01-02 12:15:00.999", ChronoUnit.HOURS);
+
+    assertIterations(2, "2020-01-01", "2020-01-02 12:15:00.999", ChronoUnit.DAYS);
+    assertIterations(2, "2020-01-01 23:59:59.500", "2020-01-02 12:15:00.999", ChronoUnit.DAYS);
   }
 
   @Test(expected = IllegalStateException.class)
@@ -144,13 +152,11 @@ public class ZonedIntervalIterableTest {
 
   @Test
   public void testForLogStartAndLogEnd() throws Throwable {
-    LocalDate fourDaysAgo = LocalDate.now().minusDays(4);
-
-    int daysExpected = 2;
-    LocalDate requestedStart = fourDaysAgo;
-    LocalDate requestedEnd = requestedStart.plusDays(daysExpected);
+    LocalDate requestedStart = LocalDate.now().minusDays(4);
+    LocalDate requestedEnd = requestedStart.plusDays(2);
     ZonedDateTime expectedStart = requestedStart.atStartOfDay(ZoneOffset.UTC);
     ZonedDateTime expectedEnd = requestedEnd.plusDays(1).atStartOfDay(ZoneOffset.UTC);
+
     ConnectorArguments arguments =
         new ConnectorArguments(
             new String[] {
@@ -161,6 +167,7 @@ public class ZonedIntervalIterableTest {
               "--connector",
               "foobar"
             });
+
     checkIntervalForArguments(expectedStart, expectedEnd, arguments);
   }
 
@@ -177,7 +184,7 @@ public class ZonedIntervalIterableTest {
     ZonedDateTime expectedStart =
         requestedStartParsed.atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.HOURS);
     ZonedDateTime expectedEnd =
-        expectedEndParsed.atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.HOURS);
+        expectedEndParsed.atZone(ZoneOffset.UTC).truncatedTo(ChronoUnit.HOURS).plusHours(1);
 
     ConnectorArguments arguments =
         new ConnectorArguments(
@@ -197,8 +204,7 @@ public class ZonedIntervalIterableTest {
     int daysExpected = 5;
     ZonedDateTime nowAtUTC = ZonedDateTime.now(ZoneOffset.UTC);
     ZonedDateTime expectedStart = nowAtUTC.minusDays(daysExpected).truncatedTo(ChronoUnit.HOURS);
-    ZonedDateTime expectedEnd =
-        nowAtUTC.truncatedTo(ChronoUnit.HOURS).plusHours(1).truncatedTo(ChronoUnit.HOURS);
+    ZonedDateTime expectedEnd = nowAtUTC.plusHours(1).truncatedTo(ChronoUnit.HOURS);
     ConnectorArguments arguments =
         new ConnectorArguments(
             new String[] {"--query-log-days", "" + daysExpected, "--connector", "foobar"});
@@ -218,32 +224,39 @@ public class ZonedIntervalIterableTest {
   }
 
   @Test
-  public void testTimeTruncator_MinuteBased() {
-    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T10:15:00+00:00");
-
-    ZonedDateTime result =
-        TimeTruncator.createBasedOnChronoUnit(ChronoUnit.MINUTES).apply(START_TIME);
-
-    assertEquals(truncatedTime, result);
-  }
-
-  @Test
   public void testTimeTruncator_HourBased() {
-    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T10:00:00+00:00");
+    ZonedDateTime startTime = ZonedDateTime.parse("2007-12-03T10:15:30+00:00");
+    ZonedDateTime endTime = ZonedDateTime.parse("2007-12-03T13:01:30+00:00");
+    ZonedInterval interval = new ZonedInterval(startTime, endTime);
 
-    ZonedDateTime result =
-        TimeTruncator.createBasedOnChronoUnit(ChronoUnit.HOURS).apply(START_TIME);
+    ZonedDateTime expandedStartTime = ZonedDateTime.parse("2007-12-03T10:00:00+00:00");
+    ZonedDateTime expandedEndTime = ZonedDateTime.parse("2007-12-03T14:00:00+00:00");
+    ZonedInterval expandedInterval = new ZonedInterval(expandedStartTime, expandedEndTime);
 
-    assertEquals(truncatedTime, result);
+    // Act
+    ZonedInterval result =
+        IntervalExpander.createBasedOnDuration(Duration.ofHours(1)).apply(interval);
+
+    // Assert
+    assertEquals(expandedInterval, result);
   }
 
   @Test
   public void testTimeTruncator_DayBased() {
-    ZonedDateTime truncatedTime = ZonedDateTime.parse("2007-12-03T00:00:00+00:00");
+    ZonedDateTime startTime = ZonedDateTime.parse("2007-12-03T10:15:30+00:00");
+    ZonedDateTime endTime = ZonedDateTime.parse("2007-12-03T13:01:30+00:00");
+    ZonedInterval interval = new ZonedInterval(startTime, endTime);
 
-    ZonedDateTime result = TimeTruncator.createBasedOnChronoUnit(ChronoUnit.DAYS).apply(START_TIME);
+    ZonedDateTime expandedStartTime = ZonedDateTime.parse("2007-12-03T00:00:00+00:00");
+    ZonedDateTime expandedEndTime = ZonedDateTime.parse("2007-12-04T00:00:00+00:00");
+    ZonedInterval expandedInterval = new ZonedInterval(expandedStartTime, expandedEndTime);
 
-    assertEquals(truncatedTime, result);
+    // Act
+    ZonedInterval result =
+        IntervalExpander.createBasedOnDuration(Duration.ofDays(1)).apply(interval);
+
+    // Assert
+    assertEquals(expandedInterval, result);
   }
 
   private void checkIntervalForArguments(
