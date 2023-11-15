@@ -182,6 +182,7 @@ public class MetadataDumper {
       TaskSetState.Impl state = new TaskSetState.Impl();
 
       LOG.info("Using " + connector);
+      SummaryPrinter summaryPrinter = new SummaryPrinter();
       try (Closer closer = Closer.create()) {
         Path outputPath = prepareOutputPath(outputFileLocation, closer, arguments);
 
@@ -203,14 +204,16 @@ public class MetadataDumper {
         new TasksRunner(sinkFactory, handle, arguments.getThreadPoolSize(), state, tasks).run();
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
-        File outputFile = new File(outputFileLocation);
-        if (outputFile.isFile()) {
-          LOG.debug("Dumper wrote " + outputFile.length() + " bytes.");
-        }
-        LOG.debug("Dumper took " + stopwatch + ".");
+        summaryPrinter.printSummarySection(
+            linePrinter -> {
+              File outputFile = new File(outputFileLocation);
+              if (outputFile.isFile()) {
+                linePrinter.println("Dumper wrote " + outputFile.length() + " bytes.");
+              }
+              linePrinter.println("Dumper took " + stopwatch + ".");
+            });
       }
 
-      SummaryPrinter summaryPrinter = new SummaryPrinter();
       printTaskResults(summaryPrinter, state);
       printDumperSummary(summaryPrinter, connector, outputFileLocation);
       checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
