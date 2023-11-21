@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
@@ -67,6 +68,14 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         "utility-logs-table",
         "The name of the table to dump utility logs from.",
         "dbc.DBQLUtilityTbl"),
+    RES_USAGE_SCPU_TABLE(
+        "res-usage-scpu-table",
+        "The name of the table to dump resource usage logs from.",
+        "dbc.ResUsageScpu"),
+    RES_USAGE_SPMA_TABLE(
+        "res-usage-spma-table",
+        "The name of the table to dump resource usage logs from.",
+        "dbc.ResUsageSpma"),
     LOG_DATE_COLUMN(
         "log-date-column",
         "The name of the column of type DATE to include in the WHERE clause when dumping"
@@ -99,6 +108,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     }
   }
 
+  private static final ImmutableMap<TeradataLogsConnectorProperty, String>
+      TIME_SERIES_PROPERTY_TO_FILENAME_PREFIX_MAP =
+          ImmutableMap.of(
+              TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE, "dbc.ResUsageScpu_",
+              TeradataLogsConnectorProperty.RES_USAGE_SPMA_TABLE, "dbc.ResUsageSpma_");
+
   @Nonnull
   @Override
   public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
@@ -109,16 +124,18 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     super("teradata-logs");
   }
 
-  private ImmutableList<TeradataJdbcSelectTask> createTimeSeriesTasks(ZonedInterval interval) {
-    return ImmutableList.of("ResUsageScpu", "ResUsageSpma").stream()
+  private ImmutableList<TeradataJdbcSelectTask> createTimeSeriesTasks(
+      ZonedInterval interval, @Nonnull ConnectorArguments arguments) {
+    return TIME_SERIES_PROPERTY_TO_FILENAME_PREFIX_MAP.keySet().stream()
         .map(
-            tableName ->
+            property ->
                 new TeradataJdbcSelectTask(
-                    createFilename("dbc." + tableName + "_", interval),
+                    createFilename(
+                        TIME_SERIES_PROPERTY_TO_FILENAME_PREFIX_MAP.get(property), interval),
                     TaskCategory.OPTIONAL,
                     String.format(
-                        "SELECT %%s FROM DBC.%s WHERE TheTimestamp >= %s AND TheTimestamp < %s",
-                        tableName,
+                        "SELECT %%s FROM %s WHERE TheTimestamp >= %s AND TheTimestamp < %s",
+                        arguments.getDefinitionOrDefault(property),
                         interval.getStart().toEpochSecond(),
                         interval.getEndExclusive().toEpochSecond())))
         .collect(toImmutableList());
@@ -185,7 +202,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                     logDateColumn,
                     orderBy)
                 .withHeaderClass(HeaderForAssessment.class));
-        out.addAll(createTimeSeriesTasks(interval));
+        out.addAll(createTimeSeriesTasks(interval, arguments));
         out.add(
             new TeradataUtilityLogsJdbcTask(
                 createFilename("utility_logs_", interval),
