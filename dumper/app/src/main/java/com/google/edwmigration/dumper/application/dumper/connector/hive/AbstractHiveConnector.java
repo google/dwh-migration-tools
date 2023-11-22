@@ -39,6 +39,7 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
+import javax.security.sasl.SaslException;
 import org.apache.thrift.transport.TTransportException;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
@@ -63,7 +64,8 @@ import org.slf4j.LoggerFactory;
     order = 401,
     arg = ConnectorArguments.OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA,
     description =
-        "Dump partition metadata; you may wish to disable this for production metastores with a significant number of partitions due to Thrift client performance implications.",
+        "Dump partition metadata; you may wish to disable this for production metastores with a"
+            + " significant number of partitions due to Thrift client performance implications.",
     defaultValue = ConnectorArguments.OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT)
 @RespectsInput(
     order = 500,
@@ -122,7 +124,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
                     builtClients.add(client);
                   }
                   return client;
-                } catch (TTransportException e) {
+                } catch (Exception e) {
                   throw new RuntimeException(
                       "Unable to build Thrift client '"
                           + threadName
@@ -191,7 +193,8 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
 
     /** Returns a thread-unsafe Thrift client unsuitable for use in multi-threaded contexts. */
     @Nonnull
-    public HiveMetastoreThriftClient newClient(@Nonnull String name) throws TTransportException {
+    public HiveMetastoreThriftClient newClient(@Nonnull String name)
+        throws TTransportException, SaslException {
       LOG.debug("Creating a new Thrift client named '{}'.", name);
       return new HiveMetastoreThriftClient.Builder(thriftClientBuilder).withName(name).build();
     }
@@ -200,7 +203,8 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     @Nonnull
     public ThriftClientPool newMultiThreadedThriftClientPool(@Nonnull String name) {
       LOG.debug(
-          "Creating a new multi-threaded pooled Thrift client named '{}' backed by a thread pool of size {}.",
+          "Creating a new multi-threaded pooled Thrift client named '{}' backed by a thread pool of"
+              + " size {}.",
           name,
           threadPoolSize);
       return new ThriftClientPool(name, thriftClientBuilder, threadPoolSize);
@@ -255,7 +259,8 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
                 arguments.getPort(
                     Integer.parseInt(ConnectorArguments.OPT_HIVE_METASTORE_PORT_DEFAULT)))
             .withUnavailableClientVersionBehavior(
-                HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK);
+                HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK)
+            .withKerberosUrl(arguments.getHiveKerberosUrl());
     return new ThriftClientHandle(thriftClientBuilder, arguments.getThreadPoolSize());
   }
 }

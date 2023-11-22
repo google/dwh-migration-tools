@@ -126,6 +126,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA =
       "hive-metastore-dump-partition-metadata";
   public static final String OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT = "true";
+  public static final String OPT_HIVE_KERBEROS_URL = "hive-kerberos-url";
 
   public static final String OPT_REQUIRED_IF_NOT_URL = "if --url is not specified";
   public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
@@ -349,6 +350,12 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .withValuesConvertedBy(BooleanValueConverter.INSTANCE)
           .defaultsTo(Boolean.parseBoolean(OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT));
+  private final OptionSpec<String> optionHiveKerberosUrl =
+      parser
+          .accepts(OPT_HIVE_KERBEROS_URL, "Kerberos URL to use to authenticate Hive Thrift API")
+          .withOptionalArg()
+          .ofType(String.class)
+          .describedAs("principal/cluster");
 
   // Threading / Pooling
   private final OptionSpec<Integer> optionThreadPoolSize =
@@ -816,6 +823,11 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isHiveMetastorePartitionMetadataDumpingEnabled() {
     return BooleanUtils.isTrue(getOptions().valueOf(optionHivePartitionMetadataCollection));
+  }
+
+  @CheckForNull
+  public String getHiveKerberosUrl() {
+    return getOptions().valueOf(optionHiveKerberosUrl);
   }
 
   public boolean saveResponseFile() {
