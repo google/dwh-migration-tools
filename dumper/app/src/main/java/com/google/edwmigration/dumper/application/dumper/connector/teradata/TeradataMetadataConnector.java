@@ -17,9 +17,13 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
+import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
@@ -31,13 +35,15 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import com.google.edwmigration.dumper.application.dumper.utils.SqlBuilder;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataMetadataDumpFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
 
 /** @author miguel */
 @AutoService({Connector.class, MetadataConnector.class})
@@ -46,6 +52,9 @@ import org.apache.commons.lang3.StringUtils;
 @RespectsArgumentAssessment
 public class TeradataMetadataConnector extends AbstractTeradataConnector
     implements MetadataConnector, TeradataMetadataDumpFormat {
+
+  private static final int TABLE_TEXT_V_REQUEST_TEXT_LENGTH = 32000;
+  private static final Range<Long> MAX_TEXT_LENGTH_RANGE = Range.closed(5000L, 32000L);
 
   public enum TeradataMetadataConnectorProperties implements ConnectorProperty {
     TABLE_SIZE_V_MAX_ROWS(
@@ -57,7 +66,14 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         "Max number of user rows (rows with DBKind='U') to extract from dbc.DatabasesV table."),
     DATABASES_V_DBS_MAX_ROWS(
         "databasesv.dbs.max-rows",
-        "Max number of database rows (rows with DBKind='D') to extract from dbc.DatabasesV table.");
+        "Max number of database rows (rows with DBKind='D') to extract from dbc.DatabasesV table."),
+    MAX_TEXT_LENGTH(
+        "max-text-length",
+        "Max length of the text column when dumping TableTextV view."
+            + " Text that is longer than the defined limit will be split."
+            + " Example: 10000. Allowed range: "
+            + MAX_TEXT_LENGTH_RANGE
+            + ".");
 
     private final String name;
     private final String description;
@@ -147,11 +163,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
             TaskCategory.REQUIRED,
             "SELECT %s FROM DBC.TablesV" + whereDataBaseNameClause + " ;"));
 
-    out.add(
-        new TeradataJdbcSelectTask(
-            TableTextVFormat.ZIP_ENTRY_NAME,
-            TaskCategory.REQUIRED, // Documented since v15.00
-            "SELECT %s FROM DBC.TableTextV" + whereDataBaseNameClause + " ;"));
+    out.add(createTaskForTableTextV(arguments));
 
     out.add(
         new TeradataJdbcSelectTask(
@@ -212,6 +224,51 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
               TaskCategory.OPTIONAL,
               "SELECT %s FROM DBC.All_RI_ParentsV " + whereParentDBClause + " ;"));
     }
+  }
+
+  private TeradataJdbcSelectTask createTaskForTableTextV(ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    List<String> databases = arguments.getDatabases();
+    OptionalLong textMaxLength =
+        PropertyParser.parseNumber(
+            arguments, TeradataMetadataConnectorProperties.MAX_TEXT_LENGTH, MAX_TEXT_LENGTH_RANGE);
+    Optional<String> whereCondition =
+        optionalIf(
+            !databases.isEmpty(),
+            () ->
+                "\"DataBaseName\" IN ("
+                    + databases.stream()
+                        .map(TeradataMetadataConnector::escapeStringLiteral)
+                        .collect(joining(",")));
+
+    String query;
+    if (textMaxLength.isPresent()) {
+      int splitTextColumnMaxLength = Ints.checkedCast(textMaxLength.getAsLong());
+      query =
+          new SplitTextColumnQueryGenerator(
+                  ImmutableList.of("DataBaseName", "TableName", "TableKind"),
+                  "RequestText",
+                  "LineNo",
+                  "DBC.TableTextV",
+                  whereCondition,
+                  TABLE_TEXT_V_REQUEST_TEXT_LENGTH,
+                  splitTextColumnMaxLength)
+              .generate();
+    } else {
+      query =
+          "SELECT %s FROM DBC.TableTextV"
+              + whereCondition.map(condition -> " WHERE " + condition).orElse("");
+    }
+    return new TeradataJdbcSelectTask(
+        TableTextVFormat.ZIP_ENTRY_NAME, TaskCategory.REQUIRED, query);
+  }
+
+  private static <T> Optional<T> optionalIf(boolean condition, Supplier<T> supplier) {
+    return condition ? Optional.of(supplier.get()) : Optional.empty();
+  }
+
+  private static String escapeStringLiteral(String s) {
+    return "'" + (s.replaceAll("'", "''")) + "'";
   }
 
   private TeradataJdbcSelectTask createTaskForDatabasesV(
@@ -283,26 +340,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   private static OptionalLong parseMaxRows(
       ConnectorArguments arguments, TeradataMetadataConnectorProperties property)
       throws MetadataDumperUsageException {
-    String stringValue = arguments.getDefinition(property);
-    if (StringUtils.isEmpty(stringValue)) {
-      return OptionalLong.empty();
-    }
-    long value;
-    try {
-      value = Long.parseLong(stringValue);
-    } catch (NumberFormatException ex) {
-      throw new MetadataDumperUsageException(
-          String.format(
-              "ERROR: Option '%s' accepts only positive integers. Actual: '%s'.",
-              property.name, stringValue));
-    }
-    if (value <= 0) {
-      throw new MetadataDumperUsageException(
-          String.format(
-              "ERROR: Option '%s' accepts only positive integers. Actual: '%s'.",
-              property.name, stringValue));
-    }
-    return OptionalLong.of(value);
+    return PropertyParser.parseNumber(arguments, property, Range.atLeast(1L));
   }
 
   private static String concatWhere(String whereClause, String condition) {
