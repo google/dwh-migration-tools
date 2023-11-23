@@ -16,15 +16,16 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
 import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.OptionalLong;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,13 +56,51 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* conditions= */ emptyList(),
             interval,
             /* logDateColumn= */ null,
+            /* maxSqlLength= */ OptionalLong.empty(),
             /* orderBy */ emptyList());
 
+    // Act
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
 
+    // Assert
     assertEqualsIgnoringWhitespace(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
+            + " WHERE L.ErrorCode=0 AND"
+            + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+        query);
+  }
+
+  @Test
+  public void getSql_maxSqlLength() {
+    TeradataAssessmentLogsJdbcTask jdbcTask =
+        new TeradataAssessmentLogsJdbcTask(
+            "result.csv",
+            queryLogsState,
+            "SampleQueryTable",
+            "SampleSqlTable",
+            /* conditions= */ emptyList(),
+            interval,
+            /* logDateColumn= */ null,
+            /* maxSqlLength= */ OptionalLong.of(20000),
+            /* orderBy */ emptyList());
+
+    // Act
+    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
+
+    // Assert
+    assertEqualsIgnoringWhitespace(
+        "SELECT L.QueryID, ST.QueryID"
+            + " FROM SampleQueryTable L LEFT OUTER JOIN ("
+            + "   SELECT QueryID,"
+            + "     CAST(SUBSTR(SqlTextInfo,1,20000) AS VARCHAR(20000)) AS SqlTextInfo,"
+            + "     (SqlRowNo - 1) * 2 + 1 AS SqlRowNo FROM SampleSqlTable"
+            + "   UNION ALL "
+            + "   SELECT QueryID,"
+            + "     CAST(SUBSTR(SqlTextInfo,20001,20000) AS VARCHAR(20000)) AS SqlTextInfo,"
+            + "     (SqlRowNo - 1) * 2 + 2 AS SqlRowNo FROM SampleSqlTable"
+            + " ) ST ON (L.QueryID=ST.QueryID)"
             + " WHERE L.ErrorCode=0 AND"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
             + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
@@ -79,10 +118,13 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* conditions= */ emptyList(),
             interval,
             /* logDateColumn= */ null,
+            /* maxSqlLength= */ OptionalLong.empty(),
             /* orderBy= */ emptyList());
 
+    // Act
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
 
+    // Assert
     assertEqualsIgnoringWhitespace(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
@@ -103,10 +145,13 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* conditions= */ emptyList(),
             interval,
             "SampleLogDate", /* orderBy */
+            /* maxSqlLength= */ OptionalLong.empty(),
             emptyList());
 
+    // Act
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
 
+    // Assert
     assertEqualsIgnoringWhitespace(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
@@ -128,10 +173,13 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* conditions= */ ImmutableList.of("L.QueryID=7"),
             interval,
             /* logDateColumn= */ null,
+            /* maxSqlLength= */ OptionalLong.empty(),
             /* orderBy= */ emptyList());
 
+    // Act
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
 
+    // Assert
     assertEqualsIgnoringWhitespace(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
@@ -152,10 +200,13 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* conditions= */ emptyList(),
             interval,
             /* logDateColumn= */ null,
+            /* maxSqlLength= */ OptionalLong.empty(),
             /* orderBy= */ ImmutableList.of("L.QueryID", "L.QueryText"));
 
+    // Act
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
 
+    // Assert
     assertEqualsIgnoringWhitespace(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
@@ -177,13 +228,55 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* conditions= */ emptyList(),
             interval,
             "SampleLogDate", /* orderBy */
+            /* maxSqlLength= */ OptionalLong.empty(),
             emptyList());
 
+    // Act
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
 
+    // Assert
     assertEqualsIgnoringWhitespace(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST"
+            + " ON (L.QueryID=ST.QueryID AND L.SampleLogDate=ST.SampleLogDate)"
+            + " WHERE L.ErrorCode=0 AND"
+            + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP) AND"
+            + " L.SampleLogDate = CAST('2023-03-04Z' AS DATE)",
+        query);
+  }
+
+  @Test
+  public void getSql_withLogDateColumnAndMaxSqlLength() {
+    TeradataAssessmentLogsJdbcTask jdbcTask =
+        new TeradataAssessmentLogsJdbcTask(
+            "result.csv",
+            queryLogsState,
+            "SampleQueryTable",
+            "SampleSqlTable",
+            /* conditions= */ emptyList(),
+            interval,
+            "SampleLogDate", /* orderBy */
+            /* maxSqlLength= */ OptionalLong.of(20000),
+            emptyList());
+
+    // Act
+    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
+
+    // Assert
+    assertEqualsIgnoringWhitespace(
+        "SELECT L.QueryID, ST.QueryID"
+            + " FROM SampleQueryTable L LEFT OUTER JOIN ("
+            + "   SELECT QueryID, SampleLogDate,"
+            + "     CAST(SUBSTR(SqlTextInfo,1,20000) AS VARCHAR(20000)) AS SqlTextInfo,"
+            + "     (SqlRowNo - 1) * 2 + 1 AS SqlRowNo FROM SampleSqlTable"
+            + "     WHERE SampleLogDate = CAST('2023-03-04Z' AS DATE)"
+            + "   UNION ALL "
+            + "   SELECT QueryID, SampleLogDate,"
+            + "     CAST(SUBSTR(SqlTextInfo,20001,20000) AS VARCHAR(20000)) AS SqlTextInfo,"
+            + "     (SqlRowNo - 1) * 2 + 2 AS SqlRowNo FROM SampleSqlTable"
+            + "     WHERE SampleLogDate = CAST('2023-03-04Z' AS DATE)"
+            + " ) ST"
             + " ON (L.QueryID=ST.QueryID AND L.SampleLogDate=ST.SampleLogDate)"
             + " WHERE L.ErrorCode=0 AND"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
@@ -203,11 +296,14 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             ImmutableList.of("QueryID=7", "QueryText LIKE '%abc%'"),
             interval,
             "SampleLogDate",
+            /* maxSqlLength= */ OptionalLong.empty(),
             ImmutableList.of("ST.QueryID", "ST.RowNo"));
 
+    // Act
     String query =
         jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "L.QueryText", "ST.QueryID"});
 
+    // Assert
     assertEqualsIgnoringWhitespace(
         "SELECT L.QueryID, L.QueryText, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST"
@@ -222,14 +318,6 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   private static void assertEqualsIgnoringWhitespace(String expected, String actual) {
-    assertEquals(squashWhitespace(expected), squashWhitespace(actual));
-  }
-
-  private static String squashWhitespace(String s) {
-    return s.replaceFirst("^\\s+", "").replaceFirst("\\s+$", "").replaceAll("\\s+", " ");
-  }
-
-  private static ZonedDateTime createUTCZonedDateTime(long epochSecond) {
-    return ZonedDateTime.ofInstant(Instant.ofEpochSecond(epochSecond), ZoneId.systemDefault());
+    assertEquals(formatQuery(expected), formatQuery(actual));
   }
 }
