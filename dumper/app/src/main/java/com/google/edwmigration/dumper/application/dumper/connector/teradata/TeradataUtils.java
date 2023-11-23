@@ -18,8 +18,13 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.common.base.Preconditions;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 class TeradataUtils {
+
+  public static <T> Optional<T> optionalIf(boolean condition, Supplier<T> supplier) {
+    return condition ? Optional.of(supplier.get()) : Optional.empty();
+  }
 
   /**
    * Formats the query by:

@@ -21,6 +21,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import java.util.List;
+import java.util.OptionalLong;
 import java.util.function.Predicate;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -162,8 +163,18 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
       List<String> conditions,
       ZonedInterval interval,
       @CheckForNull String logDateColumn,
+      OptionalLong maxSqlLength,
       List<String> orderBy) {
-    super(targetPath, state, logTable, queryTable, conditions, interval, logDateColumn, orderBy);
+    super(
+        targetPath,
+        state,
+        logTable,
+        queryTable,
+        conditions,
+        interval,
+        logDateColumn,
+        maxSqlLength,
+        orderBy);
   }
 
   @Nonnull

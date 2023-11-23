@@ -16,13 +16,17 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.DBQLSQLTBL_SQLTEXTINFO_LENGTH;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
+import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -36,6 +40,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.CheckForNull;
@@ -93,6 +98,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   protected final List<String> conditions;
   protected final ZonedInterval interval;
   @CheckForNull private final String logDateColumn;
+  private final OptionalLong maxSqlLength;
   protected final List<String> orderBy;
 
   public TeradataLogsJdbcTask(
@@ -110,6 +116,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
         conditions,
         interval,
         /* logDateColumn= */ null,
+        /* maxSqlLength= */ OptionalLong.empty(),
         Collections.emptyList());
   }
 
@@ -121,6 +128,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       List<String> conditions,
       ZonedInterval interval,
       @CheckForNull String logDateColumn,
+      OptionalLong maxSqlLength,
       List<String> orderBy) {
     super(targetPath);
     this.state = Preconditions.checkNotNull(state, "SharedState was null.");
@@ -129,6 +137,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     this.conditions = conditions;
     this.interval = interval;
     this.logDateColumn = logDateColumn;
+    this.maxSqlLength = maxSqlLength;
     this.orderBy = orderBy;
   }
 
@@ -190,7 +199,16 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       // "QueryID is a system-wide unique field; you can use QueryID
       // to join DBQL tables ... without needing ProcID as an additional join field."
       // (https://docs.teradata.com/reader/B7Lgdw6r3719WUyiCSJcgw/YIKoBz~QQgv2Aw5dF339kA)
-      buf.append(" LEFT OUTER JOIN ").append(queryTable).append(" ST ON (L.QueryID=ST.QueryID");
+      buf.append(" LEFT OUTER JOIN ");
+      if (maxSqlLength.isPresent()) {
+        buf.append('(')
+            .append(
+                createSubQueryWithSplittingLongQueries(Ints.checkedCast(maxSqlLength.getAsLong())))
+            .append(')');
+      } else {
+        buf.append(queryTable);
+      }
+      buf.append(" ST ON (L.QueryID=ST.QueryID");
 
       if (logDateColumn != null) {
         buf.append(" AND L.").append(logDateColumn).append("=ST.").append(logDateColumn);
@@ -214,12 +232,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
             SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
 
     if (logDateColumn != null) {
-      buf.append(" AND L.")
-          .append(logDateColumn)
-          .append(" = ")
-          .append("CAST('")
-          .append(SQL_DATE_FORMAT.format(interval.getStart()))
-          .append("' AS DATE)");
+      buf.append(" AND L.").append(createLogDateColumnCondition());
     }
 
     for (String condition : conditions) {
@@ -231,6 +244,27 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       Joiner.on(", ").appendTo(buf, orderBy);
     }
     return buf.toString().replace('\n', ' ');
+  }
+
+  private String createLogDateColumnCondition() {
+    return logDateColumn + " = CAST('" + SQL_DATE_FORMAT.format(interval.getStart()) + "' AS DATE)";
+  }
+
+  private String createSubQueryWithSplittingLongQueries(int maxLength) {
+    ImmutableList.Builder<String> columns = ImmutableList.<String>builder().add("QueryID");
+    if (logDateColumn != null) {
+      columns.add(logDateColumn);
+    }
+    return new SplitTextColumnQueryGenerator(
+            columns.build(),
+            "SqlTextInfo",
+            "SqlRowNo",
+            queryTable,
+            /* whereCondition=*/ optionalIf(
+                logDateColumn != null, this::createLogDateColumnCondition),
+            DBQLSQLTBL_SQLTEXTINFO_LENGTH,
+            maxLength)
+        .generate();
   }
 
   /**

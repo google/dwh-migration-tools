@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -42,7 +43,6 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataMetadataDump
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 
 /** @author miguel */
@@ -70,7 +70,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     MAX_TEXT_LENGTH(
         "max-text-length",
         "Max length of the text column when dumping TableTextV view."
-            + " Text that is longer than the defined limit will be split."
+            + " Text that is longer than the defined limit will be split into multiple rows."
             + " Example: 10000. Allowed range: "
             + MAX_TEXT_LENGTH_RANGE
             + ".");
@@ -261,10 +261,6 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     }
     return new TeradataJdbcSelectTask(
         TableTextVFormat.ZIP_ENTRY_NAME, TaskCategory.REQUIRED, query);
-  }
-
-  private static <T> Optional<T> optionalIf(boolean condition, Supplier<T> supplier) {
-    return condition ? Optional.of(supplier.get()) : Optional.empty();
   }
 
   private static String escapeStringLiteral(String s) {

@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
@@ -38,6 +39,7 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.time.Duration;
@@ -45,6 +47,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.OptionalLong;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -62,6 +65,10 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
 
   private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
   private static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
+  static final int DBQLSQLTBL_SQLTEXTINFO_LENGTH = 31000;
+
+  private static final Range<Long> MAX_SQL_LENGTH_RANGE =
+      Range.closed(5000L, (long) DBQLSQLTBL_SQLTEXTINFO_LENGTH);
 
   public enum TeradataLogsConnectorProperty implements ConnectorProperty {
     UTILITY_LOGS_TABLE(
@@ -81,6 +88,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         "The name of the column of type DATE to include in the WHERE clause when dumping"
             + " query log tables. The column must exist in both tables."
             + " See --query-log-alternates for query log table names.",
+        /* defaultValue= */ null),
+    MAX_SQL_LENGTH(
+        "max-sql-length",
+        "Max length of the DBQLSqlTbl.SqlTextInfo column."
+            + " Text that is longer than the defined limit will be split into multiple rows."
+            + " Example: 10000. Allowed range: 5000-30000.",
         /* defaultValue= */ null);
 
     private final String name;
@@ -174,9 +187,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       conditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
     }
 
-    // Beware of Teradata SQLSTATE HY000. See issue #4126.
-    // Most likely caused by some operation (equality?) being performed on a datum which is too long
-    // for a varchar.
     Duration rotationDuration = arguments.getQueryLogRotationFrequency();
     ZonedIntervalIterable intervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(
@@ -187,6 +197,9 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     String utilityLogsTable =
         arguments.getDefinitionOrDefault(TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
     String logDateColumn = arguments.getDefinition(TeradataLogsConnectorProperty.LOG_DATE_COLUMN);
+    OptionalLong maxSqlLength =
+        PropertyParser.parseNumber(
+            arguments, TeradataLogsConnectorProperty.MAX_SQL_LENGTH, MAX_SQL_LENGTH_RANGE);
     for (ZonedInterval interval : intervals) {
       String file = createFilename(ZIP_ENTRY_PREFIX, interval);
       if (isAssessment) {
@@ -200,6 +213,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                     conditions,
                     interval,
                     logDateColumn,
+                    maxSqlLength,
                     orderBy)
                 .withHeaderClass(HeaderForAssessment.class));
         out.addAll(createTimeSeriesTasks(interval, arguments));
