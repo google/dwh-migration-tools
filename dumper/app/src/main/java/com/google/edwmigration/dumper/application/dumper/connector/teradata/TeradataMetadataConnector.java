@@ -239,7 +239,8 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
                 "\"DataBaseName\" IN ("
                     + databases.stream()
                         .map(TeradataMetadataConnector::escapeStringLiteral)
-                        .collect(joining(",")));
+                        .collect(joining(","))
+                    + ")");
 
     String query;
     if (textMaxLength.isPresent()) {
