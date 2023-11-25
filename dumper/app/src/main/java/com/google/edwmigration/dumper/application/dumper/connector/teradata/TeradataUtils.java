@@ -42,7 +42,7 @@ class TeradataUtils {
    * query contains string literals with whitespace, they will be modified, which might be
    * undesirable. This method should not be used in such cases.
    */
-  static String formatQuery(String query) {
+  public static String formatQuery(String query) {
     return query.replaceAll("\\s+", " ").replaceAll("\\( ", "(").replaceAll(" \\)", ")").trim();
   }
 

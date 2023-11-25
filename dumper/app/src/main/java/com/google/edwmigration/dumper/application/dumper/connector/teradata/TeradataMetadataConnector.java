@@ -18,6 +18,10 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.stringLiteral;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -53,8 +57,11 @@ import javax.annotation.Nonnull;
 public class TeradataMetadataConnector extends AbstractTeradataConnector
     implements MetadataConnector, TeradataMetadataDumpFormat {
 
+  /** The length of the VARCHAR column {@code TableTextV.RequestText}. */
   private static final int TABLE_TEXT_V_REQUEST_TEXT_LENGTH = 32000;
-  private static final Range<Long> MAX_TEXT_LENGTH_RANGE = Range.closed(5000L, 32000L);
+
+  private static final Range<Long> MAX_TEXT_LENGTH_RANGE =
+      Range.closed(5000L, (long) TABLE_TEXT_V_REQUEST_TEXT_LENGTH);
 
   public enum TeradataMetadataConnectorProperties implements ConnectorProperty {
     TABLE_SIZE_V_MAX_ROWS(
@@ -136,10 +143,13 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         new TeradataJdbcSelectTask(
             VersionFormat.ZIP_ENTRY_NAME,
             TaskCategory.OPTIONAL,
-            "SELECT 'teradata' AS dialect, "
-                + "\"InfoData\" AS version, "
-                + "CURRENT_TIMESTAMP as export_time"
-                + " from dbc.dbcinfo where \"InfoKey\" = 'VERSION';"));
+            select(
+                    stringLiteral("teradata").as("dialect"),
+                    identifier("InfoData").as("version"),
+                    identifier("CURRENT_TIMESTAMP").as("export_time"))
+                .from("dbc.dbcinfo")
+                .where(eq(identifier("InfoKey"), stringLiteral("VERSION")))
+                .serialize()));
 
     // This is theoretically more reliable than ColumnsV, but if we are bandwidth limited, we should
     // risk taking ColumnsV only.
