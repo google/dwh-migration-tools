@@ -16,11 +16,21 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
+import com.google.auto.value.AutoValue;
+import java.util.Optional;
 
-public interface Expression {
+@AutoValue
+public abstract class SubquerySourceSpec implements SourceSpec {
+  public abstract SubqueryExpression subqueryExpression();
 
-  default Projection as(String alias) {
-    return projection(this, alias);
+  public abstract Optional<String> alias();
+
+  public static SubquerySourceSpec create(
+      SubqueryExpression subqueryExpression, Optional<String> alias) {
+    return new AutoValue_SubquerySourceSpec(subqueryExpression, alias);
+  }
+
+  public SubquerySourceSpec as(String alias) {
+    return create(subqueryExpression(), Optional.of(alias));
   }
 }

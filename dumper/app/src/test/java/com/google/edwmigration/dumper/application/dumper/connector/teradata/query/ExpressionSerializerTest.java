@@ -19,10 +19,13 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata.que
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.stringLiteral;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.selectTop;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.union;
+import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
 import static java.util.stream.Stream.concat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -46,9 +49,12 @@ public class ExpressionSerializerTest {
           Pair.of(stringLiteral(""), "''"),
           Pair.of(stringLiteral("abc"), "'abc'"),
           Pair.of(stringLiteral("de'f"), "'de''f'"),
-          Pair.of(eq(stringLiteral("A"), stringLiteral("BC")), "'A' = 'BC'"));
+          Pair.of(eq(stringLiteral("A"), stringLiteral("BC")), "'A' = 'BC'"),
+          Pair.of(
+              union(select("col_a").from("tab_1").build(), select("col_b").from("tab_2").build()),
+              "SELECT col_a FROM tab_1 UNION ALL SELECT col_b FROM tab_2"));
 
-  private static final ImmutableList<Pair<SelectExpressionBuilder, String>> QUERIES =
+  private static final ImmutableList<Pair<SelectExpressionBuilder, String>> SELECT_QUERIES =
       ImmutableList.of(
           Pair.of(select("x"), "SELECT x"),
           Pair.of(select("1"), "SELECT 1"),
@@ -64,18 +70,13 @@ public class ExpressionSerializerTest {
                   .from("tab_b")
                   .where(eq(identifier("col_c"), stringLiteral("SUCCESS"))),
               "SELECT col_a FROM tab_b WHERE col_c = 'SUCCESS'"),
-          Pair.of(
-              select("col_a")
-                  .from("tab_b")
-                  .as("b")
-                  .where(eq(identifier("b.col_c"), stringLiteral("SUCCESS"))),
-              "SELECT col_a FROM tab_b AS b WHERE b.col_c = 'SUCCESS'"));
+          Pair.of(selectTop(10, projection(identifier("x"))), "SELECT TOP 10 x"));
 
   @DataPoints("expressionsAndQueries")
   public static final ImmutableList<Pair<Expression, String>> EXPRESSIONS_AND_QUERIES =
       concat(
               EXPRESSIONS.stream(),
-              QUERIES.stream()
+              SELECT_QUERIES.stream()
                   .map(
                       pair -> Pair.<Expression, String>of(pair.getLeft().build(), pair.getRight())))
           .collect(toImmutableList());
@@ -90,7 +91,7 @@ public class ExpressionSerializerTest {
     String serializedExpression = new ExpressionSerializer(expression).serialize();
 
     // Assert
-    assertEquals(expectedSerializedExpression, serializedExpression);
+    assertQueryEquals(expectedSerializedExpression, serializedExpression);
   }
 
   @Test
