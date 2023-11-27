@@ -17,30 +17,17 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableList;
 
 @AutoValue
-public abstract class NaryExpression implements Expression {
-  public abstract NaryOperator operator();
+public abstract class SubstrExpression implements Expression {
 
-  public abstract ImmutableList<Expression> subexpressions();
+  public abstract Expression string();
 
-  public static NaryExpression create(
-      NaryOperator operator, ImmutableList<Expression> subexpressions) {
-    return new AutoValue_NaryExpression(operator, subexpressions);
-  }
+  public abstract Expression from();
 
-  public enum NaryOperator {
-    AND("AND"),
-    OR("OR"),
-    ADD("+"),
-    SUBTRACT("-"),
-    MUL("*");
+  public abstract Expression length();
 
-    public final String serializedForm;
-
-    NaryOperator(String serializedForm) {
-      this.serializedForm = serializedForm;
-    }
+  public static SubstrExpression create(Expression string, Expression from, Expression length) {
+    return new AutoValue_SubstrExpression(string, from, length);
   }
 }

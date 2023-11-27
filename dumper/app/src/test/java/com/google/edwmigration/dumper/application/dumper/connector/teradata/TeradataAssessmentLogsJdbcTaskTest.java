@@ -16,9 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
 import static java.util.Collections.emptyList;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
@@ -63,7 +62,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
             + " WHERE L.ErrorCode=0 AND"
@@ -90,16 +89,16 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN ("
             + "   SELECT QueryID,"
-            + "     CAST(SUBSTR(SqlTextInfo,1,20000) AS VARCHAR(20000)) AS SqlTextInfo,"
-            + "     (SqlRowNo - 1) * 2 + 1 AS SqlRowNo FROM SampleSqlTable"
+            + "     CAST(SUBSTR(SqlTextInfo, 1, 20000) AS VARCHAR(20000)) AS SqlTextInfo,"
+            + "     (((SqlRowNo - 1) * 2) + 1) AS SqlRowNo FROM SampleSqlTable"
             + "   UNION ALL "
             + "   SELECT QueryID,"
-            + "     CAST(SUBSTR(SqlTextInfo,20001,20000) AS VARCHAR(20000)) AS SqlTextInfo,"
-            + "     (SqlRowNo - 1) * 2 + 2 AS SqlRowNo FROM SampleSqlTable"
+            + "     CAST(SUBSTR(SqlTextInfo, 20001, 20000) AS VARCHAR(20000)) AS SqlTextInfo,"
+            + "     (((SqlRowNo - 1) * 2) + 2) AS SqlRowNo FROM SampleSqlTable"
             + " ) ST ON (L.QueryID=ST.QueryID)"
             + " WHERE L.ErrorCode=0 AND"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
@@ -125,7 +124,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
             + " WHERE L.ErrorCode=0 AND"
@@ -152,7 +151,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
             + " WHERE L.ErrorCode=0 AND"
@@ -180,7 +179,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
             + " WHERE L.ErrorCode=0 AND"
@@ -207,7 +206,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
             + " WHERE L.ErrorCode=0 AND"
@@ -235,7 +234,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST"
             + " ON (L.QueryID=ST.QueryID AND L.SampleLogDate=ST.SampleLogDate)"
@@ -264,17 +263,17 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN ("
             + "   SELECT QueryID, SampleLogDate,"
-            + "     CAST(SUBSTR(SqlTextInfo,1,20000) AS VARCHAR(20000)) AS SqlTextInfo,"
-            + "     (SqlRowNo - 1) * 2 + 1 AS SqlRowNo FROM SampleSqlTable"
+            + "     CAST(SUBSTR(SqlTextInfo, 1, 20000) AS VARCHAR(20000)) AS SqlTextInfo,"
+            + "     (((SqlRowNo - 1) * 2) + 1) AS SqlRowNo FROM SampleSqlTable"
             + "     WHERE SampleLogDate = CAST('2023-03-04Z' AS DATE)"
             + "   UNION ALL "
             + "   SELECT QueryID, SampleLogDate,"
-            + "     CAST(SUBSTR(SqlTextInfo,20001,20000) AS VARCHAR(20000)) AS SqlTextInfo,"
-            + "     (SqlRowNo - 1) * 2 + 2 AS SqlRowNo FROM SampleSqlTable"
+            + "     CAST(SUBSTR(SqlTextInfo, 20001, 20000) AS VARCHAR(20000)) AS SqlTextInfo,"
+            + "     (((SqlRowNo - 1) * 2) + 2) AS SqlRowNo FROM SampleSqlTable"
             + "     WHERE SampleLogDate = CAST('2023-03-04Z' AS DATE)"
             + " ) ST"
             + " ON (L.QueryID=ST.QueryID AND L.SampleLogDate=ST.SampleLogDate)"
@@ -304,7 +303,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "L.QueryText", "ST.QueryID"});
 
     // Assert
-    assertEqualsIgnoringWhitespace(
+    assertQueryEquals(
         "SELECT L.QueryID, L.QueryText, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST"
             + " ON (L.QueryID=ST.QueryID AND L.SampleLogDate=ST.SampleLogDate)"
@@ -315,9 +314,5 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " QueryID=7 AND QueryText LIKE '%abc%'"
             + " ORDER BY ST.QueryID, ST.RowNo",
         query);
-  }
-
-  private static void assertEqualsIgnoringWhitespace(String expected, String actual) {
-    assertEquals(formatQuery(expected), formatQuery(actual));
   }
 }

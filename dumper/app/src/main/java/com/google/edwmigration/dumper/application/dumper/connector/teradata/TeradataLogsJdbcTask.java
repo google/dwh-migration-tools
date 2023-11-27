@@ -19,6 +19,10 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.DBQLSQLTBL_SQLTEXTINFO_LENGTH;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.cast;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.stringLiteral;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -29,6 +33,7 @@ import com.google.common.io.ByteSink;
 import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
@@ -232,7 +237,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
             SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
 
     if (logDateColumn != null) {
-      buf.append(" AND L.").append(createLogDateColumnCondition());
+      buf.append(" AND L.").append(createLogDateColumnConditionStr());
     }
 
     for (String condition : conditions) {
@@ -246,8 +251,14 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     return buf.toString().replace('\n', ' ');
   }
 
-  private String createLogDateColumnCondition() {
+  private String createLogDateColumnConditionStr() {
     return logDateColumn + " = CAST('" + SQL_DATE_FORMAT.format(interval.getStart()) + "' AS DATE)";
+  }
+
+  private Expression createLogDateColumnCondition() {
+    return eq(
+        identifier(logDateColumn),
+        cast(stringLiteral(SQL_DATE_FORMAT.format(interval.getStart())), identifier("DATE")));
   }
 
   private String createSubQueryWithSplittingLongQueries(int maxLength) {

@@ -16,13 +16,29 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.add;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.cast;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.integerLiteral;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.multiply;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.substr;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.subtract;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.union;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.math.IntMath;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.ExpressionSerializer;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Projection;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.FromClauseStepBuilder;
 import java.math.RoundingMode;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 /**
  * Generator for queries that select from the table that contains a column of type VARCHAR, allowing
@@ -42,7 +58,7 @@ public class SplitTextColumnQueryGenerator {
   private final String textColumnName;
   private final String counterColumnName;
   private final String tableName;
-  private final Optional<String> whereCondition;
+  private final Optional<Expression> whereCondition;
   private final int textColumnOriginalLength;
   private final int splitTextColumnMaxLength;
 
@@ -51,7 +67,7 @@ public class SplitTextColumnQueryGenerator {
       String textColumnName,
       String counterColumnName,
       String tableName,
-      Optional<String> whereCondition,
+      Optional<Expression> whereCondition,
       int textColumnOriginalLength,
       int splitTextColumnMaxLength) {
     Preconditions.checkArgument(
@@ -80,42 +96,39 @@ public class SplitTextColumnQueryGenerator {
   public String generate() {
     int partsCount =
         IntMath.divide(textColumnOriginalLength, splitTextColumnMaxLength, RoundingMode.CEILING);
-    StringBuilder query = new StringBuilder();
-    for (int i = 0; i < partsCount; i++) {
-      if (i > 0) {
-        query.append(" UNION ALL ");
-      }
-      appendSubQuery(query, i, splitTextColumnMaxLength, partsCount);
-    }
-    return formatQuery(query.toString());
+    return ExpressionSerializer.serialize(
+        union(
+            IntStream.range(0, partsCount)
+                .mapToObj(i -> createSubquery(i, splitTextColumnMaxLength, partsCount))
+                .collect(toImmutableList())));
   }
 
-  private void appendSubQuery(StringBuilder query, int partIndex, int length, int partsCount) {
-    query.append("SELECT ").append(String.join(", ", columnNames));
+  private SelectExpression createSubquery(int partIndex, int length, int partsCount) {
+    ImmutableList.Builder<Projection> projections = ImmutableList.builder();
+    columnNames.stream()
+        .map(columnName -> projection(identifier(columnName)))
+        .forEach(projections::add);
     if (partsCount > 1) {
-      query
-          .append(", CAST(SUBSTR(")
-          .append(textColumnName)
-          .append(',')
-          .append(1 + partIndex * length)
-          .append(',')
-          .append(length)
-          .append(") AS VARCHAR(")
-          .append(length)
-          .append(")) AS ")
-          .append(textColumnName)
-          .append(", (")
-          .append(counterColumnName)
-          .append(" - 1) * ")
-          .append(partsCount)
-          .append(" + ")
-          .append(partIndex + 1)
-          .append(" AS ")
-          .append(counterColumnName);
+      projections.add(
+          cast(
+                  substr(
+                      identifier(textColumnName),
+                      integerLiteral(1 + partIndex * length),
+                      integerLiteral(length)),
+                  identifier("VARCHAR(" + length + ")"))
+              .as(textColumnName));
+      projections.add(
+          add(
+                  multiply(
+                      subtract(identifier(counterColumnName), integerLiteral(1)),
+                      integerLiteral(partsCount)),
+                  integerLiteral(partIndex + 1))
+              .as(counterColumnName));
     } else {
-      query.append(", ").append(textColumnName).append(", ").append(counterColumnName);
+      projections.add(projection(identifier(textColumnName)));
+      projections.add(projection(identifier(counterColumnName)));
     }
-    query.append(" FROM ").append(tableName);
-    whereCondition.ifPresent(condition -> query.append(" WHERE ").append(condition));
+    FromClauseStepBuilder builder = select(projections.build()).from(tableName);
+    return whereCondition.map(builder::where).orElse(builder).build();
   }
 }
