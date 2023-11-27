@@ -31,6 +31,8 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.union;
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.OrderBySpec;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.OrderBySpec.Direction;
@@ -42,6 +44,9 @@ import java.util.OptionalLong;
 
 /** Generator of queries used during dumping metadata from Teradata. */
 class MetadataQueryGenerator {
+
+  /** The length of the VARCHAR column {@code TableTextV.RequestText}. */
+  static final int TABLE_TEXT_V_REQUEST_TEXT_LENGTH = 32000;
 
   static final String DBC_INFO_QUERY =
       select(
@@ -83,6 +88,24 @@ class MetadataQueryGenerator {
                 in(
                     identifier("B_DatabaseName"),
                     databases.stream().map(String::toUpperCase).collect(toList()))));
+  }
+
+  static String createSelectForTableTextV(
+      OptionalLong textMaxLength, Optional<Expression> condition) {
+    String tableName = "DBC.TableTextV";
+    if (!textMaxLength.isPresent()) {
+      return createSimpleSelect(tableName, condition);
+    }
+    int splitTextColumnMaxLength = Ints.checkedCast(textMaxLength.getAsLong());
+    return new SplitTextColumnQueryGenerator(
+            ImmutableList.of("DataBaseName", "TableName", "TableKind"),
+            "RequestText",
+            "LineNo",
+            tableName,
+            condition,
+            TABLE_TEXT_V_REQUEST_TEXT_LENGTH,
+            splitTextColumnMaxLength)
+        .generate();
   }
 
   private static SelectExpression createSingleDbKindSelectFromDatabasesV(

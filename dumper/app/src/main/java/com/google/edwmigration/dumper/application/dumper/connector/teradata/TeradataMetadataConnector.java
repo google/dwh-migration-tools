@@ -17,19 +17,18 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.DBC_INFO_QUERY;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.TABLE_TEXT_V_REQUEST_TEXT_LENGTH;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForAllTempTablesVX;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForTableTextV;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSimpleSelect;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
-import static java.util.stream.Collectors.joining;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
-import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
@@ -58,9 +57,6 @@ import javax.annotation.Nonnull;
 @RespectsArgumentAssessment
 public class TeradataMetadataConnector extends AbstractTeradataConnector
     implements MetadataConnector, TeradataMetadataDumpFormat {
-
-  /** The length of the VARCHAR column {@code TableTextV.RequestText}. */
-  private static final int TABLE_TEXT_V_REQUEST_TEXT_LENGTH = 32000;
 
   private static final Range<Long> MAX_TEXT_LENGTH_RANGE =
       Range.closed(5000L, (long) TABLE_TEXT_V_REQUEST_TEXT_LENGTH);
@@ -226,40 +222,13 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   private TeradataJdbcSelectTask createTaskForTableTextV(
       ConnectorArguments arguments, Optional<Expression> databaseNameCondition)
       throws MetadataDumperUsageException {
-    List<String> databases = arguments.getDatabases();
     OptionalLong textMaxLength =
         PropertyParser.parseNumber(
             arguments, TeradataMetadataConnectorProperties.MAX_TEXT_LENGTH, MAX_TEXT_LENGTH_RANGE);
-    Optional<String> whereCondition =
-        optionalIf(
-            !databases.isEmpty(),
-            () ->
-                "\"DataBaseName\" IN ("
-                    + databases.stream()
-                        .map(TeradataMetadataConnector::escapeStringLiteral)
-                        .collect(joining(","))
-                    + ")");
-
-    String query;
-    if (textMaxLength.isPresent()) {
-      int splitTextColumnMaxLength = Ints.checkedCast(textMaxLength.getAsLong());
-      query =
-          new SplitTextColumnQueryGenerator(
-                  ImmutableList.of("DataBaseName", "TableName", "TableKind"),
-                  "RequestText",
-                  "LineNo",
-                  "DBC.TableTextV",
-                  databaseNameCondition,
-                  TABLE_TEXT_V_REQUEST_TEXT_LENGTH,
-                  splitTextColumnMaxLength)
-              .generate();
-    } else {
-      query =
-          "SELECT %s FROM DBC.TableTextV"
-              + whereCondition.map(condition -> " WHERE " + condition).orElse("");
-    }
     return new TeradataJdbcSelectTask(
-        TableTextVFormat.ZIP_ENTRY_NAME, TaskCategory.REQUIRED, query);
+        TableTextVFormat.ZIP_ENTRY_NAME,
+        TaskCategory.REQUIRED,
+        createSelectForTableTextV(textMaxLength, databaseNameCondition));
   }
 
   private static String escapeStringLiteral(String s) {
