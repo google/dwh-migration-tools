@@ -17,12 +17,14 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.DBC_INFO_QUERY;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForAllTempTablesVX;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSimpleSelect;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
@@ -118,27 +120,11 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     Optional<Expression> databaseNameCondition =
-        optionalIf(
-            !arguments.getDatabases().isEmpty(),
-            () -> in(identifier("DatabaseName"), arguments.getDatabases()));
-    String whereDatabaseNameClause =
-        new SqlBuilder()
-            .withWhereInVals("\"DatabaseName\"", arguments.getDatabases())
-            .toWhereClause();
+        constructDatabaseNameCondition(arguments, "DatabaseName");
     String whereDataBaseNameClause =
         new SqlBuilder()
             .withWhereInVals("\"DataBaseName\"", arguments.getDatabases())
             .toWhereClause();
-    String whereBDatabaseNameClause =
-        new SqlBuilder()
-            .withWhereInVals(
-                "\"B_DatabaseName\"",
-                arguments.getDatabases().stream().map(String::toUpperCase).collect(toList()))
-            .toWhereClause();
-    String whereChildDBClause =
-        new SqlBuilder().withWhereInVals("\"ChildDB\"", arguments.getDatabases()).toWhereClause();
-    String whereParentDBClause =
-        new SqlBuilder().withWhereInVals("\"ParentDB\"", arguments.getDatabases()).toWhereClause();
 
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
@@ -167,7 +153,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         new TeradataJdbcSelectTask(
             TablesVFormat.ZIP_ENTRY_NAME,
             TaskCategory.REQUIRED,
-            "SELECT %s FROM DBC.TablesV" + whereDataBaseNameClause + " ;"));
+            createSimpleSelect("DBC.TablesV", databaseNameCondition)));
 
     out.add(createTaskForTableTextV(arguments));
 
@@ -175,40 +161,36 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         new TeradataJdbcSelectTask(
             IndicesVFormat.ZIP_ENTRY_NAME,
             TaskCategory.OPTIONAL,
-            "SELECT %s FROM DBC.IndicesV" + whereDatabaseNameClause + " ;"));
+            createSimpleSelect("DBC.IndicesV", databaseNameCondition)));
 
     out.add(
         new TeradataJdbcSelectTask(
             PartitioningConstraintsVFormat.ZIP_ENTRY_NAME,
             TaskCategory.OPTIONAL,
-            "SELECT %s FROM DBC.PartitioningConstraintsV" + whereDatabaseNameClause + " ;"));
+            createSimpleSelect("DBC.PartitioningConstraintsV", databaseNameCondition)));
 
     out.add(
         new TeradataJdbcSelectTask(
             ColumnsVFormat.ZIP_ENTRY_NAME,
             TaskCategory.REQUIRED,
-            "SELECT %s FROM DBC.ColumnsV" + whereDatabaseNameClause + " ;"));
+            createSimpleSelect("DBC.ColumnsV", databaseNameCondition)));
 
     out.add(
         new TeradataJdbcSelectTask(
             FunctionsVFormat.ZIP_ENTRY_NAME,
             TaskCategory.OPTIONAL,
-            "SELECT %s FROM DBC.FunctionsV" + whereDatabaseNameClause + " ;"));
+            createSimpleSelect("DBC.FunctionsV", databaseNameCondition)));
 
     if (arguments.isAssessment()) {
       out.add(
           new TeradataJdbcSelectTask(
               StatsVFormat.ZIP_ENTRY_NAME,
               TaskCategory.OPTIONAL,
-              "SELECT %s FROM DBC.StatsV " + whereDatabaseNameClause + " ;"));
+              createSimpleSelect("DBC.StatsV", databaseNameCondition)));
 
       out.add(createTaskForTableSizeV(whereDataBaseNameClause, arguments));
 
-      out.add(
-          new TeradataJdbcSelectTask(
-              AllTempTablesVXFormat.ZIP_ENTRY_NAME,
-              TaskCategory.OPTIONAL,
-              "SELECT %s FROM DBC.AllTempTablesVX" + whereBDatabaseNameClause + " ;"));
+      out.add(createTaskForAllTempTablesVX(arguments));
 
       out.add(createTaskForDiskSpaceV(whereDataBaseNameClause, arguments));
 
@@ -216,20 +198,29 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
           new TeradataJdbcSelectTask(
               RoleMembersVFormat.ZIP_ENTRY_NAME,
               TaskCategory.OPTIONAL,
-              "SELECT %s FROM DBC.RoleMembersV ;"));
+              select("%s").from("DBC.RoleMembersV").serialize()));
 
       out.add(
           new TeradataJdbcSelectTask(
               All_RI_ChildrenVFormat.ZIP_ENTRY_NAME,
               TaskCategory.OPTIONAL,
-              "SELECT %s FROM DBC.All_RI_ChildrenV " + whereChildDBClause + " ;"));
+              createSimpleSelect(
+                  "DBC.All_RI_ChildrenV", constructDatabaseNameCondition(arguments, "ChildDB"))));
 
       out.add(
           new TeradataJdbcSelectTask(
               All_RI_ParentsVFormat.ZIP_ENTRY_NAME,
               TaskCategory.OPTIONAL,
-              "SELECT %s FROM DBC.All_RI_ParentsV " + whereParentDBClause + " ;"));
+              createSimpleSelect(
+                  "DBC.All_RI_ParentsV", constructDatabaseNameCondition(arguments, "ParentDB"))));
     }
+  }
+
+  private Optional<Expression> constructDatabaseNameCondition(
+      ConnectorArguments arguments, String columnName) {
+    return optionalIf(
+        !arguments.getDatabases().isEmpty(),
+        () -> in(identifier(columnName), arguments.getDatabases()));
   }
 
   private TeradataJdbcSelectTask createTaskForTableTextV(ConnectorArguments arguments)
@@ -285,6 +276,13 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         DatabasesVFormat.ZIP_ENTRY_NAME,
         TaskCategory.REQUIRED,
         MetadataQueryGenerator.createSelectForDatabasesV(userRows, dbRows, databaseNameCondition));
+  }
+
+  private TeradataJdbcSelectTask createTaskForAllTempTablesVX(ConnectorArguments arguments) {
+    return new TeradataJdbcSelectTask(
+        AllTempTablesVXFormat.ZIP_ENTRY_NAME,
+        TaskCategory.OPTIONAL,
+        createSelectForAllTempTablesVX(arguments.getDatabases()));
   }
 
   private TeradataJdbcSelectTask createTaskForTableSizeV(

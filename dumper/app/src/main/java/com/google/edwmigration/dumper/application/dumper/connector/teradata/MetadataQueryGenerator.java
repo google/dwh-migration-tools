@@ -16,9 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.and;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.selectAll;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.star;
@@ -27,12 +29,14 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.selectTop;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.union;
+import static java.util.stream.Collectors.toList;
 
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.OrderBySpec;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.OrderBySpec.Direction;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.FromClauseStepBuilder;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -50,10 +54,8 @@ class MetadataQueryGenerator {
 
   static String createSelectForDatabasesV(
       OptionalLong userRows, OptionalLong dbRows, Optional<Expression> condition) {
-    String tableName = "DBC.DatabasesV";
     if (!userRows.isPresent() && !dbRows.isPresent()) {
-      FromClauseStepBuilder partialQuery = select("%s").from(tableName);
-      return condition.map(partialQuery::where).orElse(partialQuery).serialize();
+      return createSimpleSelect("DBC.DatabasesV", condition);
     }
     SelectExpression usersSelect = createSingleDbKindSelectFromDatabasesV("U", userRows, condition);
     SelectExpression dbsSelect = createSingleDbKindSelectFromDatabasesV("D", dbRows, condition);
@@ -65,6 +67,22 @@ class MetadataQueryGenerator {
                     selectAll().from(subquery(dbsSelect)).as("dbs").build())))
         .as("t")
         .serialize();
+  }
+
+  static String createSimpleSelect(String tableName, Optional<Expression> condition) {
+    FromClauseStepBuilder partialQuery = select("%s").from(tableName);
+    return condition.map(partialQuery::where).orElse(partialQuery).serialize();
+  }
+
+  static String createSelectForAllTempTablesVX(List<String> databases) {
+    return createSimpleSelect(
+        "DBC.AllTempTablesVX",
+        optionalIf(
+            !databases.isEmpty(),
+            () ->
+                in(
+                    identifier("B_DatabaseName"),
+                    databases.stream().map(String::toUpperCase).collect(toList()))));
   }
 
   private static SelectExpression createSingleDbKindSelectFromDatabasesV(

@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.DBC_INFO_QUERY;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForAllTempTablesVX;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
@@ -157,5 +158,35 @@ public class MetadataQueryGeneratorTest {
         "SELECT 'teradata' AS dialect, InfoData AS version, CURRENT_TIMESTAMP AS export_time"
             + " FROM dbc.dbcinfo WHERE InfoKey = 'VERSION'",
         DBC_INFO_QUERY);
+  }
+
+  @Test
+  public void createSimpleSelect_success() {
+    String query =
+        MetadataQueryGenerator.createSimpleSelect("SampleTable", /* condition= */ Optional.empty());
+
+    assertQueryEquals("SELECT %s FROM SampleTable", query);
+  }
+
+  @Test
+  public void createSimpleSelect_withCondition() {
+    String query =
+        MetadataQueryGenerator.createSimpleSelect(
+            "SampleTable", Optional.of(eq(identifier("col_a"), stringLiteral("abc"))));
+
+    assertQueryEquals("SELECT %s FROM SampleTable WHERE col_a = 'abc'", query);
+  }
+
+  @Test
+  public void createSelectForAllTempTablesVX_success() {
+    String query = createSelectForAllTempTablesVX(/* databases= */ ImmutableList.of());
+    assertQueryEquals("SELECT %s FROM DBC.AllTempTablesVX", query);
+  }
+
+  @Test
+  public void createSelectForAllTempTablesVX_withDatabaseFiltering_success() {
+    String query = createSelectForAllTempTablesVX(ImmutableList.of("db1", "db2"));
+    assertQueryEquals(
+        "SELECT %s FROM DBC.AllTempTablesVX WHERE B_DatabaseName IN ('DB1', 'DB2')", query);
   }
 }
