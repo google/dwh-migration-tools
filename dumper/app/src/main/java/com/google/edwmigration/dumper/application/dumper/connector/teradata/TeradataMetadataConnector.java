@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.DBC_INFO_QUERY;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.TABLE_TEXT_V_REQUEST_TEXT_LENGTH;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForAllTempTablesVX;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForDiskSpaceV;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForTableTextV;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSimpleSelect;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
@@ -272,19 +273,12 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   private TeradataJdbcSelectTask createTaskForDiskSpaceV(
       Optional<Expression> databaseNameCondition, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    StringBuilder query = new StringBuilder();
-    query.append("SELECT %s FROM (");
-    appendSelect(
-        query,
-        parseMaxRows(arguments, TeradataMetadataConnectorProperties.DISK_SPACE_V_MAX_ROWS),
-        " * FROM DBC.DiskSpaceV "
-            + databaseNameCondition
-                .map(condition -> "WHERE " + ExpressionSerializer.serialize(condition))
-                .orElse(""),
-        " ORDER BY CurrentPerm DESC ");
-    query.append(") AS t;");
+    OptionalLong maxRows =
+        parseMaxRows(arguments, TeradataMetadataConnectorProperties.DISK_SPACE_V_MAX_ROWS);
     return new TeradataJdbcSelectTask(
-        DiskSpaceVFormat.ZIP_ENTRY_NAME, TaskCategory.OPTIONAL, formatQuery(query.toString()));
+        DiskSpaceVFormat.ZIP_ENTRY_NAME,
+        TaskCategory.OPTIONAL,
+        createSelectForDiskSpaceV(maxRows, databaseNameCondition));
   }
 
   private static OptionalLong parseMaxRows(
