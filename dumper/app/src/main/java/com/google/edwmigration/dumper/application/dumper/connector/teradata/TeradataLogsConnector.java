@@ -65,6 +65,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
 
   private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
   private static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
+
+  /** The length of the VARCHAR column {@code DBQLSqlTbl.SQLTextInfo}. */
   static final int DBQLSQLTBL_SQLTEXTINFO_LENGTH = 31000;
 
   private static final Range<Long> MAX_SQL_LENGTH_RANGE =
@@ -93,7 +95,9 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         "max-sql-length",
         "Max length of the DBQLSqlTbl.SqlTextInfo column."
             + " Text that is longer than the defined limit will be split into multiple rows."
-            + " Example: 10000. Allowed range: 5000-30000.",
+            + " Example: 10000. Allowed range: "
+            + MAX_SQL_LENGTH_RANGE
+            + ".",
         /* defaultValue= */ null);
 
     private final String name;
