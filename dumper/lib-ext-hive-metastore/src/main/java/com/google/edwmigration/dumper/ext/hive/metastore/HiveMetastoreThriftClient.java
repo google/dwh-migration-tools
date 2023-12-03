@@ -161,6 +161,8 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       saslProperties.put(Sasl.SERVER_AUTH, "true");
       saslProperties.put(Sasl.QOP, "auth-conf");
 
+      // See:
+      // https://docs.oracle.com/javase/8/docs/technotes/guides/security/jgss/single-signon.html
       return new TSaslClientTransport(
           "GSSAPI", null, urlParts[0], urlParts[1], saslProperties, null, transport);
     }
