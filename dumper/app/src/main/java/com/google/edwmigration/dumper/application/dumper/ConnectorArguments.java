@@ -354,10 +354,11 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(
               OPT_HIVE_KERBEROS_URL,
-              "Kerberos URL to use to authenticate Hive Thrift API. It's recommended to generate a"
-                  + " Kerberos ticket with the same user before running the dumper. Please note"
-                  + " that we don't accept Kerberos `REALM` in the URL. Please ensure that the tool"
-                  + " runs in an environment where the default `REALM` is known and used.")
+              "Kerberos URL to use to authenticate Hive Thrift API. Please note that we don't"
+                  + " accept Kerberos `REALM` in the URL. Please ensure that the tool runs in an"
+                  + " environment where the default `REALM` is known and used. It's recommended to"
+                  + " generate a Kerberos ticket with the same user before running the dumper. The"
+                  + " tool will prompt for credentials if a ticket is not provided.")
           .withOptionalArg()
           .ofType(String.class)
           .describedAs("principal/host");
