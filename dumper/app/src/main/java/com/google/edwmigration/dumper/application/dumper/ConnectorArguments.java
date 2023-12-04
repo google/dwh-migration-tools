@@ -352,7 +352,10 @@ public class ConnectorArguments extends DefaultArguments {
           .defaultsTo(Boolean.parseBoolean(OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT));
   private final OptionSpec<String> optionHiveKerberosUrl =
       parser
-          .accepts(OPT_HIVE_KERBEROS_URL, "Kerberos URL to use to authenticate Hive Thrift API")
+          .accepts(
+              OPT_HIVE_KERBEROS_URL,
+              "Kerberos URL to use to authenticate Hive Thrift API. It's recommended to generate a"
+                  + " Kerberos ticket with the same user before running the dumper")
           .withOptionalArg()
           .ofType(String.class)
           .describedAs("principal/cluster");
