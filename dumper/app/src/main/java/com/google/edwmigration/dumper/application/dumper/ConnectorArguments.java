@@ -358,7 +358,7 @@ public class ConnectorArguments extends DefaultArguments {
                   + " Kerberos ticket with the same user before running the dumper")
           .withOptionalArg()
           .ofType(String.class)
-          .describedAs("principal/cluster");
+          .describedAs("principal/host");
 
   // Threading / Pooling
   private final OptionSpec<Integer> optionThreadPoolSize =
