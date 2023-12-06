@@ -19,14 +19,19 @@ package com.google.edwmigration.dumper.ext.hive.metastore;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
+import javax.security.sasl.Sasl;
+import javax.security.sasl.SaslException;
 import org.apache.thrift.TConfiguration;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
@@ -70,6 +75,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     @Nonnull private String name = "unnamed-thrift-client";
     @Nonnull private String host = "localhost";
     @Nonnegative private int port;
+    @Nullable private String kerberosUrl;
 
     @Nonnull
     private UnavailableClientVersionBehavior unavailableClientBehavior =
@@ -89,6 +95,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       this.port = builder.port;
       this.unavailableClientBehavior = builder.unavailableClientBehavior;
       this.debug = builder.debug;
+      this.kerberosUrl = builder.kerberosUrl;
     }
 
     @Nonnull
@@ -110,6 +117,12 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     }
 
     @Nonnull
+    public Builder withKerberosUrl(@Nullable String kerberosUrl) {
+      this.kerberosUrl = kerberosUrl;
+      return this;
+    }
+
+    @Nonnull
     public Builder withUnavailableClientVersionBehavior(
         @Nonnull UnavailableClientVersionBehavior behavior) {
       this.unavailableClientBehavior = behavior;
@@ -123,15 +136,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     }
 
     @Nonnull
-    public HiveMetastoreThriftClient build() throws TTransportException {
-
-      // We used to support Kerberos authentication, but that was when we used the Hive metastore
-      // client
-      // wrapper around Thrift. Now that we are connecting via Thrift directly, we would need to
-      // wrap
-      // the TTransport here with a TSaslClientTransport parameterized accordingly. This hasn't been
-      // done yet
-      // in the interest of expediency.
+    private TTransport createTransport() throws SaslException, TTransportException {
       TTransport transport =
           new TSocket(
               new TConfiguration(
@@ -140,6 +145,32 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
                   TConfiguration.DEFAULT_RECURSION_DEPTH),
               host,
               port);
+
+      if (kerberosUrl == null) {
+        return transport;
+      }
+
+      String[] urlParts = kerberosUrl.split("/");
+
+      if (urlParts.length != 2) {
+        throw new IllegalArgumentException(
+            "Please provide an URL in the format of `principal/cluster`");
+      }
+
+      Map<String, String> saslProperties = new HashMap<>();
+      saslProperties.put(Sasl.SERVER_AUTH, "true");
+      saslProperties.put(Sasl.QOP, "auth-conf");
+
+      // See:
+      // https://docs.oracle.com/javase/8/docs/technotes/guides/security/jgss/single-signon.html
+      return new TSaslClientTransport(
+          "GSSAPI", null, urlParts[0], urlParts[1], saslProperties, null, transport);
+    }
+
+    @Nonnull
+    public HiveMetastoreThriftClient build() throws TTransportException, SaslException {
+      TTransport transport = createTransport();
+
       TProtocol protocol = new TBinaryProtocol(transport);
       transport.open();
 
@@ -147,7 +178,8 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       if (supportedVersionMappings.containsKey(requestedVersionString)) {
         if (debug)
           LOG.debug(
-              "The request for Hive metastore Thrift client version '{}' is satisfiable; building it now.",
+              "The request for Hive metastore Thrift client version '{}' is satisfiable; building"
+                  + " it now.",
               requestedVersionString);
         client = supportedVersionMappings.get(requestedVersionString).provide(name, protocol);
       } else {
@@ -161,9 +193,10 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
         if (unavailableClientBehavior == UnavailableClientVersionBehavior.FALLBACK) {
           LOG.warn(
               messagePrefix
-                  + " The caller requested fallback behavior, so a client compiled against a superset Thrift specification will be used instead. "
-                  + "If you encounter an error when using the fallback client, please contact CompilerWorks support and provide "
-                  + "the originally requested version number.");
+                  + " The caller requested fallback behavior, so a client compiled against a"
+                  + " superset Thrift specification will be used instead. If you encounter an error"
+                  + " when using the fallback client, please contact CompilerWorks support and"
+                  + " provide the originally requested version number.");
           client = new HiveMetastoreThriftClient_Superset(name, protocol);
         } else {
           throw new UnsupportedOperationException(
