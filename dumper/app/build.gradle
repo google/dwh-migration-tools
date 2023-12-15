@@ -28,6 +28,12 @@ plugins {
 
 apply plugin: 'com.github.jk1.dependency-license-report'
 
+repositories {
+	maven {
+		url 'https://repository.cloudera.com/artifactory/cloudera-repos'
+	}
+}
+
 configurations {
     sources {
         transitive = true
@@ -60,6 +66,7 @@ dependencies {
     implementation libs.google.cloud.nio
     implementation libs.google.cloud.kms
     implementation libs.httpclient5
+	implementation libs.cloudera.manager
 
     runtimeOnly libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j
