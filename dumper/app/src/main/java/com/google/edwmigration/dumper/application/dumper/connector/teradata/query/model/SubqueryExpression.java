@@ -16,11 +16,4 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
-
-public interface Expression {
-
-  default Projection as(String alias) {
-    return projection(this, alias);
-  }
-}
+public interface SubqueryExpression extends Expression {}

@@ -16,11 +16,25 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
+import com.google.auto.value.AutoValue;
 
-public interface Expression {
+@AutoValue
+public abstract class OrderBySpec {
 
-  default Projection as(String alias) {
-    return projection(this, alias);
+  public abstract Expression expression();
+
+  public abstract Direction direction();
+
+  public static OrderBySpec create(Expression expression) {
+    return create(expression, Direction.ASC);
+  }
+
+  public static OrderBySpec create(Expression expression, Direction direction) {
+    return new AutoValue_OrderBySpec(expression, direction);
+  }
+
+  public enum Direction {
+    DESC,
+    ASC
   }
 }

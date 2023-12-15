@@ -16,13 +16,29 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.NaryExpression.NaryOperator.AND;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
+
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.BinaryExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Identifier;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.InExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.NaryExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Projection;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.SelectBuilder;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectSubqueryExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.StringLiteral;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SubqueryExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SubquerySourceSpec;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.UnionExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.UnionSubqueryExpression;
+import java.util.List;
 import java.util.Optional;
 
+/** Shortcuts for building the Teradata query. */
 public class TeradataSelectBuilder {
 
   public static Identifier identifier(String name) {
@@ -41,7 +57,43 @@ public class TeradataSelectBuilder {
     return BinaryExpression.create(lhs, "=", rhs);
   }
 
+  public static Expression in(Expression lhs, List<String> literals) {
+    return InExpression.create(
+        lhs,
+        literals.stream().map(TeradataSelectBuilder::stringLiteral).collect(toImmutableList()));
+  }
+
   public static StringLiteral stringLiteral(String value) {
     return StringLiteral.create(value);
+  }
+
+  public static SubquerySourceSpec subquerySource(SelectExpression selectExpression) {
+    return SubquerySourceSpec.create(
+        SelectSubqueryExpression.create(selectExpression), /* alias= */ Optional.empty());
+  }
+
+  public static SubquerySourceSpec subquerySource(UnionExpression unionExpression) {
+    return SubquerySourceSpec.create(
+        UnionSubqueryExpression.create(unionExpression), /* alias= */ Optional.empty());
+  }
+
+  public static SubqueryExpression subquery(UnionExpression unionExpression) {
+    return UnionSubqueryExpression.create(unionExpression);
+  }
+
+  public static SubqueryExpression subquery(SelectExpression selectExpression) {
+    return SelectSubqueryExpression.create(selectExpression);
+  }
+
+  public static NaryExpression and(Expression... subexpressions) {
+    return NaryExpression.create(AND, ImmutableList.copyOf(subexpressions));
+  }
+
+  public static Identifier star() {
+    return identifier("*");
+  }
+
+  public static SelectBuilder selectAll() {
+    return select(projection(star()));
   }
 }

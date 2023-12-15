@@ -16,12 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.DBC_INFO_QUERY;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.stringLiteral;
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -36,6 +35,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -117,6 +117,10 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   @Override
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
+    Optional<Expression> databaseNameCondition =
+        optionalIf(
+            !arguments.getDatabases().isEmpty(),
+            () -> in(identifier("DatabaseName"), arguments.getDatabases()));
     String whereDatabaseNameClause =
         new SqlBuilder()
             .withWhereInVals("\"DatabaseName\"", arguments.getDatabases())
@@ -141,22 +145,14 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
 
     out.add(
         new TeradataJdbcSelectTask(
-            VersionFormat.ZIP_ENTRY_NAME,
-            TaskCategory.OPTIONAL,
-            select(
-                    stringLiteral("teradata").as("dialect"),
-                    identifier("InfoData").as("version"),
-                    identifier("CURRENT_TIMESTAMP").as("export_time"))
-                .from("dbc.dbcinfo")
-                .where(eq(identifier("InfoKey"), stringLiteral("VERSION")))
-                .serialize()));
+            VersionFormat.ZIP_ENTRY_NAME, TaskCategory.OPTIONAL, DBC_INFO_QUERY));
 
     // This is theoretically more reliable than ColumnsV, but if we are bandwidth limited, we should
     // risk taking ColumnsV only.
     // out.add(new JdbcSelectTask(ColumnsFormat.ZIP_ENTRY_NAME, // Was: teradata.columns.csv
     // "SELECT \"DatabaseName\", \"TableName\", \"ColumnId\", \"ColumnName\", \"ColumnType\" FROM
     // DBC.Columns" + whereDatabaseNameClause + " ;"));
-    out.add(createTaskForDatabasesV(whereDatabaseNameClause, arguments));
+    out.add(createTaskForDatabasesV(arguments, databaseNameCondition));
     // out.add(new TeradataJdbcSelectTask("td.dbc.Tables.others.csv", "SELECT * FROM DBC.Tables
     // WHERE TableKind <> 'F' ORDER BY 1,2,3,4;"));
     // out.add(new TeradataJdbcSelectTask("td.dbc.Tables.functions.csv", "SELECT * FROM DBC.Tables
@@ -279,34 +275,16 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   }
 
   private TeradataJdbcSelectTask createTaskForDatabasesV(
-      String whereDatabaseNameClause, ConnectorArguments arguments)
+      ConnectorArguments arguments, Optional<Expression> databaseNameCondition)
       throws MetadataDumperUsageException {
-    StringBuilder query = new StringBuilder();
     OptionalLong userRows =
         parseMaxRows(arguments, TeradataMetadataConnectorProperties.DATABASES_V_USERS_MAX_ROWS);
     OptionalLong dbRows =
         parseMaxRows(arguments, TeradataMetadataConnectorProperties.DATABASES_V_DBS_MAX_ROWS);
-    query.append("SELECT %s FROM ");
-    if (!userRows.isPresent() && !dbRows.isPresent()) {
-      query.append(" DBC.DatabasesV ").append(whereDatabaseNameClause);
-    } else {
-      query.append(" (SELECT * FROM ( ");
-      appendSelect(
-          query,
-          userRows,
-          " * FROM DBC.DatabasesV " + concatWhere(whereDatabaseNameClause, " DBKind='U' "),
-          " ORDER BY PermSpace DESC ");
-      query.append(" ) AS users UNION SELECT * FROM (");
-      appendSelect(
-          query,
-          dbRows,
-          " * FROM DBC.DatabasesV " + concatWhere(whereDatabaseNameClause, " DBKind='D' "),
-          " ORDER BY PermSpace DESC ");
-      query.append(" ) AS dbs) AS t");
-    }
-    query.append(';');
     return new TeradataJdbcSelectTask(
-        DatabasesVFormat.ZIP_ENTRY_NAME, TaskCategory.REQUIRED, formatQuery(query.toString()));
+        DatabasesVFormat.ZIP_ENTRY_NAME,
+        TaskCategory.REQUIRED,
+        MetadataQueryGenerator.createSelectForDatabasesV(userRows, dbRows, databaseNameCondition));
   }
 
   private TeradataJdbcSelectTask createTaskForTableSizeV(
@@ -348,17 +326,6 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
       ConnectorArguments arguments, TeradataMetadataConnectorProperties property)
       throws MetadataDumperUsageException {
     return PropertyParser.parseNumber(arguments, property, Range.atLeast(1L));
-  }
-
-  private static String concatWhere(String whereClause, String condition) {
-    StringBuilder result = new StringBuilder();
-    if (whereClause.isEmpty()) {
-      result.append(" WHERE ");
-    } else {
-      result.append(whereClause);
-    }
-    result.append(condition);
-    return result.toString();
   }
 
   private static void appendSelect(

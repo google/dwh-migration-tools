@@ -16,11 +16,22 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
+import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 
-public interface Expression {
+@AutoValue
+public abstract class NaryExpression implements Expression {
+  public abstract NaryOperator operator();
 
-  default Projection as(String alias) {
-    return projection(this, alias);
+  public abstract ImmutableList<Expression> subexpressions();
+
+  public static NaryExpression create(
+      NaryOperator operator, ImmutableList<Expression> subexpressions) {
+    return new AutoValue_NaryExpression(operator, subexpressions);
+  }
+
+  public enum NaryOperator {
+    AND,
+    OR
   }
 }

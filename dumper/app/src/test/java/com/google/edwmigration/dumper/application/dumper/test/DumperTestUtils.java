@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.test;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+import static org.junit.Assert.assertEquals;
+
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
@@ -71,5 +74,9 @@ public class DumperTestUtils {
         }
       }
     };
+  }
+
+  public static void assertQueryEquals(String expectedQuery, String actualQuery) {
+    assertEquals(formatQuery(expectedQuery), formatQuery(actualQuery));
   }
 }

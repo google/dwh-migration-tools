@@ -25,9 +25,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.ExpressionSerializer;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder;
 import java.util.Optional;
+import java.util.OptionalLong;
 
 @AutoValue
 public abstract class SelectExpression implements Expression {
+
+  public abstract OptionalLong topRowCount();
 
   public abstract ImmutableList<Projection> projections();
 
@@ -35,12 +38,16 @@ public abstract class SelectExpression implements Expression {
 
   public abstract Optional<Expression> whereCondition();
 
+  public abstract ImmutableList<OrderBySpec> orderBySpecs();
+
   public static Builder builder() {
     return new AutoValue_SelectExpression.Builder();
   }
 
   @AutoValue.Builder
   abstract static class Builder {
+    abstract Builder setTopRowCount(long value);
+
     abstract Builder setProjections(ImmutableList<Projection> projections);
 
     abstract Builder setSourceSpec(SourceSpec sourceSpec);
@@ -49,10 +56,20 @@ public abstract class SelectExpression implements Expression {
 
     abstract Builder setWhereCondition(Expression whereCondition);
 
+    abstract Builder setOrderBySpecs(ImmutableList<OrderBySpec> orderBySpecs);
+
+    abstract ImmutableList.Builder<OrderBySpec> orderBySpecsBuilder();
+
     abstract SelectExpression autoBuild();
 
     SelectExpression build() {
       SelectExpression selectExpression = autoBuild();
+      selectExpression
+          .topRowCount()
+          .ifPresent(
+              topRowCount ->
+                  Preconditions.checkState(
+                      topRowCount > 0, "SELECT TOP must use positive integer."));
       Preconditions.checkState(
           !selectExpression.projections().isEmpty(), "SELECT requires at least one projection.");
       return selectExpression;
@@ -67,8 +84,16 @@ public abstract class SelectExpression implements Expression {
             .collect(toImmutableList()));
   }
 
+  public static UnionExpression union(SelectExpression... selectExpressions) {
+    return UnionExpression.create(ImmutableList.copyOf(selectExpressions));
+  }
+
   public static SelectBuilder select(Projection... projections) {
     return new SelectBuilder(ImmutableList.copyOf(projections));
+  }
+
+  public static SelectBuilder selectTop(long rowCount, Projection... projections) {
+    return new SelectBuilder(rowCount, ImmutableList.copyOf(projections));
   }
 
   public abstract static class SelectExpressionBuilder {
@@ -93,10 +118,20 @@ public abstract class SelectExpression implements Expression {
       super(builder().setProjections(projections));
     }
 
+    private SelectBuilder(long rowCount, ImmutableList<Projection> projections) {
+      super(builder().setTopRowCount(rowCount).setProjections(projections));
+    }
+
     public FromClauseStepBuilder from(String tableName) {
       return new FromClauseStepBuilder(
           builder.setSourceSpec(
               TableSourceSpec.create(Identifier.create(tableName), /* alias= */ Optional.empty())));
+    }
+
+    public FromClauseStepBuilder from(SubqueryExpression subquery) {
+      return new FromClauseStepBuilder(
+          builder.setSourceSpec(
+              SubquerySourceSpec.create(subquery, /* alias= */ Optional.empty())));
     }
   }
 
@@ -119,7 +154,7 @@ public abstract class SelectExpression implements Expression {
     }
   }
 
-  public static class FromClauseAsStepBuilder extends SelectExpressionBuilder {
+  public static class FromClauseAsStepBuilder extends AfterWhereStepBuilder {
     private FromClauseAsStepBuilder(Builder builder) {
       super(builder);
     }
@@ -133,6 +168,10 @@ public abstract class SelectExpression implements Expression {
 
     private AfterWhereStepBuilder(Builder builder) {
       super(builder);
+    }
+
+    public SelectExpression orderBy(OrderBySpec... orderBySpecs) {
+      return builder.setOrderBySpecs(ImmutableList.copyOf(orderBySpecs)).build();
     }
   }
 }

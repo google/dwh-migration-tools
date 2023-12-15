@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.selectTop;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -33,5 +34,12 @@ public class SelectExpressionTest {
         assertThrows(IllegalStateException.class, () -> select(new String[0]).build());
 
     assertEquals("SELECT requires at least one projection.", e.getMessage());
+  }
+
+  @Test
+  public void select_topZero_fail() {
+    IllegalStateException e = assertThrows(IllegalStateException.class, () -> selectTop(0).build());
+
+    assertEquals("SELECT TOP must use positive integer.", e.getMessage());
   }
 }

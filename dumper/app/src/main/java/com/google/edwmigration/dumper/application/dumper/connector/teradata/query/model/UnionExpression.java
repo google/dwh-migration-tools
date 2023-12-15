@@ -16,11 +16,14 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
+import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 
-public interface Expression {
+@AutoValue
+public abstract class UnionExpression implements Expression {
+  public abstract ImmutableList<SelectExpression> selectExpressions();
 
-  default Projection as(String alias) {
-    return projection(this, alias);
+  public static UnionExpression create(ImmutableList<SelectExpression> selectExpressions) {
+    return new AutoValue_UnionExpression(selectExpressions);
   }
 }
