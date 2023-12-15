@@ -15,9 +15,8 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-
-import javax.annotation.Nonnull;
 import java.util.List;
+import javax.annotation.Nonnull;
 
 @AutoService({Connector.class})
 @Description("Dumps metadata from Cloudera Manager.")

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.Writer;
@@ -73,5 +72,4 @@ public class ClouderaServicesTask extends AbstractClouderaTask {
             this.yarnUtilization = yarnUtilization;
         }
     }
-}
 }
