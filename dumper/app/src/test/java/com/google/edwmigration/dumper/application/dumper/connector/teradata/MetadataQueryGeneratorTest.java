@@ -85,10 +85,10 @@ public class MetadataQueryGeneratorTest {
     assertQueryEquals(
         "SELECT %s FROM ("
             + " SELECT * FROM (SELECT TOP 13 * FROM DBC.DatabasesV"
-            + "   WHERE DatabaseName = 'abc' AND DBKind = 'U' ORDER BY PermSpace DESC) AS users"
+            + "   WHERE (DatabaseName = 'abc' AND DBKind = 'U') ORDER BY PermSpace DESC) AS users"
             + " UNION ALL "
             + " SELECT * FROM (SELECT * FROM DBC.DatabasesV"
-            + "   WHERE DatabaseName = 'abc' AND DBKind = 'D') AS dbs"
+            + "   WHERE (DatabaseName = 'abc' AND DBKind = 'D')) AS dbs"
             + ") AS t",
         query);
   }
@@ -142,11 +142,11 @@ public class MetadataQueryGeneratorTest {
     assertQueryEquals(
         "SELECT %s FROM ("
             + " SELECT * FROM (SELECT TOP 15 * FROM DBC.DatabasesV"
-            + "   WHERE DatabaseName IN ('db1', 'db2') AND DBKind = 'U'"
+            + "   WHERE (DatabaseName IN ('db1', 'db2') AND DBKind = 'U')"
             + "   ORDER BY PermSpace DESC) AS users"
             + " UNION ALL "
             + " SELECT * FROM (SELECT TOP 18 * FROM DBC.DatabasesV"
-            + "   WHERE DatabaseName IN ('db1', 'db2') AND DBKind = 'D'"
+            + "   WHERE (DatabaseName IN ('db1', 'db2') AND DBKind = 'D')"
             + "   ORDER BY PermSpace DESC) AS dbs"
             + ") AS t",
         query);

@@ -155,7 +155,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
             TaskCategory.REQUIRED,
             createSimpleSelect("DBC.TablesV", databaseNameCondition)));
 
-    out.add(createTaskForTableTextV(arguments));
+    out.add(createTaskForTableTextV(arguments, databaseNameCondition));
 
     out.add(
         new TeradataJdbcSelectTask(
@@ -223,7 +223,8 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         () -> in(identifier(columnName), arguments.getDatabases()));
   }
 
-  private TeradataJdbcSelectTask createTaskForTableTextV(ConnectorArguments arguments)
+  private TeradataJdbcSelectTask createTaskForTableTextV(
+      ConnectorArguments arguments, Optional<Expression> databaseNameCondition)
       throws MetadataDumperUsageException {
     List<String> databases = arguments.getDatabases();
     OptionalLong textMaxLength =
@@ -248,7 +249,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
                   "RequestText",
                   "LineNo",
                   "DBC.TableTextV",
-                  whereCondition,
+                  databaseNameCondition,
                   TABLE_TEXT_V_REQUEST_TEXT_LENGTH,
                   splitTextColumnMaxLength)
               .generate();

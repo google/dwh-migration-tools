@@ -22,10 +22,13 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.BinaryExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.CastExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Identifier;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.InExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.IntegerLiteral;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.NaryExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.NaryExpression.NaryOperator;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Projection;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.SelectBuilder;
@@ -33,6 +36,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.teradata.quer
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.StringLiteral;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SubqueryExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SubquerySourceSpec;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SubstrExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.UnionExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.UnionSubqueryExpression;
 import java.util.List;
@@ -65,6 +69,30 @@ public class TeradataSelectBuilder {
 
   public static StringLiteral stringLiteral(String value) {
     return StringLiteral.create(value);
+  }
+
+  public static IntegerLiteral integerLiteral(long value) {
+    return IntegerLiteral.create(value);
+  }
+
+  public static Expression multiply(Expression... expressions) {
+    return NaryExpression.create(NaryOperator.MUL, ImmutableList.copyOf(expressions));
+  }
+
+  public static Expression add(Expression... expressions) {
+    return NaryExpression.create(NaryOperator.ADD, ImmutableList.copyOf(expressions));
+  }
+
+  public static Expression subtract(Expression a, Expression b) {
+    return NaryExpression.create(NaryOperator.SUBTRACT, ImmutableList.of(a, b));
+  }
+
+  public static SubstrExpression substr(Expression string, Expression from, Expression length) {
+    return SubstrExpression.create(string, from, length);
+  }
+
+  public static CastExpression cast(Expression expression, Expression destinationType) {
+    return CastExpression.create(expression, destinationType);
   }
 
   public static SubquerySourceSpec subquerySource(SelectExpression selectExpression) {

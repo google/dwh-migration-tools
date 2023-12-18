@@ -17,10 +17,16 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata.query;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.add;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.cast;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.integerLiteral;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.multiply;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.projection;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.stringLiteral;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.substr;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.subtract;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.selectTop;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.union;
@@ -52,7 +58,16 @@ public class ExpressionSerializerTest {
           Pair.of(eq(stringLiteral("A"), stringLiteral("BC")), "'A' = 'BC'"),
           Pair.of(
               union(select("col_a").from("tab_1").build(), select("col_b").from("tab_2").build()),
-              "SELECT col_a FROM tab_1 UNION ALL SELECT col_b FROM tab_2"));
+              "SELECT col_a FROM tab_1 UNION ALL SELECT col_b FROM tab_2"),
+          Pair.of(integerLiteral(123), "123"),
+          Pair.of(
+              substr(stringLiteral("abc"), integerLiteral(2), integerLiteral(300)),
+              "SUBSTR('abc', 2, 300)"),
+          Pair.of(
+              cast(stringLiteral("abc"), identifier("VARCHAR(13)")), "CAST('abc' AS VARCHAR(13))"),
+          Pair.of(subtract(integerLiteral(7), identifier("x")), "(7 - x)"),
+          Pair.of(add(integerLiteral(7), identifier("x"), identifier("y")), "(7 + x + y)"),
+          Pair.of(multiply(integerLiteral(7), identifier("x"), identifier("y")), "(7 * x * y)"));
 
   private static final ImmutableList<Pair<SelectExpressionBuilder, String>> SELECT_QUERIES =
       ImmutableList.of(

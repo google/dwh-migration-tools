@@ -17,6 +17,9 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.stringLiteral;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -48,12 +51,12 @@ public class SplitTextColumnQueryGeneratorTest {
     assertEquals(
         formatQuery(
             "SELECT SampleColumn,\n"
-                + " CAST(SUBSTR(Description,1,5) AS VARCHAR(5)) AS Description,\n"
-                + " (PartNo - 1) * 2 + 1 AS PartNo FROM Corpus\n"
+                + " CAST(SUBSTR(Description, 1, 5) AS VARCHAR(5)) AS Description,\n"
+                + " (((PartNo - 1) * 2) + 1) AS PartNo FROM Corpus\n"
                 + " UNION ALL\n"
                 + " SELECT SampleColumn,\n"
-                + " CAST(SUBSTR(Description,6,5) AS VARCHAR(5)) AS Description,\n"
-                + " (PartNo - 1) * 2 + 2 AS PartNo FROM Corpus"),
+                + " CAST(SUBSTR(Description, 6, 5) AS VARCHAR(5)) AS Description,\n"
+                + " (((PartNo - 1) * 2) + 2) AS PartNo FROM Corpus"),
         query);
   }
 
@@ -84,7 +87,7 @@ public class SplitTextColumnQueryGeneratorTest {
             "Description",
             "PartNo",
             "Corpus",
-            /* whereCondition= */ Optional.of("Description LIKE '%ABC%'"),
+            /* whereCondition= */ Optional.of(eq(identifier("Description"), stringLiteral("ABC"))),
             /* textColumnOriginalLength= */ 10,
             /* splitTextColumnMaxLength= */ 11);
 
@@ -93,8 +96,7 @@ public class SplitTextColumnQueryGeneratorTest {
 
     // Assert
     assertEquals(
-        "SELECT SampleColumn, Description, PartNo FROM Corpus WHERE Description LIKE '%ABC%'",
-        query);
+        "SELECT SampleColumn, Description, PartNo FROM Corpus WHERE Description = 'ABC'", query);
   }
 
   @Test
@@ -116,12 +118,12 @@ public class SplitTextColumnQueryGeneratorTest {
     assertEquals(
         formatQuery(
             "SELECT SampleColumn1, SampleColumn2,\n"
-                + " CAST(SUBSTR(Description,1,5) AS VARCHAR(5)) AS Description,\n"
-                + " (PartNo - 1) * 2 + 1 AS PartNo FROM Corpus\n"
+                + " CAST(SUBSTR(Description, 1, 5) AS VARCHAR(5)) AS Description,\n"
+                + " (((PartNo - 1) * 2) + 1) AS PartNo FROM Corpus\n"
                 + " UNION ALL\n"
                 + " SELECT SampleColumn1, SampleColumn2,\n"
-                + " CAST(SUBSTR(Description,6,5) AS VARCHAR(5)) AS Description,\n"
-                + " (PartNo - 1) * 2 + 2 AS PartNo FROM Corpus"),
+                + " CAST(SUBSTR(Description, 6, 5) AS VARCHAR(5)) AS Description,\n"
+                + " (((PartNo - 1) * 2) + 2) AS PartNo FROM Corpus"),
         query);
   }
 
@@ -133,7 +135,7 @@ public class SplitTextColumnQueryGeneratorTest {
             "Description",
             "PartNo",
             "Corpus",
-            /* whereCondition= */ Optional.of("Description LIKE '%DEF%'"),
+            /* whereCondition= */ Optional.of(eq(identifier("Description"), stringLiteral("DEF"))),
             /* textColumnOriginalLength= */ 10,
             /* splitTextColumnMaxLength= */ 5);
 
@@ -143,12 +145,12 @@ public class SplitTextColumnQueryGeneratorTest {
     // Assert
     assertEquals(
         formatQuery(
-            "SELECT SampleColumn, CAST(SUBSTR(Description,1,5) AS VARCHAR(5)) AS Description,\n"
-                + " (PartNo - 1) * 2 + 1 AS PartNo FROM Corpus WHERE Description LIKE '%DEF%'\n"
+            "SELECT SampleColumn, CAST(SUBSTR(Description, 1, 5) AS VARCHAR(5)) AS Description,\n"
+                + " (((PartNo - 1) * 2) + 1) AS PartNo FROM Corpus WHERE Description = 'DEF'\n"
                 + " UNION ALL\n"
                 + " SELECT SampleColumn,\n"
-                + " CAST(SUBSTR(Description,6,5) AS VARCHAR(5)) AS Description,\n"
-                + " (PartNo - 1) * 2 + 2 AS PartNo FROM Corpus WHERE Description LIKE '%DEF%'"),
+                + " CAST(SUBSTR(Description, 6, 5) AS VARCHAR(5)) AS Description,\n"
+                + " (((PartNo - 1) * 2) + 2) AS PartNo FROM Corpus WHERE Description = 'DEF'"),
         query);
   }
 
@@ -171,16 +173,16 @@ public class SplitTextColumnQueryGeneratorTest {
     assertEquals(
         formatQuery(
             "SELECT SampleColumn,\n"
-                + " CAST(SUBSTR(Description,1,40) AS VARCHAR(40)) AS Description,\n"
-                + " (PartNo - 1) * 3 + 1 AS PartNo FROM Corpus\n"
+                + " CAST(SUBSTR(Description, 1, 40) AS VARCHAR(40)) AS Description,\n"
+                + " (((PartNo - 1) * 3) + 1) AS PartNo FROM Corpus\n"
                 + " UNION ALL\n"
                 + " SELECT SampleColumn,\n"
-                + " CAST(SUBSTR(Description,41,40) AS VARCHAR(40)) AS Description,\n"
-                + " (PartNo - 1) * 3 + 2 AS PartNo FROM Corpus"
+                + " CAST(SUBSTR(Description, 41, 40) AS VARCHAR(40)) AS Description,\n"
+                + " (((PartNo - 1) * 3) + 2) AS PartNo FROM Corpus"
                 + " UNION ALL\n"
                 + " SELECT SampleColumn,\n"
-                + " CAST(SUBSTR(Description,81,40) AS VARCHAR(40)) AS Description,\n"
-                + " (PartNo - 1) * 3 + 3 AS PartNo FROM Corpus"),
+                + " CAST(SUBSTR(Description, 81, 40) AS VARCHAR(40)) AS Description,\n"
+                + " (((PartNo - 1) * 3) + 3) AS PartNo FROM Corpus"),
         query);
   }
 

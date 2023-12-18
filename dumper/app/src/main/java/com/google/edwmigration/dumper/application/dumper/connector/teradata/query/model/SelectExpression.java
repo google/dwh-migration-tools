@@ -88,8 +88,16 @@ public abstract class SelectExpression implements Expression {
     return UnionExpression.create(ImmutableList.copyOf(selectExpressions));
   }
 
+  public static UnionExpression union(ImmutableList<SelectExpression> selectExpressions) {
+    return UnionExpression.create(selectExpressions);
+  }
+
   public static SelectBuilder select(Projection... projections) {
     return new SelectBuilder(ImmutableList.copyOf(projections));
+  }
+
+  public static SelectBuilder select(ImmutableList<Projection> projections) {
+    return new SelectBuilder(projections);
   }
 
   public static SelectBuilder selectTop(long rowCount, Projection... projections) {

@@ -21,9 +21,11 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.BinaryExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.CastExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Identifier;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.InExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.IntegerLiteral;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.NaryExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.OrderBySpec;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Projection;
@@ -33,6 +35,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.teradata.quer
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.StringLiteral;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SubqueryExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SubquerySourceSpec;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SubstrExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.TableSourceSpec;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.UnionExpression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.UnionSubqueryExpression;
@@ -64,6 +67,8 @@ public class ExpressionSerializer {
       append((SelectExpression) expression);
     } else if (expr instanceof StringLiteral) {
       serializedQuery.append(escapeStringLiteral(((StringLiteral) expr).value()));
+    } else if (expr instanceof IntegerLiteral) {
+      serializedQuery.append(((IntegerLiteral) expr).value());
     } else if (expr instanceof Identifier) {
       serializedQuery.append(((Identifier) expr).name());
     } else if (expr instanceof BinaryExpression) {
@@ -76,9 +81,31 @@ public class ExpressionSerializer {
       append(((NaryExpression) expr));
     } else if (expr instanceof InExpression) {
       append(((InExpression) expr));
+    } else if (expr instanceof SubstrExpression) {
+      append(((SubstrExpression) expr));
+    } else if (expr instanceof CastExpression) {
+      append(((CastExpression) expr));
     } else {
       throw new IllegalArgumentException(String.format("Unsupported expression type: '%s'.", expr));
     }
+  }
+
+  private void append(CastExpression expr) {
+    serializedQuery.append("CAST(");
+    append(expr.underlyingExpression());
+    serializedQuery.append(" AS ");
+    append(expr.destinationType());
+    serializedQuery.append(')');
+  }
+
+  private void append(SubstrExpression expr) {
+    serializedQuery.append("SUBSTR(");
+    append(expr.string());
+    serializedQuery.append(", ");
+    append(expr.from());
+    serializedQuery.append(", ");
+    append(expr.length());
+    serializedQuery.append(')');
   }
 
   private void append(InExpression expr) {
@@ -89,7 +116,9 @@ public class ExpressionSerializer {
   }
 
   private void append(NaryExpression expr) {
-    appendWithSeparators(expr.subexpressions(), expr.operator().name(), this::append);
+    serializedQuery.append('(');
+    appendWithSeparators(expr.subexpressions(), expr.operator().serializedForm, this::append);
+    serializedQuery.append(')');
   }
 
   private void append(BinaryExpression expr) {
