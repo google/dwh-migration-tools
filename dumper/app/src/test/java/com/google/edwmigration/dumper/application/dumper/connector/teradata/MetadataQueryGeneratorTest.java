@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.DBC_INFO_QUERY;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForAllTempTablesVX;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForTableTextV;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
@@ -188,5 +189,68 @@ public class MetadataQueryGeneratorTest {
     String query = createSelectForAllTempTablesVX(ImmutableList.of("db1", "db2"));
     assertQueryEquals(
         "SELECT %s FROM DBC.AllTempTablesVX WHERE B_DatabaseName IN ('DB1', 'DB2')", query);
+  }
+
+  @Test
+  public void createSelectForTableTextV_success() {
+    String query =
+        createSelectForTableTextV(
+            /* textMaxLength= */ OptionalLong.empty(), /* condition= */ Optional.empty());
+    assertQueryEquals("SELECT %s FROM DBC.TableTextV", query);
+  }
+
+  @Test
+  public void createSelectForTableTextV_withCondition() {
+    // Act
+    String query =
+        createSelectForTableTextV(
+            /* textMaxLength= */ OptionalLong.empty(),
+            /* condition= */ Optional.of(
+                eq(identifier("DatabaseName"), stringLiteral("sample_db"))));
+
+    // Assert
+    assertQueryEquals("SELECT %s FROM DBC.TableTextV WHERE DatabaseName = 'sample_db'", query);
+  }
+
+  @Test
+  public void createSelectForTableTextV_withTextMaxLength() {
+    // Act
+    String query =
+        createSelectForTableTextV(
+            /* textMaxLength= */ OptionalLong.of(20000), /* condition= */ Optional.empty());
+
+    // Assert
+    assertQueryEquals(
+        "SELECT DataBaseName, TableName, TableKind,"
+            + "   CAST(SUBSTR(RequestText, 1, 20000) AS VARCHAR(20000)) AS RequestText,"
+            + "   (((LineNo - 1) * 2) + 1) AS LineNo FROM DBC.TableTextV"
+            + " UNION ALL"
+            + " SELECT DataBaseName, TableName, TableKind,"
+            + "   CAST(SUBSTR(RequestText, 20001, 20000) AS VARCHAR(20000)) AS RequestText,"
+            + "   (((LineNo - 1) * 2) + 2) AS LineNo FROM DBC.TableTextV",
+        query);
+  }
+
+  @Test
+  public void createSelectForTableTextV_withTextMaxLengthAndCondition() {
+    // Act
+    String query =
+        createSelectForTableTextV(
+            /* textMaxLength= */ OptionalLong.of(20000),
+            /* condition= */ Optional.of(
+                eq(identifier("DatabaseName"), stringLiteral("sample_db"))));
+
+    // Assert
+    assertQueryEquals(
+        "SELECT DataBaseName, TableName, TableKind,"
+            + "   CAST(SUBSTR(RequestText, 1, 20000) AS VARCHAR(20000)) AS RequestText,"
+            + "   (((LineNo - 1) * 2) + 1) AS LineNo FROM DBC.TableTextV"
+            + "   WHERE DatabaseName = 'sample_db'"
+            + " UNION ALL"
+            + " SELECT DataBaseName, TableName, TableKind,"
+            + "   CAST(SUBSTR(RequestText, 20001, 20000) AS VARCHAR(20000)) AS RequestText,"
+            + "   (((LineNo - 1) * 2) + 2) AS LineNo FROM DBC.TableTextV"
+            + "   WHERE DatabaseName = 'sample_db'",
+        query);
   }
 }
