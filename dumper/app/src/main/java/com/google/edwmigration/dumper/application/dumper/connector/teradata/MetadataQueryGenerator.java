@@ -31,12 +31,14 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.union;
 import static java.util.stream.Collectors.toList;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.OrderBySpec;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.OrderBySpec.Direction;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.AfterWhereStepBuilder;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.FromClauseStepBuilder;
 import java.util.List;
 import java.util.Optional;
@@ -108,21 +110,59 @@ class MetadataQueryGenerator {
         .generate();
   }
 
+  static String createSelectForDiskSpaceV(OptionalLong rowCount, Optional<Expression> condition) {
+    Optional<LimitedSelectParams> params =
+        optionalIf(
+            rowCount.isPresent(),
+            () -> LimitedSelectParams.create(rowCount.getAsLong(), "CurrentPerm"));
+    return select("%s")
+        .from(subquery(createLimitedSelect(params, "DBC.DiskSpaceV", condition)))
+        .as("t")
+        .serialize();
+  }
+
   private static SelectExpression createSingleDbKindSelectFromDatabasesV(
       String dbKind, OptionalLong rowCount, Optional<Expression> condition) {
-    String tableName = "DBC.DatabasesV";
     Expression dbKindCondition = eq(identifier("DBKind"), stringLiteral(dbKind));
-    Expression processedCondition =
-        condition
-            .<Expression>map(innerCondition -> and(innerCondition, dbKindCondition))
-            .orElse(dbKindCondition);
-    if (rowCount.isPresent()) {
-      return selectTop(rowCount.getAsLong(), projection(star()))
-          .from(tableName)
-          .where(processedCondition)
-          .orderBy(OrderBySpec.create(identifier("PermSpace"), Direction.DESC));
-    } else {
-      return selectAll().from(tableName).where(processedCondition).build();
+    Optional<LimitedSelectParams> params =
+        optionalIf(
+            rowCount.isPresent(),
+            () -> LimitedSelectParams.create(rowCount.getAsLong(), "PermSpace"));
+    return createLimitedSelect(
+        params,
+        "DBC.DatabasesV",
+        Optional.of(
+            condition
+                .<Expression>map(innerCondition -> and(innerCondition, dbKindCondition))
+                .orElse(dbKindCondition)));
+  }
+
+  private static SelectExpression createLimitedSelect(
+      Optional<LimitedSelectParams> params, String tableName, Optional<Expression> condition) {
+    FromClauseStepBuilder builder =
+        params
+            .map(
+                innerParams ->
+                    selectTop(innerParams.rowCount(), projection(star())).from(tableName))
+            .orElseGet(() -> selectAll().from(tableName));
+    AfterWhereStepBuilder builder2 = condition.map(builder::where).orElse(builder);
+    return params
+        .map(
+            innerParams ->
+                builder2.orderBy(
+                    OrderBySpec.create(
+                        identifier(innerParams.orderByColumnDesc()), Direction.DESC)))
+        .orElseGet(builder2::build);
+  }
+
+  @AutoValue
+  abstract static class LimitedSelectParams {
+    abstract long rowCount();
+
+    abstract String orderByColumnDesc();
+
+    static LimitedSelectParams create(long rowCount, String orderByColumnDesc) {
+      return new AutoValue_MetadataQueryGenerator_LimitedSelectParams(rowCount, orderByColumnDesc);
     }
   }
 }

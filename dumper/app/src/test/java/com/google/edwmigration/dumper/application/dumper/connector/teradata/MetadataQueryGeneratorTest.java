@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.DBC_INFO_QUERY;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForAllTempTablesVX;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForDiskSpaceV;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForTableTextV;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
@@ -37,34 +38,40 @@ public class MetadataQueryGeneratorTest {
 
   @Test
   public void createSelectForDatabasesV_noLimits() {
+    // Act
     String query =
         MetadataQueryGenerator.createSelectForDatabasesV(
             /* userRows= */ OptionalLong.empty(),
             /* dbRows= */ OptionalLong.empty(),
             /* condition= */ Optional.empty());
 
+    // Assert
     assertQueryEquals("SELECT %s FROM DBC.DatabasesV", query);
   }
 
   @Test
   public void createSelectForDatabasesV_condition() {
+    // Act
     String query =
         MetadataQueryGenerator.createSelectForDatabasesV(
             /* userRows= */ OptionalLong.empty(),
             /* dbRows= */ OptionalLong.empty(),
             /* condition= */ Optional.of(eq(identifier("DatabaseName"), stringLiteral("abc"))));
 
+    // Assert
     assertQueryEquals("SELECT %s FROM DBC.DatabasesV WHERE DatabaseName = 'abc'", query);
   }
 
   @Test
   public void createSelectForDatabasesV_usersLimit() {
+    // Act
     String query =
         MetadataQueryGenerator.createSelectForDatabasesV(
             /* userRows= */ OptionalLong.of(13),
             /* dbRows= */ OptionalLong.empty(),
             /* condition= */ Optional.empty());
 
+    // Assert
     assertQueryEquals(
         "SELECT %s FROM ("
             + " SELECT * FROM (SELECT TOP 13 * FROM DBC.DatabasesV"
@@ -77,12 +84,14 @@ public class MetadataQueryGeneratorTest {
 
   @Test
   public void createSelectForDatabasesV_usersLimitAndCondition() {
+    // Act
     String query =
         MetadataQueryGenerator.createSelectForDatabasesV(
             /* userRows= */ OptionalLong.of(13),
             /* dbRows= */ OptionalLong.empty(),
             /* condition= */ Optional.of(eq(identifier("DatabaseName"), stringLiteral("abc"))));
 
+    // Assert
     assertQueryEquals(
         "SELECT %s FROM ("
             + " SELECT * FROM (SELECT TOP 13 * FROM DBC.DatabasesV"
@@ -96,12 +105,14 @@ public class MetadataQueryGeneratorTest {
 
   @Test
   public void createSelectForDatabasesV_dbsLimit() {
+    // Act
     String query =
         MetadataQueryGenerator.createSelectForDatabasesV(
             /* userRows= */ OptionalLong.empty(),
             /* dbRows= */ OptionalLong.of(18),
             /* condition= */ Optional.empty());
 
+    // Assert
     assertQueryEquals(
         "SELECT %s FROM ("
             + " SELECT * FROM (SELECT * FROM DBC.DatabasesV WHERE DBKind = 'U') AS users"
@@ -114,12 +125,14 @@ public class MetadataQueryGeneratorTest {
 
   @Test
   public void createSelectForDatabasesV_usersAndDbsLimit() {
+    // Act
     String query =
         MetadataQueryGenerator.createSelectForDatabasesV(
             /* userRows= */ OptionalLong.of(15),
             /* dbRows= */ OptionalLong.of(18),
             /* condition= */ Optional.empty());
 
+    // Assert
     assertQueryEquals(
         "SELECT %s FROM ("
             + " SELECT * FROM (SELECT TOP 15 * FROM DBC.DatabasesV"
@@ -133,6 +146,7 @@ public class MetadataQueryGeneratorTest {
 
   @Test
   public void createSelectForDatabasesV_usersAndDbsLimitAndCondition() {
+    // Act
     String query =
         MetadataQueryGenerator.createSelectForDatabasesV(
             /* userRows= */ OptionalLong.of(15),
@@ -140,6 +154,7 @@ public class MetadataQueryGeneratorTest {
             /* condition= */ Optional.of(
                 in(identifier("DatabaseName"), ImmutableList.of("db1", "db2"))));
 
+    // Assert
     assertQueryEquals(
         "SELECT %s FROM ("
             + " SELECT * FROM (SELECT TOP 15 * FROM DBC.DatabasesV"
@@ -171,10 +186,12 @@ public class MetadataQueryGeneratorTest {
 
   @Test
   public void createSimpleSelect_withCondition() {
+    // Act
     String query =
         MetadataQueryGenerator.createSimpleSelect(
             "SampleTable", Optional.of(eq(identifier("col_a"), stringLiteral("abc"))));
 
+    // Assert
     assertQueryEquals("SELECT %s FROM SampleTable WHERE col_a = 'abc'", query);
   }
 
@@ -193,9 +210,12 @@ public class MetadataQueryGeneratorTest {
 
   @Test
   public void createSelectForTableTextV_success() {
+    // Act
     String query =
         createSelectForTableTextV(
             /* textMaxLength= */ OptionalLong.empty(), /* condition= */ Optional.empty());
+
+    // Assert
     assertQueryEquals("SELECT %s FROM DBC.TableTextV", query);
   }
 
@@ -251,6 +271,62 @@ public class MetadataQueryGeneratorTest {
             + "   CAST(SUBSTR(RequestText, 20001, 20000) AS VARCHAR(20000)) AS RequestText,"
             + "   (((LineNo - 1) * 2) + 2) AS LineNo FROM DBC.TableTextV"
             + "   WHERE DatabaseName = 'sample_db'",
+        query);
+  }
+
+  @Test
+  public void createSelectForDiskSpaceV_success() {
+    // Act
+    String query =
+        createSelectForDiskSpaceV(
+            /* rowCount= */ OptionalLong.empty(), /* condition= */ Optional.empty());
+
+    // Assert
+    assertQueryEquals("SELECT %s FROM (SELECT * FROM DBC.DiskSpaceV) AS t", query);
+  }
+
+  @Test
+  public void createSelectForDiskSpaceV_withCondition() {
+    // Act
+    String query =
+        createSelectForDiskSpaceV(
+            /* rowCount= */ OptionalLong.empty(),
+            /* condition= */ Optional.of(
+                eq(identifier("DatabaseName"), stringLiteral("sample_db"))));
+
+    // Assert
+    assertQueryEquals(
+        "SELECT %s FROM (SELECT * FROM DBC.DiskSpaceV WHERE DatabaseName = 'sample_db') AS t",
+        query);
+  }
+
+  @Test
+  public void createSelectForDiskSpaceV_withLimit() {
+    // Act
+    String query =
+        createSelectForDiskSpaceV(
+            /* rowCount= */ OptionalLong.of(15), /* condition= */ Optional.empty());
+
+    // Assert
+    assertQueryEquals(
+        "SELECT %s FROM (SELECT TOP 15 * FROM DBC.DiskSpaceV ORDER BY CurrentPerm DESC) AS t",
+        query);
+  }
+
+  @Test
+  public void createSelectForDiskSpaceV_withLimitAndCondition() {
+    // Act
+    String query =
+        createSelectForDiskSpaceV(
+            /* rowCount= */ OptionalLong.of(78),
+            /* condition= */ Optional.of(
+                eq(identifier("DatabaseName"), stringLiteral("sample_db"))));
+
+    // Assert
+    assertQueryEquals(
+        "SELECT %s FROM (SELECT TOP 78 * FROM DBC.DiskSpaceV"
+            + " WHERE DatabaseName = 'sample_db'"
+            + " ORDER BY CurrentPerm DESC) AS t",
         query);
   }
 }
