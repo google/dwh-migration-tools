@@ -36,13 +36,13 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.ExpressionSerializer;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
-import com.google.edwmigration.dumper.application.dumper.utils.SqlBuilder;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataMetadataDumpFormat;
 import java.util.List;
@@ -117,10 +117,6 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
       throws MetadataDumperUsageException {
     Optional<Expression> databaseNameCondition =
         constructDatabaseNameCondition(arguments, "DatabaseName");
-    String whereDataBaseNameClause =
-        new SqlBuilder()
-            .withWhereInVals("\"DataBaseName\"", arguments.getDatabases())
-            .toWhereClause();
 
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
@@ -184,11 +180,11 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
               TaskCategory.OPTIONAL,
               createSimpleSelect("DBC.StatsV", databaseNameCondition)));
 
-      out.add(createTaskForTableSizeV(whereDataBaseNameClause, arguments));
+      out.add(createTaskForTableSizeV(databaseNameCondition, arguments));
 
       out.add(createTaskForAllTempTablesVX(arguments));
 
-      out.add(createTaskForDiskSpaceV(whereDataBaseNameClause, arguments));
+      out.add(createTaskForDiskSpaceV(databaseNameCondition, arguments));
 
       out.add(
           new TeradataJdbcSelectTask(
@@ -231,10 +227,6 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         createSelectForTableTextV(textMaxLength, databaseNameCondition));
   }
 
-  private static String escapeStringLiteral(String s) {
-    return "'" + (s.replaceAll("'", "''")) + "'";
-  }
-
   private TeradataJdbcSelectTask createTaskForDatabasesV(
       ConnectorArguments arguments, Optional<Expression> databaseNameCondition)
       throws MetadataDumperUsageException {
@@ -256,7 +248,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   }
 
   private TeradataJdbcSelectTask createTaskForTableSizeV(
-      String whereDataBaseNameClause, ConnectorArguments arguments)
+      Optional<Expression> databaseNameCondition, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     StringBuilder query = new StringBuilder();
     // TableSizeV contains a row per each VProc/AMP, so it can grow significantly for large dbs.
@@ -267,7 +259,9 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         query,
         parseMaxRows(arguments, TeradataMetadataConnectorProperties.TABLE_SIZE_V_MAX_ROWS),
         " DataBaseName, AccountName, TableName, SUM(CurrentPerm) CurrentPerm, SUM(PeakPerm) PeakPerm FROM DBC.TableSizeV "
-            + whereDataBaseNameClause
+            + databaseNameCondition
+                .map(condition -> "WHERE " + ExpressionSerializer.serialize(condition))
+                .orElse("")
             + " GROUP BY 1,2,3 ",
         " ORDER BY 4 DESC ");
     query.append(';');
@@ -276,14 +270,17 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
   }
 
   private TeradataJdbcSelectTask createTaskForDiskSpaceV(
-      String whereDataBaseNameClause, ConnectorArguments arguments)
+      Optional<Expression> databaseNameCondition, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     StringBuilder query = new StringBuilder();
     query.append("SELECT %s FROM (");
     appendSelect(
         query,
         parseMaxRows(arguments, TeradataMetadataConnectorProperties.DISK_SPACE_V_MAX_ROWS),
-        " * FROM DBC.DiskSpaceV " + whereDataBaseNameClause,
+        " * FROM DBC.DiskSpaceV "
+            + databaseNameCondition
+                .map(condition -> "WHERE " + ExpressionSerializer.serialize(condition))
+                .orElse(""),
         " ORDER BY CurrentPerm DESC ");
     query.append(") AS t;");
     return new TeradataJdbcSelectTask(
