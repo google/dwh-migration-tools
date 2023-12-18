@@ -209,22 +209,26 @@ public class ExpressionSerializer {
   }
 
   private <T> void appendCommaSeparated(ImmutableList<T> list, Consumer<T> appender) {
-    appendWithSeparators(list, ",", appender);
+    internalAppendWithSeparators(list, ", ", appender);
   }
 
   private <T> void appendWithSeparators(
       ImmutableList<T> list, String separator, Consumer<T> appender) {
+    internalAppendWithSeparators(list, " " + separator + " ", appender);
+  }
+
+  private <T> void internalAppendWithSeparators(
+      ImmutableList<T> list, String separator, Consumer<T> appender) {
     boolean first = true;
+    if (!list.isEmpty()) {
+      serializedQuery.append(' ');
+    }
     for (T element : list) {
       if (first) {
         first = false;
       } else {
-        if (!separator.equals(",")) {
-          serializedQuery.append(' ');
-        }
         serializedQuery.append(separator);
       }
-      serializedQuery.append(' ');
       appender.accept(element);
     }
   }
