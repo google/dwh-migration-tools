@@ -201,6 +201,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               outTable.bucketsCount = table.getBucketsCount();
               outTable.isCompressed = table.isCompressed();
 
+              outTable.serializationLib = table.getSerializationLib();
+              outTable.inputFormat = table.getInputFormat();
+              outTable.outputFormat = table.getOutputFormat();
+
               outTable.fields = new ArrayList<>();
               for (Field field : table.getFields()) {
                 TableMetadata.FieldMetadata fieldMetadata = new TableMetadata.FieldMetadata();

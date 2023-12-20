@@ -73,6 +73,15 @@ public interface Table {
   @CheckForNull
   public Boolean isCompressed();
 
+  @CheckForNull
+  public String getSerializationLib();
+
+  @CheckForNull
+  public String getInputFormat();
+
+  @CheckForNull
+  public String getOutputFormat();
+
   @Nonnull
   public List<? extends Field> getFields() throws Exception;
 
