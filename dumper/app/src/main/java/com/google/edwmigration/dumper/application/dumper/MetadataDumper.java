@@ -77,17 +77,10 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private boolean exitOnError = false;
-
-  public MetadataDumper withExitOnError(boolean exitOnError) {
-    this.exitOnError = exitOnError;
-    return this;
-  }
-
-  public void run(String... args) throws Exception {
+  public boolean run(String... args) throws Exception {
     ConnectorArguments arguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
     try {
-      run(arguments);
+      return run(arguments);
     } finally {
       if (arguments.saveResponseFile()) {
         JsonResponseFile.save(arguments);
@@ -95,11 +88,11 @@ public class MetadataDumper {
     }
   }
 
-  public void run(@Nonnull ConnectorArguments arguments) throws Exception {
+  public boolean run(@Nonnull ConnectorArguments arguments) throws Exception {
     String connectorName = arguments.getConnectorName();
     if (connectorName == null) {
       LOG.error("Target DBMS is required");
-      return;
+      return false;
     }
 
     Connector connector = CONNECTORS.get(connectorName.toUpperCase());
@@ -110,9 +103,9 @@ public class MetadataDumper {
               + " not supported; available are "
               + CONNECTORS.keySet()
               + ".");
-      return;
+      return false;
     }
-    run(connector, arguments);
+    return run(connector, arguments);
   }
 
   private void print(@Nonnull Task<?> task, int indent) {
@@ -151,7 +144,7 @@ public class MetadataDumper {
     }
   }
 
-  protected void run(@Nonnull Connector connector, @Nonnull ConnectorArguments arguments)
+  protected boolean run(@Nonnull Connector connector, @Nonnull ConnectorArguments arguments)
       throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
     tasks.add(new VersionTask());
@@ -177,6 +170,7 @@ public class MetadataDumper {
       for (Task<?> task : tasks) {
         print(task, 1);
       }
+      return true;
     } else {
       Stopwatch stopwatch = Stopwatch.createStarted();
       TaskSetState.Impl state = new TaskSetState.Impl();
@@ -216,8 +210,9 @@ public class MetadataDumper {
 
       printTaskResults(summaryPrinter, state);
       printDumperSummary(summaryPrinter, connector, outputFileLocation);
-      checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
+      boolean result = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
       logStatusSummary(summaryPrinter, state);
+      return result;
     }
   }
 
@@ -288,7 +283,7 @@ public class MetadataDumper {
         });
   }
 
-  private void checkRequiredTaskSuccess(
+  private boolean checkRequiredTaskSuccess(
       SummaryPrinter summaryPrinter, Impl state, String outputFileName) {
     long requiredTasksNotSucceeded =
         state.getTaskResultMap().entrySet().stream()
@@ -302,10 +297,9 @@ public class MetadataDumper {
             linePrinter.println(
                 "Output, including debugging information, has been saved to '%s'.", outputFileName);
           });
-      if (exitOnError) {
-        System.exit(1);
-      }
+      return false;
     }
+    return true;
   }
 
   private void logStatusSummary(SummaryPrinter summaryPrinter, TaskSetState.Impl state) {

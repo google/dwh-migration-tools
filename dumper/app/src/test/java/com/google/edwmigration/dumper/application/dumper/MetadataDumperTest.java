@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static org.junit.Assert.assertTrue;
+
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQueryLogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
@@ -34,7 +36,7 @@ public class MetadataDumperTest {
 
   // TODO(ishmum): `testOverridesZipWithGivenName` with content check
   private File file;
-  private Main dumper = new Main(new MetadataDumper().withExitOnError(false));
+  private Main dumper = new Main(new MetadataDumper());
   private final Connector connector = new HiveMetadataConnector();
   private final String defaultFileName = "dwh-migration-hiveql-metadata.zip";
 
@@ -48,7 +50,8 @@ public class MetadataDumperTest {
   @Test
   public void testInstantiate() throws Exception {
     dumper = new Main(new MetadataDumper());
-    dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
+    boolean result = dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
+    assertTrue(result);
   }
 
   @Test
@@ -60,7 +63,7 @@ public class MetadataDumperTest {
     dumper.run("--connector", connector.getName());
 
     // Assert
-    Assert.assertTrue(file.exists());
+    assertTrue(file.exists());
   }
 
   @Test
@@ -73,7 +76,7 @@ public class MetadataDumperTest {
     dumper.run("--connector", connector.getName(), "--output", path);
 
     // Assert
-    Assert.assertTrue(file.exists());
+    assertTrue(file.exists());
   }
 
   @Test
@@ -86,7 +89,7 @@ public class MetadataDumperTest {
     dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
-    Assert.assertTrue(file.exists());
+    assertTrue(file.exists());
   }
 
   @Test
@@ -101,7 +104,7 @@ public class MetadataDumperTest {
     dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
-    Assert.assertTrue(expectedFile.exists());
+    assertTrue(expectedFile.exists());
   }
 
   @Test
@@ -116,7 +119,7 @@ public class MetadataDumperTest {
     dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
-    Assert.assertTrue(expectedFile.exists());
+    assertTrue(expectedFile.exists());
   }
 
   @Test
@@ -134,6 +137,6 @@ public class MetadataDumperTest {
             () -> dumper.run("--connector", connector.getName(), "--output", name));
 
     // Assert
-    Assert.assertTrue(exception.getMessage().startsWith("A file already exists at test"));
+    assertTrue(exception.getMessage().startsWith("A file already exists at test"));
   }
 }
