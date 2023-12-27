@@ -35,7 +35,7 @@ import org.apache.commons.csv.CSVPrinter;
 public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
 
   Class<? extends Enum<?>> headerEnum;
-  Optional<AmazonRedshift> redshifClient;
+  Optional<AmazonRedshift> redshiftClient;
 
   public AbstractAwsApiTask(String zipEntryName, Class<? extends Enum<?>> headerEnum) {
     super(zipEntryName);
@@ -43,13 +43,13 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
   }
 
   @Nonnull
-  public AbstractAwsApiTask withRedshiftApiClient(AmazonRedshift redshifClient) {
-    this.redshifClient = Optional.of(redshifClient);
+  public AbstractAwsApiTask withRedshiftApiClient(AmazonRedshift redshiftClient) {
+    this.redshiftClient = Optional.of(redshiftClient);
     return this;
   }
 
   public AmazonRedshift redshiftApiClient() {
-    return redshifClient.or(AmazonRedshiftClientBuilder.standard().build());
+    return redshiftClient.or(AmazonRedshiftClientBuilder.standard().build());
   }
 
   public Void writeRecordsCsv(ByteSink sink, Stream<Object[]> records) throws IOException {

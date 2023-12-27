@@ -16,13 +16,64 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import autovalue.shaded.com.google.common.collect.ImmutableList;
+import com.amazonaws.services.redshift.AmazonRedshift;
+import com.amazonaws.services.redshift.model.Cluster;
+import com.amazonaws.services.redshift.model.DescribeClustersResult;
+import com.amazonaws.services.redshift.model.Endpoint;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest.MemoryByteSink;
+import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 @RunWith(JUnit4.class)
 public class RedshiftClusterNodesTaskTest {
 
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  @Mock private AmazonRedshift redshiftClientMock;
+
   @Test
-  public void doRun_success() throws Exception {}
+  public void doRun_success() throws Exception {
+    when(redshiftClientMock.describeClusters(any()))
+        .thenReturn(
+            new DescribeClustersResult()
+                .withClusters(
+                    ImmutableList.of(
+                        new Cluster()
+                            .withClusterIdentifier("clId1")
+                            .withEndpoint(new Endpoint().withAddress("hostAddr1"))
+                            .withNumberOfNodes(3)
+                            .withNodeType("ra3.4xlarge")
+                            .withTotalStorageCapacityInMegaBytes(35000L),
+                        new Cluster()
+                            .withClusterIdentifier("clId2")
+                            .withEndpoint(new Endpoint().withAddress("hostAddr2"))
+                            .withNumberOfNodes(1)
+                            .withNodeType("ra3.16xlarge")
+                            .withTotalStorageCapacityInMegaBytes(45000L))));
+
+    MemoryByteSink sink = new MemoryByteSink();
+
+    RedshiftClusterNodesTask task = new RedshiftClusterNodesTask();
+    task.withRedshiftApiClient(redshiftClientMock);
+
+    task.doRun(new DummyTaskRunContext(null), sink, null);
+
+    String actualOutput = sink.openStream().toString();
+    assertEquals(
+        "cluster_identifier,host,nodes_num,node_type,total_storage\n"
+            + "clId1,hostAddr1,3,ra3.4xlarge,35000\n"
+            + "clId2,hostAddr2,1,ra3.16xlarge,45000\n",
+        actualOutput);
+  }
 }
