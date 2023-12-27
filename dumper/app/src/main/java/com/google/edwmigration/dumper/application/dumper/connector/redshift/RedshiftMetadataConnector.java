@@ -64,6 +64,8 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.add(new RedshiftEnvironmentYamlTask());
+    // AWS API tasks
+    out.add(new RedshiftClusterNodesTask());
 
     parallelTask.addTask(
         new JdbcSelectTask(SvvColumnsFormat.ZIP_ENTRY_NAME, "SELECT * FROM SVV_COLUMNS"));

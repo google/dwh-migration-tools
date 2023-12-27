@@ -180,6 +180,22 @@ public interface RedshiftMetadataDumpFormat extends PostgresqlMetadataDumpFormat
     }
   }
 
+  /**
+   * Headers for results from cluster_nodes.csv, whose data comes from AWS API DescribeClusters
+   * response.
+   */
+  public static interface ClusterNodes {
+    public static final String ZIP_ENTRY_NAME = "cluster_nodes.csv";
+
+    public static enum Header {
+      cluster_identifier,
+      host,
+      nodes_num,
+      node_type,
+      total_storage
+    }
+  }
+
   @Deprecated // Does not give information about column order. TODO: Use SVV_TABLE_INFO.
   public static interface PgTableDef {
 
