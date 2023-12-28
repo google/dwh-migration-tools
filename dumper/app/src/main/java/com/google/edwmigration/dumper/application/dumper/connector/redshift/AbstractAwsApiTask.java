@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
@@ -34,22 +35,22 @@ import org.apache.commons.csv.CSVPrinter;
 public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
 
   Class<? extends Enum<?>> headerEnum;
-  AmazonRedshift redshiftClient;
+  Optional<AmazonRedshift> redshiftClient;
 
   public AbstractAwsApiTask(String zipEntryName, Class<? extends Enum<?>> headerEnum) {
     super(zipEntryName);
     this.headerEnum = headerEnum;
-    this.redshiftClient = AmazonRedshiftClientBuilder.standard().build();
+    this.redshiftClient = Optional.empty();
   }
 
   @Nonnull
   public AbstractAwsApiTask withRedshiftApiClient(AmazonRedshift redshiftClient) {
-    this.redshiftClient = redshiftClient;
+    this.redshiftClient = Optional.of(redshiftClient);
     return this;
   }
 
   public AmazonRedshift redshiftApiClient() {
-    return redshiftClient;
+    return redshiftClient.orElseGet(() -> AmazonRedshiftClientBuilder.standard().build());
   }
 
   public Void writeRecordsCsv(@Nonnull ByteSink sink, Stream<Object[]> records) throws IOException {
