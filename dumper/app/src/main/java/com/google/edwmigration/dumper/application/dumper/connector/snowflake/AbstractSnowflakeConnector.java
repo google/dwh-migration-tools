@@ -88,24 +88,27 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
         newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
     DataSource dataSource =
         new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
-    return checkCurrentDatabaseExists(arguments, new JdbcHandle(dataSource));
+    JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
+    if (!arguments.getDatabases().isEmpty()) {
+      checkCurrentDatabaseExists(arguments.getDatabases().get(0), jdbcHandle.getJdbcTemplate());
+    }
+    return jdbcHandle;
   }
 
   @Nonnull
-  private JdbcHandle checkCurrentDatabaseExists(
-      @Nonnull ConnectorArguments arguments, @Nonnull JdbcHandle jdbcHandle)
+  private void checkCurrentDatabaseExists(
+      @Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
-    JdbcTemplate jdbcTemplate = jdbcHandle.getJdbcTemplate();
-    String currentDatabase = jdbcTemplate.queryForObject("SELECT CURRENT_DATABASE()", String.class);
+    String currentDatabase = jdbcTemplate.queryForObject("USE DATABASE ?", String.class,
+        databaseName);
     if (currentDatabase == null) {
       List<String> dbNames =
           jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
       throw new MetadataDumperUsageException(
           "Database name not found "
-              + arguments.getDatabases().get(0)
+              + databaseName
               + ", use one of: "
               + StringUtils.join(dbNames, ", "));
     }
-    return jdbcHandle;
   }
 }
