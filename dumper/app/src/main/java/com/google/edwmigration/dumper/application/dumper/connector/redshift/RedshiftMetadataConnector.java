@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -45,6 +46,34 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
 
   private static final String PG_SCHEMAS = "('pg_catalog', 'pg_internal', 'information_schema')";
 
+  public enum RedshiftMetadataConnectorProperties implements ConnectorProperty {
+    AWS_API("aws-api", "Enables AWS API connector to extract cluster properties and metrics.");
+
+    private final String name;
+    private final String description;
+
+    RedshiftMetadataConnectorProperties(String name, String description) {
+      this.name = "redshift.metadata." + name;
+      this.description = description;
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
+  }
+
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return RedshiftMetadataConnectorProperties.class;
+  }
+
   public RedshiftMetadataConnector() {
     super("redshift");
   }
@@ -65,7 +94,9 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     out.add(new FormatTask(FORMAT_NAME));
     out.add(new RedshiftEnvironmentYamlTask());
     // AWS API tasks
-    out.add(new RedshiftClusterNodesTask());
+    if (arguments.getDefinition(RedshiftMetadataConnectorProperties.AWS_API) != null) {
+      out.add(new RedshiftClusterNodesTask());
+    }
 
     parallelTask.addTask(
         new JdbcSelectTask(SvvColumnsFormat.ZIP_ENTRY_NAME, "SELECT * FROM SVV_COLUMNS"));

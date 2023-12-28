@@ -24,6 +24,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat.ClusterNodes;
 import java.io.IOException;
+import javax.annotation.Nonnull;
 
 /** Extraction task to get information about Redshift Cluster nodes from AWS API. */
 public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
@@ -33,7 +34,8 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
   }
 
   @Override
-  protected Void doRun(TaskRunContext context, ByteSink sink, Handle handle) throws IOException {
+  protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, Handle handle)
+      throws IOException {
     AmazonRedshift client = redshiftApiClient();
     DescribeClustersRequest request = new DescribeClustersRequest();
     DescribeClustersResult result = client.describeClusters(request);

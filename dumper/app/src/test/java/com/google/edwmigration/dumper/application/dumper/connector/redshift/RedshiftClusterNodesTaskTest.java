@@ -26,7 +26,6 @@ import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
 import com.amazonaws.services.redshift.model.Endpoint;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest.MemoryByteSink;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,7 +66,7 @@ public class RedshiftClusterNodesTaskTest {
     RedshiftClusterNodesTask task = new RedshiftClusterNodesTask();
     task.withRedshiftApiClient(redshiftClientMock);
 
-    task.doRun(new DummyTaskRunContext(null), sink, null);
+    task.doRun(null, sink, null);
 
     String actualOutput = sink.openStream().toString();
     assertEquals(

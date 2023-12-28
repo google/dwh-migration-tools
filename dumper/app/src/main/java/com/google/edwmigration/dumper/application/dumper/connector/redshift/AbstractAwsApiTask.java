@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.AmazonRedshiftClientBuilder;
-import com.google.common.base.Optional;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
@@ -35,24 +34,25 @@ import org.apache.commons.csv.CSVPrinter;
 public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
 
   Class<? extends Enum<?>> headerEnum;
-  Optional<AmazonRedshift> redshiftClient;
+  AmazonRedshift redshiftClient;
 
   public AbstractAwsApiTask(String zipEntryName, Class<? extends Enum<?>> headerEnum) {
     super(zipEntryName);
     this.headerEnum = headerEnum;
+    this.redshiftClient = AmazonRedshiftClientBuilder.standard().build();
   }
 
   @Nonnull
   public AbstractAwsApiTask withRedshiftApiClient(AmazonRedshift redshiftClient) {
-    this.redshiftClient = Optional.of(redshiftClient);
+    this.redshiftClient = redshiftClient;
     return this;
   }
 
   public AmazonRedshift redshiftApiClient() {
-    return redshiftClient.or(AmazonRedshiftClientBuilder.standard().build());
+    return redshiftClient;
   }
 
-  public Void writeRecordsCsv(ByteSink sink, Stream<Object[]> records) throws IOException {
+  public Void writeRecordsCsv(@Nonnull ByteSink sink, Stream<Object[]> records) throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
     try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName());
         Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
