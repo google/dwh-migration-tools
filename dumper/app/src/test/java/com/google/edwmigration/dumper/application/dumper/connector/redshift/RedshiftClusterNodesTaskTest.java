@@ -25,7 +25,7 @@ import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
 import com.amazonaws.services.redshift.model.Endpoint;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest.MemoryByteSink;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +35,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @RunWith(JUnit4.class)
-public class RedshiftClusterNodesTaskTest {
+public class RedshiftClusterNodesTaskTest extends AbstractTaskTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
