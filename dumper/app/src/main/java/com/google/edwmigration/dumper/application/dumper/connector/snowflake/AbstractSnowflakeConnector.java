@@ -100,7 +100,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       @Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
     String currentDatabase =
-        jdbcTemplate.queryForObject(String.format("USE DATABASE %s", databaseName), String.class);
+        jdbcTemplate.queryForObject(
+            String.format("USE DATABASE \"%s\"", databaseName), String.class);
     if (currentDatabase == null) {
       List<String> dbNames =
           jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
