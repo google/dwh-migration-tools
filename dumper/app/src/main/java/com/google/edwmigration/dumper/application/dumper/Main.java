@@ -35,8 +35,8 @@ public class Main {
     this.metadataDumper = metadataDumper;
   }
 
-  public void run(@Nonnull String... args) throws Exception {
-    metadataDumper.run(args);
+  public boolean run(@Nonnull String... args) throws Exception {
+    return metadataDumper.run(args);
   }
 
   private static void printErrorMessages(Throwable e) {
@@ -61,20 +61,22 @@ public class Main {
   public static void main(String... args) throws Exception {
     try {
       Main main = new Main(new MetadataDumper());
-      // LOG.debug("Arguments are: [" + String.join("] [", args) + "]");
-      // Without this, the dumper prints "Missing required arguments:[connector]"
       if (args.length == 0) {
         args = new String[] {"--help"};
       }
-      main.run(args);
+      if (!main.run(args)) {
+        System.exit(1);
+      }
     } catch (MetadataDumperUsageException e) {
       LOG.error(e.getMessage());
       for (String msg : e.getMessages()) {
         LOG.error(msg);
       }
+      System.exit(1);
     } catch (Exception e) {
       e.printStackTrace();
       printErrorMessages(e);
+      System.exit(1);
     }
   }
 }
