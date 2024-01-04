@@ -16,11 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -45,34 +46,6 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     implements MetadataConnector, RedshiftMetadataDumpFormat {
 
   private static final String PG_SCHEMAS = "('pg_catalog', 'pg_internal', 'information_schema')";
-
-  public enum RedshiftMetadataConnectorProperties implements ConnectorProperty {
-    AWS_API("aws-api", "Enables AWS API connector to extract cluster properties and metrics.");
-
-    private final String name;
-    private final String description;
-
-    RedshiftMetadataConnectorProperties(String name, String description) {
-      this.name = "redshift.metadata." + name;
-      this.description = description;
-    }
-
-    @Nonnull
-    public String getName() {
-      return name;
-    }
-
-    @Nonnull
-    public String getDescription() {
-      return description;
-    }
-  }
-
-  @Nonnull
-  @Override
-  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-    return RedshiftMetadataConnectorProperties.class;
-  }
 
   public RedshiftMetadataConnector() {
     super("redshift");
@@ -93,9 +66,12 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.add(new RedshiftEnvironmentYamlTask());
-    // AWS API tasks
-    if (arguments.getDefinition(RedshiftMetadataConnectorProperties.AWS_API) != null) {
-      out.add(new RedshiftClusterNodesTask());
+
+    // AWS API tasks, enabled by default if IAM credentials are provided
+    Optional<AWSCredentialsProvider> awsCredentials =
+        AbstractAwsApiTask.createCredentialsProvider(arguments);
+    if (awsCredentials.isPresent()) {
+      out.add(new RedshiftClusterNodesTask(awsCredentials.get()));
     }
 
     parallelTask.addTask(

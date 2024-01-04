@@ -63,7 +63,7 @@ public class RedshiftClusterNodesTaskTest extends AbstractTaskTest {
 
     MemoryByteSink sink = new MemoryByteSink();
 
-    RedshiftClusterNodesTask task = new RedshiftClusterNodesTask();
+    RedshiftClusterNodesTask task = new RedshiftClusterNodesTask(null);
     task.withRedshiftApiClient(redshiftClientMock);
 
     task.doRun(null, sink, null);

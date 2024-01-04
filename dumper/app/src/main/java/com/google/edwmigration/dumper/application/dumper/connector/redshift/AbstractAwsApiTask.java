@@ -16,9 +16,14 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.redshift.AmazonRedshift;
-import com.amazonaws.services.redshift.AmazonRedshiftClientBuilder;
+import com.amazonaws.services.redshift.AmazonRedshiftClient;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import java.io.IOException;
@@ -34,13 +39,18 @@ import org.apache.commons.csv.CSVPrinter;
 /** Abstract class that provides methods for connecting with AWS API and writing results. */
 public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
 
+  AWSCredentialsProvider credentialsProvider;
   Class<? extends Enum<?>> headerEnum;
   Optional<AmazonRedshift> redshiftClient;
 
-  public AbstractAwsApiTask(String zipEntryName, Class<? extends Enum<?>> headerEnum) {
+  public AbstractAwsApiTask(
+      AWSCredentialsProvider credentialsProvider,
+      String zipEntryName,
+      Class<? extends Enum<?>> headerEnum) {
     super(zipEntryName);
     this.headerEnum = headerEnum;
     this.redshiftClient = Optional.empty();
+    this.credentialsProvider = credentialsProvider;
   }
 
   @Nonnull
@@ -50,7 +60,8 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
   }
 
   public AmazonRedshift redshiftApiClient() {
-    return redshiftClient.orElseGet(() -> AmazonRedshiftClientBuilder.standard().build());
+    return redshiftClient.orElseGet(
+        () -> AmazonRedshiftClient.builder().withCredentials(credentialsProvider).build());
   }
 
   public Void writeRecordsCsv(@Nonnull ByteSink sink, Stream<Object[]> records) throws IOException {
@@ -70,5 +81,19 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
           });
     }
     return null;
+  }
+
+  public static Optional<AWSCredentialsProvider> createCredentialsProvider(
+      ConnectorArguments arguments) {
+    if (arguments.getIAMProfile() != null) {
+      return Optional.of(new ProfileCredentialsProvider(arguments.getIAMProfile()));
+    }
+    if (arguments.getIAMAccessKeyID() != null && arguments.getIAMSecretAccessKey() != null) {
+      return Optional.of(
+          new AWSStaticCredentialsProvider(
+              new BasicAWSCredentials(
+                  arguments.getIAMAccessKeyID(), arguments.getIAMSecretAccessKey())));
+    }
+    return Optional.empty();
   }
 }

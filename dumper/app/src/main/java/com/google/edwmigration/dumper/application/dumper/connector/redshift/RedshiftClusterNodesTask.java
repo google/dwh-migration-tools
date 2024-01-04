@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.model.DescribeClustersRequest;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
@@ -29,8 +30,8 @@ import javax.annotation.Nonnull;
 /** Extraction task to get information about Redshift Cluster nodes from AWS API. */
 public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
 
-  public RedshiftClusterNodesTask() {
-    super(ClusterNodes.ZIP_ENTRY_NAME, ClusterNodes.Header.class);
+  public RedshiftClusterNodesTask(AWSCredentialsProvider credentialsProvider) {
+    super(credentialsProvider, ClusterNodes.ZIP_ENTRY_NAME, ClusterNodes.Header.class);
   }
 
   @Override
