@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -27,7 +29,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -70,15 +71,10 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
         Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       CSVPrinter printer = format.print(writer);
 
-      records.forEach(
-          record -> {
-            try {
-              monitor.count();
-              printer.printRecord(record);
-            } catch (IOException e) {
-              throw new UncheckedIOException(e);
-            }
-          });
+      for (Object[] record : records.collect(toImmutableList())) {
+        monitor.count();
+        printer.printRecord(record);
+      }
     }
     return null;
   }

@@ -48,7 +48,7 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
                 cluster ->
                     new Object[] {
                       cluster.getClusterIdentifier(),
-                      cluster.getEndpoint().getAddress(),
+                      cluster.getEndpoint() != null ? cluster.getEndpoint().getAddress() : "",
                       cluster.getNumberOfNodes(),
                       cluster.getNodeType(),
                       cluster.getTotalStorageCapacityInMegaBytes()
