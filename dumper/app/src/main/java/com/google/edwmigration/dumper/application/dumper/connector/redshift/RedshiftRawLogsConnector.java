@@ -16,6 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricConfig;
+import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
+import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
+
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -43,9 +48,11 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,6 +200,16 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
           wlmQueryTemplateQuery,
           "service_class_start_time",
           parallelTask);
+
+      makeClusterMetricsTasks(
+          arguments,
+          intervals,
+          RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX,
+          RedshiftRawLogsDumpFormat.ClusterUsageMetrics.Header.class,
+          List.of(
+              MetricConfig.create(MetricName.CPUUtilization, MetricType.Average),
+              MetricConfig.create(MetricName.PercentageDiskSpaceUsed, MetricType.Average)),
+          out);
     }
   }
 
@@ -231,6 +248,31 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
               + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
               + RedshiftRawLogsDumpFormat.ZIP_ENTRY_SUFFIX;
       out.addTask(new JdbcSelectIntervalTask(file, query, interval));
+    }
+  }
+
+  /** Creates tasks to get Redshift cluster metrics from AWS CloudWatch API. */
+  private void makeClusterMetricsTasks(
+      ConnectorArguments arguments,
+      ZonedIntervalIterable intervals,
+      String filePrefix,
+      Class<? extends Enum<?>> headerEnum,
+      List<MetricConfig> metrics,
+      List<? super Task<?>> out) {
+    Optional<AWSCredentialsProvider> awsCredentials =
+        AbstractAwsApiTask.createCredentialsProvider(arguments);
+    if (awsCredentials.isEmpty()) {
+      return;
+    }
+
+    for (ZonedInterval interval : intervals) {
+      String file =
+          filePrefix
+              + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
+              + RedshiftRawLogsDumpFormat.ZIP_ENTRY_SUFFIX;
+      out.add(
+          new RedshiftClusterUsageMetricsTask(
+              awsCredentials.get(), ZonedDateTime.now(), interval, file, headerEnum, metrics));
     }
   }
 }
