@@ -44,6 +44,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.tuple.Pair;
 
+/** Extraction task to get Redshift time series metrics from AWS CloudWatch API. */
 public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
 
   protected static enum MetricName {
