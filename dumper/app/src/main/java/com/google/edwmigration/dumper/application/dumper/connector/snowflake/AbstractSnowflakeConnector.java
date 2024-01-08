@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -63,6 +64,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     super(name);
   }
 
+  private static final int MAX_DATABASE_CHAR_LENGTH = 255;
+
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
@@ -86,10 +89,13 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
     Driver driver =
         newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
+    System.out.println("Before DataSource creation.");
     DataSource dataSource =
         new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
+    System.out.println("Before handle creation");
     JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
     if (!arguments.getDatabases().isEmpty()) {
+      System.out.println("Before Checking");
       checkCurrentDatabaseExists(arguments.getDatabases().get(0), jdbcHandle.getJdbcTemplate());
     }
     return jdbcHandle;
@@ -99,6 +105,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   private void checkCurrentDatabaseExists(
       @Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
+    checkForBadDatabaseName(databaseName);
     String currentDatabase =
         jdbcTemplate.queryForObject(
             String.format("USE DATABASE \"%s\"", databaseName), String.class);
@@ -110,6 +117,22 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
               + databaseName
               + ", use one of: "
               + StringUtils.join(dbNames, ", "));
+    }
+  }
+
+  private void checkForBadDatabaseName(@Nonnull String databaseName)
+      throws MetadataDumperUsageException {
+    int charLength = databaseName.length();
+    if (charLength > 255) {
+      throw new MetadataDumperUsageException(
+          String.format(
+              "The provided database name has %d characters, which is longer than the maximum allowed number %d for Snowflake identifiers.",
+              charLength, MAX_DATABASE_CHAR_LENGTH));
+    }
+    CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
+    if (doubleQuoteMatcher.matchesAnyOf(doubleQuoteMatcher.trimFrom(databaseName))) {
+      throw new MetadataDumperUsageException(
+          "Database name has incorrectly placed double quote(s). Aborting query.");
     }
   }
 }
