@@ -70,9 +70,8 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     // AWS API tasks, enabled by default if IAM credentials are provided
     Optional<AWSCredentialsProvider> awsCredentials =
         AbstractAwsApiTask.createCredentialsProvider(arguments);
-    if (awsCredentials.isPresent()) {
-      out.add(new RedshiftClusterNodesTask(awsCredentials.get()));
-    }
+
+    awsCredentials.ifPresent(awsCreds -> out.add(new RedshiftClusterNodesTask(awsCreds)));
 
     parallelTask.addTask(
         new JdbcSelectTask(SvvColumnsFormat.ZIP_ENTRY_NAME, "SELECT * FROM SVV_COLUMNS"));

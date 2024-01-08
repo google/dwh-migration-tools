@@ -52,6 +52,6 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
                       cluster.getNumberOfNodes(),
                       cluster.getNodeType(),
                       cluster.getTotalStorageCapacityInMegaBytes()
-                    }));
+                    }).toList());
   }
 }
