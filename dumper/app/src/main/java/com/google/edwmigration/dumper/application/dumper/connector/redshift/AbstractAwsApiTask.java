@@ -16,8 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -33,7 +31,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -66,7 +63,7 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
         () -> AmazonRedshiftClient.builder().withCredentials(credentialsProvider).build());
   }
 
-  public Void writeRecordsCsv(@Nonnull ByteSink sink, List<Object[]> records) throws IOException {
+  public void writeRecordsCsv(@Nonnull ByteSink sink, List<Object[]> records) throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
     try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName());
         Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
@@ -77,7 +74,6 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
         printer.printRecord(record);
       }
     }
-    return null;
   }
 
   public static Optional<AWSCredentialsProvider> createCredentialsProvider(
@@ -89,13 +85,11 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
 
     String iamAccessKey = arguments.getIAMAccessKeyID();
     String iamSecretAccessKey = arguments.getIAMSecretAccessKey();
-    if (iamAccessKey != null && iamSecretAccessKey != null) {
-      return Optional.of(
-          new AWSStaticCredentialsProvider(
-              new BasicAWSCredentials(
-                  iamAccessKey, iamSecretAccessKey)));
-    }
-  
-    return Optional.empty();
+
+    return iamAccessKey != null && iamSecretAccessKey != null
+        ? Optional.of(
+            new AWSStaticCredentialsProvider(
+                new BasicAWSCredentials(iamAccessKey, iamSecretAccessKey)))
+        : Optional.empty();
   }
 }

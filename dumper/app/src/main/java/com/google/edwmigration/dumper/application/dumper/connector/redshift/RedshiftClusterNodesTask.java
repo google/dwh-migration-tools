@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import static java.util.stream.Collectors.toList;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.model.DescribeClustersRequest;
@@ -41,7 +43,7 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
     DescribeClustersRequest request = new DescribeClustersRequest();
     DescribeClustersResult result = client.describeClusters(request);
 
-    return writeRecordsCsv(
+    writeRecordsCsv(
         sink,
         result.getClusters().stream()
             .map(
@@ -52,6 +54,8 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
                       cluster.getNumberOfNodes(),
                       cluster.getNodeType(),
                       cluster.getTotalStorageCapacityInMegaBytes()
-                    }).toList());
+                    })
+            .collect(toList()));
+    return null;
   }
 }
