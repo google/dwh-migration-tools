@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,7 @@ public class Main {
               ImmutableList<String> errorMessages =
                   Throwables.getCausalChain(e).stream()
                       .map(Throwable::getMessage)
+                      .filter(Objects::nonNull)
                       .collect(toImmutableList());
               for (int i = 0; i < errorMessages.size(); i++) {
                 String errorMessage = errorMessages.get(i);
