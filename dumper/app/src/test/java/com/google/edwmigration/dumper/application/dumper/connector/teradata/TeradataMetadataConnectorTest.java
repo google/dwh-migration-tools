@@ -274,7 +274,7 @@ public class TeradataMetadataConnectorTest extends AbstractConnectorExecutionTes
             // "--database", "db_0"
             );
 
-    MetadataDumper dumper = new MetadataDumper().withExitOnError(false);
+    MetadataDumper dumper = new MetadataDumper();
 
     dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
 

@@ -16,8 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -33,8 +31,8 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMoni
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -75,36 +73,33 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
         () -> AmazonRedshiftClient.builder().withCredentials(credentialsProvider).build());
   }
 
-  public AmazonCloudWatch cloudWatchApiClient() {
-    return cloudWatchClient.orElseGet(
-        () -> AmazonCloudWatchClient.builder().withCredentials(credentialsProvider).build());
-  }
-
-  public Void writeRecordsCsv(@Nonnull ByteSink sink, Stream<Object[]> records) throws IOException {
+  public void writeRecordsCsv(@Nonnull ByteSink sink, List<Object[]> records) throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
     try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName());
         Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       CSVPrinter printer = format.print(writer);
 
-      for (Object[] record : records.collect(toImmutableList())) {
+      for (Object[] record : records) {
         monitor.count();
         printer.printRecord(record);
       }
     }
-    return null;
   }
 
   public static Optional<AWSCredentialsProvider> createCredentialsProvider(
       ConnectorArguments arguments) {
-    if (arguments.getIAMProfile() != null) {
-      return Optional.of(new ProfileCredentialsProvider(arguments.getIAMProfile()));
+    String profileName = arguments.getIAMProfile();
+    if (profileName != null) {
+      return Optional.of(new ProfileCredentialsProvider(profileName));
     }
-    if (arguments.getIAMAccessKeyID() != null && arguments.getIAMSecretAccessKey() != null) {
-      return Optional.of(
-          new AWSStaticCredentialsProvider(
-              new BasicAWSCredentials(
-                  arguments.getIAMAccessKeyID(), arguments.getIAMSecretAccessKey())));
-    }
-    return Optional.empty();
+
+    String iamAccessKey = arguments.getIAMAccessKeyID();
+    String iamSecretAccessKey = arguments.getIAMSecretAccessKey();
+
+    return iamAccessKey != null && iamSecretAccessKey != null
+        ? Optional.of(
+            new AWSStaticCredentialsProvider(
+                new BasicAWSCredentials(iamAccessKey, iamSecretAccessKey)))
+        : Optional.empty();
   }
 }

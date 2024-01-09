@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.stream.Collectors.toList;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
@@ -95,7 +96,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
       throws IOException {
 
     List<Cluster> clusters = listClusters();
-    return writeRecordsCsv(
+    writeRecordsCsv(
         sink,
         clusters.stream()
             .flatMap(
@@ -113,7 +114,8 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
                               Stream.of(new Object[] {cluster.getClusterIdentifier()}, metricData)
                                   .flatMap(Stream::of)
                                   .toArray());
-                }));
+                }).collect(toList()));
+    return null;
   }
 
   private List<Cluster> listClusters() {
