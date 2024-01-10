@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import autovalue.shaded.com.google.common.collect.ImmutableList;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
@@ -32,13 +31,13 @@ import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,17 +60,17 @@ public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
           new Cluster().withClusterIdentifier("clId2"));
 
   private static final ZonedDateTime CURR_DATE_TIME =
-      ZonedDateTime.of(2024, 01, 01, 11, 0, 0, 0, ZoneId.of("UTC"));
+      ZonedDateTime.of(2024, 01, 02, 11, 33, 44, 55, ZoneId.of("UTC"));
   private static final ZonedInterval TEST_INTERVAL =
       new ZonedInterval(
-          ZonedDateTime.of(2024, 01, 01, 10, 0, 0, 0, ZoneId.of("UTC")),
-          ZonedDateTime.of(2024, 01, 01, 10, 10, 0, 0, ZoneId.of("UTC")));
+          ZonedDateTime.of(2024, 01, 02, 03, 0, 44, 55, ZoneId.of("UTC")),
+          ZonedDateTime.of(2024, 01, 02, 03, 10, 44, 55, ZoneId.of("UTC")));
   private static final String TEST_ZIP_ENTRY_NAME = "cluster_metrics.csv";
 
   @Test
   public void doRun_success() throws Exception {
-    List<MetricConfig> testMetrics =
-        List.of(
+    ImmutableList<MetricConfig> testMetrics =
+        ImmutableList.of(
             MetricConfig.create(MetricName.CPUUtilization, MetricType.Average),
             MetricConfig.create(MetricName.PercentageDiskSpaceUsed, MetricType.Average));
     Class<? extends Enum<?>> testHeader =
@@ -118,7 +117,7 @@ public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
 
     RedshiftClusterUsageMetricsTask task =
         new RedshiftClusterUsageMetricsTask(
-            null, CURR_DATE_TIME, TEST_INTERVAL, TEST_ZIP_ENTRY_NAME, testHeader, testMetrics);
+            null, CURR_DATE_TIME, TEST_INTERVAL, TEST_ZIP_ENTRY_NAME, testMetrics);
     task.withRedshiftApiClient(redshiftClientMock);
     task.withCloudWatchApiClient(cloudWatchClientMock);
 
@@ -127,10 +126,10 @@ public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
     String actualOutput = sink.openStream().toString();
     assertEquals(
         "cluster_identifier,interval_time,cpu_avg,storage_avg\n"
-            + "clId1,2024-01-01T10:00:00Z,10.5,14.5\n"
-            + "clId1,2024-01-01T10:01:00Z,11.5,15.5\n"
-            + "clId2,2024-01-01T10:02:00Z,12.5,16.5\n"
-            + "clId2,2024-01-01T10:03:00Z,13.5,17.5\n",
+            + "clId1,2024-01-02T03:00:44Z,10.5,14.5\n"
+            + "clId1,2024-01-02T03:01:44Z,11.5,15.5\n"
+            + "clId2,2024-01-02T03:02:44Z,12.5,16.5\n"
+            + "clId2,2024-01-02T03:03:44Z,13.5,17.5\n",
         actualOutput);
   }
 

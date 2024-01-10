@@ -73,6 +73,11 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
         () -> AmazonRedshiftClient.builder().withCredentials(credentialsProvider).build());
   }
 
+  public AmazonCloudWatch cloudWatchApiClient() {
+    return cloudWatchClient.orElseGet(
+        () -> AmazonCloudWatchClient.builder().withCredentials(credentialsProvider).build());
+  }
+
   public void writeRecordsCsv(@Nonnull ByteSink sink, List<Object[]> records) throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
     try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName());

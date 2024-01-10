@@ -20,7 +20,6 @@ import static com.google.edwmigration.dumper.application.dumper.connector.redshi
 import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
 import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -38,6 +37,9 @@ import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
+import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricConfig;
+import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
+import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectIntervalTask;
@@ -52,7 +54,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,9 +205,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
       makeClusterMetricsTasks(
           arguments,
           intervals,
-          RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX,
-          RedshiftRawLogsDumpFormat.ClusterUsageMetrics.Header.class,
-          List.of(
+          ImmutableList.of(
               MetricConfig.create(MetricName.CPUUtilization, MetricType.Average),
               MetricConfig.create(MetricName.PercentageDiskSpaceUsed, MetricType.Average)),
           out);
@@ -255,24 +254,20 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
   private void makeClusterMetricsTasks(
       ConnectorArguments arguments,
       ZonedIntervalIterable intervals,
-      String filePrefix,
-      Class<? extends Enum<?>> headerEnum,
-      List<MetricConfig> metrics,
+      ImmutableList<MetricConfig> metrics,
       List<? super Task<?>> out) {
-    Optional<AWSCredentialsProvider> awsCredentials =
-        AbstractAwsApiTask.createCredentialsProvider(arguments);
-    if (awsCredentials.isEmpty()) {
-      return;
-    }
-
-    for (ZonedInterval interval : intervals) {
-      String file =
-          filePrefix
-              + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
-              + RedshiftRawLogsDumpFormat.ZIP_ENTRY_SUFFIX;
-      out.add(
-          new RedshiftClusterUsageMetricsTask(
-              awsCredentials.get(), ZonedDateTime.now(), interval, file, headerEnum, metrics));
-    }
+    AbstractAwsApiTask.createCredentialsProvider(arguments)
+        .ifPresent(
+            awsCredentials -> {
+              for (ZonedInterval interval : intervals) {
+                String file =
+                    RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX
+                        + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
+                        + RedshiftRawLogsDumpFormat.ZIP_ENTRY_SUFFIX;
+                out.add(
+                    new RedshiftClusterUsageMetricsTask(
+                        awsCredentials, ZonedDateTime.now(), interval, file, metrics));
+              }
+            });
   }
 }
