@@ -131,7 +131,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     // out.add(new JdbcSelectTask(ColumnsFormat.ZIP_ENTRY_NAME, // Was: teradata.columns.csv
     // "SELECT \"DatabaseName\", \"TableName\", \"ColumnId\", \"ColumnName\", \"ColumnType\" FROM
     // DBC.Columns" + whereDatabaseNameClause + " ;"));
-    out.add(createTaskForDatabasesV(arguments, databaseNameCondition));
+    out.add(createTaskForDatabasesV(arguments));
     // out.add(new TeradataJdbcSelectTask("td.dbc.Tables.others.csv", "SELECT * FROM DBC.Tables
     // WHERE TableKind <> 'F' ORDER BY 1,2,3,4;"));
     // out.add(new TeradataJdbcSelectTask("td.dbc.Tables.functions.csv", "SELECT * FROM DBC.Tables
@@ -228,8 +228,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
         createSelectForTableTextV(textMaxLength, databaseNameCondition));
   }
 
-  private TeradataJdbcSelectTask createTaskForDatabasesV(
-      ConnectorArguments arguments, Optional<Expression> databaseNameCondition)
+  private TeradataJdbcSelectTask createTaskForDatabasesV(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     OptionalLong userRows =
         parseMaxRows(arguments, TeradataMetadataConnectorProperties.DATABASES_V_USERS_MAX_ROWS);
@@ -238,7 +237,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     return new TeradataJdbcSelectTask(
         DatabasesVFormat.ZIP_ENTRY_NAME,
         TaskCategory.REQUIRED,
-        MetadataQueryGenerator.createSelectForDatabasesV(userRows, dbRows, databaseNameCondition));
+        MetadataQueryGenerator.createSelectForDatabasesV(userRows, dbRows));
   }
 
   private TeradataJdbcSelectTask createTaskForAllTempTablesVX(ConnectorArguments arguments) {
