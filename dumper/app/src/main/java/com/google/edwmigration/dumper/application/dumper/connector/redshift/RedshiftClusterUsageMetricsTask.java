@@ -173,22 +173,23 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
   }
 
   private SortedMap<String, Double[]> zipMetrics(
-      List<ImmutableList<MetricDataPoint>> metricsCollection) {
+      ImmutableList<ImmutableList<MetricDataPoint>> metricsCollection) {
     SortedMap<String, Double[]> metricsMap = new TreeMap<String, Double[]>();
 
-    for (int i = 0; i < metricsCollection.size(); i++) {
-      Integer metricIndex = Integer.valueOf(i);
-      metricsCollection
-          .get(metricIndex)
-          .forEach(
-              dataPoint -> {
-                String dateString = DATE_FORMAT.format(dataPoint.date().toInstant());
-                if (!metricsMap.containsKey(dateString)) {
-                  metricsMap.put(dateString, new Double[metricsCollection.size()]);
-                }
-                metricsMap.get(dateString)[metricIndex] = dataPoint.value();
-              });
-    }
+    metricsCollection.stream()
+        .forEach(
+            metricDatapoints -> {
+              int metricIndex = metricsCollection.indexOf(metricDatapoints);
+
+              metricDatapoints.forEach(
+                  dataPoint -> {
+                    String dateString = DATE_FORMAT.format(dataPoint.date().toInstant());
+                    if (!metricsMap.containsKey(dateString)) {
+                      metricsMap.put(dateString, new Double[metricsCollection.size()]);
+                    }
+                    metricsMap.get(dateString)[metricIndex] = dataPoint.value();
+                  });
+            });
 
     return metricsMap;
   }
