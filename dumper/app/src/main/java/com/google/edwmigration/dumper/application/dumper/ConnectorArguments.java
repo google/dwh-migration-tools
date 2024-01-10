@@ -24,8 +24,8 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -863,7 +863,7 @@ public class ConnectorArguments extends DefaultArguments {
   private static ImmutableMap<String, String> buildDefinitionMap(
       @Nullable String connector, List<String> definitions) {
     ImmutableMap.Builder<String, String> resultMap = ImmutableMap.builder();
-    ImmutableMultimap<String, String> propertyNamesByConnector = allPropertyNamesByConnector();
+    ImmutableSetMultimap<String, String> propertyNamesByConnector = allPropertyNamesByConnector();
     ImmutableSet<String> allPropertyNames = ImmutableSet.copyOf(propertyNamesByConnector.values());
     for (String definition : definitions) {
       if (definition.contains("=")) {
@@ -887,8 +887,9 @@ public class ConnectorArguments extends DefaultArguments {
     return resultMap.buildKeepingLast();
   }
 
-  private static ImmutableMultimap<String, String> allPropertyNamesByConnector() {
-    ImmutableMultimap.Builder<String, String> connectorPropertyNames = ImmutableMultimap.builder();
+  private static ImmutableSetMultimap<String, String> allPropertyNamesByConnector() {
+    ImmutableSetMultimap.Builder<String, String> connectorPropertyNames =
+        ImmutableSetMultimap.builder();
     for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
       String connectorName = connector.getName();
       for (Enum<? extends ConnectorProperty> enumConstant :
