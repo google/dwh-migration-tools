@@ -84,12 +84,12 @@ public class MetadataDumper {
       return false;
     }
 
-    Connector connector = ConnectorRepository.getByName(connectorName);
+    Connector connector = ConnectorRepository.getInstance().getByName(connectorName);
     if (connector == null) {
       LOG.error(
           "Target DBMS '{}' not supported; available are {}.",
           connectorName,
-          ConnectorRepository.getAllNames());
+          ConnectorRepository.getInstance().getAllNames());
       return false;
     }
     return run(connector, arguments);

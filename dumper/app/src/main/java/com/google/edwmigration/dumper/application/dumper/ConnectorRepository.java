@@ -26,26 +26,34 @@ import javax.annotation.Nullable;
 
 public class ConnectorRepository {
 
-  private static final ImmutableMap<String, Connector> CONNECTORS;
+  private static class Inner {
+    private static final ConnectorRepository INSTANCE = new ConnectorRepository();
+  }
 
-  static {
+  public static ConnectorRepository getInstance() {
+    return Inner.INSTANCE;
+  }
+
+  private final ImmutableMap<String, Connector> connectors;
+
+  private ConnectorRepository() {
     ImmutableMap.Builder<String, Connector> builder = ImmutableMap.builder();
     for (Connector connector : ServiceLoader.load(Connector.class)) {
       builder.put(connector.getName().toLowerCase(), connector);
     }
-    CONNECTORS = builder.build();
+    connectors = builder.build();
   }
 
-  static ImmutableSet<String> getAllNames() {
-    return CONNECTORS.keySet();
+  ImmutableSet<String> getAllNames() {
+    return connectors.keySet();
   }
 
-  static ImmutableCollection<Connector> getAllConnectors() {
-    return CONNECTORS.values();
+  ImmutableCollection<Connector> getAllConnectors() {
+    return connectors.values();
   }
 
   @Nullable
-  static Connector getByName(@Nonnull String connectorName) {
-    return CONNECTORS.get(connectorName.toLowerCase());
+  Connector getByName(@Nonnull String connectorName) {
+    return connectors.get(connectorName.toLowerCase());
   }
 }

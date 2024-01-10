@@ -23,6 +23,7 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
@@ -505,7 +506,7 @@ public class ConnectorArguments extends DefaultArguments {
     // if --connector <valid-connection> provided, print only that
     if (o.has(connectorNameOption)) {
       String helpOnConnector = o.valueOf(connectorNameOption);
-      Connector connector = ConnectorRepository.getByName(helpOnConnector);
+      Connector connector = ConnectorRepository.getInstance().getByName(helpOnConnector);
       if (connector != null) {
         out.append("\nSelected connector:\n");
         printConnectorHelp(out, connector);
@@ -513,7 +514,7 @@ public class ConnectorArguments extends DefaultArguments {
       }
     }
     out.append("\nAvailable connectors:\n");
-    for (Connector connector : ConnectorRepository.getAllConnectors()) {
+    for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
       printConnectorHelp(out, connector);
     }
   }
@@ -853,37 +854,42 @@ public class ConnectorArguments extends DefaultArguments {
 
   private Map<String, String> getDefinitionMap() {
     if (definitionMap == null) {
-      definitionMap = new HashMap<>();
-      @Nullable String connector = getConnectorName();
-      ImmutableMultimap<String, String> propertyNamesByConnector = allPropertyNamesByConnector();
-      ImmutableSet<String> allPropertyNames =
-          ImmutableSet.copyOf(propertyNamesByConnector.values());
-      for (String definition : getOptions().valuesOf(definitionOption)) {
-        if (definition.contains("=")) {
-          int idx = definition.indexOf("=");
-          String name = definition.substring(0, idx);
-          String value = definition.substring(idx + 1);
-          definitionMap.put(name, value);
-          if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
-            LOG.info("Parsed property: name='{}', value='{}'", name, value);
-          } else if (allPropertyNames.contains(name)) {
-            LOG.warn(
-                "Property: name='{}', value='{}' is not compatible with connector '{}'",
-                name,
-                value,
-                MoreObjects.firstNonNull(connector, "[not specified]"));
-          } else {
-            LOG.warn("Skipping unknown property: name='{}', value='{}'", name, value);
-          }
-        }
-      }
+      definitionMap =
+          buildDefinitionMap(getConnectorName(), getOptions().valuesOf(definitionOption));
     }
     return definitionMap;
   }
 
-  private ImmutableMultimap<String, String> allPropertyNamesByConnector() {
+  private static ImmutableMap<String, String> buildDefinitionMap(
+      @Nullable String connector, List<String> definitions) {
+    ImmutableMap.Builder<String, String> resultMap = ImmutableMap.builder();
+    ImmutableMultimap<String, String> propertyNamesByConnector = allPropertyNamesByConnector();
+    ImmutableSet<String> allPropertyNames = ImmutableSet.copyOf(propertyNamesByConnector.values());
+    for (String definition : definitions) {
+      if (definition.contains("=")) {
+        int idx = definition.indexOf("=");
+        String name = definition.substring(0, idx);
+        String value = definition.substring(idx + 1);
+        resultMap.put(name, value);
+        if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
+          LOG.info("Parsed property: name='{}', value='{}'", name, value);
+        } else if (allPropertyNames.contains(name)) {
+          LOG.warn(
+              "Property: name='{}', value='{}' is not compatible with connector '{}'",
+              name,
+              value,
+              MoreObjects.firstNonNull(connector, "[not specified]"));
+        } else {
+          LOG.warn("Skipping unknown property: name='{}', value='{}'", name, value);
+        }
+      }
+    }
+    return resultMap.buildKeepingLast();
+  }
+
+  private static ImmutableMultimap<String, String> allPropertyNamesByConnector() {
     ImmutableMultimap.Builder<String, String> connectorPropertyNames = ImmutableMultimap.builder();
-    for (Connector connector : ConnectorRepository.getAllConnectors()) {
+    for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
       String connectorName = connector.getName();
       for (Enum<? extends ConnectorProperty> enumConstant :
           connector.getConnectorProperties().getEnumConstants()) {
