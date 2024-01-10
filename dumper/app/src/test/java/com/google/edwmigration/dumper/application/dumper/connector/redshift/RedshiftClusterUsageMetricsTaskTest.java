@@ -83,6 +83,7 @@ public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
     Date metricDate2 = Date.from(TEST_INTERVAL.getStartUTC().plusMinutes(1).toInstant());
     Date metricDate3 = Date.from(TEST_INTERVAL.getStartUTC().plusMinutes(2).toInstant());
     Date metricDate4 = Date.from(TEST_INTERVAL.getStartUTC().plusMinutes(3).toInstant());
+    Date metricDate5 = Date.from(TEST_INTERVAL.getStartUTC().plusMinutes(4).toInstant());
     GetMetricStatisticsRequest expectedRequestCpu1 =
         createExpectedRequest("CPUUtilization", "Average", "clId1");
     GetMetricStatisticsRequest expectedRequestCpu2 =
@@ -106,7 +107,8 @@ public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
     GetMetricStatisticsResult resultStorage2 =
         createCloudWatchResult(
             new Datapoint().withTimestamp(metricDate3).withAverage(16.5),
-            new Datapoint().withTimestamp(metricDate4).withAverage(17.5));
+            new Datapoint().withTimestamp(metricDate4).withAverage(17.5),
+            new Datapoint().withTimestamp(metricDate5).withAverage(18.5));
 
     when(redshiftClientMock.describeClusters(any()))
         .thenReturn(new DescribeClustersResult().withClusters(TEST_CLUSTERS));
@@ -131,10 +133,11 @@ public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
 
     assertEquals(
         "cluster_identifier,interval_time,cpu_avg,storage_avg\n"
-            + "clId1,2024-01-02 03/00/44,10.5,14.5\n"
-            + "clId1,2024-01-02 03/01/44,11.5,15.5\n"
-            + "clId2,2024-01-02 03/02/44,12.5,16.5\n"
-            + "clId2,2024-01-02 03/03/44,13.5,17.5\n",
+            + "clId1,2024-01-02 03:00:44.000,10.5,14.5\n"
+            + "clId1,2024-01-02 03:01:44.000,11.5,15.5\n"
+            + "clId2,2024-01-02 03:02:44.000,12.5,16.5\n"
+            + "clId2,2024-01-02 03:03:44.000,13.5,17.5\n"
+            + "clId2,2024-01-02 03:04:44.000,,18.5\n",
         actualOutput);
   }
 

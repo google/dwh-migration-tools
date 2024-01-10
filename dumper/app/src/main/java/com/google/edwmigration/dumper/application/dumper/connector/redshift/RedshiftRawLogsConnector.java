@@ -50,6 +50,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.time.Duration;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -256,13 +257,16 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
       ZonedIntervalIterable intervals,
       ImmutableList<MetricConfig> metrics,
       List<? super Task<?>> out) {
+    DateTimeFormatter dateFormat =
+        DateTimeFormatter.ofPattern("yyyy-MM-ddTHHmmssZ").withZone(ZoneOffset.UTC);
+
     AbstractAwsApiTask.createCredentialsProvider(arguments)
         .ifPresent(
             awsCredentials -> {
               for (ZonedInterval interval : intervals) {
                 String file =
                     RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX
-                        + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
+                        + dateFormat.format(interval.getStartUTC())
                         + RedshiftRawLogsDumpFormat.ZIP_ENTRY_SUFFIX;
                 out.add(
                     new RedshiftClusterUsageMetricsTask(
