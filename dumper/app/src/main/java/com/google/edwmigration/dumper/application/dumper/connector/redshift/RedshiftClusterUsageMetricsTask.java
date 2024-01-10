@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.ArrayUtils.insert;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
@@ -33,6 +32,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
+import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricDataPoint;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
@@ -86,7 +86,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
 
   private static final String REDSHIFT_NAMESPACE = "AWS/Redshift";
   private static final DateTimeFormatter DATE_FORMAT =
-      DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH/mm/ss").withZone(ZoneOffset.UTC);
 
   private final ZonedDateTime currentTime;
   private final ZonedInterval interval;
@@ -115,15 +115,16 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
         listClusters().stream()
             .flatMap(
                 cluster ->
-                    zipMetricStreams(
-                            metrics.stream()
-                                .map(
-                                    metricConfig ->
-                                        getMetricDataPoints(
-                                            cluster.getClusterIdentifier(), metricConfig))
-                                .collect(toImmutableList()))
-                        .stream()
-                        .map(metricData -> insert(0, metricData, cluster.getClusterIdentifier())))
+                    getClusterMetrics(cluster.getClusterIdentifier()).entrySet().stream()
+                        .map(
+                            metricEntry ->
+                                Stream.of(
+                                        new Object[] {
+                                          cluster.getClusterIdentifier(), metricEntry.getKey()
+                                        },
+                                        metricEntry.getValue())
+                                    .flatMap(Stream::of)
+                                    .toArray()))
             .collect(toList()));
     return null;
   }
@@ -164,7 +165,14 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
     }
   }
 
-  private ImmutableList<Object[]> zipMetricStreams(
+  private SortedMap<String, Double[]> getClusterMetrics(String clusterIdentifier) {
+    return zipMetrics(
+        metrics.stream()
+            .map(metricConfig -> getMetricDataPoints(clusterIdentifier, metricConfig))
+            .collect(toImmutableList()));
+  }
+
+  private SortedMap<String, Double[]> zipMetrics(
       List<ImmutableList<MetricDataPoint>> metricsCollection) {
     SortedMap<String, Double[]> metricsMap = new TreeMap<String, Double[]>();
 
@@ -182,14 +190,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
               });
     }
 
-    return metricsMap.keySet().stream()
-        .map(
-            metricDate -> {
-              return Stream.of(new Object[] {metricDate}, metricsMap.get(metricDate))
-                  .flatMap(Stream::of)
-                  .toArray();
-            })
-        .collect(toImmutableList());
+    return metricsMap;
   }
 
   /**

@@ -33,6 +33,9 @@ import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
+import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricConfig;
+import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
+import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.time.ZoneId;
@@ -48,6 +51,7 @@ import org.mockito.junit.MockitoRule;
 
 @RunWith(JUnit4.class)
 public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
+
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private AmazonRedshift redshiftClientMock;
@@ -124,12 +128,13 @@ public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
     task.doRun(null, sink, null);
 
     String actualOutput = sink.openStream().toString();
+
     assertEquals(
         "cluster_identifier,interval_time,cpu_avg,storage_avg\n"
-            + "clId1,2024-01-02T03:00:44Z,10.5,14.5\n"
-            + "clId1,2024-01-02T03:01:44Z,11.5,15.5\n"
-            + "clId2,2024-01-02T03:02:44Z,12.5,16.5\n"
-            + "clId2,2024-01-02T03:03:44Z,13.5,17.5\n",
+            + "clId1,2024-01-02 03/00/44,10.5,14.5\n"
+            + "clId1,2024-01-02 03/01/44,11.5,15.5\n"
+            + "clId2,2024-01-02 03/02/44,12.5,16.5\n"
+            + "clId2,2024-01-02 03/03/44,13.5,17.5\n",
         actualOutput);
   }
 
