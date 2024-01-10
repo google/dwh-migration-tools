@@ -30,6 +30,7 @@ import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersRequest;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricDataPoint;
@@ -129,9 +130,10 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
     return null;
   }
 
-  private List<Cluster> listClusters() {
+  private ImmutableList<Cluster> listClusters() {
     AmazonRedshift client = redshiftApiClient();
-    return client.describeClusters(new DescribeClustersRequest()).getClusters();
+    return ImmutableList.copyOf(
+        client.describeClusters(new DescribeClustersRequest()).getClusters());
   }
 
   private ImmutableList<MetricDataPoint> getMetricDataPoints(
@@ -165,14 +167,14 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
     }
   }
 
-  private SortedMap<String, Double[]> getClusterMetrics(String clusterIdentifier) {
+  private ImmutableSortedMap<String, Double[]> getClusterMetrics(String clusterIdentifier) {
     return zipMetrics(
         metrics.stream()
             .map(metricConfig -> getMetricDataPoints(clusterIdentifier, metricConfig))
             .collect(toImmutableList()));
   }
 
-  private SortedMap<String, Double[]> zipMetrics(
+  private ImmutableSortedMap<String, Double[]> zipMetrics(
       ImmutableList<ImmutableList<MetricDataPoint>> metricsCollection) {
     SortedMap<String, Double[]> metricsMap = new TreeMap<String, Double[]>();
 
@@ -191,7 +193,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
                   });
             });
 
-    return metricsMap;
+    return ImmutableSortedMap.copyOf(metricsMap);
   }
 
   /**

@@ -12,6 +12,8 @@
 	<logger name="org.springframework" level="info"/>
 	<logger name="com.zaxxer.hikari" level="info"/>
 	<logger name="org.apache.hc.client5.http" level="info"/>
+	<logger name="org.apache.http" level="info"/>
+	<logger name="com.amazonaws" level="info"/>
 
 	<root level="${LOG_LEVEL:-debug}">
 		<appender-ref ref="CONSOLE" />
