@@ -23,6 +23,9 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -53,12 +56,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
@@ -503,16 +506,15 @@ public class ConnectorArguments extends DefaultArguments {
     // if --connector <valid-connection> provided, print only that
     if (o.has(connectorNameOption)) {
       String helpOnConnector = o.valueOf(connectorNameOption);
-      for (Connector connector : ServiceLoader.load(Connector.class)) {
-        if (helpOnConnector.equals(connector.getName())) {
-          out.append("\nSelected connector:\n");
-          printConnectorHelp(out, connector);
-          return;
-        }
+      Connector connector = ConnectorRepository.getInstance().getByName(helpOnConnector);
+      if (connector != null) {
+        out.append("\nSelected connector:\n");
+        printConnectorHelp(out, connector);
+        return;
       }
     }
     out.append("\nAvailable connectors:\n");
-    for (Connector connector : ServiceLoader.load(Connector.class)) {
+    for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
       printConnectorHelp(out, connector);
     }
   }
@@ -847,26 +849,55 @@ public class ConnectorArguments extends DefaultArguments {
 
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
-    if (definitionMap == null) {
-      searchDefinitions();
-    }
-    String result = definitionMap.get(property.getName());
-    LOG.info(
-        "Retrieving {} from key {} - got: {}",
-        property.getName(),
-        property.getDescription(),
-        MoreObjects.firstNonNull(result, "[not found]"));
-    return result;
+    return getDefinitionMap().get(property.getName());
   }
 
-  public void searchDefinitions() {
-    definitionMap = new HashMap<>();
-    for (String definition : getOptions().valuesOf(definitionOption)) {
+  private Map<String, String> getDefinitionMap() {
+    if (definitionMap == null) {
+      definitionMap =
+          buildDefinitionMap(getConnectorName(), getOptions().valuesOf(definitionOption));
+    }
+    return definitionMap;
+  }
+
+  private static ImmutableMap<String, String> buildDefinitionMap(
+      @Nullable String connector, List<String> definitions) {
+    ImmutableMap.Builder<String, String> resultMap = ImmutableMap.builder();
+    ImmutableSetMultimap<String, String> propertyNamesByConnector = allPropertyNamesByConnector();
+    ImmutableSet<String> allPropertyNames = ImmutableSet.copyOf(propertyNamesByConnector.values());
+    for (String definition : definitions) {
       if (definition.contains("=")) {
         int idx = definition.indexOf("=");
-        definitionMap.put(definition.substring(0, idx), definition.substring(idx + 1));
+        String name = definition.substring(0, idx);
+        String value = definition.substring(idx + 1);
+        resultMap.put(name, value);
+        if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
+          LOG.info("Parsed property: name='{}', value='{}'", name, value);
+        } else if (allPropertyNames.contains(name)) {
+          LOG.warn(
+              "Property: name='{}', value='{}' is not compatible with connector '{}'",
+              name,
+              value,
+              MoreObjects.firstNonNull(connector, "[not specified]"));
+        } else {
+          LOG.warn("Skipping unknown property: name='{}', value='{}'", name, value);
+        }
       }
     }
+    return resultMap.buildKeepingLast();
+  }
+
+  private static ImmutableSetMultimap<String, String> allPropertyNamesByConnector() {
+    ImmutableSetMultimap.Builder<String, String> connectorPropertyNames =
+        ImmutableSetMultimap.builder();
+    for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
+      String connectorName = connector.getName();
+      for (Enum<? extends ConnectorProperty> enumConstant :
+          connector.getConnectorProperties().getEnumConstants()) {
+        connectorPropertyNames.put(connectorName, ((ConnectorProperty) enumConstant).getName());
+      }
+    }
+    return connectorPropertyNames.build();
   }
 
   @Override
@@ -891,16 +922,7 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_QUERY_LOG_END, getQueryLogEnd())
             .add(OPT_QUERY_LOG_ALTERNATES, getQueryLogAlternates())
             .add(OPT_ASSESSMENT, isAssessment());
-    for (Connector connector : ServiceLoader.load(Connector.class)) {
-      if (connector.getName().equals("teradata-logs")) {
-        for (Enum<? extends ConnectorProperty> enumConstant :
-            connector.getConnectorProperties().getEnumConstants()) {
-          toStringHelper.add(
-              ((ConnectorProperty) enumConstant).getName(),
-              getDefinitionOrDefault((TeradataLogsConnectorProperty) enumConstant));
-        }
-      }
-    }
+    getDefinitionMap().forEach(toStringHelper::add);
     return toStringHelper.toString();
   }
 

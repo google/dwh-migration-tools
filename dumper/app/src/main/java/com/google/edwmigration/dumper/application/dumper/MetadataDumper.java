@@ -49,7 +49,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,16 +62,6 @@ import org.slf4j.LoggerFactory;
 public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
-
-  private static final ImmutableMap<String, Connector> CONNECTORS;
-
-  static {
-    ImmutableMap.Builder<String, Connector> builder = ImmutableMap.builder();
-    for (Connector connector : ServiceLoader.load(Connector.class)) {
-      builder.put(connector.getName().toUpperCase(), connector);
-    }
-    CONNECTORS = builder.build();
-  }
 
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
@@ -95,14 +84,12 @@ public class MetadataDumper {
       return false;
     }
 
-    Connector connector = CONNECTORS.get(connectorName.toUpperCase());
+    Connector connector = ConnectorRepository.getInstance().getByName(connectorName);
     if (connector == null) {
       LOG.error(
-          "Target DBMS "
-              + connectorName
-              + " not supported; available are "
-              + CONNECTORS.keySet()
-              + ".");
+          "Target DBMS '{}' not supported; available are {}.",
+          connectorName,
+          ConnectorRepository.getInstance().getAllNames());
       return false;
     }
     return run(connector, arguments);
