@@ -17,10 +17,14 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 public class TeradataUtils {
+  private static final ImmutableSet<String> VALID_TRANSACTION_MODES =
+      ImmutableSet.of("ANSI", "TERA", "DEFAULT", "NONE");
 
   public static <T> Optional<T> optionalIf(boolean condition, Supplier<T> supplier) {
     return condition ? Optional.of(supplier.get()) : Optional.empty();
@@ -44,6 +48,33 @@ public class TeradataUtils {
    */
   public static String formatQuery(String query) {
     return query.replaceAll("\\s+", " ").replaceAll("\\( ", "(").replaceAll(" \\)", ")").trim();
+  }
+
+  /**
+   * If the mode is not provided (empty optional), then returns the default mode - ANSI. Otherwise,
+   * performs the validation of the transaction mode.
+   *
+   * @param commandLineTransactionMode command-line argument containing the transaction mode
+   * @return validated transaction mode
+   * @throws MetadataDumperUsageException if the mode is not supported
+   */
+  static Optional<String> determineTransactionMode(Optional<String> commandLineTransactionMode)
+      throws MetadataDumperUsageException {
+    if (!commandLineTransactionMode.isPresent()) {
+      return Optional.of("ANSI");
+    }
+    Optional<String> processedMode =
+        commandLineTransactionMode.map(mode -> mode.trim().toUpperCase());
+    processedMode.ifPresent(
+        mode -> {
+          if (!VALID_TRANSACTION_MODES.contains(mode)) {
+            throw new MetadataDumperUsageException(
+                String.format(
+                    "Unsupported transaction mode='%s', supported modes='%s'.",
+                    commandLineTransactionMode.get(), VALID_TRANSACTION_MODES));
+          }
+        });
+    return processedMode.filter(mode -> !mode.equals("NONE"));
   }
 
   static String createTimestampExpression(String tableAlias, String columnName) {
