@@ -16,8 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.determineTransactionMode;
+
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverClass;
@@ -28,6 +32,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
@@ -41,6 +46,7 @@ import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nonnull;
@@ -86,6 +92,31 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
   @VisibleForTesting /* pp */ static final String DEF_LOG_TABLE = "dbc.DBQLogTbl";
   @VisibleForTesting /* pp */ static final String DEF_QUERY_TABLE = "dbc.DBQLSQLTbl";
+
+  protected enum CommonTeradataConnectorProperty implements ConnectorProperty {
+    TMODE(
+        "teradata.tmode",
+        "Transaction mode - one of ANSI, TERA, DEFAULT or NONE. If NONE is used, then no"
+            + " transaction mode is included in the JDBC connection string. Default: ANSI.");
+
+    private final String name;
+    private final String description;
+
+    CommonTeradataConnectorProperty(String name, String description) {
+      this.name = name;
+      this.description = description;
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
+  }
 
   protected static class TeradataJdbcSelectTask extends JdbcSelectTask {
 
@@ -166,7 +197,13 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
     if (url == null) {
       String host = arguments.getHost();
       int port = arguments.getPort(OPT_PORT_DEFAULT);
-      url = "jdbc:teradata://" + host + "/DBS_PORT=" + port + ",TMODE=ANSI,CHARSET=UTF8";
+      ImmutableList.Builder<String> properties = ImmutableList.builder();
+      properties.add("DBS_PORT=" + port);
+      determineTransactionMode(
+              Optional.ofNullable(arguments.getDefinition(CommonTeradataConnectorProperty.TMODE)))
+          .ifPresent(transactionMode -> properties.add("TMODE=" + transactionMode));
+      properties.add("CHARSET=UTF8");
+      url = "jdbc:teradata://" + host + "/" + (Joiner.on(",").join(properties.build()));
       // ,MAX_MESSAGE_BODY=16777216
     }
 

@@ -79,7 +79,8 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
             + " Text that is longer than the defined limit will be split into multiple rows."
             + " Example: 10000. Allowed range: "
             + MAX_TEXT_LENGTH_RANGE
-            + ".");
+            + "."),
+    TMODE(CommonTeradataConnectorProperty.TMODE);
 
     private final String name;
     private final String description;
@@ -87,6 +88,11 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     TeradataMetadataConnectorProperties(String name, String description) {
       this.name = "teradata.metadata." + name;
       this.description = description;
+    }
+
+    TeradataMetadataConnectorProperties(CommonTeradataConnectorProperty connectorProperty) {
+      this.name = connectorProperty.getName();
+      this.description = connectorProperty.getDescription();
     }
 
     @Nonnull

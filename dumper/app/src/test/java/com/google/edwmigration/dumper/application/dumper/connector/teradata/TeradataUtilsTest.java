@@ -19,6 +19,8 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -94,5 +96,53 @@ public class TeradataUtilsTest {
         TeradataUtils.formatQuery("  SELECT  ( 2 + N + ( 3 + N + ( N +    N )  )  )    ");
 
     assertEquals("SELECT (2 + N + (3 + N + (N + N)))", formattedQuery);
+  }
+
+  @Test
+  public void determineTransactionMode_tera() {
+    Optional<String> transactionMode = TeradataUtils.determineTransactionMode(Optional.of("TERA"));
+
+    assertEquals(Optional.of("TERA"), transactionMode);
+  }
+
+  @Test
+  public void determineTransactionMode_ansi() {
+    Optional<String> transactionMode = TeradataUtils.determineTransactionMode(Optional.of("ANSI"));
+
+    assertEquals(Optional.of("ANSI"), transactionMode);
+  }
+
+  @Test
+  public void determineTransactionMode_default() {
+    Optional<String> transactionMode =
+        TeradataUtils.determineTransactionMode(Optional.of("DEFAULT"));
+
+    assertEquals(Optional.of("DEFAULT"), transactionMode);
+  }
+
+  @Test
+  public void determineTransactionMode_unsupportedMode_throwsException() {
+    MetadataDumperUsageException e =
+        assertThrows(
+            MetadataDumperUsageException.class,
+            () -> TeradataUtils.determineTransactionMode(Optional.of("fast")));
+
+    assertEquals(
+        "Unsupported transaction mode='fast', supported modes='[ANSI, TERA, DEFAULT, NONE]'.",
+        e.getMessage());
+  }
+
+  @Test
+  public void determineTransactionMode_none() {
+    Optional<String> transactionMode = TeradataUtils.determineTransactionMode(Optional.of("NONE"));
+
+    assertEquals(Optional.empty(), transactionMode);
+  }
+
+  @Test
+  public void determineTransactionMode_commandLineOptionNotSpecified() {
+    Optional<String> transactionMode = TeradataUtils.determineTransactionMode(Optional.empty());
+
+    assertEquals(Optional.of("ANSI"), transactionMode);
   }
 }

@@ -98,7 +98,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
             + " Example: 10000. Allowed range: "
             + MAX_SQL_LENGTH_RANGE
             + ".",
-        /* defaultValue= */ null);
+        /* defaultValue= */ null),
+    TMODE(CommonTeradataConnectorProperty.TMODE);
 
     private final String name;
     private final String description;
@@ -108,6 +109,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       this.name = "teradata-logs." + name;
       this.description = description;
       this.defaultValue = defaultValue;
+    }
+
+    TeradataLogsConnectorProperty(CommonTeradataConnectorProperty connectorProperty) {
+      this.name = connectorProperty.getName();
+      this.description = connectorProperty.getDescription();
+      this.defaultValue = null;
     }
 
     @Nonnull
