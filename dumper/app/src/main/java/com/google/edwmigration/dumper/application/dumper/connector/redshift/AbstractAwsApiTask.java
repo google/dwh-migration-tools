@@ -20,6 +20,8 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.AmazonRedshiftClient;
 import com.google.common.io.ByteSink;
@@ -41,6 +43,7 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
   AWSCredentialsProvider credentialsProvider;
   Class<? extends Enum<?>> headerEnum;
   Optional<AmazonRedshift> redshiftClient;
+  Optional<AmazonCloudWatch> cloudWatchClient;
 
   public AbstractAwsApiTask(
       AWSCredentialsProvider credentialsProvider,
@@ -49,6 +52,7 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
     super(zipEntryName);
     this.headerEnum = headerEnum;
     this.redshiftClient = Optional.empty();
+    this.cloudWatchClient = Optional.empty();
     this.credentialsProvider = credentialsProvider;
   }
 
@@ -58,9 +62,20 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
     return this;
   }
 
+  @Nonnull
+  public AbstractAwsApiTask withCloudWatchApiClient(AmazonCloudWatch cloudWatchClient) {
+    this.cloudWatchClient = Optional.of(cloudWatchClient);
+    return this;
+  }
+
   public AmazonRedshift redshiftApiClient() {
     return redshiftClient.orElseGet(
         () -> AmazonRedshiftClient.builder().withCredentials(credentialsProvider).build());
+  }
+
+  public AmazonCloudWatch cloudWatchApiClient() {
+    return cloudWatchClient.orElseGet(
+        () -> AmazonCloudWatchClient.builder().withCredentials(credentialsProvider).build());
   }
 
   public void writeRecordsCsv(@Nonnull ByteSink sink, List<Object[]> records) throws IOException {

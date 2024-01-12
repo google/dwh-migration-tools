@@ -61,6 +61,7 @@ dependencies {
     implementation libs.google.cloud.kms
     implementation libs.httpclient5
     implementation libs.aws.java.sdk.redshift
+    implementation libs.aws.java.sdk.cloudwatch
 
     runtimeOnly libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j
@@ -127,6 +128,9 @@ licenseReport {
                 licenseUrl: "https://raw.githubusercontent.com/aws/amazon-redshift-jdbc-driver/master/LICENSE",
             ],
             "com.amazonaws:aws-java-sdk-core": [
+                licenseUrl: "https://raw.githubusercontent.com/aws/aws-sdk-java/master/LICENSE.txt",
+            ],
+            "com.amazonaws:aws-java-sdk-cloudwatch": [
                 licenseUrl: "https://raw.githubusercontent.com/aws/aws-sdk-java/master/LICENSE.txt",
             ],
             "com.amazonaws:aws-java-sdk-redshift": [

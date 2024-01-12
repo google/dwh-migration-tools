@@ -146,4 +146,15 @@ public interface RedshiftRawLogsDumpFormat {
       query_priority;
     }
   }
+
+  interface ClusterUsageMetrics {
+    String ZIP_ENTRY_PREFIX = "cluster_usage_metrics_";
+
+    enum Header {
+      cluster_identifier,
+      interval_time,
+      cpu_avg,
+      storage_avg;
+    }
+  }
 }

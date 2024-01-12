@@ -56,6 +56,7 @@ apache-commons-lang3 = { module = "org.apache.commons:commons-lang3", version.re
 auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 auto-value = { module = "com.google.auto.value:auto-value", version.ref = "auto-value" }
 auto-value-annotations = { module = "com.google.auto.value:auto-value-annotations", version.ref = "auto-value" }
+aws-java-sdk-cloudwatch = { module = "com.amazonaws:aws-java-sdk-cloudwatch", version.ref = "aws-java-sdk" }
 aws-java-sdk-redshift = { module = "com.amazonaws:aws-java-sdk-redshift", version.ref = "aws-java-sdk" }
 checker-qual = { module = "org.checkerframework:checker-qual", version.ref = "checkerframework" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
