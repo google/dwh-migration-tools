@@ -258,7 +258,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
       ImmutableList<MetricConfig> metrics,
       List<? super Task<?>> out) {
     DateTimeFormatter dateFormat =
-        DateTimeFormatter.ofPattern("yyyy-MM-ddTHHmmssZ").withZone(ZoneOffset.UTC);
+        DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss").withZone(ZoneOffset.UTC);
 
     AbstractAwsApiTask.createCredentialsProvider(arguments)
         .ifPresent(
