@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQueryLogsConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.test.TestConnector;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.io.FileUtils;
@@ -37,8 +37,8 @@ public class MetadataDumperTest {
   // TODO(ishmum): `testOverridesZipWithGivenName` with content check
   private File file;
   private Main dumper = new Main(new MetadataDumper());
-  private final Connector connector = new HiveMetadataConnector();
-  private final String defaultFileName = "dwh-migration-hiveql-metadata.zip";
+  private final Connector connector = new TestConnector();
+  private final String defaultFileName = "dwh-migration-test-metadata.zip";
 
   @After
   public void tearDown() throws IOException {
@@ -49,7 +49,6 @@ public class MetadataDumperTest {
 
   @Test
   public void testInstantiate() throws Exception {
-    dumper = new Main(new MetadataDumper());
     boolean result = dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
     assertTrue(result);
   }
