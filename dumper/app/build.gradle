@@ -60,6 +60,7 @@ dependencies {
     implementation libs.google.cloud.nio
     implementation libs.google.cloud.kms
     implementation libs.httpclient5
+    implementation libs.aws.java.sdk.redshift
 
     runtimeOnly libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j
@@ -67,7 +68,6 @@ dependencies {
     runtimeOnly libs.postgresql
     runtimeOnly libs.snowflake.jdbc
     runtimeOnly libs.redshift.jdbc
-    runtimeOnly libs.aws.java.sdk.redshift
 
     testFixturesApi testFixtures(project(':dumper:lib-common'))
 

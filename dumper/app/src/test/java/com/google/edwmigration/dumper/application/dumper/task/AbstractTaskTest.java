@@ -30,7 +30,7 @@ public abstract class AbstractTaskTest {
 
   protected static Handle HANDLE = new DummyHandle();
 
-  protected static class MemoryByteSink extends ByteSink {
+  public static class MemoryByteSink extends ByteSink {
 
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
 

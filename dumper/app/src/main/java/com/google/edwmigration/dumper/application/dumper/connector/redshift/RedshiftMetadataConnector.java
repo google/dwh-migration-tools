@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
@@ -29,6 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -64,6 +66,12 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.add(new RedshiftEnvironmentYamlTask());
+
+    // AWS API tasks, enabled by default if IAM credentials are provided
+    Optional<AWSCredentialsProvider> awsCredentials =
+        AbstractAwsApiTask.createCredentialsProvider(arguments);
+
+    awsCredentials.ifPresent(awsCreds -> out.add(new RedshiftClusterNodesTask(awsCreds)));
 
     parallelTask.addTask(
         new JdbcSelectTask(SvvColumnsFormat.ZIP_ENTRY_NAME, "SELECT * FROM SVV_COLUMNS"));
