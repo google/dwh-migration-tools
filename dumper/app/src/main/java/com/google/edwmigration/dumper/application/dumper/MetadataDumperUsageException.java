@@ -27,7 +27,7 @@ import javax.annotation.Nonnull;
  *
  * @author matt
  */
-public class MetadataDumperUsageException extends Exception {
+public class MetadataDumperUsageException extends RuntimeException {
 
   private final List<String> msgs;
 

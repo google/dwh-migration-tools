@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -63,6 +64,9 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     super(name);
   }
 
+  private static final int MAX_DATABASE_CHAR_LENGTH = 255;
+  private static final String DEFAULT_DATABASE = "SNOWFLAKE";
+
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
@@ -76,36 +80,57 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       List<String> optionalArguments = new ArrayList<>();
       if (arguments.getWarehouse() != null)
         optionalArguments.add("warehouse=" + arguments.getWarehouse());
-      if (!arguments.getDatabases().isEmpty())
-        optionalArguments.add("db=" + arguments.getDatabases().get(0));
       if (arguments.getRole() != null) optionalArguments.add("role=" + arguments.getRole());
       if (!optionalArguments.isEmpty())
         buf.append("?").append(Joiner.on("&").join(optionalArguments));
       url = buf.toString();
     }
+    String databaseName =
+        arguments.getDatabases().isEmpty()
+            ? DEFAULT_DATABASE
+            : sanitizeDatabaseName(arguments.getDatabases().get(0));
 
     Driver driver =
         newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
     DataSource dataSource =
         new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
-    return checkCurrentDatabaseExists(arguments, new JdbcHandle(dataSource));
+    JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
+    setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
+    return jdbcHandle;
   }
 
   @Nonnull
-  private JdbcHandle checkCurrentDatabaseExists(
-      @Nonnull ConnectorArguments arguments, @Nonnull JdbcHandle jdbcHandle)
+  private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
-    JdbcTemplate jdbcTemplate = jdbcHandle.getJdbcTemplate();
-    String currentDatabase = jdbcTemplate.queryForObject("SELECT CURRENT_DATABASE()", String.class);
+    String currentDatabase =
+        jdbcTemplate.queryForObject(
+            String.format("USE DATABASE \"%s\";", databaseName), String.class);
     if (currentDatabase == null) {
       List<String> dbNames =
           jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
       throw new MetadataDumperUsageException(
           "Database name not found "
-              + arguments.getDatabases().get(0)
+              + databaseName
               + ", use one of: "
               + StringUtils.join(dbNames, ", "));
     }
-    return jdbcHandle;
+  }
+
+  private String sanitizeDatabaseName(@Nonnull String databaseName)
+      throws MetadataDumperUsageException {
+    CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
+    String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
+    int charLengthWithQuotes = databaseName.length() + 2;
+    if (charLengthWithQuotes > 255) {
+      throw new MetadataDumperUsageException(
+          String.format(
+              "The provided database name has %d characters, which is longer than the maximum allowed number %d for Snowflake identifiers.",
+              charLengthWithQuotes, MAX_DATABASE_CHAR_LENGTH));
+    }
+    if (doubleQuoteMatcher.matchesAnyOf(trimmedName)) {
+      throw new MetadataDumperUsageException(
+          "Database name has incorrectly placed double quote(s). Aborting query.");
+    }
+    return trimmedName;
   }
 }

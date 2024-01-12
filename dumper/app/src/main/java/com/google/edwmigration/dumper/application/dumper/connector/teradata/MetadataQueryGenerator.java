@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.and;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
@@ -59,13 +58,12 @@ class MetadataQueryGenerator {
           .where(eq(identifier("InfoKey"), stringLiteral("VERSION")))
           .serialize();
 
-  static String createSelectForDatabasesV(
-      OptionalLong userRows, OptionalLong dbRows, Optional<Expression> condition) {
+  static String createSelectForDatabasesV(OptionalLong userRows, OptionalLong dbRows) {
     if (!userRows.isPresent() && !dbRows.isPresent()) {
-      return createSimpleSelect("DBC.DatabasesV", condition);
+      return select("%s").from("DBC.DatabasesV").serialize();
     }
-    SelectExpression usersSelect = createSingleDbKindSelectFromDatabasesV("U", userRows, condition);
-    SelectExpression dbsSelect = createSingleDbKindSelectFromDatabasesV("D", dbRows, condition);
+    SelectExpression usersSelect = createSingleDbKindSelectFromDatabasesV("U", userRows);
+    SelectExpression dbsSelect = createSingleDbKindSelectFromDatabasesV("D", dbRows);
     return select("%s")
         .from(
             subquery(
@@ -122,19 +120,13 @@ class MetadataQueryGenerator {
   }
 
   private static SelectExpression createSingleDbKindSelectFromDatabasesV(
-      String dbKind, OptionalLong rowCount, Optional<Expression> condition) {
+      String dbKind, OptionalLong rowCount) {
     Expression dbKindCondition = eq(identifier("DBKind"), stringLiteral(dbKind));
     Optional<LimitedSelectParams> params =
         optionalIf(
             rowCount.isPresent(),
             () -> LimitedSelectParams.create(rowCount.getAsLong(), "PermSpace"));
-    return createLimitedSelect(
-        params,
-        "DBC.DatabasesV",
-        Optional.of(
-            condition
-                .<Expression>map(innerCondition -> and(innerCondition, dbKindCondition))
-                .orElse(dbKindCondition)));
+    return createLimitedSelect(params, "DBC.DatabasesV", Optional.of(dbKindCondition));
   }
 
   private static SelectExpression createLimitedSelect(
