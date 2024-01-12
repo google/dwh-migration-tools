@@ -136,10 +136,9 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
       String clusterId, Instant instant, List<MetricDataPoint> dataPoints) {
     Map<MetricConfig, Double> values =
         dataPoints.stream().collect(toMap(MetricDataPoint::metricConfig, MetricDataPoint::value));
-    return Stream.of(
-            new Object[] {clusterId, DATE_FORMAT.format(instant)},
-            metrics.stream().map(metric -> values.get(metric)).toArray())
-        .flatMap(Stream::of)
+    return Stream.concat(
+            Stream.of(new Object[] {clusterId, DATE_FORMAT.format(instant)}),
+            metrics.stream().map(metric -> values.get(metric)))
         .toArray();
   }
 
