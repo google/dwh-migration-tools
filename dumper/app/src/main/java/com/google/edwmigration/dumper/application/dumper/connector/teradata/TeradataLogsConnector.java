@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -44,7 +45,6 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalLong;
@@ -189,13 +189,13 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       logTable = alternates.get(0);
       queryTable = alternates.get(1);
     }
-    List<String> conditions = new ArrayList<>();
+    ImmutableSet.Builder<String> conditionsBuilder = ImmutableSet.builder();
     // if the user specifies an earliest start time there will be extraneous empty dump files
     // because we always iterate over the full 7 trailing days; maybe it's worth
     // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
     // to parse and return an ISO instant, not a database-server-specific format.
     if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp())) {
-      conditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
+      conditionsBuilder.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
     }
 
     Duration rotationDuration = arguments.getQueryLogRotationFrequency();
@@ -211,6 +211,10 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     OptionalLong maxSqlLength =
         PropertyParser.parseNumber(
             arguments, TeradataLogsConnectorProperty.MAX_SQL_LENGTH, MAX_SQL_LENGTH_RANGE);
+    if (!isAssessment) {
+      conditionsBuilder.add("L.UserName <> 'DBC'");
+    }
+    ImmutableSet<String> conditions = conditionsBuilder.build();
     for (ZonedInterval interval : intervals) {
       String file = createFilename(ZIP_ENTRY_PREFIX, interval);
       if (isAssessment) {
@@ -235,7 +239,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                 utilityLogsTable,
                 interval));
       } else {
-        conditions.add("L.UserName <> 'DBC'");
         out.add(
             new TeradataLogsJdbcTask(
                     file, queryLogsState, logTable, queryTable, conditions, interval)

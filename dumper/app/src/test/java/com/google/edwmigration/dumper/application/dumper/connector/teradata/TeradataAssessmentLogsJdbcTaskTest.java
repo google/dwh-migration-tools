@@ -20,6 +20,7 @@ import static com.google.edwmigration.dumper.application.dumper.test.DumperTestU
 import static java.util.Collections.emptyList;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import java.time.ZoneId;
@@ -52,7 +53,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            /* conditions= */ emptyList(),
+            /* conditions= */ ImmutableSet.of(),
             interval,
             /* logDateColumn= */ null,
             /* maxSqlLength= */ OptionalLong.empty(),
@@ -79,7 +80,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            /* conditions= */ emptyList(),
+            /* conditions= */ ImmutableSet.of(),
             interval,
             /* logDateColumn= */ null,
             /* maxSqlLength= */ OptionalLong.of(20000),
@@ -114,7 +115,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            /* conditions= */ emptyList(),
+            /* conditions= */ ImmutableSet.of(),
             interval,
             /* logDateColumn= */ null,
             /* maxSqlLength= */ OptionalLong.empty(),
@@ -141,7 +142,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            /* conditions= */ emptyList(),
+            /* conditions= */ ImmutableSet.of(),
             interval,
             "SampleLogDate", /* orderBy */
             /* maxSqlLength= */ OptionalLong.empty(),
@@ -169,7 +170,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            /* conditions= */ ImmutableList.of("L.QueryID=7"),
+            /* conditions= */ ImmutableSet.of("L.QueryID=7"),
             interval,
             /* logDateColumn= */ null,
             /* maxSqlLength= */ OptionalLong.empty(),
@@ -196,7 +197,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            /* conditions= */ emptyList(),
+            /* conditions= */ ImmutableSet.of(),
             interval,
             /* logDateColumn= */ null,
             /* maxSqlLength= */ OptionalLong.empty(),
@@ -224,7 +225,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            /* conditions= */ emptyList(),
+            /* conditions= */ ImmutableSet.of(),
             interval,
             "SampleLogDate", /* orderBy */
             /* maxSqlLength= */ OptionalLong.empty(),
@@ -253,7 +254,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            /* conditions= */ emptyList(),
+            /* conditions= */ ImmutableSet.of(),
             interval,
             "SampleLogDate", /* orderBy */
             /* maxSqlLength= */ OptionalLong.of(20000),
@@ -292,7 +293,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             queryLogsState,
             "SampleQueryTable",
             "SampleSqlTable",
-            ImmutableList.of("QueryID=7", "QueryText LIKE '%abc%'"),
+            ImmutableSet.of("QueryID=7", "QueryText LIKE '%abc%'"),
             interval,
             "SampleLogDate",
             /* maxSqlLength= */ OptionalLong.empty(),
