@@ -40,7 +40,7 @@ public abstract class AbstractConnectorTest {
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(AbstractConnectorTest.class);
 
-  protected static enum SpecialTaskType {
+  protected enum SpecialTaskType {
     Version,
     Arguments,
     Format

@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
@@ -43,9 +44,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.List;
 import java.util.OptionalLong;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.CheckForNull;
@@ -100,18 +101,18 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   protected final SharedState state;
   protected final String logTable;
   protected final String queryTable;
-  protected final List<String> conditions;
+  protected final ImmutableSet<String> conditions;
   protected final ZonedInterval interval;
   @CheckForNull private final String logDateColumn;
   private final OptionalLong maxSqlLength;
-  protected final List<String> orderBy;
+  protected final ImmutableList<String> orderBy;
 
   public TeradataLogsJdbcTask(
       @Nonnull String targetPath,
       SharedState state,
       String logTable,
       String queryTable,
-      List<String> conditions,
+      Set<String> conditions,
       ZonedInterval interval) {
     this(
         targetPath,
@@ -122,7 +123,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
         interval,
         /* logDateColumn= */ null,
         /* maxSqlLength= */ OptionalLong.empty(),
-        Collections.emptyList());
+        /* orderBy= */ ImmutableList.of());
   }
 
   protected TeradataLogsJdbcTask(
@@ -130,7 +131,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       SharedState state,
       String logTable,
       String queryTable,
-      List<String> conditions,
+      Set<String> conditions,
       ZonedInterval interval,
       @CheckForNull String logDateColumn,
       OptionalLong maxSqlLength,
@@ -139,11 +140,11 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     this.state = Preconditions.checkNotNull(state, "SharedState was null.");
     this.logTable = logTable;
     this.queryTable = queryTable;
-    this.conditions = conditions;
+    this.conditions = ImmutableSet.copyOf(conditions);
     this.interval = interval;
     this.logDateColumn = logDateColumn;
     this.maxSqlLength = maxSqlLength;
-    this.orderBy = orderBy;
+    this.orderBy = ImmutableList.copyOf(orderBy);
   }
 
   private static boolean isQueryTable(@Nonnull String expression) {
@@ -248,7 +249,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       buf.append(" ORDER BY ");
       Joiner.on(", ").appendTo(buf, orderBy);
     }
-    return buf.toString().replace('\n', ' ');
+    return formatQuery(buf.toString());
   }
 
   private String createLogDateColumnConditionStr() {

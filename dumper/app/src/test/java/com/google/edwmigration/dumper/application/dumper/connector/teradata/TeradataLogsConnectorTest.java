@@ -16,10 +16,15 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask.setParameterValues;
+import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -29,6 +34,8 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractConne
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
+import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
@@ -133,12 +140,164 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
       List<Task<?>> tasks = new ArrayList<>();
       connector.addTasksTo(
           tasks,
-          new ConnectorArguments(
-              new String[] {"--connector", connector.getName(), "--query-log-days", "1"}));
+          new ConnectorArguments("--connector", connector.getName(), "--query-log-days", "1"));
       for (Task<?> task : tasks) {
         task.run(runContext);
       }
     }
+  }
+
+  @Test
+  public void addTasksTo_dumpMetadataTask() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(tasks, new ConnectorArguments("--connector", connector.getName()));
+
+    // Assert
+    assertEquals(1, tasks.stream().filter(task -> task instanceof DumpMetadataTask).count());
+  }
+
+  @Test
+  public void addTasksTo_formatTask() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(tasks, new ConnectorArguments("--connector", connector.getName()));
+
+    // Assert
+    assertEquals(1, tasks.stream().filter(task -> task instanceof FormatTask).count());
+  }
+
+  @Test
+  public void addTasksTo_noTeradataAssessmentLogsJdbcTaskWithoutAssessmentFlag() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(tasks, new ConnectorArguments("--connector", connector.getName()));
+
+    // Assert
+    assertTrue(tasks.stream().noneMatch(task -> task instanceof TeradataAssessmentLogsJdbcTask));
+  }
+
+  @Test
+  public void
+      addTasksTo_allTeradataLogsJdbcTasksAreTeradataAssessmentLogsJdbcTasksWithAssessmentFlag()
+          throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(
+        tasks, new ConnectorArguments("--connector", connector.getName(), "--assessment"));
+
+    // Assert
+    assertTrue(
+        tasks.stream()
+            .filter(task -> task instanceof TeradataLogsJdbcTask)
+            .allMatch(task -> task instanceof TeradataAssessmentLogsJdbcTask));
+  }
+
+  @Test
+  public void addTasksTo_teradataLogsJdbcTaskForOneHour() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(
+        tasks,
+        new ConnectorArguments(
+            "--connector",
+            connector.getName(),
+            "--query-log-start",
+            "2023-12-22 00:00:00",
+            "--query-log-end",
+            "2023-12-22 01:00:00"));
+
+    // Assert
+    List<String> queries =
+        tasks.stream()
+            .filter(task -> task instanceof TeradataLogsJdbcTask)
+            .map(
+                task ->
+                    ((TeradataLogsJdbcTask) task)
+                        .getSql(unused -> true, new String[] {"SampleColumn"}))
+            .collect(toImmutableList());
+    assertEquals(1, queries.size());
+    assertQueryEquals(
+        "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE L.ErrorCode=0 AND"
+            + " L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND L.UserName <> 'DBC'",
+        getOnlyElement(queries));
+  }
+
+  @Test
+  public void addTasksTo_teradataLogsJdbcTasksForTwoHours() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(
+        tasks,
+        new ConnectorArguments(
+            "--connector",
+            connector.getName(),
+            "--query-log-start",
+            "2023-12-22 00:00:00",
+            "--query-log-end",
+            "2023-12-22 02:00:00"));
+
+    // Assert
+    List<String> queries =
+        tasks.stream()
+            .filter(task -> task instanceof TeradataLogsJdbcTask)
+            .map(
+                task ->
+                    ((TeradataLogsJdbcTask) task)
+                        .getSql(unused -> true, new String[] {"SampleColumn"}))
+            .collect(toImmutableList());
+    assertEquals(
+        ImmutableList.of(
+            "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE L.ErrorCode=0 AND"
+                + " L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP) AND"
+                + " L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND L.UserName <> 'DBC'",
+            "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE L.ErrorCode=0 AND"
+                + " L.StartTime >= CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND"
+                + " L.StartTime < CAST('2023-12-22T02:00:00Z' AS TIMESTAMP) AND L.UserName <> 'DBC'"),
+        queries);
+  }
+
+  @Test
+  public void addTasksTo_teradataAssessmentLogsJdbcTaskWithAssessmentFlag() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(
+        tasks,
+        new ConnectorArguments(
+            "--connector",
+            connector.getName(),
+            "--query-log-start",
+            "2023-12-22 00:00:00",
+            "--query-log-end",
+            "2023-12-22 01:00:00",
+            "--assessment"));
+
+    // Assert
+    List<String> queries =
+        tasks.stream()
+            .filter(task -> task instanceof TeradataAssessmentLogsJdbcTask)
+            .map(
+                task ->
+                    ((TeradataAssessmentLogsJdbcTask) task)
+                        .getSql(unused -> true, new String[] {"ST.QueryID"}))
+            .collect(toImmutableList());
+    assertEquals(1, queries.size());
+    assertQueryEquals(
+        "SELECT ST.QueryID"
+            + " FROM dbc.QryLogV L LEFT OUTER JOIN dbc.DBQLSQLTbl ST ON (L.QueryID=ST.QueryID)"
+            + " WHERE L.ErrorCode=0"
+            + " AND L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP)"
+            + " AND L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP)"
+            + " ORDER BY ST.QueryID, ST.SQLRowNo",
+        getOnlyElement(queries));
   }
 
   @Test
