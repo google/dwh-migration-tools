@@ -129,10 +129,10 @@ public class DefaultArguments {
     INTEGRITY("auth-int"),
     PRIVACY("auth-conf");
 
-    public final String commandLineFlag;
+    public final String qopValue;
 
-    HadoopSaslQop(String commandLineFlag) {
-      this.commandLineFlag = commandLineFlag;
+    HadoopSaslQop(String qopValue) {
+      this.qopValue = qopValue;
     }
   }
 
@@ -145,8 +145,8 @@ public class DefaultArguments {
     @Override
     public String convert(String value) {
       for (HadoopSaslQop qop : HadoopSaslQop.values()) {
-        if (qop.commandLineFlag.equals(value) || qop.name().equalsIgnoreCase(value)) {
-          return qop.commandLineFlag;
+        if (qop.qopValue.equals(value) || qop.name().equalsIgnoreCase(value)) {
+          return qop.qopValue;
         }
       }
       throw new ValueConversionException("Not a valid QOP: " + value);
@@ -160,7 +160,7 @@ public class DefaultArguments {
     @Override
     public String valuePattern() {
       return Arrays.stream(HadoopSaslQop.values())
-          .map(unit -> unit.commandLineFlag)
+          .map(unit -> unit.qopValue)
           .collect(Collectors.joining(", "));
     }
   }

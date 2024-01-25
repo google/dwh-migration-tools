@@ -381,7 +381,7 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(String.class)
           .withValuesConvertedBy(HadoopSaslQopValueConverter.INSTANCE)
-          .defaultsTo(HadoopSaslQop.PRIVACY.commandLineFlag);
+          .defaultsTo(HadoopSaslQop.PRIVACY.qopValue);
 
   // Threading / Pooling
   private final OptionSpec<Integer> optionThreadPoolSize =
