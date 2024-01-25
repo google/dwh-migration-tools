@@ -380,7 +380,7 @@ public class ConnectorArguments extends DefaultArguments {
                   + "privacy: auth-conf")
           .withOptionalArg()
           .ofType(String.class)
-          .describedAs("SASL QOP")
+          .describedAs("Hive SASL QOP")
           .defaultsTo(OPT_HIVE_SASL_QOP_DEFAULT);
 
   // Threading / Pooling

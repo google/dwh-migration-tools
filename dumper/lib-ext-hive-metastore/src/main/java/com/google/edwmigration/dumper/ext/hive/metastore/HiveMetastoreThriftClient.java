@@ -76,7 +76,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     @Nonnull private String host = "localhost";
     @Nonnegative private int port;
     @Nullable private String kerberosUrl;
-    @Nullable private String saslQop;
+    @Nonnull private String saslQop;
 
     @Nonnull
     private UnavailableClientVersionBehavior unavailableClientBehavior =
@@ -125,7 +125,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     }
 
     @Nonnull
-    public Builder withSaslQop(@Nullable String saslQop) {
+    public Builder withSaslQop(@Nonnull String saslQop) {
       this.saslQop = saslQop;
       return this;
     }
