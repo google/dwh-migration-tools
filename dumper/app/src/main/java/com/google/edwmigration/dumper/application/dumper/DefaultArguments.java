@@ -124,6 +124,47 @@ public class DefaultArguments {
     }
   }
 
+  public enum HadoopSaslQop {
+    AUTHENTICATION("auth"),
+    INTEGRITY("auth-int"),
+    PRIVACY("auth-conf");
+
+    public final String commandLineFlag;
+
+    HadoopSaslQop(String commandLineFlag) {
+      this.commandLineFlag = commandLineFlag;
+    }
+  }
+
+  public static class HadoopSaslQopValueConverter implements ValueConverter<String> {
+
+    public static HadoopSaslQopValueConverter INSTANCE = new HadoopSaslQopValueConverter();
+
+    private HadoopSaslQopValueConverter() {}
+
+    @Override
+    public String convert(String value) {
+      for (HadoopSaslQop qop : HadoopSaslQop.values()) {
+        if (qop.commandLineFlag.equals(value) || qop.name().equalsIgnoreCase(value)) {
+          return qop.commandLineFlag;
+        }
+      }
+      throw new ValueConversionException("Not a valid QOP: " + value);
+    }
+
+    @Override
+    public Class<? extends String> valueType() {
+      return String.class;
+    }
+
+    @Override
+    public String valuePattern() {
+      return Arrays.stream(HadoopSaslQop.values())
+          .map(unit -> unit.commandLineFlag)
+          .collect(Collectors.joining(", "));
+    }
+  }
+
   private static final String PRODUCT_GROUP = "com.google.edwmigration.dumper";
   private static final String PRODUCT_CORE_MODULE = "app";
 

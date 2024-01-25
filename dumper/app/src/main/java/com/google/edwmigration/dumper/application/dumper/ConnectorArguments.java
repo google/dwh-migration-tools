@@ -378,10 +378,10 @@ public class ConnectorArguments extends DefaultArguments {
                   + "authentication: auth\n"
                   + "integrity: auth-int\n"
                   + "privacy: auth-conf")
-          .withOptionalArg()
+          .withRequiredArg()
           .ofType(String.class)
-          .describedAs("Hive SASL QOP")
-          .defaultsTo(OPT_HIVE_SASL_QOP_DEFAULT);
+          .withValuesConvertedBy(HadoopSaslQopValueConverter.INSTANCE)
+          .defaultsTo(HadoopSaslQop.PRIVACY.commandLineFlag);
 
   // Threading / Pooling
   private final OptionSpec<Integer> optionThreadPoolSize =
