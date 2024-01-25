@@ -260,7 +260,8 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
                     Integer.parseInt(ConnectorArguments.OPT_HIVE_METASTORE_PORT_DEFAULT)))
             .withUnavailableClientVersionBehavior(
                 HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK)
-            .withKerberosUrl(arguments.getHiveKerberosUrl());
+            .withKerberosUrl(arguments.getHiveKerberosUrl())
+            .withSaslQop(arguments.getHiveSaslQop());
     return new ThriftClientHandle(thriftClientBuilder, arguments.getThreadPoolSize());
   }
 }

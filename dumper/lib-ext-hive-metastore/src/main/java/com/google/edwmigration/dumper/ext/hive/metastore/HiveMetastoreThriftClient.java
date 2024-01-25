@@ -76,6 +76,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     @Nonnull private String host = "localhost";
     @Nonnegative private int port;
     @Nullable private String kerberosUrl;
+    @Nullable private String saslQop;
 
     @Nonnull
     private UnavailableClientVersionBehavior unavailableClientBehavior =
@@ -96,6 +97,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       this.unavailableClientBehavior = builder.unavailableClientBehavior;
       this.debug = builder.debug;
       this.kerberosUrl = builder.kerberosUrl;
+      this.saslQop = builder.saslQop;
     }
 
     @Nonnull
@@ -119,6 +121,12 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     @Nonnull
     public Builder withKerberosUrl(@Nullable String kerberosUrl) {
       this.kerberosUrl = kerberosUrl;
+      return this;
+    }
+
+    @Nonnull
+    public Builder withSaslQop(@Nullable String saslQop) {
+      this.saslQop = saslQop;
       return this;
     }
 
@@ -159,7 +167,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
 
       Map<String, String> saslProperties = new HashMap<>();
       saslProperties.put(Sasl.SERVER_AUTH, "true");
-      saslProperties.put(Sasl.QOP, "auth-conf");
+      saslProperties.put(Sasl.QOP, saslQop);
 
       // See:
       // https://docs.oracle.com/javase/8/docs/technotes/guides/security/jgss/single-signon.html
