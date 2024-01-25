@@ -272,14 +272,14 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     out.add(new FormatTask(FORMAT_NAME));
 
     String logTable = DEF_LOG_TABLE;
-    String queryTable = DEF_QUERY_TABLE;
+    String sqlTable = DEF_SQL_TABLE;
     List<String> alternates = arguments.getQueryLogAlternates();
     if (!alternates.isEmpty()) {
       if (alternates.size() != 2)
         throw new MetadataDumperUsageException(
             "Alternate query log tables must be given as a pair; you specified: " + alternates);
       logTable = alternates.get(0);
-      queryTable = alternates.get(1);
+      sqlTable = alternates.get(1);
     }
 
     // if the user specifies an earliest start time there will be extraneous empty dump files
@@ -306,7 +306,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
               + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
               + ".csv";
       out.add(
-          new LSqlQueryFactory(LSqlfile, state, logTable, queryTable, lSqlConditions, interval)
+          new LSqlQueryFactory(LSqlfile, state, logTable, sqlTable, lSqlConditions, interval)
               .withHeaderClass(TeradataLogsDumpFormat.HeaderLSql.class));
 
       String LOGfile =
@@ -314,7 +314,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
               + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
               + ".csv";
       out.add(
-          new LogQueryFactory(LOGfile, state, logTable, queryTable, logConditions, interval)
+          new LogQueryFactory(LOGfile, state, logTable, sqlTable, logConditions, interval)
               .withHeaderClass(TeradataLogsDumpFormat.HeaderLog.class));
     }
   }

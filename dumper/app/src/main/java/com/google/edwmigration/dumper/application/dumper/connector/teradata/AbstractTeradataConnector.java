@@ -91,7 +91,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
   @VisibleForTesting /* pp */ static final String DEF_LOG_TABLE = "dbc.DBQLogTbl";
-  @VisibleForTesting /* pp */ static final String DEF_QUERY_TABLE = "dbc.DBQLSQLTbl";
+  @VisibleForTesting /* pp */ static final String DEF_SQL_TABLE = "dbc.DBQLSQLTbl";
 
   protected enum CommonTeradataConnectorProperty implements ConnectorProperty {
     TMODE(

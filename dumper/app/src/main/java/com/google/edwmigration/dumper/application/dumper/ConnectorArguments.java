@@ -312,13 +312,20 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .acceptsAll(Arrays.asList("dry-run", "n"), "Show export actions without executing.")
           .forHelp();
+
+  public static final String OPT_QUERY_LOG_ALTERNATES_DEPRECATION_MESSAGE =
+      "The "
+          + OPT_QUERY_LOG_ALTERNATES
+          + " option is "
+          + "deprecated, please use -Dteradata-logs.query-log-table and -Dteradata-logs.sql-log-table instead";
   private final OptionSpec<String> optionQueryLogAlternates =
       parser
           .accepts(
               OPT_QUERY_LOG_ALTERNATES,
               "pair of alternate query log tables to export (teradata-logs only), by default "
                   + "logTable=dbc.DBQLogTbl and queryTable=dbc.DBQLSQLTbl, if --assessment flag"
-                  + " is enabled, then logTable=dbc.QryLogV and queryTable=dbc.DBQLSQLTbl.")
+                  + " is enabled, then logTable=dbc.QryLogV and queryTable=dbc.DBQLSQLTbl. "
+                  + OPT_QUERY_LOG_ALTERNATES_DEPRECATION_MESSAGE)
           .withRequiredArg()
           .ofType(String.class)
           .withValuesSeparatedBy(',')
@@ -849,6 +856,11 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
     return getDefinitionMap().get(property.getName());
+  }
+
+  /** Checks if the property was specified on the command-line. */
+  public boolean isDefinitionSpecified(@Nonnull ConnectorProperty property) {
+    return StringUtils.isNotEmpty(getDefinitionMap().get(property.getName()));
   }
 
   private Map<String, String> getDefinitionMap() {

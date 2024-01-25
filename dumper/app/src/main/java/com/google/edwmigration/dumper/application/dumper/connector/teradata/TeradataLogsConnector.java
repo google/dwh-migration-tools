@@ -65,7 +65,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     implements LogsConnector, TeradataLogsDumpFormat {
 
   private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
-  private static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
+  static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
 
   /** The length of the VARCHAR column {@code DBQLSqlTbl.SQLTextInfo}. */
   static final int DBQLSQLTBL_SQLTEXTINFO_LENGTH = 31000;
@@ -74,24 +74,49 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       Range.closed(5000L, (long) DBQLSQLTBL_SQLTEXTINFO_LENGTH);
 
   public enum TeradataLogsConnectorProperty implements ConnectorPropertyWithDefault {
+    /**
+     * The default value is dynamically computed in the {@link QueryLogTableNamesResolver} class.
+     */
+    QUERY_LOGS_TABLE(
+        "query-logs-table",
+        "The name of the query logs table. Default without --assessment flag: "
+            + DEF_LOG_TABLE
+            + ", default with --assessment flag: "
+            + ASSESSMENT_DEF_LOG_TABLE,
+        /* defaultValue= */ null),
+
+    SQL_LOGS_TABLE(
+        "sql-logs-table", "The name of the query logs table containing SQL text.", DEF_SQL_TABLE),
     UTILITY_LOGS_TABLE(
-        "utility-logs-table",
-        "The name of the table to dump utility logs from.",
-        "dbc.DBQLUtilityTbl"),
+        "utility-logs-table", "The name of the utility logs table.", "dbc.DBQLUtilityTbl"),
     RES_USAGE_SCPU_TABLE(
         "res-usage-scpu-table",
-        "The name of the table to dump resource usage logs from.",
+        "The name of the SCPU resource usage logs table.",
         "dbc.ResUsageScpu"),
     RES_USAGE_SPMA_TABLE(
         "res-usage-spma-table",
-        "The name of the table to dump resource usage logs from.",
+        "The name of the SPMA resource usage logs table.",
         "dbc.ResUsageSpma"),
+
+    /**
+     * By default, the DATE column is not used in the join condition for the query tables, so the
+     * default value is not provided.
+     */
     LOG_DATE_COLUMN(
         "log-date-column",
-        "The name of the column of type DATE to include in the WHERE clause when dumping"
-            + " query log tables. The column must exist in both tables."
-            + " See --query-log-alternates for query log table names.",
+        "The name of the column of type DATE to include in the WHERE clause and JOIN condition"
+            + " when extracting query log tables. The column must exist in both tables."
+            + " See -D"
+            + QUERY_LOGS_TABLE.getName()
+            + " and -D"
+            + SQL_LOGS_TABLE.getName()
+            + " for"
+            + " the table names.",
         /* defaultValue= */ null),
+
+    /**
+     * By default, the SQL text splitting is not activated, so the default value is not provided.
+     */
     MAX_SQL_LENGTH(
         "max-sql-length",
         "Max length of the DBQLSqlTbl.SqlTextInfo column."
@@ -125,7 +150,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
 
     @Nonnull
     public String getDescription() {
-      return description;
+      return description + (defaultValue != null ? " Default: " + defaultValue : "");
     }
 
     public String getDefaultValue() {
@@ -179,17 +204,11 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     out.add(new FormatTask(FORMAT_NAME));
 
     boolean isAssessment = arguments.isAssessment();
-    String logTable = isAssessment ? ASSESSMENT_DEF_LOG_TABLE : DEF_LOG_TABLE;
-    String queryTable = DEF_QUERY_TABLE;
-    List<String> alternates = arguments.getQueryLogAlternates();
-    if (!alternates.isEmpty()) {
-      if (alternates.size() != 2) {
-        throw new MetadataDumperUsageException(
-            "Alternate query log tables must be given as a pair; you specified: " + alternates);
-      }
-      logTable = alternates.get(0);
-      queryTable = alternates.get(1);
-    }
+    QueryLogTableNames tableNames = QueryLogTableNamesResolver.resolve(arguments);
+    LOG.info(
+        "Extracting query logs from tables: '{}' and '{}'",
+        tableNames.queryLogsTableName(),
+        tableNames.sqlLogsTableName());
     ImmutableSet.Builder<String> conditionsBuilder = ImmutableSet.builder();
     // if the user specifies an earliest start time there will be extraneous empty dump files
     // because we always iterate over the full 7 trailing days; maybe it's worth
@@ -209,6 +228,18 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     String utilityLogsTable =
         arguments.getDefinitionOrDefault(TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
     String logDateColumn = arguments.getDefinition(TeradataLogsConnectorProperty.LOG_DATE_COLUMN);
+    if (isAssessment
+        && tableNames.usingAtLeastOneAlternate()
+        && !arguments.isDefinitionSpecified(TeradataLogsConnectorProperty.LOG_DATE_COLUMN)) {
+      LOG.info(
+          "Extracting query logs from alternate tables without using the DATE column in the"
+              + " JOIN condition. If both query logs tables ('{}' and '{}') contain a column of type"
+              + " DATE in the Partitioned Primary Index, the extraction performance can be improved"
+              + " by specifying the name of the column using the '-D{}' flag.",
+          tableNames.queryLogsTableName(),
+          tableNames.sqlLogsTableName(),
+          TeradataLogsConnectorProperty.LOG_DATE_COLUMN.getName());
+    }
     OptionalLong maxSqlLength =
         PropertyParser.parseNumber(
             arguments, TeradataLogsConnectorProperty.MAX_SQL_LENGTH, MAX_SQL_LENGTH_RANGE);
@@ -224,8 +255,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
             new TeradataAssessmentLogsJdbcTask(
                     file,
                     queryLogsState,
-                    logTable,
-                    queryTable,
+                    tableNames,
                     conditions,
                     interval,
                     logDateColumn,
@@ -241,8 +271,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                 interval));
       } else {
         out.add(
-            new TeradataLogsJdbcTask(
-                    file, queryLogsState, logTable, queryTable, conditions, interval)
+            new TeradataLogsJdbcTask(file, queryLogsState, tableNames, conditions, interval)
                 .withHeaderClass(Header.class));
       }
     }

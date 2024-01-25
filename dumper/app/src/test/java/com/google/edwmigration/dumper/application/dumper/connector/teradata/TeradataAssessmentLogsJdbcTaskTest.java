@@ -51,8 +51,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             /* conditions= */ ImmutableSet.of(),
             interval,
             /* logDateColumn= */ null,
@@ -78,8 +77,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             /* conditions= */ ImmutableSet.of(),
             interval,
             /* logDateColumn= */ null,
@@ -113,8 +111,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             /* conditions= */ ImmutableSet.of(),
             interval,
             /* logDateColumn= */ null,
@@ -140,8 +137,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             /* conditions= */ ImmutableSet.of(),
             interval,
             "SampleLogDate", /* orderBy */
@@ -168,8 +164,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             /* conditions= */ ImmutableSet.of("L.QueryID=7"),
             interval,
             /* logDateColumn= */ null,
@@ -195,8 +190,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             /* conditions= */ ImmutableSet.of(),
             interval,
             /* logDateColumn= */ null,
@@ -223,8 +217,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             /* conditions= */ ImmutableSet.of(),
             interval,
             "SampleLogDate", /* orderBy */
@@ -252,8 +245,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             /* conditions= */ ImmutableSet.of(),
             interval,
             "SampleLogDate", /* orderBy */
@@ -291,8 +283,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            createTableName("SampleQueryTable", "SampleSqlTable"),
             ImmutableSet.of("QueryID=7", "QueryText LIKE '%abc%'"),
             interval,
             "SampleLogDate",
@@ -315,5 +306,9 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " QueryID=7 AND QueryText LIKE '%abc%'"
             + " ORDER BY ST.QueryID, ST.RowNo",
         query);
+  }
+
+  private QueryLogTableNames createTableName(String logTable, String sqlTable) {
+    return QueryLogTableNames.create(logTable, sqlTable, /* usingAtLeastOneAlternate */ true);
   }
 }

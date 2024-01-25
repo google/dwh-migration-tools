@@ -58,6 +58,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
+  private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
 
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
@@ -96,11 +97,9 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
         "L.StartTime"
       };
 
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
   @VisibleForTesting /* pp */ static String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
   protected final SharedState state;
-  protected final String logTable;
-  protected final String queryTable;
+  protected final QueryLogTableNames tableNames;
   protected final ImmutableSet<String> conditions;
   protected final ZonedInterval interval;
   @CheckForNull private final String logDateColumn;
@@ -110,15 +109,13 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   public TeradataLogsJdbcTask(
       @Nonnull String targetPath,
       SharedState state,
-      String logTable,
-      String queryTable,
+      QueryLogTableNames queryLogTableNames,
       Set<String> conditions,
       ZonedInterval interval) {
     this(
         targetPath,
         state,
-        logTable,
-        queryTable,
+        queryLogTableNames,
         conditions,
         interval,
         /* logDateColumn= */ null,
@@ -129,8 +126,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   protected TeradataLogsJdbcTask(
       @Nonnull String targetPath,
       SharedState state,
-      String logTable,
-      String queryTable,
+      QueryLogTableNames tableNames,
       Set<String> conditions,
       ZonedInterval interval,
       @CheckForNull String logDateColumn,
@@ -138,8 +134,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       List<String> orderBy) {
     super(targetPath);
     this.state = Preconditions.checkNotNull(state, "SharedState was null.");
-    this.logTable = logTable;
-    this.queryTable = queryTable;
+    this.tableNames = tableNames;
     this.conditions = ImmutableSet.copyOf(conditions);
     this.interval = interval;
     this.logDateColumn = logDateColumn;
@@ -199,7 +194,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       separator = ", ";
     }
 
-    buf.append(" FROM ").append(logTable).append(" L");
+    buf.append(" FROM ").append(tableNames.queryLogsTableName()).append(" L");
 
     if (queryTableIncluded) {
       // "QueryID is a system-wide unique field; you can use QueryID
@@ -212,7 +207,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
                 createSubQueryWithSplittingLongQueries(Ints.checkedCast(maxSqlLength.getAsLong())))
             .append(')');
       } else {
-        buf.append(queryTable);
+        buf.append(tableNames.sqlLogsTableName());
       }
       buf.append(" ST ON (L.QueryID=ST.QueryID");
 
@@ -271,7 +266,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
             columns.build(),
             "SqlTextInfo",
             "SqlRowNo",
-            queryTable,
+            tableNames.sqlLogsTableName(),
             /* whereCondition=*/ optionalIf(
                 logDateColumn != null, this::createLogDateColumnCondition),
             DBQLSQLTBL_SQLTEXTINFO_LENGTH,
@@ -285,7 +280,10 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
    */
   @Nonnull
   private Boolean isValid(@Nonnull JdbcTemplate template, @Nonnull String expression) {
-    String table = isQueryTable(expression) ? queryTable + " ST" : logTable + " L";
+    String table =
+        isQueryTable(expression)
+            ? tableNames.sqlLogsTableName() + " ST"
+            : tableNames.queryLogsTableName() + " L";
     String sql = formatQuery(String.format(EXPRESSION_VALIDITY_QUERY, expression, table));
     LOG.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
     try {
