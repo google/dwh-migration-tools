@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
 import org.anarres.jdiagnostics.ProductMetadata;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,32 +138,28 @@ public class DefaultArguments {
     }
   }
 
-  public static class HadoopSaslQopValueConverter implements ValueConverter<String> {
+  public interface Converter<V> {
+    Optional<V> convert(String value);
+  }
+
+  public static class HadoopSaslQopValueConverter implements Converter<String> {
 
     public static HadoopSaslQopValueConverter INSTANCE = new HadoopSaslQopValueConverter();
 
     private HadoopSaslQopValueConverter() {}
 
     @Override
-    public String convert(String value) {
+    public Optional<String> convert(String value) throws MetadataDumperUsageException {
+      if (StringUtils.isEmpty(value)) {
+        return Optional.empty();
+      }
+
       for (HadoopSaslQop qop : HadoopSaslQop.values()) {
         if (qop.name().equalsIgnoreCase(value)) {
-          return qop.qopValue;
+          return Optional.of(qop.qopValue);
         }
       }
-      throw new ValueConversionException("Not a valid QOP: " + value);
-    }
-
-    @Override
-    public Class<? extends String> valueType() {
-      return String.class;
-    }
-
-    @Override
-    public String valuePattern() {
-      return Arrays.stream(HadoopSaslQop.values())
-          .map(unit -> unit.qopValue)
-          .collect(Collectors.joining(", "));
+      throw new MetadataDumperUsageException("Not a valid QOP: " + value);
     }
   }
 

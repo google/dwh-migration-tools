@@ -29,7 +29,6 @@ import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import com.google.errorprone.annotations.ForOverride;
@@ -298,9 +297,8 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
                 HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK)
             .withKerberosUrl(arguments.getHiveKerberosUrl());
 
-    PropertyParser.parse(
-            arguments.getDefinitionOrDefault(HiveConnectorProperty.RPC_PROTECTION),
-            HadoopSaslQopValueConverter.INSTANCE)
+    HadoopSaslQopValueConverter.INSTANCE
+        .convert(arguments.getDefinitionOrDefault(HiveConnectorProperty.RPC_PROTECTION))
         .ifPresent(thriftClientBuilder::withSaslQop);
 
     return new ThriftClientHandle(thriftClientBuilder, arguments.getThreadPoolSize());

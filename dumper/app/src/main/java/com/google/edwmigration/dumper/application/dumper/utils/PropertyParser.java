@@ -20,10 +20,7 @@ import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
-import java.util.Optional;
 import java.util.OptionalLong;
-import joptsimple.ValueConversionException;
-import joptsimple.ValueConverter;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -31,25 +28,6 @@ import org.apache.commons.lang3.StringUtils;
  * {@link ConnectorProperty} classes.
  */
 public class PropertyParser {
-
-  /**
-   * Parses a value passed as an argument to the command-line option using the provided converter.
-   *
-   * @param value command-line option
-   * @return the parsed enum or empty, if the option was not provided on the command-line
-   * @throws MetadataDumperUsageException in case of parsing or validation error
-   */
-  public static <V> Optional<V> parse(String value, ValueConverter<V> converter)
-      throws MetadataDumperUsageException {
-    if (StringUtils.isEmpty(value)) {
-      return Optional.empty();
-    }
-    try {
-      return Optional.ofNullable(converter.convert(value));
-    } catch (ValueConversionException ex) {
-      throw new MetadataDumperUsageException(ex.getMessage());
-    }
-  }
 
   /**
    * Parses a number passed as an argument to the command-line option and validates that the value
