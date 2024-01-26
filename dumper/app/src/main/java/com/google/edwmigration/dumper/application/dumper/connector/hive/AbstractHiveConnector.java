@@ -249,8 +249,8 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
   }
 
   public enum HiveConnectorProperty implements ConnectorPropertyWithDefault {
-    SASL_QOP(
-        "sasl-qop",
+    RPC_PROTECTION(
+        "rpc.protection",
         "The 'hadoop.rpc.protection' configuration of your cluster. This determines the QOP of the"
             + " SASL connection between hadoop and the dumper.",
         HadoopSaslQop.PRIVACY.name());
@@ -260,7 +260,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     private final String defaultValue;
 
     HiveConnectorProperty(String name, String description, String defaultValue) {
-      this.name = "hive." + name;
+      this.name = "hiveql." + name;
       this.description = description;
       this.defaultValue = defaultValue;
     }
@@ -299,7 +299,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
             .withKerberosUrl(arguments.getHiveKerberosUrl());
 
     PropertyParser.parse(
-            arguments.getDefinitionOrDefault(HiveConnectorProperty.SASL_QOP),
+            arguments.getDefinitionOrDefault(HiveConnectorProperty.RPC_PROTECTION),
             HadoopSaslQopValueConverter.INSTANCE)
         .ifPresent(thriftClientBuilder::withSaslQop);
 
