@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
-import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataLogsConnectorProperty;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.Console;
 import java.io.File;
@@ -948,7 +948,7 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @CheckForNull
-  public String getDefinitionOrDefault(TeradataLogsConnectorProperty property) {
+  public String getDefinitionOrDefault(ConnectorPropertyWithDefault property) {
     String stringValue = getDefinition(property);
     if (StringUtils.isEmpty(stringValue)) {
       return property.getDefaultValue();
