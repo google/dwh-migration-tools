@@ -130,13 +130,10 @@ public class ConnectorArguments extends DefaultArguments {
       "hive-metastore-dump-partition-metadata";
   public static final String OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT = "true";
   public static final String OPT_HIVE_KERBEROS_URL = "hive-kerberos-url";
-  public static final String OPT_HIVE_SASL_QOP = "hive-sasl-qop";
-
   public static final String OPT_REQUIRED_IF_NOT_URL = "if --url is not specified";
   public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
   // These are blocking threads on the client side, so it doesn't really matter much.
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
-  public static final String OPT_HIVE_SASL_QOP_DEFAULT = "auth-conf";
 
   private final OptionSpec<String> connectorNameOption =
       parser.accepts(OPT_CONNECTOR, "Target DBMS connector name").withRequiredArg().required();
@@ -368,21 +365,6 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(String.class)
           .describedAs("principal/host");
 
-  private final OptionSpec<String> optionHiveSaslQop =
-      parser
-          .accepts(
-              OPT_HIVE_SASL_QOP,
-              "The QOP of the SASL connection between hadoop and the dumper. "
-                  + "Please check the 'hadoop.rpc.protection' configuration for your cluster. "
-                  + "Mapping between the 'hadoop.rpc.protection' value and SASL QOP:\n"
-                  + "authentication: auth\n"
-                  + "integrity: auth-int\n"
-                  + "privacy: auth-conf")
-          .withRequiredArg()
-          .ofType(String.class)
-          .withValuesConvertedBy(HadoopSaslQopValueConverter.INSTANCE)
-          .defaultsTo(HadoopSaslQop.PRIVACY.qopValue);
-
   // Threading / Pooling
   private final OptionSpec<Integer> optionThreadPoolSize =
       parser
@@ -431,7 +413,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   private static class InputDescriptor implements Comparable<InputDescriptor> {
 
-    public static enum Category {
+    public enum Category {
       Arg,
       Env,
       Other
@@ -853,10 +835,6 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getHiveKerberosUrl() {
     return getOptions().valueOf(optionHiveKerberosUrl);
-  }
-
-  public String getHiveSaslQop() {
-    return getOptions().valueOf(optionHiveSaslQop);
   }
 
   public boolean saveResponseFile() {
