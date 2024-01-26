@@ -129,7 +129,7 @@ public class DefaultArguments {
     INTEGRITY("auth-int"),
     PRIVACY("auth-conf");
 
-    public final String qopValue;
+    private final String qopValue;
 
     HadoopSaslQop(String qopValue) {
       this.qopValue = qopValue;
@@ -145,7 +145,7 @@ public class DefaultArguments {
     @Override
     public String convert(String value) {
       for (HadoopSaslQop qop : HadoopSaslQop.values()) {
-        if (qop.qopValue.equals(value) || qop.name().equalsIgnoreCase(value)) {
+        if (qop.name().equalsIgnoreCase(value)) {
           return qop.qopValue;
         }
       }

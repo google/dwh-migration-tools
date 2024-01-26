@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQop;
 import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQopValueConverter;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
@@ -250,13 +251,9 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
   public enum HiveConnectorProperty implements ConnectorPropertyWithDefault {
     SASL_QOP(
         "sasl-qop",
-        "The QOP of the SASL connection between hadoop and the dumper. "
-            + "Please check the 'hadoop.rpc.protection' configuration for your cluster. "
-            + "Mapping between the 'hadoop.rpc.protection' value and SASL QOP:\n"
-            + "authentication: auth\n"
-            + "integrity: auth-int\n"
-            + "privacy: auth-conf",
-        "auth-conf");
+        "The 'hadoop.rpc.protection' configuration of your cluster. This determines the QOP of the"
+            + " SASL connection between hadoop and the dumper.",
+        HadoopSaslQop.PRIVACY.name());
 
     private final String name;
     private final String description;
@@ -291,12 +288,6 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
   @Override
   public Handle open(ConnectorArguments arguments) throws Exception {
     String requestedClientVersion = arguments.getHiveMetastoreVersion();
-    String qop =
-        PropertyParser.parse(
-                arguments.getDefinitionOrDefault(HiveConnectorProperty.SASL_QOP),
-                HadoopSaslQopValueConverter.INSTANCE)
-            .get();
-
     HiveMetastoreThriftClient.Builder thriftClientBuilder =
         new HiveMetastoreThriftClient.Builder(requestedClientVersion)
             .withHost(arguments.getHost())
@@ -305,8 +296,13 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
                     Integer.parseInt(ConnectorArguments.OPT_HIVE_METASTORE_PORT_DEFAULT)))
             .withUnavailableClientVersionBehavior(
                 HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK)
-            .withKerberosUrl(arguments.getHiveKerberosUrl())
-            .withSaslQop(qop);
+            .withKerberosUrl(arguments.getHiveKerberosUrl());
+
+    PropertyParser.parse(
+            arguments.getDefinitionOrDefault(HiveConnectorProperty.SASL_QOP),
+            HadoopSaslQopValueConverter.INSTANCE)
+        .ifPresent(thriftClientBuilder::withSaslQop);
+
     return new ThriftClientHandle(thriftClientBuilder, arguments.getThreadPoolSize());
   }
 }
