@@ -24,6 +24,7 @@ import com.google.edwmigration.dumper.application.dumper.DefaultArguments.Hadoop
 import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQopConverter;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -281,6 +282,12 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
 
   public AbstractHiveConnector(@Nonnull String name) {
     super(name);
+  }
+
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return HiveConnectorProperty.class;
   }
 
   @Nonnull
