@@ -126,14 +126,14 @@ public class DefaultArguments {
     }
   }
 
-  public enum HadoopSaslQop {
+  public enum HadoopRpcProtection {
     AUTHENTICATION("auth"),
     INTEGRITY("auth-int"),
     PRIVACY("auth-conf");
 
     private final String qopValue;
 
-    HadoopSaslQop(String qopValue) {
+    HadoopRpcProtection(String qopValue) {
       this.qopValue = qopValue;
     }
   }
@@ -142,11 +142,11 @@ public class DefaultArguments {
     Optional<V> convert(String value);
   }
 
-  public static class HadoopSaslQopValueConverter implements Converter<String> {
+  public static class HadoopSaslQopConverter implements Converter<String> {
 
-    public static HadoopSaslQopValueConverter INSTANCE = new HadoopSaslQopValueConverter();
+    public static HadoopSaslQopConverter INSTANCE = new HadoopSaslQopConverter();
 
-    private HadoopSaslQopValueConverter() {}
+    private HadoopSaslQopConverter() {}
 
     @Override
     public Optional<String> convert(String value) throws MetadataDumperUsageException {
@@ -154,7 +154,7 @@ public class DefaultArguments {
         return Optional.empty();
       }
 
-      for (HadoopSaslQop qop : HadoopSaslQop.values()) {
+      for (HadoopRpcProtection qop : HadoopRpcProtection.values()) {
         if (qop.name().equalsIgnoreCase(value)) {
           return Optional.of(qop.qopValue);
         }

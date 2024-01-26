@@ -20,8 +20,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQop;
-import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQopValueConverter;
+import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopRpcProtection;
+import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQopConverter;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
@@ -252,7 +252,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
         "rpc.protection",
         "The 'hadoop.rpc.protection' configuration of your cluster. This determines the QOP of the"
             + " SASL connection between hadoop and the dumper.",
-        HadoopSaslQop.PRIVACY.name());
+        HadoopRpcProtection.PRIVACY.name());
 
     private final String name;
     private final String description;
@@ -297,7 +297,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
                 HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK)
             .withKerberosUrl(arguments.getHiveKerberosUrl());
 
-    HadoopSaslQopValueConverter.INSTANCE
+    HadoopSaslQopConverter.INSTANCE
         .convert(arguments.getDefinitionOrDefault(HiveConnectorProperty.RPC_PROTECTION))
         .ifPresent(thriftClientBuilder::withSaslQop);
 
