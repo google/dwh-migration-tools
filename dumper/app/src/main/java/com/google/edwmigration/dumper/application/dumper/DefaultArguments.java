@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
 import org.anarres.jdiagnostics.ProductMetadata;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,6 +123,43 @@ public class DefaultArguments {
       return Arrays.stream(AllowedUnits.values())
           .map(unit -> unit.commandLineFlag)
           .collect(Collectors.joining(", "));
+    }
+  }
+
+  public enum HadoopRpcProtection {
+    AUTHENTICATION("auth"),
+    INTEGRITY("auth-int"),
+    PRIVACY("auth-conf");
+
+    private final String qopValue;
+
+    HadoopRpcProtection(String qopValue) {
+      this.qopValue = qopValue;
+    }
+  }
+
+  public interface Converter<V> {
+    Optional<V> convert(String value);
+  }
+
+  public static class HadoopSaslQopConverter implements Converter<String> {
+
+    public static HadoopSaslQopConverter INSTANCE = new HadoopSaslQopConverter();
+
+    private HadoopSaslQopConverter() {}
+
+    @Override
+    public Optional<String> convert(String value) throws MetadataDumperUsageException {
+      if (StringUtils.isEmpty(value)) {
+        return Optional.empty();
+      }
+
+      for (HadoopRpcProtection qop : HadoopRpcProtection.values()) {
+        if (qop.name().equalsIgnoreCase(value)) {
+          return Optional.of(qop.qopValue);
+        }
+      }
+      throw new MetadataDumperUsageException("Not a valid QOP: " + value);
     }
   }
 

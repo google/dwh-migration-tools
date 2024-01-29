@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.application.dumper.connector.IntervalExpander;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
@@ -72,7 +73,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
   private static final Range<Long> MAX_SQL_LENGTH_RANGE =
       Range.closed(5000L, (long) DBQLSQLTBL_SQLTEXTINFO_LENGTH);
 
-  public enum TeradataLogsConnectorProperty implements ConnectorProperty {
+  public enum TeradataLogsConnectorProperty implements ConnectorPropertyWithDefault {
     UTILITY_LOGS_TABLE(
         "utility-logs-table",
         "The name of the table to dump utility logs from.",

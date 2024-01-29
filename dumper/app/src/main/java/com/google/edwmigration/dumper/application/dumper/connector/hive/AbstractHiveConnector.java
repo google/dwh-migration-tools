@@ -20,8 +20,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopRpcProtection;
+import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQopConverter;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -244,8 +248,46 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     }
   }
 
+  public enum HiveConnectorProperty implements ConnectorPropertyWithDefault {
+    RPC_PROTECTION(
+        "rpc.protection",
+        "The 'hadoop.rpc.protection' configuration of your cluster. This determines the QOP of the"
+            + " SASL connection between hadoop and the dumper.",
+        HadoopRpcProtection.PRIVACY.name());
+
+    private final String name;
+    private final String description;
+    private final String defaultValue;
+
+    HiveConnectorProperty(String name, String description, String defaultValue) {
+      this.name = "hiveql." + name;
+      this.description = description;
+      this.defaultValue = defaultValue;
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
+
+    public String getDefaultValue() {
+      return defaultValue;
+    }
+  }
+
   public AbstractHiveConnector(@Nonnull String name) {
     super(name);
+  }
+
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return HiveConnectorProperty.class;
   }
 
   @Nonnull
@@ -261,6 +303,11 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
             .withUnavailableClientVersionBehavior(
                 HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK)
             .withKerberosUrl(arguments.getHiveKerberosUrl());
+
+    HadoopSaslQopConverter.INSTANCE
+        .convert(arguments.getDefinitionOrDefault(HiveConnectorProperty.RPC_PROTECTION))
+        .ifPresent(thriftClientBuilder::withSaslQop);
+
     return new ThriftClientHandle(thriftClientBuilder, arguments.getThreadPoolSize());
   }
 }

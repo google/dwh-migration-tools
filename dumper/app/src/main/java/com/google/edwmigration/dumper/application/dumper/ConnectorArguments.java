@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
-import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataLogsConnectorProperty;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.Console;
 import java.io.File;
@@ -130,7 +130,6 @@ public class ConnectorArguments extends DefaultArguments {
       "hive-metastore-dump-partition-metadata";
   public static final String OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT = "true";
   public static final String OPT_HIVE_KERBEROS_URL = "hive-kerberos-url";
-
   public static final String OPT_REQUIRED_IF_NOT_URL = "if --url is not specified";
   public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
   // These are blocking threads on the client side, so it doesn't really matter much.
@@ -414,7 +413,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   private static class InputDescriptor implements Comparable<InputDescriptor> {
 
-    public static enum Category {
+    public enum Category {
       Arg,
       Env,
       Other
@@ -927,7 +926,7 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @CheckForNull
-  public String getDefinitionOrDefault(TeradataLogsConnectorProperty property) {
+  public String getDefinitionOrDefault(ConnectorPropertyWithDefault property) {
     String stringValue = getDefinition(property);
     if (StringUtils.isEmpty(stringValue)) {
       return property.getDefaultValue();
