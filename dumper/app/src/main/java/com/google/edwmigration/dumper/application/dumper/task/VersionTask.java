@@ -46,7 +46,7 @@ public class VersionTask extends AbstractTask<Void> {
   }
 
   @Override
-  public String toString() {
-    return "Write " + getTargetPath() + " from product version information.";
+  public String describeSourceData() {
+    return "from product version information.";
   }
 }

@@ -150,6 +150,11 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
       }
       return databaseNames;
     }
+
+    @Override
+    protected String describeSourceData() {
+      return createSourceDataDescriptionForQuery(sql);
+    }
   }
 
   // http://dwgeek.com/netezza-system-tables-views.html/

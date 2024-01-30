@@ -111,4 +111,13 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
 
     // File file = TestUtils.newOutputFile("dumper-format-test.csv");
   }
+
+  @Test
+  public void toString_success() {
+    JdbcSelectTask task = new JdbcSelectTask("/dir1/dir2/sample.txt", "SELECT 123;");
+
+    String taskDescription = task.toString();
+
+    assertEquals("Write /dir1/dir2/sample.txt from\n        SELECT 123;", taskDescription);
+  }
 }

@@ -170,8 +170,8 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     }
 
     @Override
-    public String toString() {
-      return getSql(Predicates.alwaysTrue());
+    public String describeSourceData() {
+      return "from " + getSql(Predicates.alwaysTrue());
     }
   }
 

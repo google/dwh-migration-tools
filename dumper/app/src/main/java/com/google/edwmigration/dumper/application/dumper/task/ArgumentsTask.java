@@ -51,7 +51,7 @@ public class ArgumentsTask extends AbstractTask<Void> {
   }
 
   @Override
-  public String toString() {
-    return "Write " + getTargetPath() + " from command-line arguments.";
+  public String describeSourceData() {
+    return "from command-line arguments.";
   }
 }

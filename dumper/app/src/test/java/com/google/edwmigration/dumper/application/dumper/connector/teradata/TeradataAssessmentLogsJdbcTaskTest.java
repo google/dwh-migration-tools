@@ -46,7 +46,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_success() {
+  public void getOrCreateSql_success() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -59,7 +59,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* orderBy */ emptyList());
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID", "ST.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -72,7 +72,35 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_maxSqlLength() {
+  public void getOrCreateSql_predicateFilteringByPrefix() {
+    TeradataAssessmentLogsJdbcTask jdbcTask =
+        new TeradataAssessmentLogsJdbcTask(
+            "result.csv",
+            queryLogsState,
+            createTableName("SampleQueryTable", "SampleSqlTable"),
+            /* conditions= */ ImmutableSet.of(),
+            interval,
+            /* logDateColumn= */ null,
+            /* maxSqlLength= */ OptionalLong.empty(),
+            /* orderBy */ emptyList());
+
+    // Act
+    String query =
+        jdbcTask.getOrCreateSql(
+            s -> s.startsWith("ST"), ImmutableList.of("L.QueryID", "ST.QueryID"));
+
+    // Assert
+    assertQueryEquals(
+        "SELECT NULL, ST.QueryID"
+            + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
+            + " WHERE L.ErrorCode=0 AND"
+            + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+        query);
+  }
+
+  @Test
+  public void getOrCreateSql_maxSqlLength() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -85,7 +113,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* orderBy */ emptyList());
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID", "ST.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -106,7 +134,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_noSecondTable() {
+  public void getOrCreateSql_noSecondTable() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -119,7 +147,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* orderBy= */ emptyList());
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -132,7 +160,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_noSecondTableWithLogDateColumn() {
+  public void getOrCreateSql_noSecondTableWithLogDateColumn() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -145,7 +173,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             emptyList());
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -159,7 +187,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_noSecondTableWithCondition() {
+  public void getOrCreateSql_noSecondTableWithCondition() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -172,7 +200,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* orderBy= */ emptyList());
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -185,7 +213,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_noSecondTableWithOrderBy() {
+  public void getOrCreateSql_noSecondTableWithOrderBy() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -198,7 +226,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             /* orderBy= */ ImmutableList.of("L.QueryID", "L.QueryText"));
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -212,7 +240,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_withLogDateColumn() {
+  public void getOrCreateSql_withLogDateColumn() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -225,7 +253,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             emptyList());
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID", "ST.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -240,7 +268,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_withLogDateColumnAndMaxSqlLength() {
+  public void getOrCreateSql_withLogDateColumnAndMaxSqlLength() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -253,7 +281,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             emptyList());
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID", "ST.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -278,7 +306,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_fullQuery() {
+  public void getOrCreateSql_fullQuery() {
     TeradataAssessmentLogsJdbcTask jdbcTask =
         new TeradataAssessmentLogsJdbcTask(
             "result.csv",
@@ -292,7 +320,8 @@ public class TeradataAssessmentLogsJdbcTaskTest {
 
     // Act
     String query =
-        jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "L.QueryText", "ST.QueryID"});
+        jdbcTask.getOrCreateSql(
+            s -> true, ImmutableList.of("L.QueryID", "L.QueryText", "ST.QueryID"));
 
     // Assert
     assertQueryEquals(

@@ -59,7 +59,7 @@ public class DumpMetadataTask extends AbstractTask<Void>
   }
 
   @Override
-  public String toString() {
-    return "Write " + getTargetPath() + " containing dump metadata.";
+  protected String describeSourceData() {
+    return "containing dump metadata.";
   }
 }

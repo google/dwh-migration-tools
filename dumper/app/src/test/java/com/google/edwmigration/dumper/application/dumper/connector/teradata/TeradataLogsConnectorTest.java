@@ -219,7 +219,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
             .map(
                 task ->
                     ((TeradataLogsJdbcTask) task)
-                        .getSql(unused -> true, new String[] {"SampleColumn"}))
+                        .getOrCreateSql(unused -> true, ImmutableList.of("SampleColumn")))
             .collect(toImmutableList());
     assertEquals(1, queries.size());
     assertQueryEquals(
@@ -251,7 +251,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
             .map(
                 task ->
                     ((TeradataLogsJdbcTask) task)
-                        .getSql(unused -> true, new String[] {"SampleColumn"}))
+                        .getOrCreateSql(unused -> true, ImmutableList.of("SampleColumn")))
             .collect(toImmutableList());
     assertEquals(
         ImmutableList.of(
@@ -287,7 +287,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
             .map(
                 task ->
                     ((TeradataAssessmentLogsJdbcTask) task)
-                        .getSql(unused -> true, new String[] {"ST.QueryID"}))
+                        .getOrCreateSql(unused -> true, ImmutableList.of("ST.QueryID")))
             .collect(toImmutableList());
     assertEquals(1, queries.size());
     assertQueryEquals(
@@ -387,6 +387,10 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   private void checkNames(Enum<?>[] vals, String[] exprs) {
     assertEquals(vals.length, exprs.length);
     for (int j = 0; j < vals.length; j++) Assert.assertTrue(exprs[j].endsWith(vals[j].name()));
+  }
+
+  private void checkNames(Enum<?>[] vals, ImmutableList<String> expressions) {
+    checkNames(vals, expressions.toArray(new String[0]));
   }
 
   @Test

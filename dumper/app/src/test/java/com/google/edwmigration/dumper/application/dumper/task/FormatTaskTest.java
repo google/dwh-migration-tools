@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,5 +31,12 @@ public class FormatTaskTest extends AbstractTaskTest {
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     new FormatTask("test-format").doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
+  }
+
+  @Test
+  public void toString_success() {
+    assertEquals(
+        "Write compilerworks-format.txt containing 'test-format'.",
+        new FormatTask("test-format").toString());
   }
 }
