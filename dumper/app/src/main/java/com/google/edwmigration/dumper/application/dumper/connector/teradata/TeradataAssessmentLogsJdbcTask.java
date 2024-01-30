@@ -159,23 +159,14 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
   public TeradataAssessmentLogsJdbcTask(
       @Nonnull String targetPath,
       SharedState state,
-      String logTable,
-      String queryTable,
+      QueryLogTableNames tableNames,
       Set<String> conditions,
       ZonedInterval interval,
       @CheckForNull String logDateColumn,
       OptionalLong maxSqlLength,
       List<String> orderBy) {
     super(
-        targetPath,
-        state,
-        logTable,
-        queryTable,
-        conditions,
-        interval,
-        logDateColumn,
-        maxSqlLength,
-        orderBy);
+        targetPath, state, tableNames, conditions, interval, logDateColumn, maxSqlLength, orderBy);
   }
 
   @Nonnull

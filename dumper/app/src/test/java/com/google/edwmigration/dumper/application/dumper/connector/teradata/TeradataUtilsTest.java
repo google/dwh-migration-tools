@@ -145,4 +145,24 @@ public class TeradataUtilsTest {
 
     assertEquals(Optional.of("ANSI"), transactionMode);
   }
+
+  @Test
+  public void nonEmpty_null() {
+    assertEquals(Optional.empty(), TeradataUtils.nonEmpty(null));
+  }
+
+  @Test
+  public void nonEmpty_emptyString() {
+    assertEquals(Optional.empty(), TeradataUtils.nonEmpty(""));
+  }
+
+  @Test
+  public void nonEmpty_success() {
+    assertEquals(Optional.of("abc"), TeradataUtils.nonEmpty("abc"));
+  }
+
+  @Test
+  public void nonEmpty_space() {
+    assertEquals(Optional.of(" "), TeradataUtils.nonEmpty(" "));
+  }
 }

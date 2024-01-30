@@ -39,8 +39,8 @@ public class TeradataLogsJdbcTaskTest {
         new TeradataLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            QueryLogTableNames.create(
+                "SampleQueryTable", "SampleSqlTable", /* usingAtLeastOneAlternate */ true),
             /* conditions= */ ImmutableSet.of(),
             interval);
 
@@ -67,8 +67,8 @@ public class TeradataLogsJdbcTaskTest {
         new TeradataLogsJdbcTask(
             "result.csv",
             queryLogsState,
-            "SampleQueryTable",
-            "SampleSqlTable",
+            QueryLogTableNames.create(
+                "SampleQueryTable", "SampleSqlTable", /* usingAtLeastOneAlternate */ true),
             /* conditions= */ ImmutableSet.of("L.UserName <> 'DBC'"),
             interval);
 

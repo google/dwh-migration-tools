@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.util.Optional;
@@ -28,6 +29,10 @@ public class TeradataUtils {
 
   public static <T> Optional<T> optionalIf(boolean condition, Supplier<T> supplier) {
     return condition ? Optional.of(supplier.get()) : Optional.empty();
+  }
+
+  public static Optional<String> nonEmpty(String value) {
+    return Optional.ofNullable(Strings.emptyToNull(value));
   }
 
   /**
