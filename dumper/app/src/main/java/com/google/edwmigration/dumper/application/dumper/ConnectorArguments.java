@@ -72,7 +72,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ConnectorArguments extends DefaultArguments {
 
   private static final Logger LOG = LoggerFactory.getLogger(ConnectorArguments.class);
@@ -884,11 +886,14 @@ public class ConnectorArguments extends DefaultArguments {
         resultMap.put(name, value);
         if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
           LOG.info("Parsed property: name='{}', value='{}'", name, value);
-        } else {
+        } else if (allPropertyNames.contains(name)) {
           throw new MetadataDumperUsageException(
               String.format(
                   "Property: name='%s', value='%s' is not compatible with connector '%s'",
                   name, value, MoreObjects.firstNonNull(connector, "[not specified]")));
+        } else {
+          throw new MetadataDumperUsageException(
+              String.format("Skipping unknown property: name='%s', value='%s'", name, value));
         }
       }
     }
