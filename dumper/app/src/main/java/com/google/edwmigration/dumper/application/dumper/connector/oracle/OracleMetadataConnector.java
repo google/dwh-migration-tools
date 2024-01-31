@@ -110,7 +110,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     public SelectXmlTask(
         String targetPath, String rowSql, String xmlSql, int ownerIndex, int nameIndex) {
       super(targetPath);
-      this.rowSql = Preconditions.checkNotNull(xmlSql, "Row SQL was null.");
+      this.rowSql = Preconditions.checkNotNull(rowSql, "Row SQL was null.");
       this.xmlSql = Preconditions.checkNotNull(xmlSql, "XML SQL was null.");
       this.ownerIndex = ownerIndex;
       this.nameIndex = nameIndex;
