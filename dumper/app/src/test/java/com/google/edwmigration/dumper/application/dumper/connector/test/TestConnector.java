@@ -37,7 +37,7 @@ public class TestConnector extends AbstractConnector implements MetadataConnecto
   }
 
   public enum TestConnectorProperty implements ConnectorProperty {
-    TEST_PROPERTY("test.property", "This a a test property");
+    TEST_PROPERTY("test.property", "This is a test property");
 
     private final String name;
     private final String description;

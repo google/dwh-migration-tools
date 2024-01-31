@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -27,7 +28,6 @@ import java.io.IOException;
 import joptsimple.OptionException;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -132,8 +132,7 @@ public class MetadataDumperTest {
     // Act
     file.createNewFile();
     IllegalStateException exception =
-        Assert.assertThrows(
-            "No exception thrown from " + dumper.getClass().getSimpleName(),
+        assertThrows(
             IllegalStateException.class,
             () -> dumper.run("--connector", connector.getName(), "--output", name));
 
@@ -144,10 +143,8 @@ public class MetadataDumperTest {
   @Test
   public void testFailsOnUnrecognizedFlag() {
     OptionException exception =
-        Assert.assertThrows(
-            "No exception thrown from " + dumper.getClass().getSimpleName(),
-            OptionException.class,
-            () -> dumper.run("--unrecognized-flag", "random-value"));
+        assertThrows(
+            OptionException.class, () -> dumper.run("--unrecognized-flag", "random-value"));
 
     // Assert
     assertEquals("unrecognized-flag is not a recognized option", exception.getMessage());
@@ -156,8 +153,7 @@ public class MetadataDumperTest {
   @Test
   public void testFailsOnUnrecognizedDialect() {
     MetadataDumperUsageException exception =
-        Assert.assertThrows(
-            "No exception thrown from " + dumper.getClass().getSimpleName(),
+        assertThrows(
             MetadataDumperUsageException.class,
             () ->
                 dumper.run(
@@ -173,8 +169,7 @@ public class MetadataDumperTest {
   @Test
   public void testFailsOnUnrecognizedFlagForSpecificDialect() {
     MetadataDumperUsageException exception =
-        Assert.assertThrows(
-            "No exception thrown from " + dumper.getClass().getSimpleName(),
+        assertThrows(
             MetadataDumperUsageException.class,
             () ->
                 dumper.run(
