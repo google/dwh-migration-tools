@@ -206,12 +206,12 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
     return Duration.ofHours(1);
   }
 
-  private String getRequestDescription() {
+  private String toCallDescription() {
     return "AmazonRedshift.describeClusters, AmazonCloudWatch.getMetricStatistics";
   }
 
   @Override
-  public String toString() {
-    return "Write " + zipEntryName + " from AWS API request:\n        " + getRequestDescription();
+  public String describeSourceData() {
+    return "Write " + zipEntryName + " from AWS API request:\n        " + toCallDescription();
   }
 }
