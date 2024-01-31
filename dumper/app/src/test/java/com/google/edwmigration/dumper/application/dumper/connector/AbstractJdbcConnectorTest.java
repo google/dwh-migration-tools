@@ -37,8 +37,7 @@ public class AbstractJdbcConnectorTest extends AbstractConnectorTest {
   public void testFailsForInvalidQueryLogTimespan() throws IOException {
     for (AbstractJdbcConnector connector : connectors) {
       ConnectorArguments arguments =
-          new ConnectorArguments(
-              new String[] {"--query-log-days", "0", "--connector", connector.getName()});
+          new ConnectorArguments("--query-log-days", "0", "--connector", connector.getName());
 
       MetadataDumperUsageException exception =
           Assert.assertThrows(
