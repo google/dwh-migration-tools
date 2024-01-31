@@ -891,7 +891,7 @@ public class ConnectorArguments extends DefaultArguments {
                   name, value, MoreObjects.firstNonNull(connector, "[not specified]")));
         } else {
           throw new MetadataDumperUsageException(
-              String.format("Skipping unknown property: name='%s', value='%s'", name, value));
+              String.format("Unknown property: name='%s', value='%s'", name, value));
         }
       }
     }

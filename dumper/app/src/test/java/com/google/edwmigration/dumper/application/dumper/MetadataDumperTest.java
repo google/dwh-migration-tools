@@ -161,8 +161,7 @@ public class MetadataDumperTest {
 
     // Assert
     assertEquals(
-        "Property: name='ImaginaryDialect.flag', value='random-value' is not compatible with"
-            + " connector 'test'",
+        "Unknown property: name='ImaginaryDialect.flag', value='random-value'",
         exception.getMessage());
   }
 
@@ -172,13 +171,12 @@ public class MetadataDumperTest {
         assertThrows(
             MetadataDumperUsageException.class,
             () ->
-                dumper.run(
-                    "--connector", connector.getName(), "-Dtest.invalid.property=test-value"));
+                dumper.run("--connector", connector.getName(), "-Dhiveql.rpc.protection=privacy"));
 
     // Assert
     assertEquals(
-        "Property: name='test.invalid.property', value='test-value' is not compatible with"
-            + " connector 'test'",
+        "Property: name='hiveql.rpc.protection', value='privacy' is not compatible with connector"
+            + " 'test'",
         exception.getMessage());
   }
 
