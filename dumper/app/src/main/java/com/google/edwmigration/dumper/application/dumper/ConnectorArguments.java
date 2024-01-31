@@ -885,11 +885,10 @@ public class ConnectorArguments extends DefaultArguments {
         if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
           LOG.info("Parsed property: name='{}', value='{}'", name, value);
         } else {
-          String msg =
+          throw new MetadataDumperUsageException(
               String.format(
                   "Property: name='%s', value='%s' is not compatible with connector '%s'",
-                  name, value, MoreObjects.firstNonNull(connector, "[not specified]"));
-          throw new MetadataDumperUsageException(msg);
+                  name, value, MoreObjects.firstNonNull(connector, "[not specified]")));
         }
       }
     }
