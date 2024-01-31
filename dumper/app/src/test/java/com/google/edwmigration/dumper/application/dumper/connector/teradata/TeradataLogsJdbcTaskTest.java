@@ -17,7 +17,9 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
+import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
@@ -30,7 +32,7 @@ public class TeradataLogsJdbcTaskTest {
   private SharedState queryLogsState = new SharedState();
 
   @Test
-  public void getSql_success() {
+  public void getOrCreateSql_success() {
     ZonedInterval interval =
         new ZonedInterval(
             ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneId.systemDefault()),
@@ -45,7 +47,7 @@ public class TeradataLogsJdbcTaskTest {
             interval);
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID", "ST.QueryID"));
 
     // Assert
     assertQueryEquals(
@@ -58,7 +60,36 @@ public class TeradataLogsJdbcTaskTest {
   }
 
   @Test
-  public void getSql_withCondition() {
+  public void toString_success() {
+    ZonedInterval interval =
+        new ZonedInterval(
+            ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneId.systemDefault()),
+            ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneId.systemDefault()));
+    TeradataLogsJdbcTask jdbcTask =
+        new TeradataLogsJdbcTask(
+            "result.csv",
+            queryLogsState,
+            QueryLogTableNames.create(
+                "SampleQueryTable", "SampleSqlTable", /* usingAtLeastOneAlternate */ true),
+            /* conditions= */ ImmutableSet.of(),
+            interval);
+    String unused = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID", "ST.QueryID"));
+
+    // Act
+    String taskDescription = jdbcTask.toString();
+
+    // Assert
+    assertEquals(
+        "Write result.csv from\n        SELECT L.QueryID, ST.QueryID"
+            + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
+            + " WHERE L.ErrorCode=0 AND"
+            + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+        taskDescription);
+  }
+
+  @Test
+  public void getOrCreateSql_withCondition() {
     ZonedInterval interval =
         new ZonedInterval(
             ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneId.systemDefault()),
@@ -73,7 +104,7 @@ public class TeradataLogsJdbcTaskTest {
             interval);
 
     // Act
-    String query = jdbcTask.getSql(s -> true, new String[] {"L.QueryID", "ST.QueryID"});
+    String query = jdbcTask.getOrCreateSql(s -> true, ImmutableList.of("L.QueryID", "ST.QueryID"));
 
     // Assert
     assertQueryEquals(

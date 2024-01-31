@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.sql.Connection;
@@ -32,6 +33,7 @@ import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
@@ -185,6 +187,7 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
   private final SharedState state;
   private final String utilityTable;
   @Nonnull private final ZonedInterval interval;
+  private Optional<String> sql = Optional.empty();
 
   protected TeradataUtilityLogsJdbcTask(
       String targetPath, SharedState state, String utilityTable, @Nonnull ZonedInterval interval) {
@@ -198,18 +201,18 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
   protected Summary doInConnection(
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
-    String sql = getSql(jdbcHandle);
+    String sql = getOrCreateSql(jdbcHandle);
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1).withInterval(interval);
     return doSelect(connection, rse, sql);
   }
 
   @Nonnull
-  private String getSql(@Nonnull JdbcHandle handle) {
+  private String getOrCreateSql(@Nonnull JdbcHandle handle) {
     Function<String, Boolean> validator =
         expression -> isValid(handle.getJdbcTemplate(), expression);
     Predicate<String> predicate =
         expression -> state.expressionValidity.computeIfAbsent(expression, validator);
-    return getSql(predicate);
+    return getOrCreateSql(predicate);
   }
 
   /**
@@ -219,14 +222,17 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
    * @param predicate A predicate to compute whether a given expression is legal.
    * @return A SQL query containing every legal expression from EXPRESSIONS.
    */
-  private String getSql(@Nonnull Predicate<? super String> predicate) {
-    return getSql(predicate, EXPRESSIONS);
+  private String getOrCreateSql(@Nonnull Predicate<? super String> predicate) {
+    if (!sql.isPresent()) {
+      sql = Optional.of(buildSql(predicate));
+    }
+    return sql.get();
   }
 
-  private String getSql(Predicate<? super String> predicate, ImmutableList<String> expressions) {
+  private String buildSql(Predicate<? super String> predicate) {
     StringBuilder buf = new StringBuilder(" SELECT ");
     String separator = "";
-    for (String expression : expressions) {
+    for (String expression : EXPRESSIONS) {
       buf.append(separator);
       if (predicate.test(expression)) {
         buf.append(expression);
@@ -267,7 +273,8 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
   }
 
   @Override
-  public String toString() {
-    return getSql(expression -> true);
+  public String describeSourceData() {
+    return sql.map(AbstractTask::createSourceDataDescriptionForQuery)
+        .orElseGet(() -> String.format("from table '%s'", utilityTable));
   }
 }

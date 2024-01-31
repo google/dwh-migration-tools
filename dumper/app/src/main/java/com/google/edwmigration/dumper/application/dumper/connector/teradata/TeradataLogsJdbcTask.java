@@ -27,7 +27,6 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
@@ -37,14 +36,15 @@ import com.google.edwmigration.dumper.application.dumper.connector.teradata.Abst
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.errorprone.annotations.ForOverride;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Set;
 import java.util.function.Function;
@@ -70,32 +70,31 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   // and possibly others, hence our need to replace any missing projection attributes with NULLs.
   // MUST match TeradataLogsDumpFormat.Header
   @VisibleForTesting
-  static final String[] EXPRESSIONS =
-      new String[] {
-        "L.QueryID",
-        "ST.SQLRowNo",
-        "ST.SQLTextInfo",
-        "L.UserName",
-        "L.CollectTimeStamp",
-        "L.StatementType",
-        "L.AppID",
-        "L.DefaultDatabase",
-        "L.ErrorCode",
-        "L.ErrorText",
-        "L.FirstRespTime",
-        "L.LastRespTime",
-        "L.NumResultRows",
-        "L.QueryText",
-        "L.ReqPhysIO",
-        "L.ReqPhysIOKB",
-        "L.RequestMode",
-        "L.SessionID",
-        "L.SessionWDID",
-        "L.Statements",
-        "L.TotalIOCount",
-        "L.WarningOnly",
-        "L.StartTime"
-      };
+  static final ImmutableList<String> EXPRESSIONS =
+      ImmutableList.of(
+          "L.QueryID",
+          "ST.SQLRowNo",
+          "ST.SQLTextInfo",
+          "L.UserName",
+          "L.CollectTimeStamp",
+          "L.StatementType",
+          "L.AppID",
+          "L.DefaultDatabase",
+          "L.ErrorCode",
+          "L.ErrorText",
+          "L.FirstRespTime",
+          "L.LastRespTime",
+          "L.NumResultRows",
+          "L.QueryText",
+          "L.ReqPhysIO",
+          "L.ReqPhysIOKB",
+          "L.RequestMode",
+          "L.SessionID",
+          "L.SessionWDID",
+          "L.Statements",
+          "L.TotalIOCount",
+          "L.WarningOnly",
+          "L.StartTime");
 
   @VisibleForTesting /* pp */ static String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
   protected final SharedState state;
@@ -105,6 +104,9 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   @CheckForNull private final String logDateColumn;
   private final OptionalLong maxSqlLength;
   protected final ImmutableList<String> orderBy;
+  private final ImmutableList<String> expressions;
+
+  private Optional<String> sql = Optional.empty();
 
   public TeradataLogsJdbcTask(
       @Nonnull String targetPath,
@@ -120,7 +122,8 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
         interval,
         /* logDateColumn= */ null,
         /* maxSqlLength= */ OptionalLong.empty(),
-        /* orderBy= */ ImmutableList.of());
+        /* orderBy= */ ImmutableList.of(),
+        EXPRESSIONS);
   }
 
   protected TeradataLogsJdbcTask(
@@ -131,7 +134,8 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       ZonedInterval interval,
       @CheckForNull String logDateColumn,
       OptionalLong maxSqlLength,
-      List<String> orderBy) {
+      List<String> orderBy,
+      List<String> expressions) {
     super(targetPath);
     this.state = Preconditions.checkNotNull(state, "SharedState was null.");
     this.tableNames = tableNames;
@@ -140,6 +144,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     this.logDateColumn = logDateColumn;
     this.maxSqlLength = maxSqlLength;
     this.orderBy = ImmutableList.copyOf(orderBy);
+    this.expressions = ImmutableList.copyOf(expressions);
   }
 
   private static boolean isQueryTable(@Nonnull String expression) {
@@ -150,18 +155,18 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   protected Summary doInConnection(
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
-    String sql = getSql(jdbcHandle);
+    String sql = getOrCreateSql(jdbcHandle);
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1).withInterval(interval);
     return doSelect(connection, rse, sql);
   }
 
   @Nonnull
-  private String getSql(@Nonnull JdbcHandle handle) {
+  private String getOrCreateSql(@Nonnull JdbcHandle handle) {
     Function<String, Boolean> validator =
         expression -> isValid(handle.getJdbcTemplate(), expression);
     Predicate<String> predicate =
         expression -> state.expressionValidity.computeIfAbsent(expression, validator);
-    return getSql(predicate);
+    return getOrCreateSql(predicate, expressions);
   }
 
   /**
@@ -171,17 +176,21 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
    * @param predicate A predicate to compute whether a given expression is legal.
    * @return A SQL query containing every legal expression from EXPRESSIONS.
    */
-  @ForOverride
   @Nonnull
-  /* pp */ String getSql(@Nonnull Predicate<? super String> predicate) {
-    return getSql(predicate, EXPRESSIONS);
+  /* pp */ String getOrCreateSql(
+      Predicate<? super String> predicate, ImmutableList<String> localExpressions) {
+    if (!sql.isPresent()) {
+      sql = Optional.of(buildSql(predicate, localExpressions));
+    }
+    return sql.get();
   }
 
-  /* pp */ String getSql(Predicate<? super String> predicate, String[] expressions) {
+  private String buildSql(
+      Predicate<? super String> predicate, ImmutableList<String> localExpressions) {
     StringBuilder buf = new StringBuilder("SELECT ");
     String separator = "";
     boolean queryTableIncluded = false;
-    for (String expression : expressions) {
+    for (String expression : localExpressions) {
       buf.append(separator);
       if (predicate.test(expression)) {
         buf.append(expression);
@@ -299,7 +308,12 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   }
 
   @Override
-  public String toString() {
-    return getSql(Predicates.alwaysTrue());
+  public String describeSourceData() {
+    return sql.map(AbstractTask::createSourceDataDescriptionForQuery)
+        .orElseGet(
+            () ->
+                String.format(
+                    "from tables '%s' and '%s'",
+                    tableNames.queryLogsTableName(), tableNames.sqlLogsTableName()));
   }
 }

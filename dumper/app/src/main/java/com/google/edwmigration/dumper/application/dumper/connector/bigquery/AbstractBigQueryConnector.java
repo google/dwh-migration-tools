@@ -174,9 +174,8 @@ public abstract class AbstractBigQueryConnector extends AbstractConnector {
     @ForOverride
     protected abstract String toCallDescription();
 
-    @Override
-    public String toString() {
-      return "Write " + getTargetPath() + " from " + toCallDescription();
+    protected String describeSourceData() {
+      return "from " + toCallDescription();
     }
   }
 

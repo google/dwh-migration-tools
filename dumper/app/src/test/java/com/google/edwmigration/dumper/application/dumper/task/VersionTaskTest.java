@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,5 +31,12 @@ public class VersionTaskTest extends AbstractTaskTest {
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     new VersionTask().doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
+  }
+
+  @Test
+  public void toString_success() {
+    assertEquals(
+        "Write compilerworks-version.txt from product version information.",
+        new VersionTask().toString());
   }
 }

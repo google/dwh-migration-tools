@@ -55,9 +55,7 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
   }
 
   @Override
-  public String toString() {
-    // This is called in a situation where we have a variable amount of indentation. See
-    // MetadataDumper.
-    return "Write " + getTargetPath() + " from:\n        " + getSql();
+  public String describeSourceData() {
+    return createSourceDataDescriptionForQuery(getSql());
   }
 }

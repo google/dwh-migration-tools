@@ -181,8 +181,8 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     }
 
     @Override
-    public String toString() {
-      return super.toString() + "\n    " + xmlSql;
+    public String describeSourceData() {
+      return createSourceDataDescriptionForQuery(xmlSql);
     }
   }
 
