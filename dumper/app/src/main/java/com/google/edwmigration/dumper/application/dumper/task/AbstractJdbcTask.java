@@ -273,11 +273,4 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       return doInConnection(context, jdbcHandle, sink, connection);
     }
   }
-
-  @Override
-  public String toString() {
-    // This should be overridden by anyone serious.
-    // Perhaps we should declare this abstract instead and force the point.
-    return "Write " + getTargetPath() + " from " + getClass().getSimpleName();
-  }
 }

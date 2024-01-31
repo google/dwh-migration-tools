@@ -16,8 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,9 +32,18 @@ public class DumpMetadataTaskTest extends AbstractTaskTest {
   @Test
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
-    ConnectorArguments arguments =
-        new ConnectorArguments(new String[] {"--connector", "bigquery-logs"});
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "bigquery-logs");
     new DumpMetadataTask(arguments, "test-format")
         .doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
+  }
+
+  @Test
+  public void toString_success() throws IOException {
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "bigquery-logs");
+    DumpMetadataTask task = new DumpMetadataTask(arguments, "test-format");
+
+    String taskDescription = task.toString();
+
+    assertEquals("Write compilerworks-metadata.yaml containing dump metadata.", taskDescription);
   }
 }

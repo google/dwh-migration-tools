@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static java.lang.String.format;
+
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -105,5 +107,24 @@ public abstract class AbstractTask<T> implements Task<T> {
     T result = doRun(context, sink.asTemporaryByteSink(), context.getHandle());
     sink.commit();
     return result;
+  }
+
+  protected String describeSourceData() {
+    return "from " + getClass().getSimpleName();
+  }
+
+  /**
+   * Returns the source data description for the SQL query.
+   *
+   * @param query SQL query
+   * @return the source data description
+   */
+  protected static String createSourceDataDescriptionForQuery(String query) {
+    return "from\n        " + query;
+  }
+
+  @Override
+  public String toString() {
+    return format("Write %s %s", targetPath, describeSourceData());
   }
 }

@@ -71,4 +71,9 @@ public class RedshiftEnvironmentYamlTask extends AbstractJdbcTask<Void> {
       }
     };
   }
+
+  @Override
+  public String describeSourceData() {
+    return createSourceDataDescriptionForQuery(ENV_QUERY);
+  }
 }

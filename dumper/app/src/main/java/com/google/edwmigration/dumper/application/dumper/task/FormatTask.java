@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static java.lang.String.format;
+
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.MetadataDumperConstants;
@@ -39,7 +41,7 @@ public class FormatTask extends AbstractTask<Void> {
   }
 
   @Override
-  public String toString() {
-    return "Write " + getTargetPath() + " containing '" + format + "'.";
+  public String describeSourceData() {
+    return format("containing '%s'.", format);
   }
 }
