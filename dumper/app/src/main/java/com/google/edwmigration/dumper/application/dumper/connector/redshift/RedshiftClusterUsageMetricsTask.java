@@ -97,6 +97,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
   private final ZonedDateTime currentTime;
   private final ZonedInterval interval;
   private final List<MetricConfig> metrics;
+  private final String zipEntryName;
 
   public RedshiftClusterUsageMetricsTask(
       AWSCredentialsProvider credentialsProvider,
@@ -111,6 +112,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
     this.interval = interval;
     this.metrics = metrics;
     this.currentTime = currentTime;
+    this.zipEntryName = zipEntryName;
   }
 
   @Override
@@ -202,5 +204,14 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
       return Duration.ofMinutes(5);
     }
     return Duration.ofHours(1);
+  }
+
+  private String getRequestDescription() {
+    return "AmazonRedshift.describeClusters, AmazonCloudWatch.getMetricStatistics";
+  }
+
+  @Override
+  public String toString() {
+    return "Write " + zipEntryName + " from AWS API request:\n        " + getRequestDescription();
   }
 }

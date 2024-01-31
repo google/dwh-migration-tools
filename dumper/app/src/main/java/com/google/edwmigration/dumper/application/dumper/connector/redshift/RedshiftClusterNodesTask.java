@@ -58,4 +58,16 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
             .collect(toList()));
     return null;
   }
+
+  private String getRequestDescription() {
+    return "AmazonRedshift.describeClusters";
+  }
+
+  @Override
+  public String toString() {
+    return "Write "
+        + ClusterNodes.ZIP_ENTRY_NAME
+        + " from AWS API request:\n        "
+        + getRequestDescription();
+  }
 }
