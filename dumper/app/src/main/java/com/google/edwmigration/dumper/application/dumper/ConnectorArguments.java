@@ -863,7 +863,7 @@ public class ConnectorArguments extends DefaultArguments {
     return StringUtils.isNotEmpty(getDefinitionMap().get(property.getName()));
   }
 
-  private Map<String, String> getDefinitionMap() {
+  public Map<String, String> getDefinitionMap() {
     if (definitionMap == null) {
       definitionMap =
           buildDefinitionMap(getConnectorName(), getOptions().valuesOf(definitionOption));

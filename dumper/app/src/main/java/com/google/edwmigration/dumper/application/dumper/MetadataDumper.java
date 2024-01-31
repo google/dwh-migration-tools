@@ -92,6 +92,9 @@ public class MetadataDumper {
           ConnectorRepository.getInstance().getAllNames());
       return false;
     }
+
+    ConnectorPropertyValidator.validate(connector, arguments.getDefinitionMap());
+
     return run(connector, arguments);
   }
 

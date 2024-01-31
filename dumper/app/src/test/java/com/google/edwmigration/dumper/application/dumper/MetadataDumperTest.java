@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -23,6 +24,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQ
 import com.google.edwmigration.dumper.application.dumper.connector.test.TestConnector;
 import java.io.File;
 import java.io.IOException;
+import joptsimple.OptionException;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -137,5 +139,56 @@ public class MetadataDumperTest {
 
     // Assert
     assertTrue(exception.getMessage().startsWith("A file already exists at test"));
+  }
+
+  @Test
+  public void testFailsOnUnrecognizedFlag() {
+    OptionException exception =
+        Assert.assertThrows(
+            "No exception thrown from " + dumper.getClass().getSimpleName(),
+            OptionException.class,
+            () -> dumper.run("--unrecognized-flag", "random-value"));
+
+    // Assert
+    assertEquals("unrecognized-flag is not a recognized option", exception.getMessage());
+  }
+
+  @Test
+  public void testFailsOnUnrecognizedDialect() {
+    IllegalArgumentException exception =
+        Assert.assertThrows(
+            "No exception thrown from " + dumper.getClass().getSimpleName(),
+            IllegalArgumentException.class,
+            () ->
+                dumper.run(
+                    "--connector", connector.getName(), "-DImaginaryDialect.flag=random-value"));
+
+    // Assert
+    assertEquals(
+        "ImaginaryDialect.flag is not a recognized option for test", exception.getMessage());
+  }
+
+  @Test
+  public void testFailsOnUnrecognizedFlagForSpecificDialect() {
+    IllegalArgumentException exception =
+        Assert.assertThrows(
+            "No exception thrown from " + dumper.getClass().getSimpleName(),
+            IllegalArgumentException.class,
+            () ->
+                dumper.run(
+                    "--connector", connector.getName(), "-Dtest.invalid.property=test-value"));
+
+    // Assert
+    assertEquals(
+        "test.invalid.property is not a recognized option for test", exception.getMessage());
+  }
+
+  @Test
+  public void testAcceptsValidFlagsForSpecificDialect() throws Exception {
+    boolean result =
+        dumper.run("--connector", connector.getName(), "-Dtest.test.property=test-value");
+
+    // Assert
+    assertTrue("Expected dumper to run successfully", result);
   }
 }
