@@ -155,40 +155,47 @@ public class MetadataDumperTest {
 
   @Test
   public void testFailsOnUnrecognizedDialect() {
-    IllegalArgumentException exception =
+    MetadataDumperUsageException exception =
         Assert.assertThrows(
             "No exception thrown from " + dumper.getClass().getSimpleName(),
-            IllegalArgumentException.class,
+            MetadataDumperUsageException.class,
             () ->
                 dumper.run(
                     "--connector", connector.getName(), "-DImaginaryDialect.flag=random-value"));
 
     // Assert
     assertEquals(
-        "ImaginaryDialect.flag is not a recognized option for test", exception.getMessage());
+        "Property: name='ImaginaryDialect.flag', value='random-value' is not compatible with"
+            + " connector 'test'",
+        exception.getMessage());
   }
 
   @Test
   public void testFailsOnUnrecognizedFlagForSpecificDialect() {
-    IllegalArgumentException exception =
+    MetadataDumperUsageException exception =
         Assert.assertThrows(
             "No exception thrown from " + dumper.getClass().getSimpleName(),
-            IllegalArgumentException.class,
+            MetadataDumperUsageException.class,
             () ->
                 dumper.run(
                     "--connector", connector.getName(), "-Dtest.invalid.property=test-value"));
 
     // Assert
     assertEquals(
-        "test.invalid.property is not a recognized option for test", exception.getMessage());
+        "Property: name='test.invalid.property', value='test-value' is not compatible with"
+            + " connector 'test'",
+        exception.getMessage());
   }
 
   @Test
   public void testAcceptsValidFlagsForSpecificDialect() throws Exception {
-    boolean result =
-        dumper.run("--connector", connector.getName(), "-Dtest.test.property=test-value");
+    // Arrange
+    file = new File(defaultFileName);
+
+    // Act
+    dumper.run("--connector", connector.getName(), "-Dtest.test.property=test-value");
 
     // Assert
-    assertTrue("Expected dumper to run successfully", result);
+    assertTrue(file.exists());
   }
 }

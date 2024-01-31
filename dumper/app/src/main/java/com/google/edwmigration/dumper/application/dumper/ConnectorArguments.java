@@ -316,8 +316,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_ALTERNATES_DEPRECATION_MESSAGE =
       "The "
           + OPT_QUERY_LOG_ALTERNATES
-          + " option is "
-          + "deprecated, please use -Dteradata-logs.query-log-table and -Dteradata-logs.sql-log-table instead";
+          + " option is deprecated, please use -Dteradata-logs.query-log-table and"
+          + " -Dteradata-logs.sql-log-table instead";
   private final OptionSpec<String> optionQueryLogAlternates =
       parser
           .accepts(
@@ -884,14 +884,12 @@ public class ConnectorArguments extends DefaultArguments {
         resultMap.put(name, value);
         if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
           LOG.info("Parsed property: name='{}', value='{}'", name, value);
-        } else if (allPropertyNames.contains(name)) {
-          LOG.warn(
-              "Property: name='{}', value='{}' is not compatible with connector '{}'",
-              name,
-              value,
-              MoreObjects.firstNonNull(connector, "[not specified]"));
         } else {
-          LOG.warn("Skipping unknown property: name='{}', value='{}'", name, value);
+          String msg =
+              String.format(
+                  "Property: name='%s', value='%s' is not compatible with connector '%s'",
+                  name, value, MoreObjects.firstNonNull(connector, "[not specified]"));
+          throw new MetadataDumperUsageException(msg);
         }
       }
     }

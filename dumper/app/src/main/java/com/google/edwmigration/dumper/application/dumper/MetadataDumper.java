@@ -93,8 +93,6 @@ public class MetadataDumper {
       return false;
     }
 
-    ConnectorPropertyValidator.validate(connector, arguments.getDefinitionMap());
-
     return run(connector, arguments);
   }
 
