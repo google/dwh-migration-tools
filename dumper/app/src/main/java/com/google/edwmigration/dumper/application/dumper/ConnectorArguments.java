@@ -835,7 +835,8 @@ public class ConnectorArguments extends DefaultArguments {
 
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
-    return getOptions().valueOf(transformToOption(property)).toString();
+    Object value = getOptions().valueOf(transformToOption(property));
+    return value == null ? null : value.toString();
   }
 
   /** Checks if the property was specified on the command-line. */
@@ -856,8 +857,13 @@ public class ConnectorArguments extends DefaultArguments {
             connector ->
                 Arrays.stream(connector.getConnectorProperties().getEnumConstants())
                     .map(constant -> (ConnectorProperty) constant))
-        .map(DefaultArguments::transformToOption)
-        .forEach(name -> definitions.put(name, getOptions().valueOf(name).toString()));
+        .forEach(
+            property -> {
+              String value = getDefinition(property);
+              if (value != null) {
+                definitions.put(transformToOption(property), value);
+              }
+            });
 
     definitionMap = definitions.build();
 
