@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -23,9 +25,9 @@ import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQ
 import com.google.edwmigration.dumper.application.dumper.connector.test.TestConnector;
 import java.io.File;
 import java.io.IOException;
+import joptsimple.OptionException;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -130,12 +132,63 @@ public class MetadataDumperTest {
     // Act
     file.createNewFile();
     IllegalStateException exception =
-        Assert.assertThrows(
-            "No exception thrown from " + dumper.getClass().getSimpleName(),
+        assertThrows(
             IllegalStateException.class,
             () -> dumper.run("--connector", connector.getName(), "--output", name));
 
     // Assert
     assertTrue(exception.getMessage().startsWith("A file already exists at test"));
+  }
+
+  @Test
+  public void testFailsOnUnrecognizedFlag() {
+    OptionException exception =
+        assertThrows(
+            OptionException.class, () -> dumper.run("--unrecognized-flag", "random-value"));
+
+    // Assert
+    assertEquals("unrecognized-flag is not a recognized option", exception.getMessage());
+  }
+
+  @Test
+  public void testFailsOnUnrecognizedDialect() {
+    MetadataDumperUsageException exception =
+        assertThrows(
+            MetadataDumperUsageException.class,
+            () ->
+                dumper.run(
+                    "--connector", connector.getName(), "-DImaginaryDialect.flag=random-value"));
+
+    // Assert
+    assertEquals(
+        "Unknown property: name='ImaginaryDialect.flag', value='random-value'",
+        exception.getMessage());
+  }
+
+  @Test
+  public void testFailsOnUnrecognizedFlagForSpecificDialect() {
+    MetadataDumperUsageException exception =
+        assertThrows(
+            MetadataDumperUsageException.class,
+            () ->
+                dumper.run("--connector", connector.getName(), "-Dhiveql.rpc.protection=privacy"));
+
+    // Assert
+    assertEquals(
+        "Property: name='hiveql.rpc.protection', value='privacy' is not compatible with connector"
+            + " 'test'",
+        exception.getMessage());
+  }
+
+  @Test
+  public void testAcceptsValidFlagsForSpecificDialect() throws Exception {
+    // Arrange
+    file = new File(defaultFileName);
+
+    // Act
+    dumper.run("--connector", connector.getName(), "-Dtest.test.property=test-value");
+
+    // Assert
+    assertTrue(file.exists());
   }
 }

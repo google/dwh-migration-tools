@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -35,10 +36,37 @@ public class TestConnector extends AbstractConnector implements MetadataConnecto
     super("test");
   }
 
+  public enum TestConnectorProperty implements ConnectorProperty {
+    TEST_PROPERTY("test.property", "This is a test property");
+
+    private final String name;
+    private final String description;
+
+    TestConnectorProperty(String name, String description) {
+      this.name = "test." + name;
+      this.description = description;
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
+  }
+
   @Nonnull
   @Override
-  public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
-      throws Exception {
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return TestConnectorProperty.class;
+  }
+
+  @Override
+  public void addTasksTo(
+      @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
     // do nothing in tests
   }
 
