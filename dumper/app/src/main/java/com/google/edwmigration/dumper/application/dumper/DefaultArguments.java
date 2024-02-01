@@ -22,6 +22,9 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
@@ -29,6 +32,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -171,6 +175,11 @@ public class DefaultArguments {
       parser.accepts("help", "Displays command-line help.").forHelp();
   private final OptionSpec<?> versionOption =
       parser.accepts("version", "Displays the product version and exits.").forHelp();
+  protected static final String OPT_CONNECTOR = "connector";
+
+  protected final OptionSpec<String> connectorNameOption =
+      parser.accepts(OPT_CONNECTOR, "Target DBMS connector name").withRequiredArg().required();
+
   private final String[] args;
   private OptionSet options;
 
@@ -214,6 +223,11 @@ public class DefaultArguments {
   }
 
   @Nonnull
+  public String getConnectorName() {
+    return getOptions().valueOf(connectorNameOption);
+  }
+
+  @Nonnull
   @SuppressWarnings("DM_EXIT")
   protected OptionSet parseOptions() throws Exception {
     OptionSet o = parser.parse(args);
@@ -233,13 +247,61 @@ public class DefaultArguments {
   public OptionSet getOptions() {
     if (options == null) {
       try {
+        ImmutableSetMultimap<String, ConnectorProperty> properties = allPropertiesByConnector();
+        addConnectorSpecificProperties(properties);
         options = parseOptions();
+        validateConnectorSpecificProperties(properties, options.valueOf(connectorNameOption));
       } catch (Exception e) {
         Throwables.throwIfUnchecked(e);
         throw new RuntimeException(e);
       }
     }
     return options;
+  }
+
+  private void validateConnectorSpecificProperties(
+      ImmutableSetMultimap<String, ConnectorProperty> properties, String connectorName) {
+    properties.entries().stream()
+        .filter(entry -> !entry.getKey().equals(connectorName))
+        .map(Entry::getValue)
+        .map(DefaultArguments::transformToOption)
+        .filter(options::has)
+        .findFirst()
+        .ifPresent(
+            option -> {
+              throw new MetadataDumperUsageException(
+                  String.format(
+                      "Property: name='%s', value='%s' is not compatible with connector '%s'",
+                      option, options.valueOf(option), connectorName));
+            });
+  }
+
+  protected static String transformToOption(ConnectorProperty property) {
+    return "D" + property.getName();
+  }
+
+  private void addConnectorSpecificProperties(
+      ImmutableSetMultimap<String, ConnectorProperty> properties) {
+    properties
+        .values()
+        .forEach(
+            property ->
+                parser
+                    .accepts("D" + property.getName(), property.getDescription())
+                    .withRequiredArg());
+  }
+
+  private static ImmutableSetMultimap<String, ConnectorProperty> allPropertiesByConnector() {
+    ImmutableSetMultimap.Builder<String, ConnectorProperty> connectorPropertyNames =
+        ImmutableSetMultimap.builder();
+    for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
+      String connectorName = connector.getName();
+      for (Enum<? extends ConnectorProperty> enumConstant :
+          connector.getConnectorProperties().getEnumConstants()) {
+        connectorPropertyNames.put(connectorName, ((ConnectorProperty) enumConstant));
+      }
+    }
+    return connectorPropertyNames.build();
   }
 
   @Override

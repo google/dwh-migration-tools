@@ -24,8 +24,6 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -61,7 +59,6 @@ import java.util.function.Predicate;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
@@ -90,7 +87,6 @@ public class ConnectorArguments extends DefaultArguments {
           + "At no point are the contents of user databases themselves queried.\n"
           + "\n";
 
-  public static final String OPT_CONNECTOR = "connector";
   public static final String OPT_DRIVER = "driver";
   public static final String OPT_CLASS = "jdbcDriverClass";
   public static final String OPT_URI = "url";
@@ -134,9 +130,6 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
   // These are blocking threads on the client side, so it doesn't really matter much.
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
-
-  private final OptionSpec<String> connectorNameOption =
-      parser.accepts(OPT_CONNECTOR, "Target DBMS connector name").withRequiredArg().required();
   private final OptionSpec<String> optionDriver =
       parser
           .accepts(
@@ -400,14 +393,6 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(String.class)
           .defaultsTo("dumper-response-file.json");
-
-  // Pass properties
-  private final OptionSpec<String> definitionOption =
-      parser
-          .accepts("D", "Pass a key=value property.")
-          .withRequiredArg()
-          .ofType(String.class)
-          .describedAs("define");
   private Map<String, String> definitionMap = null;
 
   // because of quoting of special characeters on command line... the -password is made optional,
@@ -547,11 +532,6 @@ public class ConnectorArguments extends DefaultArguments {
           .append(property.getDescription())
           .append("\n");
     }
-  }
-
-  @Nonnull
-  public String getConnectorName() {
-    return getOptions().valueOf(connectorNameOption);
   }
 
   @CheckForNull
@@ -855,60 +835,33 @@ public class ConnectorArguments extends DefaultArguments {
 
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
-    return getDefinitionMap().get(property.getName());
+    return getOptions().valueOf(transformToOption(property)).toString();
   }
 
   /** Checks if the property was specified on the command-line. */
   public boolean isDefinitionSpecified(@Nonnull ConnectorProperty property) {
-    return StringUtils.isNotEmpty(getDefinitionMap().get(property.getName()));
+    return getOptions().has(transformToOption(property));
   }
 
   private Map<String, String> getDefinitionMap() {
-    if (definitionMap == null) {
-      definitionMap =
-          buildDefinitionMap(getConnectorName(), getOptions().valuesOf(definitionOption));
+    if (definitionMap != null) {
+      return definitionMap;
     }
+
+    ImmutableMap.Builder<String, String> definitions = ImmutableMap.builder();
+
+    ConnectorRepository.getInstance().getAllConnectors().stream()
+        .filter(connector -> connector.getName().equals(getConnectorName()))
+        .flatMap(
+            connector ->
+                Arrays.stream(connector.getConnectorProperties().getEnumConstants())
+                    .map(constant -> (ConnectorProperty) constant))
+        .map(DefaultArguments::transformToOption)
+        .forEach(name -> definitions.put(name, getOptions().valueOf(name).toString()));
+
+    definitionMap = definitions.build();
+
     return definitionMap;
-  }
-
-  private static ImmutableMap<String, String> buildDefinitionMap(
-      @Nullable String connector, List<String> definitions) {
-    ImmutableMap.Builder<String, String> resultMap = ImmutableMap.builder();
-    ImmutableSetMultimap<String, String> propertyNamesByConnector = allPropertyNamesByConnector();
-    ImmutableSet<String> allPropertyNames = ImmutableSet.copyOf(propertyNamesByConnector.values());
-    for (String definition : definitions) {
-      if (definition.contains("=")) {
-        int idx = definition.indexOf("=");
-        String name = definition.substring(0, idx);
-        String value = definition.substring(idx + 1);
-        resultMap.put(name, value);
-        if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
-          LOG.info("Parsed property: name='{}', value='{}'", name, value);
-        } else if (allPropertyNames.contains(name)) {
-          throw new MetadataDumperUsageException(
-              String.format(
-                  "Property: name='%s', value='%s' is not compatible with connector '%s'",
-                  name, value, MoreObjects.firstNonNull(connector, "[not specified]")));
-        } else {
-          throw new MetadataDumperUsageException(
-              String.format("Unknown property: name='%s', value='%s'", name, value));
-        }
-      }
-    }
-    return resultMap.buildKeepingLast();
-  }
-
-  private static ImmutableSetMultimap<String, String> allPropertyNamesByConnector() {
-    ImmutableSetMultimap.Builder<String, String> connectorPropertyNames =
-        ImmutableSetMultimap.builder();
-    for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
-      String connectorName = connector.getName();
-      for (Enum<? extends ConnectorProperty> enumConstant :
-          connector.getConnectorProperties().getEnumConstants()) {
-        connectorPropertyNames.put(connectorName, ((ConnectorProperty) enumConstant).getName());
-      }
-    }
-    return connectorPropertyNames.build();
   }
 
   @Override

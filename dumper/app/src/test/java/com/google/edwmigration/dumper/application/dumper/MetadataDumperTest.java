@@ -152,17 +152,15 @@ public class MetadataDumperTest {
 
   @Test
   public void testFailsOnUnrecognizedDialect() {
-    MetadataDumperUsageException exception =
+    OptionException exception =
         assertThrows(
-            MetadataDumperUsageException.class,
+            OptionException.class,
             () ->
                 dumper.run(
                     "--connector", connector.getName(), "-DImaginaryDialect.flag=random-value"));
 
     // Assert
-    assertEquals(
-        "Unknown property: name='ImaginaryDialect.flag', value='random-value'",
-        exception.getMessage());
+    assertEquals("D is not a recognized option", exception.getMessage());
   }
 
   @Test
@@ -175,7 +173,7 @@ public class MetadataDumperTest {
 
     // Assert
     assertEquals(
-        "Property: name='hiveql.rpc.protection', value='privacy' is not compatible with connector"
+        "Property: name='Dhiveql.rpc.protection', value='privacy' is not compatible with connector"
             + " 'test'",
         exception.getMessage());
   }
