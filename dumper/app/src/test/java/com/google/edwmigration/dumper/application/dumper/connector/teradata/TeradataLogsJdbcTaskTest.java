@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import org.junit.Test;
 
@@ -35,8 +35,8 @@ public class TeradataLogsJdbcTaskTest {
   public void getOrCreateSql_success() {
     ZonedInterval interval =
         new ZonedInterval(
-            ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneId.systemDefault()),
-            ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneId.systemDefault()));
+            ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneOffset.UTC),
+            ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneOffset.UTC));
     TeradataLogsJdbcTask jdbcTask =
         new TeradataLogsJdbcTask(
             "result.csv",
@@ -63,8 +63,8 @@ public class TeradataLogsJdbcTaskTest {
   public void toString_success() {
     ZonedInterval interval =
         new ZonedInterval(
-            ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneId.systemDefault()),
-            ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneId.systemDefault()));
+            ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneOffset.UTC),
+            ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneOffset.UTC));
     TeradataLogsJdbcTask jdbcTask =
         new TeradataLogsJdbcTask(
             "result.csv",
@@ -92,8 +92,8 @@ public class TeradataLogsJdbcTaskTest {
   public void getOrCreateSql_withCondition() {
     ZonedInterval interval =
         new ZonedInterval(
-            ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneId.systemDefault()),
-            ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneId.systemDefault()));
+            ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneOffset.UTC),
+            ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneOffset.UTC));
     TeradataLogsJdbcTask jdbcTask =
         new TeradataLogsJdbcTask(
             "result.csv",
