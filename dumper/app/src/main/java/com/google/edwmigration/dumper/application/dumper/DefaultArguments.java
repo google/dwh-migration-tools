@@ -16,16 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.HOURS;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -81,48 +76,6 @@ public class DefaultArguments {
       buf.append('/');
       joiner.appendTo(buf, V_FALSE);
       return buf.toString();
-    }
-  }
-
-  public static class DurationValueConverter implements ValueConverter<Duration> {
-
-    private enum AllowedUnits {
-      HOUR(HOURS, "hourly"),
-      DAY(DAYS, "daily");
-
-      private final ChronoUnit chronoUnit;
-      private final String commandLineFlag;
-
-      AllowedUnits(ChronoUnit chronoUnit, String commandLineFlag) {
-        this.chronoUnit = chronoUnit;
-        this.commandLineFlag = commandLineFlag;
-      }
-    }
-
-    public static DurationValueConverter INSTANCE = new DurationValueConverter();
-
-    private DurationValueConverter() {}
-
-    @Override
-    public Duration convert(String value) {
-      for (AllowedUnits unit : AllowedUnits.values()) {
-        if (unit.commandLineFlag.equals(value)) {
-          return unit.chronoUnit.getDuration();
-        }
-      }
-      throw new ValueConversionException("Not a valid unit of interval: " + value);
-    }
-
-    @Override
-    public Class<? extends Duration> valueType() {
-      return Duration.class;
-    }
-
-    @Override
-    public String valuePattern() {
-      return Arrays.stream(AllowedUnits.values())
-          .map(unit -> unit.commandLineFlag)
-          .collect(Collectors.joining(", "));
     }
   }
 

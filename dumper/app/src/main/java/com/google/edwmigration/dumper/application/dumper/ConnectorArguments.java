@@ -17,6 +17,10 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.ChronoUnit.HOURS;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
@@ -258,13 +262,13 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(Integer.class)
           .describedAs("N");
 
-  private final OptionSpec<Duration> optionQueryLogRotationFrequency =
+  private final OptionSpec<String> optionQueryLogRotationFrequency =
       parser
           .accepts(OPT_QUERY_LOG_ROTATION_FREQUENCY, "The interval for rotating query log files")
           .withRequiredArg()
           .ofType(String.class)
-          .withValuesConvertedBy(DurationValueConverter.INSTANCE)
-          .defaultsTo(ChronoUnit.HOURS.getDuration());
+          .describedAs(RotationFrequencyConverter.valuePattern())
+          .defaultsTo(RotationFrequencyConverter.RotationFrequency.HOURLY.value);
 
   private final OptionSpec<ZonedDateTime> optionQueryLogStart =
       parser
@@ -736,7 +740,40 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   public Duration getQueryLogRotationFrequency() {
-    return getOptions().valueOf(optionQueryLogRotationFrequency);
+    return RotationFrequencyConverter.convert(
+        getOptions().valueOf(optionQueryLogRotationFrequency));
+  }
+
+  private static class RotationFrequencyConverter {
+
+    private enum RotationFrequency {
+      HOURLY(HOURS, "hourly"),
+      DAILY(DAYS, "daily");
+
+      private final ChronoUnit chronoUnit;
+      private final String value;
+
+      RotationFrequency(ChronoUnit chronoUnit, String value) {
+        this.chronoUnit = chronoUnit;
+        this.value = value;
+      }
+    }
+
+    private RotationFrequencyConverter() {}
+
+    private static Duration convert(String value) {
+      for (RotationFrequency frequency : RotationFrequency.values()) {
+        if (frequency.value.equals(value)) {
+          return frequency.chronoUnit.getDuration();
+        }
+      }
+      throw new MetadataDumperUsageException(
+          String.format("Not a valid rotation frequency '%s'.", value));
+    }
+
+    private static String valuePattern() {
+      return stream(RotationFrequency.values()).map(unit -> unit.value).collect(joining(", "));
+    }
   }
 
   @Nonnegative
