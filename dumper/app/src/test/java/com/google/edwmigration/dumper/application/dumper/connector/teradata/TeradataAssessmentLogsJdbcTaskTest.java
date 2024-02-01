@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.OptionalLong;
 import org.junit.Before;
@@ -37,8 +37,8 @@ public class TeradataAssessmentLogsJdbcTaskTest {
   private SharedState queryLogsState = new SharedState();
   private ZonedInterval interval =
       new ZonedInterval(
-          ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneId.systemDefault()),
-          ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneId.systemDefault()));
+          ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneOffset.UTC),
+          ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneOffset.UTC));
 
   @Before
   public void setUp() {
