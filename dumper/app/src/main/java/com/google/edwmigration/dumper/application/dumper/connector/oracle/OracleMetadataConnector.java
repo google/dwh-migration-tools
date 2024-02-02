@@ -16,8 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Arrays.stream;
+
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -232,21 +236,30 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   }
 
   @Nonnull
-  private static SelectTask newSelectStarTask(
-      @Nonnull String file, @Nonnull String table, @Nonnull String where) {
-    return new SelectTask(file, "SELECT * FROM " + table + where);
+  private static SelectTask newSelectTask(
+      @Nonnull String file,
+      @Nonnull String table,
+      @Nonnull ImmutableList<String> columns,
+      @Nonnull String where) {
+    return new SelectTask(
+        file, String.format("SELECT %s FROM %s%s", String.join(", ", columns), table, where));
   }
 
-  private static void buildSelectStarTask(
+  private static void buildSelectTask(
       List<? super Task<?>> out,
       String all_file,
       String all_table,
       String dba_file,
       String dba_table,
+      ImmutableList<String> columns,
       @Nonnull String whereCond) {
-    SelectTask dba_task = newSelectStarTask(dba_file, dba_table, whereCond);
-    SelectTask all_task = newSelectStarTask(all_file, all_table, whereCond);
+    SelectTask dba_task = newSelectTask(dba_file, dba_table, columns, whereCond);
+    SelectTask all_task = newSelectTask(all_file, all_table, columns, whereCond);
     addAtLeastOneOf(out, dba_task, all_task);
+  }
+
+  private static ImmutableList<String> buildColumnsFromHeader(Class<? extends Enum<?>> headerEnum) {
+    return stream(headerEnum.getEnumConstants()).map(Enum::toString).collect(toImmutableList());
   }
 
   @CheckForNull
@@ -283,103 +296,117 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     String whereCondSequenceOwner =
         ownerInList == null ? "" : " WHERE SEQUENCE_OWNER IN " + ownerInList;
 
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Arguments.ZIP_ENTRY_NAME_DBA,
         "DBA_Arguments",
         Arguments.ZIP_ENTRY_NAME_ALL,
         "All_Arguments",
+        buildColumnsFromHeader(Arguments.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Catalog.ZIP_ENTRY_NAME_DBA,
         "DBA_Catalog",
         Catalog.ZIP_ENTRY_NAME_ALL,
         "All_Catalog",
+        buildColumnsFromHeader(Catalog.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Constraints.ZIP_ENTRY_NAME_DBA,
         "DBA_Constraints",
         Constraints.ZIP_ENTRY_NAME_ALL,
         "All_Constraints",
+        buildColumnsFromHeader(Constraints.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Indexes.ZIP_ENTRY_NAME_DBA,
         "DBA_Indexes",
         Indexes.ZIP_ENTRY_NAME_ALL,
         "All_Indexes",
+        buildColumnsFromHeader(Indexes.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         MViews.ZIP_ENTRY_NAME_DBA,
         "DBA_MViews",
         MViews.ZIP_ENTRY_NAME_ALL,
         "All_MViews",
+        buildColumnsFromHeader(MViews.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Operators.ZIP_ENTRY_NAME_DBA,
         "DBA_Operators",
         Operators.ZIP_ENTRY_NAME_ALL,
         "All_Operators",
+        buildColumnsFromHeader(Operators.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Part_key_columns.ZIP_ENTRY_NAME_DBA,
         "DBA_Part_key_columns",
         Part_key_columns.ZIP_ENTRY_NAME_ALL,
         "All_Part_key_columns",
+        buildColumnsFromHeader(Part_key_columns.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Plsql_Types.ZIP_ENTRY_NAME_DBA,
         "DBA_Plsql_Types",
         Plsql_Types.ZIP_ENTRY_NAME_ALL,
         "All_Plsql_Types",
+        buildColumnsFromHeader(Plsql_Types.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Procedures.ZIP_ENTRY_NAME_DBA,
         "DBA_Procedures",
         Procedures.ZIP_ENTRY_NAME_ALL,
         "All_Procedures",
+        buildColumnsFromHeader(Procedures.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Tab_Columns.ZIP_ENTRY_NAME_DBA,
         "DBA_Tab_Columns",
         Tab_Columns.ZIP_ENTRY_NAME_ALL,
         "All_Tab_Columns",
+        buildColumnsFromHeader(Tab_Columns.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Tab_Partitions.ZIP_ENTRY_NAME_DBA,
         "DBA_Tab_Partitions",
         Tab_Partitions.ZIP_ENTRY_NAME_ALL,
         "All_Tab_Partitions",
+        buildColumnsFromHeader(Tab_Partitions.Header.class),
         whereCondTableOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Tables.ZIP_ENTRY_NAME_DBA,
         "DBA_Tables",
         Tables.ZIP_ENTRY_NAME_ALL,
         "All_Tables",
+        buildColumnsFromHeader(Tables.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Types.ZIP_ENTRY_NAME_DBA,
         "DBA_Types",
         Types.ZIP_ENTRY_NAME_ALL,
         "All_Types",
+        buildColumnsFromHeader(Types.Header.class),
         whereCondOwner);
-    buildSelectStarTask(
+    buildSelectTask(
         out,
         Views.ZIP_ENTRY_NAME_DBA,
         "DBA_Views",
         Views.ZIP_ENTRY_NAME_ALL,
         "All_Views",
+        buildColumnsFromHeader(Views.Header.class),
         whereCondOwner);
 
     String sqlQuery, xmlQuery;
@@ -387,6 +414,8 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     // out.add(new JdbcSelectTask(Functions.ZIP_ENTRY_NAME,
     // "SELECT DBMS_METADATA.GET_DDL('FUNCTION', OBJECT_NAME) FROM USER_PROCEDURES"));
     // Double check this one
+
+    /* all XML tasks are currently broken
     String whereCondFunctionOwner = ownerInList == null ? "" : " AND OWNER IN " + ownerInList;
     out.add(
         new SelectXmlTask(
@@ -453,5 +482,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         new SelectXmlTask(
             XmlSynonyms.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_SYNONYMS" + whereCondOwner, xmlQuery));
     // Todo: procedures, database links, triggers, packages
+
+    */
   }
 }
