@@ -110,7 +110,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
         url = "jdbc:oracle:thin:@//" + host + ":" + port + "/" + arguments.getOracleServicename();
       }
     }
-    url = String.format("%s?%s", USE_FETCH_SIZE_WITH_LONG_COLUMN_ARG);
+    url = String.format("%s?%s", url, USE_FETCH_SIZE_WITH_LONG_COLUMN_ARG);
 
     Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
     DataSource dataSource =
