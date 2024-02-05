@@ -73,6 +73,10 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 })
 public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
+  /* This argument is required to improve performance of retrieving LONG columns */
+  private static final String USE_FETCH_SIZE_WITH_LONG_COLUMN_ARG =
+      "useFetchSizeWithLongColumn=true";
+
   public static final int OPT_PORT_DEFAULT = 1521;
 
   public AbstractOracleConnector(@Nonnull String name) {
@@ -106,7 +110,8 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
         url = "jdbc:oracle:thin:@//" + host + ":" + port + "/" + arguments.getOracleServicename();
       }
     }
-    // LOG.info("URL IS " + url);
+    url = String.format("%s?%s", USE_FETCH_SIZE_WITH_LONG_COLUMN_ARG);
+
     Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
     DataSource dataSource =
         new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
