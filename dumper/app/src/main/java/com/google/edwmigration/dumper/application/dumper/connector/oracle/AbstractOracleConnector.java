@@ -26,9 +26,13 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInputs;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import java.sql.Driver;
+import java.util.Optional;
+import java.util.Properties;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -73,11 +77,47 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 })
 public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
-  /* This argument is required to improve performance of retrieving LONG columns */
-  private static final String USE_FETCH_SIZE_WITH_LONG_COLUMN_ARG =
-      "useFetchSizeWithLongColumn=true";
-
   public static final int OPT_PORT_DEFAULT = 1521;
+
+  protected enum CommonOracleConnectorProperty implements ConnectorProperty {
+    USE_FETCH_SIZE_WITH_LONG_COLUMN(
+        "oracle.useFetchSizeWithLongColumn",
+        "Enables prefetch of rows with a LONG or LONG RAW column. This parameter improves the query performance"
+            + " but can result in higher memory consumption. Default value: \"true\", set to \"false\" to disable it.",
+        "true");
+
+    private final String name;
+    private final String description;
+    private final Optional<String> defaultValue;
+
+    CommonOracleConnectorProperty(String name, String description) {
+      this.name = name;
+      this.description = description;
+      this.defaultValue = Optional.empty();
+    }
+
+    CommonOracleConnectorProperty(String name, String description, String defaultValue) {
+      this.name = name;
+      this.description = description;
+      this.defaultValue = Optional.of(defaultValue);
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
+  }
+
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return CommonOracleConnectorProperty.class;
+  }
 
   public AbstractOracleConnector(@Nonnull String name) {
     super(name);
@@ -93,13 +133,33 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
           "Provide either -oracle-service or -oracle-sid for oracle dumper");
   }
 
-  //   jdbc:oracle:thin://<host>:<port>/<service>
-  //   jdbc:oracle:thin:<host>:<port>:<SID>
-  //   jdbc:oracle:thin:<TNSName> (from 10.2.0.1.0)
   @Nonnull
   @Override
   public Handle open(ConnectorArguments arguments) throws Exception {
+    Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
+    DataSource dataSource =
+        new SimpleDriverDataSource(driver, buildUrl(arguments), buildProperties(arguments));
+    return new JdbcHandle(dataSource);
+  }
 
+  private Properties buildProperties(ConnectorArguments arguments) {
+    Properties properties = new Properties();
+    properties.setProperty("user", arguments.getUser());
+    properties.setProperty("password", arguments.getPassword());
+    properties.setProperty(
+        "useFetchSizeWithLongColumn",
+        PropertyParser.getString(
+                arguments, CommonOracleConnectorProperty.USE_FETCH_SIZE_WITH_LONG_COLUMN)
+            .orElse(
+                CommonOracleConnectorProperty.USE_FETCH_SIZE_WITH_LONG_COLUMN.defaultValue.get()));
+
+    return properties;
+  }
+
+  // dbc:oracle:thin://<host>:<port>/<service>
+  // jdbc:oracle:thin:<host>:<port>:<SID>
+  // jdbc:oracle:thin:<TNSName> (from 10.2.0.1.0)
+  private String buildUrl(ConnectorArguments arguments) {
     String url = arguments.getUri();
     if (url == null) {
       String host = arguments.getHost();
@@ -110,11 +170,6 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
         url = "jdbc:oracle:thin:@//" + host + ":" + port + "/" + arguments.getOracleServicename();
       }
     }
-    url = String.format("%s?%s", url, USE_FETCH_SIZE_WITH_LONG_COLUMN_ARG);
-
-    Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
-    DataSource dataSource =
-        new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
-    return new JdbcHandle(dataSource);
+    return url;
   }
 }

@@ -59,7 +59,6 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 public class OracleMetadataConnector extends AbstractOracleConnector
     implements MetadataConnector, OracleMetadataDumpFormat {
 
-  @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(OracleMetadataConnector.class);
 
   public OracleMetadataConnector() {
