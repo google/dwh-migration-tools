@@ -26,7 +26,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInputs;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
@@ -79,9 +79,9 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
   public static final int OPT_PORT_DEFAULT = 1521;
 
-  protected enum CommonOracleConnectorProperty implements ConnectorProperty {
+  protected enum CommonOracleConnectorProperty implements ConnectorPropertyWithDefault {
     USE_FETCH_SIZE_WITH_LONG_COLUMN(
-        "oracle.useFetchSizeWithLongColumn",
+        "oracle.use-fetch-size-with-long-column",
         "Enables prefetch of rows with a LONG or LONG RAW column. This parameter improves the query performance"
             + " but can result in higher memory consumption. Default value: \"true\", set to \"false\" to disable it.",
         "true");
@@ -111,11 +111,15 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     public String getDescription() {
       return description;
     }
+
+    public String getDefaultValue() {
+      return defaultValue.orElse("");
+    }
   }
 
   @Nonnull
   @Override
-  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+  public Class<? extends Enum<? extends ConnectorPropertyWithDefault>> getConnectorProperties() {
     return CommonOracleConnectorProperty.class;
   }
 
@@ -151,7 +155,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
         PropertyParser.getString(
                 arguments, CommonOracleConnectorProperty.USE_FETCH_SIZE_WITH_LONG_COLUMN)
             .orElse(
-                CommonOracleConnectorProperty.USE_FETCH_SIZE_WITH_LONG_COLUMN.defaultValue.get()));
+                CommonOracleConnectorProperty.USE_FETCH_SIZE_WITH_LONG_COLUMN.getDefaultValue()));
 
     return properties;
   }
