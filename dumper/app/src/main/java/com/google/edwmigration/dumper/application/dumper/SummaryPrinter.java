@@ -54,4 +54,8 @@ public class SummaryPrinter {
       println(String.format(s, parameters));
     }
   }
+
+  public static String joinSummaryDoubleLine(String firstLine, String secondLine) {
+    return firstLine + "\n        " + secondLine;
+  }
 }
