@@ -20,6 +20,7 @@ import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
+import java.util.Optional;
 import java.util.OptionalLong;
 import org.apache.commons.lang3.StringUtils;
 
@@ -58,6 +59,23 @@ public class PropertyParser {
           createErrorMessage(stringValue, property, allowedRange));
     }
     return OptionalLong.of(value);
+  }
+
+  /**
+   * Gets the a string property passed as an argument to the command-line option.
+   *
+   * @param arguments all command-line options
+   * @param property command-line option
+   * @return the string value of the argument or an empty optional
+   */
+  public static Optional<String> getString(
+      ConnectorArguments arguments, ConnectorProperty property) {
+    String stringValue = arguments.getDefinition(property);
+    if (StringUtils.isEmpty(stringValue)) {
+      return Optional.empty();
+    }
+
+    return Optional.of(stringValue);
   }
 
   private static String createErrorMessage(
