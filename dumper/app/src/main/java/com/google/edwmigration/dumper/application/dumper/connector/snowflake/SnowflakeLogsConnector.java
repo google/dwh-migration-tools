@@ -34,6 +34,7 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
 import com.google.errorprone.annotations.ForOverride;
@@ -135,11 +136,22 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     private final String unformattedQuery;
     private final Class<? extends Enum<?>> headerClass;
 
+    private final TaskCategory taskCategory;
+
     private TaskDescription(
         String zipPrefix, String unformattedQuery, Class<? extends Enum<?>> headerClass) {
-      this.unformattedQuery = unformattedQuery;
+      this(zipPrefix, unformattedQuery, headerClass, TaskCategory.REQUIRED);
+    }
+
+    private TaskDescription(
+        String zipPrefix,
+        String unformattedQuery,
+        Class<? extends Enum<?>> headerClass,
+        TaskCategory taskCategory) {
       this.zipPrefix = zipPrefix;
+      this.unformattedQuery = unformattedQuery;
       this.headerClass = headerClass;
+      this.taskCategory = taskCategory;
     }
   }
 
@@ -381,7 +393,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         task.zipPrefix
             + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
             + ".csv";
-    out.add(new JdbcSelectTask(file, query).withHeaderClass(task.headerClass));
+    out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
   }
 
   private String getOverrideableQuery(
@@ -495,7 +507,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                     parseColumnsFromHeader(QueryAccelerationHistoryFormat.Header.class),
                     "QUERY_ACCELERATION_HISTORY"),
                 "END_TIME"),
-            QueryAccelerationHistoryFormat.Header.class),
+            QueryAccelerationHistoryFormat.Header.class,
+            TaskCategory.OPTIONAL),
         new TaskDescription(
             ReplicationGroupUsageHistoryFormat.ZIP_ENTRY_PREFIX,
             getOverrideableQuery(

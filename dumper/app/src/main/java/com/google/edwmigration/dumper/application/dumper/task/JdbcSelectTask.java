@@ -33,9 +33,23 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
 
   @Nonnull private final String sql;
 
+  @Nonnull private final TaskCategory taskCategory;
+
   public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
+    this(targetPath, sql, TaskCategory.REQUIRED);
+  }
+
+  public JdbcSelectTask(
+      @Nonnull String targetPath, @Nonnull String sql, TaskCategory taskCategory) {
     super(targetPath);
     this.sql = sql;
+    this.taskCategory = taskCategory;
+  }
+
+  @Override
+  @Nonnull
+  public TaskCategory getCategory() {
+    return taskCategory;
   }
 
   @Nonnull
