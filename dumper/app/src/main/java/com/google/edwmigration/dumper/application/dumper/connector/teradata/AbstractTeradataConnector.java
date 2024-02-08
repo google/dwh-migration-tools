@@ -121,17 +121,10 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
   protected static class TeradataJdbcSelectTask extends JdbcSelectTask {
 
     private final String sqlCount;
-    private final TaskCategory category;
 
     public TeradataJdbcSelectTask(String targetPath, TaskCategory category, String sqlTemplate) {
-      super(targetPath, String.format(sqlTemplate, "*"));
+      super(targetPath, String.format(sqlTemplate, "*"), Preconditions.checkNotNull(category));
       this.sqlCount = sqlTemplate.contains("%s") ? String.format(sqlTemplate, "count(*)") : null;
-      this.category = Preconditions.checkNotNull(category);
-    }
-
-    @Override
-    public TaskCategory getCategory() {
-      return category;
     }
 
     // This works to execute the count SQL on the same connection as the data SQL,
