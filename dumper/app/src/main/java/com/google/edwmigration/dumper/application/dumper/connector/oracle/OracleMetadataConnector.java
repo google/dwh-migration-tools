@@ -349,8 +349,11 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     String whereCondFunctionOwner =
         " WHERE OBJECT_NAME = 'FUNCTION'"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
+    // Since version 11g Oracle has introduced deferred segment creation.
+    // This results in DBMS_METADATA.GET_XML not found error for tables with no segment created.
     String whereCondTableSegmentCreated =
-        " WHERE SEGMENT_CREATED='Y'" + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
+        " WHERE SEGMENT_CREATED='YES'"
+            + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
 
     /*
         buildSelectStarTask(
