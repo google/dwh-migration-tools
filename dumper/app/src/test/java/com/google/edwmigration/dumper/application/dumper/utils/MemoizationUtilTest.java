@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.util;
+package com.google.edwmigration.dumper.application.dumper.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -22,7 +22,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.google.edwmigration.dumper.application.dumper.utils.MemoizationUtil;
 import java.io.IOException;
 import org.apache.commons.io.function.IOFunction;
 import org.junit.Rule;

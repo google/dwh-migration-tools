@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQopConverter;
 import java.util.Optional;
@@ -26,17 +27,22 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class DefaultArgumentsTest {
+public class HadoopSaslQopConverterTest {
 
   @Test
-  public void convert_HadoopSaslQopFromValidString_success() {
+  public void convert_success() {
     String qop = HadoopSaslQopConverter.INSTANCE.convert("integrity").get();
 
     assertEquals("auth-int", qop);
   }
 
   @Test
-  public void convert_HadoopSaslQopFromInvalidString_fail() {
+  public void convert_emptyString() {
+    assertFalse(HadoopSaslQopConverter.INSTANCE.convert("").isPresent());
+  }
+
+  @Test
+  public void convert_invalidString_fail() {
     MetadataDumperUsageException exception =
         Assert.assertThrows(
             MetadataDumperUsageException.class,

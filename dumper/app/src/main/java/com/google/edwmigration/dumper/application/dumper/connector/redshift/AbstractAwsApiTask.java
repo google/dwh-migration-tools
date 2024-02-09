@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionalIf;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -101,10 +103,10 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
     String iamAccessKey = arguments.getIAMAccessKeyID();
     String iamSecretAccessKey = arguments.getIAMSecretAccessKey();
 
-    return iamAccessKey != null && iamSecretAccessKey != null
-        ? Optional.of(
+    return optionalIf(
+        iamAccessKey != null && iamSecretAccessKey != null,
+        () ->
             new AWSStaticCredentialsProvider(
-                new BasicAWSCredentials(iamAccessKey, iamSecretAccessKey)))
-        : Optional.empty();
+                new BasicAWSCredentials(iamAccessKey, iamSecretAccessKey)));
   }
 }
