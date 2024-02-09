@@ -16,7 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static java.util.stream.Collectors.joining;
+
+import autovalue.shaded.com.google.common.collect.ImmutableList;
 import com.google.auto.service.AutoService;
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteSink;
@@ -34,6 +38,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
 import java.io.IOException;
 import java.io.Writer;
@@ -60,6 +65,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     implements MetadataConnector, OracleMetadataDumpFormat {
 
   private static final Logger LOG = LoggerFactory.getLogger(OracleMetadataConnector.class);
+  private static final int XML_BATCH_SIZE = 100;
 
   public OracleMetadataConnector() {
     super("oracle");
@@ -91,10 +97,22 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     }
   }
 
+  @AutoValue
+  protected abstract static class XmlQueryEntry {
+    public abstract String owner();
+
+    public abstract String name();
+
+    public static XmlQueryEntry create(String owner, String name) {
+      return new AutoValue_OracleMetadataConnector_XmlQueryEntry(owner, name);
+    }
+  }
+
   private static class SelectXmlTask extends AbstractJdbcTask<Void> implements GroupTask<Void> {
 
+    private final String xmlQuery = "SELECT DBMS_METADATA.GET_XML(?, ?, ?) FROM DUAL";
     private final String rowSql;
-    private final String xmlSql;
+    private final String objectType;
     private final int ownerIndex;
     private final int nameIndex;
     private Exception throwable;
@@ -107,16 +125,16 @@ public class OracleMetadataConnector extends AbstractOracleConnector
      * @param nameIndex The index of the object name in the outer ResultSet.
      */
     public SelectXmlTask(
-        String targetPath, String rowSql, String xmlSql, int ownerIndex, int nameIndex) {
+        String targetPath, String rowSql, String objectType, int ownerIndex, int nameIndex) {
       super(targetPath);
       this.rowSql = Preconditions.checkNotNull(rowSql, "Row SQL was null.");
-      this.xmlSql = Preconditions.checkNotNull(xmlSql, "XML SQL was null.");
+      this.objectType = Preconditions.checkNotNull(objectType, "XML Object type was null.");
       this.ownerIndex = ownerIndex;
       this.nameIndex = nameIndex;
     }
 
-    public SelectXmlTask(String targetPath, String rowSql, String xmlSql) {
-      this(targetPath, rowSql, xmlSql, 1, 2);
+    public SelectXmlTask(String targetPath, String rowSql, String objectType) {
+      this(targetPath, rowSql, objectType, 1, 2);
     }
 
     @Override
@@ -130,6 +148,16 @@ public class OracleMetadataConnector extends AbstractOracleConnector
       return throwable;
     }
 
+    private String buildXmlSql(List<XmlQueryEntry> querySet) {
+      return querySet.stream()
+          .map(
+              queryObject ->
+                  String.format(
+                      "SELECT DBMS_METADATA.GET_XML('%s', '%s', '%s') FROM DUAL",
+                      objectType, queryObject.name(), queryObject.owner()))
+          .collect(joining(" UNION ALL "));
+    }
+
     @Nonnull
     private ResultSetExtractor<Void> newResultSetExtractor(
         @Nonnull ByteSink sink, @Nonnull JdbcHandle handle) {
@@ -138,12 +166,16 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         private final JdbcTemplate jdbcTemplate = handle.getJdbcTemplate();
 
         @CheckForNull
-        private String getXmlData(@Nonnull String owner, @Nonnull String name) {
+        private List<String> getXmlData(List<XmlQueryEntry> querySet) {
+          if (querySet == null || querySet.isEmpty()) {
+            return ImmutableList.of();
+          }
+
           try {
-            return jdbcTemplate.queryForObject(xmlSql, String.class, name, owner);
+            return jdbcTemplate.queryForList(buildXmlSql(querySet), String.class);
           } catch (Exception e) {
-            LOG.debug("Failed to retrieve XML for " + name + ": " + e);
-            return null;
+            LOG.debug("Failed to retrieve XML for " + objectType + ": " + e);
+            return ImmutableList.of();
           }
         }
 
@@ -151,14 +183,26 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         public Void extractData(ResultSet rs) throws SQLException, DataAccessException {
           CSVFormat format = newCsvFormat(rs);
           try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
+              RecordProgressMonitor monitor = new RecordProgressMonitor(getName());
               CSVPrinter printer = format.print(writer)) {
-            final int columnCount = rs.getMetaData().getColumnCount();
+
+            ImmutableList.Builder<XmlQueryEntry> querySetBuilder = ImmutableList.builder();
             while (rs.next()) {
-              for (int i = 1; i <= columnCount; i++) printer.print(rs.getObject(i));
-              String owner = rs.getString(ownerIndex);
-              String name = rs.getString(nameIndex);
-              printer.print(getXmlData(owner, name));
-              printer.println();
+              querySetBuilder.add(
+                  XmlQueryEntry.create(rs.getString(ownerIndex), rs.getString(nameIndex)));
+            }
+
+            List<List<XmlQueryEntry>> querySetChunks =
+                Lists.partition(querySetBuilder.build(), XML_BATCH_SIZE);
+            for (List<XmlQueryEntry> querySet : querySetChunks) {
+              List<String> xmlResults = getXmlData(querySet);
+              for (int i = 0; i < xmlResults.size(); i++) {
+                printer.print(querySet.get(i).owner());
+                printer.print(querySet.get(i).name());
+                printer.print(xmlResults.get(i));
+                printer.println();
+                monitor.count();
+              }
             }
             return null;
           } catch (IOException e) {
@@ -181,7 +225,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
 
     @Override
     public String describeSourceData() {
-      return createSourceDataDescriptionForQuery(xmlSql);
+      return createSourceDataDescriptionForQuery(xmlQuery);
     }
   }
 
@@ -213,7 +257,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
       return null;
     }
 
-    // This shwos up in dry-run
+    // This shows up in dry-run
     @Override
     public String toString() {
       return "[ Error if all fail: "
@@ -248,21 +292,42 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     addAtLeastOneOf(out, dba_task, all_task);
   }
 
+  private static SelectTask newSelectXmlTask(
+      @Nonnull String file,
+      @Nonnull String table,
+      String objectType,
+      String ownerColumn,
+      String nameColumn,
+      @Nonnull String where) {
+    return new SelectTask(
+        file,
+        String.format(
+            "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s u %s",
+            ownerColumn, nameColumn, objectType, nameColumn, ownerColumn, table, where));
+  }
+
+  private static void buildSelectXmlTask(
+      List<? super Task<?>> out,
+      String all_file,
+      String all_table,
+      String dba_file,
+      String dba_table,
+      String objectType,
+      String ownerColumn,
+      String nameColumn,
+      String whereCond) {
+    SelectTask dba_task =
+        newSelectXmlTask(dba_file, dba_table, objectType, ownerColumn, nameColumn, whereCond);
+    SelectTask all_task =
+        newSelectXmlTask(all_file, all_table, objectType, ownerColumn, nameColumn, whereCond);
+    addAtLeastOneOf(out, dba_task, all_task);
+  }
+
   @CheckForNull
   private static String toInList(@CheckForNull List<String> owners) {
-    if (owners == null || owners.isEmpty()) return null;
-    StringBuilder sb = new StringBuilder();
-    boolean first = true;
-    for (String owner : owners) {
-      if (first) {
-        first = false;
-        sb.append("('").append(owner).append("'");
-      } else {
-        sb.append(",'").append(owner).append("'");
-      }
-    }
-    sb.append(")");
-    return sb.toString();
+    return (owners == null || owners.isEmpty())
+        ? null
+        : String.format("('%s')", String.join("','", owners));
   }
 
   @Override
@@ -281,176 +346,259 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     String whereCondTableOwner = ownerInList == null ? "" : " WHERE TABLE_OWNER IN " + ownerInList;
     String whereCondSequenceOwner =
         ownerInList == null ? "" : " WHERE SEQUENCE_OWNER IN " + ownerInList;
+    String whereCondFunctionOwner =
+        " WHERE OBJECT_NAME = 'FUNCTION'"
+            + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
+    String whereCondTableSegmentCreated =
+        " WHERE SEGMENT_CREATED='Y'" + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
 
-    buildSelectStarTask(
-        out,
-        Arguments.ZIP_ENTRY_NAME_DBA,
-        "DBA_Arguments",
-        Arguments.ZIP_ENTRY_NAME_ALL,
-        "All_Arguments",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Catalog.ZIP_ENTRY_NAME_DBA,
-        "DBA_Catalog",
-        Catalog.ZIP_ENTRY_NAME_ALL,
-        "All_Catalog",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Constraints.ZIP_ENTRY_NAME_DBA,
-        "DBA_Constraints",
-        Constraints.ZIP_ENTRY_NAME_ALL,
-        "All_Constraints",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Indexes.ZIP_ENTRY_NAME_DBA,
-        "DBA_Indexes",
-        Indexes.ZIP_ENTRY_NAME_ALL,
-        "All_Indexes",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        MViews.ZIP_ENTRY_NAME_DBA,
-        "DBA_MViews",
-        MViews.ZIP_ENTRY_NAME_ALL,
-        "All_MViews",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Operators.ZIP_ENTRY_NAME_DBA,
-        "DBA_Operators",
-        Operators.ZIP_ENTRY_NAME_ALL,
-        "All_Operators",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Part_key_columns.ZIP_ENTRY_NAME_DBA,
-        "DBA_Part_key_columns",
-        Part_key_columns.ZIP_ENTRY_NAME_ALL,
-        "All_Part_key_columns",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Plsql_Types.ZIP_ENTRY_NAME_DBA,
-        "DBA_Plsql_Types",
-        Plsql_Types.ZIP_ENTRY_NAME_ALL,
-        "All_Plsql_Types",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Procedures.ZIP_ENTRY_NAME_DBA,
-        "DBA_Procedures",
-        Procedures.ZIP_ENTRY_NAME_ALL,
-        "All_Procedures",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Tab_Columns.ZIP_ENTRY_NAME_DBA,
-        "DBA_Tab_Columns",
-        Tab_Columns.ZIP_ENTRY_NAME_ALL,
-        "All_Tab_Columns",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Tab_Partitions.ZIP_ENTRY_NAME_DBA,
-        "DBA_Tab_Partitions",
-        Tab_Partitions.ZIP_ENTRY_NAME_ALL,
-        "All_Tab_Partitions",
-        whereCondTableOwner);
-    buildSelectStarTask(
-        out,
-        Tables.ZIP_ENTRY_NAME_DBA,
-        "DBA_Tables",
-        Tables.ZIP_ENTRY_NAME_ALL,
-        "All_Tables",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Types.ZIP_ENTRY_NAME_DBA,
-        "DBA_Types",
-        Types.ZIP_ENTRY_NAME_ALL,
-        "All_Types",
-        whereCondOwner);
-    buildSelectStarTask(
-        out,
-        Views.ZIP_ENTRY_NAME_DBA,
-        "DBA_Views",
-        Views.ZIP_ENTRY_NAME_ALL,
-        "All_Views",
-        whereCondOwner);
-
-    String sqlQuery, xmlQuery;
+    /*
+        buildSelectStarTask(
+            out,
+            Arguments.ZIP_ENTRY_NAME_DBA,
+            "DBA_Arguments",
+            Arguments.ZIP_ENTRY_NAME_ALL,
+            "All_Arguments",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Catalog.ZIP_ENTRY_NAME_DBA,
+            "DBA_Catalog",
+            Catalog.ZIP_ENTRY_NAME_ALL,
+            "All_Catalog",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Constraints.ZIP_ENTRY_NAME_DBA,
+            "DBA_Constraints",
+            Constraints.ZIP_ENTRY_NAME_ALL,
+            "All_Constraints",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Indexes.ZIP_ENTRY_NAME_DBA,
+            "DBA_Indexes",
+            Indexes.ZIP_ENTRY_NAME_ALL,
+            "All_Indexes",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            MViews.ZIP_ENTRY_NAME_DBA,
+            "DBA_MViews",
+            MViews.ZIP_ENTRY_NAME_ALL,
+            "All_MViews",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Operators.ZIP_ENTRY_NAME_DBA,
+            "DBA_Operators",
+            Operators.ZIP_ENTRY_NAME_ALL,
+            "All_Operators",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Part_key_columns.ZIP_ENTRY_NAME_DBA,
+            "DBA_Part_key_columns",
+            Part_key_columns.ZIP_ENTRY_NAME_ALL,
+            "All_Part_key_columns",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Plsql_Types.ZIP_ENTRY_NAME_DBA,
+            "DBA_Plsql_Types",
+            Plsql_Types.ZIP_ENTRY_NAME_ALL,
+            "All_Plsql_Types",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Procedures.ZIP_ENTRY_NAME_DBA,
+            "DBA_Procedures",
+            Procedures.ZIP_ENTRY_NAME_ALL,
+            "All_Procedures",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Tab_Columns.ZIP_ENTRY_NAME_DBA,
+            "DBA_Tab_Columns",
+            Tab_Columns.ZIP_ENTRY_NAME_ALL,
+            "All_Tab_Columns",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Tab_Partitions.ZIP_ENTRY_NAME_DBA,
+            "DBA_Tab_Partitions",
+            Tab_Partitions.ZIP_ENTRY_NAME_ALL,
+            "All_Tab_Partitions",
+            whereCondTableOwner);
+        buildSelectStarTask(
+            out,
+            Tables.ZIP_ENTRY_NAME_DBA,
+            "DBA_Tables",
+            Tables.ZIP_ENTRY_NAME_ALL,
+            "All_Tables",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Types.ZIP_ENTRY_NAME_DBA,
+            "DBA_Types",
+            Types.ZIP_ENTRY_NAME_ALL,
+            "All_Types",
+            whereCondOwner);
+        buildSelectStarTask(
+            out,
+            Views.ZIP_ENTRY_NAME_DBA,
+            "DBA_Views",
+            Views.ZIP_ENTRY_NAME_ALL,
+            "All_Views",
+            whereCondOwner);
+    */
 
     // out.add(new JdbcSelectTask(Functions.ZIP_ENTRY_NAME,
     // "SELECT DBMS_METADATA.GET_DDL('FUNCTION', OBJECT_NAME) FROM USER_PROCEDURES"));
     // Double check this one
-    String whereCondFunctionOwner = ownerInList == null ? "" : " AND OWNER IN " + ownerInList;
-    out.add(
-        new SelectXmlTask(
-            XmlFunctions.ZIP_ENTRY_NAME,
-            "SELECT OWNER, OBJECT_NAME FROM ALL_OBJECTS WHERE OBJECT_NAME = 'FUNCTION'"
-                + whereCondFunctionOwner,
-            "SELECT DBMS_METADATA.GET_XML('FUNCTION', ?, ?) FROM DUAL"));
+    // String sqlQuery = "SELECT OWNER, OBJECT_NAME FROM ";
+    // addAtLeastOneOf(
+    //     out,
+    //     new SelectXmlTask(
+    //         XmlFunctions.ZIP_ENTRY_NAME_DBA,
+    //         sqlQuery + "DBA_OBJECTS" + whereCondFunctionOwner,
+    //         "FUNCTION"),
+    //     new SelectXmlTask(
+    //         XmlFunctions.ZIP_ENTRY_NAME_ALL,
+    //         sqlQuery + "ALL_OBJECTS" + whereCondFunctionOwner,
+    //         "FUNCTION"));
 
-    sqlQuery = "SELECT OWNER, TABLE_NAME FROM ";
-    xmlQuery = "SELECT DBMS_METADATA.GET_XML('TABLE', ?, ?) FROM DUAL";
-    addAtLeastOneOf(
+    buildSelectXmlTask(
         out,
-        new SelectXmlTask(
-            XmlTables.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_TABLES" + whereCondOwner, xmlQuery),
-        new SelectXmlTask(
-            XmlTables.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_TABLES" + whereCondOwner, xmlQuery));
+        XmlFunctions.ZIP_ENTRY_NAME_ALL,
+        "ALL_OBJECTS",
+        XmlFunctions.ZIP_ENTRY_NAME_DBA,
+        "DBA_OBJECTS",
+        "FUNCTION",
+        "OWNER",
+        "OBJECT_NAME",
+        whereCondFunctionOwner);
 
-    sqlQuery = "SELECT OWNER, VIEW_NAME FROM ";
-    xmlQuery = "SELECT DBMS_METADATA.GET_XML('VIEW', ?, ?) FROM DUAL";
-    addAtLeastOneOf(
-        out,
-        new SelectXmlTask(
-            XmlViews.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_VIEWS" + whereCondOwner, xmlQuery),
-        new SelectXmlTask(
-            XmlViews.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_VIEWS" + whereCondOwner, xmlQuery));
+    // sqlQuery = "SELECT OWNER, TABLE_NAME FROM ";
+    // addAtLeastOneOf(
+    //     out,
+    //     new SelectXmlTask(
+    //         XmlTables.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_TABLES" + whereCondTableIot, "TABLE"),
+    //     new SelectXmlTask(
+    //         XmlTables.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_TABLES" + whereCondTableIot, "TABLE"));
 
-    sqlQuery = "SELECT OWNER, INDEX_NAME FROM ";
-    xmlQuery = "SELECT DBMS_METADATA.GET_XML('INDEX', INDEX_NAME) FROM DUAL";
-    addAtLeastOneOf(
+    buildSelectXmlTask(
         out,
-        new SelectXmlTask(
-            XmlIndexes.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_INDEXES" + whereCondOwner, xmlQuery),
-        new SelectXmlTask(
-            XmlIndexes.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_INDEXES" + whereCondOwner, xmlQuery));
+        XmlTables.ZIP_ENTRY_NAME_ALL,
+        "ALL_TABLES",
+        XmlTables.ZIP_ENTRY_NAME_DBA,
+        "DBA_TABLES",
+        "TABLE",
+        "OWNER",
+        "TABLE_NAME",
+        whereCondTableSegmentCreated);
 
-    sqlQuery = "SELECT SEQUENCE_OWNER, SEQUENCE_NAME FROM ";
-    xmlQuery = "SELECT DBMS_METADATA.GET_XML('SEQUENCE', SEQUENCE_NAME) FROM DUAL";
-    addAtLeastOneOf(
-        out,
-        new SelectXmlTask(
-            XmlSequences.ZIP_ENTRY_NAME_DBA,
-            sqlQuery + "DBA_SEQUENCES" + whereCondSequenceOwner,
-            xmlQuery),
-        new SelectXmlTask(
-            XmlSequences.ZIP_ENTRY_NAME_ALL,
-            sqlQuery + "ALL_SEQUENCES" + whereCondSequenceOwner,
-            xmlQuery));
+    // sqlQuery = "SELECT OWNER, VIEW_NAME FROM ";
+    // addAtLeastOneOf(
+    //     out,
+    //     new SelectXmlTask(
+    //         XmlViews.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_VIEWS" + whereCondOwner, "VIEW"),
+    //     new SelectXmlTask(
+    //         XmlViews.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_VIEWS" + whereCondOwner, "VIEW"));
 
-    sqlQuery = "SELECT OWNER, TYPE_NAME FROM ";
-    xmlQuery = "SELECT DBMS_METADATA.GET_XML('TYPE', TYPE_NAME) FROM DUAL";
-    addAtLeastOneOf(
+    buildSelectXmlTask(
         out,
-        new SelectXmlTask(
-            XmlTypes.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_TYPES" + whereCondOwner, xmlQuery),
-        new SelectXmlTask(
-            XmlTypes.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_TYPES" + whereCondOwner, xmlQuery));
+        XmlViews.ZIP_ENTRY_NAME_ALL,
+        "ALL_VIEWS",
+        XmlViews.ZIP_ENTRY_NAME_DBA,
+        "DBA_VIEWS",
+        "VIEW",
+        "OWNER",
+        "VIEW_NAME",
+        whereCondOwner);
 
-    sqlQuery = "SELECT OWNER, SYNONYM_NAME FROM ";
-    xmlQuery = "SELECT DBMS_METADATA.GET_XML('SYNONYM', SYNONYM_NAME) FROM DUAL";
-    addAtLeastOneOf(
+    // sqlQuery = "SELECT OWNER, INDEX_NAME FROM ";
+    // addAtLeastOneOf(
+    //     out,
+    //     new SelectXmlTask(
+    //         XmlIndexes.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_INDEXES" + whereCondOwner, "INDEX"),
+    //     new SelectXmlTask(
+    //         XmlIndexes.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_INDEXES" + whereCondOwner, "INDEX"));
+
+    buildSelectXmlTask(
         out,
-        new SelectXmlTask(
-            XmlSynonyms.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_SYNONYMS" + whereCondOwner, xmlQuery),
-        new SelectXmlTask(
-            XmlSynonyms.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_SYNONYMS" + whereCondOwner, xmlQuery));
+        XmlIndexes.ZIP_ENTRY_NAME_ALL,
+        "ALL_INDEXES",
+        XmlIndexes.ZIP_ENTRY_NAME_DBA,
+        "DBA_INDEXES",
+        "INDEX",
+        "OWNER",
+        "INDEX_NAME",
+        whereCondOwner);
+
+    // sqlQuery = "SELECT SEQUENCE_OWNER, SEQUENCE_NAME FROM ";
+    // addAtLeastOneOf(
+    //     out,
+    //     new SelectXmlTask(
+    //         XmlSequences.ZIP_ENTRY_NAME_DBA,
+    //         sqlQuery + "DBA_SEQUENCES" + whereCondSequenceOwner,
+    //         "SEQUENCE"),
+    //     new SelectXmlTask(
+    //         XmlSequences.ZIP_ENTRY_NAME_ALL,
+    //         sqlQuery + "ALL_SEQUENCES" + whereCondSequenceOwner,
+    //         "SEQUENCE"));
+
+    buildSelectXmlTask(
+        out,
+        XmlSequences.ZIP_ENTRY_NAME_ALL,
+        "ALL_SEQUENCES",
+        XmlSequences.ZIP_ENTRY_NAME_DBA,
+        "DBA_SEQUENCES",
+        "SEQUENCE",
+        "SEQUENCE_OWNER",
+        "SEQUENCE_NAME",
+        whereCondSequenceOwner);
+
+    // sqlQuery = "SELECT OWNER, TYPE_NAME FROM ";
+    // addAtLeastOneOf(
+    //     out,
+    //     new SelectXmlTask(
+    //         XmlTypes.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_TYPES" + whereCondOwner, "TYPE"),
+    //     new SelectXmlTask(
+    //         XmlTypes.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_TYPES" + whereCondOwner, "TYPE"));
+
+    buildSelectXmlTask(
+        out,
+        XmlTypes.ZIP_ENTRY_NAME_ALL,
+        "ALL_TYPES",
+        XmlTypes.ZIP_ENTRY_NAME_DBA,
+        "DBA_TYPES",
+        "TYPE",
+        "OWNER",
+        "TYPE_NAME",
+        whereCondOwner);
+
+    // sqlQuery = "SELECT OWNER, SYNONYM_NAME FROM ";
+    // addAtLeastOneOf(
+    //     out,
+    //     new SelectXmlTask(
+    //         XmlSynonyms.ZIP_ENTRY_NAME_DBA, sqlQuery + "DBA_SYNONYMS" + whereCondOwner,
+    // "SYNONYM"),
+    //     new SelectXmlTask(
+    //         XmlSynonyms.ZIP_ENTRY_NAME_ALL, sqlQuery + "ALL_SYNONYMS" + whereCondOwner,
+    // "SYNONYM"));
+
+    buildSelectXmlTask(
+        out,
+        XmlSynonyms.ZIP_ENTRY_NAME_ALL,
+        "ALL_SYNONYMS",
+        XmlSynonyms.ZIP_ENTRY_NAME_DBA,
+        "DBA_SYNONYMS",
+        "SYNONYM",
+        "OWNER",
+        "SYNONYM_NAME",
+        whereCondOwner);
+
     // Todo: procedures, database links, triggers, packages
   }
 }

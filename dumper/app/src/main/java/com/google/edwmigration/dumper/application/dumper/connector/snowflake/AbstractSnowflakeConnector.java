@@ -99,7 +99,6 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     return jdbcHandle;
   }
 
-  @Nonnull
   private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
     String currentDatabase =

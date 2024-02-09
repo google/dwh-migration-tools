@@ -34,7 +34,6 @@ public interface Connector {
   @Nonnull
   public String getDefaultFileName(boolean isAssessment);
 
-  @Nonnull
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception;
 
