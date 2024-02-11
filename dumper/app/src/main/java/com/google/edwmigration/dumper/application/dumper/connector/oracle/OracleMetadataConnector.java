@@ -196,9 +196,9 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         " WHERE OBJECT_NAME = 'FUNCTION'"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
     // Since version 11g Oracle has introduced deferred segment creation.
-    // This results in DBMS_METADATA.GET_XML not found error for tables with no segment created.
+    // This filter removes iot overflow segments and tables with no segment created.
     String whereCondTableSegmentCreated =
-        " WHERE SEGMENT_CREATED='YES'"
+        " WHERE SEGMENT_CREATED='YES' AND (IOT_TYPE is null or IOT_TYPE='IOT')"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
 
     buildSelectStarTask(
