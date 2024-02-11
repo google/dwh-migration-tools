@@ -33,6 +33,8 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
+import com.google.j2objc.annotations.LoopTranslation.LoopStyle;
+
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.CheckForNull;
@@ -148,7 +150,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     return new SelectTask(
         file,
         String.format(
-            "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s u %s",
+            "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s %s",
             ownerColumn, nameColumn, objectType, nameColumn, ownerColumn, table, where));
   }
 
@@ -195,10 +197,10 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     String whereCondFunctionOwner =
         " WHERE OBJECT_NAME = 'FUNCTION'"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
-    // Since version 11g Oracle has introduced deferred segment creation.
-    // This filter removes iot overflow segments and tables with no segment created.
+    // This filter removes iot overflow segments and nested tables.
+    // XML data does not exist for them what causes `not found` exception.
     String whereCondTableSegmentCreated =
-        " WHERE SEGMENT_CREATED='YES' AND (IOT_TYPE is null or IOT_TYPE='IOT')"
+        " WHERE NESTED='NO' AND (IOT_TYPE IS NULL OR IOT_TYPE='IOT')"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
 
     buildSelectStarTask(
