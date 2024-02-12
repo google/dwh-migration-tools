@@ -94,11 +94,10 @@ public class OracleMetadataConnector extends AbstractOracleConnector
       LOG.error("All the select tasks failed:");
       for (int i = 1; i <= tasks.length; i++) {
         LOG.error(
-            String.format(
-                "(%s): %s : %s",
-                i,
-                tasks[i].getName(),
-                ExceptionUtils.getRootCauseMessage(tasks[i].getException())));
+            "({}): {} : {}",
+            i,
+            tasks[i].getName(),
+            ExceptionUtils.getRootCauseMessage(tasks[i].getException()));
       }
       return null;
     }
