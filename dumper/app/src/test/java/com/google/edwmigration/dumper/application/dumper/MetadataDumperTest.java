@@ -28,6 +28,7 @@ import java.io.IOException;
 import joptsimple.OptionException;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -35,18 +36,46 @@ import org.junit.runners.JUnit4;
 /** @author shevek */
 @RunWith(JUnit4.class)
 public class MetadataDumperTest {
+  private static final String DEFAULT_FILENAME = "dwh-migration-test-metadata.zip";
 
-  // TODO(ishmum): `testOverridesZipWithGivenName` with content check
-  private File file;
+  private enum TopLevelTestFile {
+    DEFAULT_FILENAME_TEST_FILE(DEFAULT_FILENAME),
+    SAMPLE_DIR("sample_dir"),
+    TEST_ZIP("test.zip"),
+    DIR_ZIP("dir.zip"),
+    TEST("test");
+
+    final String filename;
+
+    TopLevelTestFile(String filename) {
+      this.filename = filename;
+    }
+  }
+
   private Main dumper = new Main(new MetadataDumper());
   private final Connector connector = new TestConnector();
-  private final String defaultFileName = "dwh-migration-test-metadata.zip";
+
+  @Before
+  public void setUp() throws IOException {
+    deleteTopLevelTestFiles();
+  }
 
   @After
   public void tearDown() throws IOException {
-    if (file == null || !file.exists()) return;
-    if (file.isDirectory()) FileUtils.deleteDirectory(file);
-    else file.delete();
+    deleteTopLevelTestFiles();
+  }
+
+  private static void deleteTopLevelTestFiles() throws IOException {
+    for (TopLevelTestFile topLevelTestFile : TopLevelTestFile.values()) {
+      File file = new File(topLevelTestFile.filename);
+      if (file.exists()) {
+        if (file.isDirectory()) {
+          FileUtils.deleteDirectory(file);
+        } else {
+          file.delete();
+        }
+      }
+    }
   }
 
   @Test
@@ -57,52 +86,48 @@ public class MetadataDumperTest {
 
   @Test
   public void testCreatesDefaultOutputZip() throws Exception {
-    // Arrange
-    file = new File(defaultFileName);
+    File expectedFile = new File(DEFAULT_FILENAME);
 
     // Act
     dumper.run("--connector", connector.getName());
 
     // Assert
-    assertTrue(file.exists());
+    assertTrue(expectedFile.exists());
   }
 
   @Test
   public void testCreatesDefaultOutputZipInProvidedDirectory() throws Exception {
-    // Arrange
-    String path = "dir";
-    file = new File(path, defaultFileName);
+    String path = TopLevelTestFile.SAMPLE_DIR.filename;
+    File expectedFile = new File(path, DEFAULT_FILENAME);
 
     // Act
     dumper.run("--connector", connector.getName(), "--output", path);
 
     // Assert
-    assertTrue(file.exists());
+    assertTrue(expectedFile.exists());
   }
 
   @Test
   public void testCreatesZipWithGivenName() throws Exception {
-    // Arrange
-    String name = "test.zip";
-    file = new File(name);
+    String name = TopLevelTestFile.TEST_ZIP.filename;
+    File expectedFile = new File(name);
 
     // Act
     dumper.run("--connector", connector.getName(), "--output", name);
 
     // Assert
-    assertTrue(file.exists());
+    assertTrue(expectedFile.exists());
   }
 
   @Test
   public void testOverridesZipWithDefaultName() throws Exception {
-    // Arrange
-    File expectedFile = new File("test-dir/" + defaultFileName);
-    String name = "test-dir";
-    file = new File(name);
+    File expectedFile = new File(TopLevelTestFile.SAMPLE_DIR.filename + "/" + DEFAULT_FILENAME);
+    String dirName = TopLevelTestFile.SAMPLE_DIR.filename;
+    File dir = new File(dirName);
 
     // Act
-    file.mkdirs();
-    dumper.run("--connector", connector.getName(), "--output", name);
+    dir.mkdirs();
+    dumper.run("--connector", connector.getName(), "--output", dirName);
 
     // Assert
     assertTrue(expectedFile.exists());
@@ -110,14 +135,13 @@ public class MetadataDumperTest {
 
   @Test
   public void testCreatesFileInsideFolderNameWithZip() throws Exception {
-    // Arrange
-    File expectedFile = new File("dir.zip/" + defaultFileName);
-    String name = "dir.zip";
-    file = new File(name);
+    File expectedFile = new File(TopLevelTestFile.DIR_ZIP.filename + "/" + DEFAULT_FILENAME);
+    String dirName = TopLevelTestFile.DIR_ZIP.filename;
+    File dir = new File(dirName);
 
     // Act
-    file.mkdirs();
-    dumper.run("--connector", connector.getName(), "--output", name);
+    dir.mkdirs();
+    dumper.run("--connector", connector.getName(), "--output", dirName);
 
     // Assert
     assertTrue(expectedFile.exists());
@@ -125,16 +149,15 @@ public class MetadataDumperTest {
 
   @Test
   public void testDoesNotOverrideFileWithDirectory() throws IOException {
-    // Arrange
-    String name = "test";
-    file = new File(name);
+    String filename = TopLevelTestFile.TEST.filename;
+    File file = new File(filename);
 
     // Act
     file.createNewFile();
     IllegalStateException exception =
         assertThrows(
             IllegalStateException.class,
-            () -> dumper.run("--connector", connector.getName(), "--output", name));
+            () -> dumper.run("--connector", connector.getName(), "--output", filename));
 
     // Assert
     assertTrue(exception.getMessage().startsWith("A file already exists at test"));
@@ -182,8 +205,7 @@ public class MetadataDumperTest {
 
   @Test
   public void testAcceptsValidFlagsForSpecificDialect() throws Exception {
-    // Arrange
-    file = new File(defaultFileName);
+    File file = new File(DEFAULT_FILENAME);
 
     // Act
     dumper.run("--connector", connector.getName(), "-Dtest.test.property=test-value");
