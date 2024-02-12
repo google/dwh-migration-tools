@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.nonEmpty;
 import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionalIf;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.HOURS;
@@ -975,7 +974,11 @@ public class ConnectorArguments extends DefaultArguments {
 
   @CheckForNull
   public String getDefinitionOrDefault(ConnectorPropertyWithDefault property) {
-    return nonEmpty(getDefinition(property)).orElseGet(property::getDefaultValue);
+    String stringValue = getDefinition(property);
+    if (StringUtils.isEmpty(stringValue)) {
+      return property.getDefaultValue();
+    }
+    return stringValue;
   }
 
   public static class ZonedParser implements ValueConverter<ZonedDateTime> {
