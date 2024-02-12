@@ -22,11 +22,11 @@ import java.util.function.Supplier;
 
 public class OptionalUtils {
 
-  public static <T> Optional<T> optionalIf(boolean condition, Supplier<T> supplier) {
+  public static <T> Optional<T> optionallyWhen(boolean condition, Supplier<T> supplier) {
     return condition ? Optional.of(supplier.get()) : Optional.empty();
   }
 
-  public static Optional<String> nonEmpty(String value) {
+  public static Optional<String> optionallyIfNotEmpty(String value) {
     return Optional.ofNullable(Strings.emptyToNull(value));
   }
 

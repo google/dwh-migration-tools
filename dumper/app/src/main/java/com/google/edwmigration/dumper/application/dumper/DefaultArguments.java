@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.nonEmpty;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyIfNotEmpty;
 import static java.util.Arrays.stream;
 
 import com.google.common.base.Joiner;
@@ -114,7 +114,7 @@ public class DefaultArguments {
 
     @Override
     public Optional<String> convert(String value) throws MetadataDumperUsageException {
-      return nonEmpty(value).map(this::convertInternal);
+      return optionallyIfNotEmpty(value).map(this::convertInternal);
     }
 
     private String convertInternal(String value) {

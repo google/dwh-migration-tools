@@ -22,7 +22,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.stringLiteral;
-import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionalIf;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyWhen;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -276,7 +276,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
             "SqlTextInfo",
             "SqlRowNo",
             tableNames.sqlLogsTableName(),
-            /* whereCondition=*/ optionalIf(
+            /* whereCondition=*/ optionallyWhen(
                 logDateColumn != null, this::createLogDateColumnCondition),
             DBQLSQLTBL_SQLTEXTINFO_LENGTH,
             maxLength)
