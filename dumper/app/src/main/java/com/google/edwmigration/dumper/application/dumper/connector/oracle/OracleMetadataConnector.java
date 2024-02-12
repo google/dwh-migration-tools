@@ -33,8 +33,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
-import com.google.j2objc.annotations.LoopTranslation.LoopStyle;
-
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.CheckForNull;
@@ -198,10 +196,13 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         " WHERE OBJECT_NAME = 'FUNCTION'"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
     // This filter removes iot overflow segments and nested tables.
-    // XML data does not exist for them what causes `not found` exception.
-    String whereCondTableSegmentCreated =
+    // XML metadata does not exist for them what causes `not found` exception.
+    String whereCondTableXmlMetadata =
         " WHERE NESTED='NO' AND (IOT_TYPE IS NULL OR IOT_TYPE='IOT')"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
+    // XML metadata does not exist for predefined oracel types what result in not found exception.
+    String whereCondTypesNoPredefined =
+        " WHERE PREDEFINED='NO'" + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
 
     buildSelectStarTask(
         out,
@@ -322,7 +323,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         "TABLE",
         "OWNER",
         "TABLE_NAME",
-        whereCondTableSegmentCreated);
+        whereCondTableXmlMetadata);
 
     buildSelectXmlTask(
         out,
@@ -366,7 +367,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         "TYPE",
         "OWNER",
         "TYPE_NAME",
-        whereCondOwner);
+        whereCondTypesNoPredefined);
 
     buildSelectXmlTask(
         out,
