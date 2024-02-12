@@ -195,12 +195,11 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     String whereCondFunctionOwner =
         " WHERE OBJECT_NAME = 'FUNCTION'"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
-    // This filter removes iot overflow segments and nested tables.
-    // XML metadata does not exist for them what causes `not found` exception.
+    // XML metadata does not exist for iot overflow and nested tables what causes `not found` exception.
     String whereCondTableXmlMetadata =
         " WHERE NESTED='NO' AND (IOT_TYPE IS NULL OR IOT_TYPE='IOT')"
             + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
-    // XML metadata does not exist for predefined oracel types what result in not found exception.
+    // XML metadata does not exist for predefined oracle types what result in `not found` exception.
     String whereCondTypesNoPredefined =
         " WHERE PREDEFINED='NO'" + (ownerInList == null ? "" : " AND OWNER IN " + ownerInList);
 
