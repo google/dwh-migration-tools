@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.utils;
 
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.nonEmpty;
+
 import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -62,7 +64,7 @@ public class PropertyParser {
   }
 
   /**
-   * Gets the a string property passed as an argument to the command-line option.
+   * Gets the string value passed as an argument to the command-line option.
    *
    * @param arguments all command-line options
    * @param property command-line option
@@ -70,12 +72,7 @@ public class PropertyParser {
    */
   public static Optional<String> getString(
       ConnectorArguments arguments, ConnectorProperty property) {
-    String stringValue = arguments.getDefinition(property);
-    if (StringUtils.isEmpty(stringValue)) {
-      return Optional.empty();
-    }
-
-    return Optional.of(stringValue);
+    return nonEmpty(arguments.getDefinition(property));
   }
 
   private static String createErrorMessage(

@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.nonEmpty;
+import static java.util.Arrays.stream;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
@@ -37,7 +40,6 @@ import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
 import org.anarres.jdiagnostics.ProductMetadata;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,8 +60,16 @@ public class DefaultArguments {
 
     @Override
     public Boolean convert(String value) {
-      for (String s : V_TRUE) if (value.equalsIgnoreCase(s)) return Boolean.TRUE;
-      for (String s : V_FALSE) if (value.equalsIgnoreCase(s)) return Boolean.FALSE;
+      for (String s : V_TRUE) {
+        if (value.equalsIgnoreCase(s)) {
+          return Boolean.TRUE;
+        }
+      }
+      for (String s : V_FALSE) {
+        if (value.equalsIgnoreCase(s)) {
+          return Boolean.FALSE;
+        }
+      }
       throw new ValueConversionException("Not a valid boolean value: " + value);
     }
 
@@ -92,6 +102,7 @@ public class DefaultArguments {
   }
 
   public interface Converter<V> {
+
     Optional<V> convert(String value);
   }
 
@@ -103,16 +114,15 @@ public class DefaultArguments {
 
     @Override
     public Optional<String> convert(String value) throws MetadataDumperUsageException {
-      if (StringUtils.isEmpty(value)) {
-        return Optional.empty();
-      }
+      return nonEmpty(value).map(this::convertInternal);
+    }
 
-      for (HadoopRpcProtection qop : HadoopRpcProtection.values()) {
-        if (qop.name().equalsIgnoreCase(value)) {
-          return Optional.of(qop.qopValue);
-        }
-      }
-      throw new MetadataDumperUsageException("Not a valid QOP: " + value);
+    private String convertInternal(String value) {
+      return stream(HadoopRpcProtection.values())
+          .filter(qop -> qop.name().equalsIgnoreCase(value))
+          .findFirst()
+          .map(qop -> qop.qopValue)
+          .orElseThrow(() -> new MetadataDumperUsageException("Not a valid QOP: " + value));
     }
   }
 

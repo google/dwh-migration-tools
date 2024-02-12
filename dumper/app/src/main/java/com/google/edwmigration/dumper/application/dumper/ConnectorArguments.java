@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionalIf;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.util.Arrays.stream;
@@ -662,10 +663,7 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   private <T> Optional<T> optionAsOptional(OptionSpec<T> spec) {
-    if (!getOptions().has(spec)) {
-      return Optional.empty();
-    }
-    return Optional.of(getOptions().valueOf(spec));
+    return optionalIf(getOptions().has(spec), () -> getOptions().valueOf(spec));
   }
 
   @Nonnull

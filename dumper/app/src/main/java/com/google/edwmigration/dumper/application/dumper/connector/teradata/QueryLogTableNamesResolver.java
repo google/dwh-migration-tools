@@ -22,7 +22,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.ASSESSMENT_DEF_LOG_TABLE;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataLogsConnectorProperty.QUERY_LOGS_TABLE;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataLogsConnectorProperty.SQL_LOGS_TABLE;
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.nonEmpty;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.nonEmpty;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

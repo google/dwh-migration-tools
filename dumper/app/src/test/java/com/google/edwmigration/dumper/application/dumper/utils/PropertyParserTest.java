@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.util;
+package com.google.edwmigration.dumper.application.dumper.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -25,7 +25,6 @@ import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataMetadataConnector.TeradataMetadataConnectorProperties;
-import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import java.io.IOException;
 import java.util.OptionalLong;
 import org.junit.Test;
