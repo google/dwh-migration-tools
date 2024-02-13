@@ -24,22 +24,22 @@ import org.junit.Test;
 public class OptionalUtilsTest {
 
   @Test
-  public void nonEmpty_null() {
-    assertEquals(Optional.empty(), OptionalUtils.nonEmpty(null));
+  public void optionallyIfNotEmpty_null() {
+    assertEquals(Optional.empty(), OptionalUtils.optionallyIfNotEmpty(null));
   }
 
   @Test
-  public void nonEmpty_emptyString() {
-    assertEquals(Optional.empty(), OptionalUtils.nonEmpty(""));
+  public void optionallyIfNotEmpty_emptyString() {
+    assertEquals(Optional.empty(), OptionalUtils.optionallyIfNotEmpty(""));
   }
 
   @Test
-  public void nonEmpty_success() {
-    assertEquals(Optional.of("abc"), OptionalUtils.nonEmpty("abc"));
+  public void optionallyIfNotEmpty_success() {
+    assertEquals(Optional.of("abc"), OptionalUtils.optionallyIfNotEmpty("abc"));
   }
 
   @Test
-  public void nonEmpty_space() {
-    assertEquals(Optional.of(" "), OptionalUtils.nonEmpty(" "));
+  public void optionallyIfNotEmpty_space() {
+    assertEquals(Optional.of(" "), OptionalUtils.optionallyIfNotEmpty(" "));
   }
 }

@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.utils;
 
-import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.nonEmpty;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyIfNotEmpty;
 
 import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -72,7 +72,7 @@ public class PropertyParser {
    */
   public static Optional<String> getString(
       ConnectorArguments arguments, ConnectorProperty property) {
-    return nonEmpty(arguments.getDefinition(property));
+    return optionallyIfNotEmpty(arguments.getDefinition(property));
   }
 
   private static String createErrorMessage(
