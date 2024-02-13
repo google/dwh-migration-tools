@@ -28,9 +28,6 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -66,7 +63,6 @@ import java.util.function.Predicate;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
@@ -413,7 +409,8 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(String.class)
           .describedAs("define");
-  private Map<String, String> definitionMap = null;
+
+  private ConnectorProperties connectorProperties;
 
   // because of quoting of special characeters on command line... the -password is made optional,
   // and if not given, asked at the console.
@@ -541,17 +538,7 @@ public class ConnectorArguments extends DefaultArguments {
     for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
       out.append("        ").append(descriptor.toString()).append("\n");
     }
-    for (Enum<? extends ConnectorProperty> enumConstant :
-        connector.getConnectorProperties().getEnumConstants()) {
-      ConnectorProperty property = (ConnectorProperty) enumConstant;
-      out.append("        ")
-          .append("-D")
-          .append(property.getName())
-          .append("=value")
-          .append("\t\t")
-          .append(property.getDescription())
-          .append("\n");
-    }
+    ConnectorProperties.printHelp(out, connector);
   }
 
   @Nonnull
@@ -890,60 +877,20 @@ public class ConnectorArguments extends DefaultArguments {
 
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
-    return getDefinitionMap().get(property.getName());
+    return getConnectorProperties().get(property);
   }
 
   /** Checks if the property was specified on the command-line. */
   public boolean isDefinitionSpecified(@Nonnull ConnectorProperty property) {
-    return StringUtils.isNotEmpty(getDefinitionMap().get(property.getName()));
+    return getConnectorProperties().isSpecified(property);
   }
 
-  private Map<String, String> getDefinitionMap() {
-    if (definitionMap == null) {
-      definitionMap =
-          buildDefinitionMap(getConnectorName(), getOptions().valuesOf(definitionOption));
+  public ConnectorProperties getConnectorProperties() {
+    if (connectorProperties == null) {
+      connectorProperties =
+          new ConnectorProperties(getConnectorName(), getOptions().valuesOf(definitionOption));
     }
-    return definitionMap;
-  }
-
-  private static ImmutableMap<String, String> buildDefinitionMap(
-      @Nullable String connector, List<String> definitions) {
-    ImmutableMap.Builder<String, String> resultMap = ImmutableMap.builder();
-    ImmutableSetMultimap<String, String> propertyNamesByConnector = allPropertyNamesByConnector();
-    ImmutableSet<String> allPropertyNames = ImmutableSet.copyOf(propertyNamesByConnector.values());
-    for (String definition : definitions) {
-      if (definition.contains("=")) {
-        int idx = definition.indexOf("=");
-        String name = definition.substring(0, idx);
-        String value = definition.substring(idx + 1);
-        resultMap.put(name, value);
-        if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
-          LOG.info("Parsed property: name='{}', value='{}'", name, value);
-        } else if (allPropertyNames.contains(name)) {
-          throw new MetadataDumperUsageException(
-              String.format(
-                  "Property: name='%s', value='%s' is not compatible with connector '%s'",
-                  name, value, MoreObjects.firstNonNull(connector, "[not specified]")));
-        } else {
-          throw new MetadataDumperUsageException(
-              String.format("Unknown property: name='%s', value='%s'", name, value));
-        }
-      }
-    }
-    return resultMap.buildKeepingLast();
-  }
-
-  private static ImmutableSetMultimap<String, String> allPropertyNamesByConnector() {
-    ImmutableSetMultimap.Builder<String, String> connectorPropertyNames =
-        ImmutableSetMultimap.builder();
-    for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
-      String connectorName = connector.getName();
-      for (Enum<? extends ConnectorProperty> enumConstant :
-          connector.getConnectorProperties().getEnumConstants()) {
-        connectorPropertyNames.put(connectorName, ((ConnectorProperty) enumConstant).getName());
-      }
-    }
-    return connectorPropertyNames.build();
+    return connectorProperties;
   }
 
   @Override
@@ -968,17 +915,13 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_QUERY_LOG_END, getQueryLogEnd())
             .add(OPT_QUERY_LOG_ALTERNATES, getQueryLogAlternates())
             .add(OPT_ASSESSMENT, isAssessment());
-    getDefinitionMap().forEach(toStringHelper::add);
+    getConnectorProperties().getDefinitionMap().forEach(toStringHelper::add);
     return toStringHelper.toString();
   }
 
   @CheckForNull
   public String getDefinitionOrDefault(ConnectorPropertyWithDefault property) {
-    String stringValue = getDefinition(property);
-    if (StringUtils.isEmpty(stringValue)) {
-      return property.getDefaultValue();
-    }
-    return stringValue;
+    return getConnectorProperties().getOrDefault(property);
   }
 
   public static class ZonedParser implements ValueConverter<ZonedDateTime> {
