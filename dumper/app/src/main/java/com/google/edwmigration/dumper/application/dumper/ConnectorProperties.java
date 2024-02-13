@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
+import java.io.IOException;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -61,6 +62,20 @@ public class ConnectorProperties {
       return property.getDefaultValue();
     }
     return stringValue;
+  }
+
+  static void printHelp(@Nonnull Appendable out, @Nonnull Connector connector) throws IOException {
+    for (Enum<? extends ConnectorProperty> enumConstant :
+        connector.getConnectorProperties().getEnumConstants()) {
+      ConnectorProperty property = (ConnectorProperty) enumConstant;
+      out.append("        ")
+          .append("-D")
+          .append(property.getName())
+          .append("=value")
+          .append("\t\t")
+          .append(property.getDescription())
+          .append("\n");
+    }
   }
 
   private static ImmutableMap<String, String> buildDefinitionMap(

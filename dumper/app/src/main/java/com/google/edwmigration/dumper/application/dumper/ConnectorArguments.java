@@ -538,17 +538,7 @@ public class ConnectorArguments extends DefaultArguments {
     for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
       out.append("        ").append(descriptor.toString()).append("\n");
     }
-    for (Enum<? extends ConnectorProperty> enumConstant :
-        connector.getConnectorProperties().getEnumConstants()) {
-      ConnectorProperty property = (ConnectorProperty) enumConstant;
-      out.append("        ")
-          .append("-D")
-          .append(property.getName())
-          .append("=value")
-          .append("\t\t")
-          .append(property.getDescription())
-          .append("\n");
-    }
+    ConnectorProperties.printHelp(out, connector);
   }
 
   @Nonnull
