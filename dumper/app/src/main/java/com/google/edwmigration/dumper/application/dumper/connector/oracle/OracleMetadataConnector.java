@@ -92,12 +92,13 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
         throws Exception {
       LOG.error("All the select tasks failed:");
-      for (int i = 1; i <= tasks.length; i++) {
+      int i = 1;
+      for (GroupTask<?> task : tasks) {
         LOG.error(
             "({}): {} : {}",
-            i,
-            tasks[i].getName(),
-            ExceptionUtils.getRootCauseMessage(tasks[i].getException()));
+            i++,
+            task.getName(),
+            ExceptionUtils.getRootCauseMessage(task.getException()));
       }
       return null;
     }
