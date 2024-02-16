@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import com.google.auto.service.AutoService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteSink;
@@ -91,10 +92,10 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     }
   }
 
-  private static class SelectXmlTask extends AbstractJdbcTask<Void> implements GroupTask<Void> {
+  static class SelectXmlTask extends AbstractJdbcTask<Void> implements GroupTask<Void> {
 
-    private final String rowSql;
-    private final String xmlSql;
+    @VisibleForTesting final String rowSql;
+    @VisibleForTesting final String xmlSql;
     private final int ownerIndex;
     private final int nameIndex;
     private Exception throwable;
