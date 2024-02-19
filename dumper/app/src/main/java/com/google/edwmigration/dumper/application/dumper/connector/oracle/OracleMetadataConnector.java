@@ -58,7 +58,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     public Exception getException();
   }
 
-  private static class SelectTask extends JdbcSelectTask implements GroupTask<Summary> {
+  static class SelectTask extends JdbcSelectTask implements GroupTask<Summary> {
 
     private Exception throwable;
 
@@ -148,7 +148,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     return new SelectTask(
         file,
         String.format(
-            "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s %s",
+            "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s%s",
             ownerColumn, nameColumn, objectType, nameColumn, ownerColumn, table, where));
   }
 
@@ -209,98 +209,98 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         Arguments.ZIP_ENTRY_NAME_DBA,
         "DBA_Arguments",
         Arguments.ZIP_ENTRY_NAME_ALL,
-        "All_Arguments",
+        "ALL_Arguments",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Catalog.ZIP_ENTRY_NAME_DBA,
         "DBA_Catalog",
         Catalog.ZIP_ENTRY_NAME_ALL,
-        "All_Catalog",
+        "ALL_Catalog",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Constraints.ZIP_ENTRY_NAME_DBA,
         "DBA_Constraints",
         Constraints.ZIP_ENTRY_NAME_ALL,
-        "All_Constraints",
+        "ALL_Constraints",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Indexes.ZIP_ENTRY_NAME_DBA,
         "DBA_Indexes",
         Indexes.ZIP_ENTRY_NAME_ALL,
-        "All_Indexes",
+        "ALL_Indexes",
         whereCondOwner);
     buildSelectStarTask(
         out,
         MViews.ZIP_ENTRY_NAME_DBA,
         "DBA_MViews",
         MViews.ZIP_ENTRY_NAME_ALL,
-        "All_MViews",
+        "ALL_MViews",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Operators.ZIP_ENTRY_NAME_DBA,
         "DBA_Operators",
         Operators.ZIP_ENTRY_NAME_ALL,
-        "All_Operators",
+        "ALL_Operators",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Part_key_columns.ZIP_ENTRY_NAME_DBA,
         "DBA_Part_key_columns",
         Part_key_columns.ZIP_ENTRY_NAME_ALL,
-        "All_Part_key_columns",
+        "ALL_Part_key_columns",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Plsql_Types.ZIP_ENTRY_NAME_DBA,
         "DBA_Plsql_Types",
         Plsql_Types.ZIP_ENTRY_NAME_ALL,
-        "All_Plsql_Types",
+        "ALL_Plsql_Types",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Procedures.ZIP_ENTRY_NAME_DBA,
         "DBA_Procedures",
         Procedures.ZIP_ENTRY_NAME_ALL,
-        "All_Procedures",
+        "ALL_Procedures",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Tab_Columns.ZIP_ENTRY_NAME_DBA,
         "DBA_Tab_Columns",
         Tab_Columns.ZIP_ENTRY_NAME_ALL,
-        "All_Tab_Columns",
+        "ALL_Tab_Columns",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Tab_Partitions.ZIP_ENTRY_NAME_DBA,
         "DBA_Tab_Partitions",
         Tab_Partitions.ZIP_ENTRY_NAME_ALL,
-        "All_Tab_Partitions",
+        "ALL_Tab_Partitions",
         whereCondTableOwner);
     buildSelectStarTask(
         out,
         Tables.ZIP_ENTRY_NAME_DBA,
         "DBA_Tables",
         Tables.ZIP_ENTRY_NAME_ALL,
-        "All_Tables",
+        "ALL_Tables",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Types.ZIP_ENTRY_NAME_DBA,
         "DBA_Types",
         Types.ZIP_ENTRY_NAME_ALL,
-        "All_Types",
+        "ALL_Types",
         whereCondOwner);
     buildSelectStarTask(
         out,
         Views.ZIP_ENTRY_NAME_DBA,
         "DBA_Views",
         Views.ZIP_ENTRY_NAME_ALL,
-        "All_Views",
+        "ALL_Views",
         whereCondOwner);
 
     buildSelectXmlTask(

@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 import static java.lang.String.format;
 
 import com.google.common.io.ByteSink;
@@ -120,7 +121,7 @@ public abstract class AbstractTask<T> implements Task<T> {
    * @return the source data description
    */
   protected static String createSourceDataDescriptionForQuery(String query) {
-    return "from\n        " + query;
+    return joinSummaryDoubleLine("from", query);
   }
 
   @Override

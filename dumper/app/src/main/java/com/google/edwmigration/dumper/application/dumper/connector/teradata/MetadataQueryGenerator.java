@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.eq;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
@@ -28,6 +27,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.selectTop;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.union;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyWhen;
 import static java.util.stream.Collectors.toList;
 
 import com.google.auto.value.AutoValue;
@@ -82,7 +82,7 @@ class MetadataQueryGenerator {
   static String createSelectForAllTempTablesVX(List<String> databases) {
     return createSimpleSelect(
         "DBC.AllTempTablesVX",
-        optionalIf(
+        optionallyWhen(
             !databases.isEmpty(),
             () ->
                 in(
@@ -110,7 +110,7 @@ class MetadataQueryGenerator {
 
   static String createSelectForDiskSpaceV(OptionalLong rowCount, Optional<Expression> condition) {
     Optional<LimitedSelectParams> params =
-        optionalIf(
+        optionallyWhen(
             rowCount.isPresent(),
             () -> LimitedSelectParams.create(rowCount.getAsLong(), "CurrentPerm"));
     return select("%s")
@@ -123,7 +123,7 @@ class MetadataQueryGenerator {
       String dbKind, OptionalLong rowCount) {
     Expression dbKindCondition = eq(identifier("DBKind"), stringLiteral(dbKind));
     Optional<LimitedSelectParams> params =
-        optionalIf(
+        optionallyWhen(
             rowCount.isPresent(),
             () -> LimitedSelectParams.create(rowCount.getAsLong(), "PermSpace"));
     return createLimitedSelect(params, "DBC.DatabasesV", Optional.of(dbKindCondition));

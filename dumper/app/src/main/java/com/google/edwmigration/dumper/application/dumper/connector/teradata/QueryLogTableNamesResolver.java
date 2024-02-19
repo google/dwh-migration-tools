@@ -22,7 +22,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.ASSESSMENT_DEF_LOG_TABLE;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataLogsConnectorProperty.QUERY_LOGS_TABLE;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataLogsConnector.TeradataLogsConnectorProperty.SQL_LOGS_TABLE;
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.nonEmpty;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyIfNotEmpty;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -81,7 +81,7 @@ class QueryLogTableNamesResolver {
     boolean alternateQueryLogTableSpecified = arguments.isDefinitionSpecified(QUERY_LOGS_TABLE);
     boolean alternateSqlLogTableSpecified = arguments.isDefinitionSpecified(SQL_LOGS_TABLE);
     String queryLogTable =
-        nonEmpty(arguments.getDefinition(QUERY_LOGS_TABLE))
+        optionallyIfNotEmpty(arguments.getDefinition(QUERY_LOGS_TABLE))
             .orElse(arguments.isAssessment() ? ASSESSMENT_DEF_LOG_TABLE : DEF_LOG_TABLE);
     String sqlLogTable = arguments.getDefinitionOrDefault(SQL_LOGS_TABLE);
     if (alternateQueryLogTableSpecified && !alternateSqlLogTableSpecified) {

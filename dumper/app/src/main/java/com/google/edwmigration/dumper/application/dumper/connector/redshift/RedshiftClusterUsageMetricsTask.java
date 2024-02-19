@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -212,6 +213,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
 
   @Override
   public String describeSourceData() {
-    return "Write " + zipEntryName + " from AWS API request:\n        " + toCallDescription();
+    return joinSummaryDoubleLine(
+        "Write " + zipEntryName + " from AWS API request:", toCallDescription());
   }
 }

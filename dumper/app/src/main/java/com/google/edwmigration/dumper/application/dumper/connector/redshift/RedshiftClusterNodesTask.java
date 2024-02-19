@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 import static java.util.stream.Collectors.toList;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -65,9 +66,7 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
 
   @Override
   public String describeSourceData() {
-    return "Write "
-        + ClusterNodes.ZIP_ENTRY_NAME
-        + " from AWS API request:\n        "
-        + toCallDescription();
+    return joinSummaryDoubleLine(
+        "Write " + ClusterNodes.ZIP_ENTRY_NAME + " from AWS API request:", toCallDescription());
   }
 }

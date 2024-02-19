@@ -23,10 +23,10 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSelectForTableTextV;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.MetadataQueryGenerator.createSimpleSelect;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.formatQuery;
-import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.optionalIf;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.identifier;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.TeradataSelectBuilder.in;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.SelectExpression.select;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyWhen;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.Range;
@@ -217,7 +217,7 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
 
   private Optional<Expression> constructDatabaseNameCondition(
       ConnectorArguments arguments, String columnName) {
-    return optionalIf(
+    return optionallyWhen(
         !arguments.getDatabases().isEmpty(),
         () -> in(identifier(columnName), arguments.getDatabases()));
   }

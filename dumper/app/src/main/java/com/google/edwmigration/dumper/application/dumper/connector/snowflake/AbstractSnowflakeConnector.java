@@ -78,11 +78,15 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       // FWIW we can/should totally use a Properties object here and pass it to
       // SimpleDriverDataSource rather than messing with the URL.
       List<String> optionalArguments = new ArrayList<>();
-      if (arguments.getWarehouse() != null)
+      if (arguments.getWarehouse() != null) {
         optionalArguments.add("warehouse=" + arguments.getWarehouse());
-      if (arguments.getRole() != null) optionalArguments.add("role=" + arguments.getRole());
-      if (!optionalArguments.isEmpty())
+      }
+      if (arguments.getRole() != null) {
+        optionalArguments.add("role=" + arguments.getRole());
+      }
+      if (!optionalArguments.isEmpty()) {
         buf.append("?").append(Joiner.on("&").join(optionalArguments));
+      }
       url = buf.toString();
     }
     String databaseName =
