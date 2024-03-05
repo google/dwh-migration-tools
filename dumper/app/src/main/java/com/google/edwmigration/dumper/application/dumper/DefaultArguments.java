@@ -16,9 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyIfNotEmpty;
-import static java.util.Arrays.stream;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
@@ -27,7 +24,6 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -86,43 +82,6 @@ public class DefaultArguments {
       buf.append('/');
       joiner.appendTo(buf, V_FALSE);
       return buf.toString();
-    }
-  }
-
-  public enum HadoopRpcProtection {
-    AUTHENTICATION("auth"),
-    INTEGRITY("auth-int"),
-    PRIVACY("auth-conf");
-
-    private final String qopValue;
-
-    HadoopRpcProtection(String qopValue) {
-      this.qopValue = qopValue;
-    }
-  }
-
-  public interface Converter<V> {
-
-    Optional<V> convert(String value);
-  }
-
-  public static class HadoopSaslQopConverter implements Converter<String> {
-
-    public static HadoopSaslQopConverter INSTANCE = new HadoopSaslQopConverter();
-
-    private HadoopSaslQopConverter() {}
-
-    @Override
-    public Optional<String> convert(String value) throws MetadataDumperUsageException {
-      return optionallyIfNotEmpty(value).map(this::convertInternal);
-    }
-
-    private String convertInternal(String value) {
-      return stream(HadoopRpcProtection.values())
-          .filter(qop -> qop.name().equalsIgnoreCase(value))
-          .findFirst()
-          .map(qop -> qop.qopValue)
-          .orElseThrow(() -> new MetadataDumperUsageException("Not a valid QOP: " + value));
     }
   }
 

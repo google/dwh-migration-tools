@@ -20,12 +20,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopRpcProtection;
-import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQopConverter;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
+import com.google.edwmigration.dumper.application.dumper.connector.hive.HadoopSaslQopConverter.HadoopRpcProtection;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -251,7 +250,9 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     RPC_PROTECTION(
         "rpc.protection",
         "The 'hadoop.rpc.protection' configuration of your cluster. This determines the QOP of the"
-            + " SASL connection between hadoop and the dumper.",
+            + " SASL connection between hadoop and the dumper. Allowed values: '"
+            + HadoopRpcProtection.ALLOWED_VALUES
+            + "'.",
         HadoopRpcProtection.PRIVACY.name());
 
     private final String name;
@@ -303,8 +304,8 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
                 HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK)
             .withKerberosUrl(arguments.getHiveKerberosUrl());
 
-    HadoopSaslQopConverter.INSTANCE
-        .convert(arguments.getDefinitionOrDefault(HiveConnectorProperty.RPC_PROTECTION))
+    HadoopSaslQopConverter.convert(
+            arguments.getDefinitionOrDefault(HiveConnectorProperty.RPC_PROTECTION))
         .ifPresent(thriftClientBuilder::withSaslQop);
 
     return new ThriftClientHandle(thriftClientBuilder, arguments.getThreadPoolSize());

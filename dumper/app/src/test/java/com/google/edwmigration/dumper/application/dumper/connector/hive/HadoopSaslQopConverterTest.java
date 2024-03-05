@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper;
+package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.google.edwmigration.dumper.application.dumper.DefaultArguments.HadoopSaslQopConverter;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,14 +31,14 @@ public class HadoopSaslQopConverterTest {
 
   @Test
   public void convert_success() {
-    String qop = HadoopSaslQopConverter.INSTANCE.convert("integrity").get();
+    String qop = HadoopSaslQopConverter.convert("integrity").get();
 
     assertEquals("auth-int", qop);
   }
 
   @Test
   public void convert_emptyString() {
-    assertFalse(HadoopSaslQopConverter.INSTANCE.convert("").isPresent());
+    assertFalse(HadoopSaslQopConverter.convert("").isPresent());
   }
 
   @Test
@@ -47,9 +47,12 @@ public class HadoopSaslQopConverterTest {
         Assert.assertThrows(
             MetadataDumperUsageException.class,
             () -> {
-              Optional<String> ignored = HadoopSaslQopConverter.INSTANCE.convert("invalid-value");
+              Optional<String> ignored = HadoopSaslQopConverter.convert("auth");
             });
 
-    assertEquals("Not a valid QOP: invalid-value", exception.getMessage());
+    assertEquals(
+        "Invalid value 'auth' for property 'hiveql.rpc.protection'."
+            + " Allowed values are: 'authentication, integrity, privacy'.",
+        exception.getMessage());
   }
 }
