@@ -190,7 +190,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               outTable.createTime = table.getCreateTime();
               outTable.lastAccessTime = table.getLastAccessTime();
               outTable.owner = table.getOwner();
-              outTable.viewText = table.getOriginalViewText();
+              outTable.viewText = table.getExpandedViewText();
               outTable.location = table.getLocation();
               outTable.lastDdlTime = table.getLastDdlTime();
               outTable.totalSize = table.getTotalSize();
