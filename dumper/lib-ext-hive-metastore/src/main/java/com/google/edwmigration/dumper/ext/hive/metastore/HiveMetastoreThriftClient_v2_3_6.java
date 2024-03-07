@@ -237,6 +237,31 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
         return table.isSetSd() && table.getSd().isCompressed();
       }
 
+      @CheckForNull
+      @Override
+      public String getSerializationLib(){
+        return (table.isSetSd() && table.getSd().isSetSerdeInfo() && table.getSd().getSerdeInfo().isSetSerializationLib()
+            ? table.getSd().getSerdeInfo().getSerializationLib()
+            : null);
+      }
+
+      @CheckForNull
+      @Override
+      public String getInputFormat(){
+        return (table.isSetSd() && table.getSd().isSetInputFormat()
+            ? table.getSd().getInputFormat()
+            : null);
+      }
+
+      @CheckForNull
+      @Override
+      public String getOutputFormat(){
+        return (table.isSetSd() && table.getSd().isSetOutputFormat()
+            ? table.getSd().getOutputFormat()
+            : null);
+      }
+
+
       @Nonnull
       @Override
       public List<? extends Field> getFields() throws Exception {

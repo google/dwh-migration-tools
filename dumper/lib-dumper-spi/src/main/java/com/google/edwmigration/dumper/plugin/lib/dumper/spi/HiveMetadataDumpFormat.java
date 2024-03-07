@@ -122,6 +122,10 @@ public interface HiveMetadataDumpFormat {
       @CheckForNull public Integer bucketsCount;
       @CheckForNull public Boolean isCompressed;
 
+      @CheckForNull public String serializationLib;
+      @CheckForNull public String inputFormat;
+      @CheckForNull public String outputFormat;
+
       @CheckForNull public List<FieldMetadata> fields;
       @CheckForNull public List<PartitionKeyMetadata> partitionKeys;
       @CheckForNull public List<PartitionMetadata> partitions;
