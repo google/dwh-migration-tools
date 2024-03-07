@@ -179,7 +179,6 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
       @CheckForNull
       @Override
       public String getLocation() {
-        table.getSd().getSerdeInfo().getName();
         return (table.isSetSd() && table.getSd().isSetLocation()
             ? table.getSd().getLocation()
             : null);
