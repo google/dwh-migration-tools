@@ -240,15 +240,17 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
 
       @CheckForNull
       @Override
-      public String getSerializationLib(){
-        return (table.isSetSd() && table.getSd().isSetSerdeInfo() && table.getSd().getSerdeInfo().isSetSerializationLib()
+      public String getSerializationLib() {
+        return (table.isSetSd()
+                && table.getSd().isSetSerdeInfo()
+                && table.getSd().getSerdeInfo().isSetSerializationLib()
             ? table.getSd().getSerdeInfo().getSerializationLib()
             : null);
       }
 
       @CheckForNull
       @Override
-      public String getInputFormat(){
+      public String getInputFormat() {
         return (table.isSetSd() && table.getSd().isSetInputFormat()
             ? table.getSd().getInputFormat()
             : null);
@@ -256,7 +258,7 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
 
       @CheckForNull
       @Override
-      public String getOutputFormat(){
+      public String getOutputFormat() {
         return (table.isSetSd() && table.getSd().isSetOutputFormat()
             ? table.getSd().getOutputFormat()
             : null);
