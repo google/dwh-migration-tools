@@ -7,4 +7,7 @@ if [ ! -x "$BIN" ] ; then
   (cd "${BASE_DIR}" && ./gradlew --parallel :dumper:app:installDist)
 fi
 
-exec "$BIN" "$@"
+# "ALL-UNNAMED" option is required as a workaround for Snowflake JDBC Driver error.
+_JAVA_OPTIONS="--add-opens=java.base/java.nio=ALL-UNNAMED"
+
+exec env _JAVA_OPTIONS="$_JAVA_OPTIONS" "$BIN" "$@"
