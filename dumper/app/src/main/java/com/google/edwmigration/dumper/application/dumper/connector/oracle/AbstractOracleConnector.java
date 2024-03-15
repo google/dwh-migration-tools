@@ -139,7 +139,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
   @Nonnull
   @Override
-  public Handle open(ConnectorArguments arguments) throws Exception {
+  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
     DataSource dataSource =
         new SimpleDriverDataSource(driver, buildUrl(arguments), buildProperties(arguments));

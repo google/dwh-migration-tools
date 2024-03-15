@@ -672,7 +672,8 @@ public interface OracleMetadataDumpFormat {
 
   interface XmlFunctions {
 
-    final String ZIP_ENTRY_NAME = "Functions-XML.csv";
+    final String ZIP_ENTRY_NAME_DBA = "DBA.Functions-XML.csv";
+    final String ZIP_ENTRY_NAME_ALL = "ALL.Functions-XML.csv";
 
     enum Header {
       OWNER,
