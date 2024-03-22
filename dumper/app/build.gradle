@@ -574,6 +574,10 @@ tasks.named('check') {
     dependsOn 'checkLicense'
 }
 
+tasks.named('distTar') {
+    dependsOn 'installDist'
+}
+
 tasks.register('generateSourceMirror', Copy) {
     from {
         dependencies.createArtifactResolutionQuery()
