@@ -578,6 +578,10 @@ tasks.named('distTar') {
     dependsOn 'installDist'
 }
 
+tasks.named('distZip') {
+    dependsOn 'installDist'
+}
+
 tasks.register('generateSourceMirror', Copy) {
     from {
         dependencies.createArtifactResolutionQuery()
