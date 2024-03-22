@@ -94,22 +94,42 @@ dependencies {
 
 startScripts {
     classpath = files('$APP_HOME/lib/*')
+    defaultJvmOpts = ["--add-opens=java.base/java.nio=ALL-UNNAMED"]
+}
+
+task createStartScriptForJava8(type: CreateStartScripts) {
+    mainClass = tasks.startScripts.mainClass
+    applicationName = 'dwh-migration-dumper-java8'
+    outputDir = tasks.startScripts.outputDir
+    classpath = tasks.startScripts.classpath
+}
+
+tasks.named('installDist') {
+    dependsOn 'createStartScriptForJava8'
+    dependsOn 'cloudExtractorStartScripts'
+    dependsOn 'cloudExtractorStartScriptsForJava8'
 }
 
 application {
     // Define the main class for the application.
     mainClass = 'com.google.edwmigration.dumper.application.dumper.Main'
     applicationName = 'dwh-migration-dumper'
-
-    // "ALL-UNNAMED" option is required as a workaround for Snowflake JDBC Driver error.
-    applicationDefaultJvmArgs = ["--add-opens=java.base/java.nio=ALL-UNNAMED"]
 }
 
-task cloudExtractorStartScripts(type: CreateStartScripts) {
+task cloudExtractorStartScriptsForJava8(type: CreateStartScripts) {
     outputDir = layout.buildDirectory.dir('install/cloud-extractor/bin').get().asFile
     classpath = tasks.startScripts.classpath
     mainClass = 'com.google.edwmigration.dumper.application.dumper.clouddumper.Main'
     applicationName = 'dwh-cloud-extractor'
+}
+
+task cloudExtractorStartScripts(type: CreateStartScripts) {
+    outputDir = tasks.cloudExtractorStartScriptsForJava8.outputDir
+    classpath = tasks.cloudExtractorStartScriptsForJava8.classpath
+    mainClass = tasks.cloudExtractorStartScriptsForJava8.mainClass
+    applicationName = 'dwh-cloud-extractor-java8'
+    defaultJvmOpts = ["--add-opens=java.base/java.nio=ALL-UNNAMED"]
+    dependsOn 'cloudExtractorStartScriptsForJava8'
 }
 
 licenseReport {
