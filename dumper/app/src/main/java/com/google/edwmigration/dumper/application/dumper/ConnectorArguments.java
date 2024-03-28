@@ -665,22 +665,26 @@ public class ConnectorArguments extends DefaultArguments {
   public String getUserOrFail() {
     String user = getOptions().valueOf(optionUser);
     if (user == null) {
-      throw new MetadataDumperUsageException("Required username was not provided.");
+      throw new MetadataDumperUsageException(
+        "Required username was not provided. Please use the " + OPT_USER +
+        " flag to provide the username");
     }
     return user;
   }
 
-  @CheckForNull
-  public String getPasswordIfProvided() {
-    if (getOptions().has(optionPass)) {
-      return getPassword();
-    } else {
-      return null;
-    }
+  /**
+   * Get a password depending on the --password flag.
+   *
+   * @return null if the --password flag is not provided
+   * otherwise, the result of getPasswordOrPrompt()
+   */
+  @Nonnull
+  public Optional<String> getPasswordIfFlagProvided() {
+    return optionallyWhen(getOptions().has(optionPass), this::getPasswordOrPrompt);
   }
 
   @Nonnull
-  public String getPassword() {
+  public String getPasswordOrPrompt() {
     String password = getOptions().valueOf(optionPass);
     if (password != null) {
       return password;

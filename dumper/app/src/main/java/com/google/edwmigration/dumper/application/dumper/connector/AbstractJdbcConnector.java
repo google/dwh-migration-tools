@@ -170,7 +170,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
     if (!driver.acceptsURL(url))
       throw new MetadataDumperUsageException(
           "JDBC driver " + driver + " does not accept URL " + url);
-    String password = arguments.getPasswordIfProvided();
+    String password = arguments.getPasswordIfFlagProvided().orElse(null);
     return new JdbcDataSource(driver, url, arguments.getUser(), password);
   }
 }

@@ -34,6 +34,7 @@ import java.sql.Driver;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
@@ -139,6 +140,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
   @Nonnull
   private String makeJdbcUrlPostgresql(ConnectorArguments arguments)
       throws MetadataDumperUsageException, UnsupportedEncodingException {
+    String password = arguments.getPasswordIfFlagProvided().orElse(null);
     return "jdbc:postgresql://"
         + requireNonNull(arguments.getHost(), "--host should be specified")
         + ":"
@@ -147,8 +149,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
         + Iterables.getFirst(arguments.getDatabases(), "") //
         + new JdbcPropBuilder("?=&")
             .propOrWarn("user", arguments.getUser(), "--user must be specified")
-            .propOrWarn(
-                "password", arguments.getPasswordIfProvided(), "--password must be specified")
+            .propOrWarn("password", password, "--password must be specified")
             .prop("ssl", "true")
             .toJdbcPart();
   }
@@ -156,6 +157,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
   @Nonnull
   private String makeJdbcUrlRedshiftSimple(ConnectorArguments arguments)
       throws MetadataDumperUsageException, UnsupportedEncodingException {
+    String password = arguments.getPasswordIfFlagProvided().orElse(null);
     return "jdbc:redshift://"
         + requireNonNull(arguments.getHost(), "--host should be specified")
         + ":"
@@ -164,8 +166,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
         + Iterables.getFirst(arguments.getDatabases(), "") //
         + new JdbcPropBuilder("?=&")
             .propOrWarn("UID", arguments.getUser(), "--user must be specified")
-            .propOrWarn(
-                "PWD", arguments.getPasswordIfProvided(), "--password must be specified")
+            .propOrWarn("PWD", password, "--password must be specified")
             .toJdbcPart();
   }
 
@@ -209,6 +210,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     //        LOG.debug("DRIVER CAN IAM " + driver.acceptsURL("jdbc:redshift:iam://host/db"));
     //        LOG.debug("DRIVER CAN PG " + driver.acceptsURL("jdbc:postgresql://host/db"));
     String url = arguments.getUri();
+    Optional<String> password = arguments.getPasswordIfFlagProvided();
     if (url == null) {
       // driver can be pg or rs ( including rs-iam )
       // options can be username/passowrd , or iam secrets.
@@ -216,7 +218,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
       boolean isDriverRedshift = driver.acceptsURL("jdbc:redshift:iam://host/db");
       // there may be no --iam options, in which case default ~/.aws/credentials to be used.
       // so this is the only reliable check
-      boolean isAuthenticationPassword = arguments.getPasswordIfProvided() != null;
+      boolean isAuthenticationPassword = password.isPresent();
 
       if (!isDriverRedshift) {
         if (!isAuthenticationPassword)
@@ -236,8 +238,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     //   DSILogLevel=0..6;LogPath=C:\temp
     //   LogLevel 0/1
     LOG.trace("URI is " + url);
-    String password = arguments.getPasswordIfProvided();
-    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password.orElse(null));
 
     return JdbcHandle.newPooledJdbcHandle(dataSource, arguments.getThreadPoolSize());
   }

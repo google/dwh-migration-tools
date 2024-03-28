@@ -12,22 +12,20 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class AbstractOracleConnectorTest {
-  // provide mocks only with a username and a password
-  // ignore the useFetchSize... property, because it has a default
-  private static final String EXPECTED_PASSWORD = "p4ssw0rd";
-  private static final String EXPECTED_USER = "user123";
+  private static final String EXAMPLE_PASSWORD = "p4ssw0rd";
+  private static final String EXAMPLE_USER = "user123";
 
   private final ConnectorArguments arguments = mock(ConnectorArguments.class);
   private final AbstractOracleConnector connector = new OracleMetadataConnector();
 
   @Test
   public void testValid() {
-    when(arguments.getPassword()).thenReturn(EXPECTED_PASSWORD);
-    when(arguments.getUserOrFail()).thenReturn(EXPECTED_USER);
+    when(arguments.getPasswordOrPrompt()).thenReturn(EXAMPLE_PASSWORD);
+    when(arguments.getUserOrFail()).thenReturn(EXAMPLE_USER);
 
     Properties actual = connector.buildProperties(arguments);
 
-    assertEquals(EXPECTED_PASSWORD, actual.getProperty("password"));
-    assertEquals(EXPECTED_USER, actual.getProperty("user"));
+    assertEquals(EXAMPLE_PASSWORD, actual.getProperty("password"));
+    assertEquals(EXAMPLE_USER, actual.getProperty("user"));
   }
 }
