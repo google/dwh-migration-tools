@@ -110,7 +110,10 @@ main() {
     die "ZIP file did not contain dwh-migration-tools."
   fi
 
+  . "${dwh_home}/dumper/app/src/main/sh/java_versioning.sh"
   dwh_cloud_extractor="${dwh_home}/bin/dwh-cloud-extractor"
+  dwh_cloud_extractor=$(is_java_greater_than_8 && echo "${dwh_home}/bin/dwh-cloud-extractor" || echo "${dwh_home}/bin/dwh-cloud-extractor-java8")
+
   if [[ ! -x "${dwh_cloud_extractor}" ]]; then
     die "Could not find cloud extractor bin. Got no executable '${dwh_cloud_extractor}'."
   fi
