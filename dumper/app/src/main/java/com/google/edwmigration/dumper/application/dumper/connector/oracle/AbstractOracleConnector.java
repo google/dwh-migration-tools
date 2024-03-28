@@ -139,17 +139,18 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
   @Nonnull
   @Override
-  public Handle open(ConnectorArguments arguments) throws Exception {
+  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
     DataSource dataSource =
         new SimpleDriverDataSource(driver, buildUrl(arguments), buildProperties(arguments));
     return new JdbcHandle(dataSource);
   }
 
-  private Properties buildProperties(ConnectorArguments arguments) {
+  @Nonnull
+  Properties buildProperties(@Nonnull ConnectorArguments arguments) {
     Properties properties = new Properties();
-    properties.setProperty("user", arguments.getUser());
-    properties.setProperty("password", arguments.getPassword());
+    properties.setProperty("user", arguments.getUserOrFail());
+    properties.setProperty("password", arguments.getPasswordOrPrompt());
     properties.setProperty(
         "useFetchSizeWithLongColumn",
         PropertyParser.getString(
