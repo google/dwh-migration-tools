@@ -317,8 +317,8 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
     }
 
     Driver driver = newDriver(arguments.getDriverPaths(), "org.netezza.Driver");
-    DataSource dataSource =
-        new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
+    String password = arguments.getPasswordIfProvided();
+    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
     return new JdbcHandle(dataSource);
   }
 

@@ -32,8 +32,8 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
+import com.google.edwmigration.dumper.application.dumper.io.PasswordReader;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -412,9 +412,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   private ConnectorProperties connectorProperties;
 
-  // because of quoting of special characeters on command line... the -password is made optional,
-  // and if not given, asked at the console.
-  private String askedPassword;
+  private final PasswordReader passwordReader = new PasswordReader();
 
   public ConnectorArguments(@Nonnull String... args) throws IOException {
     super(args);
@@ -663,31 +661,31 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionUser);
   }
 
-  // -password has optional argument, and if not provied
-  // should be asked from command line
-  @CheckForNull
-  public String getPassword() {
-    if (!getOptions().has(optionPass)) {
-      return null;
+  @Nonnull
+  public String getUserOrFail() {
+    String user = getOptions().valueOf(optionUser);
+    if (user == null) {
+      throw new MetadataDumperUsageException("Required username was not provided.");
     }
-    String pass = getOptions().valueOf(optionPass);
-    if (pass != null) {
-      return pass;
-    }
-    // Else need to ask & save.
-    if (askedPassword != null) {
-      return askedPassword;
-    }
+    return user;
+  }
 
-    Console console = System.console();
-    if (console == null) {
-      LOG.info("Cannot prompt for password, Console not available");
-      return null;
+  @CheckForNull
+  public String getPasswordIfProvided() {
+    if (getOptions().has(optionPass)) {
+      return getPassword();
     } else {
-      console.printf("Password: ");
-      pass = new String(console.readPassword());
-      askedPassword = pass;
-      return askedPassword;
+      return null;
+    }
+  }
+
+  @Nonnull
+  public String getPassword() {
+    String password = getOptions().valueOf(optionPass);
+    if (password != null) {
+      return password;
+    } else {
+      return passwordReader.getOrPrompt();
     }
   }
 

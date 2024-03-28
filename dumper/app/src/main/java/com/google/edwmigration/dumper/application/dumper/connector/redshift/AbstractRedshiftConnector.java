@@ -147,7 +147,8 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
         + Iterables.getFirst(arguments.getDatabases(), "") //
         + new JdbcPropBuilder("?=&")
             .propOrWarn("user", arguments.getUser(), "--user must be specified")
-            .propOrWarn("password", arguments.getPassword(), "--password must be specified")
+            .propOrWarn(
+                "password", arguments.getPasswordIfProvided(), "--password must be specified")
             .prop("ssl", "true")
             .toJdbcPart();
   }
@@ -163,7 +164,8 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
         + Iterables.getFirst(arguments.getDatabases(), "") //
         + new JdbcPropBuilder("?=&")
             .propOrWarn("UID", arguments.getUser(), "--user must be specified")
-            .propOrWarn("PWD", arguments.getPassword(), "--password must be specified")
+            .propOrWarn(
+                "PWD", arguments.getPasswordIfProvided(), "--password must be specified")
             .toJdbcPart();
   }
 
@@ -214,7 +216,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
       boolean isDriverRedshift = driver.acceptsURL("jdbc:redshift:iam://host/db");
       // there may be no --iam options, in which case default ~/.aws/credentials to be used.
       // so this is the only reliable check
-      boolean isAuthenticationPassword = arguments.getPassword() != null;
+      boolean isAuthenticationPassword = arguments.getPasswordIfProvided() != null;
 
       if (!isDriverRedshift) {
         if (!isAuthenticationPassword)
@@ -234,8 +236,8 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     //   DSILogLevel=0..6;LogPath=C:\temp
     //   LogLevel 0/1
     LOG.trace("URI is " + url);
-    DataSource dataSource =
-        new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
+    String password = arguments.getPasswordIfProvided();
+    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
 
     return JdbcHandle.newPooledJdbcHandle(dataSource, arguments.getThreadPoolSize());
   }
