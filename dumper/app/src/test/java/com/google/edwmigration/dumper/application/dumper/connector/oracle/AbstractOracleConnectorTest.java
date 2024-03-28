@@ -22,7 +22,7 @@ public class AbstractOracleConnectorTest {
 
   @Test
   public void testValid() {
-    when(arguments.getPassword()).thenReturn(EXPECTED_PASSWORD);
+    when(arguments.getPasswordOrPrompt()).thenReturn(EXPECTED_PASSWORD);
     when(arguments.getUserOrFail()).thenReturn(EXPECTED_USER);
 
     Properties actual = connector.buildProperties(arguments);

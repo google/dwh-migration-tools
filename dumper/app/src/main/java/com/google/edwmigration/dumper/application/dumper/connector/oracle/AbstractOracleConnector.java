@@ -150,7 +150,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   Properties buildProperties(@Nonnull ConnectorArguments arguments) {
     Properties properties = new Properties();
     properties.setProperty("user", arguments.getUserOrFail());
-    properties.setProperty("password", arguments.getPassword());
+    properties.setProperty("password", arguments.getPasswordOrPrompt());
     properties.setProperty(
         "useFetchSizeWithLongColumn",
         PropertyParser.getString(
