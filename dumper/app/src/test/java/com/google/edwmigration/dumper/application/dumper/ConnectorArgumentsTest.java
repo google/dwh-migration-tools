@@ -74,7 +74,7 @@ public class ConnectorArgumentsTest {
     ConnectorArguments arguments = new ConnectorArguments("--connector", "abcABC123");
     Runnable action = () -> arguments.getUserOrFail();
     String expectedMessage =
-      "Required username was not provided. Please use the '--user' flag to provide the username.";
+        "Required username was not provided. Please use the '--user' flag to provide the username.";
 
     Exception exception = assertThrows(MetadataDumperUsageException.class, action::run);
 
