@@ -117,8 +117,8 @@ public class SqlServerMetadataConnector extends AbstractJdbcConnector
     // LOG.info("Connecting to URL {}", url);
     Driver driver =
         newDriver(arguments.getDriverPaths(), "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    DataSource dataSource =
-        new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
+    String password = arguments.getPasswordIfFlagProvided().orElse(null);
+    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
     return new JdbcHandle(dataSource);
   }
 }

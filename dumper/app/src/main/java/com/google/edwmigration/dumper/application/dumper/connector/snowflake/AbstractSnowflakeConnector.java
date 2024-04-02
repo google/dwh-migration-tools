@@ -96,8 +96,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
     Driver driver =
         newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-    DataSource dataSource =
-        new SimpleDriverDataSource(driver, url, arguments.getUser(), arguments.getPassword());
+    String password = arguments.getPasswordIfFlagProvided().orElse(null);
+    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
     JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
     setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
     return jdbcHandle;

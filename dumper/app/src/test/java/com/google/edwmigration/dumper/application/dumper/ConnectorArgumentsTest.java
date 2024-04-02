@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
@@ -32,7 +33,7 @@ public class ConnectorArgumentsTest {
   @Test
   public void getDatabases_success() throws IOException {
     ConnectorArguments arguments =
-        new ConnectorArguments(new String[] {"--connector", "teradata", "--database", "sample-db"});
+        new ConnectorArguments("--connector", "teradata", "--database", "sample-db");
 
     List<String> databaseNames = arguments.getDatabases();
 
@@ -41,7 +42,7 @@ public class ConnectorArgumentsTest {
 
   @Test
   public void getDatabases_databaseOptionNotSpecified_success() throws IOException {
-    ConnectorArguments arguments = new ConnectorArguments(new String[] {"--connector", "teradata"});
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "teradata");
 
     List<String> databaseNames = arguments.getDatabases();
 
@@ -51,7 +52,7 @@ public class ConnectorArgumentsTest {
   @Test
   public void getDatabases_trimDatabaseNames() throws IOException {
     ConnectorArguments arguments =
-        new ConnectorArguments(new String[] {"--connector", "teradata", "--database", "db1, db2 "});
+        new ConnectorArguments("--connector", "teradata", "--database", "db1, db2 ");
 
     List<String> databaseNames = arguments.getDatabases();
 
@@ -61,11 +62,33 @@ public class ConnectorArgumentsTest {
   @Test
   public void getDatabases_trimDatabaseNamesFilteringOutBlankStrings() throws IOException {
     ConnectorArguments arguments =
-        new ConnectorArguments(
-            new String[] {"--connector", "teradata", "--database", "db1, ,,, db2 "});
+        new ConnectorArguments("--connector", "teradata", "--database", "db1, ,,, db2 ");
 
     List<String> databaseNames = arguments.getDatabases();
 
     assertEquals(ImmutableList.of("db1", "db2"), databaseNames);
+  }
+
+  @Test
+  public void getUserOrFail_noUserFlag_throwsException() throws IOException {
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "abcABC123");
+
+    Exception exception =
+        assertThrows(MetadataDumperUsageException.class, arguments::getUserOrFail);
+
+    assertEquals(
+        "Required username was not provided. Please use the '--user' flag to provide the username.",
+        exception.getMessage());
+  }
+
+  @Test
+  public void getUserOrFail_success() throws IOException {
+    String expectedName = "admin456";
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "abcABC123", "--user", expectedName);
+
+    String actualName = arguments.getUserOrFail();
+
+    assertEquals(expectedName, actualName);
   }
 }
