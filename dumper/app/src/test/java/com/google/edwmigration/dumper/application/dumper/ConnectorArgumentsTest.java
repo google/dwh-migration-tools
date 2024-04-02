@@ -70,19 +70,19 @@ public class ConnectorArgumentsTest {
   }
 
   @Test
-  public void testNoUserFlag() throws IOException {
+  public void getUserOrFail_noUserFlag_throwsException() throws IOException {
     ConnectorArguments arguments = new ConnectorArguments("--connector", "abcABC123");
-    Runnable action = () -> arguments.getUserOrFail();
-    String expectedMessage =
-        "Required username was not provided. Please use the '--user' flag to provide the username.";
 
-    Exception exception = assertThrows(MetadataDumperUsageException.class, action::run);
+    Exception exception =
+        assertThrows(MetadataDumperUsageException.class, arguments::getUserOrFail);
 
-    assertEquals(expectedMessage, exception.getMessage());
+    assertEquals(
+        "Required username was not provided. Please use the '--user' flag to provide the username.",
+        exception.getMessage());
   }
 
   @Test
-  public void testValidUserFlag() throws IOException {
+  public void getUserOrFail_success() throws IOException {
     String expectedName = "admin456";
     ConnectorArguments arguments =
         new ConnectorArguments("--connector", "abcABC123", "--user", expectedName);

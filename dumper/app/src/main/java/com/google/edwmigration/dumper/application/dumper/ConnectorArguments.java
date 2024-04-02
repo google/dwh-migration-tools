@@ -676,8 +676,8 @@ public class ConnectorArguments extends DefaultArguments {
   /**
    * Get a password depending on the --password flag.
    *
-   * @return null if the --password flag is not provided otherwise, the result of
-   *     getPasswordOrPrompt()
+   * @return An empty optional if the --password flag is not provided. Otherwise, an optional
+   *     containing the result of getPasswordOrPrompt()
    */
   @Nonnull
   public Optional<String> getPasswordIfFlagProvided() {

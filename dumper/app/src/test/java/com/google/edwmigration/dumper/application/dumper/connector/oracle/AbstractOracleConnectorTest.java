@@ -35,7 +35,7 @@ public class AbstractOracleConnectorTest {
   private final AbstractOracleConnector connector = new OracleMetadataConnector();
 
   @Test
-  public void testValid() {
+  public void buildProperties_success() {
     when(arguments.getPasswordOrPrompt()).thenReturn(EXAMPLE_PASSWORD);
     when(arguments.getUserOrFail()).thenReturn(EXAMPLE_USER);
 
