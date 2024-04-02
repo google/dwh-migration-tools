@@ -666,9 +666,9 @@ public class ConnectorArguments extends DefaultArguments {
     String user = getOptions().valueOf(optionUser);
     if (user == null) {
       throw new MetadataDumperUsageException(
-          "Required username was not provided. Please use the "
+          "Required username was not provided. Please use the '--"
               + OPT_USER
-              + " flag to provide the username");
+              + "' flag to provide the username.");
     }
     return user;
   }
