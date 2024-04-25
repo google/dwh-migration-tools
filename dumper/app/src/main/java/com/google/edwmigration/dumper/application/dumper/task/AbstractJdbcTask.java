@@ -86,27 +86,37 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   }
 
   @Nonnull
+  public static CSVFormat formatFromHeaders(@Nonnull ResultSet resultSet, @Nonnull String[] headers)
+      throws SQLException {
+    if (headers.length != resultSet.getMetaData().getColumnCount()) {
+      Exception innerException =
+          new MetadataDumperUsageException(
+              "Fatal Error. ResultSet does not have the expected column count: " + headers.length,
+              Arrays.asList(
+                  "If a custom query has been specified please confirm the selected columns match"
+                      + " the following: ",
+                  StringUtils.join(headers, ", ")));
+      // Can we avoid nesting exceptions here?
+      throw new SQLException(innerException);
+    }
+    return FORMAT.withHeader(headers);
+  }
+
+  @Nonnull
   protected CSVFormat newCsvFormat(@Nonnull ResultSet rs) throws SQLException {
-    CSVFormat format = FORMAT;
     Class<? extends Enum<?>> headerClass = getHeaderClass();
     if (headerClass != null) {
-      format = format.withHeader(headerClass);
-      if (headerClass.getEnumConstants().length != rs.getMetaData().getColumnCount())
-        // Can we avoid nesting exceptions here?
-        throw new SQLException(
-            new MetadataDumperUsageException(
-                "Fatal Error. ResultSet does not have the expected column count: "
-                    + headerClass.getEnumConstants().length,
-                Arrays.asList(
-                    "If a custom query has been specified please confirm the selected columns match"
-                        + " the following: ",
-                    StringUtils.join(headerClass.getEnumConstants(), ", "))));
+      Enum<?>[] constants = headerClass.getEnumConstants();
+      String[] headers = new String[constants.length];
+      for (int i = 0; i < constants.length; i++) {
+        headers[i] = constants[i].name();
+      }
+      return formatFromHeaders(rs, headers);
     } else if (headerTransformer != null) {
-      format = format.withHeader(headerTransformer.transform(rs));
+      return FORMAT.withHeader(headerTransformer.transform(rs));
     } else {
-      format = format.withHeader(rs);
+      return FORMAT.withHeader(rs);
     }
-    return format;
   }
 
   @Nonnull
