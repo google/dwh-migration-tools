@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
@@ -86,12 +87,12 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   }
 
   @Nonnull
-  public static CSVFormat formatFromHeaders(@Nonnull ResultSet resultSet, @Nonnull String[] headers)
-      throws SQLException {
-    if (headers.length != resultSet.getMetaData().getColumnCount()) {
+  public static CSVFormat formatFromHeaders(
+      @Nonnull ResultSet resultSet, @Nonnull ImmutableList<String> headers) throws SQLException {
+    if (headers.size() != resultSet.getMetaData().getColumnCount()) {
       Exception innerException =
           new MetadataDumperUsageException(
-              "Fatal Error. ResultSet does not have the expected column count: " + headers.length,
+              "Fatal Error. ResultSet does not have the expected column count: " + headers.size(),
               Arrays.asList(
                   "If a custom query has been specified please confirm the selected columns match"
                       + " the following: ",
@@ -99,7 +100,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       // Can we avoid nesting exceptions here?
       throw new SQLException(innerException);
     }
-    return FORMAT.withHeader(headers);
+    String[] array = headers.toArray(new String[] {});
+    return FORMAT.withHeader(array);
   }
 
   @Nonnull
@@ -107,11 +109,12 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     Class<? extends Enum<?>> headerClass = getHeaderClass();
     if (headerClass != null) {
       Enum<?>[] constants = headerClass.getEnumConstants();
-      String[] headers = new String[constants.length];
-      for (int i = 0; i < constants.length; i++) {
-        headers[i] = constants[i].name();
+      ImmutableList.Builder<String> builder =
+          ImmutableList.<String>builderWithExpectedSize(constants.length);
+      for (Enum<?> item : constants) {
+        builder.add(item.name());
       }
-      return formatFromHeaders(rs, headers);
+      return formatFromHeaders(rs, builder.build());
     } else if (headerTransformer != null) {
       return FORMAT.withHeader(headerTransformer.transform(rs));
     } else {
