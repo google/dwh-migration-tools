@@ -90,15 +90,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   public static CSVFormat formatFromHeaders(
       @Nonnull ResultSet resultSet, @Nonnull ImmutableList<String> headers) throws SQLException {
     if (headers.size() != resultSet.getMetaData().getColumnCount()) {
-      Exception innerException =
-          new MetadataDumperUsageException(
-              "Fatal Error. ResultSet does not have the expected column count: " + headers.size(),
-              Arrays.asList(
-                  "If a custom query has been specified please confirm the selected columns match"
-                      + " the following: ",
-                  StringUtils.join(headers, ", ")));
-      // Can we avoid nesting exceptions here?
-      throw new SQLException(innerException);
+      throw headerCountException(headers);
     }
     String[] array = headers.toArray(new String[] {});
     return FORMAT.withHeader(array);
@@ -106,20 +98,18 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @Nonnull
   protected CSVFormat newCsvFormat(@Nonnull ResultSet rs) throws SQLException {
+    CSVFormat format = FORMAT;
     Class<? extends Enum<?>> headerClass = getHeaderClass();
     if (headerClass != null) {
-      Enum<?>[] constants = headerClass.getEnumConstants();
-      ImmutableList.Builder<String> builder =
-          ImmutableList.<String>builderWithExpectedSize(constants.length);
-      for (Enum<?> item : constants) {
-        builder.add(item.name());
-      }
-      return formatFromHeaders(rs, builder.build());
+      format = format.withHeader(headerClass);
+      if (headerClass.getEnumConstants().length != rs.getMetaData().getColumnCount())
+        throw headerCountException(ImmutableList.copyOf(headerClass.getEnumConstants()));
     } else if (headerTransformer != null) {
-      return FORMAT.withHeader(headerTransformer.transform(rs));
+      format = format.withHeader(headerTransformer.transform(rs));
     } else {
-      return FORMAT.withHeader(rs);
+      format = format.withHeader(rs);
     }
+    return format;
   }
 
   @Nonnull
@@ -285,5 +275,16 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       // LOG.debug("Connected to " + connection); // Hikari is using the same connection each time.
       return doInConnection(context, jdbcHandle, sink, connection);
     }
+  }
+
+  private static SQLException headerCountException(ImmutableList<?> items) {
+    Exception innerException = new MetadataDumperUsageException(
+      "Fatal Error. ResultSet does not have the expected column count: " + items.size(),
+      Arrays.asList(
+          "If a custom query has been specified please confirm the selected columns match"
+              + " the following: ",
+          StringUtils.join(items, ", ")));
+    // Can we avoid nesting exceptions here?
+    return new SQLException(innerException);
   }
 }
