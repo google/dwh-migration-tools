@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleMetadataConnector.SelectXmlTask;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleMetadataConnector.SelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ import org.junit.runners.JUnit4;
 public class OracleMetadataConnectorTest {
 
   @Test
-  public void addTasksTo_generatesSelectXmlTasks() throws Exception {
+  public void addTasksTo_generatesMetadataSelectTasks() throws Exception {
     OracleMetadataConnector connector = new OracleMetadataConnector();
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -41,46 +41,56 @@ public class OracleMetadataConnectorTest {
     connector.addTasksTo(tasks, new ConnectorArguments("--connector", connector.getName()));
 
     // Assert
-    ImmutableList<SelectXmlTask> xmlTasks =
+    ImmutableList<String> selectSqls =
         tasks.stream()
-            .filter(task -> task instanceof SelectXmlTask)
-            .map(task -> (SelectXmlTask) task)
+            .filter(task -> task instanceof SelectTask)
+            .map(task -> ((SelectTask) task).getSql())
             .collect(toImmutableList());
-    ImmutableList<String> rowSqls =
-        xmlTasks.stream().map(task -> task.rowSql).collect(toImmutableList());
+
     assertEquals(
+        selectSqls,
         ImmutableList.of(
-            "SELECT OWNER, OBJECT_NAME FROM ALL_OBJECTS WHERE OBJECT_NAME = 'FUNCTION'",
-            "SELECT OWNER, TABLE_NAME FROM DBA_TABLES",
-            "SELECT OWNER, TABLE_NAME FROM ALL_TABLES",
-            "SELECT OWNER, VIEW_NAME FROM DBA_VIEWS",
-            "SELECT OWNER, VIEW_NAME FROM ALL_VIEWS",
-            "SELECT OWNER, INDEX_NAME FROM DBA_INDEXES",
-            "SELECT OWNER, INDEX_NAME FROM ALL_INDEXES",
-            "SELECT SEQUENCE_OWNER, SEQUENCE_NAME FROM DBA_SEQUENCES",
-            "SELECT SEQUENCE_OWNER, SEQUENCE_NAME FROM ALL_SEQUENCES",
-            "SELECT OWNER, TYPE_NAME FROM DBA_TYPES",
-            "SELECT OWNER, TYPE_NAME FROM ALL_TYPES",
-            "SELECT OWNER, SYNONYM_NAME FROM DBA_SYNONYMS",
-            "SELECT OWNER, SYNONYM_NAME FROM ALL_SYNONYMS"),
-        rowSqls);
-    ImmutableList<String> xmlSqls =
-        xmlTasks.stream().map(task -> task.xmlSql).collect(toImmutableList());
-    assertEquals(
-        ImmutableList.of(
-            "SELECT DBMS_METADATA.GET_XML('FUNCTION', ?, ?) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('TABLE', ?, ?) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('TABLE', ?, ?) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('VIEW', ?, ?) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('VIEW', ?, ?) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('INDEX', INDEX_NAME) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('INDEX', INDEX_NAME) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('SEQUENCE', SEQUENCE_NAME) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('SEQUENCE', SEQUENCE_NAME) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('TYPE', TYPE_NAME) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('TYPE', TYPE_NAME) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('SYNONYM', SYNONYM_NAME) FROM DUAL",
-            "SELECT DBMS_METADATA.GET_XML('SYNONYM', SYNONYM_NAME) FROM DUAL"),
-        xmlSqls);
+            "SELECT * FROM ALL_Arguments",
+            "SELECT * FROM DBA_Arguments",
+            "SELECT * FROM ALL_Catalog",
+            "SELECT * FROM DBA_Catalog",
+            "SELECT * FROM ALL_Constraints",
+            "SELECT * FROM DBA_Constraints",
+            "SELECT * FROM ALL_Indexes",
+            "SELECT * FROM DBA_Indexes",
+            "SELECT * FROM ALL_MViews",
+            "SELECT * FROM DBA_MViews",
+            "SELECT * FROM ALL_Operators",
+            "SELECT * FROM DBA_Operators",
+            "SELECT * FROM ALL_Part_key_columns",
+            "SELECT * FROM DBA_Part_key_columns",
+            "SELECT * FROM ALL_Plsql_Types",
+            "SELECT * FROM DBA_Plsql_Types",
+            "SELECT * FROM ALL_Procedures",
+            "SELECT * FROM DBA_Procedures",
+            "SELECT * FROM ALL_Tab_Columns",
+            "SELECT * FROM DBA_Tab_Columns",
+            "SELECT * FROM ALL_Tab_Partitions",
+            "SELECT * FROM DBA_Tab_Partitions",
+            "SELECT * FROM ALL_Tables",
+            "SELECT * FROM DBA_Tables",
+            "SELECT * FROM ALL_Types",
+            "SELECT * FROM DBA_Types",
+            "SELECT * FROM ALL_Views",
+            "SELECT * FROM DBA_Views",
+            "SELECT OWNER, OBJECT_NAME, DBMS_METADATA.GET_XML('FUNCTION', OBJECT_NAME, OWNER) FROM DBA_OBJECTS WHERE OBJECT_NAME = 'FUNCTION'",
+            "SELECT OWNER, OBJECT_NAME, DBMS_METADATA.GET_XML('FUNCTION', OBJECT_NAME, OWNER) FROM ALL_OBJECTS WHERE OBJECT_NAME = 'FUNCTION'",
+            "SELECT OWNER, TABLE_NAME, DBMS_METADATA.GET_XML('TABLE', TABLE_NAME, OWNER) FROM DBA_TABLES WHERE NESTED='NO' AND (IOT_TYPE IS NULL OR IOT_TYPE='IOT')",
+            "SELECT OWNER, TABLE_NAME, DBMS_METADATA.GET_XML('TABLE', TABLE_NAME, OWNER) FROM ALL_TABLES WHERE NESTED='NO' AND (IOT_TYPE IS NULL OR IOT_TYPE='IOT')",
+            "SELECT OWNER, VIEW_NAME, DBMS_METADATA.GET_XML('VIEW', VIEW_NAME, OWNER) FROM DBA_VIEWS",
+            "SELECT OWNER, VIEW_NAME, DBMS_METADATA.GET_XML('VIEW', VIEW_NAME, OWNER) FROM ALL_VIEWS",
+            "SELECT OWNER, INDEX_NAME, DBMS_METADATA.GET_XML('INDEX', INDEX_NAME, OWNER) FROM DBA_INDEXES",
+            "SELECT OWNER, INDEX_NAME, DBMS_METADATA.GET_XML('INDEX', INDEX_NAME, OWNER) FROM ALL_INDEXES",
+            "SELECT SEQUENCE_OWNER, SEQUENCE_NAME, DBMS_METADATA.GET_XML('SEQUENCE', SEQUENCE_NAME, SEQUENCE_OWNER) FROM DBA_SEQUENCES",
+            "SELECT SEQUENCE_OWNER, SEQUENCE_NAME, DBMS_METADATA.GET_XML('SEQUENCE', SEQUENCE_NAME, SEQUENCE_OWNER) FROM ALL_SEQUENCES",
+            "SELECT OWNER, TYPE_NAME, DBMS_METADATA.GET_XML('TYPE', TYPE_NAME, OWNER) FROM DBA_TYPES WHERE PREDEFINED='NO'",
+            "SELECT OWNER, TYPE_NAME, DBMS_METADATA.GET_XML('TYPE', TYPE_NAME, OWNER) FROM ALL_TYPES WHERE PREDEFINED='NO'",
+            "SELECT OWNER, SYNONYM_NAME, DBMS_METADATA.GET_XML('SYNONYM', SYNONYM_NAME, OWNER) FROM DBA_SYNONYMS",
+            "SELECT OWNER, SYNONYM_NAME, DBMS_METADATA.GET_XML('SYNONYM', SYNONYM_NAME, OWNER) FROM ALL_SYNONYMS"));
   }
 }
