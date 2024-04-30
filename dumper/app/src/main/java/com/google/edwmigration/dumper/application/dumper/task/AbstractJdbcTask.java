@@ -278,12 +278,13 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   }
 
   private static SQLException headerCountException(ImmutableList<?> items) {
-    Exception innerException = new MetadataDumperUsageException(
-      "Fatal Error. ResultSet does not have the expected column count: " + items.size(),
-      Arrays.asList(
-          "If a custom query has been specified please confirm the selected columns match"
-              + " the following: ",
-          StringUtils.join(items, ", ")));
+    Exception innerException =
+        new MetadataDumperUsageException(
+            "Fatal Error. ResultSet does not have the expected column count: " + items.size(),
+            Arrays.asList(
+                "If a custom query has been specified please confirm the selected columns match"
+                    + " the following: ",
+                StringUtils.join(items, ", ")));
     // Can we avoid nesting exceptions here?
     return new SQLException(innerException);
   }
