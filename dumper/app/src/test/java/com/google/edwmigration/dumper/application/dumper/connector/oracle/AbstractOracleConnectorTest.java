@@ -35,7 +35,7 @@ public class AbstractOracleConnectorTest {
   private final AbstractOracleConnector connector = new OracleMetadataConnector();
 
   @Test
-  public void getDefaultFileName_notForAssessment() {
+  public void getDefaultFileName_notForAssessment_success() {
     OracleLogsConnector logs = new OracleLogsConnector();
     OracleMetadataConnector metadata = new OracleMetadataConnector();
     OracleStatsConnector stats = new OracleStatsConnector();
@@ -46,7 +46,7 @@ public class AbstractOracleConnectorTest {
   }
 
   @Test
-  public void getFormatName() {
+  public void getFormatName_success() {
     OracleLogsConnector logs = new OracleLogsConnector();
     OracleMetadataConnector metadata = new OracleMetadataConnector();
     OracleStatsConnector stats = new OracleStatsConnector();
@@ -57,7 +57,7 @@ public class AbstractOracleConnectorTest {
   }
 
   @Test
-  public void getName() {
+  public void getName_success() {
     OracleLogsConnector logs = new OracleLogsConnector();
     OracleMetadataConnector metadata = new OracleMetadataConnector();
     OracleStatsConnector stats = new OracleStatsConnector();
