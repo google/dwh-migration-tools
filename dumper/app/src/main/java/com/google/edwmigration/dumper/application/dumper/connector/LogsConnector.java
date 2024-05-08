@@ -19,16 +19,20 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import javax.annotation.Nonnull;
-import org.apache.commons.lang3.StringUtils;
 
 /** @author shevek */
 public interface LogsConnector extends Connector {
 
   @Nonnull
+  @Override
   default String getDefaultFileName(boolean isAssessment) {
+    String timeSuffix = isAssessment ? getTimeSuffix() : "";
+    return String.format("dwh-migration-%s-logs%s.zip", getName(), timeSuffix);
+  }
+
+  @Nonnull
+  static String getTimeSuffix() {
     Format format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-    String timeSuffix = "-" + format.format(System.currentTimeMillis());
-    return String.format(
-        "dwh-migration-%s-logs%s.zip", getName(), isAssessment ? timeSuffix : StringUtils.EMPTY);
+    return "-" + format.format(System.currentTimeMillis());
   }
 }
