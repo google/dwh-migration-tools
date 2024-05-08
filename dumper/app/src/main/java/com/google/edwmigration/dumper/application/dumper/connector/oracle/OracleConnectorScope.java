@@ -26,20 +26,16 @@ enum OracleConnectorScope {
   STATS;
 
   String toDisplayName() {
-    switch (this) {
-      case LOGS:
-        return "oracle-logs";
-      case METADATA:
-        return "oracle";
-      case STATS:
-        return "oracle-stats";
+    if (this == METADATA) {
+      return "oracle";
+    } else {
+      return "oracle-" + getResultType();
     }
-    throw new AssertionError();
   }
 
   String toFileName(boolean isAssessment) {
     String timeSuffix = getTimeSuffix(isAssessment);
-    return String.format("dwh-migration-%s%s.zip", toDisplayName(), timeSuffix);
+    return String.format("dwh-migration-oracle-%s%s.zip", getResultType(), timeSuffix);
   }
 
   String toFormat() {
@@ -50,6 +46,18 @@ enum OracleConnectorScope {
         return OracleMetadataDumpFormat.FORMAT_NAME;
       case STATS:
         return "oracle.stats.zip";
+    }
+    throw new AssertionError();
+  }
+
+  private String getResultType() {
+    switch (this) {
+      case LOGS:
+        return "logs";
+      case METADATA:
+        return "metadata";
+      case STATS:
+        return "stats";
     }
     throw new AssertionError();
   }

@@ -41,7 +41,7 @@ public class AbstractOracleConnectorTest {
     OracleStatsConnector stats = new OracleStatsConnector();
 
     assertEquals("dwh-migration-oracle-logs.zip", logs.getDefaultFileName(false));
-    assertEquals("dwh-migration-oracle.zip", metadata.getDefaultFileName(false));
+    assertEquals("dwh-migration-oracle-metadata.zip", metadata.getDefaultFileName(false));
     assertEquals("dwh-migration-oracle-stats.zip", stats.getDefaultFileName(false));
   }
 
