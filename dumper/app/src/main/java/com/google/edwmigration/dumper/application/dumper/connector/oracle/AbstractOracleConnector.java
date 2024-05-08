@@ -79,6 +79,8 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
   public static final int OPT_PORT_DEFAULT = 1521;
 
+  private final OracleConnectorScope connectorScope;
+
   protected enum CommonOracleConnectorProperty implements ConnectorPropertyWithDefault {
     USE_FETCH_SIZE_WITH_LONG_COLUMN(
         "oracle.use-fetch-size-with-long-column",
@@ -123,8 +125,20 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     return CommonOracleConnectorProperty.class;
   }
 
-  public AbstractOracleConnector(@Nonnull String name) {
-    super(name);
+  public AbstractOracleConnector(@Nonnull OracleConnectorScope connectorScope) {
+    super(connectorScope.toDisplayName());
+    this.connectorScope = connectorScope;
+  }
+
+  @Override
+  @Nonnull
+  public String getDefaultFileName(boolean isAssessment) {
+    return connectorScope.toFileName(isAssessment);
+  }
+
+  @Nonnull
+  String getFormatName() {
+    return connectorScope.toFormat();
   }
 
   private boolean isOracleSid(ConnectorArguments arguments) throws MetadataDumperUsageException {

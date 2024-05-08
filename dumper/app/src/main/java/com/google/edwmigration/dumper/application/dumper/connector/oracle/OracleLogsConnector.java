@@ -34,7 +34,7 @@ public class OracleLogsConnector extends AbstractOracleConnector
     implements LogsConnector, OracleLogsDumpFormat {
 
   public OracleLogsConnector() {
-    super("oracle-logs");
+    super(OracleConnectorScope.LOGS);
   }
 
   /** Exists so we can extract query text CLOBs to Strings before they reach the CSVPrinter. */
@@ -48,7 +48,7 @@ public class OracleLogsConnector extends AbstractOracleConnector
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new DumpMetadataTask(arguments, getFormatName()));
     // It's not clear to me whether we should be using v$sqlarea instead here.
     String query =
         "SELECT sql_fulltext, cpu_time, elapsed_time, disk_reads, runtime_mem FROM v$sql";
