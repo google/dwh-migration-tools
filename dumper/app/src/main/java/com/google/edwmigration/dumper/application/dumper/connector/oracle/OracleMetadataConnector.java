@@ -180,7 +180,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
     out.add(new DumpMetadataTask(arguments, getFormatName()));
-    out.add(new FormatTask(OracleMetadataDumpFormat.FORMAT_NAME));
+    out.add(new FormatTask(getFormatName()));
 
     out.add(new JdbcSelectTask(V_Version.ZIP_ENTRY_NAME, "SELECT * from V$VERSION"));
     out.add(new JdbcSelectTask(V_Parameter2.ZIP_ENTRY_NAME, "SELECT * from V$PARAMETER2"));
