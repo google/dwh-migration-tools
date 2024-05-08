@@ -35,6 +35,39 @@ public class AbstractOracleConnectorTest {
   private final AbstractOracleConnector connector = new OracleMetadataConnector();
 
   @Test
+  public void getDefaultFileName_notForAssessment() {
+    OracleLogsConnector logs = new OracleLogsConnector();
+    OracleMetadataConnector metadata = new OracleMetadataConnector();
+    OracleStatsConnector stats = new OracleStatsConnector();
+
+    assertEquals("dwh-migration-oracle-logs.zip", logs.getDefaultFileName(false));
+    assertEquals("dwh-migration-oracle.zip", metadata.getDefaultFileName(false));
+    assertEquals("dwh-migration-oracle-stats.zip", stats.getDefaultFileName(false));
+  }
+
+  @Test
+  public void getFormatName() {
+    OracleLogsConnector logs = new OracleLogsConnector();
+    OracleMetadataConnector metadata = new OracleMetadataConnector();
+    OracleStatsConnector stats = new OracleStatsConnector();
+
+    assertEquals("oracle.logs.zip", logs.getFormatName());
+    assertEquals("oracle.dump.zip", metadata.getFormatName());
+    assertEquals("oracle.stats.zip", stats.getFormatName());
+  }
+
+  @Test
+  public void getName() {
+    OracleLogsConnector logs = new OracleLogsConnector();
+    OracleMetadataConnector metadata = new OracleMetadataConnector();
+    OracleStatsConnector stats = new OracleStatsConnector();
+
+    assertEquals("oracle-logs", logs.getName());
+    assertEquals("oracle", metadata.getName());
+    assertEquals("oracle-stats", stats.getName());
+  }
+
+  @Test
   public void buildProperties_success() {
     when(arguments.getPasswordOrPrompt()).thenReturn(EXAMPLE_PASSWORD);
     when(arguments.getUserOrFail()).thenReturn(EXAMPLE_USER);
