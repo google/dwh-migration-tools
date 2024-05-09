@@ -34,7 +34,12 @@ enum OracleConnectorScope {
   }
 
   String toFileName(boolean isAssessment) {
-    String timeSuffix = getTimeSuffix(isAssessment);
+    String timeSuffix;
+    if (this == LOGS && isAssessment) {
+      timeSuffix = LogsConnector.getTimeSuffix();
+    } else {
+      timeSuffix = "";
+    }
     return String.format("dwh-migration-oracle-%s%s.zip", getResultType(), timeSuffix);
   }
 
@@ -60,13 +65,5 @@ enum OracleConnectorScope {
         return "stats";
     }
     throw new AssertionError();
-  }
-
-  private String getTimeSuffix(boolean isAssessment) {
-    if (this == LOGS && isAssessment) {
-      return LogsConnector.getTimeSuffix();
-    } else {
-      return "";
-    }
   }
 }
