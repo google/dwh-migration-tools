@@ -93,4 +93,10 @@ public class OracleMetadataConnectorTest {
             "SELECT OWNER, SYNONYM_NAME, DBMS_METADATA.GET_XML('SYNONYM', SYNONYM_NAME, OWNER) FROM DBA_SYNONYMS",
             "SELECT OWNER, SYNONYM_NAME, DBMS_METADATA.GET_XML('SYNONYM', SYNONYM_NAME, OWNER) FROM ALL_SYNONYMS"));
   }
+
+  @Test
+  public void getConnectorScope_success() {
+    OracleMetadataConnector connector = new OracleMetadataConnector();
+    assertEquals(OracleConnectorScope.METADATA, connector.getConnectorScope());
+  }
 }

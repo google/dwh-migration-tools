@@ -161,6 +161,11 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   }
 
   @Nonnull
+  OracleConnectorScope getConnectorScope() {
+    return connectorScope;
+  }
+
+  @Nonnull
   Properties buildProperties(@Nonnull ConnectorArguments arguments) {
     Properties properties = new Properties();
     properties.setProperty("user", arguments.getUserOrFail());
