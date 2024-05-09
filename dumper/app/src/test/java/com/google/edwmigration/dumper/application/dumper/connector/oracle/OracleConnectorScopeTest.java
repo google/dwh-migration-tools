@@ -34,14 +34,6 @@ public class OracleConnectorScopeTest {
   }
 
   @Test
-  public void toFileName_notForAssessment_success() {
-    assertEquals("dwh-migration-oracle-logs.zip", LOGS.toFileName(/* isAssessment= */ false));
-    assertEquals(
-        "dwh-migration-oracle-metadata.zip", METADATA.toFileName(/* isAssessment= */ false));
-    assertEquals("dwh-migration-oracle-stats.zip", STATS.toFileName(/* isAssessment= */ false));
-  }
-
-  @Test
   public void toFormat_success() {
     assertEquals("oracle.logs.zip", LOGS.toFormat());
     assertEquals("oracle.dump.zip", METADATA.toFormat());
