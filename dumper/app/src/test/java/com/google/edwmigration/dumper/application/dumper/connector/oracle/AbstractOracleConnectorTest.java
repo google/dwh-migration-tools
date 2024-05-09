@@ -40,9 +40,13 @@ public class AbstractOracleConnectorTest {
     OracleMetadataConnector metadata = new OracleMetadataConnector();
     OracleStatsConnector stats = new OracleStatsConnector();
 
-    assertEquals("dwh-migration-oracle-logs.zip", logs.getDefaultFileName(false));
-    assertEquals("dwh-migration-oracle-metadata.zip", metadata.getDefaultFileName(false));
-    assertEquals("dwh-migration-oracle-stats.zip", stats.getDefaultFileName(false));
+    assertEquals(
+        "dwh-migration-oracle-logs.zip", logs.getDefaultFileName(/* isAssessment= */ false));
+    assertEquals(
+        "dwh-migration-oracle-metadata.zip",
+        metadata.getDefaultFileName(/* isAssessment= */ false));
+    assertEquals(
+        "dwh-migration-oracle-stats.zip", stats.getDefaultFileName(/* isAssessment= */ false));
   }
 
   @Test
