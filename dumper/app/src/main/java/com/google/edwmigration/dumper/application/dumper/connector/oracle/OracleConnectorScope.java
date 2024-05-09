@@ -21,16 +21,22 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleLogsDumpFormat
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
 
 enum OracleConnectorScope {
-  LOGS,
-  METADATA,
-  STATS;
+  LOGS("oracle-logs", OracleLogsDumpFormat.FORMAT_NAME, "logs"),
+  METADATA("oracle", OracleMetadataDumpFormat.FORMAT_NAME, "metadata"),
+  STATS("oracle-stats", "oracle.stats.zip", "stats");
+
+  private final String displayName;
+  private final String format;
+  private final String resultType;
+
+  OracleConnectorScope(String displayName, String format, String resultType) {
+    this.displayName = displayName;
+    this.format = format;
+    this.resultType = resultType;
+  }
 
   String toDisplayName() {
-    if (this == METADATA) {
-      return "oracle";
-    } else {
-      return "oracle-" + getResultType();
-    }
+    return displayName;
   }
 
   String toFileName(boolean isAssessment) {
@@ -40,30 +46,10 @@ enum OracleConnectorScope {
     } else {
       timeSuffix = "";
     }
-    return String.format("dwh-migration-oracle-%s%s.zip", getResultType(), timeSuffix);
+    return String.format("dwh-migration-oracle-%s%s.zip", resultType, timeSuffix);
   }
 
   String toFormat() {
-    switch (this) {
-      case LOGS:
-        return OracleLogsDumpFormat.FORMAT_NAME;
-      case METADATA:
-        return OracleMetadataDumpFormat.FORMAT_NAME;
-      case STATS:
-        return "oracle.stats.zip";
-    }
-    throw new AssertionError();
-  }
-
-  private String getResultType() {
-    switch (this) {
-      case LOGS:
-        return "logs";
-      case METADATA:
-        return "metadata";
-      case STATS:
-        return "stats";
-    }
-    throw new AssertionError();
+    return format;
   }
 }
