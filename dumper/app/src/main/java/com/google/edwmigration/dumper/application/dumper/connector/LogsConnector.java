@@ -16,8 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
-import java.text.Format;
-import java.text.SimpleDateFormat;
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
+import java.time.Clock;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -26,13 +26,11 @@ public interface LogsConnector extends Connector {
   @Nonnull
   @Override
   default String getDefaultFileName(boolean isAssessment) {
-    String timeSuffix = isAssessment ? getTimeSuffix() : "";
-    return String.format("dwh-migration-%s-logs%s.zip", getName(), timeSuffix);
-  }
-
-  @Nonnull
-  static String getTimeSuffix() {
-    Format format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-    return "-" + format.format(System.currentTimeMillis());
+    if (isAssessment) {
+      Clock clock = Clock.systemDefaultZone();
+      return ArchiveNameUtil.getFileNameWithTime(getName(), "logs", clock);
+    } else {
+      return ArchiveNameUtil.getBasicFileName(getName(), "logs");
+    }
   }
 }

@@ -16,9 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleLogsDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
+import java.time.Clock;
 
 enum OracleConnectorScope {
   LOGS("oracle-logs", OracleLogsDumpFormat.FORMAT_NAME, "logs"),
@@ -40,13 +41,12 @@ enum OracleConnectorScope {
   }
 
   String toFileName(boolean isAssessment) {
-    String timeSuffix;
     if (this == LOGS && isAssessment) {
-      timeSuffix = LogsConnector.getTimeSuffix();
+      Clock systemClock = Clock.systemDefaultZone();
+      return ArchiveNameUtil.getFileNameWithTime("oracle", resultType, systemClock);
     } else {
-      timeSuffix = "";
+      return ArchiveNameUtil.getBasicFileName("oracle", resultType);
     }
-    return String.format("dwh-migration-oracle-%s%s.zip", resultType, timeSuffix);
   }
 
   String toFormat() {
