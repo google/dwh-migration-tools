@@ -28,14 +28,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class OracleStatsConnector extends AbstractOracleConnector {
 
-  private final StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
-
   public OracleStatsConnector() {
     super(OracleConnectorScope.STATS);
   }
 
   @Override
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
+    StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
     out.add(new DumpMetadataTask(arguments, getFormatName()));
     out.addAll(taskListGenerator.createTasks(arguments));
   }
