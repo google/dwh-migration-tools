@@ -27,12 +27,12 @@ enum OracleConnectorScope {
   STATS("oracle-stats", "oracle.stats.zip", "stats");
 
   private final String connectorName;
-  private final String format;
+  private final String formatName;
   private final String resultType;
 
-  OracleConnectorScope(String displayName, String format, String resultType) {
+  OracleConnectorScope(String displayName, String formatName, String resultType) {
     this.connectorName = displayName;
-    this.format = format;
+    this.formatName = formatName;
     this.resultType = resultType;
   }
 
@@ -53,6 +53,6 @@ enum OracleConnectorScope {
   }
 
   String formatName() {
-    return format;
+    return formatName;
   }
 }
