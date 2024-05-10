@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import java.sql.Driver;
+import java.time.Clock;
 import java.util.Optional;
 import java.util.Properties;
 import javax.annotation.Nonnull;
@@ -133,7 +134,8 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   @Override
   @Nonnull
   public String getDefaultFileName(boolean isAssessment) {
-    return connectorScope.toFileName(isAssessment);
+    Clock systemClock = Clock.systemDefaultZone();
+    return connectorScope.toFileName(isAssessment, systemClock);
   }
 
   @Nonnull

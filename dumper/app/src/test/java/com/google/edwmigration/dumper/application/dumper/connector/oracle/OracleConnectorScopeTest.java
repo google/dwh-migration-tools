@@ -19,6 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleConnectorScope.*;
 import static org.junit.Assert.assertEquals;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -38,5 +41,25 @@ public class OracleConnectorScopeTest {
     assertEquals("oracle.logs.zip", LOGS.formatName());
     assertEquals("oracle.dump.zip", METADATA.formatName());
     assertEquals("oracle.stats.zip", STATS.formatName());
+  }
+
+  @Test
+  public void toFileName_forAssessment_success() {
+    Instant instant = Instant.ofEpochMilli(1715346130945L);
+    Clock clock = Clock.fixed(instant, ZoneId.systemDefault());
+
+    assertEquals("dwh-migration-oracle-logs-logs20240510T130210.zip", LOGS.toFileName(true, clock));
+    assertEquals("dwh-migration-oracle-metadata.zip", METADATA.toFileName(true, clock));
+    assertEquals("dwh-migration-oracle-stats.zip", STATS.toFileName(true, clock));
+  }
+
+  @Test
+  public void toFileName_notForAssessment_success() {
+    Instant instant = Instant.ofEpochMilli(1715346130945L);
+    Clock clock = Clock.fixed(instant, ZoneId.systemDefault());
+
+    assertEquals("dwh-migration-oracle-logs-logs.zip", LOGS.toFileName(false, clock));
+    assertEquals("dwh-migration-oracle-metadata.zip", METADATA.toFileName(false, clock));
+    assertEquals("dwh-migration-oracle-stats.zip", STATS.toFileName(false, clock));
   }
 }

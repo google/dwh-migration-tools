@@ -40,10 +40,14 @@ enum OracleConnectorScope {
     return connectorName;
   }
 
-  String toFileName(boolean isAssessment) {
-    if (this == LOGS && isAssessment) {
-      Clock systemClock = Clock.systemDefaultZone();
-      return ArchiveNameUtil.getFileNameWithTimestamp("oracle-" + resultType, systemClock);
+  String toFileName(boolean isAssessment, Clock clock) {
+    if (this == LOGS) {
+      // add "-logs" twice for consistency with previous versions
+      String name = String.format("oracle-%s-%s", resultType, resultType);
+      if (isAssessment) {
+        return ArchiveNameUtil.getFileNameWithTimestamp(name, clock);
+      }
+      return ArchiveNameUtil.getFileName(name);
     }
     return ArchiveNameUtil.getFileName("oracle-" + resultType);
   }
