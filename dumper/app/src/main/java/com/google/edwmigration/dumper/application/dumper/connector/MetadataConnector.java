@@ -25,6 +25,6 @@ public interface MetadataConnector extends Connector {
   @Nonnull
   @Override
   default String getDefaultFileName(boolean unused) {
-    return ArchiveNameUtil.getFileName(getName() + "-metadata");
+    return ArchiveNameUtil.getFileName(getName(), "metadata");
   }
 }

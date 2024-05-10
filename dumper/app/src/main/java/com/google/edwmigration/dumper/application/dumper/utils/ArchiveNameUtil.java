@@ -25,30 +25,31 @@ public class ArchiveNameUtil {
    * Generate the archive file name that includes creation time. Typically this is used with a logs
    * connector when dumping for Assessment.
    *
-   * @param nameWithOptionalSuffix The name of the connector, can be followed by a suffix such as
-   *     "-metadata" or "-logs".
+   * @param name The name of the connector.
+   * @param suffix Connector-specific suffix such as "metadata" or "logs".
    * @param clock The Clock instance to provide the date.
    * @return Full name for the .zip archive.
    */
-  public static String getFileNameWithTimestamp(String nameWithOptionalSuffix, Clock clock) {
+  public static String getFileNameWithTimestamp(String name, String suffix, Clock clock) {
     SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
     String timeSuffix = format.format(clock.millis());
-    return formatFileName(nameWithOptionalSuffix + timeSuffix);
+    return formatFileName(name, suffix + timeSuffix);
   }
 
   /**
    * Generate the archive file name, but do not include creation time. This is the most common case,
    * dumping logs for assessment being a known exception.
    *
-   * @param nameWithOptionalSuffix The name of the connector, can be followed by a suffix such as
-   *     "-metadata" or "-logs"
+   * @param name The name of the connector.
+   * @param suffix Connector-specific suffix such as "metadata" or "logs".
    * @return Full name for the .zip archive.
    */
-  public static String getFileName(String nameWithOptionalSuffix) {
-    return formatFileName(nameWithOptionalSuffix);
+  public static String getFileName(String name, String suffix) {
+    return formatFileName(name, suffix);
   }
 
-  private static String formatFileName(String nameWithOptionalSuffix) {
+  private static String formatFileName(String name, String suffix) {
+    String nameWithOptionalSuffix = name + (suffix.isEmpty() ? "" : "-" + suffix);
     return String.format("dwh-migration-%s.zip", nameWithOptionalSuffix);
   }
 
