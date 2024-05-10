@@ -24,9 +24,11 @@ buildscript {
 
 plugins {
     id 'dwh-migration-dumper.java-application-conventions'
+    id 'jacoco'
 }
 
 apply plugin: 'com.github.jk1.dependency-license-report'
+apply plugin: "jacoco"
 
 configurations {
     sources {
@@ -90,6 +92,19 @@ dependencies {
 
     sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}@sources"
     sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
 }
 
 startScripts {
