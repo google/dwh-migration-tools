@@ -33,7 +33,7 @@ public class ArchiveNameUtil {
   public static String getFileNameWithTimestamp(String name, String suffix, Clock clock) {
     SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
     String timeSuffix = format.format(clock.millis());
-    return formatFileName(name, suffix + timeSuffix);
+    return formatFileName(name, suffix + "-" + timeSuffix);
   }
 
   /**

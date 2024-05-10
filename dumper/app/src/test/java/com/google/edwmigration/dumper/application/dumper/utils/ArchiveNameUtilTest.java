@@ -43,7 +43,7 @@ public class ArchiveNameUtilTest {
     String suffix = "information-schema-logs";
 
     assertEquals(
-        "dwh-migration-snowflake-information-schema-logs20240510T130210.zip",
+        "dwh-migration-snowflake-information-schema-logs-20240510T130210.zip",
         ArchiveNameUtil.getFileNameWithTimestamp(name, suffix, clock));
   }
 }
