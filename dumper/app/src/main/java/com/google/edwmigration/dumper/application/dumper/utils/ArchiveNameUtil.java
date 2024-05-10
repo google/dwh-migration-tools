@@ -25,7 +25,8 @@ public class ArchiveNameUtil {
    * Generate the archive file name that includes creation time. Typically this is used with a logs
    * connector when dumping for Assessment.
    *
-   * @param nameWithOptionalSuffix The name of the connector, can be followed by a suffix such as "-metadata" or "-logs".
+   * @param nameWithOptionalSuffix The name of the connector, can be followed by a suffix such as
+   *     "-metadata" or "-logs".
    * @param clock The Clock instance to provide the date.
    * @return Full name for the .zip archive.
    */
@@ -39,7 +40,8 @@ public class ArchiveNameUtil {
    * Generate the archive file name, but do not include creation time. This is the most common case,
    * dumping logs for assessment being a known exception.
    *
-   * @param nameWithOptionalSuffix The name of the connector, can be followed by a suffix such as "-metadata" or "-logs"
+   * @param nameWithOptionalSuffix The name of the connector, can be followed by a suffix such as
+   *     "-metadata" or "-logs"
    * @return Full name for the .zip archive.
    */
   public static String getFileName(String nameWithOptionalSuffix) {
