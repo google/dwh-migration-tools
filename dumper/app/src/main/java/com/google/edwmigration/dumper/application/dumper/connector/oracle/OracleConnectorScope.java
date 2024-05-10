@@ -26,18 +26,18 @@ enum OracleConnectorScope {
   METADATA("oracle", OracleMetadataDumpFormat.FORMAT_NAME, "metadata"),
   STATS("oracle-stats", "oracle.stats.zip", "stats");
 
-  private final String displayName;
+  private final String connectorName;
   private final String format;
   private final String resultType;
 
   OracleConnectorScope(String displayName, String format, String resultType) {
-    this.displayName = displayName;
+    this.connectorName = displayName;
     this.format = format;
     this.resultType = resultType;
   }
 
-  String displayName() {
-    return displayName;
+  String connectorName() {
+    return connectorName;
   }
 
   String toFileName(boolean isAssessment) {

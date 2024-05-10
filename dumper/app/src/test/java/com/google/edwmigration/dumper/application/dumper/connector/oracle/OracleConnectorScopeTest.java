@@ -28,9 +28,9 @@ public class OracleConnectorScopeTest {
 
   @Test
   public void toDisplayName_success() {
-    assertEquals("oracle-logs", LOGS.displayName());
-    assertEquals("oracle", METADATA.displayName());
-    assertEquals("oracle-stats", STATS.displayName());
+    assertEquals("oracle-logs", LOGS.connectorName());
+    assertEquals("oracle", METADATA.connectorName());
+    assertEquals("oracle-stats", STATS.connectorName());
   }
 
   @Test

@@ -126,7 +126,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   }
 
   public AbstractOracleConnector(@Nonnull OracleConnectorScope connectorScope) {
-    super(connectorScope.displayName());
+    super(connectorScope.connectorName());
     this.connectorScope = connectorScope;
   }
 
