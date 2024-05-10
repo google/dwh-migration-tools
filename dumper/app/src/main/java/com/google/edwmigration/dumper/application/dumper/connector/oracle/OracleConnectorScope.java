@@ -43,9 +43,9 @@ enum OracleConnectorScope {
   String toFileName(boolean isAssessment) {
     if (this == LOGS && isAssessment) {
       Clock systemClock = Clock.systemDefaultZone();
-      return ArchiveNameUtil.getFileNameWithTimestamp("oracle", resultType, systemClock);
+      return ArchiveNameUtil.getFileNameWithTimestamp("oracle-" + resultType, systemClock);
     } else {
-      return ArchiveNameUtil.getFileName("oracle", resultType);
+      return ArchiveNameUtil.getFileName("oracle-" + resultType);
     }
   }
 

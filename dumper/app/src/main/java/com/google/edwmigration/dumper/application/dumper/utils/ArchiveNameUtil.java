@@ -25,32 +25,29 @@ public class ArchiveNameUtil {
    * Generate the archive file name that includes creation time. Typically this is used with a logs
    * connector when dumping for Assessment.
    *
-   * @param dwhType The type of the input data source, e.g. "teradata" or "snowflake".
-   * @param resultType The type of the resulting dump, e.g. "logs", "account-usage-logs" or
-   *     "raw-logs".
+   * @param nameWithOptionalSuffix The name of the connector, can be followed by a suffix such as "-metadata" or "-logs".
    * @param clock The Clock instance to provide the date.
    * @return Full name for the .zip archive.
    */
-  public static String getFileNameWithTimestamp(String dwhType, String resultType, Clock clock) {
+  public static String getFileNameWithTimestamp(String nameWithOptionalSuffix, Clock clock) {
     SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
     String timeSuffix = format.format(clock.millis());
-    return formatFileName(dwhType, resultType + timeSuffix);
+    return formatFileName(nameWithOptionalSuffix + timeSuffix);
   }
 
   /**
    * Generate the archive file name, but do not include creation time. This is the most common case,
    * dumping logs for assessment being a known exception.
    *
-   * @param dwhType The type of the input data source, e.g. "teradata" or "oracle".
-   * @param resultType The type of the resulting dump, e.g. "metadata" or "stats".
+   * @param nameWithOptionalSuffix The name of the connector, can be followed by a suffix such as "-metadata" or "-logs"
    * @return Full name for the .zip archive.
    */
-  public static String getFileName(String dwhType, String resultType) {
-    return formatFileName(dwhType, resultType);
+  public static String getFileName(String nameWithOptionalSuffix) {
+    return formatFileName(nameWithOptionalSuffix);
   }
 
-  private static String formatFileName(String dwhType, String details) {
-    return String.format("dwh-migration-%s-%s.zip", dwhType, details);
+  private static String formatFileName(String nameWithOptionalSuffix) {
+    return String.format("dwh-migration-%s.zip", nameWithOptionalSuffix);
   }
 
   private ArchiveNameUtil() {}
