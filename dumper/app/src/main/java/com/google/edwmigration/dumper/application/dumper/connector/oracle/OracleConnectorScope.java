@@ -36,20 +36,20 @@ enum OracleConnectorScope {
     this.resultType = resultType;
   }
 
-  String toDisplayName() {
+  String displayName() {
     return displayName;
   }
 
   String toFileName(boolean isAssessment) {
     if (this == LOGS && isAssessment) {
       Clock systemClock = Clock.systemDefaultZone();
-      return ArchiveNameUtil.getFileNameWithTime("oracle", resultType, systemClock);
+      return ArchiveNameUtil.getFileNameWithTimestamp("oracle", resultType, systemClock);
     } else {
-      return ArchiveNameUtil.getBasicFileName("oracle", resultType);
+      return ArchiveNameUtil.getFileName("oracle", resultType);
     }
   }
 
-  String toFormat() {
+  String formatName() {
     return format;
   }
 }

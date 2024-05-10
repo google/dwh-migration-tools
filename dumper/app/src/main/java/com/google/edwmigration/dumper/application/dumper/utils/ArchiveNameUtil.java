@@ -31,10 +31,10 @@ public class ArchiveNameUtil {
    * @param clock The Clock instance to provide the date.
    * @return Full name for the .zip archive.
    */
-  public static String getFileNameWithTime(String dwhType, String resultType, Clock clock) {
+  public static String getFileNameWithTimestamp(String dwhType, String resultType, Clock clock) {
     SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
     String timeSuffix = format.format(clock.millis());
-    return getFileName(dwhType, resultType + timeSuffix);
+    return formatFileName(dwhType, resultType + timeSuffix);
   }
 
   /**
@@ -45,11 +45,11 @@ public class ArchiveNameUtil {
    * @param resultType The type of the resulting dump, e.g. "metadata" or "stats".
    * @return Full name for the .zip archive.
    */
-  public static String getBasicFileName(String dwhType, String resultType) {
-    return getFileName(dwhType, resultType);
+  public static String getFileName(String dwhType, String resultType) {
+    return formatFileName(dwhType, resultType);
   }
 
-  private static String getFileName(String dwhType, String details) {
+  private static String formatFileName(String dwhType, String details) {
     return String.format("dwh-migration-%s-%s.zip", dwhType, details);
   }
 

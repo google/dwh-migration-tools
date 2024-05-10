@@ -28,15 +28,15 @@ public class OracleConnectorScopeTest {
 
   @Test
   public void toDisplayName_success() {
-    assertEquals("oracle-logs", LOGS.toDisplayName());
-    assertEquals("oracle", METADATA.toDisplayName());
-    assertEquals("oracle-stats", STATS.toDisplayName());
+    assertEquals("oracle-logs", LOGS.displayName());
+    assertEquals("oracle", METADATA.displayName());
+    assertEquals("oracle-stats", STATS.displayName());
   }
 
   @Test
   public void toFormat_success() {
-    assertEquals("oracle.logs.zip", LOGS.toFormat());
-    assertEquals("oracle.dump.zip", METADATA.toFormat());
-    assertEquals("oracle.stats.zip", STATS.toFormat());
+    assertEquals("oracle.logs.zip", LOGS.formatName());
+    assertEquals("oracle.dump.zip", METADATA.formatName());
+    assertEquals("oracle.stats.zip", STATS.formatName());
   }
 }

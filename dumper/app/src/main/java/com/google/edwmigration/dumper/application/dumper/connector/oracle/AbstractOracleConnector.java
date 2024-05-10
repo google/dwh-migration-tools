@@ -126,7 +126,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   }
 
   public AbstractOracleConnector(@Nonnull OracleConnectorScope connectorScope) {
-    super(connectorScope.toDisplayName());
+    super(connectorScope.displayName());
     this.connectorScope = connectorScope;
   }
 
@@ -138,7 +138,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
   @Nonnull
   String getFormatName() {
-    return connectorScope.toFormat();
+    return connectorScope.formatName();
   }
 
   private boolean isOracleSid(ConnectorArguments arguments) throws MetadataDumperUsageException {
