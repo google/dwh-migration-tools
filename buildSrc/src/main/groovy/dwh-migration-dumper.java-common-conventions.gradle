@@ -151,7 +151,7 @@ tasks.named('test') {
             exceptionFormat "full"
         }
     }
-
+    finalizedBy jacocoTestReport // report is always generated after tests run
     ignoreFailures = false
 }
 
