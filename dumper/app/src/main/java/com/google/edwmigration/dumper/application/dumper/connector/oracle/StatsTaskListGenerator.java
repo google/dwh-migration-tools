@@ -24,22 +24,23 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 class StatsTaskListGenerator {
 
+  private static final ImmutableList<StatsQuery> QUERIES =
+      ImmutableList.of(
+          // TODO: add entries for other SQLs to this list
+          StatsQuery.create("hist-cmd-types", Tool.STATSPACK));
+
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
 
-    ImmutableList<StatsQuery> queries =
-        ImmutableList.of(
-            // TODO: add entries for other SQLs to this list
-            StatsQuery.create("hist-cmd-types", Tool.STATSPACK));
-    for (StatsQuery item : queries) {
+    for (StatsQuery item : QUERIES) {
       builder.add(item.toTask());
     }
     return builder.build();
@@ -61,18 +62,17 @@ class StatsTaskListGenerator {
 
     abstract String name();
 
-    abstract String tool();
+    abstract Tool tool();
 
     static StatsQuery create(String name, Tool tool) {
-      String toolName = tool.value;
-      return new AutoValue_StatsTaskListGenerator_StatsQuery(name, toolName);
+      return new AutoValue_StatsTaskListGenerator_StatsQuery(name, tool);
     }
 
     @Nonnull
     Task<?> toTask() throws IOException {
-      String path = String.format("oracle-stats/%s/%s", tool(), name());
+      String path = String.format("oracle-stats/%s/%s", tool().value, name());
       URL queryUrl = Resources.getResource(path + ".sql");
-      String query = Resources.toString(queryUrl, Charset.forName("UTF-8"));
+      String query = Resources.toString(queryUrl, StandardCharsets.UTF_8);
       return new JdbcSelectTask(path + ".csv", query);
     }
   }
