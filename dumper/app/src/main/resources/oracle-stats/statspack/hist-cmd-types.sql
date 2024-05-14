@@ -16,11 +16,8 @@ SELECT
   ss.snap_id,
   ss.dbid,
   ss.instance_number,
-  ss.text_subset,
   ss.old_hash_value,
   ss.command_type,
-  ss.force_matching_signature,
-  ss.sql_id,
   C.snap_time,
   ss.executions,
   ss.delta_executions,
@@ -52,10 +49,10 @@ SELECT
   ss.delta_plsql_exec_time,
   ss.java_exec_time,
   ss.delta_java_exec_time,
-  'N/A' con_id,
-  TO_CHAR(C.snap_time, 'hh24') hh24,
+  to_char(C.snap_time, 'hh24') hh24,
   ss.command_type,
-  D.name command_name
+  D.name command_name,
+  count(1)
 FROM
 (
   SELECT
@@ -585,11 +582,8 @@ GROUP BY
   ss.snap_id,
   ss.dbid,
   ss.instance_number,
-  ss.text_subset,
   ss.old_hash_value,
   ss.command_type,
-  ss.force_matching_signature,
-  ss.sql_id,
   C.snap_time,
   ss.executions,
   ss.delta_executions,
@@ -621,6 +615,6 @@ GROUP BY
   ss.delta_plsql_exec_time,
   ss.java_exec_time,
   ss.delta_java_exec_time,
-  TO_CHAR(C.snap_time, 'hh24'),
+  to_char(C.snap_time, 'hh24'),
   ss.command_type,
   D.name
