@@ -31,8 +31,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 class StatsTaskListGenerator {
 
-  StatsTaskListGenerator() {}
-
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
