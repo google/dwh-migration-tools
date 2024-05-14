@@ -70,10 +70,10 @@ class StatsTaskListGenerator {
 
     @Nonnull
     Task<?> toTask() throws IOException {
-      String path = String.format("oracle-stats/%s/%s", tool().value, name());
-      URL queryUrl = Resources.getResource(path + ".sql");
+      String path = String.format("oracle-stats/%s/%s.sql", tool().value, name());
+      URL queryUrl = Resources.getResource(path);
       String query = Resources.toString(queryUrl, StandardCharsets.UTF_8);
-      return new JdbcSelectTask(path + ".csv", query);
+      return new JdbcSelectTask("oracle-stats/" + name() + ".csv", query);
     }
   }
 }
