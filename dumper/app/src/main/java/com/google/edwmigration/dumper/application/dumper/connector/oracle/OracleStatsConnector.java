@@ -36,8 +36,7 @@ public class OracleStatsConnector extends AbstractOracleConnector {
 
   @Override
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
-    String archiveFormat = getConnectorScope().formatName();
-    StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator(archiveFormat);
+    StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
     out.add(new DumpMetadataTask(arguments, getFormatName()));
     out.addAll(taskListGenerator.createTasks(arguments));
   }

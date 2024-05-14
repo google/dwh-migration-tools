@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.io.IOException;
@@ -32,16 +31,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 class StatsTaskListGenerator {
 
-  private final String archiveFormat;
-
-  StatsTaskListGenerator(String archiveFormat) {
-    this.archiveFormat = archiveFormat;
-  }
+  StatsTaskListGenerator() {}
 
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
-    ImmutableList.Builder<Task<?>> builder =
-        ImmutableList.<Task<?>>builder().add(new DumpMetadataTask(arguments, archiveFormat));
+    ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
 
     ImmutableList<StatsQuery> queries =
         ImmutableList.of(
