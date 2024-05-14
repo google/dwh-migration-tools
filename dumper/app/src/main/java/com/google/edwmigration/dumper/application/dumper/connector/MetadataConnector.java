@@ -16,11 +16,15 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
+import javax.annotation.Nonnull;
+
 /** @author shevek */
 public interface MetadataConnector extends Connector {
 
+  @Nonnull
   @Override
-  default String getDefaultFileName(boolean isAssessment) {
-    return "dwh-migration-" + getName() + "-metadata.zip";
+  default String getDefaultFileName(boolean unused) {
+    return ArchiveNameUtil.getFileName(getName(), "metadata");
   }
 }

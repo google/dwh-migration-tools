@@ -14,23 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector;
+package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import java.time.Clock;
-import javax.annotation.Nonnull;
+import static org.junit.Assert.assertEquals;
 
-/** @author shevek */
-public interface LogsConnector extends Connector {
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-  @Nonnull
-  @Override
-  default String getDefaultFileName(boolean isAssessment) {
-    if (isAssessment) {
-      Clock clock = Clock.systemDefaultZone();
-      return ArchiveNameUtil.getFileNameWithTimestamp(getName(), "logs", clock);
-    } else {
-      return ArchiveNameUtil.getFileName(getName(), "logs");
-    }
+@RunWith(JUnit4.class)
+public class OracleStatsConnectorTest {
+
+  @Test
+  public void getConnectorScope_success() {
+    OracleStatsConnector connector = new OracleStatsConnector();
+    assertEquals(OracleConnectorScope.STATS, connector.getConnectorScope());
   }
 }

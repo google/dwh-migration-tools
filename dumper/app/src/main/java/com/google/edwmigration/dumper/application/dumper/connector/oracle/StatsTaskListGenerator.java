@@ -14,23 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector;
+package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import java.time.Clock;
+import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-/** @author shevek */
-public interface LogsConnector extends Connector {
+@ParametersAreNonnullByDefault
+class StatsTaskListGenerator {
 
   @Nonnull
-  @Override
-  default String getDefaultFileName(boolean isAssessment) {
-    if (isAssessment) {
-      Clock clock = Clock.systemDefaultZone();
-      return ArchiveNameUtil.getFileNameWithTimestamp(getName(), "logs", clock);
-    } else {
-      return ArchiveNameUtil.getFileName(getName(), "logs");
-    }
+  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) {
+    throw new UnsupportedOperationException();
   }
 }

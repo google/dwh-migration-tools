@@ -49,7 +49,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   private static final Logger LOG = LoggerFactory.getLogger(OracleMetadataConnector.class);
 
   public OracleMetadataConnector() {
-    super("oracle");
+    super(OracleConnectorScope.METADATA);
   }
 
   private static interface GroupTask<T> extends Task<T> {
@@ -179,8 +179,8 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-    out.add(new FormatTask(OracleMetadataDumpFormat.FORMAT_NAME));
+    out.add(new DumpMetadataTask(arguments, getFormatName()));
+    out.add(new FormatTask(getFormatName()));
 
     out.add(new JdbcSelectTask(V_Version.ZIP_ENTRY_NAME, "SELECT * from V$VERSION"));
     out.add(new JdbcSelectTask(V_Parameter2.ZIP_ENTRY_NAME, "SELECT * from V$PARAMETER2"));

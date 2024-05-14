@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import java.sql.Driver;
+import java.time.Clock;
 import java.util.Optional;
 import java.util.Properties;
 import javax.annotation.Nonnull;
@@ -79,6 +80,8 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
   public static final int OPT_PORT_DEFAULT = 1521;
 
+  private final OracleConnectorScope connectorScope;
+
   protected enum CommonOracleConnectorProperty implements ConnectorPropertyWithDefault {
     USE_FETCH_SIZE_WITH_LONG_COLUMN(
         "oracle.use-fetch-size-with-long-column",
@@ -123,8 +126,21 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     return CommonOracleConnectorProperty.class;
   }
 
-  public AbstractOracleConnector(@Nonnull String name) {
-    super(name);
+  public AbstractOracleConnector(@Nonnull OracleConnectorScope connectorScope) {
+    super(connectorScope.connectorName());
+    this.connectorScope = connectorScope;
+  }
+
+  @Override
+  @Nonnull
+  public String getDefaultFileName(boolean isAssessment) {
+    Clock systemClock = Clock.systemDefaultZone();
+    return connectorScope.toFileName(isAssessment, systemClock);
+  }
+
+  @Nonnull
+  String getFormatName() {
+    return connectorScope.formatName();
   }
 
   private boolean isOracleSid(ConnectorArguments arguments) throws MetadataDumperUsageException {
@@ -144,6 +160,11 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     DataSource dataSource =
         new SimpleDriverDataSource(driver, buildUrl(arguments), buildProperties(arguments));
     return new JdbcHandle(dataSource);
+  }
+
+  @Nonnull
+  OracleConnectorScope getConnectorScope() {
+    return connectorScope;
   }
 
   @Nonnull
