@@ -16,17 +16,64 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 class StatsTaskListGenerator {
 
+  private static final ImmutableList<StatsQuery> QUERIES =
+      ImmutableList.of(
+          // TODO: add entries for other SQLs to this list
+          StatsQuery.create("hist-cmd-types", Tool.STATSPACK));
+
   @Nonnull
-  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) {
-    throw new UnsupportedOperationException();
+  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
+    ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
+
+    for (StatsQuery item : QUERIES) {
+      builder.add(item.toTask());
+    }
+    return builder.build();
+  }
+
+  enum Tool {
+    AWR("awr"),
+    STATSPACK("statspack");
+
+    final String value;
+
+    Tool(String value) {
+      this.value = value;
+    }
+  }
+
+  @AutoValue
+  abstract static class StatsQuery {
+
+    abstract String name();
+
+    abstract Tool tool();
+
+    static StatsQuery create(String name, Tool tool) {
+      return new AutoValue_StatsTaskListGenerator_StatsQuery(name, tool);
+    }
+
+    @Nonnull
+    Task<?> toTask() throws IOException {
+      String path = String.format("oracle-stats/%s/%s.sql", tool().value, name());
+      URL queryUrl = Resources.getResource(path);
+      String query = Resources.toString(queryUrl, StandardCharsets.UTF_8);
+      return new JdbcSelectTask("oracle-stats/" + name() + ".csv", query);
+    }
   }
 }
