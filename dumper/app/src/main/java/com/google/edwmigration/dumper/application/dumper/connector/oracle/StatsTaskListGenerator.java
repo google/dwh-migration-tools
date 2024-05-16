@@ -33,8 +33,10 @@ class StatsTaskListGenerator {
 
   private static final ImmutableList<StatsQuery> QUERIES =
       ImmutableList.of(
+          StatsQuery.create("hist-cmd-types", Tool.STATSPACK),
+          StatsQuery.create("app-schemas-pdbs", Tool.OTHER)
           // TODO: add entries for other SQLs to this list
-          StatsQuery.create("hist-cmd-types", Tool.STATSPACK));
+          );
 
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
@@ -48,6 +50,7 @@ class StatsTaskListGenerator {
 
   enum Tool {
     AWR("awr"),
+    OTHER("other"),
     STATSPACK("statspack");
 
     final String value;
