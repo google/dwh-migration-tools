@@ -21,7 +21,9 @@ SELECT
     D.logging "Logging",
     D.con_id "ConId",
     D.con_uid "ConUid",
-    E.min_owner "Owner"
+    F.min_owner "EbsOwner",
+    H.min_owner "SiebelOwner",
+    J.min_owner "PsftOwner"
 FROM (
   SELECT
     'pdbs' source,
@@ -48,10 +50,26 @@ FROM (
   ON B.obj# = C.obj# AND B.con_id# = 1
 ) D
 LEFT JOIN (
-  SELECT F.con_id, min(F.owner) min_owner
-  FROM cdb_tab_columns F
-  WHERE F.table_name = 'FND_PRODUCT_GROUPS'
-    AND F.column_name = 'RELEASE_NAME'
-    AND F.data_type = 'VARCHAR2'
-  GROUP BY F.con_id
-) E ON D.con_id = E.con_id
+  SELECT E.con_id, min(E.owner) min_owner
+  FROM cdb_tab_columns E
+  WHERE E.table_name = 'FND_PRODUCT_GROUPS'
+    AND E.column_name = 'RELEASE_NAME'
+    AND E.data_type = 'VARCHAR2'
+  GROUP BY E.con_id
+) F ON D.con_id = F.con_id
+LEFT JOIN (
+  SELECT G.con_id, min(G.owner) min_owner
+  FROM cdb_tab_columns G
+  WHERE G.table_name = 'S_REPOSITORY'
+    AND G.column_name = 'ROW_ID'
+    AND G.data_type = 'VARCHAR2'
+  GROUP BY G.con_id
+) H ON D.con_id = H.con_id
+LEFT JOIN (
+  SELECT I.con_id, min(I.owner) min_owner
+  FROM cdb_tab_columns I
+  WHERE table_name = 'PSSTATUS'
+    AND column_name = 'TOOLSREL'
+    AND data_type = 'VARCHAR2'
+  GROUP BY I.con_id
+) J ON D.con_id = J.con_id
