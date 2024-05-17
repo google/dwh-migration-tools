@@ -33,8 +33,8 @@ class StatsTaskListGenerator {
 
   private static final ImmutableList<StatsQuery> QUERIES =
       ImmutableList.of(
-          StatsQuery.create("hist-cmd-types", Tool.STATSPACK),
-          StatsQuery.create("app-schemas-pdbs", Tool.OTHER)
+          StatsQuery.create("hist-cmd-types", Source.STATSPACK),
+          StatsQuery.create("app-schemas-pdbs", Source.METADATA)
           // TODO: add entries for other SQLs to this list
           );
 
@@ -48,14 +48,15 @@ class StatsTaskListGenerator {
     return builder.build();
   }
 
-  enum Tool {
+  /** The source of performance statistics. */
+  enum Source {
     AWR("awr"),
-    OTHER("other"),
+    METADATA("metadata"),
     STATSPACK("statspack");
 
     final String value;
 
-    Tool(String value) {
+    Source(String value) {
       this.value = value;
     }
   }
@@ -65,9 +66,9 @@ class StatsTaskListGenerator {
 
     abstract String name();
 
-    abstract Tool tool();
+    abstract Source tool();
 
-    static StatsQuery create(String name, Tool tool) {
+    static StatsQuery create(String name, Source tool) {
       return new AutoValue_StatsTaskListGenerator_StatsQuery(name, tool);
     }
 
