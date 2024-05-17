@@ -23,7 +23,12 @@ SELECT
     D.con_uid "ConUid",
     F.min_owner "EbsOwner",
     H.min_owner "SiebelOwner",
-    J.min_owner "PsftOwner"
+    J.min_owner "PsftOwner",
+    nvl(L.count, 0) "RdaMatchCount",
+    nvl(N.count, 0) "OciAutoViewMatches",
+    nvl(R.count, 0) "DbmsCloudMatches",
+    nvl(U.count, 0) "ApexMatches",
+    W.min_owner "SapOwner"
 FROM (
   SELECT
     'pdbs' source,
@@ -73,3 +78,39 @@ LEFT JOIN (
     AND data_type = 'VARCHAR2'
   GROUP BY I.con_id
 ) J ON D.con_id = J.con_id
+LEFT JOIN (
+  SELECT K.con_id, count(1) count FROM cdb_objects K
+  WHERE K.owner = 'RDSADMIN'
+    AND K.object_name = 'RDAADMIN_UTIL'
+  GROUP BY K.con_id
+) L ON D.con_id = L.con_id
+LEFT JOIN (
+  SELECT M.con_id, count(1) count FROM cdb_views M
+  WHERE view_name = 'OCI_AUTONOMOUS_DATABASES'
+  GROUP BY M.con_id
+) N ON D.con_id = N.con_id
+LEFT JOIN (
+  SELECT P.con_id, count(1) count FROM cdb_objects P
+  JOIN v$parameter Q
+    ON P.object_name = 'DBMS_CLOUD'
+    AND Q.name = 'common_user_prefix'
+    AND P.con_id = Q.con_id
+    AND P.owner = 'CLOUD$SERVICE' || Q.value
+  GROUP BY P.con_id
+) R ON D.con_id = R.con_id
+LEFT JOIN (
+  SELECT S.con_id, count(1) count FROM cdb_objects S
+  JOIN cdb_users T
+    ON S.object_name = 'WWV_FLOW'
+    AND S.object_type = 'PACKAGE'
+    AND T.username = 'apex_public_user'
+    AND S.con_id = T.con_id
+  GROUP BY S.con_id
+) U ON D.con_id = U.con_id
+LEFT JOIN (
+  SELECT V.con_id, min(V.owner) min_owner FROM cdb_tab_columns V
+  WHERE V.table_name = 'DD02T'
+    AND V.column_name = 'DDLANGUAGE'
+    AND V.data_type = 'VARCHAR2'
+  GROUP BY V.con_id, V.owner
+) W ON D.con_id = W.con_id
