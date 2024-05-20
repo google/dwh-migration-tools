@@ -73,9 +73,9 @@ LEFT JOIN (
 LEFT JOIN (
   SELECT I.con_id, min(I.owner) min_owner
   FROM cdb_tab_columns I
-  WHERE table_name = 'PSSTATUS'
-    AND column_name = 'TOOLSREL'
-    AND data_type = 'VARCHAR2'
+  WHERE I.table_name = 'PSSTATUS'
+    AND I.column_name = 'TOOLSREL'
+    AND I.data_type = 'VARCHAR2'
   GROUP BY I.con_id
 ) J ON D.con_id = J.con_id
 LEFT JOIN (
