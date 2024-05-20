@@ -34,7 +34,8 @@ class StatsTaskListGenerator {
   private static final ImmutableList<StatsQuery> QUERIES =
       ImmutableList.of(
           StatsQuery.create("hist-cmd-types", StatsSource.STATSPACK),
-          StatsQuery.create("app-schemas-pdbs", StatsSource.METADATA)
+          StatsQuery.create("app-schemas-pdbs", StatsSource.METADATA),
+          StatsQuery.create("app-schemas-summary", StatsSource.METADATA)
           // TODO: add entries for other SQLs to this list
           );
 
