@@ -137,6 +137,12 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_HIVE_KERBEROS_URL = "hive-kerberos-url";
   public static final String OPT_REQUIRED_IF_NOT_URL = "if --url is not specified";
   public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
+
+  // Ranger.
+  public static final String OPT_RANGER_PORT_DEFAULT = "6080";
+  public static final String OPT_RANGER_PAGE_SIZE = "ranger-page-size";
+  public static final int OPT_RANGER_PAGE_SIZE_DEFAULT = 1000;
+
   // These are blocking threads on the client side, so it doesn't really matter much.
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
 
@@ -376,6 +382,14 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(String.class)
           .describedAs("principal/host");
+
+  // Ranger.
+  private final OptionSpec<Integer> optionRangerPageSize =
+      parser
+          .accepts(OPT_RANGER_PAGE_SIZE, "Set the page size used to fetch Ranger entries.")
+          .withRequiredArg()
+          .ofType(Integer.class)
+          .defaultsTo(OPT_RANGER_PAGE_SIZE_DEFAULT);
 
   // Threading / Pooling
   private final OptionSpec<Integer> optionThreadPoolSize =
@@ -843,6 +857,10 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getIAMProfile() {
     return getOptions().valueOf(optionRedshiftIAMProfile);
+  }
+
+  public int getRangerPageSizeDefault() {
+    return getOptions().valueOf(optionRangerPageSize);
   }
 
   public int getThreadPoolSize() {

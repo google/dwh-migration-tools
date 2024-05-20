@@ -66,6 +66,7 @@ dependencies {
     implementation libs.httpclient5
     implementation libs.aws.java.sdk.redshift
     implementation libs.aws.java.sdk.cloudwatch
+    implementation libs.ranger.intg
 
     runtimeOnly libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j
