@@ -35,9 +35,9 @@ SELECT
     ) "SiebelOwner",
     (
       SELECT min(I.owner) FROM dba_tab_columns I
-      WHERE table_name = 'PSSTATUS'
-        AND column_name = 'TOOLSREL'
-        AND data_type = 'VARCHAR2'
+      WHERE I.table_name = 'PSSTATUS'
+        AND I.column_name = 'TOOLSREL'
+        AND I.data_type = 'VARCHAR2'
     ) "PsftOwner",
     (
       SELECT count(1) FROM dba_objects K
