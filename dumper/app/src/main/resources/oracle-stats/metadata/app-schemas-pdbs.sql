@@ -52,7 +52,7 @@ FROM (
     B.con_uid
   FROM sys.container$ B
   JOIN sys.obj$ C
-  ON "B.obj#" = "C.obj#" AND "B.con_id#" = 1
+  ON B.obj# = C.obj# AND B.con_id# = 1
 ) D
 LEFT JOIN (
   SELECT E.con_id, min(E.owner) min_owner
