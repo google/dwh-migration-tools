@@ -110,6 +110,11 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   }
 
   @Nonnull
+  public ResultSetExtractor<Summary> newCsvResultSetExtractor(@Nonnull ByteSink sink) {
+    return newCsvResultSetExtractor(sink, -1);
+  }
+
+  @Nonnull
   protected ExtendableResultSetExtractor newCsvResultSetExtractor(
       @Nonnull ByteSink sink, @CheckForSigned long count) {
     return rs -> {
