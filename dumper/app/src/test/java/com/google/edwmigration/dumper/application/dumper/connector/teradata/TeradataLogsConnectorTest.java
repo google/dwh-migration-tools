@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
+import static java.time.ZoneOffset.UTC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -40,6 +41,8 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
@@ -260,6 +263,16 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
 
   private void checkNames(Enum<?>[] vals, ImmutableList<String> expressions) {
     checkNames(vals, expressions.toArray(new String[0]));
+  }
+
+  @Test
+  public void getDefaultFileName_success() {
+    Instant instant = Instant.ofEpochMilli(1715346130945L);
+    Clock clock = Clock.fixed(instant, UTC);
+
+    String fileName = connector.getDefaultFileName(/* isAssessment= */ true, clock);
+
+    assertEquals("dwh-migration-teradata-logs-logs-20240510T130210.zip", fileName);
   }
 
   @Test
