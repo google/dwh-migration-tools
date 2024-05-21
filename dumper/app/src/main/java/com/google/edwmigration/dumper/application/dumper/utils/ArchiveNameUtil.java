@@ -16,8 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.utils;
 
-import java.text.SimpleDateFormat;
 import java.time.Clock;
+import java.time.format.DateTimeFormatter;
 
 public class ArchiveNameUtil {
 
@@ -31,8 +31,8 @@ public class ArchiveNameUtil {
    * @return Full name for the .zip archive.
    */
   public static String getFileNameWithTimestamp(String name, String suffix, Clock clock) {
-    SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-    String timeSuffix = format.format(clock.millis());
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    String timeSuffix = formatter.withZone(clock.getZone()).format(clock.instant());
     return formatFileName(name, suffix + "-" + timeSuffix);
   }
 
