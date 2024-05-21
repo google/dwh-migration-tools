@@ -20,7 +20,6 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.io.IOException;
 import java.net.URL;
@@ -44,7 +43,7 @@ class StatsTaskListGenerator {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
 
     for (StatsQuery item : QUERIES) {
-      builder.add(item.toTask());
+      builder.add(StatsJdbcTask.fromQuery(item));
     }
     return builder.build();
   }
@@ -74,11 +73,10 @@ class StatsTaskListGenerator {
     }
 
     @Nonnull
-    Task<?> toTask() throws IOException {
+    String queryText() throws IOException {
       String path = String.format("oracle-stats/%s/%s.sql", tool().value, name());
       URL queryUrl = Resources.getResource(path);
-      String query = Resources.toString(queryUrl, StandardCharsets.UTF_8);
-      return new JdbcSelectTask("oracle-stats/" + name() + ".csv", query);
+      return Resources.toString(queryUrl, StandardCharsets.UTF_8);
     }
   }
 }
