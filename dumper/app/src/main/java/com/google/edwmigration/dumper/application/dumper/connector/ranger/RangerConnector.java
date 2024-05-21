@@ -23,6 +23,8 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerInternalClient.RangerInternalException;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerInternalClient.User;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerPageIterator.Page;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -33,8 +35,10 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.PoliciesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.ServicesFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.UsersFormat;
 import com.google.errorprone.annotations.ForOverride;
 import java.io.Writer;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
@@ -75,6 +79,7 @@ public class RangerConnector extends AbstractConnector {
 
   @Override
   public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    out.add(new DumpUsersTask());
     out.add(new DumpServicesTask());
     out.add(new DumpPoliciesTask());
   }
@@ -82,15 +87,46 @@ public class RangerConnector extends AbstractConnector {
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
+    // TODO(aleofreddi): check if we need to handle SSL or Kerberos here.
+    URI apiUrl = URI.create("http://" + arguments.getHost() + ":" + arguments.getPort());
+    String password = arguments.getPasswordOrPrompt();
     return new RangerClientHandle(
+        // Public API client.
         new RangerClient(
-            // TODO(aleofreddi): check if we need to handle SSL or Kerberos here.
-            "http://" + arguments.getHost() + ":" + arguments.getPort(),
+            apiUrl.toString(),
             /* authType= */ "simple", // Use basic auth instead of Kerberos.
             arguments.getUser(),
-            arguments.getPasswordOrPrompt(),
-            null),
+            password,
+            /* configFile= */ null),
+        // Internal API client.
+        new RangerInternalClient(apiUrl, arguments.getUser(), password),
         arguments.getRangerPageSizeDefault());
+  }
+
+  static class DumpUsersTask extends AbstractRangerTask<User> {
+
+    DumpUsersTask() {
+      super(UsersFormat.ZIP_ENTRY_NAME);
+    }
+
+    @Override
+    protected Iterator<User> dataIterator(
+        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
+      return new RangerPageIterator<>(
+          page -> {
+            try {
+              return handle.rangerInternalClient.findUsers(toParameters(page));
+            } catch (RangerInternalException e) {
+              throw new RuntimeException("Failed to fetch Ranger users", e);
+            }
+          },
+          handle.pageSize);
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "Ranger users";
+    }
   }
 
   static class DumpServicesTask extends AbstractRangerTask<RangerService> {
@@ -188,10 +224,14 @@ public class RangerConnector extends AbstractConnector {
 
     public final RangerClient rangerClient;
 
+    public final RangerInternalClient rangerInternalClient;
+
     public final int pageSize;
 
-    RangerClientHandle(RangerClient rangerClient, int pageSize) {
+    RangerClientHandle(
+        RangerClient rangerClient, RangerInternalClient rangerInternalClient, int pageSize) {
       this.rangerClient = rangerClient;
+      this.rangerInternalClient = rangerInternalClient;
       this.pageSize = pageSize;
     }
   }

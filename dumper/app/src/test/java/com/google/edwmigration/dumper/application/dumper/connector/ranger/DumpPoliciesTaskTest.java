@@ -41,9 +41,11 @@ import org.mockito.junit.MockitoRule;
 @RunWith(JUnit4.class)
 public class DumpPoliciesTaskTest extends AbstractTaskTest {
 
-  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+  @Rule
+  public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private RangerClient rangerClientMock;
+  @Mock
+  private RangerClient rangerClientMock;
 
   private static final List<RangerPolicy> TEST_POLICIES =
       ImmutableList.of(
@@ -112,10 +114,11 @@ public class DumpPoliciesTaskTest extends AbstractTaskTest {
   public void doRun_success() throws Exception {
     when(rangerClientMock.findPolicies(anyMap())).thenReturn(TEST_POLICIES);
     DumpPoliciesTask task = new DumpPoliciesTask();
-    RangerClientHandle handle = new RangerClientHandle(rangerClientMock, 1000);
+    RangerClientHandle handle =
+        new RangerClientHandle(rangerClientMock, /* rangerInternalClient= */ null, 1000);
     MemoryByteSink sink = new MemoryByteSink();
 
-    task.doRun(null, sink, handle);
+    task.doRun(/* context= */ null, sink, handle);
 
     String actual = sink.openStream().toString();
     String expected = RangerTestResources.getResourceAsString("ranger/policies.success.jsonl");
