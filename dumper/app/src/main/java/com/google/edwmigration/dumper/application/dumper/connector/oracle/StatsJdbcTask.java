@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsQuery;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
@@ -50,7 +49,7 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   }
 
   @Nonnull
-  static Task<?> fromQuery(StatsQuery query) throws IOException {
+  static Task<?> fromQuery(OracleStatsQuery query) throws IOException {
     String name = "oracle-stats/" + query.name() + ".csv";
     String queryText = query.queryText();
     return new StatsJdbcTask(name, queryText);
