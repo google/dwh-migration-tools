@@ -30,8 +30,8 @@ enum OracleConnectorScope {
   private final String formatName;
   private final String resultType;
 
-  OracleConnectorScope(String displayName, String formatName, String resultType) {
-    this.connectorName = displayName;
+  OracleConnectorScope(String connectorName, String formatName, String resultType) {
+    this.connectorName = connectorName;
     this.formatName = formatName;
     this.resultType = resultType;
   }

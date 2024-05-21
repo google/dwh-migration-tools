@@ -37,17 +37,17 @@ public abstract class OracleStatsQuery {
   abstract String queryText();
 
   @Nonnull
-  abstract StatsSource tool();
+  abstract StatsSource statsSource();
 
-  static OracleStatsQuery create(String name, StatsSource tool) throws IOException {
-    String path = String.format("oracle-stats/%s/%s.sql", tool.value, name);
+  static OracleStatsQuery create(String name, StatsSource statsSource) throws IOException {
+    String path = String.format("oracle-stats/%s/%s.sql", statsSource.value, name);
     URL queryUrl = Resources.getResource(path);
     String queryText = Resources.toString(queryUrl, UTF_8);
-    return new AutoValue_OracleStatsQuery(name, queryText, tool);
+    return new AutoValue_OracleStatsQuery(name, queryText, statsSource);
   }
 
   @Nonnull
   String description() {
-    return String.format("Query{name=%s, tool=%s}", name(), tool());
+    return String.format("Query{name=%s, statsSource=%s}", name(), statsSource());
   }
 }
