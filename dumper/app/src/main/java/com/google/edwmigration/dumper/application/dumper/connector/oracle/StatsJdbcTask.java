@@ -59,10 +59,10 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   @Nonnull
   @Override
   public Summary doInConnection(
-      @Nonnull TaskRunContext context,
-      @Nonnull JdbcHandle jdbcHandle,
-      @Nonnull ByteSink sink,
-      @Nonnull Connection connection)
+      TaskRunContext context,
+      JdbcHandle jdbcHandle,
+      ByteSink sink,
+      Connection connection)
       throws SQLException {
     ResultSetExtractor<Summary> extractor = newCsvResultSetExtractor(sink);
     Summary result = doSelect(connection, extractor, query);
