@@ -24,22 +24,30 @@ import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsT
 import java.io.IOException;
 import java.net.URL;
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoValue
+@ParametersAreNonnullByDefault
 public abstract class OracleStatsQuery {
 
+  @Nonnull
   abstract String name();
 
+  @Nonnull
+  abstract String queryText();
+
+  @Nonnull
   abstract StatsSource tool();
 
-  static OracleStatsQuery create(String name, StatsSource tool) {
-    return new AutoValue_OracleStatsQuery(name, tool);
+  static OracleStatsQuery create(String name, StatsSource tool) throws IOException {
+    String path = String.format("oracle-stats/%s/%s.sql", tool.value, name);
+    URL queryUrl = Resources.getResource(path);
+    String queryText = Resources.toString(queryUrl, UTF_8);
+    return new AutoValue_OracleStatsQuery(name, queryText, tool);
   }
 
   @Nonnull
-  String queryText() throws IOException {
-    String path = String.format("oracle-stats/%s/%s.sql", tool().value, name());
-    URL queryUrl = Resources.getResource(path);
-    return Resources.toString(queryUrl, UTF_8);
+  String description() {
+    return String.format("Query{name=%s, tool=%s}", name(), tool());
   }
 }

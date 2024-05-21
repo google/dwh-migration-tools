@@ -26,19 +26,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 class StatsTaskListGenerator {
 
-  private static final ImmutableList<OracleStatsQuery> QUERIES =
-      ImmutableList.of(
-          OracleStatsQuery.create("hist-cmd-types", StatsSource.STATSPACK),
-          OracleStatsQuery.create("app-schemas-pdbs", StatsSource.METADATA),
-          OracleStatsQuery.create("app-schemas-summary", StatsSource.METADATA)
-          // TODO: add entries for other SQLs to this list
-          );
-
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
+    ImmutableList<OracleStatsQuery> queries =
+        ImmutableList.of(
+            OracleStatsQuery.create("hist-cmd-types", StatsSource.STATSPACK),
+            OracleStatsQuery.create("app-schemas-pdbs", StatsSource.METADATA),
+            OracleStatsQuery.create("app-schemas-summary", StatsSource.METADATA)
+            // TODO: add entries for other SQLs to this list
+            );
+
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
 
-    for (OracleStatsQuery item : QUERIES) {
+    for (OracleStatsQuery item : queries) {
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     return builder.build();

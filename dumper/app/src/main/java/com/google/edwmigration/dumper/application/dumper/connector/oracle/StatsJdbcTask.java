@@ -40,19 +40,18 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   private static final Logger LOG = LoggerFactory.getLogger(StatsJdbcTask.class);
 
-  private final String query;
+  private final OracleStatsQuery query;
 
-  private StatsJdbcTask(String name, String query) {
+  private StatsJdbcTask(String name, OracleStatsQuery query) {
     super(name);
     Preconditions.checkArgument(name.endsWith(".csv"));
     this.query = query;
   }
 
   @Nonnull
-  static Task<?> fromQuery(OracleStatsQuery query) throws IOException {
+  static Task<?> fromQuery(OracleStatsQuery query) {
     String name = "oracle-stats/" + query.name() + ".csv";
-    String queryText = query.queryText();
-    return new StatsJdbcTask(name, queryText);
+    return new StatsJdbcTask(name, query);
   }
 
   @Nonnull
@@ -61,7 +60,7 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     ResultSetExtractor<Summary> extractor = newCsvResultSetExtractor(sink);
-    Summary result = doSelect(connection, extractor, query);
+    Summary result = doSelect(connection, extractor, query.queryText());
     if (result == null) {
       LOG.warn("Unexpected data extraction result: null");
       return Summary.EMPTY;
@@ -75,15 +74,15 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
     return TaskCategory.REQUIRED;
   }
 
-  @Nonnull
-  @Override
-  public String describeSourceData() {
-    return "";
-  }
-
   @Override
   @Nonnull
   protected CSVFormat newCsvFormat(ResultSet resultSet) throws SQLException {
     return FORMAT.builder().setHeader(resultSet).build();
+  }
+
+  @Nonnull
+  @Override
+  public String toString() {
+    return String.format("Write to %s: %s", getTargetPath(), query.description());
   }
 }
