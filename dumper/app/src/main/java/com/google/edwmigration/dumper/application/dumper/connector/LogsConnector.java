@@ -25,9 +25,8 @@ public interface LogsConnector extends Connector {
 
   @Nonnull
   @Override
-  default String getDefaultFileName(boolean isAssessment) {
+  default String getDefaultFileName(boolean isAssessment, Clock clock) {
     if (isAssessment) {
-      Clock clock = Clock.systemDefaultZone();
       return ArchiveNameUtil.getFileNameWithTimestamp(getName(), "logs", clock);
     } else {
       return ArchiveNameUtil.getFileName(getName(), "logs");

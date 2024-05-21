@@ -135,8 +135,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void addTasksTo_withAssessmentFlag_assessmentAddedToAllRelevantTasks()
-          throws Exception {
+  public void addTasksTo_withAssessmentFlag_assessmentAddedToAllRelevantTasks() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act

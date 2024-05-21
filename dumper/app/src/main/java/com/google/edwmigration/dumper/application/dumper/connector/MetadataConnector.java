@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector;
 
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
+import java.time.Clock;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -24,7 +25,7 @@ public interface MetadataConnector extends Connector {
 
   @Nonnull
   @Override
-  default String getDefaultFileName(boolean unused) {
+  default String getDefaultFileName(boolean unused, Clock unused2) {
     return ArchiveNameUtil.getFileName(getName(), "metadata");
   }
 }

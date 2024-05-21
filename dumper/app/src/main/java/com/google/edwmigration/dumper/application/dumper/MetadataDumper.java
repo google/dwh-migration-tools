@@ -46,6 +46,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -204,10 +205,11 @@ public class MetadataDumper {
   }
 
   private String getOutputFileLocation(Connector connector, ConnectorArguments arguments) {
+    Clock clock = Clock.systemDefaultZone();
     // The default output file is based on the connector.
     // We had a customer request to base it on the database, but that isn't well-defined,
     // as there may be 0 or N databases in a single file.
-    String defaultFileName = connector.getDefaultFileName(arguments.isAssessment());
+    String defaultFileName = connector.getDefaultFileName(arguments.isAssessment(), clock);
     return arguments
         .getOutputFile()
         .map(file -> getVerifiedFile(defaultFileName, file))

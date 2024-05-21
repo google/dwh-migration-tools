@@ -133,9 +133,8 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
   @Override
   @Nonnull
-  public String getDefaultFileName(boolean isAssessment) {
-    Clock systemClock = Clock.systemDefaultZone();
-    return connectorScope.toFileName(isAssessment, systemClock);
+  public String getDefaultFileName(boolean isAssessment, Clock clock) {
+    return connectorScope.toFileName(isAssessment, clock);
   }
 
   @Nonnull
