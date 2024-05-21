@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -46,7 +46,7 @@ public class OracleConnectorScopeTest {
   @Test
   public void toFileName_forAssessment_success() {
     Instant instant = Instant.ofEpochMilli(1715346130945L);
-    Clock clock = Clock.fixed(instant, ZoneId.systemDefault());
+    Clock clock = Clock.fixed(instant, ZoneOffset.UTC);
 
     assertEquals(
         "dwh-migration-oracle-logs-logs-20240510T130210.zip", LOGS.toFileName(true, clock));
@@ -57,7 +57,7 @@ public class OracleConnectorScopeTest {
   @Test
   public void toFileName_notForAssessment_success() {
     Instant instant = Instant.ofEpochMilli(1715346130945L);
-    Clock clock = Clock.fixed(instant, ZoneId.systemDefault());
+    Clock clock = Clock.fixed(instant, ZoneOffset.UTC);
 
     assertEquals("dwh-migration-oracle-logs-logs.zip", LOGS.toFileName(false, clock));
     assertEquals("dwh-migration-oracle-metadata.zip", METADATA.toFileName(false, clock));

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import org.junit.Test;
 
 public class ArchiveNameUtilTest {
@@ -38,7 +38,7 @@ public class ArchiveNameUtilTest {
   @Test
   public void getFileNameWithTimestamp_success() {
     Instant instant = Instant.ofEpochMilli(1715346130945L);
-    Clock clock = Clock.fixed(instant, ZoneId.systemDefault());
+    Clock clock = Clock.fixed(instant, ZoneOffset.UTC);
     String name = "snowflake";
     String suffix = "information-schema-logs";
 
