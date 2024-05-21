@@ -16,12 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.auto.value.AutoValue;
 import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import javax.annotation.Nonnull;
 
 @AutoValue
@@ -39,6 +40,6 @@ public abstract class OracleStatsQuery {
   String queryText() throws IOException {
     String path = String.format("oracle-stats/%s/%s.sql", tool().value, name());
     URL queryUrl = Resources.getResource(path);
-    return Resources.toString(queryUrl, StandardCharsets.UTF_8);
+    return Resources.toString(queryUrl, UTF_8);
   }
 }
