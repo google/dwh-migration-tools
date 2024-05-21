@@ -72,10 +72,11 @@ public class DumpServicesTaskTest extends AbstractTaskTest {
   public void doRun_success() throws Exception {
     when(rangerClientMock.findServices(anyMap())).thenReturn(TEST_SERVICES);
     DumpServicesTask task = new DumpServicesTask();
-    RangerClientHandle handle = new RangerClientHandle(rangerClientMock, 1000);
+    RangerClientHandle handle =
+        new RangerClientHandle(rangerClientMock, /* rangerInternalClient= */ null, 1000);
     MemoryByteSink sink = new MemoryByteSink();
 
-    task.doRun(null, sink, handle);
+    task.doRun(/* context= */ null, sink, handle);
 
     String actual = sink.openStream().toString();
     String expected = RangerTestResources.getResourceAsString("ranger/services.success.jsonl");

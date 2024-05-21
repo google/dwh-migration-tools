@@ -19,12 +19,15 @@ package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public interface RangerDumpFormat {
 
   ObjectMapper MAPPER =
       new ObjectMapper()
+          .registerModule(new JavaTimeModule())
           .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+          .enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .disable(SerializationFeature.INDENT_OUTPUT);
 
   interface ServicesFormat {
@@ -35,5 +38,10 @@ public interface RangerDumpFormat {
   interface PoliciesFormat {
 
     String ZIP_ENTRY_NAME = "policies.jsonl";
+  }
+
+  interface UsersFormat {
+
+    String ZIP_ENTRY_NAME = "users.jsonl";
   }
 }

@@ -83,6 +83,7 @@ hive-service = { module = "org.apache.hive:hive-service", version.ref = "hive" }
 httpclient5 = { module = "org.apache.httpcomponents.client5:httpclient5", version.ref = "httpclient5" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 jcip-annotations = { module = "com.github.stephenc.jcip:jcip-annotations", version.ref = "jcip" }
 jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j", version.ref = "jcl-over-slf4j" }
 jdiagnostics = { module = "org.anarres.jdiagnostics:jdiagnostics", version.ref = "jdiagnostics" }
