@@ -32,10 +32,14 @@ import java.sql.SQLException;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 @ParametersAreNonnullByDefault
 class StatsJdbcTask extends AbstractJdbcTask<Summary> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(StatsJdbcTask.class);
 
   private final String query;
 
@@ -45,12 +49,14 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
     this.query = query;
   }
 
+  @Nonnull
   static Task<?> fromQuery(StatsQuery query) throws IOException {
     String name = "oracle-stats/" + query.name() + ".csv";
     String queryText = query.queryText();
     return new StatsJdbcTask(name, queryText);
   }
 
+  @Nonnull
   @Override
   public Summary doInConnection(
       @Nonnull TaskRunContext context,
@@ -59,7 +65,12 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
       @Nonnull Connection connection)
       throws SQLException {
     ResultSetExtractor<Summary> extractor = newCsvResultSetExtractor(sink);
-    return doSelect(connection, extractor, query);
+    Summary result = doSelect(connection, extractor, query);
+    if (result == null) {
+      LOG.warn("Unexpected data extraction result: null");
+      return Summary.EMPTY;
+    }
+    return result;
   }
 
   @Nonnull
