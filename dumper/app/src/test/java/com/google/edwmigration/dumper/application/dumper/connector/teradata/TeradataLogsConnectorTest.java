@@ -60,12 +60,12 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void testConnector() throws Exception {
+  public void addTasksTo_commonConnectorTest_success() throws Exception {
     testConnectorDefaults(connector);
   }
 
   @Test
-  public void testExecution() throws Exception {
+  public void addTasksTo_executeQuery_success() throws Exception {
     String name = getClass().getSimpleName();
     File dbFile = DumperTestUtils.newJdbcFile(name);
     File zipFile = DumperTestUtils.newZipFile(name);
@@ -102,7 +102,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void addTasksTo_dumpMetadataTask() throws Exception {
+  public void addTasksTo_containsDumpMetadataTask() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
@@ -113,7 +113,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void addTasksTo_formatTask() throws Exception {
+  public void addTasksTo_containsFormatTask() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
@@ -124,7 +124,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void addTasksTo_noTeradataAssessmentLogsJdbcTaskWithoutAssessmentFlag() throws Exception {
+  public void addTasksTo_noAssessmentFlag_assessmentNotAddedToRelevantTasks() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
@@ -135,8 +135,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void
-      addTasksTo_allTeradataLogsJdbcTasksAreTeradataAssessmentLogsJdbcTasksWithAssessmentFlag()
+  public void addTasksTo_withAssessmentFlag_assessmentAddedToAllRelevantTasks()
           throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -265,7 +264,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void testHeaderAndColumns() {
+  public void values_success() {
     checkNames(TeradataLogsDumpFormat.Header.values(), TeradataLogsJdbcTask.EXPRESSIONS);
     checkNames(
         TeradataLogsDumpFormat.HeaderLSql.values(),
