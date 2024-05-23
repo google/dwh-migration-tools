@@ -14,26 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
+package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-public interface RangerDumpFormat {
+import com.google.common.io.Resources;
+import java.io.IOException;
 
-  ObjectMapper MAPPER =
-      new ObjectMapper()
-          .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-          .disable(SerializationFeature.INDENT_OUTPUT);
+public class RangerTestResources {
 
-  interface ServicesFormat {
+  private RangerTestResources() {}
 
-    String ZIP_ENTRY_NAME = "services.jsonl";
-  }
-
-  interface PoliciesFormat {
-
-    String ZIP_ENTRY_NAME = "policies.jsonl";
+  public static String getResourceAsString(String name) throws IOException {
+    return Resources.toString(Resources.getResource(name), UTF_8);
   }
 }

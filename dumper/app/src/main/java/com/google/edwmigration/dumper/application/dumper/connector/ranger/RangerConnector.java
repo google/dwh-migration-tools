@@ -17,11 +17,13 @@
 package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerPageIterator.Page;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -30,16 +32,17 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.PoliciesFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.ServicesFormat;
 import com.google.errorprone.annotations.ForOverride;
-import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.elasticsearch.common.collect.Map;
+import org.apache.ranger.plugin.model.RangerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +57,7 @@ import org.slf4j.LoggerFactory;
     description = "The port of the Ranger server.",
     defaultValue = ConnectorArguments.OPT_RANGER_PORT_DEFAULT)
 @AutoService({Connector.class})
-@Description("Dumps service policies from Apache Ranger.")
+@Description("Dumps services and policies from Apache Ranger.")
 public class RangerConnector extends AbstractConnector {
 
   @SuppressWarnings("UnusedVariable")
@@ -72,6 +75,7 @@ public class RangerConnector extends AbstractConnector {
 
   @Override
   public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    out.add(new DumpServicesTask());
     out.add(new DumpPoliciesTask());
   }
 
@@ -89,53 +93,66 @@ public class RangerConnector extends AbstractConnector {
         arguments.getRangerPageSizeDefault());
   }
 
-  static class DumpPoliciesTask extends AbstractRangerTask {
+  static class DumpServicesTask extends AbstractRangerTask<RangerService> {
+
+    DumpServicesTask() {
+      super(ServicesFormat.ZIP_ENTRY_NAME);
+    }
+
+    protected Iterator<RangerService> dataIterator(
+        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
+      return new RangerPageIterator<>(
+          page -> {
+            try {
+              return handle.rangerClient.findServices(toParameters(page));
+            } catch (RangerServiceException e) {
+              throw new RuntimeException("Failed to fetch Ranger services", e);
+            }
+          },
+          handle.pageSize);
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "Ranger services";
+    }
+  }
+
+  static class DumpPoliciesTask extends AbstractRangerTask<RangerPolicy> {
 
     DumpPoliciesTask() {
       super(PoliciesFormat.ZIP_ENTRY_NAME);
     }
 
     @Override
-    protected void run(@Nonnull Writer writer, @Nonnull RangerClientHandle handle)
-        throws IOException, RangerServiceException {
-      LOG.info("Listing Ranger policies...");
-      RangerPageIterator<RangerPolicy> policyIterator =
-          new RangerPageIterator<>(
-              page -> {
-                try {
-                  return handle.rangerClient.findPolicies(
-                      Map.of(
-                          "startIndex",
-                          String.valueOf(page.offset()),
-                          "pageSize",
-                          String.valueOf(page.limit())));
-                } catch (RangerServiceException e) {
-                  throw new RuntimeException("Failed to fetch Ranger policies", e);
-                }
-              },
-              handle.pageSize);
-      while (policyIterator.hasNext()) {
-        String policyJson = RangerDumpFormat.MAPPER.writeValueAsString(policyIterator.next());
-        writer.write(policyJson);
-        writer.write('\n');
-      }
+    protected Iterator<RangerPolicy> dataIterator(
+        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
+      return new RangerPageIterator<>(
+          page -> {
+            try {
+              return handle.rangerClient.findPolicies(toParameters(page));
+            } catch (RangerServiceException e) {
+              throw new RuntimeException("Failed to fetch Ranger policies", e);
+            }
+          },
+          handle.pageSize);
     }
 
     @Override
     protected String toCallDescription() {
-      return "Ranger Policies";
+      return "Ranger policies";
     }
   }
 
-  private abstract static class AbstractRangerTask extends AbstractTask<Void> {
+  private abstract static class AbstractRangerTask<T> extends AbstractTask<Void> {
 
     public AbstractRangerTask(String targetPath) {
       super(targetPath);
     }
 
     @ForOverride
-    protected abstract void run(@Nonnull Writer writer, @Nonnull RangerClientHandle handle)
-        throws Exception;
+    protected abstract Iterator<T> dataIterator(
+        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) throws Exception;
 
     @Override
     protected Void doRun(TaskRunContext context, ByteSink sink, @Nonnull Handle handle)
@@ -143,7 +160,12 @@ public class RangerConnector extends AbstractConnector {
       RangerClientHandle rangerClientHandler = (RangerClientHandle) handle;
       LOG.info("Writing to '{}' -> '{}'", getTargetPath(), sink);
       try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-        run(writer, rangerClientHandler);
+        for (Iterator<T> iterator = dataIterator(writer, rangerClientHandler);
+            iterator.hasNext(); ) {
+          String json = RangerDumpFormat.MAPPER.writeValueAsString(iterator.next());
+          writer.write(json);
+          writer.write('\n');
+        }
       }
       return null;
     }
@@ -153,6 +175,12 @@ public class RangerConnector extends AbstractConnector {
 
     protected String describeSourceData() {
       return "from " + toCallDescription();
+    }
+
+    protected ImmutableMap<String, String> toParameters(Page page) {
+      return ImmutableMap.of(
+          "startIndex", String.valueOf(page.offset()),
+          "pageSize", String.valueOf(page.limit()));
     }
   }
 
