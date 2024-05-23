@@ -258,13 +258,23 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void getDefaultFileName_success() {
+  public void getDefaultFileName_forAssessment_success() {
     Instant instant = Instant.ofEpochMilli(1715346130945L);
     Clock clock = Clock.fixed(instant, UTC);
 
     String fileName = connector.getDefaultFileName(/* isAssessment= */ true, clock);
 
     assertEquals("dwh-migration-teradata-logs-logs-20240510T130210.zip", fileName);
+  }
+
+  @Test
+  public void getDefaultFileName_notForAssessment_success() {
+    Instant instant = Instant.ofEpochMilli(1715346130945L);
+    Clock clock = Clock.fixed(instant, UTC);
+
+    String fileName = connector.getDefaultFileName(/* isAssessment= */ false, clock);
+
+    assertEquals("dwh-migration-teradata-logs-logs.zip", fileName);
   }
 
   @Test
