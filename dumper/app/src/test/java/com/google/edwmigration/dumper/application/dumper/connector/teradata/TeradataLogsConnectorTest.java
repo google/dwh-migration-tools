@@ -78,8 +78,6 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
             FileSystems.newFileSystem(outputUri, ImmutableMap.of("create", "true"))) {
       OutputHandleFactory sinkFactory = new FileSystemOutputHandleFactory(fileSystem, "/");
       handle.getJdbcTemplate().execute("attach ':memory:' as dbc");
-      // handle.getJdbcTemplate().execute("create table dbc.dbcinfo (InfoKey varchar,  InfoData
-      // varchar)");
       handle
           .getJdbcTemplate()
           .execute(
