@@ -25,7 +25,7 @@ public interface MetadataConnector extends Connector {
 
   @Nonnull
   @Override
-  default String getDefaultFileName(boolean unused, Clock unused2) {
+  default String getDefaultFileName(boolean isAssessment, Clock clock) {
     return ArchiveNameUtil.getFileName(getName(), "metadata");
   }
 }

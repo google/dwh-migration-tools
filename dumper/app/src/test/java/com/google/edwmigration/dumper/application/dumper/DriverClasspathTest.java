@@ -129,7 +129,7 @@ public class DriverClasspathTest {
 
     @Nonnull
     @Override
-    public String getDefaultFileName(boolean unused, Clock unused2) {
+    public String getDefaultFileName(boolean isAssessment, Clock clock) {
       return StringUtils.EMPTY;
     }
 
