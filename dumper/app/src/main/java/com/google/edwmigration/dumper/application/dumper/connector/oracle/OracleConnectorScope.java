@@ -41,13 +41,8 @@ enum OracleConnectorScope {
   }
 
   String toFileName(boolean isAssessment, Clock clock) {
-    if (this == LOGS) {
-      // add "-logs" twice for consistency with previous versions
-      String suffix = String.format("%s-%s", resultType, resultType);
-      if (isAssessment) {
-        return ArchiveNameUtil.getFileNameWithTimestamp("oracle", suffix, clock);
-      }
-      return ArchiveNameUtil.getFileName("oracle", suffix);
+    if (this == LOGS && isAssessment) {
+      return ArchiveNameUtil.getFileNameWithTimestamp("oracle", resultType, clock);
     }
     return ArchiveNameUtil.getFileName("oracle", resultType);
   }
