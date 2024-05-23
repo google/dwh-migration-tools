@@ -22,13 +22,10 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.DumpPoliciesTask;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -121,9 +118,7 @@ public class DumpPoliciesTaskTest extends AbstractTaskTest {
     task.doRun(null, sink, handle);
 
     String actual = sink.openStream().toString();
-    String expected =
-        Resources.toString(
-            Resources.getResource("ranger/policies.success.jsonl"), StandardCharsets.UTF_8);
+    String expected = RangerTestResources.getResourceAsString("ranger/policies.success.jsonl");
     assertEquals(expected, actual);
   }
 }
