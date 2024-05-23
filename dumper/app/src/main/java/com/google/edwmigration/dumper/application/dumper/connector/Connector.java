@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -32,7 +33,7 @@ public interface Connector {
   public String getName();
 
   @Nonnull
-  public String getDefaultFileName(boolean isAssessment);
+  public String getDefaultFileName(boolean isAssessment, Clock clock);
 
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception;

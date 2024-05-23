@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
+import static java.time.ZoneOffset.UTC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -40,10 +41,11 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -54,18 +56,13 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
 
   private final TeradataLogsConnector connector = new TeradataLogsConnector();
 
-  @Before
-  public void setUp() {
-    System.setProperty("user.timezone", "UTC");
-  }
-
   @Test
-  public void testConnector() throws Exception {
+  public void addTasksTo_commonConnectorTest_success() throws Exception {
     testConnectorDefaults(connector);
   }
 
   @Test
-  public void testExecution() throws Exception {
+  public void addTasksTo_executeQuery_success() throws Exception {
     String name = getClass().getSimpleName();
     File dbFile = DumperTestUtils.newJdbcFile(name);
     File zipFile = DumperTestUtils.newZipFile(name);
@@ -81,8 +78,6 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
             FileSystems.newFileSystem(outputUri, ImmutableMap.of("create", "true"))) {
       OutputHandleFactory sinkFactory = new FileSystemOutputHandleFactory(fileSystem, "/");
       handle.getJdbcTemplate().execute("attach ':memory:' as dbc");
-      // handle.getJdbcTemplate().execute("create table dbc.dbcinfo (InfoKey varchar,  InfoData
-      // varchar)");
       handle
           .getJdbcTemplate()
           .execute(
@@ -102,7 +97,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void addTasksTo_dumpMetadataTask() throws Exception {
+  public void addTasksTo_containsDumpMetadataTask() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
@@ -113,7 +108,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void addTasksTo_formatTask() throws Exception {
+  public void addTasksTo_containsFormatTask() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
@@ -124,7 +119,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void addTasksTo_noTeradataAssessmentLogsJdbcTaskWithoutAssessmentFlag() throws Exception {
+  public void addTasksTo_noAssessmentFlag_assessmentNotAddedToRelevantTasks() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
@@ -135,9 +130,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void
-      addTasksTo_allTeradataLogsJdbcTasksAreTeradataAssessmentLogsJdbcTasksWithAssessmentFlag()
-          throws Exception {
+  public void addTasksTo_withAssessmentFlag_assessmentAddedToAllRelevantTasks() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
@@ -265,7 +258,27 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   }
 
   @Test
-  public void testHeaderAndColumns() {
+  public void getDefaultFileName_forAssessment_success() {
+    Instant instant = Instant.ofEpochMilli(1715346130945L);
+    Clock clock = Clock.fixed(instant, UTC);
+
+    String fileName = connector.getDefaultFileName(/* isAssessment= */ true, clock);
+
+    assertEquals("dwh-migration-teradata-logs-logs-20240510T130210.zip", fileName);
+  }
+
+  @Test
+  public void getDefaultFileName_notForAssessment_success() {
+    Instant instant = Instant.ofEpochMilli(1715346130945L);
+    Clock clock = Clock.fixed(instant, UTC);
+
+    String fileName = connector.getDefaultFileName(/* isAssessment= */ false, clock);
+
+    assertEquals("dwh-migration-teradata-logs-logs.zip", fileName);
+  }
+
+  @Test
+  public void values_success() {
     checkNames(TeradataLogsDumpFormat.Header.values(), TeradataLogsJdbcTask.EXPRESSIONS);
     checkNames(
         TeradataLogsDumpFormat.HeaderLSql.values(),

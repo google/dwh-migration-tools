@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.time.Clock;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -128,7 +129,7 @@ public class DriverClasspathTest {
 
     @Nonnull
     @Override
-    public String getDefaultFileName(boolean ignored) {
+    public String getDefaultFileName(boolean isAssessment, Clock clock) {
       return StringUtils.EMPTY;
     }
 
