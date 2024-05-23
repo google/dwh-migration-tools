@@ -31,7 +31,9 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import java.sql.Driver;
+import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -152,5 +154,15 @@ public class GenericConnector extends AbstractJdbcConnector implements LogsConne
     Driver driver = newDriver(this.driverPaths, this.driverClass);
     DataSource dataSource = newSimpleDataSource(driver, this.uri, arguments);
     return JdbcHandle.newPooledJdbcHandle(dataSource, 2);
+  }
+
+  @Nonnull
+  @Override
+  public String getDefaultFileName(boolean isAssessment, Clock clock) {
+    if (isAssessment) {
+      return ArchiveNameUtil.getFileNameWithTimestamp(getName() + "-logs", clock);
+    } else {
+      return ArchiveNameUtil.getFileName(getName() + "-logs");
+    }
   }
 }

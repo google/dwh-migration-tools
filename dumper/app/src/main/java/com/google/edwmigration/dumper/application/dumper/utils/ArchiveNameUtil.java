@@ -30,10 +30,10 @@ public class ArchiveNameUtil {
    * @param clock The Clock instance to provide the date.
    * @return Full name for the .zip archive.
    */
-  public static String getFileNameWithTimestamp(String name, String suffix, Clock clock) {
+  public static String getFileNameWithTimestamp(String name, Clock clock) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
     String timeSuffix = formatter.withZone(clock.getZone()).format(clock.instant());
-    return formatFileName(name, suffix + "-" + timeSuffix);
+    return formatFileName(name, timeSuffix);
   }
 
   /**
@@ -44,13 +44,12 @@ public class ArchiveNameUtil {
    * @param suffix Connector-specific suffix such as "metadata" or "logs".
    * @return Full name for the .zip archive.
    */
-  public static String getFileName(String name, String suffix) {
-    return formatFileName(name, suffix);
+  public static String getFileName(String name) {
+    return formatFileName(name);
   }
 
-  private static String formatFileName(String name, String suffix) {
-    String nameWithOptionalSuffix = name + (suffix.isEmpty() ? "" : "-" + suffix);
-    return String.format("dwh-migration-%s.zip", nameWithOptionalSuffix);
+  private static String formatFileName(String... terms) {
+    return String.format("dwh-migration-%s.zip", String.join("-", terms));
   }
 
   private ArchiveNameUtil() {}

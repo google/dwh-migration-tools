@@ -42,9 +42,9 @@ enum OracleConnectorScope {
 
   String toFileName(boolean isAssessment, Clock clock) {
     if (this == LOGS && isAssessment) {
-      return ArchiveNameUtil.getFileNameWithTimestamp("oracle", resultType, clock);
+      return ArchiveNameUtil.getFileNameWithTimestamp("oracle-" + resultType, clock);
     }
-    return ArchiveNameUtil.getFileName("oracle", resultType);
+    return ArchiveNameUtil.getFileName("oracle-" + resultType);
   }
 
   String formatName() {

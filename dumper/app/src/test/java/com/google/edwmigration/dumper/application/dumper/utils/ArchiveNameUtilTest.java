@@ -27,23 +27,20 @@ public class ArchiveNameUtilTest {
 
   @Test
   public void getFileName_success() {
-    String name = "snowflake";
-    String suffix = "information-schema-logs";
+    String name = "snowflake-information-schema-logs";
 
     assertEquals(
-        "dwh-migration-snowflake-information-schema-logs.zip",
-        ArchiveNameUtil.getFileName(name, suffix));
+        "dwh-migration-snowflake-information-schema-logs.zip", ArchiveNameUtil.getFileName(name));
   }
 
   @Test
   public void getFileNameWithTimestamp_success() {
     Instant instant = Instant.ofEpochMilli(1715346130945L);
     Clock clock = Clock.fixed(instant, UTC);
-    String name = "snowflake";
-    String suffix = "information-schema-logs";
+    String name = "snowflake-information-schema-logs";
 
     assertEquals(
         "dwh-migration-snowflake-information-schema-logs-20240510T130210.zip",
-        ArchiveNameUtil.getFileNameWithTimestamp(name, suffix, clock));
+        ArchiveNameUtil.getFileNameWithTimestamp(name, clock));
   }
 }
