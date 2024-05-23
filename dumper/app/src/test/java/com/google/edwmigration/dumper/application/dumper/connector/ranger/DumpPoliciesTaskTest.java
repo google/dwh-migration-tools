@@ -54,37 +54,37 @@ public class DumpPoliciesTaskTest extends AbstractTaskTest {
               /* policyPriority= */ 0,
               /* description= */ "Policy for all - hiveservice",
               /* resources= */ ImmutableMap.of(
-              "database",
-              new RangerPolicyResource(
-                  /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false),
-              "table",
-              new RangerPolicyResource(
-                  /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false),
-              "column",
-              new RangerPolicyResource(
-                  /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false)),
+                  "database",
+                  new RangerPolicyResource(
+                      /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false),
+                  "table",
+                  new RangerPolicyResource(
+                      /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false),
+                  "column",
+                  new RangerPolicyResource(
+                      /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false)),
               /* policyItems= */ ImmutableList.of(
-              new RangerPolicyItem(
-                  /* accessTypes= */ ImmutableList.of(
-                  new RangerPolicy.RangerPolicyItemAccess("select", true),
-                  new RangerPolicy.RangerPolicyItemAccess("update", true),
-                  new RangerPolicy.RangerPolicyItemAccess("create", true),
-                  new RangerPolicy.RangerPolicyItemAccess("drop", true),
-                  new RangerPolicy.RangerPolicyItemAccess("alter", true),
-                  new RangerPolicy.RangerPolicyItemAccess("index", true),
-                  new RangerPolicy.RangerPolicyItemAccess("lock", true),
-                  new RangerPolicy.RangerPolicyItemAccess("all", true),
-                  new RangerPolicy.RangerPolicyItemAccess("read", true),
-                  new RangerPolicy.RangerPolicyItemAccess("write", true),
-                  new RangerPolicy.RangerPolicyItemAccess("repladmin", true),
-                  new RangerPolicy.RangerPolicyItemAccess("serviceadmin", true),
-                  new RangerPolicy.RangerPolicyItemAccess("tempudfadmin", true),
-                  new RangerPolicy.RangerPolicyItemAccess("refresh", true)),
-                  /* users= */ ImmutableList.of("admin", "hive"),
-                  /* groups= */ ImmutableList.of(),
-                  /* roles= */ ImmutableList.of(),
-                  /* conditions= */ ImmutableList.of(),
-                  /* delegateAdmin= */ false)),
+                  new RangerPolicyItem(
+                      /* accessTypes= */ ImmutableList.of(
+                          new RangerPolicy.RangerPolicyItemAccess("select", true),
+                          new RangerPolicy.RangerPolicyItemAccess("update", true),
+                          new RangerPolicy.RangerPolicyItemAccess("create", true),
+                          new RangerPolicy.RangerPolicyItemAccess("drop", true),
+                          new RangerPolicy.RangerPolicyItemAccess("alter", true),
+                          new RangerPolicy.RangerPolicyItemAccess("index", true),
+                          new RangerPolicy.RangerPolicyItemAccess("lock", true),
+                          new RangerPolicy.RangerPolicyItemAccess("all", true),
+                          new RangerPolicy.RangerPolicyItemAccess("read", true),
+                          new RangerPolicy.RangerPolicyItemAccess("write", true),
+                          new RangerPolicy.RangerPolicyItemAccess("repladmin", true),
+                          new RangerPolicy.RangerPolicyItemAccess("serviceadmin", true),
+                          new RangerPolicy.RangerPolicyItemAccess("tempudfadmin", true),
+                          new RangerPolicy.RangerPolicyItemAccess("refresh", true)),
+                      /* users= */ ImmutableList.of("admin", "hive"),
+                      /* groups= */ ImmutableList.of(),
+                      /* roles= */ ImmutableList.of(),
+                      /* conditions= */ ImmutableList.of(),
+                      /* delegateAdmin= */ false)),
               /* resourceSignature=*/ null,
               /* options= */ ImmutableMap.of(),
               /* validitySchedule= */ ImmutableList.of(),
