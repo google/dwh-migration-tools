@@ -1,0 +1,2 @@
+{"id":null,"guid":null,"isEnabled":true,"createdBy":null,"updatedBy":null,"createTime":null,"updateTime":null,"version":null,"name":"auditor","description":"Auditor","options":{},"users":[{"name":"aleofreddi","isAdmin":true}],"groups":[],"roles":[],"createdByUser":null}
+{"id":null,"guid":null,"isEnabled":true,"createdBy":null,"updatedBy":null,"createTime":null,"updateTime":null,"version":null,"name":"dba","description":"Database administrator","options":{},"users":[{"name":"aleofreddi","isAdmin":true}],"groups":[],"roles":[],"createdByUser":null}

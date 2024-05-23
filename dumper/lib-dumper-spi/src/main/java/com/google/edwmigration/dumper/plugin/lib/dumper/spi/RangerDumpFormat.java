@@ -44,4 +44,14 @@ public interface RangerDumpFormat {
 
     String ZIP_ENTRY_NAME = "users.jsonl";
   }
+
+  interface GroupsFormat {
+
+    String ZIP_ENTRY_NAME = "groups.jsonl";
+  }
+
+  interface RolesFormat {
+
+    String ZIP_ENTRY_NAME = "roles.jsonl";
+  }
 }

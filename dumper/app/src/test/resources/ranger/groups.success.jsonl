@@ -1,0 +1,2 @@
+{"id":1,"createDate":"2024-05-22T18:07:35Z","updateDate":"2024-05-23T18:07:35Z","owner":"admin","updatedBy":"admin","name":"public","description":"public group","groupType":0,"groupSource":0,"credStoreId":null,"isVisible":1,"otherAttributes":null,"syncSource":null}
+{"id":21,"createDate":"2024-05-22T18:07:35Z","updateDate":"2024-05-23T18:07:35Z","owner":"rangerusersync","updatedBy":"rangerusersync","name":"backup","description":"backup - add from Unix box","groupType":1,"groupSource":1,"credStoreId":null,"isVisible":1,"otherAttributes":null,"syncSource":null}

@@ -48,6 +48,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.apache.ranger.plugin.model.RangerRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,6 +199,122 @@ public class RangerInternalClient {
     abstract List<User> vXUsers();
   }
 
+  /**
+   * A Ranger group. Based on server's model defined at
+   * https://raw.githubusercontent.com/apache/ranger/master/security-admin/src/main/java/org/apache/ranger/view/VXGroup.java.
+   */
+  @AutoValue
+  @JsonSerialize(as = Group.class)
+  public abstract static class Group {
+
+    @JsonCreator
+    static Group create(
+        @JsonProperty("id") long id,
+        @JsonProperty("createDate") Instant createDate,
+        @JsonProperty("updateDate") Instant updateDate,
+        @JsonProperty("owner") String owner,
+        @JsonProperty("updatedBy") String updatedBy,
+        @JsonProperty("name") String name,
+        @JsonProperty("description") String description,
+        @JsonProperty("groupType") Integer groupType,
+        @JsonProperty("groupSource") Integer groupSource,
+        @JsonProperty("credStoreId") String credStoreId,
+        @JsonProperty("isVisible") Integer isVisible,
+        @JsonProperty("otherAttributes") String otherAttributes,
+        @JsonProperty("syncSource") String syncSource) {
+      return new AutoValue_RangerInternalClient_Group(
+          id,
+          createDate,
+          updateDate,
+          owner,
+          updatedBy,
+          name,
+          description,
+          groupType,
+          groupSource,
+          credStoreId,
+          isVisible,
+          otherAttributes,
+          syncSource);
+    }
+
+    @JsonProperty
+    abstract long id();
+
+    @JsonProperty
+    @JsonFormat(shape = Shape.STRING)
+    @Nullable
+    abstract Instant createDate();
+
+    @JsonProperty
+    @JsonFormat(shape = Shape.STRING)
+    @Nullable
+    abstract Instant updateDate();
+
+    @JsonProperty
+    @Nullable
+    abstract String owner();
+
+    @JsonProperty
+    @Nullable
+    abstract String updatedBy();
+
+    @JsonProperty
+    abstract String name();
+
+    @JsonProperty
+    @Nullable
+    abstract String description();
+
+    @JsonProperty
+    @Nullable
+    abstract Integer groupType();
+
+    @JsonProperty
+    @Nullable
+    abstract Integer groupSource();
+
+    @JsonProperty
+    @Nullable
+    abstract String credStoreId();
+
+    @JsonProperty
+    @Nullable
+    abstract Integer isVisible();
+
+    @JsonProperty
+    @Nullable
+    abstract String otherAttributes();
+
+    @JsonProperty
+    @Nullable
+    abstract String syncSource();
+  }
+
+  @AutoValue
+  abstract static class ListGroupsResponse {
+
+    @JsonCreator
+    static ListGroupsResponse create(@JsonProperty("vXGroups") List<Group> vXGroups) {
+      return new AutoValue_RangerInternalClient_ListGroupsResponse(vXGroups);
+    }
+
+    @JsonProperty
+    abstract List<Group> vXGroups();
+  }
+
+  @AutoValue
+  abstract static class ListRolesResponse {
+
+    @JsonCreator
+    static ListRolesResponse create(@JsonProperty("roles") List<RangerRole> roles) {
+      return new AutoValue_RangerInternalClient_ListRolesResponse(roles);
+    }
+
+    @JsonProperty
+    abstract List<RangerRole> roles();
+  }
+
   public static class RangerInternalException extends Exception {
 
     public RangerInternalException(String message, Throwable cause) {
@@ -223,6 +340,14 @@ public class RangerInternalClient {
 
   public List<User> findUsers(Map<String, String> args) throws RangerInternalException {
     return doHttpGet("/service/xusers/users", args, ListUsersResponse.class).vXUsers();
+  }
+
+  public List<Group> findGroups(Map<String, String> args) throws RangerInternalException {
+    return doHttpGet("/service/xusers/groups", args, ListGroupsResponse.class).vXGroups();
+  }
+
+  public List<RangerRole> findRoles(Map<String, String> args) throws RangerInternalException {
+    return doHttpGet("/service/roles/roles", args, ListRolesResponse.class).roles();
   }
 
   private <T> T doHttpGet(String path, Map<String, String> params, Class<T> bodyClass)
