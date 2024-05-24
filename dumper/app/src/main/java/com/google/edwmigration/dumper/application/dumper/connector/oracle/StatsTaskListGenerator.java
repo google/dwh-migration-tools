@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.METADATA;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.STATSPACK;
+
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -30,10 +33,11 @@ class StatsTaskListGenerator {
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
     ImmutableList<OracleStatsQuery> queries =
         ImmutableList.of(
-            OracleStatsQuery.create("pdbs-info", StatsSource.METADATA),
-            OracleStatsQuery.create("app-schemas-pdbs", StatsSource.METADATA),
-            OracleStatsQuery.create("app-schemas-summary", StatsSource.METADATA),
-            OracleStatsQuery.create("hist-cmd-types", StatsSource.STATSPACK)
+            OracleStatsQuery.create("db-features", METADATA),
+            OracleStatsQuery.create("pdbs-info", METADATA),
+            OracleStatsQuery.create("app-schemas-pdbs", METADATA),
+            OracleStatsQuery.create("app-schemas-summary", METADATA),
+            OracleStatsQuery.create("hist-cmd-types", STATSPACK)
             // TODO: add entries for other SQLs to this list
             );
 
