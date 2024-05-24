@@ -224,7 +224,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
 
     private final Set<String> expectedEntries = new HashSet<>();
     private final Set<String> allowedEntries = new HashSet<>();
-    @Nonnull private Predicate<? super String> allowedEntriesPredicate = Predicates.alwaysFalse();
+    @Nonnull private Predicate<String> allowedEntriesPredicate = Predicates.alwaysFalse();
     private final List<ZipEntryValidator<?>> entryValidators = new ArrayList<>();
     private String format;
 
@@ -256,7 +256,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
      * <p>This predicate is considered additionally and separately to the explicitly allowed names.
      */
     @Nonnull
-    public ZipValidator withAllowedEntries(@Nonnull Predicate<? super String> allowedEntries) {
+    public ZipValidator withAllowedEntries(@Nonnull Predicate<String> allowedEntries) {
       this.allowedEntriesPredicate =
           MoreObjects.firstNonNull(allowedEntries, Predicates.alwaysFalse());
       return this;

@@ -69,7 +69,7 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
 
   @Nonnull
   @Override
-  public List<? extends String> getAllDatabaseNames() throws Exception {
+  public List<String> getAllDatabaseNames() throws Exception {
     return client.get_all_databases();
   }
 
@@ -113,8 +113,7 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
 
   @Nonnull
   @Override
-  public List<? extends String> getAllTableNamesInDatabase(@Nonnull String databaseName)
-      throws Exception {
+  public List<String> getAllTableNamesInDatabase(@Nonnull String databaseName) throws Exception {
     return client.get_all_tables(databaseName);
   }
 

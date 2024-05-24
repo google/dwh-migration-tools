@@ -16,13 +16,15 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore.utils;
 
+import static java.util.stream.Collectors.joining;
+
 import com.google.common.collect.Streams;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,15 +56,14 @@ public final class PartitionNameGenerator {
             partitionValues.stream(),
             PartitionNameGenerator::constructPartitionName)
         .filter(Objects::nonNull)
-        .collect(Collectors.joining("/"));
+        .collect(joining("/"));
   }
 
   @CheckForNull
   private static String constructPartitionName(String partitionKey, String partitionValue) {
-    if (partitionValue == null || partitionValue.length() == 0) {
+    if (StringUtils.isEmpty(partitionValue)) {
       // This is unexpected and the original code throws an exception here.
-      LOG.warn(
-          String.format("Got empty partition value for the key %s, will ignore it.", partitionKey));
+      LOG.warn("Got empty partition value for the key '{}', will ignore it.", partitionKey);
       return null;
     }
     return escapePartitionPart(partitionKey) + "=" + escapePartitionPart(partitionValue);

@@ -178,15 +178,14 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
    */
   @Nonnull
   /* pp */ String getOrCreateSql(
-      Predicate<? super String> predicate, ImmutableList<String> localExpressions) {
+      Predicate<String> predicate, ImmutableList<String> localExpressions) {
     if (!sql.isPresent()) {
       sql = Optional.of(buildSql(predicate, localExpressions));
     }
     return sql.get();
   }
 
-  private String buildSql(
-      Predicate<? super String> predicate, ImmutableList<String> localExpressions) {
+  private String buildSql(Predicate<String> predicate, ImmutableList<String> localExpressions) {
     StringBuilder buf = new StringBuilder("SELECT ");
     String separator = "";
     boolean queryTableIncluded = false;

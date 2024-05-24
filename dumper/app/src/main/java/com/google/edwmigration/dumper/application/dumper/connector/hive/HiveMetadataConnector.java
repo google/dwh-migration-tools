@@ -85,7 +85,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing database names to " + getTargetPath());
           CSVPrinter printer = FORMAT.withHeader(Header.class).print(writer)) {
-        List<? extends String> allDatabases = client.getAllDatabaseNames();
+        List<String> allDatabases = client.getAllDatabaseNames();
         for (String database : allDatabases) {
           monitor.count();
           printer.printRecord(database);
@@ -113,7 +113,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing databases info to " + getTargetPath());
           CSVPrinter printer = FORMAT.withHeader(Header.class).print(writer)) {
-        List<? extends String> allDatabases = client.getAllDatabaseNames();
+        List<String> allDatabases = client.getAllDatabaseNames();
         for (String databaseName : allDatabases) {
           Database database = client.getDatabase(databaseName);
           monitor.count();
@@ -153,11 +153,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           thriftClientHandle.newMultiThreadedThriftClientPool("tables-task-pooled-client")) {
         clientPool.execute(
             thriftClient -> {
-              List<? extends String> allDatabases = thriftClient.getAllDatabaseNames();
+              List<String> allDatabases = thriftClient.getAllDatabaseNames();
               for (String databaseName : allDatabases) {
                 if (isIncludedDatabase(databaseName)) {
-                  List<? extends String> allTables =
-                      thriftClient.getAllTableNamesInDatabase(databaseName);
+                  List<String> allTables = thriftClient.getAllTableNamesInDatabase(databaseName);
                   try (ConcurrentProgressMonitor monitor =
                       new ConcurrentRecordProgressMonitor(
                           "Writing tables in database '" + databaseName + "' to " + getTargetPath(),
