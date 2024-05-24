@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -72,21 +73,21 @@ public class JsonResponseFile {
   }
 
   @Nonnull
-  private static List<String> to_arguments(@Nonnull File file) throws IOException {
+  private static ImmutableList<String> to_arguments(@Nonnull File file) throws IOException {
     return convert(newObjectMapper().readTree(file));
   }
 
   @VisibleForTesting
-  /* pp */ static List<String> to_arguments(@Nonnull String text)
+  /* pp */ static ImmutableList<String> to_arguments(@Nonnull String text)
       throws IOException, JsonProcessingException {
     return convert(newObjectMapper().readTree(text));
   }
 
   @Nonnull
-  private static List<String> convert(@Nonnull JsonNode node) {
+  private static ImmutableList<String> convert(@Nonnull JsonNode node) {
     List<String> out = new ArrayList<>();
     convert(node, out);
-    return out;
+    return ImmutableList.copyOf(out);
   }
 
   private static void convert(@Nonnull JsonNode node, @Nonnull List<String> ret) {

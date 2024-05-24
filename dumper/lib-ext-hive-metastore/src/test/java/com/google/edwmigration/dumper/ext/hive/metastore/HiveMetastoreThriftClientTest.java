@@ -18,7 +18,7 @@ package com.google.edwmigration.dumper.ext.hive.metastore;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +37,7 @@ public class HiveMetastoreThriftClientTest {
   public void testClientAgainstLiveMetastore_v2_3_6() throws Exception {
     HiveMetastoreThriftClient client =
         new HiveMetastoreThriftClient.Builder("2.3.6").withHost("localhost").withPort(9083).build();
-    List<String> databaseNames = client.getAllDatabaseNames();
+    ImmutableList<String> databaseNames = client.getAllDatabaseNames();
     LOG.info("Databases in metastore: {}", databaseNames);
     assertTrue("Expected at least one database name.", databaseNames.size() > 0);
   }
@@ -54,7 +54,7 @@ public class HiveMetastoreThriftClientTest {
             .withHost("localhost")
             .withPort(9083)
             .build();
-    List<String> databaseNames = client.getAllDatabaseNames();
+    ImmutableList<String> databaseNames = client.getAllDatabaseNames();
     LOG.info("Databases in metastore: {}", databaseNames);
     assertTrue("Expected at least one database name.", databaseNames.size() > 0);
   }

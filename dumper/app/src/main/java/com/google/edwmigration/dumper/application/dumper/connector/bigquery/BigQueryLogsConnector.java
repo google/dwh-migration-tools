@@ -97,7 +97,7 @@ public class BigQueryLogsConnector extends AbstractBigQueryConnector
       // BigQuery.JobListOption allUsers = BigQuery.JobListOption.allUsers(); //XXX: using allUsers
       // causes NPE while getting values.
 
-      List<String> projectIds = arguments.getDatabases();
+      ImmutableList<String> projectIds = arguments.getDatabases();
       if (projectIds.isEmpty()) projectIds = ImmutableList.of(bigQuery.getOptions().getProjectId());
 
       ZonedIntervalIterable intervals =

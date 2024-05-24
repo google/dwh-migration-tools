@@ -69,8 +69,8 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
 
   @Nonnull
   @Override
-  public List<String> getAllDatabaseNames() throws Exception {
-    return client.get_all_databases();
+  public ImmutableList<String> getAllDatabaseNames() throws Exception {
+    return ImmutableList.copyOf(client.get_all_databases());
   }
 
   @Nonnull
@@ -113,8 +113,9 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
 
   @Nonnull
   @Override
-  public List<String> getAllTableNamesInDatabase(@Nonnull String databaseName) throws Exception {
-    return client.get_all_tables(databaseName);
+  public ImmutableList<String> getAllTableNamesInDatabase(@Nonnull String databaseName)
+      throws Exception {
+    return ImmutableList.copyOf(client.get_all_tables(databaseName));
   }
 
   @Nonnull

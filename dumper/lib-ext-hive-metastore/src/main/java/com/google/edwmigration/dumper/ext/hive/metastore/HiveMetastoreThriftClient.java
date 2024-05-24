@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.ext.hive.metastore;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.List;
@@ -229,13 +230,13 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
   }
 
   @Nonnull
-  public abstract List<String> getAllDatabaseNames() throws Exception;
+  public abstract ImmutableList<String> getAllDatabaseNames() throws Exception;
 
   @Nonnull
   public abstract Database getDatabase(@Nonnull String databaseName) throws Exception;
 
   @Nonnull
-  public abstract List<String> getAllTableNamesInDatabase(@Nonnull String databaseName)
+  public abstract ImmutableList<String> getAllTableNamesInDatabase(@Nonnull String databaseName)
       throws Exception;
 
   @Nonnull
