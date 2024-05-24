@@ -34,6 +34,7 @@ class StatsTaskListGenerator {
     ImmutableList<OracleStatsQuery> queries =
         ImmutableList.of(
             OracleStatsQuery.create("db-features", METADATA),
+            OracleStatsQuery.create("db-instances", METADATA),
             OracleStatsQuery.create("pdbs-info", METADATA),
             OracleStatsQuery.create("app-schemas-pdbs", METADATA),
             OracleStatsQuery.create("app-schemas-summary", METADATA),
