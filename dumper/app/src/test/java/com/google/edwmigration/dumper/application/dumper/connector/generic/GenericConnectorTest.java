@@ -16,15 +16,18 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.generic;
 
+import static java.time.ZoneOffset.UTC;
+import static org.junit.Assert.assertEquals;
+
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.io.IOException;
+import java.time.Clock;
+import java.time.Instant;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * ./gradlew compilerworks-application-dumper:{clean,test} -Dtest.verbose=true
@@ -33,12 +36,32 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class GenericConnectorTest extends AbstractConnectorExecutionTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GenericConnectorTest.class);
-
   private static final String SUBPROJECT = "compilerworks-application-dumper";
 
   private static final File GENERIC_DUMPER_TEST =
       new File(TestUtils.getTestResourcesDir(SUBPROJECT), "dumper-test/generic.sql");
+
+  private final GenericConnector connector = new GenericConnector();
+
+  @Test
+  public void getDefaultFileName_forAssessment_success() {
+    Instant instant = Instant.ofEpochMilli(1715346130945L);
+    Clock clock = Clock.fixed(instant, UTC);
+
+    String fileName = connector.getDefaultFileName(/* isAssessment= */ true, clock);
+
+    assertEquals("dwh-migration-generic-logs-20240510T130210.zip", fileName);
+  }
+
+  @Test
+  public void getDefaultFileName_notForAssessment_success() {
+    Instant instant = Instant.ofEpochMilli(1715346130945L);
+    Clock clock = Clock.fixed(instant, UTC);
+
+    String fileName = connector.getDefaultFileName(/* isAssessment= */ false, clock);
+
+    assertEquals("dwh-migration-generic-logs.zip", fileName);
+  }
 
   @Test
   public void testGeneric() throws IOException, Exception {

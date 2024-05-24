@@ -48,8 +48,7 @@ public class OracleConnectorScopeTest {
     Instant instant = Instant.ofEpochMilli(1715346130945L);
     Clock clock = Clock.fixed(instant, UTC);
 
-    assertEquals(
-        "dwh-migration-oracle-logs-logs-20240510T130210.zip", LOGS.toFileName(true, clock));
+    assertEquals("dwh-migration-oracle-logs-20240510T130210.zip", LOGS.toFileName(true, clock));
     assertEquals("dwh-migration-oracle-metadata.zip", METADATA.toFileName(true, clock));
     assertEquals("dwh-migration-oracle-stats.zip", STATS.toFileName(true, clock));
   }
@@ -59,7 +58,7 @@ public class OracleConnectorScopeTest {
     Instant instant = Instant.ofEpochMilli(1715346130945L);
     Clock clock = Clock.fixed(instant, UTC);
 
-    assertEquals("dwh-migration-oracle-logs-logs.zip", LOGS.toFileName(false, clock));
+    assertEquals("dwh-migration-oracle-logs.zip", LOGS.toFileName(false, clock));
     assertEquals("dwh-migration-oracle-metadata.zip", METADATA.toFileName(false, clock));
     assertEquals("dwh-migration-oracle-stats.zip", STATS.toFileName(false, clock));
   }

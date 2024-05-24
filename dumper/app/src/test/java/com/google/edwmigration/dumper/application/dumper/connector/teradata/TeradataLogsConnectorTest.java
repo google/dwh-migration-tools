@@ -264,7 +264,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
 
     String fileName = connector.getDefaultFileName(/* isAssessment= */ true, clock);
 
-    assertEquals("dwh-migration-teradata-logs-logs-20240510T130210.zip", fileName);
+    assertEquals("dwh-migration-teradata-logs-20240510T130210.zip", fileName);
   }
 
   @Test
@@ -274,7 +274,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
 
     String fileName = connector.getDefaultFileName(/* isAssessment= */ false, clock);
 
-    assertEquals("dwh-migration-teradata-logs-logs.zip", fileName);
+    assertEquals("dwh-migration-teradata-logs.zip", fileName);
   }
 
   @Test
