@@ -30,9 +30,10 @@ class StatsTaskListGenerator {
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
     ImmutableList<OracleStatsQuery> queries =
         ImmutableList.of(
-            OracleStatsQuery.create("hist-cmd-types", StatsSource.STATSPACK),
+            OracleStatsQuery.create("pdbs-info", StatsSource.METADATA),
             OracleStatsQuery.create("app-schemas-pdbs", StatsSource.METADATA),
-            OracleStatsQuery.create("app-schemas-summary", StatsSource.METADATA)
+            OracleStatsQuery.create("app-schemas-summary", StatsSource.METADATA),
+            OracleStatsQuery.create("hist-cmd-types", StatsSource.STATSPACK)
             // TODO: add entries for other SQLs to this list
             );
 
