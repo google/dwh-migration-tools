@@ -32,4 +32,10 @@ public interface LogsConnector extends Connector {
       return ArchiveNameUtil.getFileName(getName());
     }
   }
+
+  @Nonnull
+  @Override
+  default String summary(@Nonnull String fileName) {
+    return "Logs have been saved to " + fileName;
+  }
 }

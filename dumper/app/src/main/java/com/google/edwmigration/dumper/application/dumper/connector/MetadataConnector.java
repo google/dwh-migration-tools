@@ -28,4 +28,10 @@ public interface MetadataConnector extends Connector {
   default String getDefaultFileName(boolean isAssessment, Clock clock) {
     return ArchiveNameUtil.getFileName(getName() + "-metadata");
   }
+
+  @Nonnull
+  @Override
+  default String summary(@Nonnull String fileName) {
+    return "Metadata has been saved to " + fileName;
+  }
 }
