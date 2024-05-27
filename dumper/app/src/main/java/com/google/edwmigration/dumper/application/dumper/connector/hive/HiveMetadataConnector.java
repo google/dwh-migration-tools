@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
+import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
@@ -370,6 +371,42 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class MasterKeysTask extends AbstractHiveMetadataTask {
+    private static final CSVFormat MASTER_KEYS_FORMAT =
+        FORMAT.builder().setHeader("MasterKey").build();
+
+    private MasterKeysTask() {
+      super("master-keys.csv", unused -> true);
+    }
+
+    @Override
+    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
+        throws Exception {
+      try (HiveMetastoreThriftClient client =
+              thriftClientHandle.newClient("master-keys-task-client");
+          RecordProgressMonitor monitor =
+              new RecordProgressMonitor("Writing Master Keys to " + getTargetPath())) {
+        ImmutableList<String> masterKeys = client.getMasterKeys();
+        try (CSVPrinter printer = MASTER_KEYS_FORMAT.print(writer)) {
+          for (String masterKey : masterKeys) {
+            monitor.count();
+            printer.printRecord(masterKey);
+          }
+        }
+      }
+    }
+
+    @Override
+    public TaskCategory getCategory() {
+      return TaskCategory.OPTIONAL;
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "get_master_keys()";
+    }
+  }
+
   public HiveMetadataConnector() {
     super("hiveql");
   }
@@ -389,6 +426,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         arguments.getDefinitionOrDefault(HiveConnectorProperty.MIGRATION_METADATA))) {
       out.add(new CatalogsTask());
       out.add(new DatabasesJsonlTask());
+      out.add(new MasterKeysTask());
     }
 
     if (arguments.isAssessment()) {

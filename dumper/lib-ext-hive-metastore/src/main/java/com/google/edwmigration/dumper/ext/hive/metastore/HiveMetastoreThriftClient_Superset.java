@@ -130,6 +130,11 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
         .collect(toImmutableList());
   }
 
+  @Override
+  public ImmutableList<String> getMasterKeys() throws Exception {
+    return ImmutableList.copyOf(client.get_master_keys());
+  }
+
   @Nonnull
   @Override
   public ImmutableList<String> getAllTableNamesInDatabase(@Nonnull String databaseName)
