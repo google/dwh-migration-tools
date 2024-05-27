@@ -16,17 +16,25 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static org.junit.Assert.assertTrue;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.Main;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.support.HiveServerSupport;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.support.HiveTestSchemaBuilder;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentRecordProgressMonitor;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -63,6 +71,21 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
   @Test
   public void testConnector() throws Exception {
     testConnectorDefaults(connector);
+  }
+
+  @Test
+  public void addTasksTo_catalogsTask_success() throws IOException {
+    ConnectorArguments args = new ConnectorArguments("--connector", "hiveql");
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(tasks, args);
+
+    // Assert
+    ImmutableList<String> taskNames = tasks.stream().map(Task::getName).collect(toImmutableList());
+    assertTrue(
+        "Task names must contain 'catalogs.jsonl'. Actual tasks: " + taskNames,
+        taskNames.contains("catalogs.jsonl"));
   }
 
   @Test
@@ -116,7 +139,7 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
               "--output",
               tmpFile.getAbsolutePath());
 
-          Assert.assertTrue(tmpFile.exists());
+          assertTrue(tmpFile.exists());
 
           try (ZipFile zipFile = new ZipFile(tmpFile)) {
             List<ZipArchiveEntry> entries = Collections.list(zipFile.getEntries());

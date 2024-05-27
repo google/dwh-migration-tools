@@ -497,4 +497,10 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
       throw new IOException("Unable to shutdown Thrift client.", e);
     }
   }
+
+  @Override
+  public ImmutableList<String> getCatalogsAsJsonl() {
+    LOG.info("Catalogs are not supported in Hive 2.3.6");
+    return ImmutableList.of();
+  }
 }
