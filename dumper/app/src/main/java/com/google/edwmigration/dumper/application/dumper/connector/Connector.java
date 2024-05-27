@@ -45,4 +45,7 @@ public interface Connector {
   public default Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
     return DefaultProperties.class;
   }
+
+  @Nonnull
+  String summary(@Nonnull String fileName);
 }

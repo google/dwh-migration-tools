@@ -24,8 +24,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
@@ -197,7 +195,8 @@ public class MetadataDumper {
       }
 
       printTaskResults(summaryPrinter, state);
-      printDumperSummary(summaryPrinter, connector, outputFileLocation);
+      String summary = connector.summary(outputFileLocation);
+      summaryPrinter.printSummarySection(summary);
       boolean result = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
       logStatusSummary(summaryPrinter, state);
       return result;
@@ -241,15 +240,6 @@ public class MetadataDumper {
                 fileName));
       }
       return isZipFile ? fileName : path.resolve(defaultFileName).toString();
-    }
-  }
-
-  private void printDumperSummary(
-      SummaryPrinter summaryPrinter, Connector connector, String outputFileName) {
-    if (connector instanceof MetadataConnector) {
-      summaryPrinter.printSummarySection("Metadata has been saved to " + outputFileName);
-    } else if (connector instanceof LogsConnector) {
-      summaryPrinter.printSummarySection("Logs have been saved to " + outputFileName);
     }
   }
 

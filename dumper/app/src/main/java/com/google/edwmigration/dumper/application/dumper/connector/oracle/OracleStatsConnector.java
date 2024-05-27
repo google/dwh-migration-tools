@@ -23,6 +23,7 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.util.List;
+import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoService(Connector.class)
@@ -39,5 +40,11 @@ public class OracleStatsConnector extends AbstractOracleConnector {
     StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
     out.add(new DumpMetadataTask(arguments, getFormatName()));
     out.addAll(taskListGenerator.createTasks(arguments));
+  }
+
+  @Nonnull
+  @Override
+  public String summary(String fileName) {
+    return String.format("Oracle statistics saved to %s", fileName);
   }
 }
