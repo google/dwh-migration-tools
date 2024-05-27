@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Fie
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogsResponse;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.WMGetAllResourcePlanRequest;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.WMResourcePlan;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -535,10 +536,9 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
   @Override
   public ImmutableList<String> getResourcePlansAsJsonl() throws Exception {
     TSerializer serializer = createJsonSerializer();
-    return client
-        .get_all_resource_plans(new WMGetAllResourcePlanRequest())
-        .getResourcePlans()
-        .stream()
+    List<WMResourcePlan> resourcePlans =
+        client.get_all_resource_plans(new WMGetAllResourcePlanRequest()).getResourcePlans();
+    return resourcePlans.stream()
         .map(
             resourcePlan -> {
               try {
