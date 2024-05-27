@@ -135,6 +135,34 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class DatabasesJsonlTask extends AbstractHiveMetadataTask {
+
+    private DatabasesJsonlTask() {
+      super("databases.jsonl", unused -> true);
+    }
+
+    @Override
+    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
+        throws Exception {
+      try (HiveMetastoreThriftClient client =
+              thriftClientHandle.newClient("databases-jsonl-task-client");
+          RecordProgressMonitor monitor =
+              new RecordProgressMonitor("Writing databases to " + getTargetPath())) {
+        ImmutableList<String> allDatabases = client.getDatabasesAsJsonl();
+        for (String databaseJson : allDatabases) {
+          monitor.count();
+          writer.write(databaseJson);
+          writer.write('\n');
+        }
+      }
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "get_all_databases()*.get_database()";
+    }
+  }
+
   private static class TablesJsonTask extends AbstractHiveMetadataTask
       implements TablesJsonTaskFormat {
 
@@ -352,6 +380,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
     out.add(new FunctionsTask(databasePredicate));
     out.add(new CatalogsTask());
+    out.add(new DatabasesJsonlTask());
 
     if (arguments.isAssessment()) {
       out.add(new DatabasesTask(databasePredicate));

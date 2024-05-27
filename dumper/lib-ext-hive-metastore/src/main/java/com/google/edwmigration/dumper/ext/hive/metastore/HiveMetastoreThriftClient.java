@@ -30,8 +30,10 @@ import javax.annotation.concurrent.NotThreadSafe;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import org.apache.thrift.TConfiguration;
+import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.protocol.TSimpleJSONProtocol;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
@@ -236,6 +238,9 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
   public abstract Database getDatabase(@Nonnull String databaseName) throws Exception;
 
   @Nonnull
+  public abstract ImmutableList<String> getDatabasesAsJsonl() throws Exception;
+
+  @Nonnull
   public abstract ImmutableList<String> getAllTableNamesInDatabase(@Nonnull String databaseName)
       throws Exception;
 
@@ -253,4 +258,8 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
    * @return list of JSON messages
    */
   public abstract ImmutableList<String> getCatalogsAsJsonl() throws Exception;
+
+  protected TSerializer createJsonSerializer() throws TTransportException {
+    return new TSerializer(new TSimpleJSONProtocol.Factory());
+  }
 }

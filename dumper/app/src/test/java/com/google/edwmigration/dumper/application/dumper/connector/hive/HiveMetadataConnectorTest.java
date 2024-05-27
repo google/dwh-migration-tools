@@ -51,8 +51,11 @@ import org.apache.commons.lang3.SystemUtils;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
+import org.junit.experimental.theories.DataPoints;
+import org.junit.experimental.theories.FromDataPoints;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +63,7 @@ import org.slf4j.LoggerFactory;
  * Run this with: > ./gradlew :dumper:app:{cleanTest,test} --tests HiveMetadataConnectorTest
  * -Dtest.verbose=true -Dorg.gradle.java.home=/usr/lib/jvm/java-1.8.0-openjdk-amd64
  */
-@RunWith(JUnit4.class)
+@RunWith(Theories.class)
 public class HiveMetadataConnectorTest extends AbstractConnectorTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(HiveMetadataConnectorTest.class);
@@ -73,8 +76,13 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
     testConnectorDefaults(connector);
   }
 
-  @Test
-  public void addTasksTo_catalogsTask_success() throws IOException {
+  @DataPoints("expectedTaskNames")
+  public static final ImmutableList<String> EXPECTED_TASK_NAMES =
+      ImmutableList.of("catalogs.jsonl", "databases.jsonl");
+
+  @Theory
+  public void addTasksTo_taskExists_success(@FromDataPoints("expectedTaskNames") String taskName)
+      throws IOException {
     ConnectorArguments args = new ConnectorArguments("--connector", "hiveql");
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -84,8 +92,8 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
     // Assert
     ImmutableList<String> taskNames = tasks.stream().map(Task::getName).collect(toImmutableList());
     assertTrue(
-        "Task names must contain 'catalogs.jsonl'. Actual tasks: " + taskNames,
-        taskNames.contains("catalogs.jsonl"));
+        "Task names must contain '" + taskName + "'. Actual tasks: " + taskNames,
+        taskNames.contains(taskName));
   }
 
   @Test
