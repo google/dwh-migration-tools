@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.STATSPACK;
+
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -30,9 +33,12 @@ class StatsTaskListGenerator {
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
     ImmutableList<OracleStatsQuery> queries =
         ImmutableList.of(
-            OracleStatsQuery.create("hist-cmd-types", StatsSource.STATSPACK),
-            OracleStatsQuery.create("app-schemas-pdbs", StatsSource.METADATA),
-            OracleStatsQuery.create("app-schemas-summary", StatsSource.METADATA)
+            OracleStatsQuery.create("db-features", NATIVE),
+            OracleStatsQuery.create("db-instances", NATIVE),
+            OracleStatsQuery.create("pdbs-info", NATIVE),
+            OracleStatsQuery.create("app-schemas-pdbs", NATIVE),
+            OracleStatsQuery.create("app-schemas-summary", NATIVE),
+            OracleStatsQuery.create("hist-cmd-types", STATSPACK)
             // TODO: add entries for other SQLs to this list
             );
 
@@ -47,7 +53,7 @@ class StatsTaskListGenerator {
   /** The source of performance statistics. */
   enum StatsSource {
     AWR("awr"),
-    METADATA("metadata"),
+    NATIVE("native"),
     STATSPACK("statspack");
 
     final String value;
