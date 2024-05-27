@@ -29,6 +29,7 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.ext.hive.metastore.Database;
+import com.google.edwmigration.dumper.ext.hive.metastore.DelegationToken;
 import com.google.edwmigration.dumper.ext.hive.metastore.Field;
 import com.google.edwmigration.dumper.ext.hive.metastore.Function;
 import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient;
@@ -407,6 +408,42 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class DelegationTokensTask extends AbstractHiveMetadataTask {
+    private static final CSVFormat DELEGATION_TOKENS_FORMAT =
+        FORMAT.builder().setHeader("Identifier", "Token").build();
+
+    private DelegationTokensTask() {
+      super("delegation-tokens.csv", unused -> true);
+    }
+
+    @Override
+    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
+        throws Exception {
+      try (HiveMetastoreThriftClient client =
+              thriftClientHandle.newClient("delegation-tokens-task-client");
+          RecordProgressMonitor monitor =
+              new RecordProgressMonitor("Writing Delegation Tokens to " + getTargetPath())) {
+        ImmutableList<DelegationToken> delegationTokens = client.getDelegationTokens();
+        try (CSVPrinter printer = DELEGATION_TOKENS_FORMAT.print(writer)) {
+          for (DelegationToken delegationToken : delegationTokens) {
+            monitor.count();
+            printer.printRecord(delegationToken.identifier(), delegationToken.token());
+          }
+        }
+      }
+    }
+
+    @Override
+    public TaskCategory getCategory() {
+      return TaskCategory.OPTIONAL;
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "get_all_token_identifiers()*.get_token()";
+    }
+  }
+
   public HiveMetadataConnector() {
     super("hiveql");
   }
@@ -427,6 +464,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
       out.add(new CatalogsTask());
       out.add(new DatabasesJsonlTask());
       out.add(new MasterKeysTask());
+      out.add(new DelegationTokensTask());
     }
 
     if (arguments.isAssessment()) {

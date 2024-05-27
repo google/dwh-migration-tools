@@ -244,6 +244,9 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
   public abstract ImmutableList<String> getMasterKeys() throws Exception;
 
   @Nonnull
+  public abstract ImmutableList<DelegationToken> getDelegationTokens() throws Exception;
+
+  @Nonnull
   public abstract ImmutableList<String> getAllTableNamesInDatabase(@Nonnull String databaseName)
       throws Exception;
 

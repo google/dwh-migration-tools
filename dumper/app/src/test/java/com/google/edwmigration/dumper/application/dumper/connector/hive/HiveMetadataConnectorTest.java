@@ -102,7 +102,8 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
 
   @DataPoints("migrationMetadataTaskNames")
   public static final ImmutableList<String> EXPECTED_TASK_NAMES_WITH_MIGRATION_METADATA_ENABLED =
-      ImmutableList.of("catalogs.jsonl", "databases.jsonl", "master-keys.csv");
+      ImmutableList.of(
+          "catalogs.jsonl", "databases.jsonl", "master-keys.csv", "delegation-tokens.csv");
 
   @Theory
   public void addTasksTo_migrationMetadataTaskExists_success(
