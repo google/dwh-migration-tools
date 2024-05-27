@@ -306,7 +306,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
-  private static class CatalogsTask extends AbstractHiveMetadataTask implements FunctionsFormat {
+  private static class CatalogsTask extends AbstractHiveMetadataTask {
 
     private CatalogsTask() {
       super("catalogs.jsonl", unused -> true);
