@@ -257,6 +257,9 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
   @Nonnull
   public abstract List<? extends Function> getFunctions() throws Exception;
 
+  @Nonnull
+  public abstract ImmutableList<String> getFunctionsAsJsonl() throws Exception;
+
   /**
    * Returns all the catalogs as the list of JSON messages that correspond to the response from the
    * Hive Metastore API.

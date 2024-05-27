@@ -528,6 +528,21 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
   }
 
   @Override
+  public ImmutableList<String> getFunctionsAsJsonl() throws Exception {
+    TSerializer serializer = createJsonSerializer();
+    return client.get_all_functions().getFunctions().stream()
+        .map(
+            function -> {
+              try {
+                return serializer.toString(function);
+              } catch (TException e) {
+                throw new IllegalStateException(e);
+              }
+            })
+        .collect(toImmutableList());
+  }
+
+  @Override
   public void close() throws IOException {
     try {
       client.shutdown();

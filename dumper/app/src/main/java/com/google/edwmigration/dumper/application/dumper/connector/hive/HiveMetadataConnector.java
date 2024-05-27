@@ -342,6 +342,39 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class FunctionsJsonlTask extends AbstractHiveMetadataTask {
+
+    private FunctionsJsonlTask() {
+      super("functions.jsonl", unused -> true);
+    }
+
+    @Override
+    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
+        throws Exception {
+      try (HiveMetastoreThriftClient client =
+              thriftClientHandle.newClient("functions-jsonl-task-client");
+          RecordProgressMonitor monitor =
+              new RecordProgressMonitor("Writing functions to " + getTargetPath())) {
+        ImmutableList<String> functions = client.getFunctionsAsJsonl();
+        for (String functionJson : functions) {
+          monitor.count();
+          writer.write(functionJson);
+          writer.write('\n');
+        }
+      }
+    }
+
+    @Override
+    public TaskCategory getCategory() {
+      return TaskCategory.OPTIONAL;
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "get_all_functions()";
+    }
+  }
+
   private static class CatalogsTask extends AbstractHiveMetadataTask {
 
     private CatalogsTask() {
@@ -465,6 +498,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
       out.add(new DatabasesJsonlTask());
       out.add(new MasterKeysTask());
       out.add(new DelegationTokensTask());
+      out.add(new FunctionsJsonlTask());
     }
 
     if (arguments.isAssessment()) {
