@@ -27,6 +27,8 @@ import static com.google.edwmigration.dumper.ext.hive.metastore.utils.PartitionN
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.FieldSchema;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogRequest;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogsResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +39,9 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.apache.thrift.TException;
+import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.protocol.TSimpleJSONProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -497,5 +501,21 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
     } catch (TException e) {
       throw new IOException("Unable to shutdown Thrift client.", e);
     }
+  }
+
+  @Override
+  public ImmutableList<String> getCatalogsAsJsonl() throws TException {
+    TSerializer serializer = new TSerializer(new TSimpleJSONProtocol.Factory());
+    GetCatalogsResponse catalogs = client.get_catalogs();
+    return catalogs.getNames().stream()
+        .map(
+            catalogName -> {
+              try {
+                return serializer.toString(client.get_catalog(new GetCatalogRequest(catalogName)));
+              } catch (TException e) {
+                throw new IllegalStateException(e);
+              }
+            })
+        .collect(toImmutableList());
   }
 }

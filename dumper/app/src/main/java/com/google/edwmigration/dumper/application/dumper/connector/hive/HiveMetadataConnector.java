@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.MetadataConne
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.ext.hive.metastore.Database;
 import com.google.edwmigration.dumper.ext.hive.metastore.Field;
 import com.google.edwmigration.dumper.ext.hive.metastore.Function;
@@ -305,6 +306,36 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class CatalogsTask extends AbstractHiveMetadataTask {
+
+    private CatalogsTask() {
+      super("catalogs.jsonl", unused -> true);
+    }
+
+    @Override
+    protected void run(Writer writer, ThriftClientHandle thriftClientHandle) throws Exception {
+      try (HiveMetastoreThriftClient client = thriftClientHandle.newClient("catalogs-task-client");
+          RecordProgressMonitor monitor =
+              new RecordProgressMonitor("Writing catalogs to " + getTargetPath())) {
+        for (String catalogJson : client.getCatalogsAsJsonl()) {
+          monitor.count();
+          writer.write(catalogJson);
+          writer.write('\n');
+        }
+      }
+    }
+
+    @Override
+    public TaskCategory getCategory() {
+      return TaskCategory.OPTIONAL;
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "get_catalogs()*.get_catalog()";
+    }
+  }
+
   public HiveMetadataConnector() {
     super("hiveql");
   }
@@ -320,6 +351,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     out.add(new SchemataTask(databasePredicate));
     out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
     out.add(new FunctionsTask(databasePredicate));
+    out.add(new CatalogsTask());
 
     if (arguments.isAssessment()) {
       out.add(new DatabasesTask(databasePredicate));
