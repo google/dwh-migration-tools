@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hive;
 import com.google.auto.service.AutoService;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -85,7 +86,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing database names to " + getTargetPath());
           CSVPrinter printer = FORMAT.withHeader(Header.class).print(writer)) {
-        List<? extends String> allDatabases = client.getAllDatabaseNames();
+        ImmutableList<String> allDatabases = client.getAllDatabaseNames();
         for (String database : allDatabases) {
           monitor.count();
           printer.printRecord(database);
@@ -113,7 +114,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing databases info to " + getTargetPath());
           CSVPrinter printer = FORMAT.withHeader(Header.class).print(writer)) {
-        List<? extends String> allDatabases = client.getAllDatabaseNames();
+        ImmutableList<String> allDatabases = client.getAllDatabaseNames();
         for (String databaseName : allDatabases) {
           Database database = client.getDatabase(databaseName);
           monitor.count();
@@ -153,10 +154,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           thriftClientHandle.newMultiThreadedThriftClientPool("tables-task-pooled-client")) {
         clientPool.execute(
             thriftClient -> {
-              List<? extends String> allDatabases = thriftClient.getAllDatabaseNames();
+              ImmutableList<String> allDatabases = thriftClient.getAllDatabaseNames();
               for (String databaseName : allDatabases) {
                 if (isIncludedDatabase(databaseName)) {
-                  List<? extends String> allTables =
+                  ImmutableList<String> allTables =
                       thriftClient.getAllTableNamesInDatabase(databaseName);
                   try (ConcurrentProgressMonitor monitor =
                       new ConcurrentRecordProgressMonitor(

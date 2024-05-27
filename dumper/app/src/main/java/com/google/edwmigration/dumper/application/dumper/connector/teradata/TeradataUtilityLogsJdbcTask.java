@@ -222,14 +222,14 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
    * @param predicate A predicate to compute whether a given expression is legal.
    * @return A SQL query containing every legal expression from EXPRESSIONS.
    */
-  private String getOrCreateSql(@Nonnull Predicate<? super String> predicate) {
+  private String getOrCreateSql(@Nonnull Predicate<String> predicate) {
     if (!sql.isPresent()) {
       sql = Optional.of(buildSql(predicate));
     }
     return sql.get();
   }
 
-  private String buildSql(Predicate<? super String> predicate) {
+  private String buildSql(Predicate<String> predicate) {
     StringBuilder buf = new StringBuilder(" SELECT ");
     String separator = "";
     for (String expression : EXPRESSIONS) {

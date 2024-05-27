@@ -35,6 +35,7 @@ import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TimePartitioning;
 import com.google.cloud.bigquery.ViewDefinition;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -97,15 +98,13 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
 
   public abstract static class AbstractBigQueryMetadataTask extends AbstractBigQueryTask {
 
-    private final List<? extends String> databaseList;
-    private final Predicate<? super String> schemaPredicate;
+    private final ImmutableList<String> databaseList;
+    private final Predicate<String> schemaPredicate;
 
     public AbstractBigQueryMetadataTask(
-        String targetPath,
-        @Nonnull List<? extends String> databaseList,
-        Predicate<? super String> schemaPredicate) {
+        String targetPath, @Nonnull List<String> databaseList, Predicate<String> schemaPredicate) {
       super(targetPath);
-      this.databaseList = Preconditions.checkNotNull(databaseList, "Database list was null.");
+      this.databaseList = ImmutableList.copyOf(databaseList);
       this.schemaPredicate =
           Preconditions.checkNotNull(schemaPredicate, "Schema predicate was null.");
     }
@@ -173,8 +172,7 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
       implements BigQueryMetadataDumpFormat.DatasetsTaskFormat {
 
     public DatasetsTask(
-        @Nonnull List<? extends String> databaseList,
-        @Nonnull Predicate<? super String> schemaPredicate) {
+        @Nonnull List<String> databaseList, @Nonnull Predicate<String> schemaPredicate) {
       super(ZIP_ENTRY_NAME, databaseList, schemaPredicate);
     }
 
@@ -241,8 +239,7 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
       implements BigQueryMetadataDumpFormat.TablesJsonTaskFormat {
 
     public TablesJsonTask(
-        @Nonnull List<? extends String> databaseList,
-        @Nonnull Predicate<? super String> schemaPredicate) {
+        @Nonnull List<String> databaseList, @Nonnull Predicate<String> schemaPredicate) {
       super(ZIP_ENTRY_NAME, databaseList, schemaPredicate);
     }
 
@@ -412,8 +409,8 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
-    List<? extends String> databaseList = arguments.getDatabases();
-    Predicate<? super String> schemaPredicate = arguments.getSchemaPredicate();
+    ImmutableList<String> databaseList = arguments.getDatabases();
+    Predicate<String> schemaPredicate = arguments.getSchemaPredicate();
     out.add(new DatasetsTask(databaseList, schemaPredicate));
     out.add(new TablesJsonTask(databaseList, schemaPredicate));
     // out.add(new ColumnsTask(databaseList, schemaPredicate));

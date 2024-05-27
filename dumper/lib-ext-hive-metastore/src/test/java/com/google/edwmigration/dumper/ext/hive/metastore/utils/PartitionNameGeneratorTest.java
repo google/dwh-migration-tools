@@ -27,9 +27,9 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class PartitionNameGeneratorTest {
+
   @Test
   public void makePartitionName_emptySpec() {
-
     String partitionName = makePartitionName(ImmutableList.of(), ImmutableList.of());
 
     assertTrue(partitionName.isEmpty());

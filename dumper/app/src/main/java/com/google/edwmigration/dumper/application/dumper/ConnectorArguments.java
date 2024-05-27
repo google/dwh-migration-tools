@@ -28,6 +28,7 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -612,7 +613,7 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @Nonnull
-  public List<String> getDatabases() {
+  public ImmutableList<String> getDatabases() {
     return getOptions().valuesOf(optionDatabase).stream()
         .map(String::trim)
         .filter(StringUtils::isNotEmpty)

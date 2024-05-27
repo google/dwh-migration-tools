@@ -30,7 +30,7 @@ import org.apache.commons.lang3.ArrayUtils;
 public class AbstractSnowflakeConnectorExecutionTest extends AbstractConnectorExecutionTest {
 
   // TODO("Constants from SnowflakeValidator.")
-  private static final ImmutableList<? extends String> ARGS =
+  private static final ImmutableList<String> ARGS =
       ImmutableList.of(
           "--host", "compilerworks.snowflakecomputing.com",
           "--database", "cw",

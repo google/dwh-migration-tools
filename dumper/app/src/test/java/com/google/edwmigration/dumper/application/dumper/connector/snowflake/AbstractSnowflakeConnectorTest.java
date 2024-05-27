@@ -31,7 +31,7 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
-  private static final ImmutableList<? extends String> ARGS =
+  private static final ImmutableList<String> ARGS =
       ImmutableList.of(
           "--host", "compilerworks.snowflakecomputing.com",
           "--warehouse", "testwh",

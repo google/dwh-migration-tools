@@ -146,7 +146,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     }
 
     @Nonnull
-    protected abstract String getSql(@Nonnull Predicate<? super String> predicate);
+    protected abstract String getSql(@Nonnull Predicate<String> predicate);
 
     /**
      * Runs a test query to check whether a given projection expression is legal on this Teradata
@@ -189,7 +189,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
 
     @Override
     @Nonnull
-    protected String getSql(@Nonnull Predicate<? super String> predicate) {
+    protected String getSql(@Nonnull Predicate<String> predicate) {
       StringBuilder buf = new StringBuilder("SELECT ");
 
       String separator = "";
@@ -234,7 +234,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
 
     @Override
     @Nonnull
-    protected String getSql(@Nonnull Predicate<? super String> predicate) {
+    protected String getSql(@Nonnull Predicate<String> predicate) {
       StringBuilder buf = new StringBuilder("SELECT ");
 
       String separator = "";

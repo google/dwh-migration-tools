@@ -177,16 +177,14 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
    * @return A SQL query containing every legal expression from EXPRESSIONS.
    */
   @Nonnull
-  /* pp */ String getOrCreateSql(
-      Predicate<? super String> predicate, ImmutableList<String> localExpressions) {
+  /* pp */ String getOrCreateSql(Predicate<String> predicate, List<String> localExpressions) {
     if (!sql.isPresent()) {
       sql = Optional.of(buildSql(predicate, localExpressions));
     }
     return sql.get();
   }
 
-  private String buildSql(
-      Predicate<? super String> predicate, ImmutableList<String> localExpressions) {
+  private String buildSql(Predicate<String> predicate, List<String> localExpressions) {
     StringBuilder buf = new StringBuilder("SELECT ");
     String separator = "";
     boolean queryTableIncluded = false;

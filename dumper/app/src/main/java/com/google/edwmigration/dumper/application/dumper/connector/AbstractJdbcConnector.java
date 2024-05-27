@@ -71,7 +71,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
    */
   @Nonnull
   private static ClassLoader newDriverClassLoader(
-      @Nonnull ClassLoader parentClassLoader, @CheckForNull List<? extends String> driverPaths)
+      @Nonnull ClassLoader parentClassLoader, @CheckForNull List<String> driverPaths)
       throws PrivilegedActionException, MalformedURLException {
     if (driverPaths == null || driverPaths.isEmpty()) return parentClassLoader;
     List<URL> urls = new ArrayList<>();
@@ -108,7 +108,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
 
   @Nonnull
   protected Driver newDriver(
-      @CheckForNull List<? extends String> driverPaths, @Nonnull String... driverClassNames)
+      @CheckForNull List<String> driverPaths, @Nonnull String... driverClassNames)
       throws SQLException {
     Class<?> driverClass = null;
     try {

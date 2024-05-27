@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -72,24 +73,24 @@ public class JsonResponseFile {
   }
 
   @Nonnull
-  private static List<? extends String> to_arguments(@Nonnull File file) throws IOException {
+  private static ImmutableList<String> to_arguments(@Nonnull File file) throws IOException {
     return convert(newObjectMapper().readTree(file));
   }
 
   @VisibleForTesting
-  /* pp */ static List<? extends String> to_arguments(@Nonnull String text)
+  /* pp */ static ImmutableList<String> to_arguments(@Nonnull String text)
       throws IOException, JsonProcessingException {
     return convert(newObjectMapper().readTree(text));
   }
 
   @Nonnull
-  private static List<? extends String> convert(@Nonnull JsonNode node) {
+  private static ImmutableList<String> convert(@Nonnull JsonNode node) {
     List<String> out = new ArrayList<>();
     convert(node, out);
-    return out;
+    return ImmutableList.copyOf(out);
   }
 
-  private static void convert(@Nonnull JsonNode node, @Nonnull List<? super String> ret) {
+  private static void convert(@Nonnull JsonNode node, @Nonnull List<String> ret) {
     Preconditions.checkArgument(node.isObject(), "Object expected as root node of JSON file.");
     node.fields()
         .forEachRemaining(
@@ -102,7 +103,7 @@ public class JsonResponseFile {
   }
 
   private static void convertDefinitions(
-      String s, String s1, String s2, JsonNode childnode, List<? super String> ret) {
+      String s, String s1, String s2, JsonNode childnode, List<String> ret) {
     Preconditions.checkArgument(childnode.isObject(), "Definitions should be a JSON object");
     childnode
         .fields()
@@ -117,7 +118,7 @@ public class JsonResponseFile {
 
   /** Converts the given JsonNode into a set of --argument strings, within the given prefix. */
   private static void convertArgument(
-      @Nonnull String prefix, @Nonnull JsonNode node, @Nonnull List<? super String> ret) {
+      @Nonnull String prefix, @Nonnull JsonNode node, @Nonnull List<String> ret) {
     if (node.isObject()) {
       node.fields()
           .forEachRemaining(
