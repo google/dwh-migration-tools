@@ -53,7 +53,7 @@ class StatsTaskListGenerator {
   /** The source of performance statistics. */
   enum StatsSource {
     AWR("awr"),
-    NATIVE("metadata"),
+    NATIVE("native"),
     STATSPACK("statspack");
 
     final String value;
