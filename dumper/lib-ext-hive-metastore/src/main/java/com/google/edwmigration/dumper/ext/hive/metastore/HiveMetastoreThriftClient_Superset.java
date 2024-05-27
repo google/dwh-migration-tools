@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.FieldSchema;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogsResponse;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.WMGetAllResourcePlanRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -529,6 +530,24 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
   @Override
   public ImmutableList<? extends TBase<?, ?>> getRawFunctions() throws Exception {
     return ImmutableList.copyOf(client.get_all_functions().getFunctions());
+  }
+
+  @Override
+  public ImmutableList<String> getResourcePlansAsJsonl() throws Exception {
+    TSerializer serializer = createJsonSerializer();
+    return client
+        .get_all_resource_plans(new WMGetAllResourcePlanRequest())
+        .getResourcePlans()
+        .stream()
+        .map(
+            resourcePlan -> {
+              try {
+                return serializer.toString(resourcePlan);
+              } catch (TException e) {
+                throw new IllegalStateException(e);
+              }
+            })
+        .collect(toImmutableList());
   }
 
   @Override

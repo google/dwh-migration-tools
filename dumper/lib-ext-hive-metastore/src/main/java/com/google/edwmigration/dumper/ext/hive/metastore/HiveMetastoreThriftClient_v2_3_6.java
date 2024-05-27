@@ -529,6 +529,12 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
   }
 
   @Override
+  public ImmutableList<String> getResourcePlansAsJsonl() throws Exception {
+    LOG.info("Resource plans are not supported in Hive 2.3.6");
+    return ImmutableList.of();
+  }
+
+  @Override
   public void close() throws IOException {
     try {
       client.shutdown();

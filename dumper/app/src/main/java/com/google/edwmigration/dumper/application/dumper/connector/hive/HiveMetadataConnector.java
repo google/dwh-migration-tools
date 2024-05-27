@@ -481,6 +481,39 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class ResourcePlansJsonlTask extends AbstractHiveMetadataTask {
+
+    private ResourcePlansJsonlTask() {
+      super("resource-plans.jsonl", unused -> true);
+    }
+
+    @Override
+    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
+        throws Exception {
+      try (HiveMetastoreThriftClient client =
+              thriftClientHandle.newClient("resource-plans-jsonl-task-client");
+          RecordProgressMonitor monitor =
+              new RecordProgressMonitor("Writing resource plans to " + getTargetPath())) {
+        ImmutableList<String> resourcePlans = client.getResourcePlansAsJsonl();
+        for (String resourcePlanJson : resourcePlans) {
+          monitor.count();
+          writer.write(resourcePlanJson);
+          writer.write('\n');
+        }
+      }
+    }
+
+    @Override
+    public TaskCategory getCategory() {
+      return TaskCategory.OPTIONAL;
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "get_all_resource_plans()";
+    }
+  }
+
   public HiveMetadataConnector() {
     super("hiveql");
   }
@@ -503,6 +536,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
       out.add(new MasterKeysTask());
       out.add(new DelegationTokensTask());
       out.add(new FunctionsJsonlTask());
+      out.add(new ResourcePlansJsonlTask());
     }
 
     if (arguments.isAssessment()) {
