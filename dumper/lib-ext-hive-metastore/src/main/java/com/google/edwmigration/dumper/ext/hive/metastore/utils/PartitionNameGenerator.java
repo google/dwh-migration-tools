@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore.utils;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.Streams;
@@ -24,7 +25,6 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.CheckForNull;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +61,7 @@ public final class PartitionNameGenerator {
 
   @CheckForNull
   private static String constructPartitionName(String partitionKey, String partitionValue) {
-    if (StringUtils.isEmpty(partitionValue)) {
+    if (isNullOrEmpty(partitionValue)) {
       // This is unexpected and the original code throws an exception here.
       LOG.warn("Got empty partition value for the key '{}', will ignore it.", partitionKey);
       return null;
