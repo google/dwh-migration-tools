@@ -38,7 +38,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -93,7 +92,7 @@ public class DriverClasspathTest {
     String driverPaths = driverJarPath + "," + supportJarPath;
     String[] args = {"--connector", "ignored", "--driver", driverPaths};
 
-    try (Handle ignored = new DummyConnector("dummy").open(new ConnectorArguments(args))) {
+    try (Handle ignored = new DummyConnector().open(new ConnectorArguments(args))) {
       Assert.assertTrue("Driver instantiated.", true);
     }
   }
@@ -108,8 +107,7 @@ public class DriverClasspathTest {
         Assert.assertThrows(
             SQLException.class,
             () -> {
-              try (Handle ignored =
-                  new DummyConnector("dummy").open(new ConnectorArguments(args))) {
+              try (Handle ignored = new DummyConnector().open(new ConnectorArguments(args))) {
                 Assert.assertTrue("Driver instantiated.", true);
               }
             });
@@ -123,14 +121,14 @@ public class DriverClasspathTest {
 
   private static class DummyConnector extends AbstractJdbcConnector {
 
-    public DummyConnector(@Nonnull String name) {
-      super(name);
+    public DummyConnector() {
+      super("dummy");
     }
 
     @Nonnull
     @Override
     public String getDefaultFileName(boolean isAssessment, Clock clock) {
-      return StringUtils.EMPTY;
+      return "";
     }
 
     @Override
@@ -142,6 +140,12 @@ public class DriverClasspathTest {
     public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
       newDriver(arguments.getDriverPaths(), "foo.bar.DummyDriver");
       return () -> {};
+    }
+
+    @Nonnull
+    @Override
+    public String summary(@Nonnull String fileName) {
+      return "";
     }
   }
 }
