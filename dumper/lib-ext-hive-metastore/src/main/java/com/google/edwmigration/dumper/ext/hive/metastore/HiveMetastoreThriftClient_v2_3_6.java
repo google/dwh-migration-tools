@@ -464,6 +464,11 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
                 })
             .collect(toImmutableList());
       }
+
+      @Override
+      public String toJson() throws Exception {
+        return createJsonSerializer().toString(table);
+      }
     };
   }
 

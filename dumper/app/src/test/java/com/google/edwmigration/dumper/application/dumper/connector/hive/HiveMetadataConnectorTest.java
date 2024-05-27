@@ -78,7 +78,6 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
           "compilerworks-metadata.yaml",
           "compilerworks-format.txt",
           "schemata.csv",
-          "tables.jsonl",
           "functions.csv");
 
   @Theory
@@ -100,6 +99,21 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
         taskNames.contains(taskName));
   }
 
+  @Test
+  public void addTasksTo_originalTableJsonl_success() throws IOException {
+    ConnectorArguments args = new ConnectorArguments("--connector", "hiveql");
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(tasks, args);
+
+    // Assert
+    ImmutableList<String> taskNames = tasks.stream().map(Task::getName).collect(toImmutableList());
+    assertTrue(
+        "Task names must contain 'tables.jsonl'. Actual tasks: " + taskNames,
+        taskNames.contains("tables.jsonl"));
+  }
+
   @DataPoints("migrationMetadataTaskNames")
   public static final ImmutableList<String> EXPECTED_TASK_NAMES_WITH_MIGRATION_METADATA_ENABLED =
       ImmutableList.of(
@@ -108,7 +122,8 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
           "master-keys.csv",
           "delegation-tokens.csv",
           "functions.jsonl",
-          "resource-plans.jsonl");
+          "resource-plans.jsonl",
+          "tables-raw.jsonl");
 
   @Theory
   public void addTasksTo_migrationMetadataTaskExists_success(

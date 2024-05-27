@@ -90,4 +90,7 @@ public interface Table {
 
   @Nonnull
   public List<? extends Partition> getPartitions() throws Exception;
+
+  @Nonnull
+  public String toJson() throws Exception;
 }
