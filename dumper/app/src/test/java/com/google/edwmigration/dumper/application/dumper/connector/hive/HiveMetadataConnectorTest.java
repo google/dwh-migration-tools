@@ -59,10 +59,6 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Run this with: > ./gradlew :dumper:app:{cleanTest,test} --tests HiveMetadataConnectorTest
- * -Dtest.verbose=true -Dorg.gradle.java.home=/usr/lib/jvm/java-1.8.0-openjdk-amd64
- */
 @RunWith(Theories.class)
 public class HiveMetadataConnectorTest extends AbstractConnectorTest {
 
@@ -96,6 +92,14 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
         taskNames.contains(taskName));
   }
 
+  /**
+   * Run this with:
+   *
+   * <pre>
+   * ./gradlew :dumper:app:{cleanTest,test} --tests HiveMetadataConnectorTest
+   * -Dtest.verbose=true -Dorg.gradle.java.home=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+   * </pre>
+   */
   @Test
   public void testLoadedHive312() throws Exception {
 

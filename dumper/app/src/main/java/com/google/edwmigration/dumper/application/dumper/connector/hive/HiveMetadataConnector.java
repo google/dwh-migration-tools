@@ -158,6 +158,11 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
 
     @Override
+    public TaskCategory getCategory() {
+      return TaskCategory.OPTIONAL;
+    }
+
+    @Override
     protected String toCallDescription() {
       return "get_all_databases()*.get_database()";
     }
