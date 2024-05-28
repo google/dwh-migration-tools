@@ -156,8 +156,8 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     String sql = getOrCreateSql(jdbcHandle);
-    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1).withInterval(interval);
-    return doSelect(connection, rse, sql);
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1);
+    return doSelect(connection, withInterval(rse, interval), sql);
   }
 
   @Nonnull
