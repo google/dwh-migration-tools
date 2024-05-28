@@ -47,7 +47,7 @@ public class JdbcSelectIntervalTask extends JdbcSelectTask {
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
-    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1);
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     return doSelect(connection, withInterval(rse, interval), getSql());
   }
 }

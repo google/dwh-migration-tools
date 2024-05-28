@@ -132,7 +132,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
         @Nonnull Connection connection)
         throws SQLException {
       String sql = getSql(jdbcHandle);
-      ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1);
+      ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
       return doSelect(connection, withInterval(rse, interval), sql);
     }
 

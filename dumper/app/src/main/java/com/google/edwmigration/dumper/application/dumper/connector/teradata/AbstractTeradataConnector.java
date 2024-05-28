@@ -142,7 +142,11 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
         Long result = DataAccessUtils.nullableSingleResult(results);
         if (result != null) count = result;
       }
-      return newCsvResultSetExtractor(sink, count);
+      if (count < 0) {
+        return newCsvResultSetExtractor(sink);
+      } else {
+        return newCsvResultSetExtractor(sink, count);
+      }
     }
 
     @Override

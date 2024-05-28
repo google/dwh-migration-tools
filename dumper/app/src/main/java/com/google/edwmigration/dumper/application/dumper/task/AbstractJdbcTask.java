@@ -139,7 +139,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     };
   }
 
-  private void iterateResults(ResultSet resultSet, RecordProgressMonitor monitor, Writer writer) 
+  private void iterateResults(ResultSet resultSet, RecordProgressMonitor monitor, Writer writer)
       throws IOException, SQLException {
     CSVFormat format = newCsvFormat(resultSet);
     try (CSVPrinter printer = format.print(writer)) {

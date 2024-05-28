@@ -202,7 +202,7 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     String sql = getOrCreateSql(jdbcHandle);
-    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink, -1);
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     return doSelect(connection, withInterval(rse, interval), sql);
   }
 
