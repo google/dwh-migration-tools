@@ -132,6 +132,20 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
     return ImmutableList.copyOf(client.get_master_keys());
   }
 
+  @Override
+  public ImmutableList<DelegationToken> getDelegationTokens() throws Exception {
+    return client.get_all_token_identifiers().stream()
+        .map(
+            tokenIdentifier -> {
+              try {
+                return DelegationToken.create(tokenIdentifier, client.get_token(tokenIdentifier));
+              } catch (TException e) {
+                throw new IllegalStateException(e);
+              }
+            })
+        .collect(toImmutableList());
+  }
+
   @Nonnull
   @Override
   public ImmutableList<String> getAllTableNamesInDatabase(@Nonnull String databaseName)
