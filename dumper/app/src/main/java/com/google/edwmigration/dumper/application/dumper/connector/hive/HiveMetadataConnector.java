@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -384,8 +385,11 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     out.add(new SchemataTask(databasePredicate));
     out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
     out.add(new FunctionsTask(databasePredicate));
-    out.add(new CatalogsTask());
-    out.add(new DatabasesJsonlTask());
+    if (BooleanUtils.toBoolean(
+        arguments.getDefinitionOrDefault(HiveConnectorProperty.MIGRATION_METADATA))) {
+      out.add(new CatalogsTask());
+      out.add(new DatabasesJsonlTask());
+    }
 
     if (arguments.isAssessment()) {
       out.add(new DatabasesTask(databasePredicate));

@@ -253,7 +253,9 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
             + " SASL connection between hadoop and the dumper. Allowed values: '"
             + HadoopRpcProtection.ALLOWED_VALUES
             + "'.",
-        HadoopRpcProtection.PRIVACY.name());
+        HadoopRpcProtection.PRIVACY.name()),
+    MIGRATION_METADATA(
+        "migration.metadata", "Extraction of the metadata necessary for migration.", "false");
 
     private final String name;
     private final String description;

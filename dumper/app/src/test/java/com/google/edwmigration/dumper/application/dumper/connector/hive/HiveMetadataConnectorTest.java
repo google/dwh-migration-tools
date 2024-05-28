@@ -72,14 +72,43 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
     testConnectorDefaults(connector);
   }
 
-  @DataPoints("expectedTaskNames")
+  @DataPoints("commonTaskNames")
   public static final ImmutableList<String> EXPECTED_TASK_NAMES =
+      ImmutableList.of(
+          "compilerworks-metadata.yaml",
+          "compilerworks-format.txt",
+          "schemata.csv",
+          "tables.jsonl",
+          "functions.csv");
+
+  @Theory
+  public void addTasksTo_taskExists_success(
+      @FromDataPoints("commonTaskNames") String taskName, boolean migrationMetadataEnabled)
+      throws IOException {
+    ConnectorArguments args =
+        new ConnectorArguments(
+            "--connector", "hiveql", "-Dhiveql.migration.metadata=" + migrationMetadataEnabled);
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(tasks, args);
+
+    // Assert
+    ImmutableList<String> taskNames = tasks.stream().map(Task::getName).collect(toImmutableList());
+    assertTrue(
+        "Task names must contain '" + taskName + "'. Actual tasks: " + taskNames,
+        taskNames.contains(taskName));
+  }
+
+  @DataPoints("migrationMetadataTaskNames")
+  public static final ImmutableList<String> EXPECTED_TASK_NAMES_WITH_MIGRATION_METADATA_ENABLED =
       ImmutableList.of("catalogs.jsonl", "databases.jsonl");
 
   @Theory
-  public void addTasksTo_taskExists_success(@FromDataPoints("expectedTaskNames") String taskName)
-      throws IOException {
-    ConnectorArguments args = new ConnectorArguments("--connector", "hiveql");
+  public void addTasksTo_migrationMetadataTaskExists_success(
+      @FromDataPoints("migrationMetadataTaskNames") String taskName) throws IOException {
+    ConnectorArguments args =
+        new ConnectorArguments("--connector", "hiveql", "-Dhiveql.migration.metadata=true");
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
