@@ -132,7 +132,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
     @Nonnull
     private ResultSetExtractor<Summary> newCountedResultSetExtractor(
         @Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
-      long count = -1;
+      Optional<Long> count = Optional.empty();
       if (sqlCount != null) {
         // It's a lot of infrastructure, but we don't have to write it.
         RowMapper<Long> rowMapper = new SingleColumnRowMapper<>(Long.class);
@@ -140,12 +140,12 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
             new RowMapperResultSetExtractor<>(rowMapper);
         List<Long> results = doSelect(connection, resultSetExtractor, sqlCount);
         Long result = DataAccessUtils.nullableSingleResult(results);
-        if (result != null) count = result;
+        count = Optional.ofNullable(result).filter(x -> x >= 0);
       }
-      if (count < 0) {
-        return newCsvResultSetExtractor(sink);
+      if (count.isPresent()) {
+        return newCsvResultSetExtractor(sink, count.get());
       } else {
-        return newCsvResultSetExtractor(sink, count);
+        return newCsvResultSetExtractor(sink);
       }
     }
 

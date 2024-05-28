@@ -39,7 +39,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Base64;
 import javax.annotation.CheckForNull;
-import javax.annotation.CheckForSigned;
+import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.csv.CSVFormat;
@@ -124,12 +124,9 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @Nonnull
   protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
-      @Nonnull ByteSink sink, @CheckForSigned long count) {
+      @Nonnull ByteSink sink, @Nonnegative long count) {
     return rs -> {
-      try (RecordProgressMonitor monitor =
-              count >= 0
-                  ? new RecordProgressMonitor(getName(), count)
-                  : new RecordProgressMonitor(getName());
+      try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName(), count);
           Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
         iterateResults(rs, monitor, writer);
         return new Summary(monitor.getCount());

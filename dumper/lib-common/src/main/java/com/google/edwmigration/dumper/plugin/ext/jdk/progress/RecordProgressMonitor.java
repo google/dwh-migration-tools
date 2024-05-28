@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnegative;
@@ -44,6 +46,7 @@ public class RecordProgressMonitor extends AbstractProgressMonitor {
   private long nextMinSeconds = 0;
 
   public RecordProgressMonitor(@Nonnull String name, @Nonnegative long total) {
+    checkArgument(total >= 0, "Total must be nonnegative. Was: %s", total);
     this.name = name;
     this.total = total;
     this.stepPercent = Math.max(total / 10, 1); // 10% or 1 count.
