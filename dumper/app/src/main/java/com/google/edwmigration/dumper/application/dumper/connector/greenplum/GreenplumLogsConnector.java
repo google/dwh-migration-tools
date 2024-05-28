@@ -40,9 +40,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.GreenplumLogsDumpFor
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.GreenplumMetadataDumpFormat;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +51,7 @@ import org.slf4j.LoggerFactory;
     arg = ConnectorArguments.OPT_PORT,
     description = "The port of the server.",
     required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
-    defaultValue = "" + GreenplumLogsConnector.OPT_PORT_DEFAULT
-    )
+    defaultValue = "" + GreenplumLogsConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentAssessment
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
@@ -77,7 +74,8 @@ public class GreenplumLogsConnector extends AbstractGreenplumConnector
 
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
 
-    // is also be there in the metadata , no harm is making zip self-sufficient
+    // pg_user table is also dumped in the greenplum(metadata) connector, but there is no harm
+    // making this zip self-sufficient.
     parallelTask.addTask(
         new JdbcSelectTask(
             GreenplumMetadataDumpFormat.PgUser.ZIP_ENTRY_NAME, "select * from pg_user"));
@@ -110,14 +108,11 @@ public class GreenplumLogsConnector extends AbstractGreenplumConnector
       ParallelTaskGroup out)
       throws MetadataDumperUsageException {
 
-    List<String> whereClauses = new ArrayList<>();
-
     for (ZonedInterval interval : intervals) {
       String query =
           queryTemplate.replace(
               "##",
               newWhereClause(
-                  whereClauses,
                   String.format(
                       "%s >= TIMESTAMP '%s'", startField, SQL_FORMAT.format(interval.getStart())),
                   String.format(

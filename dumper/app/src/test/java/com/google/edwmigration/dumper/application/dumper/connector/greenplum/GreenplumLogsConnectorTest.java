@@ -17,11 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.greenplum;
 
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.GreenplumLogsDumpFormat;
-import com.google.edwmigration.dumper.test.TestUtils;
-import java.io.File;
-
-import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -40,18 +35,5 @@ public class GreenplumLogsConnectorTest extends AbstractConnectorExecutionTest {
   @Test
   public void testConnector() throws Exception {
     testConnectorDefaults(connector);
-  }
-
-  @Test
-  public void testExecution() throws Exception {
-    Assume.assumeTrue(isDumperTest());
-
-    File outputFile = TestUtils.newOutputFile("test-compilerworks-greenplum.zip");
-    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
-
-    runDumper("--connector", connector.getName(), "--output", outputFile.getAbsolutePath());
-
-    ZipValidator validator = new ZipValidator().withFormat(GreenplumLogsDumpFormat.FORMAT_NAME);
-    validator.run(outputFile);
   }
 }

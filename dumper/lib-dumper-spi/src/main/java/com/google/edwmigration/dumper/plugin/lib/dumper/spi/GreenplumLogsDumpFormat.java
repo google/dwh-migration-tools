@@ -48,6 +48,4 @@ public interface GreenplumLogsDumpFormat {
       return name.startsWith(ZIP_ENTRY_PREFIX) && name.endsWith(ZIP_ENTRY_SUFFIX);
     }
   }
-
-  
 }

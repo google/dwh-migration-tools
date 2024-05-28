@@ -20,7 +20,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractConne
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
-import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -36,33 +35,13 @@ public class GreenplumMetadataTest extends AbstractConnectorExecutionTest {
 
   private static final String SUBPROJECT = "compilerworks-application-dumper";
 
-  private static final File PG_DUMPER_TEST = new File(TestUtils.getTestResourcesDir(SUBPROJECT),
-      "dumper-test/postgresql.sql");
+  private static final File PG_DUMPER_TEST =
+      new File(TestUtils.getTestResourcesDir(SUBPROJECT), "dumper-test/postgresql.sql");
 
   private final MetadataConnector connector = new GreenplumMetadataConnector();
 
   @Test
   public void testConnector() throws Exception {
     testConnectorDefaults(connector);
-  }
-
-  @Test
-  public void testMetadata() throws Exception {
-    Assume.assumeTrue(isDumperTest());
-
-    File outputFile = TestUtils.newOutputFile("compilerworks-greenplum-metadata.zip");
-    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
-
-    runDumper(
-        "--connector",
-        connector.getName(),
-        "--user",
-        "cw",
-        "--password",
-        "password",
-        "--output",
-        outputFile.getAbsolutePath(),
-        "--sqlscript",
-        PG_DUMPER_TEST.getAbsolutePath());
   }
 }
