@@ -115,7 +115,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   }
 
   @Nonnull
-  protected ExtendableResultSetExtractor newCsvResultSetExtractor(
+  protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
       @Nonnull ByteSink sink, @CheckForSigned long count) {
     return rs -> {
       CSVFormat format = newCsvFormat(rs);
@@ -148,12 +148,6 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         throw new SQLException(e);
       }
     };
-  }
-
-  public interface ExtendableResultSetExtractor extends ResultSetExtractor<Summary> {
-    default ResultSetExtractor<Summary> withInterval(ZonedInterval interval) {
-      return AbstractJdbcTask.withInterval(this, interval);
-    }
   }
 
   public static ResultSetExtractor<Summary> withInterval(
