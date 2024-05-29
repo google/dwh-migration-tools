@@ -49,8 +49,7 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   @Nonnull
   static Task<?> fromQuery(OracleStatsQuery query) {
-    String name = "oracle-stats/" + query.name() + ".csv";
-    return new StatsJdbcTask(name, query);
+    return new StatsJdbcTask(query.name() + ".csv", query);
   }
 
   @Nonnull
