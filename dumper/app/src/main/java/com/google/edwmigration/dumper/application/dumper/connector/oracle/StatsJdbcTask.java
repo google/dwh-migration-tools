@@ -41,9 +41,9 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   private final OracleStatsQuery query;
 
-  private StatsJdbcTask(String name, OracleStatsQuery query) {
-    super(name);
-    Preconditions.checkArgument(name.endsWith(".csv"));
+  private StatsJdbcTask(String targetPath, OracleStatsQuery query) {
+    super(targetPath);
+    Preconditions.checkArgument(targetPath.endsWith(".csv"));
     this.query = query;
   }
 
