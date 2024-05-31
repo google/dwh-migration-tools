@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.determineTransactionMode;
+import static org.springframework.dao.support.DataAccessUtils.nullableSingleResult;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -53,7 +54,6 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.RowMapperResultSetExtractor;
@@ -132,21 +132,17 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
     @Nonnull
     private ResultSetExtractor<Summary> newCountedResultSetExtractor(
         @Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
-      Optional<Long> count = Optional.empty();
       if (sqlCount != null) {
         // It's a lot of infrastructure, but we don't have to write it.
         RowMapper<Long> rowMapper = new SingleColumnRowMapper<>(Long.class);
-        ResultSetExtractor<List<Long>> resultSetExtractor =
-            new RowMapperResultSetExtractor<>(rowMapper);
-        List<Long> results = doSelect(connection, resultSetExtractor, sqlCount);
-        Long result = DataAccessUtils.nullableSingleResult(results);
-        count = Optional.ofNullable(result).filter(x -> x >= 0);
+        ResultSetExtractor<List<Long>> extractor = new RowMapperResultSetExtractor<>(rowMapper);
+        List<Long> results = doSelect(connection, extractor, sqlCount);
+        Optional<Long> count = Optional.ofNullable(nullableSingleResult(results));
+        if (count.isPresent() && count.get() >= 0) {
+          return newCsvResultSetExtractor(sink, count.get());
+        }
       }
-      if (count.isPresent()) {
-        return newCsvResultSetExtractor(sink, count.get());
-      } else {
-        return newCsvResultSetExtractor(sink);
-      }
+      return newCsvResultSetExtractor(sink);
     }
 
     @Override
