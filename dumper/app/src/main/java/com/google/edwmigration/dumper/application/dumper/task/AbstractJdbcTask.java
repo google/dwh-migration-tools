@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -28,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -112,9 +113,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   @Nonnull
   public ResultSetExtractor<Summary> newCsvResultSetExtractor(@Nonnull ByteSink sink) {
     return rs -> {
-      try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName());
-          Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-        iterateResults(rs, monitor, writer);
+      try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName())) {
+        printAllResults(sink, rs, monitor);
         return new Summary(monitor.getCount());
       } catch (IOException e) {
         throw new SQLException(e);
@@ -126,9 +126,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
       @Nonnull ByteSink sink, @Nonnegative long count) {
     return rs -> {
-      try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName(), count);
-          Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-        iterateResults(rs, monitor, writer);
+      try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName(), count)) {
+        printAllResults(sink, rs, monitor);
         return new Summary(monitor.getCount());
       } catch (IOException e) {
         throw new SQLException(e);
@@ -136,10 +135,11 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     };
   }
 
-  private void iterateResults(ResultSet resultSet, RecordProgressMonitor monitor, Writer writer)
+  private void printAllResults(ByteSink sink, ResultSet resultSet, RecordProgressMonitor monitor)
       throws IOException, SQLException {
     CSVFormat format = newCsvFormat(resultSet);
-    try (CSVPrinter printer = format.print(writer)) {
+    try (Writer writer = sink.asCharSink(UTF_8).openBufferedStream();
+        CSVPrinter printer = format.print(writer)) {
       int columnCount = resultSet.getMetaData().getColumnCount();
       while (resultSet.next()) {
         monitor.count();
@@ -161,8 +161,6 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       IOUtils.copy(in, w);
       return w.toString();
     } else {
-      // TODO: add explicit conversions for remaining types so that the return type can become
-      // String instead of Object.
       return object;
     }
   }
