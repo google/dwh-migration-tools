@@ -38,10 +38,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -156,13 +158,30 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
           new ConcurrentRecordProgressMonitor("Populating Hive instance.", total)) {
         ExecutorService executor = Executors.newFixedThreadPool(HiveServerSupport.CONCURRENCY);
 
+        LinkedBlockingDeque<Optional<Exception>> q = new LinkedBlockingDeque<>();
+
         for (List<String> statementList : setupStatements) {
           executor
               .invokeAll(
                   Lists.partition(statementList, BATCH_SIZE).stream()
                       .map(l -> getCallable(instanceSupport, l, monitor))
                       .collect(Collectors.toList()))
-              .forEach(this::assertNoException);
+              .forEach(f -> {
+                Optional<Exception> opt = Optional.empty();
+                try {
+                  f.get();
+                } catch (Exception e) {
+                  opt = Optional.of(e);
+                }
+                q.addLast(opt);
+              });
+        }
+
+        for (int i = 0, n = setupStatements.size(); i < n; i++) {
+          Optional<Exception> item = q.take();
+          if (item.isPresent()) {
+            throw item.get();
+          }
         }
       }
 
