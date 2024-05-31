@@ -21,6 +21,8 @@ import static com.google.edwmigration.dumper.application.dumper.connector.oracle
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
+import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.io.IOException;
 import javax.annotation.Nonnull;
@@ -28,6 +30,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 class StatsTaskListGenerator {
+
+  private final OracleConnectorScope scope = OracleConnectorScope.STATS;
 
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
@@ -43,7 +47,8 @@ class StatsTaskListGenerator {
             );
 
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
-
+    builder.add(new DumpMetadataTask(arguments, scope.formatName()));
+    builder.add(new FormatTask(scope.formatName()));
     for (OracleStatsQuery item : queries) {
       builder.add(StatsJdbcTask.fromQuery(item));
     }

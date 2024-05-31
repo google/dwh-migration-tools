@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.util.List;
@@ -38,7 +37,6 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   @Override
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
     StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
-    out.add(new DumpMetadataTask(arguments, getFormatName()));
     out.addAll(taskListGenerator.createTasks(arguments));
   }
 

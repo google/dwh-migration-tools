@@ -21,6 +21,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
+import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
@@ -40,18 +41,22 @@ public class OracleLogsConnector extends AbstractOracleConnector
   /** Exists so we can extract query text CLOBs to Strings before they reach the CSVPrinter. */
   private static class QueryHistoryTask extends JdbcSelectTask {
 
-    public QueryHistoryTask(@Nonnull String targetPath, @Nonnull String sql) {
-      super(targetPath, sql);
+    QueryHistoryTask() {
+      super(ZIP_ENTRY_FILENAME, sql());
+    }
+
+    private static String sql() {
+      return "SELECT sql_fulltext, cpu_time, elapsed_time, disk_reads, runtime_mem FROM v$sql";
     }
   }
 
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
-    out.add(new DumpMetadataTask(arguments, getFormatName()));
-    // It's not clear to me whether we should be using v$sqlarea instead here.
-    String query =
-        "SELECT sql_fulltext, cpu_time, elapsed_time, disk_reads, runtime_mem FROM v$sql";
-    out.add(new QueryHistoryTask(ZIP_ENTRY_FILENAME, query).withHeaderClass(Header.class));
+    String format = getConnectorScope().formatName();
+
+    out.add(new DumpMetadataTask(arguments, format));
+    out.add(new FormatTask(format));
+    out.add(new QueryHistoryTask());
   }
 }
