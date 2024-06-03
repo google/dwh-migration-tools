@@ -138,7 +138,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
         ResultSetExtractor<List<Long>> extractor = new RowMapperResultSetExtractor<>(rowMapper);
         List<Long> results = doSelect(connection, extractor, sqlCount);
         Long count = nullableSingleResult(results);
-        if (count != null && count >= 0) {
+        if (count != null) {
           return newCsvResultSetExtractor(sink, count);
         }
       }
