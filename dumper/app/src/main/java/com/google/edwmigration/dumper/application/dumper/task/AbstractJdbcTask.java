@@ -152,7 +152,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     }
   }
 
-  public static Object convertObject(Object object) throws IOException, SQLException {
+  private static Object convertObject(Object object) throws IOException, SQLException {
     if (object instanceof byte[]) {
       return Base64.getEncoder().encodeToString((byte[]) object);
     } else if (object instanceof Clob) {
