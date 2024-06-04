@@ -22,21 +22,18 @@ import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.auto.value.AutoValue;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Group;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.User;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -62,131 +59,6 @@ public class RangerInternalClient {
           .registerModule(new JavaTimeModule())
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-  /**
-   * A Ranger user. Based on server's model defined at
-   * https://raw.githubusercontent.com/apache/ranger/master/security-admin/src/main/java/org/apache/ranger/view/VXUser.java.
-   */
-  @AutoValue
-  @JsonSerialize(as = User.class)
-  public abstract static class User {
-
-    @JsonCreator
-    static User create(
-        @JsonProperty("id") long id,
-        @JsonProperty("createDate") Instant createDate,
-        @JsonProperty("updateDate") Instant updateDate,
-        @JsonProperty("owner") String owner,
-        @JsonProperty("updatedBy") String updatedBy,
-        @JsonProperty("name") String name,
-        @JsonProperty("firstName") String firstName,
-        @JsonProperty("lastName") String lastName,
-        @JsonProperty("emailAddress") String emailAddress,
-        @JsonProperty("credStoreId") String credStoreId,
-        @JsonProperty("description") String description,
-        @JsonProperty("groupIdList") List<Long> groupIdList,
-        @JsonProperty("groupNameList") List<String> groupNameList,
-        @JsonProperty("status") Integer status,
-        @JsonProperty("isVisible") Integer isVisible,
-        @JsonProperty("userSource") Integer userSource,
-        @JsonProperty("userRoleList") List<String> userRoleList,
-        @JsonProperty("otherAttributes") String otherAttributes,
-        @JsonProperty("syncSource") String syncSource) {
-      return new AutoValue_RangerInternalClient_User(
-          id,
-          createDate,
-          updateDate,
-          owner,
-          updatedBy,
-          name,
-          firstName,
-          lastName,
-          emailAddress,
-          credStoreId,
-          description,
-          groupIdList,
-          groupNameList,
-          status,
-          isVisible,
-          userSource,
-          userRoleList,
-          otherAttributes,
-          syncSource);
-    }
-
-    @JsonProperty
-    abstract long id();
-
-    @JsonProperty
-    @JsonFormat(shape = Shape.STRING)
-    @Nullable
-    abstract Instant createDate();
-
-    @JsonProperty
-    @JsonFormat(shape = Shape.STRING)
-    @Nullable
-    abstract Instant updateDate();
-
-    @JsonProperty
-    @Nullable
-    abstract String owner();
-
-    @JsonProperty
-    @Nullable
-    abstract String updatedBy();
-
-    @JsonProperty
-    abstract String name();
-
-    @JsonProperty
-    @Nullable
-    abstract String firstName();
-
-    @JsonProperty
-    @Nullable
-    abstract String lastName();
-
-    @JsonProperty
-    @Nullable
-    abstract String emailAddress();
-
-    @JsonProperty
-    @Nullable
-    abstract String credStoreId();
-
-    @JsonProperty
-    @Nullable
-    abstract String description();
-
-    @JsonProperty
-    abstract List<Long> groupIdList();
-
-    @JsonProperty
-    abstract List<String> groupNameList();
-
-    @JsonProperty
-    @Nullable
-    abstract Integer status();
-
-    @JsonProperty
-    @Nullable
-    abstract Integer isVisible();
-
-    @JsonProperty
-    @Nullable
-    abstract Integer userSource();
-
-    @JsonProperty
-    abstract List<String> userRoleList();
-
-    @JsonProperty
-    @Nullable
-    abstract String otherAttributes();
-
-    @JsonProperty
-    @Nullable
-    abstract String syncSource();
-  }
-
   @AutoValue
   abstract static class ListUsersResponse {
 
@@ -197,98 +69,6 @@ public class RangerInternalClient {
 
     @JsonProperty
     abstract List<User> vXUsers();
-  }
-
-  /**
-   * A Ranger group. Based on server's model defined at
-   * https://raw.githubusercontent.com/apache/ranger/master/security-admin/src/main/java/org/apache/ranger/view/VXGroup.java.
-   */
-  @AutoValue
-  @JsonSerialize(as = Group.class)
-  public abstract static class Group {
-
-    @JsonCreator
-    static Group create(
-        @JsonProperty("id") long id,
-        @JsonProperty("createDate") Instant createDate,
-        @JsonProperty("updateDate") Instant updateDate,
-        @JsonProperty("owner") String owner,
-        @JsonProperty("updatedBy") String updatedBy,
-        @JsonProperty("name") String name,
-        @JsonProperty("description") String description,
-        @JsonProperty("groupType") Integer groupType,
-        @JsonProperty("groupSource") Integer groupSource,
-        @JsonProperty("credStoreId") String credStoreId,
-        @JsonProperty("isVisible") Integer isVisible,
-        @JsonProperty("otherAttributes") String otherAttributes,
-        @JsonProperty("syncSource") String syncSource) {
-      return new AutoValue_RangerInternalClient_Group(
-          id,
-          createDate,
-          updateDate,
-          owner,
-          updatedBy,
-          name,
-          description,
-          groupType,
-          groupSource,
-          credStoreId,
-          isVisible,
-          otherAttributes,
-          syncSource);
-    }
-
-    @JsonProperty
-    abstract long id();
-
-    @JsonProperty
-    @JsonFormat(shape = Shape.STRING)
-    @Nullable
-    abstract Instant createDate();
-
-    @JsonProperty
-    @JsonFormat(shape = Shape.STRING)
-    @Nullable
-    abstract Instant updateDate();
-
-    @JsonProperty
-    @Nullable
-    abstract String owner();
-
-    @JsonProperty
-    @Nullable
-    abstract String updatedBy();
-
-    @JsonProperty
-    abstract String name();
-
-    @JsonProperty
-    @Nullable
-    abstract String description();
-
-    @JsonProperty
-    @Nullable
-    abstract Integer groupType();
-
-    @JsonProperty
-    @Nullable
-    abstract Integer groupSource();
-
-    @JsonProperty
-    @Nullable
-    abstract String credStoreId();
-
-    @JsonProperty
-    @Nullable
-    abstract Integer isVisible();
-
-    @JsonProperty
-    @Nullable
-    abstract String otherAttributes();
-
-    @JsonProperty
-    @Nullable
-    abstract String syncSource();
   }
 
   @AutoValue
