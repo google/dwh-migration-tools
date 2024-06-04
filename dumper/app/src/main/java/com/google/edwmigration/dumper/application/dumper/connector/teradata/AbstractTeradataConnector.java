@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.determineTransactionMode;
+import static org.springframework.dao.support.DataAccessUtils.nullableSingleResult;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -53,7 +54,6 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.RowMapperResultSetExtractor;
@@ -132,17 +132,17 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
     @Nonnull
     private ResultSetExtractor<Summary> newCountedResultSetExtractor(
         @Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
-      long count = -1;
       if (sqlCount != null) {
         // It's a lot of infrastructure, but we don't have to write it.
         RowMapper<Long> rowMapper = new SingleColumnRowMapper<>(Long.class);
-        ResultSetExtractor<List<Long>> resultSetExtractor =
-            new RowMapperResultSetExtractor<>(rowMapper);
-        List<Long> results = doSelect(connection, resultSetExtractor, sqlCount);
-        Long result = DataAccessUtils.nullableSingleResult(results);
-        if (result != null) count = result;
+        ResultSetExtractor<List<Long>> extractor = new RowMapperResultSetExtractor<>(rowMapper);
+        List<Long> results = doSelect(connection, extractor, sqlCount);
+        Long count = nullableSingleResult(results);
+        if (count != null) {
+          return newCsvResultSetExtractor(sink, count);
+        }
       }
-      return newCsvResultSetExtractor(sink, count);
+      return newCsvResultSetExtractor(sink);
     }
 
     @Override

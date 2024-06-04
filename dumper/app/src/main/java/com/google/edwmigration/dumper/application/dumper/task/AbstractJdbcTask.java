@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -28,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -39,7 +40,6 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Base64;
 import javax.annotation.CheckForNull;
-import javax.annotation.CheckForSigned;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.csv.CSVFormat;
@@ -111,43 +111,57 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @Nonnull
   public ResultSetExtractor<Summary> newCsvResultSetExtractor(@Nonnull ByteSink sink) {
-    return newCsvResultSetExtractor(sink, -1);
-  }
-
-  @Nonnull
-  protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
-      @Nonnull ByteSink sink, @CheckForSigned long count) {
     return rs -> {
-      CSVFormat format = newCsvFormat(rs);
-      try (RecordProgressMonitor monitor =
-              count >= 0
-                  ? new RecordProgressMonitor(getName(), count)
-                  : new RecordProgressMonitor(getName());
-          Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
-          CSVPrinter printer = format.print(writer)) {
-        final int columnCount = rs.getMetaData().getColumnCount();
-        while (rs.next()) {
-          monitor.count();
-          for (int i = 1; i <= columnCount; i++) {
-            Object object = rs.getObject(i);
-            if (object instanceof byte[]) {
-              printer.print(Base64.getEncoder().encodeToString((byte[]) object));
-            } else if (object instanceof Clob) {
-              InputStream in = ((Clob) object).getAsciiStream();
-              StringWriter w = new StringWriter();
-              IOUtils.copy(in, w);
-              printer.print(w.toString());
-            } else {
-              printer.print(object);
-            }
-          }
-          printer.println();
-        }
+      try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName())) {
+        printAllResults(sink, rs, monitor);
         return new Summary(monitor.getCount());
       } catch (IOException e) {
         throw new SQLException(e);
       }
     };
+  }
+
+  @Nonnull
+  protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
+      @Nonnull ByteSink sink, long count) {
+    return rs -> {
+      try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName(), count)) {
+        printAllResults(sink, rs, monitor);
+        return new Summary(monitor.getCount());
+      } catch (IOException e) {
+        throw new SQLException(e);
+      }
+    };
+  }
+
+  private void printAllResults(ByteSink sink, ResultSet resultSet, RecordProgressMonitor monitor)
+      throws IOException, SQLException {
+    CSVFormat format = newCsvFormat(resultSet);
+    try (Writer writer = sink.asCharSink(UTF_8).openBufferedStream();
+        CSVPrinter printer = format.print(writer)) {
+      int columnCount = resultSet.getMetaData().getColumnCount();
+      while (resultSet.next()) {
+        monitor.count();
+        for (int i = 1; i <= columnCount; i++) {
+          Object object = resultSet.getObject(i);
+          printer.print(convertObject(object));
+        }
+        printer.println();
+      }
+    }
+  }
+
+  private static Object convertObject(Object object) throws IOException, SQLException {
+    if (object instanceof byte[]) {
+      return Base64.getEncoder().encodeToString((byte[]) object);
+    } else if (object instanceof Clob) {
+      InputStream in = ((Clob) object).getAsciiStream();
+      StringWriter w = new StringWriter();
+      IOUtils.copy(in, w);
+      return w.toString();
+    } else {
+      return object;
+    }
   }
 
   public static ResultSetExtractor<Summary> withInterval(
