@@ -40,7 +40,6 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Base64;
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.csv.CSVFormat;
@@ -124,7 +123,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @Nonnull
   protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
-      @Nonnull ByteSink sink, @Nonnegative long count) {
+      @Nonnull ByteSink sink, long count) {
     return rs -> {
       try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName(), count)) {
         printAllResults(sink, rs, monitor);

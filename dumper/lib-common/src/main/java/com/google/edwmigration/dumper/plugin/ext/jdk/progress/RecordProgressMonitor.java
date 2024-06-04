@@ -45,7 +45,7 @@ public class RecordProgressMonitor extends AbstractProgressMonitor {
   private long nextSeconds = 0;
   private long nextMinSeconds = 0;
 
-  public RecordProgressMonitor(@Nonnull String name, @Nonnegative long total) {
+  public RecordProgressMonitor(@Nonnull String name, long total) {
     checkArgument(total >= 0, "Total must be nonnegative. Was: %s", total);
     this.name = name;
     this.total = total;
