@@ -271,8 +271,14 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
   @Nonnull
   public abstract ImmutableList<? extends TBase<?, ?>> getRawFunctions() throws Exception;
 
+  /**
+   * Returns all the resource plans as the list of raw Thrift objects that correspond to the
+   * response from the Hive Metastore API.
+   *
+   * @return list of resource plans as raw Thrift objects
+   */
   @Nonnull
-  public abstract ImmutableList<String> getResourcePlansAsJsonl() throws Exception;
+  public abstract ImmutableList<? extends TBase<?, ?>> getRawResourcePlans() throws Exception;
 
   /**
    * Returns all the catalogs as the list of raw Thrift objects that correspond to the response from

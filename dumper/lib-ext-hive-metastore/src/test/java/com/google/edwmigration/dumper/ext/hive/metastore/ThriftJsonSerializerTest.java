@@ -22,7 +22,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.Database;
 import org.apache.thrift.TException;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class ThriftJsonSerializerTest {
 
   @Test
