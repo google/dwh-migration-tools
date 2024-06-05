@@ -36,6 +36,7 @@ import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClie
 import com.google.edwmigration.dumper.ext.hive.metastore.Partition;
 import com.google.edwmigration.dumper.ext.hive.metastore.PartitionKey;
 import com.google.edwmigration.dumper.ext.hive.metastore.Table;
+import com.google.edwmigration.dumper.ext.hive.metastore.ThriftJsonSerializer;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentRecordProgressMonitor;
@@ -49,6 +50,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.thrift.TBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,10 +153,11 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               thriftClientHandle.newClient("databases-jsonl-task-client");
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing databases to " + getTargetPath())) {
-        ImmutableList<String> allDatabases = client.getDatabasesAsJsonl();
-        for (String databaseJson : allDatabases) {
+        ThriftJsonSerializer serializer = new ThriftJsonSerializer();
+        ImmutableList<? extends TBase<?, ?>> databases = client.getRawDatabases();
+        for (TBase<?, ?> databaseThriftObject : databases) {
           monitor.count();
-          writer.write(databaseJson);
+          writer.write(serializer.serialize(databaseThriftObject));
           writer.write('\n');
         }
       }
@@ -355,10 +358,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               thriftClientHandle.newClient("functions-jsonl-task-client");
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing functions to " + getTargetPath())) {
-        ImmutableList<String> functions = client.getFunctionsAsJsonl();
-        for (String functionJson : functions) {
+        ThriftJsonSerializer serializer = new ThriftJsonSerializer();
+        for (TBase<?, ?> function : client.getRawFunctions()) {
           monitor.count();
-          writer.write(functionJson);
+          writer.write(serializer.serialize(function));
           writer.write('\n');
         }
       }
@@ -386,9 +389,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
       try (HiveMetastoreThriftClient client = thriftClientHandle.newClient("catalogs-task-client");
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing catalogs to " + getTargetPath())) {
-        for (String catalogJson : client.getCatalogsAsJsonl()) {
+        ThriftJsonSerializer serializer = new ThriftJsonSerializer();
+        for (TBase<?, ?> catalog : client.getRawCatalogs()) {
           monitor.count();
-          writer.write(catalogJson);
+          writer.write(serializer.serialize(catalog));
           writer.write('\n');
         }
       }
