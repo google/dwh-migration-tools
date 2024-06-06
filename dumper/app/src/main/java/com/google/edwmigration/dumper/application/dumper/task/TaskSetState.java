@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
-import javax.annotation.concurrent.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 /** @author shevek */
@@ -75,62 +74,47 @@ public interface TaskSetState {
   @ThreadSafe
   public static class Impl implements TaskSetState {
 
-    @GuardedBy("lock")
     private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
 
-    private final Object lock = new Object();
-
-    public long failedRequiredTaskCount() {
-      synchronized (lock) {
-        return resultMap.entrySet().stream()
-            .filter(e -> TaskCategory.REQUIRED.equals(e.getKey().getCategory()))
-            .filter(e -> TaskState.FAILED.equals(e.getValue().getState()))
-            .count();
-      }
+    public synchronized long failedRequiredTaskCount() {
+      return resultMap.entrySet().stream()
+          .filter(e -> TaskCategory.REQUIRED.equals(e.getKey().getCategory()))
+          .filter(e -> TaskState.FAILED.equals(e.getValue().getState()))
+          .count();
     }
 
-    public ImmutableList<TaskResultSummary> taskResultSummaries() {
-      synchronized (lock) {
-        ImmutableList.Builder<TaskResultSummary> builder = ImmutableList.builder();
-        resultMap.forEach(
-            (task, result) -> {
-              TaskResultSummary summary = TaskResultSummary.create(task, result);
-              builder.add(summary);
-            });
-        return builder.build();
-      }
+    public synchronized ImmutableList<TaskResultSummary> taskResultSummaries() {
+      ImmutableList.Builder<TaskResultSummary> builder = ImmutableList.builder();
+      resultMap.forEach(
+          (task, result) -> {
+            TaskResultSummary summary = TaskResultSummary.create(task, result);
+            builder.add(summary);
+          });
+      return builder.build();
     }
 
-    public ImmutableList<TasksReport> tasksReports() {
-      synchronized (lock) {
-        ImmutableList.Builder<TasksReport> builder = ImmutableList.builder();
-        resultMap.values().stream()
-            .collect(Collectors.groupingBy(TaskResult::getState, Collectors.counting()))
-            .forEach((key, value) -> builder.add(new TasksReport(value, key)));
-        return builder.build();
-      }
+    public synchronized ImmutableList<TasksReport> tasksReports() {
+      ImmutableList.Builder<TasksReport> builder = ImmutableList.builder();
+      resultMap.values().stream()
+          .collect(Collectors.groupingBy(TaskResult::getState, Collectors.counting()))
+          .forEach((key, value) -> builder.add(new TasksReport(value, key)));
+      return builder.build();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task) {
-      synchronized (lock) {
-        return (TaskResult<T>) resultMap.get(task);
-      }
+    public synchronized <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task) {
+      return (TaskResult<T>) resultMap.get(task);
     }
 
-    public <T> void setTaskResult(
+    public synchronized <T> void setTaskResult(
         @Nonnull Task<T> task, @Nonnull TaskState state, @CheckForNull T value) {
-      synchronized (lock) {
-        resultMap.put(task, new TaskResult<>(state, value));
-      }
+      resultMap.put(task, new TaskResult<>(state, value));
     }
 
-    public <T> void setTaskException(
+    public synchronized <T> void setTaskException(
         @Nonnull Task<T> task, @Nonnull TaskState state, @CheckForNull Exception exception) {
-      synchronized (lock) {
-        resultMap.put(task, new TaskResult<>(state, exception));
-      }
+      resultMap.put(task, new TaskResult<>(state, exception));
     }
   }
 
