@@ -29,11 +29,7 @@ public class ThriftJsonSerializer {
     this.underlyingSerializer = new TSerializer(new TSimpleJSONProtocol.Factory());
   }
 
-  public String serialize(TBase<?, ?> thriftObject) throws TTransportException {
-    try {
-      return underlyingSerializer.toString(thriftObject);
-    } catch (TException e) {
-      throw new IllegalStateException(e);
-    }
+  public String serialize(TBase<?, ?> thriftObject) throws TException {
+    return underlyingSerializer.toString(thriftObject);
   }
 }

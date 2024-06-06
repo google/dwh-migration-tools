@@ -20,13 +20,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.Database;
-import org.apache.thrift.transport.TTransportException;
+import org.apache.thrift.TException;
 import org.junit.Test;
 
 public class ThriftJsonSerializerTest {
 
   @Test
-  public void serialize_success() throws TTransportException {
+  public void serialize_success() throws TException {
     com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.Database database =
         new Database(
             "sample-db",
