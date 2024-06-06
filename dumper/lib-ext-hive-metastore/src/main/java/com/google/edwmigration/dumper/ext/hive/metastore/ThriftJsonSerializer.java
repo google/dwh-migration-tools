@@ -36,6 +36,9 @@ public class ThriftJsonSerializer {
     return underlyingSerializer.toString(thriftObject);
   }
 
+  /**
+   * Writes the list of Thrift objects as a JSON array to the Writer. The method is not thread-safe.
+   */
   public void serialize(List<? extends TBase<?, ?>> thriftObjects, Writer writer)
       throws IOException, TException {
     writer.write('[');
