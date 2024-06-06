@@ -252,11 +252,11 @@ public class MetadataDumper {
 
   private boolean checkRequiredTaskSuccess(
       SummaryPrinter summaryPrinter, Impl state, String outputFileName) {
-    long requiredTasksNotSucceeded = state.failedRequiredTaskCount();
-    if (requiredTasksNotSucceeded > 0) {
+    long failedRequiredTasks = state.failedRequiredTaskCount();
+    if (failedRequiredTasks > 0) {
       summaryPrinter.printSummarySection(
           linePrinter -> {
-            linePrinter.println("ERROR: %s required task[s] failed.", requiredTasksNotSucceeded);
+            linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks);
             linePrinter.println(
                 "Output, including debugging information, has been saved to '%s'.", outputFileName);
           });
