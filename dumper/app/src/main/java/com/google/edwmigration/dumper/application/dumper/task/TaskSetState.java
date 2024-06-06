@@ -116,10 +116,11 @@ public interface TaskSetState {
       return builder.build();
     }
 
+    @Nonnull
     @Override
-    @SuppressWarnings("unchecked")
-    public synchronized <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task) {
-      return (TaskResult<T>) resultMap.get(task);
+    public TaskState getTaskState(@Nonnull Task<?> task) {
+      TaskResult<?> result = resultMap.get(task);
+      return (result == null) ? TaskState.NOT_STARTED : result.getState();
     }
 
     public synchronized <T> void setTaskResult(
@@ -141,12 +142,6 @@ public interface TaskSetState {
   @Nonnull
   ImmutableList<TasksReport> tasksReports();
 
-  @CheckForNull
-  public <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task);
-
   @Nonnull
-  public default TaskState getTaskState(@Nonnull Task<?> task) {
-    TaskResult<?> result = getTaskResult(task);
-    return (result == null) ? TaskState.NOT_STARTED : result.getState();
-  }
+  TaskState getTaskState(@Nonnull Task<?> task);
 }
