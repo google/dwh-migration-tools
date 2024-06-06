@@ -26,11 +26,15 @@ import static com.google.edwmigration.dumper.ext.hive.metastore.utils.PartitionN
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.CheckConstraintsRequest;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.DefaultConstraintsRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.FieldSchema;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.ForeignKeysRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogsResponse;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.NotNullConstraintsRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.PrimaryKeysRequest;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.UniqueConstraintsRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.WMGetAllResourcePlanRequest;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -495,6 +499,42 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
                         databaseName,
                         tableName))
                 .getForeignKeys());
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawUniqueConstraints() throws Exception {
+        return ImmutableList.copyOf(
+            client
+                .get_unique_constraints(
+                    new UniqueConstraintsRequest(table.catName, databaseName, tableName))
+                .getUniqueConstraints());
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawNonNullConstraints() throws Exception {
+        return ImmutableList.copyOf(
+            client
+                .get_not_null_constraints(
+                    new NotNullConstraintsRequest(table.catName, databaseName, tableName))
+                .getNotNullConstraints());
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawDefaultConstraints() throws Exception {
+        return ImmutableList.copyOf(
+            client
+                .get_default_constraints(
+                    new DefaultConstraintsRequest(table.catName, databaseName, tableName))
+                .getDefaultConstraints());
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawCheckConstraints() throws Exception {
+        return ImmutableList.copyOf(
+            client
+                .get_check_constraints(
+                    new CheckConstraintsRequest(table.catName, databaseName, tableName))
+                .getCheckConstraints());
       }
     };
   }

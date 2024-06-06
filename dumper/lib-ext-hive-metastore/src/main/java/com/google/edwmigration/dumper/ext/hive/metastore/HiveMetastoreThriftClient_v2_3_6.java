@@ -492,6 +492,26 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
                         tableName))
                 .getForeignKeys());
       }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawUniqueConstraints() {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawNonNullConstraints() {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawDefaultConstraints() {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawCheckConstraints() {
+        return ImmutableList.of();
+      }
     };
   }
 

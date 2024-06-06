@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -45,6 +46,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HiveMetadataDumpForm
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
@@ -335,16 +337,25 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               monitor.count();
               Table table = thriftClient.getTable(databaseName, tableName);
               TBase<?, ?> rawTableThriftObject = table.getRawThriftObject();
-              ImmutableList<? extends TBase<?, ?>> primaryKeys = table.getRawPrimaryKeys();
-              ImmutableList<? extends TBase<?, ?>> foreignKeys = table.getRawForeignKeys();
+              ImmutableMap<String, ImmutableList<? extends TBase<?, ?>>> additionalMetadata =
+                  ImmutableMap.of(
+                      "primaryKeys", table.getRawPrimaryKeys(),
+                      "foreignKeys", table.getRawForeignKeys(),
+                      "uniqueConstraints", table.getRawUniqueConstraints(),
+                      "nonNullConstraints", table.getRawNonNullConstraints(),
+                      "defaultConstraints", table.getRawDefaultConstraints(),
+                      "checkConstraints", table.getRawCheckConstraints());
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
                 writer.write("{\"table\":");
                 writer.write(jsonSerializer.serialize(rawTableThriftObject));
-                writer.write(",\"primaryKeys\":");
-                jsonSerializer.serialize(primaryKeys, writer);
-                writer.write(",\"foreignKeys\":");
-                jsonSerializer.serialize(foreignKeys, writer);
+                for (Map.Entry<String, ImmutableList<? extends TBase<?, ?>>> entry :
+                    additionalMetadata.entrySet()) {
+                  writer.write(",\"");
+                  writer.write(entry.getKey());
+                  writer.write("\":");
+                  jsonSerializer.serialize(entry.getValue(), writer);
+                }
                 writer.write("}");
                 writer.write('\n');
               }
