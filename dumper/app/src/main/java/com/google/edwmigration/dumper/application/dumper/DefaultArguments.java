@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import java.io.IOException;
@@ -33,9 +32,9 @@ import joptsimple.OptionDescriptor;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
 import org.anarres.jdiagnostics.ProductMetadata;
+import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,26 +46,13 @@ public class DefaultArguments {
 
   public static class BooleanValueConverter implements ValueConverter<Boolean> {
 
-    private final String[] V_TRUE = {"true", "t", "yes", "y", "1"};
-    private final String[] V_FALSE = {"false", "f", "no", "n", "0"};
-
     public static BooleanValueConverter INSTANCE = new BooleanValueConverter();
 
     private BooleanValueConverter() {}
 
     @Override
     public Boolean convert(String value) {
-      for (String s : V_TRUE) {
-        if (value.equalsIgnoreCase(s)) {
-          return Boolean.TRUE;
-        }
-      }
-      for (String s : V_FALSE) {
-        if (value.equalsIgnoreCase(s)) {
-          return Boolean.FALSE;
-        }
-      }
-      throw new ValueConversionException("Not a valid boolean value: " + value);
+      return BooleanUtils.toBoolean(value);
     }
 
     @Override
@@ -76,12 +62,7 @@ public class DefaultArguments {
 
     @Override
     public String valuePattern() {
-      StringBuilder buf = new StringBuilder();
-      Joiner joiner = Joiner.on('/');
-      joiner.appendTo(buf, V_TRUE);
-      buf.append('/');
-      joiner.appendTo(buf, V_FALSE);
-      return buf.toString();
+      return "true/t/yes/y/1/false/f/no/n/0";
     }
   }
 
