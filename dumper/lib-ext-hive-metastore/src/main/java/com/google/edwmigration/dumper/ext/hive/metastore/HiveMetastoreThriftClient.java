@@ -29,11 +29,10 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
+import org.apache.thrift.TBase;
 import org.apache.thrift.TConfiguration;
-import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.protocol.TSimpleJSONProtocol;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
@@ -237,8 +236,14 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
   @Nonnull
   public abstract Database getDatabase(@Nonnull String databaseName) throws Exception;
 
+  /**
+   * Returns all the databases as the list of raw Thrift objects that correspond to the response
+   * from the Hive Metastore API.
+   *
+   * @return list of databases as raw Thrift objects
+   */
   @Nonnull
-  public abstract ImmutableList<String> getDatabasesAsJsonl() throws Exception;
+  public abstract ImmutableList<? extends TBase<?, ?>> getRawDatabases() throws Exception;
 
   @Nonnull
   public abstract ImmutableList<String> getMasterKeys() throws Exception;
@@ -258,14 +263,19 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
   public abstract List<? extends Function> getFunctions() throws Exception;
 
   /**
-   * Returns all the catalogs as the list of JSON messages that correspond to the response from the
-   * Hive Metastore API.
+   * Returns all the functions as the list of raw Thrift objects that correspond to the response
+   * from the Hive Metastore API.
    *
-   * @return list of JSON messages
+   * @return list of functions as raw Thrift objects
    */
-  public abstract ImmutableList<String> getCatalogsAsJsonl() throws Exception;
+  @Nonnull
+  public abstract ImmutableList<? extends TBase<?, ?>> getRawFunctions() throws Exception;
 
-  protected TSerializer createJsonSerializer() throws TTransportException {
-    return new TSerializer(new TSimpleJSONProtocol.Factory());
-  }
+  /**
+   * Returns all the catalogs as the list of raw Thrift objects that correspond to the response from
+   * the Hive Metastore API.
+   *
+   * @return list of catalogs as raw Thrift objects
+   */
+  public abstract ImmutableList<? extends TBase<?, ?>> getRawCatalogs() throws Exception;
 }

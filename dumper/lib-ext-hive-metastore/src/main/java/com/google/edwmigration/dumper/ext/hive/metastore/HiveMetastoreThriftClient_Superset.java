@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.NotThreadSafe;
+import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
-import org.apache.thrift.TSerializer;
 import org.apache.thrift.protocol.TProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,13 +116,12 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
   }
 
   @Override
-  public ImmutableList<String> getDatabasesAsJsonl() throws Exception {
-    TSerializer serializer = createJsonSerializer();
+  public ImmutableList<? extends TBase<?, ?>> getRawDatabases() throws Exception {
     return client.get_all_databases().stream()
         .map(
             databaseName -> {
               try {
-                return serializer.toString(client.get_database(databaseName));
+                return client.get_database(databaseName);
               } catch (TException e) {
                 throw new IllegalStateException(e);
               }
@@ -528,6 +527,11 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
   }
 
   @Override
+  public ImmutableList<? extends TBase<?, ?>> getRawFunctions() throws Exception {
+    return ImmutableList.copyOf(client.get_all_functions().getFunctions());
+  }
+
+  @Override
   public void close() throws IOException {
     try {
       client.shutdown();
@@ -537,14 +541,13 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
   }
 
   @Override
-  public ImmutableList<String> getCatalogsAsJsonl() throws TException {
-    TSerializer serializer = createJsonSerializer();
+  public ImmutableList<? extends TBase<?, ?>> getRawCatalogs() throws TException {
     GetCatalogsResponse catalogs = client.get_catalogs();
     return catalogs.getNames().stream()
         .map(
             catalogName -> {
               try {
-                return serializer.toString(client.get_catalog(new GetCatalogRequest(catalogName)));
+                return client.get_catalog(new GetCatalogRequest(catalogName));
               } catch (TException e) {
                 throw new IllegalStateException(e);
               }
