@@ -79,6 +79,7 @@ public interface TaskSetState {
 
     private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
 
+    @Override
     public synchronized long failedRequiredTaskCount() {
       long result = 0;
       for (Task<?> key : resultMap.keySet()) {
@@ -90,6 +91,8 @@ public interface TaskSetState {
       return result;
     }
 
+    @Nonnull
+    @Override
     public synchronized ImmutableList<TaskResultSummary> taskResultSummaries() {
       ImmutableList.Builder<TaskResultSummary> builder = ImmutableList.builder();
       resultMap.forEach(
@@ -100,6 +103,8 @@ public interface TaskSetState {
       return builder.build();
     }
 
+    @Nonnull
+    @Override
     public synchronized ImmutableList<TasksReport> tasksReports() {
       ImmutableList.Builder<TasksReport> builder = ImmutableList.builder();
       resultMap.values().stream()
@@ -124,6 +129,14 @@ public interface TaskSetState {
       resultMap.put(task, new TaskResult<>(state, exception));
     }
   }
+
+  long failedRequiredTaskCount();
+
+  @Nonnull
+  ImmutableList<TaskResultSummary> taskResultSummaries();
+
+  @Nonnull
+  ImmutableList<TasksReport> tasksReports();
 
   @CheckForNull
   public <T> TaskResult<T> getTaskResult(@Nonnull Task<T> task);
