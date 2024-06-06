@@ -333,12 +333,15 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           (thriftClient) -> {
             try {
               monitor.count();
-              TBase<?, ?> table =
-                  thriftClient.getTable(databaseName, tableName).getRawThriftObject();
-              ThriftJsonSerializer serializer = new ThriftJsonSerializer();
+              Table table = thriftClient.getTable(databaseName, tableName);
+              TBase<?, ?> rawTableThriftObject = table.getRawThriftObject();
+              ImmutableList<? extends TBase<?, ?>> primaryKeys = table.getRawPrimaryKeys();
+              ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
                 writer.write("{\"table\":");
-                writer.write(serializer.serialize(table));
+                writer.write(jsonSerializer.serialize(rawTableThriftObject));
+                writer.write(",\"primaryKeys\":");
+                jsonSerializer.serialize(primaryKeys, writer);
                 writer.write("}");
                 writer.write('\n');
               }

@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
@@ -31,5 +34,23 @@ public class ThriftJsonSerializer {
 
   public String serialize(TBase<?, ?> thriftObject) throws TException {
     return underlyingSerializer.toString(thriftObject);
+  }
+
+  /**
+   * Writes the list of Thrift objects as a JSON array to the Writer. The method is not thread-safe.
+   */
+  public void serialize(List<? extends TBase<?, ?>> thriftObjects, Writer writer)
+      throws IOException, TException {
+    writer.write('[');
+    boolean first = true;
+    for (TBase<?, ?> thriftObject : thriftObjects) {
+      if (first) {
+        first = false;
+      } else {
+        writer.write(',');
+      }
+      writer.write(underlyingSerializer.toString(thriftObject));
+    }
+    writer.write(']');
   }
 }

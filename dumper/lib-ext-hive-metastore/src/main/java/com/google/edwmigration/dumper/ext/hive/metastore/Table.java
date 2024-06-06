@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -94,4 +95,6 @@ public interface Table {
 
   @Nonnull
   TBase<?, ?> getRawThriftObject();
+
+  ImmutableList<? extends TBase<?, ?>> getRawPrimaryKeys() throws Exception;
 }
