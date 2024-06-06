@@ -107,4 +107,6 @@ public interface Table {
   ImmutableList<? extends TBase<?, ?>> getRawDefaultConstraints() throws Exception;
 
   ImmutableList<? extends TBase<?, ?>> getRawCheckConstraints() throws Exception;
+
+  ImmutableList<? extends TBase<?, ?>> getRawTableStatistics() throws Exception;
 }
