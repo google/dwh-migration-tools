@@ -37,7 +37,6 @@ import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClie
 import com.google.edwmigration.dumper.ext.hive.metastore.Partition;
 import com.google.edwmigration.dumper.ext.hive.metastore.PartitionKey;
 import com.google.edwmigration.dumper.ext.hive.metastore.Table;
-import com.google.edwmigration.dumper.ext.hive.metastore.ThriftJsonSerializer;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentRecordProgressMonitor;
@@ -350,16 +349,16 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                       "tableStatistics", table.getRawTableStatistics());
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
-                writer.write("{\"table\":");
-                writer.write(jsonSerializer.serialize(rawTableThriftObject));
+                JsonWriter jsonWriter = new JsonWriter(writer);
+                jsonWriter.beginObject();
+                jsonWriter.name("table");
+                jsonWriter.jsonValue(jsonSerializer.serialize(rawTableThriftObject));
                 for (Map.Entry<String, ImmutableList<? extends TBase<?, ?>>> entry :
                     additionalMetadata.entrySet()) {
-                  writer.write(",\"");
-                  writer.write(entry.getKey());
-                  writer.write("\":");
-                  jsonSerializer.serialize(entry.getValue(), writer);
+                  jsonWriter.name(entry.getKey());
+                  jsonSerializer.serialize(entry.getValue(), jsonWriter);
                 }
-                writer.write("}");
+                jsonWriter.endObject();
                 writer.write('\n');
               }
             } catch (Exception e) {
@@ -432,14 +431,15 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
                 JsonWriter jsonWriter = new JsonWriter(writer);
-                jsonWriter.setLenient(true);
-                writer.write("{\"databaseName\":");
+                jsonWriter.beginObject();
+                jsonWriter.name("databaseName");
                 jsonWriter.value(databaseName);
-                writer.write(",\"tableName\":");
+                jsonWriter.name("tableName");
                 jsonWriter.value(tableName);
-                writer.write(",\"partitions\":");
-                jsonSerializer.serialize(partitions, writer);
-                writer.write("}\n");
+                jsonWriter.name("partitions");
+                jsonSerializer.serialize(partitions, jsonWriter);
+                jsonWriter.endObject();
+                writer.write('\n');
               }
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being

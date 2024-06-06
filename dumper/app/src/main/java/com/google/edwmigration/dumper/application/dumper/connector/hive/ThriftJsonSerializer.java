@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.ext.hive.metastore;
+package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
+import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.List;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
@@ -37,20 +37,15 @@ public class ThriftJsonSerializer {
   }
 
   /**
-   * Writes the list of Thrift objects as a JSON array to the Writer. The method is not thread-safe.
+   * Writes the list of Thrift objects as a JSON array to the JsonWriter. The method is not
+   * thread-safe.
    */
-  public void serialize(List<? extends TBase<?, ?>> thriftObjects, Writer writer)
+  public void serialize(List<? extends TBase<?, ?>> thriftObjects, JsonWriter jsonWriter)
       throws IOException, TException {
-    writer.write('[');
-    boolean first = true;
+    jsonWriter.beginArray();
     for (TBase<?, ?> thriftObject : thriftObjects) {
-      if (first) {
-        first = false;
-      } else {
-        writer.write(',');
-      }
-      writer.write(underlyingSerializer.toString(thriftObject));
+      jsonWriter.jsonValue(underlyingSerializer.toString(thriftObject));
     }
-    writer.write(']');
+    jsonWriter.endArray();
   }
 }
