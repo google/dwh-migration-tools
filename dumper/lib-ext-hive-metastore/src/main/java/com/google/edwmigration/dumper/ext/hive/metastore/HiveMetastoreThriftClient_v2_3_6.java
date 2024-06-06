@@ -466,8 +466,8 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
       }
 
       @Override
-      public String toJson() throws Exception {
-        return createJsonSerializer().toString(table);
+      public TBase<?, ?> getRawThriftObject() {
+        return table;
       }
     };
   }
