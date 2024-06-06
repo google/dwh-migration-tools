@@ -23,7 +23,6 @@ import java.nio.charset.StandardCharsets;
 import org.anarres.jdiagnostics.ProductMetadata;
 
 /** @author shevek */
-@Deprecated // Use DumpMetadataTask
 public class VersionTask extends AbstractTask<Void> {
 
   public VersionTask(String targetPath) {
