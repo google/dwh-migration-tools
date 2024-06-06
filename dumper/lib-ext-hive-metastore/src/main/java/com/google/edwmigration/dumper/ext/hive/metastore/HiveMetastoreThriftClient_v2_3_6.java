@@ -526,6 +526,12 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
                     new TableStatsRequest(databaseName, tableName, columnNames))
                 .getTableStats());
       }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawPartitions() throws Exception {
+        return ImmutableList.copyOf(
+            client.get_partitions(databaseName, tableName, /* max_parts= */ (short) -1));
+      }
     };
   }
 

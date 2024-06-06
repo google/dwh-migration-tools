@@ -551,6 +551,12 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
                         databaseName, tableName, columnNames, /* engine= */ "hive"))
                 .getTableStats());
       }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawPartitions() throws Exception {
+        return ImmutableList.copyOf(
+            client.get_partitions(databaseName, tableName, /* max_parts= */ (short) -1));
+      }
     };
   }
 

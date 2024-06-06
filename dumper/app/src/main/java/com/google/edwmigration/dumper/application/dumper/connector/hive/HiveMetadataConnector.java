@@ -43,6 +43,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentProgress
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentRecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HiveMetadataDumpFormat;
+import com.google.gson.stream.JsonWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -380,6 +381,85 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class PartitionsJsonlTask extends AbstractHiveMetadataTask {
+
+    private PartitionsJsonlTask(Predicate<String> databasePredicate) {
+      super("partitions.jsonl", databasePredicate);
+    }
+
+    @Override
+    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
+        throws Exception {
+      try (ThriftClientPool clientPool =
+          thriftClientHandle.newMultiThreadedThriftClientPool("partitions-task-pooled-client")) {
+        clientPool.execute(
+            thriftClient -> {
+              ImmutableList<String> allDatabases = thriftClient.getAllDatabaseNames();
+              for (String databaseName : allDatabases) {
+                if (isIncludedDatabase(databaseName)) {
+                  ImmutableList<String> allTables =
+                      thriftClient.getAllTableNamesInDatabase(databaseName);
+                  try (ConcurrentProgressMonitor monitor =
+                      new ConcurrentRecordProgressMonitor(
+                          "Writing partitions of tables in database '"
+                              + databaseName
+                              + "' to "
+                              + getTargetPath(),
+                          allTables.size())) {
+                    for (String tableName : allTables) {
+                      dumpPartitions(monitor, writer, clientPool, databaseName, tableName);
+                    }
+                  }
+                }
+              }
+            });
+      }
+    }
+
+    private void dumpPartitions(
+        @Nonnull ConcurrentProgressMonitor monitor,
+        @Nonnull Writer writer,
+        @Nonnull ThriftClientPool clientPool,
+        @Nonnull String databaseName,
+        @Nonnull String tableName) {
+      clientPool.execute(
+          (thriftClient) -> {
+            try {
+              monitor.count();
+              ImmutableList<? extends TBase<?, ?>> partitions =
+                  thriftClient.getTable(databaseName, tableName).getRawPartitions();
+              ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
+              synchronized (writer) {
+                JsonWriter jsonWriter = new JsonWriter(writer);
+                jsonWriter.setLenient(true);
+                writer.write("{\"databaseName\":");
+                jsonWriter.value(databaseName);
+                writer.write(",\"tableName\":");
+                jsonWriter.value(tableName);
+                writer.write(",\"partitions\":");
+                jsonSerializer.serialize(partitions, writer);
+                writer.write("}\n");
+              }
+            } catch (Exception e) {
+              // Failure to dump a single table should not prevent the rest of the tables from being
+              // dumped.
+              LOG.warn(
+                  "Partitions cannot be dumped for table "
+                      + databaseName
+                      + "."
+                      + tableName
+                      + " due to an exception, skipping it.",
+                  e);
+            }
+          });
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "get_all_databases()*.get_all_tables()*.get_partitions()";
+    }
+  }
+
   private static class FunctionsTask extends AbstractHiveMetadataTask implements FunctionsFormat {
 
     private FunctionsTask(@Nonnull Predicate<String> databasePredicate) {
@@ -589,6 +669,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
       out.add(new FunctionsJsonlTask());
       out.add(new ResourcePlansJsonlTask());
       out.add(new TablesRawJsonlTask(databasePredicate));
+      out.add(new PartitionsJsonlTask(databasePredicate));
     } else {
       out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
     }
