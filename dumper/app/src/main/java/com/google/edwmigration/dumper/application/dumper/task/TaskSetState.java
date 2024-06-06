@@ -79,6 +79,7 @@ public interface TaskSetState {
 
     private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
 
+    @Deprecated // Use TaskSetState instead of TaskSetState.Impl
     @Override
     public synchronized long failedRequiredTaskCount() {
       long result = 0;
@@ -91,6 +92,7 @@ public interface TaskSetState {
       return result;
     }
 
+    @Deprecated // Use TaskSetState instead of TaskSetState.Impl
     @Nonnull
     @Override
     public synchronized ImmutableList<TaskResultSummary> taskResultSummaries() {
@@ -103,6 +105,7 @@ public interface TaskSetState {
       return builder.build();
     }
 
+    @Deprecated // Use TaskSetState instead of TaskSetState.Impl
     @Nonnull
     @Override
     public synchronized ImmutableList<TasksReport> tasksReports() {

@@ -240,7 +240,7 @@ public class MetadataDumper {
     }
   }
 
-  private void printTaskResults(SummaryPrinter summaryPrinter, TaskSetState.Impl state) {
+  private void printTaskResults(SummaryPrinter summaryPrinter, TaskSetState state) {
     summaryPrinter.printSummarySection(
         linePrinter -> {
           linePrinter.println("Task Summary:");
@@ -251,7 +251,7 @@ public class MetadataDumper {
   }
 
   private boolean checkRequiredTaskSuccess(
-      SummaryPrinter summaryPrinter, Impl state, String outputFileName) {
+      SummaryPrinter summaryPrinter, TaskSetState state, String outputFileName) {
     long failedRequiredTasks = state.failedRequiredTaskCount();
     if (failedRequiredTasks > 0) {
       summaryPrinter.printSummarySection(
@@ -265,7 +265,7 @@ public class MetadataDumper {
     return true;
   }
 
-  private void logStatusSummary(SummaryPrinter summaryPrinter, TaskSetState.Impl state) {
+  private void logStatusSummary(SummaryPrinter summaryPrinter, TaskSetState state) {
     summaryPrinter.printSummarySection(
         linePrinter -> {
           for (TasksReport item : state.tasksReports()) {
