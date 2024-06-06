@@ -26,7 +26,10 @@ import com.google.edwmigration.dumper.application.dumper.connector.teradata.Abst
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class TeradataLogsJdbcTaskTest {
 
   private SharedState queryLogsState = new SharedState();
