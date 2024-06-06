@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.REQUIRED;
+import static com.google.edwmigration.dumper.application.dumper.task.TaskState.FAILED;
+
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,10 +80,14 @@ public interface TaskSetState {
     private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
 
     public synchronized long failedRequiredTaskCount() {
-      return resultMap.entrySet().stream()
-          .filter(e -> TaskCategory.REQUIRED.equals(e.getKey().getCategory()))
-          .filter(e -> TaskState.FAILED.equals(e.getValue().getState()))
-          .count();
+      long result = 0;
+      for (Task<?> key : resultMap.keySet()) {
+        TaskState state = resultMap.get(key).getState();
+        if (key.getCategory() == REQUIRED && state == FAILED) {
+          result++;
+        }
+      }
+      return result;
     }
 
     public synchronized ImmutableList<TaskResultSummary> taskResultSummaries() {
