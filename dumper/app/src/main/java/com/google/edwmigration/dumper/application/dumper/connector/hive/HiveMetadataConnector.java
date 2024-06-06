@@ -74,6 +74,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           Preconditions.checkNotNull(databasePredicate, "Database predicate was null.");
     }
 
+    private AbstractHiveMetadataTask(String targetPath) {
+      this(targetPath, unused -> true);
+    }
+
     protected boolean isIncludedDatabase(@Nonnull String database) {
       return databasePredicate.test(database);
     }
@@ -140,37 +144,16 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
-  private static class DatabasesJsonlTask extends AbstractHiveMetadataTask {
+  private static class DatabasesJsonlTask extends HiveJsonlTask {
 
     private DatabasesJsonlTask() {
-      super("databases.jsonl", unused -> true);
+      super("databases.jsonl", "get_all_databases()*.get_database()");
     }
 
     @Override
-    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
-        throws Exception {
-      try (HiveMetastoreThriftClient client =
-              thriftClientHandle.newClient("databases-jsonl-task-client");
-          RecordProgressMonitor monitor =
-              new RecordProgressMonitor("Writing databases to " + getTargetPath())) {
-        ThriftJsonSerializer serializer = new ThriftJsonSerializer();
-        ImmutableList<? extends TBase<?, ?>> databases = client.getRawDatabases();
-        for (TBase<?, ?> databaseThriftObject : databases) {
-          monitor.count();
-          writer.write(serializer.serialize(databaseThriftObject));
-          writer.write('\n');
-        }
-      }
-    }
-
-    @Override
-    public TaskCategory getCategory() {
-      return TaskCategory.OPTIONAL;
-    }
-
-    @Override
-    protected String toCallDescription() {
-      return "get_all_databases()*.get_database()";
+    protected ImmutableList<? extends TBase<?, ?>> retrieveEntities(
+        HiveMetastoreThriftClient client) throws Exception {
+      return client.getRawDatabases();
     }
   }
 
@@ -345,67 +328,29 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
-  private static class FunctionsJsonlTask extends AbstractHiveMetadataTask {
+  private static class FunctionsJsonlTask extends HiveJsonlTask {
 
     private FunctionsJsonlTask() {
-      super("functions.jsonl", unused -> true);
+      super("functions.jsonl", "get_all_functions()");
     }
 
     @Override
-    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
-        throws Exception {
-      try (HiveMetastoreThriftClient client =
-              thriftClientHandle.newClient("functions-jsonl-task-client");
-          RecordProgressMonitor monitor =
-              new RecordProgressMonitor("Writing functions to " + getTargetPath())) {
-        ThriftJsonSerializer serializer = new ThriftJsonSerializer();
-        for (TBase<?, ?> function : client.getRawFunctions()) {
-          monitor.count();
-          writer.write(serializer.serialize(function));
-          writer.write('\n');
-        }
-      }
-    }
-
-    @Override
-    public TaskCategory getCategory() {
-      return TaskCategory.OPTIONAL;
-    }
-
-    @Override
-    protected String toCallDescription() {
-      return "get_all_functions()";
+    protected ImmutableList<? extends TBase<?, ?>> retrieveEntities(
+        HiveMetastoreThriftClient client) throws Exception {
+      return client.getRawFunctions();
     }
   }
 
-  private static class CatalogsTask extends AbstractHiveMetadataTask {
+  private static class CatalogsJsonlTask extends HiveJsonlTask {
 
-    private CatalogsTask() {
-      super("catalogs.jsonl", unused -> true);
+    private CatalogsJsonlTask() {
+      super("catalogs.jsonl", "get_catalogs()*.get_catalog()");
     }
 
     @Override
-    protected void run(Writer writer, ThriftClientHandle thriftClientHandle) throws Exception {
-      try (HiveMetastoreThriftClient client = thriftClientHandle.newClient("catalogs-task-client");
-          RecordProgressMonitor monitor =
-              new RecordProgressMonitor("Writing catalogs to " + getTargetPath())) {
-        ThriftJsonSerializer serializer = new ThriftJsonSerializer();
-        for (TBase<?, ?> catalog : client.getRawCatalogs()) {
-          monitor.count();
-          writer.write(serializer.serialize(catalog));
-          writer.write('\n');
-        }
-      }
-    }
-
-    @Override
-    public TaskCategory getCategory() {
-      return TaskCategory.OPTIONAL;
-    }
-
-    @Override
-    protected String toCallDescription() {
-      return "get_catalogs()*.get_catalog()";
+    protected ImmutableList<? extends TBase<?, ?>> retrieveEntities(
+        HiveMetastoreThriftClient client) throws Exception {
+      return client.getRawCatalogs();
     }
   }
 
@@ -414,7 +359,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         FORMAT.builder().setHeader("MasterKey").build();
 
     private MasterKeysTask() {
-      super("master-keys.csv", unused -> true);
+      super("master-keys.csv");
     }
 
     @Override
@@ -450,7 +395,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         FORMAT.builder().setHeader("Identifier", "Token").build();
 
     private DelegationTokensTask() {
-      super("delegation-tokens.csv", unused -> true);
+      super("delegation-tokens.csv");
     }
 
     @Override
@@ -481,6 +426,57 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class ResourcePlansJsonlTask extends HiveJsonlTask {
+
+    private ResourcePlansJsonlTask() {
+      super("resource-plans.jsonl", "get_all_resource_plans()");
+    }
+
+    @Override
+    protected ImmutableList<? extends TBase<?, ?>> retrieveEntities(
+        HiveMetastoreThriftClient client) throws Exception {
+      return client.getRawResourcePlans();
+    }
+  }
+
+  private abstract static class HiveJsonlTask extends AbstractHiveMetadataTask {
+    private final String callDescription;
+
+    private HiveJsonlTask(String targetPath, String callDescription) {
+      super(targetPath);
+      this.callDescription = callDescription;
+    }
+
+    @Override
+    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
+        throws Exception {
+      try (HiveMetastoreThriftClient client =
+              thriftClientHandle.newClient(getTargetPath() + "-task-client");
+          RecordProgressMonitor monitor =
+              new RecordProgressMonitor("Writing to " + getTargetPath())) {
+        ThriftJsonSerializer serializer = new ThriftJsonSerializer();
+        for (TBase<?, ?> entity : retrieveEntities(client)) {
+          monitor.count();
+          writer.write(serializer.serialize(entity));
+          writer.write('\n');
+        }
+      }
+    }
+
+    protected abstract ImmutableList<? extends TBase<?, ?>> retrieveEntities(
+        HiveMetastoreThriftClient client) throws Exception;
+
+    @Override
+    public TaskCategory getCategory() {
+      return TaskCategory.OPTIONAL;
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return callDescription;
+    }
+  }
+
   public HiveMetadataConnector() {
     super("hiveql");
   }
@@ -498,11 +494,12 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     out.add(new FunctionsTask(databasePredicate));
     if (BooleanUtils.toBoolean(
         arguments.getDefinitionOrDefault(HiveConnectorProperty.MIGRATION_METADATA))) {
-      out.add(new CatalogsTask());
+      out.add(new CatalogsJsonlTask());
       out.add(new DatabasesJsonlTask());
       out.add(new MasterKeysTask());
       out.add(new DelegationTokensTask());
       out.add(new FunctionsJsonlTask());
+      out.add(new ResourcePlansJsonlTask());
     }
 
     if (arguments.isAssessment()) {

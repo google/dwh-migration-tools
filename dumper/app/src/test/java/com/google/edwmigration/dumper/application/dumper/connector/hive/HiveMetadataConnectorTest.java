@@ -107,7 +107,8 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
           "databases.jsonl",
           "master-keys.csv",
           "delegation-tokens.csv",
-          "functions.jsonl");
+          "functions.jsonl",
+          "resource-plans.jsonl");
 
   @Theory
   public void addTasksTo_migrationMetadataTaskExists_success(
