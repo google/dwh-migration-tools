@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.FieldSchema;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogsResponse;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.PrimaryKeysRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.WMGetAllResourcePlanRequest;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -472,6 +473,14 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
       @Override
       public TBase<?, ?> getRawThriftObject() {
         return table;
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawPrimaryKeys() throws Exception {
+        return ImmutableList.copyOf(
+            client
+                .get_primary_keys(new PrimaryKeysRequest(databaseName, tableName))
+                .getPrimaryKeys());
       }
     };
   }
