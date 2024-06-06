@@ -80,13 +80,6 @@ public interface TaskSetState {
 
     private final Object lock = new Object();
 
-    @Nonnull
-    public Map<Task<?>, TaskResult<?>> getTaskResultMap() {
-      synchronized (lock) {
-        return resultMap;
-      }
-    }
-
     public long failedRequiredTaskCount() {
       synchronized (lock) {
         return resultMap.entrySet().stream()
