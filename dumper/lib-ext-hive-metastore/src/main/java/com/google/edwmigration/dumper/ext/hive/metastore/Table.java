@@ -97,4 +97,6 @@ public interface Table {
   TBase<?, ?> getRawThriftObject();
 
   ImmutableList<? extends TBase<?, ?>> getRawPrimaryKeys() throws Exception;
+
+  ImmutableList<? extends TBase<?, ?>> getRawForeignKeys() throws Exception;
 }

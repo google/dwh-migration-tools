@@ -27,6 +27,7 @@ import static com.google.edwmigration.dumper.ext.hive.metastore.utils.PartitionN
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.FieldSchema;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.ForeignKeysRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogsResponse;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.PrimaryKeysRequest;
@@ -481,6 +482,19 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
             client
                 .get_primary_keys(new PrimaryKeysRequest(databaseName, tableName))
                 .getPrimaryKeys());
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawForeignKeys() throws Exception {
+        return ImmutableList.copyOf(
+            client
+                .get_foreign_keys(
+                    new ForeignKeysRequest(
+                        /*parent_db_name=*/ null,
+                        /*parent_tbl_name=*/ null,
+                        databaseName,
+                        tableName))
+                .getForeignKeys());
       }
     };
   }
