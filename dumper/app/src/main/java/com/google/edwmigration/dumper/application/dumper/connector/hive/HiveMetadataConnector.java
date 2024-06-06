@@ -337,6 +337,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               TBase<?, ?> rawTableThriftObject = table.getRawThriftObject();
               ImmutableList<? extends TBase<?, ?>> primaryKeys = table.getRawPrimaryKeys();
               ImmutableList<? extends TBase<?, ?>> foreignKeys = table.getRawForeignKeys();
+              ImmutableList<? extends TBase<?, ?>> uniqueConstraints =
+                  table.getRawUniqueConstraints();
+              ImmutableList<? extends TBase<?, ?>> nonNullConstraints =
+                  table.getRawNonNullConstraints();
+              ImmutableList<? extends TBase<?, ?>> defaultConstraints =
+                  table.getRawDefaultConstraints();
+              ImmutableList<? extends TBase<?, ?>> checkConstraints =
+                  table.getRawCheckConstraints();
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
                 writer.write("{\"table\":");
@@ -345,6 +353,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                 jsonSerializer.serialize(primaryKeys, writer);
                 writer.write(",\"foreignKeys\":");
                 jsonSerializer.serialize(foreignKeys, writer);
+                writer.write(",\"uniqueConstraints\":");
+                jsonSerializer.serialize(uniqueConstraints, writer);
+                writer.write(",\"nonNullConstraints\":");
+                jsonSerializer.serialize(nonNullConstraints, writer);
+                writer.write(",\"defaultConstraints\":");
+                jsonSerializer.serialize(defaultConstraints, writer);
+                writer.write(",\"checkConstraints\":");
+                jsonSerializer.serialize(checkConstraints, writer);
                 writer.write("}");
                 writer.write('\n');
               }

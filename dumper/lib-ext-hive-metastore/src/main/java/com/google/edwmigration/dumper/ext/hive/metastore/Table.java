@@ -99,4 +99,12 @@ public interface Table {
   ImmutableList<? extends TBase<?, ?>> getRawPrimaryKeys() throws Exception;
 
   ImmutableList<? extends TBase<?, ?>> getRawForeignKeys() throws Exception;
+
+  ImmutableList<? extends TBase<?, ?>> getRawUniqueConstraints() throws Exception;
+
+  ImmutableList<? extends TBase<?, ?>> getRawNonNullConstraints() throws Exception;
+
+  ImmutableList<? extends TBase<?, ?>> getRawDefaultConstraints() throws Exception;
+
+  ImmutableList<? extends TBase<?, ?>> getRawCheckConstraints() throws Exception;
 }
