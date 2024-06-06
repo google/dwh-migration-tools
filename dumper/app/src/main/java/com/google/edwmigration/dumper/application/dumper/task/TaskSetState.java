@@ -16,15 +16,61 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 /** @author shevek */
 public interface TaskSetState {
+
+  @ParametersAreNonnullByDefault
+  static class TaskResultSummary {
+    private final String exception;
+    private final Task<?> task;
+    private final TaskState state;
+
+    private TaskResultSummary(String exception, Task<?> task, TaskState state) {
+      this.exception = exception;
+      this.task = task;
+      this.state = state;
+    }
+
+    @Nonnull
+    static TaskResultSummary create(Task<?> task, TaskResult<?> result) {
+      String optionalException = String.format(": %s", result.getException());
+      String exceptionDescription = result.getException() == null ? "" : optionalException;
+      return new TaskResultSummary(exceptionDescription, task, result.getState());
+    }
+
+    @Nonnull
+    @Override
+    public String toString() {
+      return String.format("Task %s (%s) %s%s", state, task.getCategory(), task, exception);
+    }
+  }
+
+  public static class TasksReport {
+
+    private final long count;
+    private final TaskState state;
+
+    @Nonnull
+    @Override
+    public String toString() {
+      return String.format("%d TASKS %s", count, state);
+    }
+
+    TasksReport(Long count, TaskState state) {
+      this.count = count == null ? 0 : count;
+      this.state = state;
+    }
+  }
 
   @ThreadSafe
   public static class Impl implements TaskSetState {
@@ -38,6 +84,37 @@ public interface TaskSetState {
     public Map<Task<?>, TaskResult<?>> getTaskResultMap() {
       synchronized (lock) {
         return resultMap;
+      }
+    }
+
+    public long failedRequiredTaskCount() {
+      synchronized (lock) {
+        return resultMap.entrySet().stream()
+            .filter(e -> TaskCategory.REQUIRED.equals(e.getKey().getCategory()))
+            .filter(e -> TaskState.FAILED.equals(e.getValue().getState()))
+            .count();
+      }
+    }
+
+    public ImmutableList<TaskResultSummary> taskResultSummaries() {
+      synchronized (lock) {
+        ImmutableList.Builder<TaskResultSummary> builder = ImmutableList.builder();
+        resultMap.forEach(
+            (task, result) -> {
+              TaskResultSummary summary = TaskResultSummary.create(task, result);
+              builder.add(summary);
+            });
+        return builder.build();
+      }
+    }
+
+    public ImmutableList<TasksReport> tasksReports() {
+      synchronized (lock) {
+        ImmutableList.Builder<TasksReport> builder = ImmutableList.builder();
+        resultMap.values().stream()
+            .collect(Collectors.groupingBy(TaskResult::getState, Collectors.counting()))
+            .forEach((key, value) -> builder.add(new TasksReport(value, key)));
+        return builder.build();
       }
     }
 
