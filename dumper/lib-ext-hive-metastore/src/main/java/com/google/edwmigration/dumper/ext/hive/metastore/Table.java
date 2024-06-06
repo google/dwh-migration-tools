@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.ext.hive.metastore;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import org.apache.thrift.TBase;
 
 public interface Table {
 
@@ -90,4 +91,7 @@ public interface Table {
 
   @Nonnull
   public List<? extends Partition> getPartitions() throws Exception;
+
+  @Nonnull
+  TBase<?, ?> getRawThriftObject();
 }

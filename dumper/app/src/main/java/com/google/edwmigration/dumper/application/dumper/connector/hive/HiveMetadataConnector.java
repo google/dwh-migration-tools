@@ -291,6 +291,77 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  private static class TablesRawJsonlTask extends AbstractHiveMetadataTask {
+
+    private TablesRawJsonlTask(Predicate<String> databasePredicate) {
+      super("tables-raw.jsonl", databasePredicate);
+    }
+
+    @Override
+    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
+        throws Exception {
+      try (ThriftClientPool clientPool =
+          thriftClientHandle.newMultiThreadedThriftClientPool("tables-raw-task-pooled-client")) {
+        clientPool.execute(
+            thriftClient -> {
+              ImmutableList<String> allDatabases = thriftClient.getAllDatabaseNames();
+              for (String databaseName : allDatabases) {
+                if (isIncludedDatabase(databaseName)) {
+                  ImmutableList<String> allTables =
+                      thriftClient.getAllTableNamesInDatabase(databaseName);
+                  try (ConcurrentProgressMonitor monitor =
+                      new ConcurrentRecordProgressMonitor(
+                          "Writing tables in database '" + databaseName + "' to " + getTargetPath(),
+                          allTables.size())) {
+                    for (String tableName : allTables) {
+                      dumpTable(monitor, writer, clientPool, databaseName, tableName);
+                    }
+                  }
+                }
+              }
+            });
+      }
+    }
+
+    private void dumpTable(
+        @Nonnull ConcurrentProgressMonitor monitor,
+        @Nonnull Writer writer,
+        @Nonnull ThriftClientPool clientPool,
+        @Nonnull String databaseName,
+        @Nonnull String tableName) {
+      clientPool.execute(
+          (thriftClient) -> {
+            try {
+              monitor.count();
+              TBase<?, ?> table =
+                  thriftClient.getTable(databaseName, tableName).getRawThriftObject();
+              ThriftJsonSerializer serializer = new ThriftJsonSerializer();
+              synchronized (writer) {
+                writer.write("{\"table\":");
+                writer.write(serializer.serialize(table));
+                writer.write("}");
+                writer.write('\n');
+              }
+            } catch (Exception e) {
+              // Failure to dump a single table should not prevent the rest of the tables from being
+              // dumped.
+              LOG.warn(
+                  "Metadata cannot be dumped for table "
+                      + databaseName
+                      + "."
+                      + tableName
+                      + " due to an exception, skipping it.",
+                  e);
+            }
+          });
+    }
+
+    @Override
+    protected String toCallDescription() {
+      return "get_all_databases()*.get_all_tables()";
+    }
+  }
+
   private static class FunctionsTask extends AbstractHiveMetadataTask implements FunctionsFormat {
 
     private FunctionsTask(@Nonnull Predicate<String> databasePredicate) {
@@ -490,7 +561,6 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         arguments.isHiveMetastorePartitionMetadataDumpingEnabled() || arguments.isAssessment();
 
     out.add(new SchemataTask(databasePredicate));
-    out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
     out.add(new FunctionsTask(databasePredicate));
     if (BooleanUtils.toBoolean(
         arguments.getDefinitionOrDefault(HiveConnectorProperty.MIGRATION_METADATA))) {
@@ -500,6 +570,9 @@ public class HiveMetadataConnector extends AbstractHiveConnector
       out.add(new DelegationTokensTask());
       out.add(new FunctionsJsonlTask());
       out.add(new ResourcePlansJsonlTask());
+      out.add(new TablesRawJsonlTask(databasePredicate));
+    } else {
+      out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
     }
 
     if (arguments.isAssessment()) {
