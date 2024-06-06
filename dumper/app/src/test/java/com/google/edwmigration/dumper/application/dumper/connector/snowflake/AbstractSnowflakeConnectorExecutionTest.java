@@ -27,7 +27,8 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang3.ArrayUtils;
 
 /** @author shevek */
-public class AbstractSnowflakeConnectorExecutionTest extends AbstractConnectorExecutionTest {
+public abstract class AbstractSnowflakeConnectorExecutionTest
+    extends AbstractConnectorExecutionTest {
 
   // TODO("Constants from SnowflakeValidator.")
   private static final ImmutableList<String> ARGS =
