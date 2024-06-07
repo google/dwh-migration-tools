@@ -38,6 +38,7 @@ public class BooleanValueConverterTest {
           TestCase.create("true", true),
           TestCase.create("yes", true),
           TestCase.create("false", false),
+          TestCase.create("1", true),
           TestCase.create("0", false));
 
   @Theory
