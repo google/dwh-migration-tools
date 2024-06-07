@@ -109,11 +109,12 @@ public interface TaskSetState {
     @Nonnull
     @Override
     public synchronized ImmutableList<TasksReport> tasksReports() {
-      ImmutableList.Builder<TasksReport> builder = ImmutableList.builder();
-      resultMap.values().stream()
+      return resultMap.values().stream()
           .collect(Collectors.groupingBy(TaskResult::getState, Collectors.counting()))
-          .forEach((key, value) -> builder.add(new TasksReport(value, key)));
-      return builder.build();
+          .entrySet()
+          .stream()
+          .map((entry) -> new TasksReport(entry.getValue(), entry.getKey()))
+          .collect(toImmutableList());
     }
 
     @Nonnull
