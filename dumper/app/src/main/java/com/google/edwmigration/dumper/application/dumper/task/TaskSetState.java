@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.REQUIRED;
 import static com.google.edwmigration.dumper.application.dumper.task.TaskState.FAILED;
 
@@ -99,13 +100,9 @@ public interface TaskSetState {
     @Nonnull
     @Override
     public synchronized ImmutableList<TaskResultSummary> taskResultSummaries() {
-      ImmutableList.Builder<TaskResultSummary> builder = ImmutableList.builder();
-      resultMap.forEach(
-          (task, result) -> {
-            TaskResultSummary summary = TaskResultSummary.create(task, result);
-            builder.add(summary);
-          });
-      return builder.build();
+      return resultMap.entrySet().stream()
+          .map((entry) -> TaskResultSummary.create(entry.getKey(), entry.getValue()))
+          .collect(toImmutableList());
     }
 
     @Deprecated // Use TaskSetState instead of TaskSetState.Impl
