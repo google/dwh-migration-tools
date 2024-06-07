@@ -32,7 +32,6 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TaskResultSummary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TasksReport;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
