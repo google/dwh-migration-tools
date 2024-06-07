@@ -19,11 +19,12 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.REQUIRED;
 import static com.google.edwmigration.dumper.application.dumper.task.TaskState.FAILED;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -110,7 +111,7 @@ public interface TaskSetState {
     @Override
     public synchronized ImmutableList<TasksReport> tasksReports() {
       return resultMap.values().stream()
-          .collect(Collectors.groupingBy(TaskResult::getState, Collectors.counting()))
+          .collect(groupingBy(TaskResult::getState, counting()))
           .entrySet()
           .stream()
           .map((entry) -> new TasksReport(entry.getValue(), entry.getKey()))
