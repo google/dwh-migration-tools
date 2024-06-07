@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.concurrent.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 /** @author shevek */
@@ -78,6 +79,7 @@ public interface TaskSetState {
   @ThreadSafe
   public static class Impl implements TaskSetState {
 
+    @GuardedBy("this")
     private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
 
     @Deprecated // Use TaskSetState instead of TaskSetState.Impl
