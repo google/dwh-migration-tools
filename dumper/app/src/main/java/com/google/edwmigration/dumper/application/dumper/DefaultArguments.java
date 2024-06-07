@@ -32,6 +32,7 @@ import joptsimple.OptionDescriptor;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
 import org.anarres.jdiagnostics.ProductMetadata;
 import org.apache.commons.lang3.BooleanUtils;
@@ -52,7 +53,11 @@ public class DefaultArguments {
 
     @Override
     public Boolean convert(String value) {
-      return BooleanUtils.toBoolean(value);
+      Boolean booleanValue = BooleanUtils.toBooleanObject(value);
+      if (booleanValue == null) {
+        throw new ValueConversionException(String.format("Not a valid boolean value: '%s'", value));
+      }
+      return booleanValue;
     }
 
     @Override

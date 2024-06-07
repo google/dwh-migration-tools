@@ -17,10 +17,13 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.DefaultArguments.BooleanValueConverter;
+import joptsimple.ValueConversionException;
+import org.junit.Test;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
@@ -33,8 +36,6 @@ public class BooleanValueConverterTest {
   @DataPoints("testCases")
   public static ImmutableList<TestCase> testCases =
       ImmutableList.of(
-          TestCase.create("", false),
-          TestCase.create("&*%^$*&@#*^**$", false),
           TestCase.create("true", true),
           TestCase.create("yes", true),
           TestCase.create("false", false),
@@ -45,6 +46,26 @@ public class BooleanValueConverterTest {
   public void convert_success(@FromDataPoints("testCases") TestCase testCase) {
     assertEquals(
         testCase.convertedValue(), BooleanValueConverter.INSTANCE.convert(testCase.inputValue()));
+  }
+
+  @Test
+  public void convert_unsupportedValue_throwsException() {
+    String unsupportedValue = "&*%^$*&@#*^**$";
+
+    ValueConversionException e =
+        assertThrows(
+            ValueConversionException.class,
+            () -> BooleanValueConverter.INSTANCE.convert(unsupportedValue));
+
+    assertEquals("Not a valid boolean value: '&*%^$*&@#*^**$'", e.getMessage());
+  }
+
+  @Test
+  public void convert_emptyString_throwsException() {
+    ValueConversionException e =
+        assertThrows(
+            ValueConversionException.class, () -> BooleanValueConverter.INSTANCE.convert(""));
+    assertEquals("Not a valid boolean value: ''", e.getMessage());
   }
 
   @AutoValue
