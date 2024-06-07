@@ -129,8 +129,8 @@ public interface TaskSetState {
       resultMap.put(task, new TaskResult<>(state, value));
     }
 
-    public synchronized <T> void setTaskException(
-        @Nonnull Task<T> task, @Nonnull TaskState state, @CheckForNull Exception exception) {
+    public synchronized void setTaskException(
+        @Nonnull Task<?> task, @Nonnull TaskState state, @CheckForNull Exception exception) {
       resultMap.put(task, new TaskResult<>(state, exception));
     }
   }
