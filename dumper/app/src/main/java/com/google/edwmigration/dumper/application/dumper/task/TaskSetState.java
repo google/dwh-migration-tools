@@ -57,6 +57,7 @@ public interface TaskSetState {
     }
   }
 
+  @ParametersAreNonnullByDefault
   public static class TasksReport {
 
     private final long count;
@@ -68,8 +69,8 @@ public interface TaskSetState {
       return String.format("%d TASKS %s", count, state);
     }
 
-    TasksReport(Long count, TaskState state) {
-      this.count = count == null ? 0 : count;
+    TasksReport(long count, TaskState state) {
+      this.count = count;
       this.state = state;
     }
   }
