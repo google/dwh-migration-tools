@@ -86,9 +86,9 @@ public interface TaskSetState {
     @Override
     public synchronized long failedRequiredTaskCount() {
       long result = 0;
-      for (Task<?> key : resultMap.keySet()) {
-        TaskState state = resultMap.get(key).getState();
-        if (key.getCategory() == REQUIRED && state == FAILED) {
+      for (Map.Entry<Task<?>, TaskResult<?>> entry : resultMap.entrySet()) {
+        TaskState state = entry.getValue().getState();
+        if (entry.getKey().getCategory() == REQUIRED && state == FAILED) {
           result++;
         }
       }
