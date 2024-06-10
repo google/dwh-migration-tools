@@ -59,21 +59,22 @@ public interface TaskSetState {
     }
   }
 
+  @AutoValue
   @ParametersAreNonnullByDefault
-  public static class TasksReport {
+  abstract static class TasksReport {
 
-    private final long count;
-    private final TaskState state;
+    abstract long count();
+
+    abstract TaskState state();
 
     @Nonnull
     @Override
     public String toString() {
-      return String.format("%d TASKS %s", count, state);
+      return String.format("%d TASKS %s", count(), state());
     }
 
-    TasksReport(long count, TaskState state) {
-      this.count = count;
-      this.state = state;
+    static TasksReport create(long count, TaskState state) {
+      return new AutoValue_TaskSetState_TasksReport(count, state);
     }
   }
 
@@ -113,7 +114,7 @@ public interface TaskSetState {
           .collect(groupingBy(TaskResult::getState, counting()))
           .entrySet()
           .stream()
-          .map(entry -> new TasksReport(entry.getValue(), entry.getKey()))
+          .map(entry -> TasksReport.create(entry.getValue(), entry.getKey()))
           .collect(toImmutableList());
     }
 
