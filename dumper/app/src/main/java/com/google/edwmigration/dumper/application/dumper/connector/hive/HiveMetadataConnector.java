@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.BooleanUtils;
@@ -381,6 +382,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  @ParametersAreNonnullByDefault
   private static class PartitionsJsonlTask extends AbstractHiveMetadataTask {
 
     private PartitionsJsonlTask(Predicate<String> databasePredicate) {
@@ -388,8 +390,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
 
     @Override
-    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
-        throws Exception {
+    protected void run(Writer writer, ThriftClientHandle thriftClientHandle) throws Exception {
       try (ThriftClientPool clientPool =
           thriftClientHandle.newMultiThreadedThriftClientPool("partitions-task-pooled-client")) {
         clientPool.execute(
@@ -417,11 +418,11 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
 
     private void dumpPartitions(
-        @Nonnull ConcurrentProgressMonitor monitor,
-        @Nonnull Writer writer,
-        @Nonnull ThriftClientPool clientPool,
-        @Nonnull String databaseName,
-        @Nonnull String tableName) {
+        ConcurrentProgressMonitor monitor,
+        Writer writer,
+        ThriftClientPool clientPool,
+        String databaseName,
+        String tableName) {
       clientPool.execute(
           (thriftClient) -> {
             try {
