@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.FieldSchema;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.ForeignKeysRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.PrimaryKeysRequest;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6.TableStatsRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -511,6 +512,19 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
       @Override
       public ImmutableList<? extends TBase<?, ?>> getRawCheckConstraints() {
         return ImmutableList.of();
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawTableStatistics() throws Exception {
+        ImmutableList columnNames =
+            client.get_fields(databaseName, tableName).stream()
+                .map(FieldSchema::getName)
+                .collect(toImmutableList());
+        return ImmutableList.copyOf(
+            client
+                .get_table_statistics_req(
+                    new TableStatsRequest(databaseName, tableName, columnNames))
+                .getTableStats());
       }
     };
   }

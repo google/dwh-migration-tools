@@ -34,6 +34,7 @@ import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.Get
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.GetCatalogsResponse;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.NotNullConstraintsRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.PrimaryKeysRequest;
+import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.TableStatsRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.UniqueConstraintsRequest;
 import com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.superset.WMGetAllResourcePlanRequest;
 import java.io.IOException;
@@ -535,6 +536,20 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
                 .get_check_constraints(
                     new CheckConstraintsRequest(table.catName, databaseName, tableName))
                 .getCheckConstraints());
+      }
+
+      @Override
+      public ImmutableList<? extends TBase<?, ?>> getRawTableStatistics() throws Exception {
+        ImmutableList columnNames =
+            client.get_fields(databaseName, tableName).stream()
+                .map(FieldSchema::getName)
+                .collect(toImmutableList());
+        return ImmutableList.copyOf(
+            client
+                .get_table_statistics_req(
+                    new TableStatsRequest(
+                        databaseName, tableName, columnNames, /* engine= */ "hive"))
+                .getTableStats());
       }
     };
   }

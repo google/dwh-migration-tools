@@ -344,7 +344,8 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                       "uniqueConstraints", table.getRawUniqueConstraints(),
                       "nonNullConstraints", table.getRawNonNullConstraints(),
                       "defaultConstraints", table.getRawDefaultConstraints(),
-                      "checkConstraints", table.getRawCheckConstraints());
+                      "checkConstraints", table.getRawCheckConstraints(),
+                      "tableStatistics", table.getRawTableStatistics());
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
                 writer.write("{\"table\":");
