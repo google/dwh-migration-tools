@@ -26,6 +26,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -38,7 +39,7 @@ public interface TaskSetState {
   @AutoValue
   @ParametersAreNonnullByDefault
   abstract static class TaskResultSummary {
-    abstract Throwable throwable();
+    abstract Optional<Throwable> throwable();
 
     abstract Task<?> task();
 
@@ -46,8 +47,8 @@ public interface TaskSetState {
 
     @Nonnull
     static TaskResultSummary create(Task<?> task, TaskResult<?> result) {
-      return new AutoValue_TaskSetState_TaskResultSummary(
-          result.getException(), task, result.getState());
+      Optional<Throwable> throwable = Optional.ofNullable(result.getException());
+      return new AutoValue_TaskSetState_TaskResultSummary(throwable, task, result.getState());
     }
 
     @Nonnull
@@ -55,8 +56,8 @@ public interface TaskSetState {
     public String toString() {
       String prefix = String.format("Task %s (%s) %s", state(), task().getCategory(), task());
       StringBuilder buf = new StringBuilder(prefix);
-      if (throwable() != null) {
-        buf.append(": ").append(throwable());
+      if (throwable().isPresent()) {
+        buf.append(": ").append(throwable().get());
       }
       return buf.toString();
     }
