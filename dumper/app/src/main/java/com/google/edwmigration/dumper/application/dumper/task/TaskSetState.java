@@ -102,7 +102,7 @@ public interface TaskSetState {
     @Override
     public synchronized ImmutableList<TaskResultSummary> getTaskResultSummaries() {
       return resultMap.entrySet().stream()
-          .map((entry) -> TaskResultSummary.create(entry.getKey(), entry.getValue()))
+          .map(entry -> TaskResultSummary.create(entry.getKey(), entry.getValue()))
           .collect(toImmutableList());
     }
 
@@ -114,7 +114,7 @@ public interface TaskSetState {
           .collect(groupingBy(TaskResult::getState, counting()))
           .entrySet()
           .stream()
-          .map((entry) -> new TasksReport(entry.getValue(), entry.getKey()))
+          .map(entry -> new TasksReport(entry.getValue(), entry.getKey()))
           .collect(toImmutableList());
     }
 
