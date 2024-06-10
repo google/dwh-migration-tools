@@ -79,7 +79,7 @@ public interface TaskSetState {
   }
 
   @ThreadSafe
-  public static class Impl implements TaskSetState {
+  static class Impl implements TaskSetState {
 
     @GuardedBy("this")
     private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
