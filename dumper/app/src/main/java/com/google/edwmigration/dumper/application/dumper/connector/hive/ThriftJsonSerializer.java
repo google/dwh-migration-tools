@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
-import com.google.gson.stream.JsonWriter;
+import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.IOException;
 import java.util.List;
 import org.apache.thrift.TBase;
@@ -40,12 +40,12 @@ public class ThriftJsonSerializer {
    * Writes the list of Thrift objects as a JSON array to the JsonWriter. The method is not
    * thread-safe.
    */
-  public void serialize(List<? extends TBase<?, ?>> thriftObjects, JsonWriter jsonWriter)
+  public void serialize(List<? extends TBase<?, ?>> thriftObjects, JsonGenerator jsonGenerator)
       throws IOException, TException {
-    jsonWriter.beginArray();
+    jsonGenerator.writeStartArray();
     for (TBase<?, ?> thriftObject : thriftObjects) {
-      jsonWriter.jsonValue(underlyingSerializer.toString(thriftObject));
+      jsonGenerator.writeRawValue(underlyingSerializer.toString(thriftObject));
     }
-    jsonWriter.endArray();
+    jsonGenerator.writeEndArray();
   }
 }

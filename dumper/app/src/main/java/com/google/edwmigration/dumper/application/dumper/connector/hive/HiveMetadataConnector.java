@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.auto.service.AutoService;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -42,7 +44,6 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentProgress
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentRecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HiveMetadataDumpFormat;
-import com.google.gson.stream.JsonWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -278,11 +279,9 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
               LOG.warn(
-                  "Metadata cannot be dumped for table "
-                      + databaseName
-                      + "."
-                      + tableName
-                      + " due to an exception, skipping it.",
+                  "Metadata cannot be dumped for table '{}.{}' due to an exception, skipping it.",
+                  databaseName,
+                  tableName,
                   e);
             }
           });
@@ -295,6 +294,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   private static class TablesRawJsonlTask extends AbstractHiveMetadataTask {
+    private final JsonFactory jsonFactory = new JsonFactory();
 
     private TablesRawJsonlTask(Predicate<String> databasePredicate) {
       super("tables-raw.jsonl", databasePredicate);
@@ -349,27 +349,26 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                       "tableStatistics", table.getRawTableStatistics());
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
-                JsonWriter jsonWriter = new JsonWriter(writer);
-                jsonWriter.beginObject();
-                jsonWriter.name("table");
-                jsonWriter.jsonValue(jsonSerializer.serialize(rawTableThriftObject));
+                JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
+                jsonGenerator.writeStartObject();
+                jsonGenerator.writeFieldName("table");
+                jsonGenerator.writeRawValue(jsonSerializer.serialize(rawTableThriftObject));
                 for (Map.Entry<String, ImmutableList<? extends TBase<?, ?>>> entry :
                     additionalMetadata.entrySet()) {
-                  jsonWriter.name(entry.getKey());
-                  jsonSerializer.serialize(entry.getValue(), jsonWriter);
+                  jsonGenerator.writeFieldName(entry.getKey());
+                  jsonSerializer.serialize(entry.getValue(), jsonGenerator);
                 }
-                jsonWriter.endObject();
+                jsonGenerator.writeEndObject();
+                jsonGenerator.flush();
                 writer.write('\n');
               }
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
               LOG.warn(
-                  "Metadata cannot be dumped for table "
-                      + databaseName
-                      + "."
-                      + tableName
-                      + " due to an exception, skipping it.",
+                  "Metadata cannot be dumped for table '{}.{}' due to an exception, skipping it.",
+                  databaseName,
+                  tableName,
                   e);
             }
           });
@@ -383,6 +382,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
 
   @ParametersAreNonnullByDefault
   private static class PartitionsJsonlTask extends AbstractHiveMetadataTask {
+    private final JsonFactory jsonFactory = new JsonFactory();
 
     private PartitionsJsonlTask(Predicate<String> databasePredicate) {
       super("partitions.jsonl", databasePredicate);
@@ -430,15 +430,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   thriftClient.getTable(databaseName, tableName).getRawPartitions();
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
-                JsonWriter jsonWriter = new JsonWriter(writer);
-                jsonWriter.beginObject();
-                jsonWriter.name("databaseName");
-                jsonWriter.value(databaseName);
-                jsonWriter.name("tableName");
-                jsonWriter.value(tableName);
-                jsonWriter.name("partitions");
-                jsonSerializer.serialize(partitions, jsonWriter);
-                jsonWriter.endObject();
+                JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
+                jsonGenerator.writeStartObject();
+                jsonGenerator.writeStringField("databaseName", databaseName);
+                jsonGenerator.writeStringField("tableName", tableName);
+                jsonGenerator.writeFieldName("partitions");
+                jsonSerializer.serialize(partitions, jsonGenerator);
+                jsonGenerator.writeEndObject();
+                jsonGenerator.flush();
                 writer.write('\n');
               }
             } catch (Exception e) {
