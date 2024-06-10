@@ -38,7 +38,7 @@ public interface TaskSetState {
   @AutoValue
   @ParametersAreNonnullByDefault
   abstract static class TaskResultSummary {
-    abstract String exception();
+    abstract Throwable throwable();
 
     abstract Task<?> task();
 
@@ -46,16 +46,19 @@ public interface TaskSetState {
 
     @Nonnull
     static TaskResultSummary create(Task<?> task, TaskResult<?> result) {
-      String optionalException = String.format(": %s", result.getException());
-      String exceptionDescription = result.getException() == null ? "" : optionalException;
       return new AutoValue_TaskSetState_TaskResultSummary(
-          exceptionDescription, task, result.getState());
+          result.getException(), task, result.getState());
     }
 
     @Nonnull
     @Override
     public String toString() {
-      return String.format("Task %s (%s) %s%s", state(), task().getCategory(), task(), exception());
+      String prefix = String.format("Task %s (%s) %s", state(), task().getCategory(), task());
+      StringBuilder buf = new StringBuilder(prefix);
+      if (throwable() != null) {
+        buf.append(": ").append(throwable());
+      }
+      return buf.toString();
     }
   }
 
