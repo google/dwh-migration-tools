@@ -279,7 +279,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
               LOG.warn(
-                  "Metadata cannot be dumped for table '{}.{}' due to an exception, skipping it.",
+                  "Metadata cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
                   databaseName,
                   tableName,
                   e);
@@ -366,7 +366,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
               LOG.warn(
-                  "Metadata cannot be dumped for table '{}.{}' due to an exception, skipping it.",
+                  "Metadata cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
                   databaseName,
                   tableName,
                   e);
@@ -444,11 +444,9 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
               LOG.warn(
-                  "Partitions cannot be dumped for table "
-                      + databaseName
-                      + "."
-                      + tableName
-                      + " due to an exception, skipping it.",
+                  "Partitions cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
+                  databaseName,
+                  tableName,
                   e);
             }
           });
