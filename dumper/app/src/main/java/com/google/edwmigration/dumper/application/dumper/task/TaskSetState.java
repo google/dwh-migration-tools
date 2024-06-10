@@ -22,6 +22,7 @@ import static com.google.edwmigration.dumper.application.dumper.task.TaskState.F
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,29 +35,27 @@ import net.jcip.annotations.ThreadSafe;
 /** @author shevek */
 public interface TaskSetState {
 
+  @AutoValue
   @ParametersAreNonnullByDefault
-  static class TaskResultSummary {
-    private final String exception;
-    private final Task<?> task;
-    private final TaskState state;
+  abstract static class TaskResultSummary {
+    abstract String exception();
 
-    private TaskResultSummary(String exception, Task<?> task, TaskState state) {
-      this.exception = exception;
-      this.task = task;
-      this.state = state;
-    }
+    abstract Task<?> task();
+
+    abstract TaskState state();
 
     @Nonnull
     static TaskResultSummary create(Task<?> task, TaskResult<?> result) {
       String optionalException = String.format(": %s", result.getException());
       String exceptionDescription = result.getException() == null ? "" : optionalException;
-      return new TaskResultSummary(exceptionDescription, task, result.getState());
+      return new AutoValue_TaskSetState_TaskResultSummary(
+          exceptionDescription, task, result.getState());
     }
 
     @Nonnull
     @Override
     public String toString() {
-      return String.format("Task %s (%s) %s%s", state, task.getCategory(), task, exception);
+      return String.format("Task %s (%s) %s%s", state(), task().getCategory(), task(), exception());
     }
   }
 
