@@ -86,7 +86,7 @@ public interface TaskSetState {
 
     @Deprecated // Use TaskSetState instead of TaskSetState.Impl
     @Override
-    public synchronized long failedRequiredTaskCount() {
+    public synchronized long getFailedRequiredTaskCount() {
       long result = 0;
       for (Map.Entry<Task<?>, TaskResult<?>> entry : resultMap.entrySet()) {
         TaskState state = entry.getValue().getState();
@@ -100,7 +100,7 @@ public interface TaskSetState {
     @Deprecated // Use TaskSetState instead of TaskSetState.Impl
     @Nonnull
     @Override
-    public synchronized ImmutableList<TaskResultSummary> taskResultSummaries() {
+    public synchronized ImmutableList<TaskResultSummary> getTaskResultSummaries() {
       return resultMap.entrySet().stream()
           .map((entry) -> TaskResultSummary.create(entry.getKey(), entry.getValue()))
           .collect(toImmutableList());
@@ -109,7 +109,7 @@ public interface TaskSetState {
     @Deprecated // Use TaskSetState instead of TaskSetState.Impl
     @Nonnull
     @Override
-    public synchronized ImmutableList<TasksReport> tasksReports() {
+    public synchronized ImmutableList<TasksReport> getTasksReports() {
       return resultMap.values().stream()
           .collect(groupingBy(TaskResult::getState, counting()))
           .entrySet()
@@ -136,13 +136,13 @@ public interface TaskSetState {
     }
   }
 
-  long failedRequiredTaskCount();
+  long getFailedRequiredTaskCount();
 
   @Nonnull
-  ImmutableList<TaskResultSummary> taskResultSummaries();
+  ImmutableList<TaskResultSummary> getTaskResultSummaries();
 
   @Nonnull
-  ImmutableList<TasksReport> tasksReports();
+  ImmutableList<TasksReport> getTasksReports();
 
   @Nonnull
   TaskState getTaskState(@Nonnull Task<?> task);
