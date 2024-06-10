@@ -120,7 +120,7 @@ public interface TaskSetState {
 
     @Nonnull
     @Override
-    public TaskState getTaskState(@Nonnull Task<?> task) {
+    public synchronized TaskState getTaskState(@Nonnull Task<?> task) {
       TaskResult<?> result = resultMap.get(task);
       return (result == null) ? TaskState.NOT_STARTED : result.getState();
     }
