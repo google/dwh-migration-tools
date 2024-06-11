@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.auto.service.AutoService;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -37,13 +39,11 @@ import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClie
 import com.google.edwmigration.dumper.ext.hive.metastore.Partition;
 import com.google.edwmigration.dumper.ext.hive.metastore.PartitionKey;
 import com.google.edwmigration.dumper.ext.hive.metastore.Table;
-import com.google.edwmigration.dumper.ext.hive.metastore.ThriftJsonSerializer;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentRecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HiveMetadataDumpFormat;
-import com.google.gson.stream.JsonWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -279,11 +279,9 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
               LOG.warn(
-                  "Metadata cannot be dumped for table "
-                      + databaseName
-                      + "."
-                      + tableName
-                      + " due to an exception, skipping it.",
+                  "Metadata cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
+                  databaseName,
+                  tableName,
                   e);
             }
           });
@@ -296,6 +294,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   private static class TablesRawJsonlTask extends AbstractHiveMetadataTask {
+    private final JsonFactory jsonFactory = new JsonFactory();
 
     private TablesRawJsonlTask(Predicate<String> databasePredicate) {
       super("tables-raw.jsonl", databasePredicate);
@@ -350,27 +349,26 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                       "tableStatistics", table.getRawTableStatistics());
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
-                writer.write("{\"table\":");
-                writer.write(jsonSerializer.serialize(rawTableThriftObject));
+                JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
+                jsonGenerator.writeStartObject();
+                jsonGenerator.writeFieldName("table");
+                jsonGenerator.writeRawValue(jsonSerializer.serialize(rawTableThriftObject));
                 for (Map.Entry<String, ImmutableList<? extends TBase<?, ?>>> entry :
                     additionalMetadata.entrySet()) {
-                  writer.write(",\"");
-                  writer.write(entry.getKey());
-                  writer.write("\":");
-                  jsonSerializer.serialize(entry.getValue(), writer);
+                  jsonGenerator.writeFieldName(entry.getKey());
+                  jsonSerializer.serialize(entry.getValue(), jsonGenerator);
                 }
-                writer.write("}");
+                jsonGenerator.writeEndObject();
+                jsonGenerator.flush();
                 writer.write('\n');
               }
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
               LOG.warn(
-                  "Metadata cannot be dumped for table "
-                      + databaseName
-                      + "."
-                      + tableName
-                      + " due to an exception, skipping it.",
+                  "Metadata cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
+                  databaseName,
+                  tableName,
                   e);
             }
           });
@@ -384,6 +382,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
 
   @ParametersAreNonnullByDefault
   private static class PartitionsJsonlTask extends AbstractHiveMetadataTask {
+    private final JsonFactory jsonFactory = new JsonFactory();
 
     private PartitionsJsonlTask(Predicate<String> databasePredicate) {
       super("partitions.jsonl", databasePredicate);
@@ -431,25 +430,23 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   thriftClient.getTable(databaseName, tableName).getRawPartitions();
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
               synchronized (writer) {
-                JsonWriter jsonWriter = new JsonWriter(writer);
-                jsonWriter.setLenient(true);
-                writer.write("{\"databaseName\":");
-                jsonWriter.value(databaseName);
-                writer.write(",\"tableName\":");
-                jsonWriter.value(tableName);
-                writer.write(",\"partitions\":");
-                jsonSerializer.serialize(partitions, writer);
-                writer.write("}\n");
+                JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
+                jsonGenerator.writeStartObject();
+                jsonGenerator.writeStringField("databaseName", databaseName);
+                jsonGenerator.writeStringField("tableName", tableName);
+                jsonGenerator.writeFieldName("partitions");
+                jsonSerializer.serialize(partitions, jsonGenerator);
+                jsonGenerator.writeEndObject();
+                jsonGenerator.flush();
+                writer.write('\n');
               }
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
               LOG.warn(
-                  "Partitions cannot be dumped for table "
-                      + databaseName
-                      + "."
-                      + tableName
-                      + " due to an exception, skipping it.",
+                  "Partitions cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
+                  databaseName,
+                  tableName,
                   e);
             }
           });

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.ext.hive.metastore;
+package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
 import static org.junit.Assert.assertEquals;
 
