@@ -30,12 +30,10 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
-import com.google.edwmigration.dumper.application.dumper.task.TaskResult;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
-import com.google.edwmigration.dumper.application.dumper.task.TaskState;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TaskResultSummary;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TasksReport;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
 import java.io.IOException;
@@ -48,10 +46,8 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -243,36 +239,23 @@ public class MetadataDumper {
     }
   }
 
-  private void printTaskResults(SummaryPrinter summaryPrinter, TaskSetState.Impl state) {
+  private void printTaskResults(SummaryPrinter summaryPrinter, TaskSetState state) {
     summaryPrinter.printSummarySection(
         linePrinter -> {
           linePrinter.println("Task Summary:");
-          state
-              .getTaskResultMap()
-              .forEach(
-                  (task, result) ->
-                      linePrinter.println(
-                          "Task %s (%s) %s%s",
-                          result.getState(),
-                          task.getCategory(),
-                          task,
-                          (result.getException() == null)
-                              ? ""
-                              : String.format(": %s", result.getException())));
+          for (TaskResultSummary item : state.getTaskResultSummaries()) {
+            linePrinter.println(item.toString());
+          }
         });
   }
 
   private boolean checkRequiredTaskSuccess(
-      SummaryPrinter summaryPrinter, Impl state, String outputFileName) {
-    long requiredTasksNotSucceeded =
-        state.getTaskResultMap().entrySet().stream()
-            .filter(e -> TaskCategory.REQUIRED.equals(e.getKey().getCategory()))
-            .filter(e -> TaskState.FAILED.equals(e.getValue().getState()))
-            .count();
-    if (requiredTasksNotSucceeded > 0) {
+      SummaryPrinter summaryPrinter, TaskSetState state, String outputFileName) {
+    long failedRequiredTasks = state.getFailedRequiredTaskCount();
+    if (failedRequiredTasks > 0) {
       summaryPrinter.printSummarySection(
           linePrinter -> {
-            linePrinter.println("ERROR: %s required task[s] failed.", requiredTasksNotSucceeded);
+            linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks);
             linePrinter.println(
                 "Output, including debugging information, has been saved to '%s'.", outputFileName);
           });
@@ -281,13 +264,12 @@ public class MetadataDumper {
     return true;
   }
 
-  private void logStatusSummary(SummaryPrinter summaryPrinter, TaskSetState.Impl state) {
+  private void logStatusSummary(SummaryPrinter summaryPrinter, TaskSetState state) {
     summaryPrinter.printSummarySection(
         linePrinter -> {
-          state.getTaskResultMap().values().stream()
-              .map(TaskResult::getState)
-              .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-              .forEach((key, value) -> linePrinter.println("%d TASKS %s", value, key));
+          for (TasksReport item : state.getTasksReports()) {
+            linePrinter.println("%s", item);
+          }
         });
   }
 }
