@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.Duration;
@@ -25,7 +26,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 
-final class ScanContext {
+final class ScanContext implements Closeable {
 
   private final FileSystem fs;
   private final Writer outputSink;
@@ -53,6 +54,11 @@ final class ScanContext {
     this.instantScanBegin = Instant.now();
   }
 
+  @Override
+  public void close() throws IOException {
+    csvPrinter.close();
+  }
+
   FileStatus[] listDirectory(FileStatus dir) throws IOException {
     Instant instantListBegin = Instant.now();
     FileStatus[] files = fs.listStatus(dir.getPath());
@@ -74,10 +80,14 @@ final class ScanContext {
       this.accumulatedFileSize += accumFileSize;
 
       csvPrinter.printRecord(
-          // skip the schema, host and port, get the path only:
-          dir.getPath().toUri().getPath(), dir.getOwner(), dir.getGroup(), dir.getPermission());
+          dir.getPath().toUri().getPath(),
+          dir.getOwner(),
+          dir.getGroup(),
+          dir.getPermission().toString());
     }
   }
+
+  void walkFile(FileStatus file) {}
 
   /** This method is used to produce meaningful metrics for log/debug purposes. */
   String getFormattedStats() {
@@ -89,7 +99,7 @@ final class ScanContext {
     final long numFilesDivisor = numFiles > 0 ? numFiles : 1;
     StringBuilder sb =
         new StringBuilder()
-            .append("Total: num files/dirs: " + numFiles)
+            .append("Total: num files&dirs: " + numFiles)
             .append("\n       num dirs found: " + numDirs)
             .append("\n       num dirs walkd: " + numDirsWalked)
             .append("\nTotal File Size: " + accumulatedFileSize)

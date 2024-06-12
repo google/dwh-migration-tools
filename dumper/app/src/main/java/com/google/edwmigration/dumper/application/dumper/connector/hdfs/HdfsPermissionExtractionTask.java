@@ -25,7 +25,6 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Phaser;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.hadoop.conf.Configuration;
@@ -36,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HdfsPermissionExtractionTask implements Task<Void> {
-  private static final Logger LOG = LoggerFactory.getLogger(ScanContext.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionTask.class);
 
   final String clusterHost;
   final int port;
@@ -75,18 +74,17 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
     LOG.info("threadPoolSize: {}", poolSize);
 
     Configuration conf = new Configuration();
-    // conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-    conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
     conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
 
-    try (FileSystem fs = FileSystem.get(conf)) {
-      ScanContext scanCtx = new ScanContext(fs, output);
-      Phaser phaser = new Phaser(1); // Start with one party (the main thread)
+    try (FileSystem fs = FileSystem.get(conf);
+        ScanContext scanCtx = new ScanContext(fs, output)) {
+
+      AtomicCounter jobsTodoCounter = new AtomicCounter(/* currentCount= */ 0);
       String hdfsPath = "/";
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
-      SingleDirScanJob rootJob = new SingleDirScanJob(scanCtx, phaser, rootDir);
+      SingleDirScanJob rootJob = new SingleDirScanJob(scanCtx, jobsTodoCounter, rootDir);
       new ForkJoinPool(poolSize).invoke(rootJob); // The root task finishes immediately
-      phaser.arriveAndAwaitAdvance(); // Block until all tasks are done
+      jobsTodoCounter.waitTillZero(); // Wait until all (recursive) tasks are done executing:
       LOG.info(scanCtx.getFormattedStats());
     }
   }

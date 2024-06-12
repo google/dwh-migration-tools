@@ -16,21 +16,23 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import java.io.IOException;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.RecursiveTask;
 import org.apache.hadoop.fs.FileStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class SingleDirScanJob extends RecursiveTask<Void> {
+  private static final Logger LOG = LoggerFactory.getLogger(SingleDirScanJob.class);
+
   private final ScanContext scanCtx;
-  private final Phaser phaser;
+  private final AtomicCounter jobsTodoCounter;
   private final FileStatus dir;
 
-  SingleDirScanJob(ScanContext scanCtx, Phaser phaser, FileStatus dir) {
+  SingleDirScanJob(ScanContext scanCtx, AtomicCounter jobsTodoCounter, FileStatus dir) {
     this.scanCtx = scanCtx;
-    this.phaser = phaser;
     this.dir = dir;
-    phaser.register();
+    this.jobsTodoCounter = jobsTodoCounter;
+    jobsTodoCounter.increment();
   }
 
   @Override
@@ -48,15 +50,18 @@ class SingleDirScanJob extends RecursiveTask<Void> {
 
         if (file.isDirectory()) {
           numDirs++;
-          SingleDirScanJob subJob = new SingleDirScanJob(scanCtx, phaser, file);
-          subJob.fork(); // Submit to ForkJoinPool
+          new SingleDirScanJob(scanCtx, jobsTodoCounter, file).fork();
+        } else {
+          scanCtx.walkFile(file);
         }
       }
       scanCtx.endWalkDir(dir, numFiles, numDirs, accumFileSize);
-    } catch (IOException exn) {
-      throw new IllegalStateException(exn);
+    } catch (Exception exn) {
+      LOG.error(
+          "Unexpected exception while scanning HDFS folder " + dir.getPath().toUri().getPath(),
+          exn);
     } finally {
-      phaser.arriveAndDeregister();
+      jobsTodoCounter.decrement();
     }
     return null;
   }
