@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.io;
 
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import javax.annotation.Nonnull;
@@ -27,7 +28,7 @@ import javax.annotation.Nonnull;
  *
  * @author shevek
  */
-public interface OutputHandle {
+public interface OutputHandle extends Closeable {
 
   public boolean exists() throws IOException;
 
@@ -48,8 +49,14 @@ public interface OutputHandle {
   /**
    * Renames the temporary file to the final file.
    *
-   * <p>The stream, if any, must be closed. The temporary file must exist. Do NOT call commit() in a
-   * try-with-resources or finally block, or you risk committing bad data.
+   * <p>The stream, if any, must be closed. The temporary file must exist. If the instance of this
+   * class is created in a try-with-resources call or this method is used in finally block, then
+   * make sure to have the underlying stream closed before.
    */
   public void commit() throws IOException;
+
+  @Override
+  default void close() throws IOException {
+    commit();
+  }
 }

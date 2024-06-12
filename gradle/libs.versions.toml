@@ -21,6 +21,7 @@ google-cloud-nio = "0.127.1"
 gradle-info-plugin = "11.4.1"
 gradle-license-report = "1.17"
 guava = "32.1.2-jre"
+hadoop = "3.4.0"
 hikaricp = "3.2.0"
 hive = "3.1.2"
 httpclient5 = "5.2.1"
@@ -72,6 +73,8 @@ google-cloud-nio = { module = "com.google.cloud:google-cloud-nio", version.ref =
 gradle-info-plugin = { module = "com.netflix.nebula:gradle-info-plugin", version.ref = "gradle-info-plugin" }
 gradle-license-report = { module = "com.github.jk1:gradle-license-report", version.ref = "gradle-license-report" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
+hadoop-common = { module = "org.apache.hadoop:hadoop-common", version.ref = "hadoop" }
+hadoop-hdfs-client = { module = "org.apache.hadoop:hadoop-hdfs-client", version.ref = "hadoop" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 hive-common = { module = "org.apache.hive:hive-common", version.ref = "hive" }
 hive-exec = { module = "org.apache.hive:hive-exec", version.ref = "hive" }
