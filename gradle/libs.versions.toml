@@ -4,6 +4,7 @@
 apache-commons-compress = "1.18"
 apache-commons-csv = "1.10.0"
 apache-commons-lang3 = "3.8.1"
+apache-commons-exec = "1.4.0"
 auto-service = "1.1.1"
 auto-value = "1.10.2"
 aws-java-sdk = "1.12.520"
@@ -53,6 +54,7 @@ version-catalog-update-plugin = "0.8.1"
 apache-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-commons-compress" }
 apache-commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "apache-commons-csv" }
 apache-commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "apache-commons-lang3" }
+apache-commons-exec = { module = "org.apache.commons:commons-exec", version.ref = "apache-commons-exec" }
 auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 auto-value = { module = "com.google.auto.value:auto-value", version.ref = "auto-value" }
 auto-value-annotations = { module = "com.google.auto.value:auto-value-annotations", version.ref = "auto-value" }
