@@ -875,6 +875,10 @@ licenseReport {
                 projectUrl: "https://github.com/javaee/jsr311",
                 licenseUrl: "https://raw.githubusercontent.com/javaee/jsr311/master/LICENSE",
             ],
+            "javax.xml.stream:stax-api": [
+                projectUrl: "https://github.com/jakartaee/jaxb-api",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaxb-api/master/LICENSE.md",
+            ]
         ]),
         new com.github.jk1.license.render.JsonReportRenderer('index.json', false),
         new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
