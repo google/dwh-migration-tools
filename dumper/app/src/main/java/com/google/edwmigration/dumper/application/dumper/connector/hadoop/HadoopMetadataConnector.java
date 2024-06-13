@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
 import com.google.auto.service.AutoService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -31,7 +32,8 @@ import javax.annotation.Nonnull;
 @Description("Dumps metadata from the Hadoop cluster via bash commands.")
 public class HadoopMetadataConnector implements MetadataConnector {
 
-  private static final ImmutableList<String> SCRIPT_NAMES =
+  @VisibleForTesting
+  static final ImmutableList<String> SCRIPT_NAMES =
       ImmutableList.of(
           "airflow-version",
           "grafana-server-version",

@@ -20,8 +20,6 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.ByteSink;
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
@@ -30,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.net.URL;
 import java.time.Duration;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -56,13 +53,7 @@ public class BashTask implements Task<Void> {
   private void doRun(ByteSink outputSink, ByteSink errorSink, ByteSink exitStatusSink)
       throws IOException {
     String scriptFilename = scriptName + ".sh";
-    URL resourceUrl = Resources.getResource("hadoop-scripts/" + scriptFilename);
-    byte[] scriptBody = Resources.toByteArray(resourceUrl);
-    File scriptDir = new File("dwh-migration-tools-tmp");
-    scriptDir.mkdirs();
-    File scriptFile = new File(scriptDir, scriptFilename);
-    Files.write(scriptBody, scriptFile);
-    scriptFile.setExecutable(true);
+    File scriptFile = HadoopScripts.extract(scriptFilename);
     CommandLine cmdLine = CommandLine.parse("/bin/bash " + scriptFile.getAbsolutePath());
     DefaultExecutor executor = DefaultExecutor.builder().get();
     executor.setExitValue(1);
