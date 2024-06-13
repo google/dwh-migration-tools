@@ -19,9 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,12 +29,14 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class HadoopScriptsTest {
-  File extractedFile;
+  Path extractedFile;
 
   @After
-  public void tearDown() {
-    if (extractedFile != null && extractedFile.exists()) {
-      extractedFile.delete();
+  public void tearDown() throws IOException {
+    if (extractedFile != null) {
+      if (Files.exists(extractedFile)) {
+        Files.delete(extractedFile);
+      }
     }
   }
 
@@ -52,7 +54,6 @@ public class HadoopScriptsTest {
     extractedFile = HadoopScripts.extract(scriptFilename);
 
     // Assert
-    assertArrayEquals(
-        HadoopScripts.read(scriptFilename), Files.readAllBytes(extractedFile.toPath()));
+    assertArrayEquals(HadoopScripts.read(scriptFilename), Files.readAllBytes(extractedFile));
   }
 }

@@ -24,10 +24,10 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.time.Duration;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -53,8 +53,8 @@ public class BashTask implements Task<Void> {
   private void doRun(ByteSink outputSink, ByteSink errorSink, ByteSink exitStatusSink)
       throws IOException {
     String scriptFilename = scriptName + ".sh";
-    File scriptFile = HadoopScripts.extract(scriptFilename);
-    CommandLine cmdLine = CommandLine.parse("/bin/bash " + scriptFile.getAbsolutePath());
+    Path scriptFile = HadoopScripts.extract(scriptFilename);
+    CommandLine cmdLine = CommandLine.parse("/bin/bash " + scriptFile.toAbsolutePath());
     DefaultExecutor executor = DefaultExecutor.builder().get();
     executor.setExitValue(1);
     ExecuteWatchdog watchdog = ExecuteWatchdog.builder().setTimeout(SCRIPT_TIMEOUT).get();
