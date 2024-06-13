@@ -22,16 +22,12 @@ vdbobji AS (
                object_name
         FROM &v_tblprefix._objects a
         WHERE  (owner = 'SYS' AND object_type = 'DIRECTORY')
-           OR owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+           OR owner NOT LIKE '%SYS'
 ),
 vdbobjx AS (
         SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &v_b_con_id AS con_id, table_owner
         FROM &v_tblprefix._synonyms b
-        WHERE owner = 'PUBLIC' and
-              table_owner in
-@&EXTRACTSDIR/exclude_schemas.sql
-              ),
+        WHERE owner = 'PUBLIC'),
 vdbobj AS (
         SELECT :v_pkey AS pkey,
                i.con_id,
