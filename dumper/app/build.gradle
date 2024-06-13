@@ -858,6 +858,23 @@ licenseReport {
                 projectUrl: "https://github.com/jakartaee/jaf-api",
                 licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaf-api/master/LICENSE.md",
             ],
+            "javax.xml.bind:jaxb-api": [
+                projectUrl: "https://github.com/jakartaee/jaxb-api/",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaxb-api/master/LICENSE.md",
+            ],
+            "javax.servlet:javax.servlet-api": [
+                projectUrl: "https://github.com/jakartaee/servlet",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/servlet/master/LICENSE.md",
+            ],
+            "javax.servlet.jsp:jsp-api": [
+                projectUrl: "https://github.com/jakartaee/pages",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/pages/master/LICENSE.md",
+                licenseName: "Eclipse Public License - v 2.0",
+            ],
+            "javax.ws.rs:jsr311-api": [
+                projectUrl: "https://github.com/javaee/jsr311",
+                licenseUrl: "https://raw.githubusercontent.com/javaee/jsr311/master/LICENSE",
+            ],
         ]),
         new com.github.jk1.license.render.JsonReportRenderer('index.json', false),
         new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
