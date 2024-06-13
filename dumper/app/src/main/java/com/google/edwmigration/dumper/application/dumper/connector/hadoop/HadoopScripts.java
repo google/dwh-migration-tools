@@ -16,13 +16,17 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
+import static com.google.common.base.Suppliers.memoize;
+
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.function.Supplier;
 
 class HadoopScripts {
+  private static final Supplier<File> SCRIPT_DIR_SUPPLIER = memoize(Files::createTempDir);
 
   /** Reads the script from the resources directory inside the jar. */
   static byte[] read(String scriptFilename) throws IOException {
@@ -31,11 +35,9 @@ class HadoopScripts {
   }
 
   /** Extracts the script from the resources directory inside the jar to the local filesystem. */
-  static File extract(String scriptFilename) throws IOException {
+  static synchronized File extract(String scriptFilename) throws IOException {
     byte[] scriptBody = HadoopScripts.read(scriptFilename);
-    File scriptDir = new File("dwh-migration-tools-tmp");
-    scriptDir.mkdirs();
-    File scriptFile = new File(scriptDir, scriptFilename);
+    File scriptFile = new File(SCRIPT_DIR_SUPPLIER.get(), scriptFilename);
     Files.write(scriptBody, scriptFile);
     scriptFile.setExecutable(true);
     return scriptFile;
