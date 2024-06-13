@@ -15,22 +15,21 @@
 WITH
 vdbobji AS (
         SELECT
-               &v_a_con_id AS con_id,
+               con_id,
                owner,
                object_type,
-               &v_editionable_col AS editionable,
+               editionable AS editionable,
                object_name
-        FROM &v_tblprefix._objects a
+        FROM cdb_objects a
         WHERE  (owner = 'SYS' AND object_type = 'DIRECTORY')
            OR owner NOT LIKE '%SYS'
 ),
 vdbobjx AS (
-        SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &v_b_con_id AS con_id, table_owner
-        FROM &v_tblprefix._synonyms b
+        SELECT 'SYNONYM' as object_type, owner, synonym_name, con_id, table_owner
+        FROM cdb_synonyms b
         WHERE owner = 'PUBLIC'),
 vdbobj AS (
-        SELECT :v_pkey AS pkey,
-               i.con_id,
+        SELECT i.con_id,
                i.owner,
                i.object_type,
                i.editionable,
@@ -46,7 +45,6 @@ SELECT pkey ,
        owner ,
        object_type ,
        editionable ,
-       count  ,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+       count
 FROM vdbobj a
 
