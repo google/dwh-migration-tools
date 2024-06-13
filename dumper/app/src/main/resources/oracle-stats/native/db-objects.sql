@@ -26,24 +26,26 @@ FROM (
     A.editionable,
     A.object_name
   FROM cdb_objects A
-  WHERE  (A.owner = 'SYS' AND A.object_type = 'DIRECTORY')
-    OR A.owner NOT LIKE '%SYS'
+  WHERE ((A.owner = 'SYS' AND A.object_type = 'DIRECTORY') OR A.owner NOT LIKE '%SYS')
+    AND (
+      A.object_type <> 'SYNONYM'
+      OR A.owner <> 'PUBLIC'
+      OR A.object_name NOT LIKE '/%'
+    )
+    AND A.object_name NOT LIKE 'BIN$%'
 ) B
 LEFT OUTER JOIN (
   SELECT
-    C.owner, synonym_name,
+    C.owner,
+    C.synonym_name,
     C.con_id,
     C.table_owner
   FROM cdb_synonyms C
   WHERE C.owner = 'PUBLIC'
+    AND C.table_owner IS NOT NULL
 ) D ON B.object_type = 'SYNONYM'
   AND B.owner = D.owner
   AND B.object_name = D.synonym_name
   AND B.con_id = D.con_id
-WHERE (
-    B.object_type <> 'SYNONYM'
-    OR B.owner <> 'PUBLIC'
-    OR (B.object_name NOT LIKE '/%' AND D.table_owner IS NULL)
-  )
-  AND B.object_name NOT LIKE 'BIN$%'
+WHERE D.table_owner IS NULL
 GROUP  BY  B.con_id, B.owner, B.editionable , B.object_type
