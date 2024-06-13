@@ -33,10 +33,8 @@ public class HadoopScriptsTest {
 
   @After
   public void tearDown() throws IOException {
-    if (extractedFile != null) {
-      if (Files.exists(extractedFile)) {
-        Files.delete(extractedFile);
-      }
+    if ((extractedFile != null) && Files.exists(extractedFile)) {
+      Files.delete(extractedFile);
     }
   }
 

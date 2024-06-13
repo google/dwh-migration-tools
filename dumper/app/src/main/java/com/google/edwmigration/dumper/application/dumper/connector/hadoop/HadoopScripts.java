@@ -62,7 +62,7 @@ class HadoopScripts {
   }
 
   /** Extracts the script from the resources directory inside the jar to the local filesystem. */
-  static synchronized Path extract(String scriptFilename) throws IOException {
+  static Path extract(String scriptFilename) throws IOException {
     byte[] scriptBody = HadoopScripts.read(scriptFilename);
     Path scriptDir = SCRIPT_DIR_SUPPLIER.get();
     checkState(
