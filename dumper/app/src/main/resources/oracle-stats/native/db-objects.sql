@@ -38,13 +38,12 @@ FROM (
   ) B
   LEFT OUTER JOIN (
     SELECT
-      'SYNONYM' object_type,
       C.owner, synonym_name,
       C.con_id,
       C.table_owner
     FROM cdb_synonyms C
     WHERE C.owner = 'PUBLIC'
-  ) D ON B.object_type = D.object_type
+  ) D ON B.object_type = 'SYNONYM'
     AND B.owner = D.owner
     AND B.object_name = D.synonym_name
     AND B.con_id = D.con_id
