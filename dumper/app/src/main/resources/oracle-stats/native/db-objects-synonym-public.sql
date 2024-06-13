@@ -12,40 +12,42 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+
+-- The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC
+-- A JOIN is performed to exclude objects which appear in the cdb_synonyms table
 SELECT
-  B.con_id,
-  B.owner,
-  B.object_type,
-  B.editionable,
-  COUNT(1) count
+  B.con_id "ConId",
+  B.editionable "Editionable",
+  -- This looks similar to filtering with WHERE and using count() instead of sum().
+  --
+  -- It is not similar. DB will see the LIKE inside a WHERE predicate and decide to
+  -- replace a HASH JOIN with NESTED LOOPS. The JOIN arguments have >10k rows each,
+  -- so performance-wise the nested loop would be terrible.
+  sum(
+    CASE WHEN B.object_name LIKE '/%' THEN 0
+    WHEN B.object_name LIKE 'BIN$%' THEN 0
+    ELSE 1 END
+  ) "Count"
 FROM (
   SELECT
     A.con_id,
-    A.owner,
-    A.object_type,
     A.editionable,
-    A.object_name
+    A.object_name,
+    A.owner
   FROM cdb_objects A
-  WHERE ((A.owner = 'SYS' AND A.object_type = 'DIRECTORY') OR A.owner NOT LIKE '%SYS')
-    AND (
-      A.object_type <> 'SYNONYM'
-      OR A.owner <> 'PUBLIC'
-      OR A.object_name NOT LIKE '/%'
-    )
-    AND A.object_name NOT LIKE 'BIN$%'
+  WHERE A.object_type = 'SYNONYM'
+    AND A.owner = 'PUBLIC'
 ) B
-LEFT OUTER JOIN (
+LEFT JOIN (
   SELECT
-    C.owner,
     C.synonym_name,
     C.con_id,
     C.table_owner
   FROM cdb_synonyms C
   WHERE C.owner = 'PUBLIC'
     AND C.table_owner IS NOT NULL
-) D ON B.object_type = 'SYNONYM'
-  AND B.owner = D.owner
-  AND B.object_name = D.synonym_name
+) D ON B.object_name = D.synonym_name
   AND B.con_id = D.con_id
 WHERE D.table_owner IS NULL
-GROUP  BY  B.con_id, B.owner, B.editionable , B.object_type
+    AND B.owner = 'PUBLIC'
+GROUP BY B.con_id, B.editionable
