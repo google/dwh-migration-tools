@@ -49,9 +49,10 @@ FROM (
     AND B.object_name = D.synonym_name
     AND B.con_id = D.con_id
   WHERE (
-    CASE WHEN B.object_type = 'SYNONYM' and B.owner ='PUBLIC' and ( B.object_name like '/%' OR D.table_owner IS NOT NULL
-    ) THEN 0 ELSE 1 END
-    = 1)
-  AND B.object_name NOT LIKE 'BIN$%'
+      B.object_type <> 'SYNONYM'
+      OR B.owner <> 'PUBLIC'
+      OR (B.object_name NOT LIKE '/%' AND D.table_owner IS NULL)
+    )
+    AND B.object_name NOT LIKE 'BIN$%'
   GROUP  BY  B.con_id, B.owner, B.editionable , B.object_type
 )
