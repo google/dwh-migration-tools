@@ -39,6 +39,7 @@ class StatsTaskListGenerator {
         ImmutableList.of(
             OracleStatsQuery.create("db-features", NATIVE),
             OracleStatsQuery.create("db-instances", NATIVE),
+            OracleStatsQuery.create("db-objects-sys-directory", NATIVE),
             OracleStatsQuery.create("db-objects", NATIVE),
             OracleStatsQuery.create("pdbs-info", NATIVE),
             OracleStatsQuery.create("app-schemas-pdbs", NATIVE),
