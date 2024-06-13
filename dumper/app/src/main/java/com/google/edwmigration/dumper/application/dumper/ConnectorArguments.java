@@ -124,6 +124,9 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_IAM_SECRETACCESSKEY = "iam-secretaccesskey";
   public static final String OPT_IAM_PROFILE = "iam-profile";
 
+  // Port 8020 is used by HDFS to communicate with the NameNode.
+  public static final String OPT_HDFS_PORT_DEFAULT = "8020";
+
   // Hive metastore
   public static final String OPT_HIVE_METASTORE_PORT_DEFAULT = "9083";
   public static final String OPT_HIVE_METASTORE_VERSION = "hive-metastore-version";

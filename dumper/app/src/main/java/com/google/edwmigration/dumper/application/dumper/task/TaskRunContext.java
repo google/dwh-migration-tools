@@ -22,6 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
+import java.io.IOException;
 import java.util.concurrent.Executor;
 import javax.annotation.Nonnull;
 
@@ -49,6 +50,15 @@ public abstract class TaskRunContext implements OutputHandleFactory {
   @Override
   public OutputHandle newOutputFileHandle(String targetPath) {
     return sinkFactory.newOutputFileHandle(targetPath);
+  }
+
+  public OutputHandle createOutputHandle(String targetPath) throws IOException {
+    OutputHandle outputHandle = newOutputFileHandle(targetPath);
+    if (outputHandle.exists()) {
+      throw new IllegalStateException(
+          String.format("Attempt to create two sinks for the same target path='%s'.", targetPath));
+    }
+    return outputHandle;
   }
 
   @Nonnull

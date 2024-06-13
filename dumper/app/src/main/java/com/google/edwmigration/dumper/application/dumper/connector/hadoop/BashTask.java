@@ -88,18 +88,14 @@ public class BashTask implements Task<Void> {
 
   @Override
   public Void run(TaskRunContext context) throws Exception {
-    OutputHandle outputHandle = createOutputHandle(context, scriptName + ".out");
-    OutputHandle errorOutputHandle = createOutputHandle(context, scriptName + ".err");
-    OutputHandle exitStatusOutputHandle = createOutputHandle(context, scriptName + ".exit-status");
-    try {
+    try (OutputHandle outputHandle = context.createOutputHandle(scriptName + ".out");
+        OutputHandle errorOutputHandle = context.createOutputHandle(scriptName + ".err");
+        OutputHandle exitStatusOutputHandle =
+            context.createOutputHandle(scriptName + ".exit-status"); ) {
       doRun(
           outputHandle.asTemporaryByteSink(),
           errorOutputHandle.asTemporaryByteSink(),
           exitStatusOutputHandle.asTemporaryByteSink());
-    } finally {
-      outputHandle.commit();
-      errorOutputHandle.commit();
-      exitStatusOutputHandle.commit();
     }
     return null;
   }

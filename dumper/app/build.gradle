@@ -53,6 +53,8 @@ dependencies {
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
     implementation libs.apache.commons.exec
+    implementation libs.hadoop.common
+    implementation libs.hadoop.hdfs.client
     implementation libs.spring.core
     implementation libs.spring.jdbc
     implementation libs.hikaricp
@@ -72,6 +74,9 @@ dependencies {
     runtimeOnly libs.postgresql
     runtimeOnly libs.snowflake.jdbc
     runtimeOnly libs.redshift.jdbc
+
+    runtimeOnly "ch.qos.reload4j:reload4j:1.2.22"
+    runtimeOnly "org.slf4j:slf4j-reload4j:1.7.36"
 
     testFixturesApi testFixtures(project(':dumper:lib-common'))
 
@@ -413,7 +418,13 @@ licenseReport {
                 licenseUrl: "https://raw.githubusercontent.com/apache/commons-io/master/LICENSE.txt",
             ],
             "org.apache.commons:commons-exec": [
-                    licenseUrl: "https://raw.githubusercontent.com/apache/commons-exec/master/LICENSE.txt",
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-exec/master/LICENSE.txt",
+            ],
+            "org.apache.hadoop:hadoop-common": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop-common/master/hadoop-common-project/hadoop-common/LICENSE.txt",
+            ],
+            "org.apache.hadoop:hadoop-hdfs-client": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop-hdfs/master/LICENSE.txt",
             ],
             "io.grpc:grpc-alts": [
                 licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
