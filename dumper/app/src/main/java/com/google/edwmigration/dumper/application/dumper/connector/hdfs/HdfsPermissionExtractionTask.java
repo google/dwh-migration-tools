@@ -84,7 +84,7 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
       SingleDirScanJob rootJob = new SingleDirScanJob(scanCtx, jobsTodoCounter, rootDir);
       new ForkJoinPool(poolSize).invoke(rootJob); // The root task finishes immediately
-      jobsTodoCounter.waitTillZero(); // Wait until all (recursive) tasks are done executing:
+      jobsTodoCounter.waitTillZero(); // Wait until all (recursive) tasks are done executing
       LOG.info(scanCtx.getFormattedStats());
     }
   }

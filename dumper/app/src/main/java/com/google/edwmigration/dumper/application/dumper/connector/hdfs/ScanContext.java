@@ -25,10 +25,16 @@ import java.time.Instant;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants.StoragePolicy;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 
 final class ScanContext implements Closeable {
 
   private final FileSystem fs;
+
+  private final DFSClient dfsClient;
   private final Writer outputSink;
   private final CSVPrinter csvPrinter;
   private final Instant instantScanBegin;
@@ -45,10 +51,15 @@ final class ScanContext implements Closeable {
     Owner,
     Group,
     Permission,
+    ModificationTime,
+    NumberOfFiles, // this is files & subdirs
+    NumberOfSubdirs, // this is subdirs only
+    StoragePolicy,
   }
 
   ScanContext(FileSystem fs, Writer outputSink) throws IOException {
     this.fs = fs;
+    this.dfsClient = ((DistributedFileSystem) fs).getClient();
     this.outputSink = outputSink;
     this.csvPrinter = AbstractTask.FORMAT.withHeader(CsvHeader.class).print(outputSink);
     this.instantScanBegin = Instant.now();
@@ -79,11 +90,20 @@ final class ScanContext implements Closeable {
       this.numDirs += nDirs;
       this.accumulatedFileSize += accumFileSize;
 
+      String absolutePath = dir.getPath().toUri().getPath();
+      HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
+      byte byteStoragePolicy = hdfsFileStatus.getStoragePolicy();
+      StoragePolicy storagePolicy = StoragePolicy.valueOf(byteStoragePolicy);
+
       csvPrinter.printRecord(
-          dir.getPath().toUri().getPath(),
+          absolutePath,
           dir.getOwner(),
           dir.getGroup(),
-          dir.getPermission().toString());
+          dir.getPermission(),
+          dir.getModificationTime(),
+          nFiles,
+          nDirs,
+          storagePolicy != null ? storagePolicy.toString() : String.valueOf(byteStoragePolicy));
     }
   }
 

@@ -16,9 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Simple synchronization counter used instead of {@link java.util.concurrent.Phaser} as Phazer has
- * this limitation to count up to 2^16, while this counter counts up to 2^32.
+ * this limitation to count up to 2^16-1, while this counter counts up to Integer.MAX_VALUE
  */
 class AtomicCounter {
 
@@ -28,8 +30,12 @@ class AtomicCounter {
     this.currentCount = currentCount;
   }
 
+  synchronized int currentValue() {
+    return currentCount;
+  }
+
   synchronized void increment() {
-    assert currentCount < Integer.MAX_VALUE : "Implementation limits reached!";
+    checkArgument(currentCount < Integer.MAX_VALUE); // implementation limits reached!
     ++currentCount;
   }
 
