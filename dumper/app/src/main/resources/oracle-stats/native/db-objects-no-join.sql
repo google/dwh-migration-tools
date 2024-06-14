@@ -12,10 +12,6 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
-
--- This deals with the simpler case of db-objects.
--- The other case is SYNONYM objects with PUBLIC owner, which require a JOIN
--- with a _synonyms table.
 SELECT
   A.con_id "ConId",
   A.owner "Owner",

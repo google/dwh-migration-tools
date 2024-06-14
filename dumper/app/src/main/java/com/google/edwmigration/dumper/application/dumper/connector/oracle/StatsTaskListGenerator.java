@@ -40,6 +40,8 @@ class StatsTaskListGenerator {
             OracleStatsQuery.create("db-features", NATIVE),
             OracleStatsQuery.create("db-instances", NATIVE),
             OracleStatsQuery.create("db-objects-no-join", NATIVE),
+            // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
+            // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
             OracleStatsQuery.create("db-objects-synonym-public", NATIVE),
             OracleStatsQuery.create("pdbs-info", NATIVE),
             OracleStatsQuery.create("app-schemas-pdbs", NATIVE),

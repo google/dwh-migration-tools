@@ -12,9 +12,6 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
-
--- The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC
--- A JOIN is performed to exclude objects which appear in the cdb_synonyms table
 SELECT
   B.con_id "ConId",
   B.editionable "Editionable",
