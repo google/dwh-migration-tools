@@ -25,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
-@Deprecated // Use DumpMetadataTask
 public class ArgumentsTask extends AbstractTask<Void> {
 
   @Nonnull private final ConnectorArguments arguments;
