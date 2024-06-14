@@ -421,10 +421,12 @@ licenseReport {
                 licenseUrl: "https://raw.githubusercontent.com/apache/commons-exec/master/LICENSE.txt",
             ],
             "org.apache.hadoop:hadoop-common": [
-                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop-common/master/hadoop-common-project/hadoop-common/LICENSE.txt",
+                projectUrl: "https://github.com/apache/hadoop",
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop/trunk/LICENSE.txt",
             ],
             "org.apache.hadoop:hadoop-hdfs-client": [
-                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop-hdfs/master/LICENSE.txt",
+                projectUrl: "https://github.com/apache/hadoop",
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop/trunk/LICENSE.txt",
             ],
             "io.grpc:grpc-alts": [
                 licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
@@ -626,6 +628,7 @@ licenseReport {
                 licenseUrl: "https://bitbucket.org/connect2id/nimbus-jose-jwt/raw/81efe49024e0a491a718160d1bb3cedd8a3be295/LICENSE.txt",
             ],
             "org.jline:jline": [
+                projectUrl: "https://github.com/jline/jline3",
                 licenseUrl: "https://raw.githubusercontent.com/jline/jline3/master/LICENSE.txt",
             ],
             "org.eclipse.jetty:jetty-http": [
