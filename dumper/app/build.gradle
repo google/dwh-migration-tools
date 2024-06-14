@@ -593,6 +593,292 @@ licenseReport {
             "software.amazon.ion:ion-java": [
                 licenseUrl: "https://raw.githubusercontent.com/amazon-ion/ion-java/master/LICENSE",
             ],
+            "org.xerial.snappy:snappy-java": [
+                licenseUrl: "https://raw.githubusercontent.com/xerial/snappy-java/master/LICENSE",
+            ],
+            "org.springframework:spring-beans": [
+                licenseUrl: "https://raw.githubusercontent.com/spring-projects/spring-framework/main/LICENSE.txt",
+            ],
+            "org.springframework:spring-core": [
+                licenseUrl: "https://raw.githubusercontent.com/spring-projects/spring-framework/main/LICENSE.txt",
+            ],
+            "org.springframework:spring-jdbc": [
+                licenseUrl: "https://raw.githubusercontent.com/spring-projects/spring-framework/main/LICENSE.txt",
+            ],
+            "org.springframework:spring-tx": [
+                licenseUrl: "https://raw.githubusercontent.com/spring-projects/spring-framework/main/LICENSE.txt",
+            ],
+            "org.slf4j:slf4j-reload4j": [
+                projectUrl: "https://github.com/qos-ch/reload4j",
+                licenseUrl: "https://raw.githubusercontent.com/qos-ch/reload4j/master/LICENSE",
+            ],
+            "ch.qos.reload4j:reload4j": [
+                projectUrl: "https://github.com/qos-ch/reload4j",
+                licenseUrl: "https://raw.githubusercontent.com/qos-ch/reload4j/master/LICENSE",
+            ],
+            "com.fasterxml.woodstox:woodstox-core": [
+                licenseUrl: "https://raw.githubusercontent.com/FasterXML/woodstox/master/LICENSE",
+            ],
+            "com.github.pjfanning:jersey-json": [
+                licenseUrl: "https://raw.githubusercontent.com/pjfanning/jersey-1.x/master/license.html",
+            ],
+            "com.nimbusds:nimbus-jose-jwt": [
+                licenseUrl: "https://bitbucket.org/connect2id/nimbus-jose-jwt/raw/81efe49024e0a491a718160d1bb3cedd8a3be295/LICENSE.txt",
+            ],
+            "org.jline:jline": [
+                licenseUrl: "https://raw.githubusercontent.com/jline/jline3/master/LICENSE.txt",
+            ],
+            "org.eclipse.jetty:jetty-http": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.eclipse.jetty:jetty-io": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.eclipse.jetty:jetty-security": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.eclipse.jetty:jetty-server": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.eclipse.jetty:jetty-servlet": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.eclipse.jetty:jetty-util": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.eclipse.jetty:jetty-util-ajax": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.eclipse.jetty:jetty-webapp": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.eclipse.jetty:jetty-xml": [
+                projectUrl: "https://github.com/jetty/jetty.project",
+                licenseUrl: "https://raw.githubusercontent.com/jetty/jetty.project/jetty-12.0.x/LICENSE",
+            ],
+            "org.bouncycastle:bcprov-jdk15on": [
+                projectUrl: "https://github.com/bcgit/bc-java",
+                licenseUrl: "https://raw.githubusercontent.com/bcgit/bc-java/main/LICENSE.html",
+            ],
+            "org.codehaus.jettison:jettison": [
+                licenseUrl: "https://raw.githubusercontent.com/jettison-json/jettison/master/LICENSE",
+            ],
+            "org.codehaus.woodstox:stax2-api": [
+                licenseUrl: "https://raw.githubusercontent.com/FasterXML/stax2-api/master/LICENSE",
+            ],
+            "org.apache.yetus:audience-annotations": [
+                projectUrl: "https://github.com/apache/yetus",
+                licenseUrl: "https://raw.githubusercontent.com/apache/yetus/main/LICENSE",
+            ],
+            "org.apache.zookeeper:zookeeper": [
+                projectUrl: "https://github.com/apache/zookeeper",
+                licenseUrl: "https://raw.githubusercontent.com/apache/zookeeper/master/LICENSE.txt",
+            ],
+            "org.apache.zookeeper:zookeeper-jute": [
+                projectUrl: "https://github.com/apache/zookeeper",
+                licenseUrl: "https://raw.githubusercontent.com/apache/zookeeper/master/LICENSE.txt",
+            ],
+            "org.apache.kerby:kerb-admin" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerb-client" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerb-common" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerb-core" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerb-crypto" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerb-identity" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerb-server" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerb-simplekdc" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerb-util" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerby-asn1" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerby-config" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerby-pkix" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerby-util" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:kerby-xdr" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.kerby:token-provider" : [
+                projectUrl: "https://github.com/apache/directory-kerby",
+                licenseUrl: "https://raw.githubusercontent.com/apache/directory-kerby/trunk/LICENSE",
+            ],
+            "org.apache.hadoop:hadoop-annotations": [
+                projectUrl: "https://github.com/apache/hadoop",
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop/trunk/LICENSE.txt",
+            ],
+            "org.apache.hadoop:hadoop-auth": [
+                projectUrl: "https://github.com/apache/hadoop",
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop/trunk/LICENSE.txt",
+            ],
+            "org.apache.hadoop.thirdparty:hadoop-shaded-guava": [
+                projectUrl: "https://github.com/apache/hadoop-thirdparty",
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop-thirdparty/trunk/LICENSE.txt",
+            ],
+            "org.apache.hadoop.thirdparty:hadoop-shaded-protobuf_3_21": [
+                projectUrl: "https://github.com/apache/hadoop-thirdparty",
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop-thirdparty/trunk/LICENSE.txt",
+            ],
+            "org.apache.curator:curator-client" : [
+                projectUrl: "https://github.com/apache/curator",
+                licenseUrl: "https://raw.githubusercontent.com/apache/curator/master/LICENSE",
+            ],
+            "org.apache.curator:curator-framework" : [
+                projectUrl: "https://github.com/apache/curator",
+                licenseUrl: "https://raw.githubusercontent.com/apache/curator/master/LICENSE",
+            ],
+            "org.apache.curator:curator-recipes" : [
+                projectUrl: "https://github.com/apache/curator",
+                licenseUrl: "https://raw.githubusercontent.com/apache/curator/master/LICENSE",
+            ],
+            "org.apache.commons:commons-compress": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-compress/master/LICENSE.txt",
+            ],
+            "org.apache.commons:commons-configuration2": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-configuration/master/LICENSE.txt",
+            ],
+            "org.apache.commons:commons-math3": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-math/master/LICENSE",
+            ],
+            "org.apache.commons:commons-text": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-text/master/LICENSE.txt",
+            ],
+            "org.apache.avro:avro": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/avro/main/LICENSE.txt",
+            ],
+            "com.sun.xml.bind:jaxb-impl": [
+                licenseUrl: "https://github.com/eclipse-ee4j/jaxb-ri/blob/master/LICENSE.md",
+            ],
+            "commons-beanutils:commons-beanutils": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-beanutils/master/LICENSE.txt",
+            ],
+            "commons-cli:commons-cli": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-cli/master/LICENSE.txt",
+            ],
+            "commons-collections:commons-collections": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-collections/master/LICENSE.txt",
+            ],
+            "commons-net:commons-net": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-net/master/NOTICE.txt",
+            ],
+            "dnsjava:dnsjava": [
+                licenseUrl: "https://raw.githubusercontent.com/dnsjava/dnsjava/master/LICENSE",
+            ],
+            "io.dropwizard.metrics:metrics-core": [
+                projectUrl: "https://github.com/dropwizard/metrics",
+                licenseUrl: "https://raw.githubusercontent.com/dropwizard/metrics/release/4.2.x/LICENSE",
+            ],
+            "io.netty:netty-codec": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "io.netty:netty-handler": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "io.netty:netty-resolver": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "io.netty:netty-transport": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "io.netty:netty-transport-classes-epoll": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "io.netty:netty-transport-native-epoll": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "io.netty:netty-transport-native-unix-common": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "com.sun.jersey:jersey-core": [
+                projectUrl: "https://github.com/javaee/jersey-1.x",
+                licenseUrl: "https://raw.githubusercontent.com/javaee/jersey-1.x/master/license.html",
+            ],
+            "com.sun.jersey:jersey-server": [
+                projectUrl: "https://github.com/javaee/jersey-1.x",
+                licenseUrl: "https://raw.githubusercontent.com/javaee/jersey-1.x/master/license.html",
+            ],
+            "com.sun.jersey:jersey-servlet": [
+                projectUrl: "https://github.com/javaee/jersey-1.x",
+                licenseUrl: "https://raw.githubusercontent.com/javaee/jersey-1.x/master/license.html",
+            ],
+            "com.jcraft:jsch": [
+                licenseUrl: "http://www.jcraft.com/jsch/LICENSE.txt",
+            ],
+            "jakarta.activation:jakarta.activation-api": [
+                projectUrl: "https://github.com/jakartaee/jaf-api",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaf-api/master/LICENSE.md",
+            ],
+            "javax.xml.bind:jaxb-api": [
+                projectUrl: "https://github.com/jakartaee/jaxb-api/",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaxb-api/master/LICENSE.md",
+            ],
+            "javax.servlet:javax.servlet-api": [
+                projectUrl: "https://github.com/jakartaee/servlet",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/servlet/master/LICENSE.md",
+            ],
+            "javax.servlet.jsp:jsp-api": [
+                projectUrl: "https://github.com/jakartaee/pages",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/pages/master/LICENSE.md",
+                licenseName: "Eclipse Public License - v 2.0",
+            ],
+            "javax.ws.rs:jsr311-api": [
+                projectUrl: "https://github.com/javaee/jsr311",
+                licenseUrl: "https://raw.githubusercontent.com/javaee/jsr311/master/LICENSE",
+            ],
+            "javax.xml.stream:stax-api": [
+                projectUrl: "https://github.com/jakartaee/jaxb-api",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaxb-api/master/LICENSE.md",
+            ]
         ]),
         new com.github.jk1.license.render.JsonReportRenderer('index.json', false),
         new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
