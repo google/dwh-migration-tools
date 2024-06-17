@@ -123,6 +123,7 @@ jacocoTestReport {
 }
 
 startScripts {
+    applicationName = "dwh-migration-dumper-latest"
     classpath = files('$APP_HOME/lib/*')
     defaultJvmOpts = ["--add-opens=java.base/java.nio=ALL-UNNAMED"]
 }
@@ -132,6 +133,7 @@ task createStartScriptForJava8(type: CreateStartScripts) {
     applicationName = 'dwh-migration-dumper-java8'
     outputDir = tasks.startScripts.outputDir
     classpath = tasks.startScripts.classpath
+    executableDir = 'bin/scripts'
 }
 
 tasks.named('installDist') {
@@ -143,7 +145,8 @@ tasks.named('installDist') {
 application {
     // Define the main class for the application.
     mainClass = 'com.google.edwmigration.dumper.application.dumper.Main'
-    applicationName = 'dwh-migration-dumper'
+    applicationName = 'dwh-migration-dumper-latest'
+    executableDir = 'bin/scripts'
 }
 
 task cloudExtractorStartScriptsForJava8(type: CreateStartScripts) {
@@ -936,6 +939,11 @@ tasks.register('copyGceLauncher', Copy) {
 distributions {
     main {
         distributionBaseName = "app"
+        contents {
+            from("src/main/sh/java_versioning.sh") {
+                into "bin/scripts"
+            }
+        }
     }
     published {
         distributionBaseName = "dwh-migration-dumper"

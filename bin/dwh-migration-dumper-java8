@@ -13,16 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-function is_java_greater_than_8() {
-  java_version_output="$(java -version 2>&1)"
+set -e
 
-  # Will return 1 for all versions before Java 9.
-  java_major_version="$(echo "$java_version_output" | grep -Eoi 'version "?([0-9]+)' | head -1 | cut -d'"' -f2 | cut -d'.' -f1)"
+BASE_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>&1 > /dev/null && pwd -P)"
+SCRIPT_DIR="${BASE_DIR}/scripts"
+if [ ! -d "$SCRIPT_DIR" ] ; then
+  SCRIPT_DIR="$(cd -- "${BASE_DIR}/../dumper/app/build/install/app/bin/scripts/" 2>&1 > /dev/null && pwd -P)"
+fi
 
-  # Check if the major version is greater than 8.
-  if [[ "$java_major_version" -gt 8 ]]; then
-    return 0  # True
-  else
-    return 1  # False
-  fi
-}
+if [ ! -d "$SCRIPT_DIR" ] ; then
+  (cd "${BASE_DIR}/.." && ./gradlew --parallel :dumper:app:installDist)
+fi
+
+BIN="${SCRIPT_DIR}/dwh-migration-dumper-java8"
+
+exec "$BIN" "$@"

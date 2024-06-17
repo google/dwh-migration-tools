@@ -12,7 +12,16 @@ distributions {
                 exclude "**/__pycache__"
                 into "client"
             }
-            from("bin/dwh-migration-client") {
+            from("bin/dwh-migration-dumper") {
+                into "bin"
+            }
+            from("bin/dwh-migration-dumper-java8") {
+                into "bin"
+            }
+            from("bin/dwh-migration-dumper-java8.bat") {
+                into "bin"
+            }
+            from("bin/dwh-migration-dumper.bat") {
                 into "bin"
             }
             project(":dumper:app").afterEvaluate {
