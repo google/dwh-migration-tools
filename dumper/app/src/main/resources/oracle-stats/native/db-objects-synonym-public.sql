@@ -14,6 +14,8 @@
 -- limitations under the License.
 SELECT
   B.con_id "ConId",
+  'PUBLIC' "Owner",
+  'SYNONYM' "ObjectType",
   B.editionable "Editionable",
   -- This looks similar to filtering with WHERE and using count() instead of sum().
   --
