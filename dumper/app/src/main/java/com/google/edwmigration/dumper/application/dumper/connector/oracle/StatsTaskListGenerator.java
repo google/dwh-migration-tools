@@ -39,9 +39,14 @@ class StatsTaskListGenerator {
         ImmutableList.of(
             OracleStatsQuery.create("db-features", NATIVE),
             OracleStatsQuery.create("db-instances", NATIVE),
+            OracleStatsQuery.create("db-objects", NATIVE),
+            // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
+            // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
+            OracleStatsQuery.create("db-objects-synonym-public", NATIVE),
             OracleStatsQuery.create("pdbs-info", NATIVE),
             OracleStatsQuery.create("app-schemas-pdbs", NATIVE),
             OracleStatsQuery.create("app-schemas-summary", NATIVE),
+            OracleStatsQuery.create("used-space-details", NATIVE),
             OracleStatsQuery.create("hist-cmd-types", STATSPACK)
             // TODO: add entries for other SQLs to this list
             );
