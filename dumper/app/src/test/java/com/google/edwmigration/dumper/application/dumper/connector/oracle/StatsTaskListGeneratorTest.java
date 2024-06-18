@@ -34,7 +34,7 @@ public class StatsTaskListGeneratorTest {
   // This is more of a configuration check than a unit test for app logic.
   // Still, it's convenient to include it in Gradle test.
   @Test
-  public void nativeNames_returnsValidNames() throws IOException {
+  public void nativeNames_allNamedFilesExist() throws IOException {
     ImmutableList<String> names = generator.nativeNames();
     ArrayList<String> failed = new ArrayList<>(names.size());
     // Act
