@@ -29,16 +29,12 @@ import org.junit.runner.RunWith;
 @RunWith(Theories.class)
 public class StatsTaskListGeneratorTest {
 
-  static {
-    StatsTaskListGenerator generator = new StatsTaskListGenerator();
-    nameList = generator.nativeNames();
-  }
-
   @DataPoints("nativeNames")
-  public static final ImmutableList<String> nameList;
+  public static final ImmutableList<String> nameList = new StatsTaskListGenerator().nativeNames();
 
   @Theory
-  public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name) throws IOException {
+  public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
+      throws IOException {
     OracleStatsQuery.create(name, NATIVE);
   }
 }
