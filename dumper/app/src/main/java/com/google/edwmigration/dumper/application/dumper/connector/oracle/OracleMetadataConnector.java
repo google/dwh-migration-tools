@@ -18,26 +18,19 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
-import java.util.Arrays;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +45,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     super(OracleConnectorScope.METADATA);
   }
 
-  private static interface GroupTask<T> extends Task<T> {
+  static interface GroupTask<T> extends Task<T> {
 
     @CheckForNull
     public Exception getException();
@@ -75,40 +68,6 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     @Override
     public Exception getException() {
       return throwable;
-    }
-  }
-
-  private static class MessageTask extends AbstractTask<Void> {
-
-    private final GroupTask<?>[] tasks;
-
-    public MessageTask(@Nonnull GroupTask<?>... ts) {
-      super(String.join(", ", Lists.transform(Arrays.asList(ts), GroupTask::getName)));
-      tasks = ts;
-    }
-
-    // if we are here, means both the dep tasks *have* failed.
-    @Override
-    protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
-        throws Exception {
-      LOG.error("All the select tasks failed:");
-      int i = 1;
-      for (GroupTask<?> task : tasks) {
-        LOG.error(
-            "({}): {} : {}",
-            i++,
-            task.getName(),
-            ExceptionUtils.getRootCauseMessage(task.getException()));
-      }
-      return null;
-    }
-
-    // This shows up in dry-run
-    @Override
-    public String toString() {
-      return "[ Error if all fail: "
-          + String.join(", ", Lists.transform(Arrays.asList(tasks), GroupTask::getName))
-          + " ]";
     }
   }
 
