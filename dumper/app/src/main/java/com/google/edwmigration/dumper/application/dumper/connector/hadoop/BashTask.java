@@ -29,13 +29,18 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.time.Duration;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteException;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.exec.PumpStreamHandler;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BashTask implements Task<Void> {
+  private static final Logger LOG = LoggerFactory.getLogger(BashTask.class);
 
   private static final Duration SCRIPT_TIMEOUT = Duration.ofMinutes(5);
 
@@ -51,29 +56,60 @@ public class BashTask implements Task<Void> {
   }
 
   private void doRun(ByteSink outputSink, ByteSink errorSink, ByteSink exitStatusSink)
-      throws IOException {
+      throws IOException, ExecutionException {
     String scriptFilename = scriptName + ".sh";
     Path scriptFile = HadoopScripts.extract(scriptFilename);
-    CommandLine cmdLine = CommandLine.parse("/bin/bash " + scriptFile.toAbsolutePath());
-    DefaultExecutor executor = DefaultExecutor.builder().get();
-    executor.setExitValue(1);
-    ExecuteWatchdog watchdog = ExecuteWatchdog.builder().setTimeout(SCRIPT_TIMEOUT).get();
-    executor.setWatchdog(watchdog);
+    Process process =
+        new ProcessBuilder("/bin/bash", scriptFile.toAbsolutePath().toString()).start();
+    Future<Void> outputStreamPump;
+    Future<Void> errorStreamPump;
+    ExecutorService executorService = Executors.newFixedThreadPool(2);
     try (OutputStream outputStream = outputSink.openBufferedStream();
         OutputStream errorStream = errorSink.openBufferedStream()) {
-      PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream, errorStream);
-      executor.setStreamHandler(streamHandler);
-      int exitValue = executor.execute(cmdLine);
-      try (Writer wr = exitStatusSink.asCharSink(UTF_8).openBufferedStream()) {
-        wr.write("" + exitValue);
-      }
-    } catch (ExecuteException e) {
-      try (Writer wr = exitStatusSink.asCharSink(UTF_8).openBufferedStream()) {
-        wr.write("" + e.getExitValue());
-      }
-      if (e.getExitValue() != 0) {
-        throw e;
-      }
+      outputStreamPump =
+          executorService.submit(
+              throwing(() -> IOUtils.copy(process.getInputStream(), outputStream)));
+      errorStreamPump =
+          executorService.submit(
+              throwing(() -> IOUtils.copy(process.getErrorStream(), errorStream)));
+      boolean processFinished = process.waitFor(SCRIPT_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
+      LOG.info("Process finished: '{}'", processFinished);
+    } catch (InterruptedException e) {
+      writeExitStatus(exitStatusSink, "interrupted");
+      throw new RuntimeException(e);
+    } finally {
+      executorService.shutdown();
+    }
+    writeExitStatusOrTimeout(exitStatusSink, process);
+    propagateException(outputStreamPump, "output");
+    propagateException(errorStreamPump, "error");
+  }
+
+  private void propagateException(Future<Void> future, String streamName)
+      throws ExecutionException {
+    try {
+      future.get();
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(
+          String.format(
+              "Error while processing the '%s' stream from the bash command.", streamName),
+          ex);
+    }
+  }
+
+  private static void writeExitStatusOrTimeout(ByteSink exitStatusSink, Process process)
+      throws IOException {
+    try {
+      writeExitStatus(exitStatusSink, process.exitValue() + "");
+    } catch (Exception e) {
+      writeExitStatus(exitStatusSink, "timeout");
+    }
+  }
+
+  private static void writeExitStatus(ByteSink exitStatusSink, String value) throws IOException {
+    try (Writer wr = exitStatusSink.asCharSink(UTF_8).openBufferedStream()) {
+      wr.write(value);
     }
   }
 
@@ -109,5 +145,16 @@ public class BashTask implements Task<Void> {
   @Override
   public String toString() {
     return format("Bash script execution '%s'", scriptName);
+  }
+
+  private static Callable<Void> throwing(ThrowingRunnable runnable) {
+    return () -> {
+      runnable.run();
+      return null;
+    };
+  }
+
+  private interface ThrowingRunnable {
+    void run() throws Exception;
   }
 }

@@ -36,20 +36,14 @@ class HadoopScripts {
       memoize(
           () -> {
             Path tmpDir;
-            LOG.info("Creating temporary directory...");
+            Path workingDir = Paths.get("");
+            LOG.info(
+                "Creating temporary directory in the working directory '{}'...",
+                workingDir.toAbsolutePath());
             try {
-              tmpDir = Files.createTempDirectory(TMP_DIR_PREFIX);
+              tmpDir = Files.createTempDirectory(workingDir, TMP_DIR_PREFIX);
             } catch (IOException e) {
-              LOG.error("Error creating temporary directory in the system temporary directory.", e);
-              Path workingDir = Paths.get("");
-              LOG.info(
-                  "Falling back to creating the temporary directory in the working directory: '{}'.",
-                  workingDir.toAbsolutePath());
-              try {
-                tmpDir = Files.createTempDirectory(workingDir, TMP_DIR_PREFIX);
-              } catch (IOException e2) {
-                throw new IllegalStateException("Error creating temporary directory.", e2);
-              }
+              throw new IllegalStateException("Error creating temporary directory.", e);
             }
             LOG.info("Temporary directory created: '{}'.", tmpDir);
             return tmpDir;
@@ -67,8 +61,9 @@ class HadoopScripts {
     Path scriptDir = SCRIPT_DIR_SUPPLIER.get();
     checkState(
         Files.exists(scriptDir) && Files.isDirectory(scriptDir),
-        "Temporary directory '%s' does not exist.",
+        "Directory '%s' does not exist.",
         scriptDir);
+    LOG.info("Extracting '{}' to '{}'...", scriptFilename, scriptDir);
     Path scriptPath = scriptDir.resolve(scriptFilename);
     Files.write(scriptPath, scriptBody);
     scriptPath.toFile().setExecutable(true);
