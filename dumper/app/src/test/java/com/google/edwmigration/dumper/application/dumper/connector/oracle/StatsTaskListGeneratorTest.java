@@ -17,33 +17,28 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.util.ArrayList;
-import org.junit.Test;
+import org.junit.experimental.theories.DataPoints;
+import org.junit.experimental.theories.FromDataPoints;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
+@RunWith(Theories.class)
 public class StatsTaskListGeneratorTest {
 
-  private final StatsTaskListGenerator generator = new StatsTaskListGenerator();
+  static {
+    StatsTaskListGenerator generator = new StatsTaskListGenerator();
+    nameList = generator.nativeNames();
+  }
 
-  @Test
-  public void nativeNames_allNamedFilesExist() throws IOException {
-    ImmutableList<String> names = generator.nativeNames();
-    ArrayList<String> failed = new ArrayList<>(names.size());
-    // Act
-    for (String item : names) {
-      try {
-        OracleStatsQuery.create(item, NATIVE);
-      } catch (IllegalArgumentException e) {
-        failed.add(item);
-      }
-    }
-    // Assert
-    assertEquals(ImmutableList.of(), failed);
+  @DataPoints("nativeNames")
+  public static final ImmutableList<String> nameList;
+
+  @Theory
+  public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name) throws IOException {
+    OracleStatsQuery.create(name, NATIVE);
   }
 }
