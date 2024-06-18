@@ -52,7 +52,6 @@ dependencies {
     implementation libs.commons.io
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
-    implementation libs.apache.commons.exec
     implementation libs.hadoop.common
     implementation libs.hadoop.hdfs.client
     implementation libs.spring.core
@@ -416,9 +415,6 @@ licenseReport {
             ],
             "commons-io:commons-io": [
                 licenseUrl: "https://raw.githubusercontent.com/apache/commons-io/master/LICENSE.txt",
-            ],
-            "org.apache.commons:commons-exec": [
-                licenseUrl: "https://raw.githubusercontent.com/apache/commons-exec/master/LICENSE.txt",
             ],
             "org.apache.hadoop:hadoop-common": [
                 projectUrl: "https://github.com/apache/hadoop",
