@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableList.builderWithExpectedSize;
+
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleMetadataConnector.GroupTask;
@@ -25,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,19 +42,24 @@ public class MessageTask extends AbstractTask<Void> {
     tasks = ts;
   }
 
-  // if we are here, means both the dep tasks *have* failed.
-  @Override
-  protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
-      throws Exception {
-    LOG.error("All the select tasks failed:");
+  Iterable<String> getMessages() {
+    int size = 1 + tasks.length;
+    ImmutableList.Builder<String> builder = builderWithExpectedSize(size);
+    builder.add("All the select tasks failed:");
     int i = 1;
     for (GroupTask<?> task : tasks) {
-      LOG.error(
-          "({}): {} : {}",
-          i++,
-          task.getName(),
-          ExceptionUtils.getRootCauseMessage(task.getException()));
+      String cause = ExceptionUtils.getRootCauseMessage(task.getException());
+      String message = String.format("(%d): %s : %s", i, task.getName(), cause);
+      builder.add(message);
+      i++;
     }
+    return builder.build();
+  }
+
+  // if we are here, means both the dep tasks *have* failed.
+  @Override
+  protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle) {
+    getMessages().forEach(LOG::error);
     return null;
   }
 
