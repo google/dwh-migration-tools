@@ -74,8 +74,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   private static void addAtLeastOneOf(
       @Nonnull List<? super Task<?>> out, @Nonnull GroupTask<?>... tasks) {
     for (GroupTask<?> task : tasks) out.add(Preconditions.checkNotNull(task));
-    MessageTask msg_task = new MessageTask(tasks);
-    msg_task.onlyIfAllFailed(tasks);
+    Task<?> msg_task = MessageTask.create(tasks).onlyIfAllFailed(tasks);
     out.add(msg_task);
   }
 

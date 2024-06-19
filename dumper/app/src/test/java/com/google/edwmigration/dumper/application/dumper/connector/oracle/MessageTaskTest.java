@@ -42,7 +42,7 @@ public class MessageTaskTest {
             "(2): fake : RuntimeException: ExceptionCauseB");
     GroupTask<?> subtaskA = new FakeTask("ExceptionCauseA");
     GroupTask<?> subtaskB = new FakeTask("ExceptionCauseB");
-    MessageTask task = new MessageTask(subtaskA, subtaskB);
+    MessageTask task = MessageTask.create(subtaskA, subtaskB);
     // Act
     ImmutableList<String> taskMessages = ImmutableList.copyOf(task.getMessages());
     // Assert

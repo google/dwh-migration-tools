@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.util.Arrays;
+import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableList;
@@ -36,10 +37,18 @@ public class MessageTask extends AbstractTask<Void> {
   private static final Logger LOG = LoggerFactory.getLogger(MessageTask.class);
 
   private final GroupTask<?>[] tasks;
+  private final String names;
 
-  public MessageTask(@Nonnull GroupTask<?>... ts) {
-    super(String.join(", ", Lists.transform(Arrays.asList(ts), GroupTask::getName)));
-    tasks = ts;
+  private MessageTask(GroupTask<?>[] tasks, String names) {
+    super(names);
+    this.tasks = tasks;
+    this.names = names;
+  }
+
+  public static MessageTask create(@Nonnull GroupTask<?>... ts) {
+    GroupTask<?>[] tasks = ts.clone();
+    String names = toNames(ts);
+    return new MessageTask(tasks, names);
   }
 
   Iterable<String> getMessages() {
@@ -66,8 +75,11 @@ public class MessageTask extends AbstractTask<Void> {
   // This shows up in dry-run
   @Override
   public String toString() {
-    return "[ Error if all fail: "
-        + String.join(", ", Lists.transform(Arrays.asList(tasks), GroupTask::getName))
-        + " ]";
+    return "[ Error if all fail: " + names + " ]";
+  }
+
+  static String toNames(GroupTask<?>... tasks) {
+    List<String> tokens = Lists.transform(Arrays.asList(tasks), GroupTask::getName);
+    return String.join(", ", tokens);
   }
 }
