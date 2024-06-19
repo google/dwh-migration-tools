@@ -52,6 +52,16 @@ public class AbstractOracleConnectorTest {
   }
 
   @Test
+  public void buildUrl_providedBoth_throwsException() {
+    when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
+    when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
+    // Act
+    ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
+    // Assert
+    assertThrows(MetadataDumperUsageException.class, runnable);
+  }
+
+  @Test
   public void buildUrl_providedNone_throwsException() {
     ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
     assertThrows(MetadataDumperUsageException.class, runnable);
