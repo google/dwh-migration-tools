@@ -17,12 +17,17 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.util.Properties;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -43,5 +48,25 @@ public class AbstractOracleConnectorTest {
 
     assertEquals(EXAMPLE_PASSWORD, actual.getProperty("password"));
     assertEquals(EXAMPLE_USER, actual.getProperty("user"));
+  }
+
+  @Test
+  public void isOracleSid_providedServiceName_success() {
+    when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
+    boolean isSid = AbstractOracleConnector.isOracleSid(arguments);
+    assertFalse(isSid);
+  }
+
+  @Test
+  public void isOracleSid_providedSid_success() {
+    when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
+    boolean isSid = AbstractOracleConnector.isOracleSid(arguments);
+    assertTrue(isSid);
+  }
+
+  @Test
+  public void isOracleSid_providedNone_throwsException() {
+    ThrowingRunnable runnable = () -> AbstractOracleConnector.isOracleSid(arguments);
+    assertThrows(MetadataDumperUsageException.class, runnable);
   }
 }
