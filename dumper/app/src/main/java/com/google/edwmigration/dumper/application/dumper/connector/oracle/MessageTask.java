@@ -16,8 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableList.builderWithExpectedSize;
+import static com.google.common.collect.ImmutableList.builderWithExpectedSize;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleMetadataConnector.GroupTask;
@@ -28,7 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
