@@ -142,7 +142,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     return connectorScope.formatName();
   }
 
-  private boolean isOracleSid(ConnectorArguments arguments) throws MetadataDumperUsageException {
+  static boolean isOracleSid(ConnectorArguments arguments) throws MetadataDumperUsageException {
     String service = arguments.getOracleServicename();
     String sid = arguments.getOracleSID();
     if (sid != null && service == null) return true;
@@ -184,7 +184,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   // dbc:oracle:thin://<host>:<port>/<service>
   // jdbc:oracle:thin:<host>:<port>:<SID>
   // jdbc:oracle:thin:<TNSName> (from 10.2.0.1.0)
-  private String buildUrl(ConnectorArguments arguments) {
+  static String buildUrl(ConnectorArguments arguments) {
     String url = arguments.getUri();
     if (url == null) {
       String host = arguments.getHost();
