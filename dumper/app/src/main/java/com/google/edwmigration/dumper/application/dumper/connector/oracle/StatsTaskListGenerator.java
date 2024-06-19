@@ -72,6 +72,7 @@ class StatsTaskListGenerator {
         "pdbs-info",
         "app-schemas-pdbs",
         "app-schemas-summary",
+        "table-types-dtl",
         "used-space-details");
   }
 }
