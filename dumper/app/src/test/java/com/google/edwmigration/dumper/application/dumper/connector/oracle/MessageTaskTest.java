@@ -40,13 +40,17 @@ public class MessageTaskTest {
             "All the select tasks failed:",
             "(1): fake : RuntimeException: ExceptionCauseA",
             "(2): fake : RuntimeException: ExceptionCauseB");
-    GroupTask<?> subtaskA = new FakeTask("ExceptionCauseA");
-    GroupTask<?> subtaskB = new FakeTask("ExceptionCauseB");
-    MessageTask task = MessageTask.create(subtaskA, subtaskB);
+    MessageTask task = createTask();
     // Act
     ImmutableList<String> taskMessages = ImmutableList.copyOf(task.getMessages());
     // Assert
     assertEquals(messages, taskMessages);
+  }
+
+  @Test
+  public void toString_success() {
+    String task = createTask().toString();
+    assertEquals("[ Error if all fail: fake, fake ]", task);
   }
 
   private static class FakeTask extends AbstractTask<Object> implements GroupTask<Object> {
@@ -67,5 +71,11 @@ public class MessageTaskTest {
     public Exception getException() {
       return exception;
     }
+  }
+
+  private static MessageTask createTask() {
+    GroupTask<?> subtaskA = new FakeTask("ExceptionCauseA");
+    GroupTask<?> subtaskB = new FakeTask("ExceptionCauseB");
+    return MessageTask.create(subtaskA, subtaskB);
   }
 }
