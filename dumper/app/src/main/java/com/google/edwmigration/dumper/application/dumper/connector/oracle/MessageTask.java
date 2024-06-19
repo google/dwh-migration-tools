@@ -32,7 +32,7 @@ import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessageTask extends AbstractTask<Void> {
+class MessageTask extends AbstractTask<Void> {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessageTask.class);
 
@@ -45,7 +45,7 @@ public class MessageTask extends AbstractTask<Void> {
     this.names = names;
   }
 
-  public static MessageTask create(@Nonnull GroupTask<?>... ts) {
+  static MessageTask create(@Nonnull GroupTask<?>... ts) {
     GroupTask<?>[] tasks = ts.clone();
     String names = toNames(ts);
     return new MessageTask(tasks, names);
@@ -78,7 +78,7 @@ public class MessageTask extends AbstractTask<Void> {
     return "[ Error if all fail: " + names + " ]";
   }
 
-  static String toNames(GroupTask<?>... tasks) {
+  private static String toNames(GroupTask<?>... tasks) {
     List<String> tokens = Lists.transform(Arrays.asList(tasks), GroupTask::getName);
     return String.join(", ", tokens);
   }
