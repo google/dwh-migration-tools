@@ -142,7 +142,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     return connectorScope.formatName();
   }
 
-  static boolean isOracleSid(ConnectorArguments arguments) throws MetadataDumperUsageException {
+  private static boolean isOracleSid(ConnectorArguments arguments) throws MetadataDumperUsageException {
     String service = arguments.getOracleServicename();
     String sid = arguments.getOracleSID();
     if (sid != null && service == null) return true;

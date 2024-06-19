@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,22 +52,40 @@ public class AbstractOracleConnectorTest {
   }
 
   @Test
-  public void isOracleSid_providedServiceName_success() {
-    when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
-    boolean isSid = AbstractOracleConnector.isOracleSid(arguments);
-    assertFalse(isSid);
-  }
-
-  @Test
-  public void isOracleSid_providedSid_success() {
-    when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
-    boolean isSid = AbstractOracleConnector.isOracleSid(arguments);
-    assertTrue(isSid);
-  }
-
-  @Test
-  public void isOracleSid_providedNone_throwsException() {
-    ThrowingRunnable runnable = () -> AbstractOracleConnector.isOracleSid(arguments);
+  public void buildUrl_providedNone_throwsException() {
+    ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
     assertThrows(MetadataDumperUsageException.class, runnable);
+  }
+
+  @Test
+  public void buildUrl_providedServiceName_success() {
+    when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
+    when(arguments.getHost()).thenReturn("localhost");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+    // Act
+    String url = AbstractOracleConnector.buildUrl(arguments);
+    // Assert
+    assertEquals("jdbc:oracle:thin:@//localhost:1521/ORCLPDB", url);
+  }
+
+  @Test
+  public void buildUrl_providedSid_success() {
+    when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
+    when(arguments.getHost()).thenReturn("localhost");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+    // Act
+    String url = AbstractOracleConnector.buildUrl(arguments);
+    // Assert
+    assertEquals("jdbc:oracle:thin:@localhost:1521:ORCLPDB1", url);
+  }
+
+  @Test
+  public void buildUrl_providedUrl_success() {
+    String argumentUrl = "jdbc:oracle:thin:@localhost:1521:ORCLPDB1";
+    when(arguments.getUri()).thenReturn(argumentUrl);
+    // Act
+    String url = AbstractOracleConnector.buildUrl(arguments);
+    // Assert
+    assertEquals(argumentUrl, url);
   }
 }
