@@ -40,7 +40,7 @@ FROM (
     A.cluster_name,
     'TAB' source
   FROM cdb_tables A
-  WHERE A.owner <> 'SYSTEM' AND A.owner NOT LIKE '%SYS'
+  WHERE A.owner NOT LIKE '%SYS'
   UNION ALL SELECT
     B.con_id,
     B.owner,
@@ -53,7 +53,7 @@ FROM (
     NULL cluster_name,
     'XML' source
   FROM cdb_xml_tables B
-  WHERE B.owner <> 'SYSTEM' AND B.owner NOT LIKE '%SYS'
+  WHERE B.owner NOT LIKE '%SYS'
   UNION ALL SELECT
     C.con_id,
     C.owner,
@@ -66,7 +66,7 @@ FROM (
     C.cluster_name,
     'OBJ' source
   FROM cdb_object_tables C
-  WHERE C.owner <> 'SYSTEM' AND C.owner NOT LIKE '%SYS'
+  WHERE C.owner NOT LIKE '%SYS'
 ) D
 LEFT JOIN cdb_part_tables E
   ON D.con_id = E.con_id
