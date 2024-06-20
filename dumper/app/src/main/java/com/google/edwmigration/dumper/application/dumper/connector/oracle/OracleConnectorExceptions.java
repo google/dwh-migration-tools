@@ -16,11 +16,18 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+
 class OracleConnectorExceptions {
 
   static IllegalArgumentException invalidSqlSourcePath(String path) {
     String message = String.format("Invalid path for SQL source file: %s", path);
     return new IllegalArgumentException(message);
+  }
+
+  static MetadataDumperUsageException mustProvideServiceOrSid() {
+    String message = "Provide either -oracle-service or -oracle-sid for oracle dumper";
+    return new MetadataDumperUsageException(message);
   }
 
   private OracleConnectorExceptions() {}

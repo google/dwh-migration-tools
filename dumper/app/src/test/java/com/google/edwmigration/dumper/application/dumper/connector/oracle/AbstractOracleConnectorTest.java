@@ -51,6 +51,7 @@ public class AbstractOracleConnectorTest {
 
   @Test
   public void buildUrl_serviceNameAndSidBothProvided_throwsException() {
+    Exception serviceOrSid = OracleConnectorExceptions.mustProvideServiceOrSid();
     when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
     when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
 
@@ -58,13 +59,20 @@ public class AbstractOracleConnectorTest {
     ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
 
     // Assert
-    assertThrows(MetadataDumperUsageException.class, runnable);
+    Exception exception = assertThrows(MetadataDumperUsageException.class, runnable);
+    assertEquals(serviceOrSid.getMessage(), exception.getMessage());
   }
 
   @Test
   public void buildUrl_serviceNameAndSidBothNull_throwsException() {
+    Exception serviceOrSid = OracleConnectorExceptions.mustProvideServiceOrSid();
+
+    // Act
     ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
-    assertThrows(MetadataDumperUsageException.class, runnable);
+
+    // Assert
+    Exception exception = assertThrows(MetadataDumperUsageException.class, runnable);
+    assertEquals(serviceOrSid.getMessage(), exception.getMessage());
   }
 
   @Test
