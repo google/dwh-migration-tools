@@ -53,8 +53,10 @@ public class AbstractOracleConnectorTest {
   public void buildUrl_serviceNameAndSidBothProvided_throwsException() {
     when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
     when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
+
     // Act
     ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
+
     // Assert
     assertThrows(MetadataDumperUsageException.class, runnable);
   }
@@ -70,8 +72,10 @@ public class AbstractOracleConnectorTest {
     when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
     when(arguments.getHost()).thenReturn("localhost");
     when(arguments.getPort(anyInt())).thenReturn(1521);
+
     // Act
     String url = AbstractOracleConnector.buildUrl(arguments);
+
     // Assert
     assertEquals("jdbc:oracle:thin:@//localhost:1521/ORCLPDB", url);
   }
@@ -81,8 +85,10 @@ public class AbstractOracleConnectorTest {
     when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
     when(arguments.getHost()).thenReturn("localhost");
     when(arguments.getPort(anyInt())).thenReturn(1521);
+
     // Act
     String url = AbstractOracleConnector.buildUrl(arguments);
+
     // Assert
     assertEquals("jdbc:oracle:thin:@localhost:1521:ORCLPDB1", url);
   }
@@ -91,8 +97,10 @@ public class AbstractOracleConnectorTest {
   public void buildUrl_providedUrl_success() {
     String argumentUrl = "jdbc:oracle:thin:@localhost:1521:ORCLPDB1";
     when(arguments.getUri()).thenReturn(argumentUrl);
+
     // Act
     String url = AbstractOracleConnector.buildUrl(arguments);
+
     // Assert
     assertEquals(argumentUrl, url);
   }
