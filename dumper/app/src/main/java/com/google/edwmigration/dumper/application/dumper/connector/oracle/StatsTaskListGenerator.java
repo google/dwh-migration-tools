@@ -63,6 +63,7 @@ class StatsTaskListGenerator {
   ImmutableList<String> nativeNames() {
     // TODO: add entries for other SQLs to this list
     return ImmutableList.of(
+        "data-types",
         "db-features",
         "db-instances",
         "db-objects",
