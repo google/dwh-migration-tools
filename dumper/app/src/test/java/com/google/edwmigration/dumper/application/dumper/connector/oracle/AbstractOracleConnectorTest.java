@@ -57,9 +57,9 @@ public class AbstractOracleConnectorTest {
 
     // Act
     ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
+    Exception exception = assertThrows(MetadataDumperUsageException.class, runnable);
 
     // Assert
-    Exception exception = assertThrows(MetadataDumperUsageException.class, runnable);
     assertEquals(serviceOrSid.getMessage(), exception.getMessage());
   }
 
@@ -69,9 +69,9 @@ public class AbstractOracleConnectorTest {
 
     // Act
     ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
+    Exception exception = assertThrows(MetadataDumperUsageException.class, runnable);
 
     // Assert
-    Exception exception = assertThrows(MetadataDumperUsageException.class, runnable);
     assertEquals(serviceOrSid.getMessage(), exception.getMessage());
   }
 
