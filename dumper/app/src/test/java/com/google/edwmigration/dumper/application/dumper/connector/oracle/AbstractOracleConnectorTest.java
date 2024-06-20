@@ -17,9 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -52,7 +50,7 @@ public class AbstractOracleConnectorTest {
   }
 
   @Test
-  public void buildUrl_providedBoth_throwsException() {
+  public void buildUrl_serviceNameAndSidBothProvided_throwsException() {
     when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
     when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
     // Act
@@ -62,7 +60,7 @@ public class AbstractOracleConnectorTest {
   }
 
   @Test
-  public void buildUrl_providedNone_throwsException() {
+  public void buildUrl_serviceNameAndSidBothNull_throwsException() {
     ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
     assertThrows(MetadataDumperUsageException.class, runnable);
   }
