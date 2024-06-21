@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.common.collect.ImmutableList.builderWithExpectedSize;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
@@ -53,8 +52,7 @@ class MessageTask extends AbstractTask<Void> {
   }
 
   Iterable<String> getMessages() {
-    int size = 1 + tasks.length;
-    ImmutableList.Builder<String> builder = builderWithExpectedSize(size);
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add("All the select tasks failed:");
     int i = 1;
     for (GroupTask<?> task : tasks) {
