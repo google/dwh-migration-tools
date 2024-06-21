@@ -19,9 +19,11 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -36,7 +38,13 @@ public class OracleStatsQueryTest {
 
   @Test
   public void create_fileDoesNotExist_throwsException() {
-    assertThrows(
-        IllegalArgumentException.class, () -> OracleStatsQuery.create("invalid-filename", NATIVE));
+
+    // Act
+    ThrowingRunnable runnable = () -> OracleStatsQuery.create("invalid-filename", NATIVE);
+    Exception exception = assertThrows(IllegalArgumentException.class, runnable);
+
+    // Assert
+    String message = exception.getMessage();
+    assertTrue("Actual: " + message, message.startsWith("Invalid path for SQL source file: "));
   }
 }
