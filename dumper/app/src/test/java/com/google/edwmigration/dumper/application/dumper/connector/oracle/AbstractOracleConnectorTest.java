@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -99,6 +100,21 @@ public class AbstractOracleConnectorTest {
 
     // Assert
     assertEquals("jdbc:oracle:thin:@localhost:1521:ORCLPDB1", url);
+  }
+
+  @Test
+  public void buildUrl_customArguments_containsCustomValues() {
+    when(arguments.getOracleSID()).thenReturn("MYPDB1");
+    when(arguments.getHost()).thenReturn("sample-host-123");
+    when(arguments.getPort(anyInt())).thenReturn(8081);
+
+    // Act
+    String url = AbstractOracleConnector.buildUrl(arguments);
+
+    // Assert
+    assertTrue("No SID in url: " + url, url.contains("MYPDB1"));
+    assertTrue("No host in url: " + url, url.contains("sample-host-123"));
+    assertTrue("No port in url: " + url, url.contains("8081"));
   }
 
   @Test
