@@ -41,13 +41,20 @@ public abstract class OracleStatsQuery {
 
   static OracleStatsQuery create(String name, StatsSource statsSource) throws IOException {
     String path = String.format("oracle-stats/%s/%s.sql", statsSource.value, name);
-    URL queryUrl = Resources.getResource(path);
-    String queryText = Resources.toString(queryUrl, UTF_8);
-    return new AutoValue_OracleStatsQuery(name, queryText, statsSource);
+    return new AutoValue_OracleStatsQuery(name, loadFile(path), statsSource);
   }
 
   @Nonnull
   String description() {
     return String.format("Query{name=%s, statsSource=%s}", name(), statsSource());
+  }
+
+  private static String loadFile(String path) throws IOException {
+    try {
+      URL queryUrl = Resources.getResource(path);
+      return Resources.toString(queryUrl, UTF_8);
+    } catch (IllegalArgumentException e) {
+      throw OracleConnectorExceptions.invalidSqlSourcePath(path);
+    }
   }
 }
