@@ -27,7 +27,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.util.Properties;
 import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -57,8 +56,9 @@ public class AbstractOracleConnectorTest {
     when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
 
     // Act
-    ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
-    Exception exception = assertThrows(MetadataDumperUsageException.class, runnable);
+    Exception exception =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
 
     // Assert
     assertEquals(serviceOrSid.getMessage(), exception.getMessage());
@@ -69,8 +69,9 @@ public class AbstractOracleConnectorTest {
     Exception serviceOrSid = OracleConnectorExceptions.mustProvideServiceOrSid();
 
     // Act
-    ThrowingRunnable runnable = () -> AbstractOracleConnector.buildUrl(arguments);
-    Exception exception = assertThrows(MetadataDumperUsageException.class, runnable);
+    Exception exception =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
 
     // Assert
     assertEquals(serviceOrSid.getMessage(), exception.getMessage());
