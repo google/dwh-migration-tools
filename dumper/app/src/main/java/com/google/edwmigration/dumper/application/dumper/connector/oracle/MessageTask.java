@@ -17,16 +17,15 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static com.google.common.collect.ImmutableList.builderWithExpectedSize;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleMetadataConnector.GroupTask;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.util.Arrays;
-import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -79,7 +78,6 @@ class MessageTask extends AbstractTask<Void> {
   }
 
   private static String toNames(GroupTask<?>... tasks) {
-    List<String> tokens = Lists.transform(Arrays.asList(tasks), GroupTask::getName);
-    return String.join(", ", tokens);
+    return stream(tasks).map(GroupTask::getName).collect(joining(", "));
   }
 }
