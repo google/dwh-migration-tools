@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.common.collect.ImmutableList.copyOf;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
@@ -43,10 +44,10 @@ public class MessageTaskTest {
     MessageTask task = createTask();
 
     // Act
-    ImmutableList<String> taskMessages = ImmutableList.copyOf(task.getMessages());
+    Iterable<String> taskMessages = task.getMessages();
 
     // Assert
-    assertEquals(messages, taskMessages);
+    assertEquals(messages, copyOf(taskMessages));
   }
 
   @Test
