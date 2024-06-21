@@ -26,7 +26,7 @@ import org.junit.runners.JUnit4;
 public class OracleConnectorExceptionsTest {
 
   @Test
-  public void fun() {
+  public void invalidSqlSourcePath_success() {
 
     Exception exception =
         OracleConnectorExceptions.invalidSqlSourcePath("oracle-stats/native/invalid-filename.sql");
