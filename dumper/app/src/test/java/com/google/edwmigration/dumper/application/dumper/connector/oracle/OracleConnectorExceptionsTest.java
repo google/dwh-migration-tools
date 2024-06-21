@@ -26,12 +26,18 @@ import org.junit.runners.JUnit4;
 public class OracleConnectorExceptionsTest {
 
   @Test
-  public void invalidSqlSourcePath_success() {
-
+  public void invalidSqlSourcePath_success_correctMessage() {
     Exception exception =
         OracleConnectorExceptions.invalidSqlSourcePath("oracle-stats/native/invalid-filename.sql");
     assertEquals(
         "Invalid path for SQL source file: oracle-stats/native/invalid-filename.sql",
         exception.getMessage());
+  }
+
+  @Test
+  public void mustProvideServiceOrSid_success_correctMessage() {
+    Exception exception = OracleConnectorExceptions.mustProvideServiceOrSid();
+    assertEquals(
+        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
   }
 }
