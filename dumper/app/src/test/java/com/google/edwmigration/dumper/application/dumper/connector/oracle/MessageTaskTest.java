@@ -41,8 +41,10 @@ public class MessageTaskTest {
             "(1): fake : RuntimeException: ExceptionCauseA",
             "(2): fake : RuntimeException: ExceptionCauseB");
     MessageTask task = createTask();
+
     // Act
     ImmutableList<String> taskMessages = ImmutableList.copyOf(task.getMessages());
+
     // Assert
     assertEquals(messages, taskMessages);
   }
