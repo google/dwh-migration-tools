@@ -50,11 +50,7 @@ public abstract class OracleStatsQuery {
   }
 
   private static String loadFile(String path) throws IOException {
-    try {
-      URL queryUrl = Resources.getResource(path);
-      return Resources.toString(queryUrl, UTF_8);
-    } catch (IllegalArgumentException e) {
-      throw OracleConnectorExceptions.invalidSqlSourcePath(path);
-    }
+    URL queryUrl = Resources.getResource(path);
+    return Resources.toString(queryUrl, UTF_8);
   }
 }

@@ -51,7 +51,6 @@ public class AbstractOracleConnectorTest {
 
   @Test
   public void buildUrl_serviceNameAndSidBothProvided_throwsException() {
-    Exception serviceOrSid = OracleConnectorExceptions.mustProvideServiceOrSid();
     when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
     when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
 
@@ -61,12 +60,12 @@ public class AbstractOracleConnectorTest {
             MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
 
     // Assert
-    assertEquals(serviceOrSid.getMessage(), exception.getMessage());
+    assertEquals(
+        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
   }
 
   @Test
   public void buildUrl_serviceNameAndSidBothNull_throwsException() {
-    Exception serviceOrSid = OracleConnectorExceptions.mustProvideServiceOrSid();
 
     // Act
     Exception exception =
@@ -74,7 +73,8 @@ public class AbstractOracleConnectorTest {
             MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
 
     // Assert
-    assertEquals(serviceOrSid.getMessage(), exception.getMessage());
+    assertEquals(
+        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
   }
 
   @Test

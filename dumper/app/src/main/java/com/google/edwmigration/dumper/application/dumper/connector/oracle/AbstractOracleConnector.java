@@ -151,7 +151,8 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     } else if (sid == null && service != null) {
       return false;
     } else {
-      throw OracleConnectorExceptions.mustProvideServiceOrSid();
+      throw new MetadataDumperUsageException(
+          "Provide either -oracle-service or -oracle-sid for oracle dumper");
     }
   }
 
