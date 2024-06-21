@@ -17,10 +17,14 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.util.Properties;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,5 +47,86 @@ public class AbstractOracleConnectorTest {
 
     assertEquals(EXAMPLE_PASSWORD, actual.getProperty("password"));
     assertEquals(EXAMPLE_USER, actual.getProperty("user"));
+  }
+
+  @Test
+  public void buildUrl_serviceNameAndSidBothProvided_throwsException() {
+    when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
+    when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
+
+    // Act
+    Exception exception =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
+
+    // Assert
+    assertEquals(
+        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
+  }
+
+  @Test
+  public void buildUrl_serviceNameAndSidBothNull_throwsException() {
+
+    // Act
+    Exception exception =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
+
+    // Assert
+    assertEquals(
+        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
+  }
+
+  @Test
+  public void buildUrl_providedServiceName_success() {
+    when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
+    when(arguments.getHost()).thenReturn("localhost");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+
+    // Act
+    String url = AbstractOracleConnector.buildUrl(arguments);
+
+    // Assert
+    assertEquals("jdbc:oracle:thin:@//localhost:1521/ORCLPDB", url);
+  }
+
+  @Test
+  public void buildUrl_providedSid_success() {
+    when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
+    when(arguments.getHost()).thenReturn("localhost");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+
+    // Act
+    String url = AbstractOracleConnector.buildUrl(arguments);
+
+    // Assert
+    assertEquals("jdbc:oracle:thin:@localhost:1521:ORCLPDB1", url);
+  }
+
+  @Test
+  public void buildUrl_customArguments_containsCustomValues() {
+    when(arguments.getOracleSID()).thenReturn("MYPDB1");
+    when(arguments.getHost()).thenReturn("sample-host-123");
+    when(arguments.getPort(anyInt())).thenReturn(8081);
+
+    // Act
+    String url = AbstractOracleConnector.buildUrl(arguments);
+
+    // Assert
+    assertTrue("No SID in url: " + url, url.contains("MYPDB1"));
+    assertTrue("No host in url: " + url, url.contains("sample-host-123"));
+    assertTrue("No port in url: " + url, url.contains("8081"));
+  }
+
+  @Test
+  public void buildUrl_providedUrl_success() {
+    String argumentUrl = "jdbc:oracle:thin:@localhost:1521:ORCLPDB1";
+    when(arguments.getUri()).thenReturn(argumentUrl);
+
+    // Act
+    String url = AbstractOracleConnector.buildUrl(arguments);
+
+    // Assert
+    assertEquals(argumentUrl, url);
   }
 }
