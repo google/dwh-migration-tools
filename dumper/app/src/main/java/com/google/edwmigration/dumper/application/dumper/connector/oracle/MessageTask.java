@@ -31,11 +31,13 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Task to print error messages after all queries of a certain type failed. */
 class MessageTask extends AbstractTask<Void> {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessageTask.class);
 
   private final GroupTask<?>[] tasks;
+  /** */
   private final String names;
 
   private MessageTask(GroupTask<?>[] tasks, String names) {
@@ -64,14 +66,17 @@ class MessageTask extends AbstractTask<Void> {
     return builder.build();
   }
 
-  // if we are here, means both the dep tasks *have* failed.
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle) {
     getMessages().forEach(LOG::error);
     return null;
   }
 
-  // This shows up in dry-run
+  /**
+   * Returns a string representation of the object. Used in dry-run.
+   *
+   * @return The string representation of this class, including a list of dependency Tasks.
+   */
   @Override
   public String toString() {
     return "[ Error if all fail: " + names + " ]";
