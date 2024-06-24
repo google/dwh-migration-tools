@@ -111,12 +111,9 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @Nonnull
   public ResultSetExtractor<Summary> newCsvResultSetExtractor(@Nonnull ByteSink sink) {
-    return rs -> {
+    return resultSet -> {
       try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName())) {
-        printAllResults(sink, rs, monitor);
-        return new Summary(monitor.getCount());
-      } catch (IOException e) {
-        throw new SQLException(e);
+        return printWithMonitor(sink, monitor, resultSet);
       }
     };
   }
@@ -124,14 +121,26 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   @Nonnull
   protected ResultSetExtractor<Summary> newCsvResultSetExtractor(
       @Nonnull ByteSink sink, long count) {
-    return rs -> {
+    return resultSet -> {
       try (RecordProgressMonitor monitor = new RecordProgressMonitor(getName(), count)) {
-        printAllResults(sink, rs, monitor);
-        return new Summary(monitor.getCount());
-      } catch (IOException e) {
-        throw new SQLException(e);
+        return printWithMonitor(sink, monitor, resultSet);
       }
     };
+  }
+
+  private Summary printWithMonitor(
+      @Nonnull ByteSink sink,
+      @Nonnull RecordProgressMonitor monitor,
+      @CheckForNull ResultSet resultSet)
+      throws SQLException {
+    try {
+      if (resultSet != null) {
+        printAllResults(sink, resultSet, monitor);
+      }
+      return new Summary(monitor.getCount());
+    } catch (IOException e) {
+      throw new SQLException(e);
+    }
   }
 
   private void printAllResults(ByteSink sink, ResultSet resultSet, RecordProgressMonitor monitor)
