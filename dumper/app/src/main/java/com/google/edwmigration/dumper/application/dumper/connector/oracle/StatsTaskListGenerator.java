@@ -43,8 +43,13 @@ class StatsTaskListGenerator {
       OracleStatsQuery item = OracleStatsQuery.create(name, NATIVE);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
-    OracleStatsQuery awr = OracleStatsQuery.create("source-conn-latest", AWR);
-    builder.add(StatsJdbcTask.fromQuery(awr));
+    ImmutableList<OracleStatsQuery> awr = ImmutableList.of(
+      OracleStatsQuery.create("source-conn-latest", AWR),
+      OracleStatsQuery.create("sql-stats", AWR)
+    );
+    for (OracleStatsQuery query : awr) {
+      builder.add(StatsJdbcTask.fromQuery(query));
+    }
     OracleStatsQuery statspack = OracleStatsQuery.create("hist-cmd-types", STATSPACK);
     builder.add(StatsJdbcTask.fromQuery(statspack));
     return builder.build();

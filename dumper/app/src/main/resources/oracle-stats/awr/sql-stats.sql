@@ -40,10 +40,10 @@ SELECT
     sum(A.ccwait_delta) "SumCcwaitDelta",
     sum(A.plsexec_time_delta) "SumPlsexecTimeDelta",
     sum(A.javexec_time_delta) "SumJavexecTimeDelta"
-FROM '{prefix}'_hist_sqlstat A
+FROM cdb_hist_sqlstat A
 JOIN (
     SELECT B.snap_id, B.instance_number, B.dbid
-    FROM '{prefix}'_hist_snapshot B
+    FROM cdb_hist_snapshot B
 ) B
 ON A.dbid = B.dbid
     AND A.instance_number = B.instance_number
@@ -52,4 +52,3 @@ GROUP BY
     A.con_id,
     A.dbid,
     A.instance_number
-FETCH FIRST 299 ROWS ONLY
