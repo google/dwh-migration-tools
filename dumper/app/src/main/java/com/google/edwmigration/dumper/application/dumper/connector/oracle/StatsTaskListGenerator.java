@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.AWR;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.STATSPACK;
 
@@ -42,6 +43,8 @@ class StatsTaskListGenerator {
       OracleStatsQuery item = OracleStatsQuery.create(name, NATIVE);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
+    OracleStatsQuery awr = OracleStatsQuery.create("source-conn-latest", AWR);
+    builder.add(StatsJdbcTask.fromQuery(awr));
     OracleStatsQuery statspack = OracleStatsQuery.create("hist-cmd-types", STATSPACK);
     builder.add(StatsJdbcTask.fromQuery(statspack));
     return builder.build();
