@@ -22,9 +22,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.hadoop.conf.Configuration;
@@ -68,7 +69,7 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
     return null;
   }
 
-  private void doRun(Writer output) throws IOException {
+  private void doRun(Writer output) throws IOException, ExecutionException, InterruptedException {
     LOG.info("clusterHost: {}", clusterHost);
     LOG.info("port: {}", port);
     LOG.info("threadPoolSize: {}", poolSize);
@@ -77,14 +78,17 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
     conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
 
     try (FileSystem fs = FileSystem.get(conf);
-        ScanContext scanCtx = new ScanContext(fs, output)) {
+        ScanContext scanCtx = new ScanContext(fs, output);
+        ExecutorManager execManager =
+            new ExecutorManager(
+                ExecutorManager.newExecutorServiceWithBackpressure(
+                    "hdfs permission extraction", poolSize))) {
 
-      AtomicCounter jobsTodoCounter = new AtomicCounter(/* currentCount= */ 0);
       String hdfsPath = "/";
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
-      SingleDirScanJob rootJob = new SingleDirScanJob(scanCtx, jobsTodoCounter, rootDir);
-      new ForkJoinPool(poolSize).invoke(rootJob); // The root task finishes immediately
-      jobsTodoCounter.waitTillZero(); // Wait until all (recursive) tasks are done executing
+      SingleDirScanJob rootJob = new SingleDirScanJob(scanCtx, execManager, rootDir);
+      execManager.execute(rootJob); // The root job executes immediately
+      execManager.await(); // Wait until all (recursive) tasks are done executing
       LOG.info(scanCtx.getFormattedStats());
     }
   }
