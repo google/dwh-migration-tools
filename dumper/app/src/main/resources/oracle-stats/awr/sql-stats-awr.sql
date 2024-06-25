@@ -16,6 +16,7 @@ SELECT
     A.con_id "ConId",
     A.dbid "Dbid",
     A.instance_number "InstanceNumber",
+    to_char(A.force_matching_signature) "ForceMatchingSignature",
     min(A.sql_id) "MinSqlId",
     sum(A.executions_delta) "SumExecutionsDelta",
     sum(A.px_servers_execs_delta) "SumPxServersExecsDelta",
@@ -51,4 +52,5 @@ ON A.dbid = B.dbid
 GROUP BY
     A.con_id,
     A.dbid,
-    A.instance_number
+    A.instance_number,
+    to_char(A.force_matching_signature)
