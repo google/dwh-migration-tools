@@ -46,7 +46,7 @@ class StatsTaskListGenerator {
     ImmutableList<OracleStatsQuery> awr =
         ImmutableList.of(
             OracleStatsQuery.create("source-conn-latest", AWR),
-            OracleStatsQuery.create("sql-stats", AWR));
+            OracleStatsQuery.create("sql-stats-awr", AWR));
     for (OracleStatsQuery query : awr) {
       builder.add(StatsJdbcTask.fromQuery(query));
     }
