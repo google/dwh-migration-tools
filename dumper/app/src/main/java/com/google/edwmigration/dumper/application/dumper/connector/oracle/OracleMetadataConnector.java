@@ -86,14 +86,14 @@ public class OracleMetadataConnector extends AbstractOracleConnector
 
   private static void buildSelectStarTask(
       @Nonnull List<? super Task<?>> out,
-      @Nonnull String all_file,
-      @Nonnull String all_table,
       @Nonnull String dba_file,
       @Nonnull String dba_table,
+      @Nonnull String all_file,
+      @Nonnull String all_table,
       @Nonnull String whereCond) {
-    SelectTask dba_task = newSelectStarTask(dba_file, dba_table, whereCond);
     SelectTask all_task = newSelectStarTask(all_file, all_table, whereCond);
-    addAtLeastOneOf(out, dba_task, all_task);
+    SelectTask dba_task = newSelectStarTask(dba_file, dba_table, whereCond);
+    addAtLeastOneOf(out, all_task, dba_task);
   }
 
   private static SelectTask newSelectXmlTask(
