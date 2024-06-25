@@ -40,12 +40,11 @@ SELECT
     sum(A.apwait_delta) "SumApwaitDelta",
     sum(A.ccwait_delta) "SumCcwaitDelta",
     sum(A.plsexec_time_delta) "SumPlsexecTimeDelta",
-    sum(A.javexec_time_delta) "SumJavexecTimeDelta"
+    sum(A.javexec_time_delta) "SumJavexecTimeDelta",
+    min(B.begin_interval_time) "MinBeginTime",
+    max(B.end_interval_time) "MaxEndTime"
 FROM cdb_hist_sqlstat A
-JOIN (
-    SELECT B.snap_id, B.instance_number, B.dbid
-    FROM cdb_hist_snapshot B
-) B
+JOIN cdb_hist_snapshot B
 ON A.dbid = B.dbid
     AND A.instance_number = B.instance_number
     AND A.snap_id = B.snap_id
