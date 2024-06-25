@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,8 +34,10 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 
 final class ScanContext implements Closeable {
 
-  private final FileSystem fs;
+  private static final DateTimeFormatter DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
 
+  private final FileSystem fs;
   private final DFSClient dfsClient;
   private final Writer outputSink;
   private final CSVPrinter csvPrinter;
@@ -52,8 +56,8 @@ final class ScanContext implements Closeable {
     Group,
     Permission,
     ModificationTime,
-    NumberOfFiles, // this is files & subdirs
-    NumberOfSubdirs, // this is subdirs only
+    NumberOfFilesAndSubdirs,
+    NumberOfSubdirs,
     StoragePolicy,
   }
 
@@ -100,7 +104,7 @@ final class ScanContext implements Closeable {
           dir.getOwner(),
           dir.getGroup(),
           dir.getPermission(),
-          dir.getModificationTime(),
+          DATE_FORMAT.format(Instant.ofEpochMilli(dir.getModificationTime())),
           nFiles,
           nDirs,
           storagePolicy != null ? storagePolicy.toString() : String.valueOf(byteStoragePolicy));

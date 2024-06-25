@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Simple synchronization counter used instead of {@link java.util.concurrent.Phaser} as Phazer has
- * this limitation to count up to 2^16-1, while this counter counts up to Integer.MAX_VALUE
+ * this limitation to count up to 2^16-1, while this counter counts up to {@link Integer#MAX_VALUE}
  */
 class AtomicCounter {
 
@@ -35,7 +35,8 @@ class AtomicCounter {
   }
 
   synchronized void increment() {
-    checkArgument(currentCount < Integer.MAX_VALUE); // implementation limits reached!
+    checkArgument(
+        currentCount < Integer.MAX_VALUE, "The limit for the synchronization counter reached.");
     ++currentCount;
   }
 
