@@ -16,27 +16,27 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import java.util.concurrent.RecursiveTask;
+import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
+import java.util.concurrent.Callable;
 import org.apache.hadoop.fs.FileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class SingleDirScanJob extends RecursiveTask<Void> {
+class SingleDirScanJob implements Callable<Void> {
   private static final Logger LOG = LoggerFactory.getLogger(SingleDirScanJob.class);
 
   private final ScanContext scanCtx;
-  private final AtomicCounter jobsTodoCounter;
+  private final ExecutorManager execManager;
   private final FileStatus dir;
 
-  SingleDirScanJob(ScanContext scanCtx, AtomicCounter jobsTodoCounter, FileStatus dir) {
+  SingleDirScanJob(ScanContext scanCtx, ExecutorManager execManager, FileStatus dir) {
     this.scanCtx = scanCtx;
     this.dir = dir;
-    this.jobsTodoCounter = jobsTodoCounter;
-    jobsTodoCounter.increment();
+    this.execManager = execManager;
   }
 
   @Override
-  protected Void compute() throws IllegalStateException {
+  public Void call() {
     long numFiles = 0;
     long numDirs = 0;
     long accumFileSize = 0;
@@ -50,7 +50,7 @@ class SingleDirScanJob extends RecursiveTask<Void> {
 
         if (file.isDirectory()) {
           numDirs++;
-          new SingleDirScanJob(scanCtx, jobsTodoCounter, file).fork();
+          execManager.submit(new SingleDirScanJob(scanCtx, execManager, file));
         } else {
           scanCtx.walkFile(file);
         }
@@ -60,8 +60,6 @@ class SingleDirScanJob extends RecursiveTask<Void> {
       LOG.error(
           "Unexpected exception while scanning HDFS folder " + dir.getPath().toUri().getPath(),
           exn);
-    } finally {
-      jobsTodoCounter.decrement();
     }
     return null;
   }
