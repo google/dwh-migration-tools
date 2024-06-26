@@ -91,9 +91,6 @@ class StatsTaskListGenerator {
   }
 
   ImmutableList<String> statspackNames() {
-    return ImmutableList.of(
-      "hist-cmd-types-statspack",
-      "sql-stats-statspack"
-    );
+    return ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
   }
 }
