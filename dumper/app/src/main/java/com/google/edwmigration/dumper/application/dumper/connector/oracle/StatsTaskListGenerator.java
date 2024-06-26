@@ -50,8 +50,11 @@ class StatsTaskListGenerator {
     for (OracleStatsQuery query : awr) {
       builder.add(StatsJdbcTask.fromQuery(query));
     }
-    OracleStatsQuery statspack = OracleStatsQuery.create("hist-cmd-types-statspack", STATSPACK);
-    builder.add(StatsJdbcTask.fromQuery(statspack));
+
+    for (String name : statspackNames()) {
+      OracleStatsQuery query = OracleStatsQuery.create(name, STATSPACK);
+      builder.add(StatsJdbcTask.fromQuery(query));
+    }
     return builder.build();
   }
 
@@ -85,5 +88,12 @@ class StatsTaskListGenerator {
         "app-schemas-summary",
         "table-types-dtl",
         "used-space-details");
+  }
+
+  ImmutableList<String> statspackNames() {
+    return ImmutableList.of(
+      "hist-cmd-types-statspack",
+      "sql-stats-statspack"
+    );
   }
 }
