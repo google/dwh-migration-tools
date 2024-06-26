@@ -50,7 +50,7 @@ class StatsTaskListGenerator {
     for (OracleStatsQuery query : awr) {
       builder.add(StatsJdbcTask.fromQuery(query));
     }
-    OracleStatsQuery statspack = OracleStatsQuery.create("hist-cmd-types", STATSPACK);
+    OracleStatsQuery statspack = OracleStatsQuery.create("hist-cmd-types-statspack", STATSPACK);
     builder.add(StatsJdbcTask.fromQuery(statspack));
     return builder.build();
   }
