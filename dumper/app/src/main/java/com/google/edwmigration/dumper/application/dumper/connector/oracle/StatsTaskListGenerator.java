@@ -34,6 +34,26 @@ class StatsTaskListGenerator {
 
   private final OracleConnectorScope scope = OracleConnectorScope.STATS;
 
+  private static final ImmutableList<String> NATIVE_NAMES =
+      ImmutableList.of(
+          "data-types",
+          "db-features",
+          "db-instances",
+          "db-objects",
+          // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
+          // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
+          "db-objects-synonym-public",
+          "dtl-source-code",
+          "m-view-types",
+          "pdbs-info",
+          "app-schemas-pdbs",
+          "app-schemas-summary",
+          "table-types-dtl",
+          "used-space-details");
+
+  private static final ImmutableList<String> STATSPACK_NAMES =
+      ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
+
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
@@ -50,8 +70,11 @@ class StatsTaskListGenerator {
     for (OracleStatsQuery query : awr) {
       builder.add(StatsJdbcTask.fromQuery(query));
     }
-    OracleStatsQuery statspack = OracleStatsQuery.create("hist-cmd-types", STATSPACK);
-    builder.add(StatsJdbcTask.fromQuery(statspack));
+
+    for (String name : statspackNames()) {
+      OracleStatsQuery query = OracleStatsQuery.create(name, STATSPACK);
+      builder.add(StatsJdbcTask.fromQuery(query));
+    }
     return builder.build();
   }
 
@@ -69,21 +92,10 @@ class StatsTaskListGenerator {
   }
 
   ImmutableList<String> nativeNames() {
-    // TODO: add entries for other SQLs to this list
-    return ImmutableList.of(
-        "data-types",
-        "db-features",
-        "db-instances",
-        "db-objects",
-        // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
-        // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
-        "db-objects-synonym-public",
-        "dtl-source-code",
-        "m-view-types",
-        "pdbs-info",
-        "app-schemas-pdbs",
-        "app-schemas-summary",
-        "table-types-dtl",
-        "used-space-details");
+    return NATIVE_NAMES;
+  }
+
+  ImmutableList<String> statspackNames() {
+    return STATSPACK_NAMES;
   }
 }
