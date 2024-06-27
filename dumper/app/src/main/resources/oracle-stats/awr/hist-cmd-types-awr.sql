@@ -26,7 +26,7 @@ SELECT
   sum(A.iowait_total) "SumIOWaitTotal",
   sum(A.clwait_total) "SumCLWaitTotal",
   sum(A.apwait_total) "SumAPWaitTotal",
-  sum(A.ccwait_Total) "SumCCWaitTotal",
+  sum(A.ccwait_total) "SumCCWaitTotal",
   sum(A.plsexec_time_total) "SumPLSExecTimeTotal"
 FROM cdb_hist_sqlstat A
 INNER JOIN cdb_hist_sqltext B
