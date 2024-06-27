@@ -39,7 +39,7 @@ SELECT
   D.name "CommandName",
   count(1) "Count"
 FROM stats$SQL_SUMMARY ss
-JOIN stats$snapshot C
+INNER JOIN stats$snapshot C
   ON ss.dbid = C.dbid
   AND ss.snap_id = C.snap_id
   AND ss.instance_number = C.instance_number
