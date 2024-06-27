@@ -13,15 +13,11 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
-  A.snap_id "SnapId",
+  B.name "CommandName",
+  A.command_type "CommandType",
   A.dbid "DbId",
-  A.instance_number "InstanceNumber",
-  A.old_hash_value "OldHashValue",
-  A.command_type "CommandType",
-  C.snap_time "SnapTime",
   to_char(C.snap_time, 'hh24') "Hour",
-  A.command_type "CommandType",
-  D.name "CommandName",
+  A.instance_number "InstanceNumber",
   count(1) "Count",
   sum(A.application_wait_time) "SumAPWait",
   sum(A.buffer_gets) "SumBufferGets",
@@ -39,18 +35,15 @@ SELECT
   sum(A.px_servers_executions) "SumPXExecutions",
   sum(A.rows_processed) "SumRowsProcessed"
 FROM stats$SQL_SUMMARY A
+LEFT JOIN audit_actions B ON A.command_type = B.action
 INNER JOIN stats$snapshot C
   ON A.dbid = C.dbid
   AND A.snap_id = C.snap_id
   AND A.instance_number = C.instance_number
-LEFT OUTER JOIN audit_actions D ON A.command_type = D.action
 GROUP BY
-  A.snap_id,
   A.dbid,
   A.instance_number,
   A.old_hash_value,
   A.command_type,
-  C.snap_time,
   to_char(C.snap_time, 'hh24'),
-  A.command_type,
-  D.name
+  B.name
