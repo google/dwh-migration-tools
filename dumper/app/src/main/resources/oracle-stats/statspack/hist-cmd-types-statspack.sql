@@ -38,33 +38,7 @@ SELECT
   ss.command_type "CommandType",
   D.name "CommandName",
   count(1) "Count"
-FROM
-(
-  SELECT
-    snap_id,
-    dbid,
-    instance_number,
-    text_subset,
-    old_hash_value,
-    command_type,
-    force_matching_signature, sql_id,
-    s.executions,
-    px_servers_executions,
-    elapsed_time,
-    disk_reads,
-    direct_writes,
-    end_of_fetch_count,
-    rows_processed,
-    buffer_gets,
-    cpu_time,
-    user_io_wait_time,
-    cluster_wait_time,
-    application_wait_time,
-    concurrency_wait_time,
-    plsql_exec_time,
-      java_exec_time
-  FROM stats$SQL_SUMMARY s
-) ss
+FROM stats$SQL_SUMMARY ss
 JOIN stats$snapshot C
   ON ss.dbid = C.dbid
   AND ss.snap_id = C.snap_id
