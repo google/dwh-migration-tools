@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.AWR;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 
 import com.google.common.collect.ImmutableList;
@@ -30,11 +31,21 @@ import org.junit.runner.RunWith;
 public class StatsTaskListGeneratorTest {
 
   @DataPoints("nativeNames")
-  public static final ImmutableList<String> nameList = new StatsTaskListGenerator().nativeNames();
+  public static final ImmutableList<String> nativeNames =
+      new StatsTaskListGenerator().nativeNames();
+
+  @DataPoints("awrNames")
+  public static final ImmutableList<String> awrNames = new StatsTaskListGenerator().awrNames();
 
   @Theory
   public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
       throws IOException {
     OracleStatsQuery.create(name, NATIVE);
+  }
+
+  @Theory
+  public void awrNames_allNamedFilesExist(@FromDataPoints("awrNames") String name)
+      throws IOException {
+    OracleStatsQuery.create(name, AWR);
   }
 }

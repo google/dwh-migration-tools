@@ -34,6 +34,9 @@ class StatsTaskListGenerator {
 
   private final OracleConnectorScope scope = OracleConnectorScope.STATS;
 
+  private static final ImmutableList<String> AWR_NAMES =
+      ImmutableList.of("hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr");
+
   private static final ImmutableList<String> NATIVE_NAMES =
       ImmutableList.of(
           "data-types",
@@ -59,18 +62,14 @@ class StatsTaskListGenerator {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));
+    for (String name : awrNames()) {
+      OracleStatsQuery item = OracleStatsQuery.create(name, AWR);
+      builder.add(StatsJdbcTask.fromQuery(item));
+    }
     for (String name : nativeNames()) {
       OracleStatsQuery item = OracleStatsQuery.create(name, NATIVE);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
-    ImmutableList<OracleStatsQuery> awr =
-        ImmutableList.of(
-            OracleStatsQuery.create("source-conn-latest", AWR),
-            OracleStatsQuery.create("sql-stats-awr", AWR));
-    for (OracleStatsQuery query : awr) {
-      builder.add(StatsJdbcTask.fromQuery(query));
-    }
-
     for (String name : statspackNames()) {
       OracleStatsQuery query = OracleStatsQuery.create(name, STATSPACK);
       builder.add(StatsJdbcTask.fromQuery(query));
@@ -89,6 +88,10 @@ class StatsTaskListGenerator {
     StatsSource(String value) {
       this.value = value;
     }
+  }
+
+  ImmutableList<String> awrNames() {
+    return AWR_NAMES;
   }
 
   ImmutableList<String> nativeNames() {
