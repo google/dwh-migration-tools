@@ -18,16 +18,16 @@ SELECT
   to_char(C.begin_interval_time, 'hh24') "Hour",
   D.name "CommandName",
   count(1) "Count",
-  sum(A.buffer_gets_total) "SumBufferGetsTotal",
-  sum(A.elapsed_time_total) "SumElapsedTimeTotal",
-  sum(A.rows_processed_total) "SumRowsProcessedTotal",
-  sum(A.executions_total) "SumExecutionsTotal",
-  sum(A.cpu_time_total) "SumCpuTimeTotal",
-  sum(A.iowait_total) "SumIOWaitTotal",
-  sum(A.clwait_total) "SumCLWaitTotal",
-  sum(A.apwait_total) "SumAPWaitTotal",
-  sum(A.ccwait_total) "SumCCWaitTotal",
-  sum(A.plsexec_time_total) "SumPLSExecTimeTotal"
+  sum(A.buffer_gets_total) "SumBufferGets",
+  sum(A.elapsed_time_total) "SumElapsedTime",
+  sum(A.rows_processed_total) "SumRowsProcessed",
+  sum(A.executions_total) "SumExecutions",
+  sum(A.cpu_time_total) "SumCpuTime",
+  sum(A.iowait_total) "SumIOWait",
+  sum(A.clwait_total) "SumCLWait",
+  sum(A.apwait_total) "SumAPWait",
+  sum(A.ccwait_total) "SumCCWait",
+  sum(A.plsexec_time_total) "SumPLSExecTime"
 FROM cdb_hist_sqlstat A
 INNER JOIN cdb_hist_sqltext B
   ON A.con_id = B.con_id
