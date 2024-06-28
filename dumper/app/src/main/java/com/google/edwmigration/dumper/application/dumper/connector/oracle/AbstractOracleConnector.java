@@ -205,7 +205,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   private static void checkServiceAndSid(ConnectorArguments arguments) {
     boolean hasService = arguments.getOracleServicename() != null;
     boolean hasSid = arguments.getOracleSID() != null;
-    if (!hasService && !hasSid || hasService && hasSid) {
+    if ((!hasService && !hasSid) || (hasService && hasSid)) {
       throw new MetadataDumperUsageException(
           "Provide either -oracle-service or -oracle-sid for oracle dumper");
     }
