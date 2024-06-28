@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
+
+import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
@@ -55,7 +57,7 @@ public class StatsJdbcTaskTest {
     assertTrue(taskString, taskString.contains(property.value));
   }
 
-  @Theory
+  @Test
   public void getCategory_success() throws IOException {
     OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE);
     Task<?> task = StatsJdbcTask.fromQuery(query);
