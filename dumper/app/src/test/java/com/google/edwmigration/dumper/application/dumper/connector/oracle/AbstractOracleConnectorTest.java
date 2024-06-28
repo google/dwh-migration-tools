@@ -61,7 +61,7 @@ public class AbstractOracleConnectorTest {
 
     // Assert
     assertEquals(
-        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
+        "Provide either --oracle-service or --oracle-sid for oracle dumper", exception.getMessage());
   }
 
   @Test
@@ -74,7 +74,7 @@ public class AbstractOracleConnectorTest {
 
     // Assert
     assertEquals(
-        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
+        "Provide either --oracle-service or --oracle-sid for oracle dumper", exception.getMessage());
   }
 
   @Test

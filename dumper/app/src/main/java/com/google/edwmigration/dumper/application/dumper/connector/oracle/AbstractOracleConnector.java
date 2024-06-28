@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SERVICE;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SID;
+
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
@@ -206,8 +209,10 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     boolean hasService = arguments.getOracleServicename() != null;
     boolean hasSid = arguments.getOracleSID() != null;
     if ((!hasService && !hasSid) || (hasService && hasSid)) {
-      throw new MetadataDumperUsageException(
-          "Provide either -oracle-service or -oracle-sid for oracle dumper");
+      String message =
+          String.format(
+              "Provide either --%s or --%s for oracle dumper", OPT_ORACLE_SERVICE, OPT_ORACLE_SID);
+      throw new MetadataDumperUsageException(message);
     }
   }
 
