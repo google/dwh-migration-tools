@@ -54,7 +54,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.thrift.TBase;
@@ -569,11 +568,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   private static class DelegationTokensTask extends AbstractHiveMetadataTask {
-    private static final CSVFormat DELEGATION_TOKENS_FORMAT =
-        FORMAT.builder().setHeader("Identifier", "Token").build();
+    private final JsonFactory jsonFactory = new JsonFactory();
 
     private DelegationTokensTask() {
-      super("delegation-tokens.csv");
+      super("delegation-tokens.jsonl");
     }
 
     @Override
@@ -584,11 +582,15 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing Delegation Tokens to " + getTargetPath())) {
         ImmutableList<DelegationToken> delegationTokens = client.getDelegationTokens();
-        try (CSVPrinter printer = DELEGATION_TOKENS_FORMAT.print(writer)) {
-          for (DelegationToken delegationToken : delegationTokens) {
-            monitor.count();
-            printer.printRecord(delegationToken.identifier(), delegationToken.token());
-          }
+        for (DelegationToken delegationToken : delegationTokens) {
+          monitor.count();
+          JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
+          jsonGenerator.writeStartObject();
+          jsonGenerator.writeStringField("identifier", delegationToken.identifier());
+          jsonGenerator.writeStringField("token", delegationToken.token());
+          jsonGenerator.writeEndObject();
+          jsonGenerator.flush();
+          writer.write('\n');
         }
       }
     }
