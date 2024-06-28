@@ -142,20 +142,6 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     return connectorScope.formatName();
   }
 
-  private static boolean isOracleSid(ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
-    String service = arguments.getOracleServicename();
-    String sid = arguments.getOracleSID();
-    if (sid != null && service == null) {
-      return true;
-    } else if (sid == null && service != null) {
-      return false;
-    } else {
-      throw new MetadataDumperUsageException(
-          "Provide either -oracle-service or -oracle-sid for oracle dumper");
-    }
-  }
-
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
@@ -190,15 +176,46 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   // jdbc:oracle:thin:<TNSName> (from 10.2.0.1.0)
   static String buildUrl(ConnectorArguments arguments) {
     String url = arguments.getUri();
-    if (url == null) {
-      String host = arguments.getHost();
-      int port = arguments.getPort(OPT_PORT_DEFAULT);
-      if (isOracleSid(arguments)) {
-        url = "jdbc:oracle:thin:@" + host + ":" + port + ":" + arguments.getOracleSID();
-      } else {
-        url = "jdbc:oracle:thin:@//" + host + ":" + port + "/" + arguments.getOracleServicename();
-      }
+    String host = arguments.getHost();
+    int port = arguments.getPort(OPT_PORT_DEFAULT);
+    if (url != null) {
+      checkNonUriFlags(arguments);
+      return url;
     }
-    return url;
+    checkServiceAndSid(arguments);
+    if (arguments.getOracleSID() != null) {
+      return "jdbc:oracle:thin:@" + host + ":" + port + ":" + arguments.getOracleSID();
+    } else {
+      return "jdbc:oracle:thin:@//" + host + ":" + port + "/" + arguments.getOracleServicename();
+    }
+  }
+
+  private static void checkNonUriFlags(ConnectorArguments arguments) {
+    if (arguments.getHost() != null) {
+      throw extraFlagProvided("host");
+    } else if (arguments.getPort() != null) {
+      throw extraFlagProvided("port");
+    } else if (arguments.getOracleServicename() != null) {
+      throw extraFlagProvided("oracle-service");
+    } else if (arguments.getOracleSID() != null) {
+      throw extraFlagProvided("oracle-sid");
+    }
+  }
+
+  private static void checkServiceAndSid(ConnectorArguments arguments) {
+    boolean hasService = arguments.getOracleServicename() != null;
+    boolean hasSid = arguments.getOracleSID() != null;
+    if (!hasService && !hasSid || hasService && hasSid) {
+      throw new MetadataDumperUsageException(
+        "Provide either -oracle-service or -oracle-sid for oracle dumper");
+    }
+  }
+
+  private static MetadataDumperUsageException extraFlagProvided(String flagName) {
+    String message =
+        String.format(
+            "Both url and %s were provided. If the url is valid, please omit the %s",
+            flagName, flagName);
+    return new MetadataDumperUsageException(message);
   }
 }
