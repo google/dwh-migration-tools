@@ -14,8 +14,13 @@
 -- limitations under the License.
 SELECT A.con_id "ConId",
        A.owner "Owner",
+       A.segment_name "SegmentName",
        A.segment_type "SegmentType",
        SUM(bytes) "Bytes"
-       FROM cdb_segments A
-       WHERE A.owner NOT LIKE '%SYS'
-       GROUP BY A.con_id, A.owner, A.segment_type
+FROM cdb_segments A
+WHERE A.owner NOT LIKE '%SYS'
+GROUP BY
+  A.con_id,
+  A.owner,
+  A.segment_name,
+  A.segment_type
