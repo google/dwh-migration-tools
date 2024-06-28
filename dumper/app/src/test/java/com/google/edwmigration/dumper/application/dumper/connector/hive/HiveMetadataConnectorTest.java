@@ -120,7 +120,7 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
           "catalogs.jsonl",
           "databases.jsonl",
           "master-keys.jsonl",
-          "delegation-tokens.csv",
+          "delegation-tokens.jsonl",
           "functions.jsonl",
           "resource-plans.jsonl",
           "tables-raw.jsonl");
