@@ -568,7 +568,7 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionUri);
   }
 
-  @Nonnull
+  @CheckForNull
   public String getHost() {
     return getOptions().valueOf(optionHost);
   }
