@@ -17,6 +17,7 @@ SELECT
   'PUBLIC' "Owner",
   'SYNONYM' "ObjectType",
   B.editionable "Editionable",
+  B.object_name "ObjectName",
   -- This looks similar to filtering with WHERE and using count() instead of sum().
   --
   -- It is not similar. DB will see the LIKE inside a WHERE predicate and decide to
@@ -49,4 +50,7 @@ LEFT JOIN (
   AND B.con_id = D.con_id
 WHERE D.table_owner IS NULL
     AND B.owner = 'PUBLIC'
-GROUP BY B.con_id, B.editionable
+GROUP BY
+  B.con_id,
+  B.editionable,
+  B.object_name
