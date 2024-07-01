@@ -47,7 +47,7 @@ class StatsTaskListGenerator {
           // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
           "db-objects-synonym-public",
           "dtl-source-code",
-          "external-tables",
+          "exttab",
           "m-view-types",
           "pdbs-info",
           "app-schemas-pdbs",
