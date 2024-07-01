@@ -522,11 +522,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   private static class MasterKeysTask extends AbstractHiveMetadataTask {
-    private static final CSVFormat MASTER_KEYS_FORMAT =
-        FORMAT.builder().setHeader("MasterKey").build();
+    private final JsonFactory jsonFactory = new JsonFactory();
 
     private MasterKeysTask() {
-      super("master-keys.csv");
+      super("master-keys.jsonl");
     }
 
     @Override
@@ -537,11 +536,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing Master Keys to " + getTargetPath())) {
         ImmutableList<String> masterKeys = client.getMasterKeys();
-        try (CSVPrinter printer = MASTER_KEYS_FORMAT.print(writer)) {
-          for (String masterKey : masterKeys) {
-            monitor.count();
-            printer.printRecord(masterKey);
-          }
+        for (String masterKey : masterKeys) {
+          monitor.count();
+          JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
+          jsonGenerator.writeStartObject();
+          jsonGenerator.writeStringField("masterKey", masterKey);
+          jsonGenerator.writeEndObject();
+          jsonGenerator.flush();
+          writer.write('\n');
         }
       }
     }
