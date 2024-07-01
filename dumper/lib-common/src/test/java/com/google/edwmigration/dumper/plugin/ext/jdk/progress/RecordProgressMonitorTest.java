@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
