@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SERVICE;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SID;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_URI;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -217,10 +218,11 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   }
 
   private static MetadataDumperUsageException extraFlagProvided(String flagName) {
-    String message =
-        String.format(
-            "Both url and %s were provided. If the url is valid, please omit the %s",
-            flagName, flagName);
-    return new MetadataDumperUsageException(message);
+    String[] sentences =
+        new String[] {
+          String.format("Both the --%s and --%s flags were provided.", OPT_URI, flagName),
+          String.format("If the --%s value is valid, please omit --%s.", OPT_URI, flagName),
+        };
+    return new MetadataDumperUsageException(String.join(" ", sentences));
   }
 }
