@@ -82,7 +82,7 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
         ExecutorManager execManager =
             new ExecutorManager(
                 ExecutorManager.newExecutorServiceWithBackpressure(
-                    "hdfs permission extraction", poolSize))) {
+                    "hdfs-permission-extraction", poolSize))) {
 
       String hdfsPath = "/";
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));

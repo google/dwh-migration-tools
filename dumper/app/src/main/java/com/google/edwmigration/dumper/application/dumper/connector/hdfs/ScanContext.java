@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import java.io.Closeable;
 import java.io.IOException;
@@ -62,6 +64,10 @@ final class ScanContext implements Closeable {
   }
 
   ScanContext(FileSystem fs, Writer outputSink) throws IOException {
+    checkArgument(
+        fs instanceof DistributedFileSystem,
+        "Not a DistributedFileSystem - can't create ScanContext.");
+
     this.fs = fs;
     this.dfsClient = ((DistributedFileSystem) fs).getClient();
     this.outputSink = outputSink;
@@ -115,11 +121,17 @@ final class ScanContext implements Closeable {
 
   /** This method is used to produce meaningful metrics for log/debug purposes. */
   String getFormattedStats() {
+
     final Duration timeSinceScanBegin = Duration.between(instantScanBegin, Instant.now());
-    final Duration avgTimeSpentInListStatusPerFile =
-        numFilesByListStatus > 0
-            ? timeSpentInListStatus.dividedBy(numFilesByListStatus)
-            : Duration.ZERO;
+    Duration avgTimeSpentInListStatusPerFile;
+    long secondsSpentInListStatus;
+    synchronized (LOCK1) {
+      avgTimeSpentInListStatusPerFile =
+          numFilesByListStatus > 0
+              ? timeSpentInListStatus.dividedBy(numFilesByListStatus)
+              : Duration.ZERO;
+      secondsSpentInListStatus = timeSpentInListStatus.getSeconds();
+    }
     final long numFilesDivisor = numFiles > 0 ? numFiles : 1;
     StringBuilder sb =
         new StringBuilder()
@@ -131,7 +143,7 @@ final class ScanContext implements Closeable {
             .append("\nTotal time: ")
             .append(timeSinceScanBegin.getSeconds() + "s")
             .append("\nTotal time in listStatus(..): ")
-            .append(timeSpentInListStatus.getSeconds() + "s")
+            .append(secondsSpentInListStatus + "s")
             .append("\nAvg time per file in listStatus(..): ")
             .append(avgTimeSpentInListStatusPerFile.toMillis() + "ms")
             .append("\nAvg time per doc: ")
