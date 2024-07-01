@@ -29,8 +29,10 @@ public class RecordProgressMonitorTest {
   public void testFast() {
     int n = 187317;
     RecordProgressMonitor monitor = new RecordProgressMonitor("fast", n);
-    for (int i = 0; i < n * 2; i++) // deliberate overflow
-    monitor.count();
+    // deliberate overflow
+    for (int i = 0; i < n * 2; i++) {
+      monitor.count();
+    }
     monitor.count();
     monitor.count();
   }
