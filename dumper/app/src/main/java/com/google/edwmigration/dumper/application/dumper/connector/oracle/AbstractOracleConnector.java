@@ -224,6 +224,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
         new String[] {
           String.format("Both the --%s and --%s flags were provided.", OPT_URI, flagName),
           String.format("If the --%s value is valid, please omit --%s.", OPT_URI, flagName),
+          String.format("If all connection parameters are provided, please omit the --%s", OPT_URI)
         };
     return new MetadataDumperUsageException(String.join(" ", sentences));
   }
