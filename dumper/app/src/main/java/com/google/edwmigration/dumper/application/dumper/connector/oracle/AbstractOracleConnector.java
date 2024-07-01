@@ -16,8 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SERVICE;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SID;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_PORT;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_URI;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -196,13 +198,13 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
 
   private static void checkNonUriFlags(ConnectorArguments arguments) {
     if (arguments.getHost() != null) {
-      throw extraFlagProvided("host");
+      throw extraFlagProvided(OPT_HOST);
     } else if (arguments.getPort() != null) {
-      throw extraFlagProvided("port");
+      throw extraFlagProvided(OPT_PORT);
     } else if (arguments.getOracleServicename() != null) {
-      throw extraFlagProvided("oracle-service");
+      throw extraFlagProvided(OPT_ORACLE_SERVICE);
     } else if (arguments.getOracleSID() != null) {
-      throw extraFlagProvided("oracle-sid");
+      throw extraFlagProvided(OPT_ORACLE_SID);
     }
   }
 
