@@ -15,6 +15,7 @@
 SELECT
   A.con_id "ConId",
   A.owner "Owner",
+  A.object_name "ObjectName",
   A.object_type "ObjectType",
   A.editionable "Editionable",
   count(1) "Count"
@@ -24,12 +25,14 @@ WHERE A.owner NOT LIKE '%SYS'
 GROUP BY
   A.con_id,
   A.owner,
+  A.object_name,
   A.object_type,
   A.editionable
 UNION ALL (
   SELECT
     B.con_id "ConId",
     'SYS' "Owner",
+    B.object_name "ObjectName",
     'DIRECTORY' "ObjectType",
     B.editionable "Editionable",
     count(1) "Count"
@@ -40,6 +43,7 @@ UNION ALL (
   GROUP BY
     B.con_id,
     B.owner,
+    B.object_name,
     B.object_type,
     B.editionable
 )
@@ -47,6 +51,7 @@ UNION ALL (
   SELECT
     C.con_id "ConId",
     C.owner "Owner",
+    C.object_name "ObjectName",
     C.object_type "ObjectType",
     C.editionable "Editionable",
     count(1) "Count"
@@ -59,5 +64,6 @@ UNION ALL (
     C.con_id,
     C.owner,
     C.editionable,
+    C.object_name,
     C.object_type
 )
