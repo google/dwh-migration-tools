@@ -34,17 +34,4 @@ public class RecordProgressMonitorTest {
     monitor.count();
     monitor.count();
   }
-
-  @Ignore("ohmygodslow")
-  @Test
-  public void testSlow() throws Exception {
-    int n = 1827317;
-    RecordProgressMonitor monitor = new RecordProgressMonitor("fast", n);
-    for (int i = 0; i < n; i++) {
-      Thread.sleep(100);
-      monitor.count();
-    }
-    monitor.count();
-    monitor.count();
-  }
 }
