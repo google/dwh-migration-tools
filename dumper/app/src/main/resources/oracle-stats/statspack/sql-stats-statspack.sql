@@ -13,25 +13,25 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
-  A.dbid,
-  A.instance_number,
-  to_char(B.force_matching_signature),
-  min(B.sql_id),
-  sum(B.application_wait_time),
-  sum(B.buffer_gets),
-  sum(B.cluster_wait_time),
-  sum(B.concurrency_wait_time),
-  sum(B.cpu_time),
-  sum(B.direct_writes),
-  sum(B.disk_reads),
-  sum(B.elapsed_time),
-  sum(B.end_of_fetch_count),
-  sum(B.executions),
-  sum(B.java_exec_time),
-  sum(B.plsql_exec_time),
-  sum(B.px_servers_executions),
-  sum(B.rows_processed),
-  sum(B.user_io_wait_time)
+  A.dbid "DbId",
+  A.instance_number "InstanceNumber",
+  to_char(B.force_matching_signature) "ForceMatchingSignature",
+  min(B.sql_id) "MinSqlId",
+  sum(B.application_wait_time) "SumAPWait",
+  sum(B.buffer_gets) "SumBufferGets",
+  sum(B.cluster_wait_time) "SumClusterWait",
+  sum(B.concurrency_wait_time) "SumCCWait",
+  sum(B.cpu_time) "SumCpuTime",
+  sum(B.direct_writes) "SumDirectWrites",
+  sum(B.disk_reads) "SumDiskReads",
+  sum(B.elapsed_time) "SumElapsedTime",
+  sum(B.end_of_fetch_count) "SumEndOfFetchCount",
+  sum(B.executions) "SumExecutions",
+  sum(B.java_exec_time) "SumJavaExecTime",
+  sum(B.plsql_exec_time) "SumPlsExecTime",
+  sum(B.px_servers_executions) "SumPXExecutions",
+  sum(B.rows_processed) "SumRowsProcessed",
+  sum(B.user_io_wait_time) "SumIOWait"
 FROM
   stats$snapshot A
 INNER JOIN stats$sql_summary B
