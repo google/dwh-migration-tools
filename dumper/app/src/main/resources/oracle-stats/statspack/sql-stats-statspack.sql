@@ -19,19 +19,19 @@ SELECT
   min(B.sql_id) "MinSqlId",
   sum(B.application_wait_time) "SumAPWait",
   sum(B.buffer_gets) "SumBufferGets",
-  sum(B.cluster_wait_time) "SumClusterWait",
   sum(B.concurrency_wait_time) "SumCCWait",
+  sum(B.cluster_wait_time) "SumCLWait",
   sum(B.cpu_time) "SumCpuTime",
   sum(B.direct_writes) "SumDirectWrites",
   sum(B.disk_reads) "SumDiskReads",
   sum(B.elapsed_time) "SumElapsedTime",
   sum(B.end_of_fetch_count) "SumEndOfFetchCount",
   sum(B.executions) "SumExecutions",
-  sum(B.java_exec_time) "SumJavaExecTime",
-  sum(B.plsql_exec_time) "SumPlsExecTime",
-  sum(B.px_servers_executions) "SumPXExecutions",
-  sum(B.rows_processed) "SumRowsProcessed",
-  sum(B.user_io_wait_time) "SumIOWait"
+  sum(B.user_io_wait_time) "SumIOWait",
+  sum(B.java_exec_time) "SumJavaExec",
+  sum(B.plsql_exec_time) "SumPlsExec",
+  sum(B.px_servers_executions) "SumPxExecutions",
+  sum(B.rows_processed) "SumRowsProcessed"
 FROM
   stats$snapshot A
 INNER JOIN stats$sql_summary B
