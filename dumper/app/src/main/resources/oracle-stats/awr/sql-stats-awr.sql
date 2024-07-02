@@ -33,7 +33,7 @@ SELECT
     sum(A.iowait_total) "SumIOWait",
     sum(A.javexec_time_total) "SumJavaExec",
     sum(A.plsexec_time_total) "SumPlsExec",
-    sum(A.px_servers_execs_total) "SumPxServersExec",
+    sum(A.px_servers_execs_total) "SumPxExecutions",
     sum(A.rows_processed_total) "SumRowsProcessed"
 FROM cdb_hist_sqlstat A
 JOIN cdb_hist_snapshot B
