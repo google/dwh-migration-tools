@@ -16,6 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SERVICE;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SID;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_PORT;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_URI;
+
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
@@ -142,20 +148,6 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     return connectorScope.formatName();
   }
 
-  private static boolean isOracleSid(ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
-    String service = arguments.getOracleServicename();
-    String sid = arguments.getOracleSID();
-    if (sid != null && service == null) {
-      return true;
-    } else if (sid == null && service != null) {
-      return false;
-    } else {
-      throw new MetadataDumperUsageException(
-          "Provide either -oracle-service or -oracle-sid for oracle dumper");
-    }
-  }
-
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
@@ -190,15 +182,50 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   // jdbc:oracle:thin:<TNSName> (from 10.2.0.1.0)
   static String buildUrl(ConnectorArguments arguments) {
     String url = arguments.getUri();
-    if (url == null) {
-      String host = arguments.getHost();
-      int port = arguments.getPort(OPT_PORT_DEFAULT);
-      if (isOracleSid(arguments)) {
-        url = "jdbc:oracle:thin:@" + host + ":" + port + ":" + arguments.getOracleSID();
-      } else {
-        url = "jdbc:oracle:thin:@//" + host + ":" + port + "/" + arguments.getOracleServicename();
-      }
+    String host = arguments.getHost();
+    int port = arguments.getPort(OPT_PORT_DEFAULT);
+    if (url != null) {
+      checkNonUriFlags(arguments);
+      return url;
     }
-    return url;
+    checkServiceAndSid(arguments);
+    if (arguments.getOracleSID() != null) {
+      return "jdbc:oracle:thin:@" + host + ":" + port + ":" + arguments.getOracleSID();
+    } else {
+      return "jdbc:oracle:thin:@//" + host + ":" + port + "/" + arguments.getOracleServicename();
+    }
+  }
+
+  private static void checkNonUriFlags(ConnectorArguments arguments) {
+    if (arguments.getHost() != null) {
+      throw extraFlagProvided(OPT_HOST);
+    } else if (arguments.getPort() != null) {
+      throw extraFlagProvided(OPT_PORT);
+    } else if (arguments.getOracleServicename() != null) {
+      throw extraFlagProvided(OPT_ORACLE_SERVICE);
+    } else if (arguments.getOracleSID() != null) {
+      throw extraFlagProvided(OPT_ORACLE_SID);
+    }
+  }
+
+  private static void checkServiceAndSid(ConnectorArguments arguments) {
+    boolean hasService = arguments.getOracleServicename() != null;
+    boolean hasSid = arguments.getOracleSID() != null;
+    if ((!hasService && !hasSid) || (hasService && hasSid)) {
+      String message =
+          String.format(
+              "Provide either --%s or --%s for oracle dumper", OPT_ORACLE_SERVICE, OPT_ORACLE_SID);
+      throw new MetadataDumperUsageException(message);
+    }
+  }
+
+  private static MetadataDumperUsageException extraFlagProvided(String flagName) {
+    String[] sentences =
+        new String[] {
+          String.format("Both the --%s and --%s flags were provided.", OPT_URI, flagName),
+          String.format("If the --%s value is valid, please omit --%s.", OPT_URI, flagName),
+          String.format("If all connection parameters are provided, please omit the --%s", OPT_URI)
+        };
+    return new MetadataDumperUsageException(String.join(" ", sentences));
   }
 }

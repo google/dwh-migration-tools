@@ -61,7 +61,8 @@ public class AbstractOracleConnectorTest {
 
     // Assert
     assertEquals(
-        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
+        "Provide either --oracle-service or --oracle-sid for oracle dumper",
+        exception.getMessage());
   }
 
   @Test
@@ -74,7 +75,8 @@ public class AbstractOracleConnectorTest {
 
     // Assert
     assertEquals(
-        "Provide either -oracle-service or -oracle-sid for oracle dumper", exception.getMessage());
+        "Provide either --oracle-service or --oracle-sid for oracle dumper",
+        exception.getMessage());
   }
 
   @Test
@@ -121,6 +123,7 @@ public class AbstractOracleConnectorTest {
   @Test
   public void buildUrl_providedUrl_success() {
     String argumentUrl = "jdbc:oracle:thin:@localhost:1521:ORCLPDB1";
+    when(arguments.getPort()).thenReturn(null);
     when(arguments.getUri()).thenReturn(argumentUrl);
 
     // Act
