@@ -18,9 +18,23 @@ SELECT
     A.instance_number "InstanceNumber",
     to_char(A.force_matching_signature) "ForceMatchingSignature",
     min(A.sql_id) "MinSqlId",
-    sum(A.elapsed_time_total) "SumElapsedTimeTotal",
     min(B.begin_interval_time) "MinBeginTime",
-    max(B.end_interval_time) "MaxEndTime"
+    max(B.end_interval_time) "MaxEndTime",
+    sum(A.apwait_total) "SumAPWait",
+    sum(A.buffer_gets_total) "SumBufferGets",
+    sum(A.ccwait_total) "SumCCWait",
+    sum(A.clwait_total) "SumCLWait",
+    sum(A.cpu_time_total) "SumCpuTime",
+    sum(A.direct_writes_total) "SumDirectWrites",
+    sum(A.disk_reads_total) "SumDiskReads",
+    sum(A.elapsed_time_total) "SumElapsedTime",
+    sum(A.end_of_fetch_count_total) "SumEndOfFetchCount",
+    sum(A.executions_total) "SumExecutions",
+    sum(A.iowait_total) "SumIOWait",
+    sum(A.javexec_time_total) "SumJavaExec",
+    sum(A.plsexec_time_total) "SumPlsExec",
+    sum(A.px_servers_execs_total) "SumPxServersExec",
+    sum(A.rows_processed_total) "SumRowsProcessed"
 FROM cdb_hist_sqlstat A
 JOIN cdb_hist_snapshot B
 ON A.dbid = B.dbid
