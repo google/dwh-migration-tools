@@ -32,6 +32,8 @@ SELECT
     sum(A.executions_delta) "ExecutionsTotal",
     sum(A.iowait_delta) "IoWaitTotal",
     sum(A.javexec_time_delta) "JavaExecTotal",
+    sum(A.physical_read_bytes_delta) "PhysicalReadBytesTotal",
+    sum(A.physical_write_bytes_delta) "PhysicalWriteBytesTotal",
     sum(A.plsexec_time_delta) "PlsExecTotal",
     sum(A.px_servers_execs_delta) "PxExecutionsTotal",
     sum(A.rows_processed_delta) "RowsTotal"
