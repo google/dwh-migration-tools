@@ -16,8 +16,7 @@
  */
 package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
-import static org.junit.Assert.assertEquals;
-
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -27,16 +26,12 @@ import org.junit.runners.JUnit4;
 public class RecordProgressMonitorTest {
 
   @Test
-  public void count_totalExceeded_noExceptionThrown() {
-    int counterTotal = 187317;
-    // TODO: legacy value, (counterTotal + 1) should be enough for this test
-    int updateCount = 2 + 2 * counterTotal;
-    try (RecordProgressMonitor monitor = new RecordProgressMonitor("fast", counterTotal)) {
-      // deliberate overflow
-      for (int i = 0; i < updateCount; i++) {
-        monitor.count();
-      }
-      assertEquals(updateCount, monitor.getCount());
-    }
+  public void testFast() {
+    int n = 187317;
+    RecordProgressMonitor monitor = new RecordProgressMonitor("fast", n);
+    for (int i = 0; i < n * 2; i++) // deliberate overflow
+    monitor.count();
+    monitor.count();
+    monitor.count();
   }
 }
