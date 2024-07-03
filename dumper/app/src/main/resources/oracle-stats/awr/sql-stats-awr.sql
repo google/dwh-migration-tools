@@ -34,7 +34,7 @@ SELECT
     sum(A.javexec_time_delta) "JavaExecTotal",
     sum(A.plsexec_time_delta) "PlsExecTotal",
     sum(A.px_servers_execs_delta) "PxExecutionsTotal",
-    sum(A.rows_processed_delta) "RowsProcessedTotal"
+    sum(A.rows_processed_delta) "RowsTotal"
 FROM cdb_hist_sqlstat A
 JOIN cdb_hist_snapshot B
 ON A.dbid = B.dbid
