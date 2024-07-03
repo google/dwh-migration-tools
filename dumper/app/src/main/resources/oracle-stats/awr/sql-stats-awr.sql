@@ -26,7 +26,7 @@ SELECT
     sum(A.clwait_delta) "ClWaitTotal",
     sum(A.cpu_time_delta) "CpuTimeTotal",
     sum(A.direct_writes_delta) "DirectWritesTotal",
-    sum(A.disk_reads_delta) "iskReadsTotal",
+    sum(A.disk_reads_delta) "DiskReadsTotal",
     sum(A.elapsed_time_delta) "ElapsedTimeTotal",
     sum(A.end_of_fetch_count_delta) "EndOfFetchCountTotal",
     sum(A.executions_delta) "ExecutionsTotal",
