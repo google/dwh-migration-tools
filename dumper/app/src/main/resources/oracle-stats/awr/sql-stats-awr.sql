@@ -17,7 +17,7 @@ SELECT
     A.dbid "Dbid",
     A.instance_number "InstanceNumber",
     to_char(A.force_matching_signature) "ForceMatchingSignature",
-    min(A.sql_id) "MinSqlId",
+    min(A.sql_id) "SqlId",
     min(B.begin_interval_time) "MinBeginTime",
     max(B.end_interval_time) "MaxEndTime",
     sum(A.apwait_delta) "ApWaitTotal",
