@@ -12,7 +12,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
-SELECT
+SELECT -- non-synonym type, non-system objects
   A.con_id "ConId",
   A.owner "Owner",
   A.object_name "ObjectName",
@@ -22,6 +22,7 @@ SELECT
 FROM cdb_objects A
 WHERE A.owner NOT LIKE '%SYS'
   AND A.object_name NOT LIKE 'BIN$%'
+  AND A.object_type <> 'SYNONYM'
 GROUP BY
   A.con_id,
   A.owner,
@@ -29,6 +30,7 @@ GROUP BY
   A.object_type,
   A.editionable
 UNION ALL (
+  -- directory type, system objects (only the SYS user)
   SELECT
     B.con_id "ConId",
     'SYS' "Owner",
@@ -48,6 +50,7 @@ UNION ALL (
     B.editionable
 )
 UNION ALL (
+  -- synonym type, non-system objects (apart from public)
   SELECT
     C.con_id "ConId",
     C.owner "Owner",
