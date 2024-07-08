@@ -29,44 +29,42 @@ GROUP BY
   A.object_name,
   A.object_type,
   A.editionable
-UNION ALL (
-  -- directory type, system objects (only the SYS user)
-  SELECT
-    B.con_id "ConId",
-    'SYS' "Owner",
-    B.object_name "ObjectName",
-    'DIRECTORY' "ObjectType",
-    B.editionable "Editionable",
-    count(1) "Count"
-  FROM cdb_objects B
-  WHERE B.owner = 'SYS'
-    AND B.object_type = 'DIRECTORY'
-    AND B.object_name NOT LIKE 'BIN$%'
-  GROUP BY
-    B.con_id,
-    B.owner,
-    B.object_name,
-    B.object_type,
-    B.editionable
-)
-UNION ALL (
-  -- synonym type, non-system objects (apart from public)
-  SELECT
-    C.con_id "ConId",
-    C.owner "Owner",
-    C.object_name "ObjectName",
-    C.object_type "ObjectType",
-    C.editionable "Editionable",
-    count(1) "Count"
-  FROM cdb_objects C
-  WHERE C.owner NOT LIKE '%SYS'
-    AND C.owner <> 'PUBLIC'
-    AND C.object_type = 'SYNONYM'
-    AND C.object_name NOT LIKE 'BIN$%'
-  GROUP BY
-    C.con_id,
-    C.owner,
-    C.editionable,
-    C.object_name,
-    C.object_type
-)
+UNION ALL
+-- directory type, system objects (only the SYS user)
+SELECT
+  B.con_id "ConId",
+  'SYS' "Owner",
+  B.object_name "ObjectName",
+  'DIRECTORY' "ObjectType",
+  B.editionable "Editionable",
+  count(1) "Count"
+FROM cdb_objects B
+WHERE B.owner = 'SYS'
+  AND B.object_type = 'DIRECTORY'
+  AND B.object_name NOT LIKE 'BIN$%'
+GROUP BY
+  B.con_id,
+  B.owner,
+  B.object_name,
+  B.object_type,
+  B.editionable
+UNION ALL
+-- synonym type, non-system objects (apart from public)
+SELECT
+  C.con_id "ConId",
+  C.owner "Owner",
+  C.object_name "ObjectName",
+  C.object_type "ObjectType",
+  C.editionable "Editionable",
+  count(1) "Count"
+FROM cdb_objects C
+WHERE C.owner NOT LIKE '%SYS'
+  AND C.owner <> 'PUBLIC'
+  AND C.object_type = 'SYNONYM'
+  AND C.object_name NOT LIKE 'BIN$%'
+GROUP BY
+  C.con_id,
+  C.owner,
+  C.editionable,
+  C.object_name,
+  C.object_type
