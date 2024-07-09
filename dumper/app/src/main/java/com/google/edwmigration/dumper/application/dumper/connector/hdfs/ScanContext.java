@@ -26,6 +26,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.atomic.LongAdder;
+import javax.annotation.WillClose;
+import javax.annotation.concurrent.GuardedBy;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -41,16 +44,22 @@ final class ScanContext implements Closeable {
 
   private final FileSystem fs;
   private final DFSClient dfsClient;
-  private final Writer outputSink;
   private final CSVPrinter csvPrinter;
   private final Instant instantScanBegin;
-  private Duration timeSpentInListStatus = Duration.ofMillis(0);
-  private long numFilesByListStatus = 0L;
+  private LongAdder timeSpentInListStatus = new LongAdder();
+  private LongAdder numFilesByListStatus = new LongAdder();
+
+  @GuardedBy("csvPrinter")
   private long accumulatedFileSize = 0L;
+
+  @GuardedBy("csvPrinter")
   private long numFiles = 0L;
+
+  @GuardedBy("csvPrinter")
   private long numDirs = 0L;
+
+  @GuardedBy("csvPrinter")
   private long numDirsWalked = 0L;
-  private final Object LOCK1 = new Object();
 
   private enum CsvHeader {
     Path,
@@ -63,14 +72,13 @@ final class ScanContext implements Closeable {
     StoragePolicy,
   }
 
-  ScanContext(FileSystem fs, Writer outputSink) throws IOException {
+  ScanContext(FileSystem fs, @WillClose Writer outputSink) throws IOException {
     checkArgument(
         fs instanceof DistributedFileSystem,
         "Not a DistributedFileSystem - can't create ScanContext.");
 
     this.fs = fs;
     this.dfsClient = ((DistributedFileSystem) fs).getClient();
-    this.outputSink = outputSink;
     this.csvPrinter = AbstractTask.FORMAT.withHeader(CsvHeader.class).print(outputSink);
     this.instantScanBegin = Instant.now();
   }
@@ -83,37 +91,38 @@ final class ScanContext implements Closeable {
   FileStatus[] listDirectory(FileStatus dir) throws IOException {
     Instant instantListBegin = Instant.now();
     FileStatus[] files = fs.listStatus(dir.getPath());
-    synchronized (LOCK1) {
-      timeSpentInListStatus =
-          timeSpentInListStatus.plus(Duration.between(instantListBegin, Instant.now()));
-      numFilesByListStatus += files.length;
-    }
+    timeSpentInListStatus.add(Duration.between(instantListBegin, Instant.now()).toMillis());
+    numFilesByListStatus.add(files.length);
     return files;
   }
 
   void beginWalkDir(FileStatus dir) {}
 
   void endWalkDir(FileStatus dir, long nFiles, long nDirs, long accumFileSize) throws IOException {
-    synchronized (outputSink) {
+    String absolutePath = dir.getPath().toUri().getPath();
+    HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
+    String strModificationTime =
+        DATE_FORMAT.format(Instant.ofEpochMilli(dir.getModificationTime()));
+    byte byteStoragePolicy = hdfsFileStatus.getStoragePolicy();
+    StoragePolicy storagePolicy = StoragePolicy.valueOf(byteStoragePolicy);
+    String strStoragePolicy =
+        storagePolicy != null ? storagePolicy.toString() : String.valueOf(byteStoragePolicy);
+
+    synchronized (csvPrinter) {
       this.numDirsWalked++;
       this.numFiles += nFiles;
       this.numDirs += nDirs;
       this.accumulatedFileSize += accumFileSize;
-
-      String absolutePath = dir.getPath().toUri().getPath();
-      HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
-      byte byteStoragePolicy = hdfsFileStatus.getStoragePolicy();
-      StoragePolicy storagePolicy = StoragePolicy.valueOf(byteStoragePolicy);
 
       csvPrinter.printRecord(
           absolutePath,
           dir.getOwner(),
           dir.getGroup(),
           dir.getPermission(),
-          DATE_FORMAT.format(Instant.ofEpochMilli(dir.getModificationTime())),
+          strModificationTime,
           nFiles,
           nDirs,
-          storagePolicy != null ? storagePolicy.toString() : String.valueOf(byteStoragePolicy));
+          strStoragePolicy);
     }
   }
 
@@ -121,17 +130,14 @@ final class ScanContext implements Closeable {
 
   /** This method is used to produce meaningful metrics for log/debug purposes. */
   String getFormattedStats() {
-
     final Duration timeSinceScanBegin = Duration.between(instantScanBegin, Instant.now());
-    Duration avgTimeSpentInListStatusPerFile;
-    long secondsSpentInListStatus;
-    synchronized (LOCK1) {
-      avgTimeSpentInListStatusPerFile =
-          numFilesByListStatus > 0
-              ? timeSpentInListStatus.dividedBy(numFilesByListStatus)
-              : Duration.ZERO;
-      secondsSpentInListStatus = timeSpentInListStatus.getSeconds();
-    }
+    long numFilesByListStatus = this.numFilesByListStatus.longValue();
+    Duration timeSpentInListStatus = Duration.ofMillis(this.timeSpentInListStatus.longValue());
+    Duration avgTimeSpentInListStatusPerFile =
+        numFilesByListStatus > 0
+            ? timeSpentInListStatus.dividedBy(numFilesByListStatus)
+            : Duration.ZERO;
+
     final long numFilesDivisor = numFiles > 0 ? numFiles : 1;
     StringBuilder sb =
         new StringBuilder()
@@ -143,11 +149,11 @@ final class ScanContext implements Closeable {
             .append("\nTotal time: ")
             .append(timeSinceScanBegin.getSeconds() + "s")
             .append("\nTotal time in listStatus(..): ")
-            .append(secondsSpentInListStatus + "s")
+            .append(timeSpentInListStatus.getSeconds() + "s")
             .append("\nAvg time per file in listStatus(..): ")
             .append(avgTimeSpentInListStatusPerFile.toMillis() + "ms")
             .append("\nAvg time per doc: ")
-            .append(timeSinceScanBegin.toMillis() / numFilesDivisor + "ms\n");
+            .append(timeSinceScanBegin.dividedBy(numFilesDivisor).toMillis() + "ms\n");
 
     return sb.toString();
   }
