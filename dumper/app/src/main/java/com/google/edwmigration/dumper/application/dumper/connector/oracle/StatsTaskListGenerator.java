@@ -46,6 +46,7 @@ class StatsTaskListGenerator {
           // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
           // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
           "db-objects-synonym-public",
+          "dtl-index-type",
           "dtl-source-code",
           "exttab",
           "m-view-types",
