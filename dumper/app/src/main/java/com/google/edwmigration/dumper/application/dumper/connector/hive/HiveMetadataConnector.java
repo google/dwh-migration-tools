@@ -16,9 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
+import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -522,7 +525,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   private static class MasterKeysTask extends AbstractHiveMetadataTask {
-    private final JsonFactory jsonFactory = new JsonFactory();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private MasterKeysTask() {
       super("master-keys.jsonl");
@@ -538,11 +541,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         ImmutableList<String> masterKeys = client.getMasterKeys();
         for (String masterKey : masterKeys) {
           monitor.count();
-          JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
-          jsonGenerator.writeStartObject();
-          jsonGenerator.writeStringField("masterKey", masterKey);
-          jsonGenerator.writeEndObject();
-          jsonGenerator.flush();
+          writer.write(objectMapper.writeValueAsString(MasterKey.create(masterKey)));
           writer.write('\n');
         }
       }
@@ -556,6 +555,16 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     @Override
     protected String toCallDescription() {
       return "get_master_keys()";
+    }
+  }
+
+  @AutoValue
+  abstract static class MasterKey {
+    @JsonProperty
+    abstract String masterKey();
+
+    public static MasterKey create(String masterKey) {
+      return new AutoValue_HiveMetadataConnector_MasterKey(masterKey);
     }
   }
 
