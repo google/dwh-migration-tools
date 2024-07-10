@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
+import static java.lang.String.format;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -26,14 +28,20 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteSink;
+import com.google.common.net.PercentEscaper;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.ext.hive.metastore.Database;
 import com.google.edwmigration.dumper.ext.hive.metastore.DelegationToken;
 import com.google.edwmigration.dumper.ext.hive.metastore.Field;
@@ -48,6 +56,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentRecordPr
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HiveMetadataDumpFormat;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -383,44 +392,44 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   @ParametersAreNonnullByDefault
-  private static class PartitionsJsonlTask extends AbstractHiveMetadataTask {
-    private final JsonFactory jsonFactory = new JsonFactory();
+  private static class PartitionsJsonlTask extends AbstractTask<Void> {
+    private final PercentEscaper percentEscaper =
+        new PercentEscaper("._,@=", /* plusForSpace= */ false);
 
-    private PartitionsJsonlTask(Predicate<String> databasePredicate) {
-      super("partitions.jsonl", databasePredicate);
+    private PartitionsJsonlTask() {
+      super("partitions.jsonl", /* createTarget= */ false);
     }
 
     @Override
-    protected void run(Writer writer, ThriftClientHandle thriftClientHandle) throws Exception {
+    protected Void doRun(TaskRunContext context, ByteSink sink, @Nonnull Handle handle)
+        throws Exception {
+      ThriftClientHandle thriftClientHandle = (ThriftClientHandle) handle;
+
       try (ThriftClientPool clientPool =
           thriftClientHandle.newMultiThreadedThriftClientPool("partitions-task-pooled-client")) {
         clientPool.execute(
             thriftClient -> {
               ImmutableList<String> allDatabases = thriftClient.getAllDatabaseNames();
               for (String databaseName : allDatabases) {
-                if (isIncludedDatabase(databaseName)) {
-                  ImmutableList<String> allTables =
-                      thriftClient.getAllTableNamesInDatabase(databaseName);
-                  try (ConcurrentProgressMonitor monitor =
-                      new ConcurrentRecordProgressMonitor(
-                          "Writing partitions of tables in database '"
-                              + databaseName
-                              + "' to "
-                              + getTargetPath(),
-                          allTables.size())) {
-                    for (String tableName : allTables) {
-                      dumpPartitions(monitor, writer, clientPool, databaseName, tableName);
-                    }
+                ImmutableList<String> allTables =
+                    thriftClient.getAllTableNamesInDatabase(databaseName);
+                try (ConcurrentProgressMonitor monitor =
+                    new ConcurrentRecordProgressMonitor(
+                        "Writing partitions of tables in database '" + databaseName + "'",
+                        allTables.size())) {
+                  for (String tableName : allTables) {
+                    dumpPartitions(context, monitor, clientPool, databaseName, tableName);
                   }
                 }
               }
             });
       }
+      return null;
     }
 
     private void dumpPartitions(
+        TaskRunContext context,
         ConcurrentProgressMonitor monitor,
-        Writer writer,
         ThriftClientPool clientPool,
         String databaseName,
         String tableName) {
@@ -431,17 +440,30 @@ public class HiveMetadataConnector extends AbstractHiveConnector
               ImmutableList<? extends TBase<?, ?>> partitions =
                   thriftClient.getTable(databaseName, tableName).getRawPartitions();
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
-              synchronized (writer) {
-                JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
-                jsonGenerator.writeStartObject();
-                jsonGenerator.writeStringField("databaseName", databaseName);
-                jsonGenerator.writeStringField("tableName", tableName);
-                jsonGenerator.writeFieldName("partitions");
-                jsonSerializer.serialize(partitions, jsonGenerator);
-                jsonGenerator.writeEndObject();
-                jsonGenerator.flush();
-                writer.write('\n');
+
+              String targetPath =
+                  "partitions-"
+                      + percentEscaper.escape(databaseName)
+                      + "-"
+                      + percentEscaper.escape(tableName)
+                      + ".jsonl";
+              OutputHandle sink = context.newOutputFileHandle(targetPath);
+              if (sink.exists()) {
+                LOG.info("Skipping " + getName() + ": " + sink + " already exists.");
+                return;
               }
+              LOG.info("Writing to " + targetPath + " -> " + sink);
+
+              try (Writer writer =
+                  sink.asTemporaryByteSink()
+                      .asCharSink(StandardCharsets.UTF_8)
+                      .openBufferedStream()) {
+                for (TBase<?, ?> partition : partitions) {
+                  writer.write(jsonSerializer.serialize(partition));
+                  writer.write('\n');
+                }
+              }
+              sink.commit();
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
@@ -455,8 +477,13 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
 
     @Override
-    protected String toCallDescription() {
-      return "get_all_databases()*.get_all_tables()*.get_partitions()";
+    protected String describeSourceData() {
+      return "from get_all_databases()*.get_all_tables()*.get_partitions()";
+    }
+
+    @Override
+    public String toString() {
+      return format("Write partitions %s", describeSourceData());
     }
   }
 
@@ -675,7 +702,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
       out.add(new FunctionsJsonlTask());
       out.add(new ResourcePlansJsonlTask());
       out.add(new TablesRawJsonlTask(databasePredicate));
-      out.add(new PartitionsJsonlTask(databasePredicate));
+      out.add(new PartitionsJsonlTask());
     } else {
       out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
     }

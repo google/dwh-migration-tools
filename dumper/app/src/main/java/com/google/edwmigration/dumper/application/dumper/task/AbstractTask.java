@@ -23,6 +23,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.CheckForNull;
@@ -52,10 +53,16 @@ public abstract class AbstractTask<T> implements Task<T> {
           .withQuoteMode(QuoteMode.MINIMAL);
 
   private final String targetPath;
+  private final boolean createTarget;
   protected Condition[] conditions = Condition.EMPTY_ARRAY;
 
   public AbstractTask(String targetPath) {
+    this(targetPath, /* createTarget= */ true);
+  }
+
+  public AbstractTask(String targetPath, boolean createTarget) {
     this.targetPath = targetPath;
+    this.createTarget = createTarget;
   }
 
   @Override
@@ -100,6 +107,9 @@ public abstract class AbstractTask<T> implements Task<T> {
 
   @Override
   public T run(TaskRunContext context) throws Exception {
+    if (!createTarget) {
+      return doRun(context, DummyByteSink.INSTANCE, context.getHandle());
+    }
     OutputHandle sink = context.newOutputFileHandle(getTargetPath());
     if (sink.exists()) {
       LOG.info("Skipping " + getName() + ": " + sink + " already exists.");
@@ -127,5 +137,14 @@ public abstract class AbstractTask<T> implements Task<T> {
   @Override
   public String toString() {
     return format("Write %s %s", targetPath, describeSourceData());
+  }
+
+  private static class DummyByteSink extends ByteSink {
+    private static final DummyByteSink INSTANCE = new DummyByteSink();
+
+    @Override
+    public OutputStream openStream() {
+      throw new UnsupportedOperationException("Opening stream for DummyByteSink is not supported.");
+    }
   }
 }
