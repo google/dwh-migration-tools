@@ -14,11 +14,11 @@
 -- limitations under the License.
 SELECT
   A.dbid "DbId",
+  to_char(B.begin_interval_time, 'hh24') "Hour",
   A.instance_number "InstanceNumber",
   A.program "Program",
   A.module "Module",
   A.machine "Machine",
-  to_char(B.begin_interval_time, 'hh24') "Hour",
   C.command_name "CommandName",
   count(1) "Count"
 FROM cdb_hist_active_sess_history A

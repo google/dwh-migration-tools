@@ -13,12 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
-  A.con_id,
-  A.owner,
-  A.table_name,
-  A.type_owner,
-  A.type_name,
-  A.default_directory_owner,
-  A.default_directory_name
+  A.con_id "ConId",
+  A.owner "Owner",
+  A.table_name "TableName",
+  A.type_owner "TypeOwner",
+  A.type_name "TypeName",
+  A.default_directory_owner "DefaultDirectoryOwner",
+  A.default_directory_name "DefaultDirectoryName"
 FROM
   cdb_external_tables A
