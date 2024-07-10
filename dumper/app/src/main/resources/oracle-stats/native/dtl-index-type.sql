@@ -26,3 +26,4 @@ SELECT
   A.table_name "TableName",
   A.index_name "IndexName"
 FROM cdb_indexes A
+WHERE A.owner NOT LIKE '%SYS'
