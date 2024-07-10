@@ -568,7 +568,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   private static class DelegationTokensTask extends AbstractHiveMetadataTask {
-    private final JsonFactory jsonFactory = new JsonFactory();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private DelegationTokensTask() {
       super("delegation-tokens.jsonl");
@@ -584,12 +584,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         ImmutableList<DelegationToken> delegationTokens = client.getDelegationTokens();
         for (DelegationToken delegationToken : delegationTokens) {
           monitor.count();
-          JsonGenerator jsonGenerator = jsonFactory.createGenerator(writer);
-          jsonGenerator.writeStartObject();
-          jsonGenerator.writeStringField("identifier", delegationToken.identifier());
-          jsonGenerator.writeStringField("token", delegationToken.token());
-          jsonGenerator.writeEndObject();
-          jsonGenerator.flush();
+          writer.write(objectMapper.writeValueAsString(delegationToken));
           writer.write('\n');
         }
       }

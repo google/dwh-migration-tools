@@ -16,12 +16,15 @@
  */
 package com.google.edwmigration.dumper.ext.hive.metastore;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
 
 @AutoValue
 public abstract class DelegationToken {
+  @JsonProperty
   public abstract String identifier();
 
+  @JsonProperty
   public abstract String token();
 
   public static DelegationToken create(String identifier, String token) {

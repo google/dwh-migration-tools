@@ -29,6 +29,7 @@ sourceSets {
 dependencies {
     api libs.libthrift
     implementation libs.guava
+    implementation libs.jackson.databind
 
     hive312RuntimeOnly libs.hive.common
     hive312RuntimeOnly libs.hive.exec
