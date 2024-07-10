@@ -16,9 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
+import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -522,11 +525,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   private static class MasterKeysTask extends AbstractHiveMetadataTask {
-    private static final CSVFormat MASTER_KEYS_FORMAT =
-        FORMAT.builder().setHeader("MasterKey").build();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private MasterKeysTask() {
-      super("master-keys.csv");
+      super("master-keys.jsonl");
     }
 
     @Override
@@ -537,11 +539,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
           RecordProgressMonitor monitor =
               new RecordProgressMonitor("Writing Master Keys to " + getTargetPath())) {
         ImmutableList<String> masterKeys = client.getMasterKeys();
-        try (CSVPrinter printer = MASTER_KEYS_FORMAT.print(writer)) {
-          for (String masterKey : masterKeys) {
-            monitor.count();
-            printer.printRecord(masterKey);
-          }
+        for (String masterKey : masterKeys) {
+          monitor.count();
+          writer.write(objectMapper.writeValueAsString(MasterKey.create(masterKey)));
+          writer.write('\n');
         }
       }
     }
@@ -554,6 +555,16 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     @Override
     protected String toCallDescription() {
       return "get_master_keys()";
+    }
+  }
+
+  @AutoValue
+  abstract static class MasterKey {
+    @JsonProperty
+    abstract String masterKey();
+
+    public static MasterKey create(String masterKey) {
+      return new AutoValue_HiveMetadataConnector_MasterKey(masterKey);
     }
   }
 

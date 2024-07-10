@@ -119,7 +119,7 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
       ImmutableList.of(
           "catalogs.jsonl",
           "databases.jsonl",
-          "master-keys.csv",
+          "master-keys.jsonl",
           "delegation-tokens.csv",
           "functions.jsonl",
           "resource-plans.jsonl",
