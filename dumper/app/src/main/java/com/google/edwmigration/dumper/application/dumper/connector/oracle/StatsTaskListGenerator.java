@@ -41,6 +41,7 @@ class StatsTaskListGenerator {
       ImmutableList.of(
           "data-types",
           "db-features",
+          "db-info",
           "db-instances",
           "db-objects",
           // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
