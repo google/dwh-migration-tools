@@ -16,9 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -26,16 +28,20 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HdfsPermissionExtractionTask implements Task<Void> {
+
   private static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionTask.class);
 
   final String clusterHost;
@@ -76,13 +82,19 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
 
     Configuration conf = new Configuration();
     conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
+    FileSystem fs = FileSystem.get(conf);
+    checkArgument(
+        fs instanceof DistributedFileSystem,
+        "Not a DistributedFileSystem - can't create ScanContext.");
 
-    try (FileSystem fs = FileSystem.get(conf);
-        ScanContext scanCtx = new ScanContext(fs, output);
+    ExecutorService execService = null;
+    try (DistributedFileSystem dfs = (DistributedFileSystem) fs;
+        ScanContext scanCtx = new ScanContext(dfs, output);
         ExecutorManager execManager =
-            new ExecutorManager(
-                ExecutorManager.newExecutorServiceWithBackpressure(
-                    "hdfs-permission-extraction", poolSize))) {
+            new ExecutorManager( // Create and use a dedicated ExecutorService:
+                execService =
+                    ExecutorManager.newExecutorServiceWithBackpressure(
+                        "hdfs-permission-extraction", poolSize))) {
 
       String hdfsPath = "/";
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
@@ -90,6 +102,11 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
       execManager.execute(rootJob); // The root job executes immediately
       execManager.await(); // Wait until all (recursive) tasks are done executing
       LOG.info(scanCtx.getFormattedStats());
+    } finally {
+      // Shutdown the dedicated ExecutorService:
+      if (execService != null) {
+        MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);
+      }
     }
   }
 }

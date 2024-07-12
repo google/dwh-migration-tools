@@ -16,8 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import java.io.Closeable;
 import java.io.IOException;
@@ -31,7 +29,6 @@ import javax.annotation.WillClose;
 import javax.annotation.concurrent.GuardedBy;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.StoragePolicy;
@@ -42,7 +39,7 @@ final class ScanContext implements Closeable {
   private static final DateTimeFormatter DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
 
-  private final FileSystem fs;
+  private final DistributedFileSystem dfs;
   private final DFSClient dfsClient;
   private final CSVPrinter csvPrinter;
   private final Instant instantScanBegin;
@@ -72,13 +69,9 @@ final class ScanContext implements Closeable {
     StoragePolicy,
   }
 
-  ScanContext(FileSystem fs, @WillClose Writer outputSink) throws IOException {
-    checkArgument(
-        fs instanceof DistributedFileSystem,
-        "Not a DistributedFileSystem - can't create ScanContext.");
-
-    this.fs = fs;
-    this.dfsClient = ((DistributedFileSystem) fs).getClient();
+  ScanContext(DistributedFileSystem dfs, @WillClose Writer outputSink) throws IOException {
+    this.dfs = dfs;
+    this.dfsClient = dfs.getClient();
     this.csvPrinter = AbstractTask.FORMAT.withHeader(CsvHeader.class).print(outputSink);
     this.instantScanBegin = Instant.now();
   }
@@ -90,7 +83,7 @@ final class ScanContext implements Closeable {
 
   FileStatus[] listDirectory(FileStatus dir) throws IOException {
     Instant instantListBegin = Instant.now();
-    FileStatus[] files = fs.listStatus(dir.getPath());
+    FileStatus[] files = dfs.listStatus(dir.getPath());
     timeSpentInListStatus.add(Duration.between(instantListBegin, Instant.now()).toMillis());
     numFilesByListStatus.add(files.length);
     return files;
