@@ -87,14 +87,12 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
         fs instanceof DistributedFileSystem,
         "Not a DistributedFileSystem - can't create ScanContext.");
 
-    ExecutorService execService = null;
+    // Create a dedicated ExecutorService to use:
+    ExecutorService execService =
+        ExecutorManager.newExecutorServiceWithBackpressure("hdfs-permission-extraction", poolSize);
     try (DistributedFileSystem dfs = (DistributedFileSystem) fs;
         ScanContext scanCtx = new ScanContext(dfs, output);
-        ExecutorManager execManager =
-            new ExecutorManager( // Create and use a dedicated ExecutorService:
-                execService =
-                    ExecutorManager.newExecutorServiceWithBackpressure(
-                        "hdfs-permission-extraction", poolSize))) {
+        ExecutorManager execManager = new ExecutorManager(execService)) {
 
       String hdfsPath = "/";
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
@@ -104,9 +102,7 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
       LOG.info(scanCtx.getFormattedStats());
     } finally {
       // Shutdown the dedicated ExecutorService:
-      if (execService != null) {
-        MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);
-      }
+      MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);
     }
   }
 }
