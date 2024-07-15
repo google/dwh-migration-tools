@@ -41,4 +41,4 @@ INNER JOIN stats$sql_summary B
 GROUP BY
   A.dbid,
   A.instance_number,
-  B.force_matching_signature
+  to_char(B.force_matching_signature)
