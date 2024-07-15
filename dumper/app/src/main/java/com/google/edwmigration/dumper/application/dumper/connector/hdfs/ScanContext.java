@@ -63,6 +63,7 @@ final class ScanContext implements Closeable {
     Owner,
     Group,
     Permission,
+    Size, // byte size for a file, empty for a directory (see b/344808098)
     ModificationTime,
     NumberOfFilesAndSubdirs,
     NumberOfSubdirs,
@@ -91,6 +92,10 @@ final class ScanContext implements Closeable {
 
   void beginWalkDir(FileStatus dir) {}
 
+  /*
+   * CsvPrint the directory attributes of the specified dir
+   * and incrementally update the scan statistics (this is what the rest of the parameters are for)
+   */
   void endWalkDir(FileStatus dir, long nFiles, long nDirs, long accumFileSize) throws IOException {
     String absolutePath = dir.getPath().toUri().getPath();
     HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
@@ -112,6 +117,7 @@ final class ScanContext implements Closeable {
           dir.getOwner(),
           dir.getGroup(),
           dir.getPermission(),
+          "", // Size field is empty for directories
           strModificationTime,
           nFiles,
           nDirs,
