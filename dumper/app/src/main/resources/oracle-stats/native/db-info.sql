@@ -14,27 +14,10 @@
 -- limitations under the License.
 SELECT
   A.dbid "DbId",
-  to_char(B.begin_interval_time, 'hh24') "Hour",
-  A.instance_number "InstanceNumber",
-  A.program "Program",
-  A.module "Module",
-  A.machine "Machine",
-  C.command_name "CommandName",
-  count(1) "Count"
-FROM cdb_hist_active_sess_history A
-INNER JOIN cdb_hist_snapshot B
-  ON A.snap_id = B.snap_id
-  AND A.instance_number = B.instance_number
-  AND A.dbid = B.dbid
-  AND A.session_type = 'FOREGROUND'
-  AND B.end_interval_time > sysdate - 30
-INNER JOIN v$sqlcommand C
-  ON A.sql_opcode = C.command_type
-GROUP BY
-  A.dbid,
-  A.instance_number,
-  A.program,
-  A.module,
-  A.machine,
-  to_char(B.begin_interval_time, 'hh24'),
-  C.command_name
+  A.name "Name",
+  A.db_unique_name "DbUniqueName",
+  A.con_id "ConId",
+  A.con_dbid "ConDbId",
+  A.cdb "Cdb",
+  A.database_role "DatabaseRole"
+FROM v$database A
