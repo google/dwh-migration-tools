@@ -61,20 +61,21 @@ class StatsTaskListGenerator {
       ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
 
   @Nonnull
-  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, int logDays) throws IOException {
+  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, int queriedDays)
+      throws IOException {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));
     for (String name : awrNames()) {
-      OracleStatsQuery item = OracleStatsQuery.create(name, AWR, logDays);
+      OracleStatsQuery item = OracleStatsQuery.create(name, AWR, queriedDays);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : nativeNames()) {
-      OracleStatsQuery item = OracleStatsQuery.create(name, NATIVE, logDays);
+      OracleStatsQuery item = OracleStatsQuery.create(name, NATIVE, queriedDays);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : statspackNames()) {
-      OracleStatsQuery query = OracleStatsQuery.create(name, STATSPACK, logDays);
+      OracleStatsQuery query = OracleStatsQuery.create(name, STATSPACK, queriedDays);
       builder.add(StatsJdbcTask.fromQuery(query));
     }
     return builder.build();

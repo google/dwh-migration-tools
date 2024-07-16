@@ -42,8 +42,8 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   @Override
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
     StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
-    int queryLogDays = getQueryLogDays(arguments);
-    out.addAll(taskListGenerator.createTasks(arguments, queryLogDays));
+    int queriedDays = getQueryLogDays(arguments);
+    out.addAll(taskListGenerator.createTasks(arguments, queriedDays));
   }
 
   @Nonnull
@@ -53,11 +53,11 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   }
 
   static int getQueryLogDays(ConnectorArguments arguments) {
-    int queryLogDays = requireNonNullElse(arguments.getQueryLogDays(), 30);
-    if (queryLogDays > 0 && queryLogDays <= MAX_DAYS) {
-      return queryLogDays;
+    int queriedDays = requireNonNullElse(arguments.getQueryLogDays(), 30);
+    if (queriedDays > 0 && queriedDays <= MAX_DAYS) {
+      return queriedDays;
     } else {
-      throw invalidDuration(queryLogDays);
+      throw invalidDuration(queriedDays);
     }
   }
 
