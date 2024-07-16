@@ -41,10 +41,10 @@ public abstract class OracleStatsQuery {
   @Nonnull
   abstract StatsSource statsSource();
 
-  static OracleStatsQuery create(String name, StatsSource statsSource, int days)
+  static OracleStatsQuery create(String name, StatsSource statsSource, int queriedDays)
       throws IOException {
     String path = String.format("oracle-stats/%s/%s.sql", statsSource.value, name);
-    return new AutoValue_OracleStatsQuery(days, name, loadFile(path), statsSource);
+    return new AutoValue_OracleStatsQuery(queriedDays, name, loadFile(path), statsSource);
   }
 
   @Nonnull
