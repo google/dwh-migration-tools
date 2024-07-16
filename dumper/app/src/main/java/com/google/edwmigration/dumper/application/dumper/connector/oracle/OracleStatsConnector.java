@@ -60,14 +60,10 @@ public class OracleStatsConnector extends AbstractOracleConnector {
     if (queriedDays > 0 && queriedDays <= MAX_DAYS) {
       return queriedDays;
     } else {
-      throw invalidDuration(queriedDays);
+      throw new MetadataDumperUsageException(
+          String.format(
+              "The number of days must be positive and not greater than %s. Was: %s",
+              MAX_DAYS, queriedDays));
     }
-  }
-
-  private static MetadataDumperUsageException invalidDuration(int days) {
-    String message =
-        String.format(
-            "The number of days must be positive and not greater than %s. Was: %s", MAX_DAYS, days);
-    return new MetadataDumperUsageException(message);
   }
 }
