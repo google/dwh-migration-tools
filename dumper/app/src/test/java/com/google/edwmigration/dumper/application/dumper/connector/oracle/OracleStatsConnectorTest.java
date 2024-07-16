@@ -37,19 +37,8 @@ public class OracleStatsConnectorTest {
     assertEquals(OracleConnectorScope.STATS, connector.getConnectorScope());
   }
 
-  enum LogTime {
-    SHORT(7),
-    LONG(30);
-
-    final int asDays;
-
-    LogTime(int asDays) {
-      this.asDays = asDays;
-    }
-  }
-
   @Theory
-  public void getQueryLogDays_success(LogTime time) throws IOException {
+  public void getQueryLogDays_success(ValidLogTime time) throws IOException {
     ConnectorArguments arguments =
         new ConnectorArguments(
             "--connector", "oracle-stats", "--query-log-days", String.valueOf(time.asDays));
@@ -59,17 +48,42 @@ public class OracleStatsConnectorTest {
     assertEquals(time.asDays, days);
   }
 
-  @Test
-  public void getQueryLogDays_wrongNumberOfDays_throwsException() throws IOException {
+  @Theory
+  public void getQueryLogDays_invalidValue_throwsException(InvalidLogTime time) throws IOException {
     ConnectorArguments arguments =
-        new ConnectorArguments("--connector", "oracle-stats", "--query-log-days", "999");
+        new ConnectorArguments("--connector", "oracle-stats", "--query-log-days", time.asDays);
 
     MetadataDumperUsageException exception =
         assertThrows(
             MetadataDumperUsageException.class,
             () -> OracleStatsConnector.getQueryLogDays(arguments));
 
-    assertTrue(exception.getMessage().contains("999"));
-    assertTrue(exception.getMessage().startsWith("The number of days must be either 7 or 30"));
+    assertTrue(exception.getMessage().contains(time.asDays));
+    assertTrue(exception.getMessage().startsWith("The number of days must be positive and not greater than"));
+  }
+
+  enum InvalidLogTime {
+    NEGATIVE("-5"),
+    ZERO("0"),
+    EXCEEDS_MAX("999999");
+
+    final String asDays;
+
+    InvalidLogTime(String asDays) {
+      this.asDays = asDays;
+    }
+  }
+
+  enum ValidLogTime {
+    MIN(1),
+    SHORT(7),
+    LONG(30),
+    MAX(OracleStatsConnector.MAX_DAYS);
+
+    final int asDays;
+
+    ValidLogTime(int asDays) {
+      this.asDays = asDays;
+    }
   }
 }

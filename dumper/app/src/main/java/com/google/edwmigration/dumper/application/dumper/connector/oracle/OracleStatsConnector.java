@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static java.util.Objects.requireNonNullElse;
+
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -30,6 +32,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Description("Dumps aggregated statistics from Oracle")
 @ParametersAreNonnullByDefault
 public class OracleStatsConnector extends AbstractOracleConnector {
+
+  static int MAX_DAYS = 10000;
 
   public OracleStatsConnector() {
     super(OracleConnectorScope.STATS);
@@ -49,20 +53,18 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   }
 
   static int getQueryLogDays(ConnectorArguments arguments) {
-    Integer queryLogDaysObject = arguments.getQueryLogDays();
-    int shortTimeInDays = 7;
-    int longTimeInDays = 30;
-    if (queryLogDaysObject == null || queryLogDaysObject == longTimeInDays) {
-      return longTimeInDays;
-    } else if (queryLogDaysObject == shortTimeInDays) {
-      return shortTimeInDays;
+    int queryLogDays = requireNonNullElse(arguments.getQueryLogDays(), 30);
+    if (queryLogDays > 0 && queryLogDays <= MAX_DAYS) {
+      return queryLogDays;
     } else {
-      throw invalidDuration(queryLogDaysObject.intValue());
+      throw invalidDuration(queryLogDays);
     }
   }
 
   private static MetadataDumperUsageException invalidDuration(int days) {
-    String message = "The number of days must be either 7 or 30. Was: " + days;
+    String message =
+        String.format(
+            "The number of days must be positive and not greater than %s. Was: %s", MAX_DAYS, days);
     return new MetadataDumperUsageException(message);
   }
 }
