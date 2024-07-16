@@ -63,6 +63,7 @@ final class ScanContext implements Closeable {
     Owner,
     Group,
     Permission,
+    Size, // byte size for a File, accumulated size of immediately contained files for a Directory
     ModificationTime,
     NumberOfFilesAndSubdirs,
     NumberOfSubdirs,
@@ -91,6 +92,10 @@ final class ScanContext implements Closeable {
 
   void beginWalkDir(FileStatus dir) {}
 
+  /*
+   * CsvPrint the directory attributes of the specified dir
+   * and incrementally update the scan statistics (this is what the rest of the parameters are for)
+   */
   void endWalkDir(FileStatus dir, long nFiles, long nDirs, long accumFileSize) throws IOException {
     String absolutePath = dir.getPath().toUri().getPath();
     HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
@@ -112,6 +117,7 @@ final class ScanContext implements Closeable {
           dir.getOwner(),
           dir.getGroup(),
           dir.getPermission(),
+          accumFileSize, // Size of a directory is the sum of sizes of (immediately) contained files
           strModificationTime,
           nFiles,
           nDirs,
@@ -119,7 +125,29 @@ final class ScanContext implements Closeable {
     }
   }
 
-  void walkFile(FileStatus file) {}
+  void walkFile(FileStatus file) throws IOException {
+    String absolutePath = file.getPath().toUri().getPath();
+    HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
+    String strModificationTime =
+        DATE_FORMAT.format(Instant.ofEpochMilli(file.getModificationTime()));
+    byte byteStoragePolicy = hdfsFileStatus.getStoragePolicy();
+    StoragePolicy storagePolicy = StoragePolicy.valueOf(byteStoragePolicy);
+    String strStoragePolicy =
+        storagePolicy != null ? storagePolicy.toString() : String.valueOf(byteStoragePolicy);
+
+    synchronized (csvPrinter) {
+      csvPrinter.printRecord(
+          absolutePath,
+          file.getOwner(),
+          file.getGroup(),
+          file.getPermission(),
+          file.getLen(),
+          strModificationTime,
+          /* nFiles= */ 0,
+          /* nDirs= */ 0,
+          strStoragePolicy);
+    }
+  }
 
   /** This method is used to produce meaningful metrics for log/debug purposes. */
   String getFormattedStats() {
