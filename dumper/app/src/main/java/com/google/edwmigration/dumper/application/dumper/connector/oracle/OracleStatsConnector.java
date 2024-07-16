@@ -50,12 +50,12 @@ public class OracleStatsConnector extends AbstractOracleConnector {
 
   static int getQueryLogDays(ConnectorArguments arguments) {
     Integer asObject = arguments.getQueryLogDays();
-    int shortTime = 7;
-    int longTime = 30;
-    if (asObject == null || asObject == longTime) {
-      return longTime;
-    } else if (asObject == shortTime) {
-      return shortTime;
+    int shortTimeInDays = 7;
+    int longTimeInDays = 30;
+    if (asObject == null || asObject == longTimeInDays) {
+      return longTimeInDays;
+    } else if (asObject == shortTimeInDays) {
+      return shortTimeInDays;
     } else {
       throw invalidDuration(asObject.intValue());
     }
