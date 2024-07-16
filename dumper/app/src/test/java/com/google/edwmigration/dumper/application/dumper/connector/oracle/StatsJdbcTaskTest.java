@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -47,7 +46,9 @@ public class StatsJdbcTaskTest {
 
   @Theory
   public void toString_success(ResultProperty property) throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE, Duration.ofDays(30));
+    boolean isRequired = false;
+    OracleStatsQuery query =
+        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     // Act
@@ -59,7 +60,9 @@ public class StatsJdbcTaskTest {
 
   @Test
   public void getCategory_success() throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE, Duration.ofDays(30));
+    boolean isRequired = false;
+    OracleStatsQuery query =
+        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     assertEquals(TaskCategory.REQUIRED, task.getCategory());

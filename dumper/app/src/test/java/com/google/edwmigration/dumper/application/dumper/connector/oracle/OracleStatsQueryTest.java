@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -30,7 +29,9 @@ public class OracleStatsQueryTest {
 
   @Test
   public void description_success() throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("db-objects", NATIVE, Duration.ofDays(30));
+    boolean isRequired = true;
+    OracleStatsQuery query =
+        OracleStatsQuery.createNative("db-objects", isRequired, Duration.ofDays(30));
     assertEquals("Query{name=db-objects, statsSource=NATIVE}", query.description());
   }
 }
