@@ -30,6 +30,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public abstract class OracleStatsQuery {
 
+  abstract int queriedDays();
+
   @Nonnull
   abstract String name();
 
@@ -39,9 +41,10 @@ public abstract class OracleStatsQuery {
   @Nonnull
   abstract StatsSource statsSource();
 
-  static OracleStatsQuery create(String name, StatsSource statsSource) throws IOException {
+  static OracleStatsQuery create(String name, StatsSource statsSource, int days)
+      throws IOException {
     String path = String.format("oracle-stats/%s/%s.sql", statsSource.value, name);
-    return new AutoValue_OracleStatsQuery(name, loadFile(path), statsSource);
+    return new AutoValue_OracleStatsQuery(days, name, loadFile(path), statsSource);
   }
 
   @Nonnull

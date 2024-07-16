@@ -40,7 +40,7 @@ INNER JOIN stats$snapshot C
   ON A.dbid = C.dbid
   AND A.snap_id = C.snap_id
   AND A.instance_number = C.instance_number
-  AND C.snap_time > sysdate - 30
+  AND C.snap_time > sysdate - ?
 GROUP BY
   A.dbid,
   A.instance_number,

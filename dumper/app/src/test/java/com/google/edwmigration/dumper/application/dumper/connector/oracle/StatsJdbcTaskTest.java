@@ -46,7 +46,7 @@ public class StatsJdbcTaskTest {
 
   @Theory
   public void toString_success(ResultProperty property) throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE);
+    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE, 30);
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     // Act
@@ -58,7 +58,7 @@ public class StatsJdbcTaskTest {
 
   @Test
   public void getCategory_success() throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE);
+    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE, 30);
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     assertEquals(TaskCategory.REQUIRED, task.getCategory());

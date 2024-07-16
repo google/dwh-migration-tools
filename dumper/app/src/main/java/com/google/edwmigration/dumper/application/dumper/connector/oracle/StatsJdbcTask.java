@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
+
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -58,7 +60,12 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     ResultSetExtractor<Summary> extractor = newCsvResultSetExtractor(sink);
-    Summary result = doSelect(connection, extractor, query.queryText());
+    Summary result;
+    if (query.statsSource() == NATIVE) {
+      result = doSelect(connection, extractor, query.queryText());
+    } else {
+      result = doSelect(connection, extractor, query.queryText(), query.queriedDays());
+    }
     if (result == null) {
       LOG.warn("Unexpected data extraction result: null");
       return Summary.EMPTY;

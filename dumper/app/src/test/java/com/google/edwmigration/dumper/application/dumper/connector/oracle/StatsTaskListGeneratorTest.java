@@ -40,12 +40,12 @@ public class StatsTaskListGeneratorTest {
   @Theory
   public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
       throws IOException {
-    OracleStatsQuery.create(name, NATIVE);
+    OracleStatsQuery.create(name, NATIVE, 7);
   }
 
   @Theory
   public void awrNames_allNamedFilesExist(@FromDataPoints("awrNames") String name)
       throws IOException {
-    OracleStatsQuery.create(name, AWR);
+    OracleStatsQuery.create(name, AWR, 7);
   }
 }

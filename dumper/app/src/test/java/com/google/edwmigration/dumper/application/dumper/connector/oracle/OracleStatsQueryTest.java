@@ -29,7 +29,7 @@ public class OracleStatsQueryTest {
 
   @Test
   public void description_success() throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("db-objects", NATIVE);
+    OracleStatsQuery query = OracleStatsQuery.create("db-objects", NATIVE, 30);
     assertEquals("Query{name=db-objects, statsSource=NATIVE}", query.description());
   }
 }

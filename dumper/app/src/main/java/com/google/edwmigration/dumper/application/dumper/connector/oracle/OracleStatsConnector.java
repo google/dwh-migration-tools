@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
@@ -37,12 +38,31 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   @Override
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
     StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
-    out.addAll(taskListGenerator.createTasks(arguments));
+    int queryLogDays = getQueryLogDays(arguments);
+    out.addAll(taskListGenerator.createTasks(arguments, queryLogDays));
   }
 
   @Nonnull
   @Override
   public String summary(String fileName) {
     return String.format("Oracle statistics saved to %s", fileName);
+  }
+
+  static int getQueryLogDays(ConnectorArguments arguments) {
+    Integer asObject = arguments.getQueryLogDays();
+    int shortTime = 7;
+    int longTime = 30;
+    if (asObject == null || asObject == longTime) {
+      return longTime;
+    } else if (asObject == shortTime) {
+      return shortTime;
+    } else {
+      throw invalidDuration(asObject.intValue());
+    }
+  }
+
+  private static MetadataDumperUsageException invalidDuration(int days) {
+    String message = "The number of days must be either 7 or 30. Was: " + days;
+    return new MetadataDumperUsageException(message);
   }
 }
