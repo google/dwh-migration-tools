@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 @ParametersAreNonnullByDefault
-class StatsJdbcTask extends AbstractJdbcTask<Summary> {
+final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   private static final Logger LOG = LoggerFactory.getLogger(StatsJdbcTask.class);
 
@@ -64,7 +64,8 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
     if (query.statsSource() == NATIVE) {
       result = doSelect(connection, extractor, query.queryText());
     } else {
-      result = doSelect(connection, extractor, query.queryText(), query.queriedDays());
+      long days = query.queriedDuration().toDays();
+      result = doSelect(connection, extractor, query.queryText(), days);
     }
     if (result == null) {
       LOG.warn("Unexpected data extraction result: null");

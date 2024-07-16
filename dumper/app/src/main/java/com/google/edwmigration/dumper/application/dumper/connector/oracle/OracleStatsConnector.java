@@ -22,6 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import java.time.Duration;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,7 +32,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class OracleStatsConnector extends AbstractOracleConnector {
 
-  static int MAX_DAYS = 10000;
+  static final int MAX_DAYS = 10000;
+  static final Duration maxDuration = Duration.ofDays(MAX_DAYS);
 
   public OracleStatsConnector() {
     super(OracleConnectorScope.STATS);
@@ -40,8 +42,8 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   @Override
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
     StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
-    int queriedDays = getQueryLogDays(arguments);
-    out.addAll(taskListGenerator.createTasks(arguments, queriedDays));
+    Duration queriedDuration = getQueriedDuration(arguments);
+    out.addAll(taskListGenerator.createTasks(arguments, queriedDuration));
   }
 
   @Nonnull
@@ -50,20 +52,26 @@ public class OracleStatsConnector extends AbstractOracleConnector {
     return String.format("Oracle statistics saved to %s", fileName);
   }
 
-  static int getQueryLogDays(ConnectorArguments arguments) {
+  static Duration getQueriedDuration(ConnectorArguments arguments) {
+    Duration queriedDuration = extractFromArgs(arguments);
+    if (queriedDuration.compareTo(Duration.ofDays(0)) == 1
+        && queriedDuration.compareTo(maxDuration) < 1) {
+      return queriedDuration;
+    } else {
+      throw new MetadataDumperUsageException(
+          String.format(
+              "The number of days must be positive and not greater than %s. Was: %s",
+              MAX_DAYS, queriedDuration.toDays()));
+    }
+  }
+
+  private static Duration extractFromArgs(ConnectorArguments arguments) {
     int queriedDays;
     if (arguments.getQueryLogDays() == null) {
       queriedDays = 30;
     } else {
       queriedDays = arguments.getQueryLogDays();
     }
-    if (queriedDays > 0 && queriedDays <= MAX_DAYS) {
-      return queriedDays;
-    } else {
-      throw new MetadataDumperUsageException(
-          String.format(
-              "The number of days must be positive and not greater than %s. Was: %s",
-              MAX_DAYS, queriedDays));
-    }
+    return Duration.ofDays(queriedDays);
   }
 }

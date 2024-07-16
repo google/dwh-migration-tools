@@ -26,6 +26,7 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.io.IOException;
+import java.time.Duration;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -61,21 +62,21 @@ class StatsTaskListGenerator {
       ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
 
   @Nonnull
-  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, int queriedDays)
+  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, Duration queriedDuration)
       throws IOException {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));
     for (String name : awrNames()) {
-      OracleStatsQuery item = OracleStatsQuery.create(name, AWR, queriedDays);
+      OracleStatsQuery item = OracleStatsQuery.create(name, AWR, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : nativeNames()) {
-      OracleStatsQuery item = OracleStatsQuery.create(name, NATIVE, queriedDays);
+      OracleStatsQuery item = OracleStatsQuery.create(name, NATIVE, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : statspackNames()) {
-      OracleStatsQuery query = OracleStatsQuery.create(name, STATSPACK, queriedDays);
+      OracleStatsQuery query = OracleStatsQuery.create(name, STATSPACK, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(query));
     }
     return builder.build();

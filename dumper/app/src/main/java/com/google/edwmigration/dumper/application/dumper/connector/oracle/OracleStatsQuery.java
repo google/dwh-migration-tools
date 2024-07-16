@@ -23,6 +23,7 @@ import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource;
 import java.io.IOException;
 import java.net.URL;
+import java.time.Duration;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -30,7 +31,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public abstract class OracleStatsQuery {
 
-  abstract int queriedDays();
+  abstract Duration queriedDuration();
 
   @Nonnull
   abstract String name();
@@ -41,10 +42,10 @@ public abstract class OracleStatsQuery {
   @Nonnull
   abstract StatsSource statsSource();
 
-  static OracleStatsQuery create(String name, StatsSource statsSource, int queriedDays)
+  static OracleStatsQuery create(String name, StatsSource statsSource, Duration queriedDuration)
       throws IOException {
     String path = String.format("oracle-stats/%s/%s.sql", statsSource.value, name);
-    return new AutoValue_OracleStatsQuery(queriedDays, name, loadFile(path), statsSource);
+    return new AutoValue_OracleStatsQuery(queriedDuration, name, loadFile(path), statsSource);
   }
 
   @Nonnull

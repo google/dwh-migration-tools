@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.io.IOException;
+import java.time.Duration;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -41,24 +42,31 @@ public class OracleStatsConnectorTest {
   public void getQueryLogDays_success(ValidLogTime time) throws IOException {
     ConnectorArguments arguments =
         new ConnectorArguments(
-            "--connector", "oracle-stats", "--query-log-days", String.valueOf(time.asDays));
+            "--connector",
+            "oracle-stats",
+            "--query-log-days",
+            String.valueOf(time.duration.toDays()));
 
-    int days = OracleStatsConnector.getQueryLogDays(arguments);
+    Duration days = OracleStatsConnector.getQueriedDuration(arguments);
 
-    assertEquals(time.asDays, days);
+    assertEquals(time.duration, days);
   }
 
   @Theory
   public void getQueryLogDays_invalidValue_throwsException(InvalidLogTime time) throws IOException {
     ConnectorArguments arguments =
-        new ConnectorArguments("--connector", "oracle-stats", "--query-log-days", time.asDays);
+        new ConnectorArguments(
+            "--connector",
+            "oracle-stats",
+            "--query-log-days",
+            String.valueOf(time.duration.toDays()));
 
     MetadataDumperUsageException exception =
         assertThrows(
             MetadataDumperUsageException.class,
-            () -> OracleStatsConnector.getQueryLogDays(arguments));
+            () -> OracleStatsConnector.getQueriedDuration(arguments));
 
-    assertTrue(exception.getMessage().contains(time.asDays));
+    assertTrue(exception.getMessage().contains(String.valueOf(time.duration.toDays())));
     assertTrue(
         exception
             .getMessage()
@@ -66,27 +74,27 @@ public class OracleStatsConnectorTest {
   }
 
   enum InvalidLogTime {
-    NEGATIVE("-5"),
-    ZERO("0"),
-    EXCEEDS_MAX("999999");
+    NEGATIVE(Duration.ofDays(-5)),
+    ZERO(Duration.ofDays(0)),
+    EXCEEDS_MAX(Duration.ofDays(999999));
 
-    final String asDays;
+    final Duration duration;
 
-    InvalidLogTime(String asDays) {
-      this.asDays = asDays;
+    InvalidLogTime(Duration duration) {
+      this.duration = duration;
     }
   }
 
   enum ValidLogTime {
-    MIN(1),
-    SHORT(7),
-    LONG(30),
-    MAX(OracleStatsConnector.MAX_DAYS);
+    MIN(Duration.ofDays(1)),
+    SHORT(Duration.ofDays(7)),
+    LONG(Duration.ofDays(30)),
+    MAX(OracleStatsConnector.maxDuration);
 
-    final int asDays;
+    final Duration duration;
 
-    ValidLogTime(int asDays) {
-      this.asDays = asDays;
+    ValidLogTime(Duration duration) {
+      this.duration = duration;
     }
   }
 }

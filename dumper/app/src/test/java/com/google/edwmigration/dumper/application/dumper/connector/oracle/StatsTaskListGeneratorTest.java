@@ -21,6 +21,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.oracle
 
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.time.Duration;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
@@ -40,12 +41,12 @@ public class StatsTaskListGeneratorTest {
   @Theory
   public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
       throws IOException {
-    OracleStatsQuery.create(name, NATIVE, 7);
+    OracleStatsQuery.create(name, NATIVE, Duration.ofDays(7));
   }
 
   @Theory
   public void awrNames_allNamedFilesExist(@FromDataPoints("awrNames") String name)
       throws IOException {
-    OracleStatsQuery.create(name, AWR, 7);
+    OracleStatsQuery.create(name, AWR, Duration.ofDays(7));
   }
 }
