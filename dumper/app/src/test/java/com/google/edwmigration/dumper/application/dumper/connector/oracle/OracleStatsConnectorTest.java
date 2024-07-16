@@ -59,7 +59,10 @@ public class OracleStatsConnectorTest {
             () -> OracleStatsConnector.getQueryLogDays(arguments));
 
     assertTrue(exception.getMessage().contains(time.asDays));
-    assertTrue(exception.getMessage().startsWith("The number of days must be positive and not greater than"));
+    assertTrue(
+        exception
+            .getMessage()
+            .startsWith("The number of days must be positive and not greater than"));
   }
 
   enum InvalidLogTime {
