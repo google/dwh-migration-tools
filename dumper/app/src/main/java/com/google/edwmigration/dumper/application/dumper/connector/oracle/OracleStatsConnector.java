@@ -16,8 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static java.util.Objects.requireNonNullElse;
-
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -53,7 +51,12 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   }
 
   static int getQueryLogDays(ConnectorArguments arguments) {
-    int queriedDays = requireNonNullElse(arguments.getQueryLogDays(), 30);
+    int queriedDays;
+    if (arguments.getQueryLogDays() == null) {
+      queriedDays = 30;
+    } else {
+      queriedDays = arguments.getQueryLogDays();
+    }
     if (queriedDays > 0 && queriedDays <= MAX_DAYS) {
       return queriedDays;
     } else {
