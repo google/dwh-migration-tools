@@ -53,7 +53,9 @@ public class OracleStatsConnectorTest {
     ConnectorArguments arguments =
         new ConnectorArguments(
             "--connector", "oracle-stats", "--query-log-days", String.valueOf(time.asDays));
+
     int days = OracleStatsConnector.getQueryLogDays(arguments);
+
     assertEquals(time.asDays, days);
   }
 
@@ -61,10 +63,12 @@ public class OracleStatsConnectorTest {
   public void getQueryLogDays_wrongNumberOfDays_throwsException() throws IOException {
     ConnectorArguments arguments =
         new ConnectorArguments("--connector", "oracle-stats", "--query-log-days", "999");
+
     MetadataDumperUsageException exception =
         assertThrows(
             MetadataDumperUsageException.class,
             () -> OracleStatsConnector.getQueryLogDays(arguments));
+
     assertTrue(exception.getMessage().contains("999"));
     assertTrue(exception.getMessage().startsWith("The number of days must be either 7 or 30"));
   }
