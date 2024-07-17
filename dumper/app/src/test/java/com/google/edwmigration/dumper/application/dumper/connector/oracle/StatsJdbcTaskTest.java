@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
+import java.time.Duration;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -46,7 +47,7 @@ public class StatsJdbcTaskTest {
 
   @Theory
   public void toString_success(ResultProperty property) throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE);
+    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE, Duration.ofDays(30));
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     // Act
@@ -58,7 +59,7 @@ public class StatsJdbcTaskTest {
 
   @Test
   public void getCategory_success() throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE);
+    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE, Duration.ofDays(30));
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     assertEquals(TaskCategory.REQUIRED, task.getCategory());

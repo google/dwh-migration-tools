@@ -38,7 +38,7 @@ INNER JOIN stats$sql_summary B
   ON A.dbid = B.dbid
   AND A.snap_id = B.snap_id
   AND A.instance_number = B.instance_number
-  AND A.snap_time > sysdate - 30
+  AND A.snap_time > sysdate - ?
 GROUP BY
   A.dbid,
   A.instance_number,

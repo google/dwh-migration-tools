@@ -20,6 +20,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.oracle
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.time.Duration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,7 +30,7 @@ public class OracleStatsQueryTest {
 
   @Test
   public void description_success() throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("db-objects", NATIVE);
+    OracleStatsQuery query = OracleStatsQuery.create("db-objects", NATIVE, Duration.ofDays(30));
     assertEquals("Query{name=db-objects, statsSource=NATIVE}", query.description());
   }
 }

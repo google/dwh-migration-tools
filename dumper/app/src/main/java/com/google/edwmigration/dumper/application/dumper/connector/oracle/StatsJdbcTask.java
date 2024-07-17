@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
+
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -35,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 @ParametersAreNonnullByDefault
-class StatsJdbcTask extends AbstractJdbcTask<Summary> {
+final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   private static final Logger LOG = LoggerFactory.getLogger(StatsJdbcTask.class);
 
@@ -58,7 +60,13 @@ class StatsJdbcTask extends AbstractJdbcTask<Summary> {
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     ResultSetExtractor<Summary> extractor = newCsvResultSetExtractor(sink);
-    Summary result = doSelect(connection, extractor, query.queryText());
+    Summary result;
+    if (query.statsSource() == NATIVE) {
+      result = doSelect(connection, extractor, query.queryText());
+    } else {
+      long days = query.queriedDuration().toDays();
+      result = doSelect(connection, extractor, query.queryText(), days);
+    }
     if (result == null) {
       LOG.warn("Unexpected data extraction result: null");
       return Summary.EMPTY;

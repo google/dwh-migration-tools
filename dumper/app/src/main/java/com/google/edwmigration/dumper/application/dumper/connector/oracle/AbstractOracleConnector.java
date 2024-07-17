@@ -20,6 +20,7 @@ import static com.google.edwmigration.dumper.application.dumper.ConnectorArgumen
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SERVICE;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SID;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_PORT;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_QUERY_LOG_DAYS;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_URI;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -72,7 +73,9 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @RespectsArgumentPassword
 @RespectsArgumentUri
 @RespectsInputs({
-  // Although RespectsInput is @Repeatable, errorprone fails on it.
+  @RespectsInput(
+      arg = OPT_QUERY_LOG_DAYS,
+      description = "The number of days of query history to dump."),
   @RespectsInput(
       order = 450,
       arg = ConnectorArguments.OPT_ORACLE_SID,
