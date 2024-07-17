@@ -16,7 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static java.time.Duration.ofDays;
+
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -32,8 +35,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class OracleStatsConnector extends AbstractOracleConnector {
 
-  static final Duration DEFAULT_DURATION = Duration.ofDays(30);
-  static final Duration MAX_DURATION = Duration.ofDays(10000);
+  static final Duration DEFAULT_DURATION = ofDays(30);
+  static final Duration MAX_DURATION = ofDays(10000);
 
   public OracleStatsConnector() {
     super(OracleConnectorScope.STATS);
@@ -54,8 +57,7 @@ public class OracleStatsConnector extends AbstractOracleConnector {
 
   static Duration getQueriedDuration(ConnectorArguments arguments) {
     Duration queriedDuration = extractFromArgs(arguments);
-    if (queriedDuration.compareTo(Duration.ofDays(1)) >= 0
-        && queriedDuration.compareTo(MAX_DURATION) < 1) {
+    if (Range.closed(ofDays(1), MAX_DURATION).contains(queriedDuration)) {
       return queriedDuration;
     } else {
       throw new MetadataDumperUsageException(
@@ -70,7 +72,7 @@ public class OracleStatsConnector extends AbstractOracleConnector {
       return DEFAULT_DURATION;
     } else {
       int queriedDays = arguments.getQueryLogDays();
-      return Duration.ofDays(queriedDays);
+      return ofDays(queriedDays);
     }
   }
 }
