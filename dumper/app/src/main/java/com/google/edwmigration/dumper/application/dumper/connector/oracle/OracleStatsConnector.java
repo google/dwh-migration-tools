@@ -32,8 +32,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class OracleStatsConnector extends AbstractOracleConnector {
 
-  static final int MAX_DAYS = 10000;
-  static final Duration maxDuration = Duration.ofDays(MAX_DAYS);
+  static final Duration DEFAULT_DURATION = Duration.ofDays(30);
+  static final Duration MAX_DURATION = Duration.ofDays(10000);
 
   public OracleStatsConnector() {
     super(OracleConnectorScope.STATS);
@@ -55,23 +55,22 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   static Duration getQueriedDuration(ConnectorArguments arguments) {
     Duration queriedDuration = extractFromArgs(arguments);
     if (queriedDuration.compareTo(Duration.ofDays(0)) == 1
-        && queriedDuration.compareTo(maxDuration) < 1) {
+        && queriedDuration.compareTo(MAX_DURATION) < 1) {
       return queriedDuration;
     } else {
       throw new MetadataDumperUsageException(
           String.format(
               "The number of days must be positive and not greater than %s. Was: %s",
-              MAX_DAYS, queriedDuration.toDays()));
+              MAX_DURATION.toDays(), queriedDuration.toDays()));
     }
   }
 
   private static Duration extractFromArgs(ConnectorArguments arguments) {
-    int queriedDays;
     if (arguments.getQueryLogDays() == null) {
-      queriedDays = 30;
+      return DEFAULT_DURATION;
     } else {
-      queriedDays = arguments.getQueryLogDays();
+      int queriedDays = arguments.getQueryLogDays();
+      return Duration.ofDays(queriedDays);
     }
-    return Duration.ofDays(queriedDays);
   }
 }

@@ -89,7 +89,7 @@ public class OracleStatsConnectorTest {
     MIN(Duration.ofDays(1)),
     SHORT(Duration.ofDays(7)),
     LONG(Duration.ofDays(30)),
-    MAX(OracleStatsConnector.maxDuration);
+    MAX(OracleStatsConnector.MAX_DURATION);
 
     final Duration duration;
 
