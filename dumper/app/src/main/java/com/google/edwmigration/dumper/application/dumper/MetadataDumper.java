@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
@@ -33,7 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TaskResultSummary;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TasksReport;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +46,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
@@ -155,6 +156,7 @@ public class MetadataDumper {
       return true;
     } else {
       Stopwatch stopwatch = Stopwatch.createStarted();
+      OptionalLong outputFileLength = OptionalLong.empty();
       TaskSetState.Impl state = new TaskSetState.Impl();
 
       LOG.info("Using " + connector);
@@ -180,21 +182,15 @@ public class MetadataDumper {
         new TasksRunner(sinkFactory, handle, arguments.getThreadPoolSize(), state, tasks).run();
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
-        summaryPrinter.printSummarySection(
-            linePrinter -> {
-              File outputFile = new File(outputFileLocation);
-              if (outputFile.isFile()) {
-                linePrinter.println("Dumper wrote " + outputFile.length() + " bytes.");
-              }
-              linePrinter.println("Dumper took " + stopwatch + ".");
-            });
+        File outputFile = new File(outputFileLocation);
+        if (outputFile.isFile()) {
+          outputFileLength = OptionalLong.of(outputFile.length());
+        }
       }
 
       printTaskResults(summaryPrinter, state);
-      String summary = connector.summary(outputFileLocation);
-      summaryPrinter.printSummarySection(summary);
       boolean result = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
-      logStatusSummary(summaryPrinter, state);
+      logFinalSummary(summaryPrinter, state, outputFileLength, stopwatch, outputFileLocation);
       return result;
     }
   }
@@ -264,12 +260,24 @@ public class MetadataDumper {
     return true;
   }
 
-  private void logStatusSummary(SummaryPrinter summaryPrinter, TaskSetState state) {
+  private void logFinalSummary(
+      SummaryPrinter summaryPrinter,
+      TaskSetState state,
+      OptionalLong outputFileLength,
+      Stopwatch stopwatch,
+      String outputFileLocation) {
     summaryPrinter.printSummarySection(
         linePrinter -> {
-          for (TasksReport item : state.getTasksReports()) {
-            linePrinter.println("%s", item);
-          }
+          StringBuilder executionSummary = new StringBuilder("Dumper ");
+          outputFileLength.ifPresent(length -> executionSummary.append("wrote " + length + ", "));
+          executionSummary.append("took " + stopwatch + ".");
+          linePrinter.println(executionSummary.toString());
+          linePrinter.println(
+              "Task summary: "
+                  + state.getTasksReports().stream()
+                      .map(taskReport -> taskReport.count() + " " + taskReport.state())
+                      .collect(joining(", ")));
+          linePrinter.println("Output saved to '%s'", outputFileLocation);
         });
   }
 }

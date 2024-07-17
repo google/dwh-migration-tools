@@ -82,10 +82,4 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector {
   public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
     return super.getConnectorProperties();
   }
-
-  @Nonnull
-  @Override
-  public String summary(String fileName) {
-    return String.format("HDFS metadata has been saved to %s", fileName);
-  }
 }
