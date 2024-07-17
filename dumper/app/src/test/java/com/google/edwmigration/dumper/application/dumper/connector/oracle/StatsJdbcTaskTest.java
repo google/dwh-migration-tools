@@ -71,7 +71,8 @@ public class StatsJdbcTaskTest {
   @Test
   public void getCategory_isRequired_success() throws IOException {
     boolean isRequired = true;
-    OracleStatsQuery query = OracleStatsQuery.createNative(isRequired, "pdbs-info");
+    OracleStatsQuery query =
+        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     assertEquals(TaskCategory.REQUIRED, task.getCategory());
