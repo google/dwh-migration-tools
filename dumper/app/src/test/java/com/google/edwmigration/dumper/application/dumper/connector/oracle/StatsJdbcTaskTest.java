@@ -59,10 +59,19 @@ public class StatsJdbcTaskTest {
   }
 
   @Test
-  public void getCategory_success() throws IOException {
+  public void getCategory_isNotRequired_success() throws IOException {
     boolean isRequired = false;
     OracleStatsQuery query =
         OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
+    Task<?> task = StatsJdbcTask.fromQuery(query);
+
+    assertEquals(TaskCategory.OPTIONAL, task.getCategory());
+  }
+
+  @Test
+  public void getCategory_isRequired_success() throws IOException {
+    boolean isRequired = true;
+    OracleStatsQuery query = OracleStatsQuery.createNative(isRequired, "pdbs-info");
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     assertEquals(TaskCategory.REQUIRED, task.getCategory());

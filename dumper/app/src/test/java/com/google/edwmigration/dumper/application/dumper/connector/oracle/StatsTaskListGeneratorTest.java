@@ -59,6 +59,6 @@ public class StatsTaskListGeneratorTest {
   @Theory
   public void statspackNames_allNamedFilesExist(@FromDataPoints("statspackNames") String name)
       throws IOException {
-    OracleStatsQuery.createAwr(name, Duration.ofDays(7));
+    OracleStatsQuery.createStatspack(name, Duration.ofDays(7));
   }
 }
