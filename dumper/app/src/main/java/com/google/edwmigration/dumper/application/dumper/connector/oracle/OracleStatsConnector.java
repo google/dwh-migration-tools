@@ -54,7 +54,7 @@ public class OracleStatsConnector extends AbstractOracleConnector {
 
   static Duration getQueriedDuration(ConnectorArguments arguments) {
     Duration queriedDuration = extractFromArgs(arguments);
-    if (queriedDuration.compareTo(Duration.ofDays(0)) == 1
+    if (queriedDuration.compareTo(Duration.ofDays(1)) >= 0
         && queriedDuration.compareTo(MAX_DURATION) < 1) {
       return queriedDuration;
     } else {
