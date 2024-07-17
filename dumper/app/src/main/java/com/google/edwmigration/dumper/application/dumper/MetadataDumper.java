@@ -46,7 +46,6 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
@@ -156,7 +155,7 @@ public class MetadataDumper {
       return true;
     } else {
       Stopwatch stopwatch = Stopwatch.createStarted();
-      OptionalLong outputFileLength = OptionalLong.empty();
+      long outputFileLength = 0;
       TaskSetState.Impl state = new TaskSetState.Impl();
 
       LOG.info("Using " + connector);
@@ -184,14 +183,21 @@ public class MetadataDumper {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);
         if (outputFile.isFile()) {
-          outputFileLength = OptionalLong.of(outputFile.length());
+          outputFileLength = outputFile.length();
         }
       }
 
       printTaskResults(summaryPrinter, state);
-      boolean result = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
-      logFinalSummary(summaryPrinter, state, outputFileLength, stopwatch, outputFileLocation);
-      return result;
+      boolean requiredTaskSucceeded =
+          checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
+      logFinalSummary(
+          summaryPrinter,
+          state,
+          outputFileLength,
+          stopwatch,
+          outputFileLocation,
+          requiredTaskSucceeded);
+      return requiredTaskSucceeded;
     }
   }
 
@@ -252,8 +258,6 @@ public class MetadataDumper {
       summaryPrinter.printSummarySection(
           linePrinter -> {
             linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks);
-            linePrinter.println(
-                "Output, including debugging information, has been saved to '%s'.", outputFileName);
           });
       return false;
     }
@@ -263,21 +267,25 @@ public class MetadataDumper {
   private void logFinalSummary(
       SummaryPrinter summaryPrinter,
       TaskSetState state,
-      OptionalLong outputFileLength,
+      long outputFileLength,
       Stopwatch stopwatch,
-      String outputFileLocation) {
+      String outputFileLocation,
+      boolean requiredTaskSucceeded) {
     summaryPrinter.printSummarySection(
         linePrinter -> {
-          StringBuilder executionSummary = new StringBuilder("Dumper ");
-          outputFileLength.ifPresent(length -> executionSummary.append("wrote " + length + ", "));
-          executionSummary.append("took " + stopwatch + ".");
-          linePrinter.println(executionSummary.toString());
+          linePrinter.println(
+              "Dumper wrote " + outputFileLength + " bytes, took " + stopwatch + ".");
           linePrinter.println(
               "Task summary: "
                   + state.getTasksReports().stream()
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
-          linePrinter.println("Output saved to '%s'", outputFileLocation);
+          if (requiredTaskSucceeded) {
+            linePrinter.println("Output saved to '%s'", outputFileLocation);
+          } else {
+            linePrinter.println(
+                "Output, including debugging information, saved to '%s'", outputFileLocation);
+          }
         });
   }
 }
