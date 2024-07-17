@@ -46,8 +46,7 @@ public class StatsTaskListGeneratorTest {
   @Theory
   public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
       throws IOException {
-    boolean isRequired = true;
-    OracleStatsQuery.createNative(name, isRequired, Duration.ofDays(7));
+    OracleStatsQuery.createNative(name, /* isRequired= */ true, Duration.ofDays(7));
   }
 
   @Theory
