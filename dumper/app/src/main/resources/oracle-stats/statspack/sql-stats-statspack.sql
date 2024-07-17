@@ -13,25 +13,24 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
+  NULL "ConId",
   A.dbid "DbId",
   A.instance_number "InstanceNumber",
   to_char(B.force_matching_signature) "ForceMatchingSignature",
-  min(B.sql_id) "MinSqlId",
-  sum(B.application_wait_time) "SumAPWait",
-  sum(B.buffer_gets) "SumBufferGets",
-  sum(B.concurrency_wait_time) "SumCCWait",
-  sum(B.cluster_wait_time) "SumCLWait",
-  sum(B.cpu_time) "SumCpuTime",
-  sum(B.direct_writes) "SumDirectWrites",
-  sum(B.disk_reads) "SumDiskReads",
-  sum(B.elapsed_time) "SumElapsedTime",
-  sum(B.end_of_fetch_count) "SumEndOfFetchCount",
-  sum(B.executions) "SumExecutions",
-  sum(B.user_io_wait_time) "SumIOWait",
-  sum(B.java_exec_time) "SumJavaExec",
-  sum(B.plsql_exec_time) "SumPlsExec",
-  sum(B.px_servers_executions) "SumPxExecutions",
-  sum(B.rows_processed) "SumRowsProcessed"
+  min(B.sql_id) "SqlId",
+  sum(B.buffer_gets) "BufferGetsTotal",
+  sum(B.cluster_wait_time) "ClWaitTotal",
+  sum(B.cpu_time) "CpuTimeTotal",
+  sum(B.direct_writes) "DirectWritesTotal",
+  sum(B.disk_reads) "DiskReadsTotal",
+  sum(B.elapsed_time) "ElapsedTimeTotal",
+  sum(B.end_of_fetch_count) "EndOfFetchCountTotal",
+  sum(B.executions) "ExecutionsTotal",
+  sum(B.user_io_wait_time) "IoWaitTotal",
+  sum(B.java_exec_time) "JavaExecTotal",
+  sum(B.plsql_exec_time) "PlsExecTotal",
+  sum(B.px_servers_executions) "PxExecutionsTotal",
+  sum(B.rows_processed) "RowsTotal"
 FROM
   stats$snapshot A
 INNER JOIN stats$sql_summary B
@@ -42,4 +41,4 @@ INNER JOIN stats$sql_summary B
 GROUP BY
   A.dbid,
   A.instance_number,
-  B.force_matching_signature
+  to_char(B.force_matching_signature)
