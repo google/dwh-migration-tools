@@ -40,7 +40,6 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   private static final Logger LOG = LoggerFactory.getLogger(StatsJdbcTask.class);
-
   private final OracleStatsQuery query;
 
   private StatsJdbcTask(String targetPath, OracleStatsQuery query) {
@@ -77,7 +76,11 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   @Nonnull
   @Override
   public TaskCategory getCategory() {
-    return TaskCategory.REQUIRED;
+    if (query.isRequired()) {
+      return TaskCategory.REQUIRED;
+    } else {
+      return TaskCategory.OPTIONAL;
+    }
   }
 
   @Override
