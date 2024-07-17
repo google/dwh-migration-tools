@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
@@ -33,7 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TaskResultSummary;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TasksReport;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
 import java.io.IOException;
@@ -155,6 +155,7 @@ public class MetadataDumper {
       return true;
     } else {
       Stopwatch stopwatch = Stopwatch.createStarted();
+      long outputFileLength = 0;
       TaskSetState.Impl state = new TaskSetState.Impl();
 
       LOG.info("Using " + connector);
@@ -180,22 +181,23 @@ public class MetadataDumper {
         new TasksRunner(sinkFactory, handle, arguments.getThreadPoolSize(), state, tasks).run();
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
-        summaryPrinter.printSummarySection(
-            linePrinter -> {
-              File outputFile = new File(outputFileLocation);
-              if (outputFile.isFile()) {
-                linePrinter.println("Dumper wrote " + outputFile.length() + " bytes.");
-              }
-              linePrinter.println("Dumper took " + stopwatch + ".");
-            });
+        File outputFile = new File(outputFileLocation);
+        if (outputFile.isFile()) {
+          outputFileLength = outputFile.length();
+        }
       }
 
       printTaskResults(summaryPrinter, state);
-      String summary = connector.summary(outputFileLocation);
-      summaryPrinter.printSummarySection(summary);
-      boolean result = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
-      logStatusSummary(summaryPrinter, state);
-      return result;
+      boolean requiredTaskSucceeded =
+          checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
+      logFinalSummary(
+          summaryPrinter,
+          state,
+          outputFileLength,
+          stopwatch,
+          outputFileLocation,
+          requiredTaskSucceeded);
+      return requiredTaskSucceeded;
     }
   }
 
@@ -256,19 +258,33 @@ public class MetadataDumper {
       summaryPrinter.printSummarySection(
           linePrinter -> {
             linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks);
-            linePrinter.println(
-                "Output, including debugging information, has been saved to '%s'.", outputFileName);
           });
       return false;
     }
     return true;
   }
 
-  private void logStatusSummary(SummaryPrinter summaryPrinter, TaskSetState state) {
+  private void logFinalSummary(
+      SummaryPrinter summaryPrinter,
+      TaskSetState state,
+      long outputFileLength,
+      Stopwatch stopwatch,
+      String outputFileLocation,
+      boolean requiredTaskSucceeded) {
     summaryPrinter.printSummarySection(
         linePrinter -> {
-          for (TasksReport item : state.getTasksReports()) {
-            linePrinter.println("%s", item);
+          linePrinter.println(
+              "Dumper wrote " + outputFileLength + " bytes, took " + stopwatch + ".");
+          linePrinter.println(
+              "Task summary: "
+                  + state.getTasksReports().stream()
+                      .map(taskReport -> taskReport.count() + " " + taskReport.state())
+                      .collect(joining(", ")));
+          if (requiredTaskSucceeded) {
+            linePrinter.println("Output saved to '%s'", outputFileLocation);
+          } else {
+            linePrinter.println(
+                "Output, including debugging information, saved to '%s'", outputFileLocation);
           }
         });
   }

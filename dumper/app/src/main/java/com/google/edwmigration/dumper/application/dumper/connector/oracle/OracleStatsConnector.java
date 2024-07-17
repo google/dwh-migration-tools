@@ -27,7 +27,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.time.Duration;
 import java.util.List;
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoService(Connector.class)
@@ -47,12 +46,6 @@ public class OracleStatsConnector extends AbstractOracleConnector {
     StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
     Duration queriedDuration = getQueriedDuration(arguments);
     out.addAll(taskListGenerator.createTasks(arguments, queriedDuration));
-  }
-
-  @Nonnull
-  @Override
-  public String summary(String fileName) {
-    return String.format("Oracle statistics saved to %s", fileName);
   }
 
   static Duration getQueriedDuration(ConnectorArguments arguments) {
