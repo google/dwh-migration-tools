@@ -36,6 +36,7 @@ public abstract class OracleStatsQuery {
 
   abstract boolean isRequired();
 
+  @Nonnull
   abstract Duration queriedDuration();
 
   @Nonnull
@@ -47,15 +48,18 @@ public abstract class OracleStatsQuery {
   @Nonnull
   abstract StatsSource statsSource();
 
+  @Nonnull
   static OracleStatsQuery createAwr(String name, Duration queriedDuration) throws IOException {
     return create(false, queriedDuration, name, AWR);
   }
 
+  @Nonnull
   static OracleStatsQuery createNative(String name, boolean isRequired, Duration queriedDuration)
       throws IOException {
     return create(isRequired, queriedDuration, name, NATIVE);
   }
 
+  @Nonnull
   static OracleStatsQuery createStatspack(String name, Duration queriedDuration)
       throws IOException {
     return create(false, queriedDuration, name, STATSPACK);
