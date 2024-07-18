@@ -18,6 +18,7 @@ SELECT
   A.instance_number "InstanceNumber",
   to_char(B.force_matching_signature) "ForceMatchingSignature",
   min(B.sql_id) "SqlId",
+  sum(B.application_wait_time) "ApWaitTotal",
   sum(B.buffer_gets) "BufferGetsTotal",
   sum(B.cluster_wait_time) "ClWaitTotal",
   sum(B.cpu_time) "CpuTimeTotal",
