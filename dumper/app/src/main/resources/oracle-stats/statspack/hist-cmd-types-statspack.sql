@@ -27,12 +27,7 @@ SELECT
   avg(A.cluster_wait_time) "AvgClWait",
   avg(A.application_wait_time) "AvgApWait",
   avg(A.concurrency_wait_time) "AvgCcWait",
-  avg(A.plsql_exec_time) "AvgPlsExecTime",
-  avg(A.direct_writes) "AvgDirectWrites",
-  avg(A.disk_reads) "AvgDiskReads",
-  avg(A.end_of_fetch_count) "AvgFetchCount",
-  avg(A.java_exec_time) "AvgJavaExecTime",
-  avg(A.px_servers_executions) "AvgPxExecutions"
+  avg(A.plsql_exec_time) "AvgPlsExecTime"
 FROM stats$sql_summary A
 LEFT JOIN audit_actions B ON A.command_type = B.action
 INNER JOIN stats$snapshot C
