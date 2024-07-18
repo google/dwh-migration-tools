@@ -26,6 +26,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -46,10 +47,11 @@ import javax.annotation.Nonnull;
     description = "The size of the thread pool to use when extracting hdfs permissions.")
 @AutoService({Connector.class})
 @Description("Dumps permissions from the HDFS.")
-public class HdfsPermissionExtractionConnector extends AbstractConnector {
+public class HdfsPermissionExtractionConnector extends AbstractConnector
+    implements HdfsPermissionExtractionDumpFormat {
 
   public HdfsPermissionExtractionConnector() {
-    super("hdfs-permissions");
+    super(FORMAT_NAME);
   }
 
   @Nonnull
@@ -61,9 +63,9 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector {
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments args)
       throws Exception {
-    out.add(
-        new HdfsPermissionExtractionTask(
-            args.getHost(), args.getPort(/* defaultPort= */ 8020), args.getThreadPoolSize()));
+    // out.add(
+    //    new HdfsPermissionExtractionTask(
+    //        args.getHost(), args.getPort(/* defaultPort= */ 8020), args.getThreadPoolSize()));
     out.add(new HdfsContentSummaryTask(args.getHost(), args.getPort(/* defaultPort= */ 8020)));
   }
 

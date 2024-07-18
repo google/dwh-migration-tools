@@ -19,17 +19,14 @@ package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftLogsDumpFormat.SvlStatementText.Header;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.hadoop.conf.Configuration;
@@ -37,24 +34,19 @@ import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HdfsContentSummaryTask implements Task<Void> {
+public class HdfsContentSummaryTask extends AbstractTask<Void>
+    implements HdfsPermissionExtractionDumpFormat.ContentSummary {
 
   private static final Logger LOG = LoggerFactory.getLogger(HdfsContentSummaryTask.class);
 
   private final String clusterHost;
   private final int port;
 
-  private enum CsvHeader {
-    Path,
-    TotalSubtreeFileSize,
-    TotalSubtreeNumberOfFiles,
-  }
-
   HdfsContentSummaryTask(@Nonnull String clusterHost, int port) {
+    super(ZIP_ENTRY_NAME, true);
     this.clusterHost = clusterHost;
     this.port = port;
   }
@@ -62,65 +54,38 @@ public class HdfsContentSummaryTask implements Task<Void> {
   @Override
   public String toString() {
     return format(
-        "Write content summary of the top level directories of a hdfs %s", getTargetPath());
+        "Write content summary of the top-level directories of a hdfs %s", getTargetPath());
   }
 
-  @Nonnull
   @Override
-  public String getTargetPath() {
-    return "hdfs-content-summary.csv";
-  }
-
-  @CheckForNull
-  @Override
-  public Void run(TaskRunContext context) throws Exception {
-    try (OutputHandle outputHandle = context.createOutputHandle(getTargetPath());
-        Writer out = outputHandle.asTemporaryByteSink().asCharSink(UTF_8).openBufferedStream()) {
-      doRun(out, context.getExecutorService());
-    }
-    return null;
-  }
-
-  private void doRun(Writer output, Executor executorService)
-      throws IOException, ExecutionException, InterruptedException {
+  protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
+      throws IOException {
     LOG.info("clusterHost: {}", clusterHost);
     LOG.info("port: {}", port);
 
     Configuration conf = new Configuration();
     conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
     FileSystem fs = FileSystem.get(conf);
-
-    try (final DistributedFileSystem dfs = (DistributedFileSystem) fs;
-        final ExecutorManager execManager = new ExecutorManager(executorService);
-        final CSVPrinter csvPrinter =
-            AbstractTask.FORMAT.withHeader(CsvHeader.class).print(output)) {
-
-      String hdfsPath = "/";
-      FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
-      FileStatus[] topLevelFiles = fs.listStatus(rootDir.getPath());
+    String hdfsPath = "/";
+    FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
+    FileStatus[] topLevelFiles = fs.listStatus(rootDir.getPath());
+    try (final Writer output = sink.asCharSink(UTF_8).openBufferedStream();
+        final CSVPrinter csvPrinter = AbstractTask.FORMAT.withHeader(Header.class).print(output)) {
       for (FileStatus file : topLevelFiles) {
-        // Process file or dir (in this case - just collect statistics)
         if (file.isDirectory()) {
-          execManager.submit(
-              new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                  ContentSummary summary = fs.getContentSummary(file.getPath());
-                  long totalFileSize = summary.getLength(); // This gives you the total size
-                  long totalNumberOfFiles = summary.getFileCount();
-                  long totalNumberOfDirectories = summary.getDirectoryCount();
-                  synchronized (csvPrinter) {
-                    csvPrinter.printRecord(
-                        file.getPath().toUri().getPath(),
-                        totalFileSize,
-                        totalNumberOfDirectories + totalNumberOfFiles);
-                  }
-                  return null;
-                }
-              });
+          ContentSummary summary = fs.getContentSummary(file.getPath());
+          long totalFileSize = summary.getLength();
+          long totalNumberOfFiles = summary.getFileCount();
+          long totalNumberOfDirectories = summary.getDirectoryCount();
+          synchronized (csvPrinter) {
+            csvPrinter.printRecord(
+                file.getPath().toUri().getPath(),
+                totalFileSize,
+                totalNumberOfDirectories + totalNumberOfFiles);
+          }
         }
       }
-      execManager.await(); // Wait until all submitted tasks are done executing
     }
+    return null;
   }
 }

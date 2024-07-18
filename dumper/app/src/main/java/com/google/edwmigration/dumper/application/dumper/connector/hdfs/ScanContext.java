@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
@@ -58,21 +59,13 @@ final class ScanContext implements Closeable {
   @GuardedBy("csvPrinter")
   private long numDirsWalked = 0L;
 
-  private enum CsvHeader {
-    Path,
-    Owner,
-    Group,
-    Permission,
-    ModificationTime,
-    NumberOfFilesAndSubdirs,
-    NumberOfSubdirs,
-    StoragePolicy,
-  }
-
   ScanContext(DistributedFileSystem dfs, @WillClose Writer outputSink) throws IOException {
     this.dfs = dfs;
     this.dfsClient = dfs.getClient();
-    this.csvPrinter = AbstractTask.FORMAT.withHeader(CsvHeader.class).print(outputSink);
+    this.csvPrinter =
+        AbstractTask.FORMAT
+            .withHeader(HdfsPermissionExtractionDumpFormat.Header.class)
+            .print(outputSink);
     this.instantScanBegin = Instant.now();
   }
 
