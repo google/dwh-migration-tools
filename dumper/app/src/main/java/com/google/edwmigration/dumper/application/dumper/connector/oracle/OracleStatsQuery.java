@@ -68,7 +68,7 @@ public abstract class OracleStatsQuery {
   private static OracleStatsQuery create(
       boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource)
       throws IOException {
-    String path = String.format("oracle-stats/%s/%s.sql", statsSource.value, name);
+    String path = String.format("oracle-stats/cdb/%s/%s.sql", statsSource.value, name);
     return new AutoValue_OracleStatsQuery(
         isRequired, queriedDuration, name, loadFile(path), statsSource);
   }
