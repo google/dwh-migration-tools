@@ -16,9 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static java.time.Duration.ofDays;
-
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.time.Duration;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
@@ -44,23 +44,20 @@ public class StatsTaskListGeneratorTest {
   public static final ImmutableList<String> statspackNames = generator.statspackNames();
 
   @Theory
-  public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name) {
-    OracleStatsQuery query = OracleStatsQuery.createNative(name, /* isRequired= */ true, ofDays(7));
-
-    query.queryText();
+  public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
+      throws IOException {
+    OracleStatsQuery.createNative(name, /* isRequired= */ true, Duration.ofDays(7));
   }
 
   @Theory
-  public void awrNames_allNamedFilesExist(@FromDataPoints("awrNames") String name) {
-    OracleStatsQuery query = OracleStatsQuery.createAwr(name, ofDays(7));
-
-    query.queryText();
+  public void awrNames_allNamedFilesExist(@FromDataPoints("awrNames") String name)
+      throws IOException {
+    OracleStatsQuery.createAwr(name, Duration.ofDays(7));
   }
 
   @Theory
-  public void statspackNames_allNamedFilesExist(@FromDataPoints("statspackNames") String name) {
-    OracleStatsQuery query = OracleStatsQuery.createStatspack(name, ofDays(7));
-
-    query.queryText();
+  public void statspackNames_allNamedFilesExist(@FromDataPoints("statspackNames") String name)
+      throws IOException {
+    OracleStatsQuery.createStatspack(name, Duration.ofDays(7));
   }
 }

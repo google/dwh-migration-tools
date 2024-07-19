@@ -43,6 +43,9 @@ public abstract class OracleStatsQuery {
   abstract String name();
 
   @Nonnull
+  abstract String queryText();
+
+  @Nonnull
   abstract StatsSource statsSource();
 
   @Nonnull
@@ -62,15 +65,10 @@ public abstract class OracleStatsQuery {
 
   private static OracleStatsQuery create(
       boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource) {
-    return new AutoValue_OracleStatsQuery(isRequired, queriedDuration, name, statsSource);
-  }
-
-  @Nonnull
-  String queryText() {
-    String source = statsSource().value;
-    String tenantSetup = "cdb";
-    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup, source, name());
-    return loadFile(path);
+        String source = statsSource.value;
+        String tenantSetup = "cdb";
+        String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup, source, name);
+    return new AutoValue_OracleStatsQuery(isRequired, queriedDuration, name, loadFile(path), statsSource);
   }
 
   @Nonnull
