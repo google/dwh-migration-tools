@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
-import java.io.IOException;
 import java.time.Duration;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
@@ -45,7 +44,7 @@ public class StatsJdbcTaskTest {
   }
 
   @Theory
-  public void toString_success(ResultProperty property) throws IOException {
+  public void toString_success(ResultProperty property) {
     boolean isRequired = false;
     OracleStatsQuery query =
         OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
@@ -59,7 +58,7 @@ public class StatsJdbcTaskTest {
   }
 
   @Test
-  public void getCategory_isNotRequired_success() throws IOException {
+  public void getCategory_isNotRequired_success() {
     boolean isRequired = false;
     OracleStatsQuery query =
         OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
@@ -69,7 +68,7 @@ public class StatsJdbcTaskTest {
   }
 
   @Test
-  public void getCategory_isRequired_success() throws IOException {
+  public void getCategory_isRequired_success() {
     boolean isRequired = true;
     OracleStatsQuery query =
         OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));

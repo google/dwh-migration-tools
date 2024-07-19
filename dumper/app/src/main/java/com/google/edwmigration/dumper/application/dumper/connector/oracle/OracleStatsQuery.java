@@ -49,26 +49,25 @@ public abstract class OracleStatsQuery {
   abstract StatsSource statsSource();
 
   @Nonnull
-  static OracleStatsQuery createAwr(String name, Duration queriedDuration) throws IOException {
+  static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
     return create(false, queriedDuration, name, AWR);
   }
 
   @Nonnull
-  static OracleStatsQuery createNative(String name, boolean isRequired, Duration queriedDuration)
-      throws IOException {
+  static OracleStatsQuery createNative(String name, boolean isRequired, Duration queriedDuration) {
     return create(isRequired, queriedDuration, name, NATIVE);
   }
 
   @Nonnull
-  static OracleStatsQuery createStatspack(String name, Duration queriedDuration)
-      throws IOException {
+  static OracleStatsQuery createStatspack(String name, Duration queriedDuration) {
     return create(false, queriedDuration, name, STATSPACK);
   }
 
   private static OracleStatsQuery create(
-      boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource)
-      throws IOException {
-    String path = String.format("oracle-stats/cdb/%s/%s.sql", statsSource.value, name);
+      boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource) {
+    String source = statsSource.value;
+    String tenantSetup = "cdb";
+    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup, source, name);
     return new AutoValue_OracleStatsQuery(
         isRequired, queriedDuration, name, loadFile(path), statsSource);
   }
@@ -78,8 +77,13 @@ public abstract class OracleStatsQuery {
     return String.format("Query{name=%s, statsSource=%s}", name(), statsSource());
   }
 
-  private static String loadFile(String path) throws IOException {
-    URL queryUrl = Resources.getResource(path);
-    return Resources.toString(queryUrl, UTF_8);
+  private static String loadFile(String path) {
+    try {
+      URL queryUrl = Resources.getResource(path);
+      return Resources.toString(queryUrl, UTF_8);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(
+          String.format("An invalid file was provided: '%s'.", path), e);
+    }
   }
 }

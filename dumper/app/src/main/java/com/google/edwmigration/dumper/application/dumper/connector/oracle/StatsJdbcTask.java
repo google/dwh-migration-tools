@@ -16,9 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 
-import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
@@ -44,7 +44,7 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   private StatsJdbcTask(String targetPath, OracleStatsQuery query) {
     super(targetPath);
-    Preconditions.checkArgument(targetPath.endsWith(".csv"));
+    checkArgument(targetPath.endsWith(".csv"));
     this.query = query;
   }
 
