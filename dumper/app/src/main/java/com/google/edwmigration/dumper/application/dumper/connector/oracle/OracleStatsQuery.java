@@ -83,7 +83,7 @@ public abstract class OracleStatsQuery {
       return Resources.toString(queryUrl, UTF_8);
     } catch (IOException e) {
       throw new IllegalArgumentException(
-          String.format("An invalid file was provided: %s.", path), e);
+          String.format("An invalid file was provided: '%s'.", path), e);
     }
   }
 }
