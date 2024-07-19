@@ -83,7 +83,7 @@ public abstract class OracleStatsQuery {
       URL queryUrl = Resources.getResource(path);
       return Resources.toString(queryUrl, UTF_8);
     } catch (IOException e) {
-      String message = String.format("IOException caused by invalid file: %s.", path);
+      String message = String.format("An invalid file was provided: %s.", path);
       throw new IllegalArgumentException(message, e);
     }
   }
