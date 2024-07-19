@@ -16,8 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static java.time.Duration.ofDays;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import com.google.common.collect.ImmutableList;
-import java.time.Duration;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
@@ -44,16 +46,22 @@ public class StatsTaskListGeneratorTest {
 
   @Theory
   public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name) {
-    OracleStatsQuery.createNative(name, /* isRequired= */ true, Duration.ofDays(7));
+    OracleStatsQuery query = OracleStatsQuery.createNative(name, /* isRequired= */ true, ofDays(7));
+
+    assertDoesNotThrow(query::queryText);
   }
 
   @Theory
   public void awrNames_allNamedFilesExist(@FromDataPoints("awrNames") String name) {
-    OracleStatsQuery.createAwr(name, Duration.ofDays(7));
+    OracleStatsQuery query = OracleStatsQuery.createAwr(name, ofDays(7));
+
+    assertDoesNotThrow(query::queryText);
   }
 
   @Theory
   public void statspackNames_allNamedFilesExist(@FromDataPoints("statspackNames") String name) {
-    OracleStatsQuery.createStatspack(name, Duration.ofDays(7));
+    OracleStatsQuery query = OracleStatsQuery.createStatspack(name, ofDays(7));
+
+    assertDoesNotThrow(query::queryText);
   }
 }
