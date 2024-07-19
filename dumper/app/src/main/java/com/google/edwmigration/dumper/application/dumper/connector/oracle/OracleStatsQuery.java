@@ -65,10 +65,11 @@ public abstract class OracleStatsQuery {
 
   private static OracleStatsQuery create(
       boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource) {
-        String source = statsSource.value;
-        String tenantSetup = "cdb";
-        String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup, source, name);
-    return new AutoValue_OracleStatsQuery(isRequired, queriedDuration, name, loadFile(path), statsSource);
+    String source = statsSource.value;
+    String tenantSetup = "cdb";
+    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup, source, name);
+    return new AutoValue_OracleStatsQuery(
+        isRequired, queriedDuration, name, loadFile(path), statsSource);
   }
 
   @Nonnull
