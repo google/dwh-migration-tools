@@ -21,7 +21,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import java.io.IOException;
 import java.time.Duration;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -61,8 +60,7 @@ class StatsTaskListGenerator {
       ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
 
   @Nonnull
-  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, Duration queriedDuration)
-      throws IOException {
+  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, Duration queriedDuration) {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));

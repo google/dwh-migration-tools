@@ -43,34 +43,34 @@ public abstract class OracleStatsQuery {
   abstract String name();
 
   @Nonnull
-  abstract String queryText();
-
-  @Nonnull
   abstract StatsSource statsSource();
 
   @Nonnull
-  static OracleStatsQuery createAwr(String name, Duration queriedDuration) throws IOException {
+  static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
     return create(false, queriedDuration, name, AWR);
   }
 
   @Nonnull
-  static OracleStatsQuery createNative(String name, boolean isRequired, Duration queriedDuration)
-      throws IOException {
+  static OracleStatsQuery createNative(String name, boolean isRequired, Duration queriedDuration) {
     return create(isRequired, queriedDuration, name, NATIVE);
   }
 
   @Nonnull
-  static OracleStatsQuery createStatspack(String name, Duration queriedDuration)
-      throws IOException {
+  static OracleStatsQuery createStatspack(String name, Duration queriedDuration) {
     return create(false, queriedDuration, name, STATSPACK);
   }
 
   private static OracleStatsQuery create(
-      boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource)
-      throws IOException {
-    String path = String.format("oracle-stats/cdb/%s/%s.sql", statsSource.value, name);
-    return new AutoValue_OracleStatsQuery(
-        isRequired, queriedDuration, name, loadFile(path), statsSource);
+      boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource) {
+    return new AutoValue_OracleStatsQuery(isRequired, queriedDuration, name, statsSource);
+  }
+
+  @Nonnull
+  String queryText() {
+    String source = statsSource().value;
+    String tenantSetup = "cdb";
+    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup, source, name());
+    return loadFile(path);
   }
 
   @Nonnull
@@ -78,8 +78,13 @@ public abstract class OracleStatsQuery {
     return String.format("Query{name=%s, statsSource=%s}", name(), statsSource());
   }
 
-  private static String loadFile(String path) throws IOException {
-    URL queryUrl = Resources.getResource(path);
-    return Resources.toString(queryUrl, UTF_8);
+  private static String loadFile(String path) {
+    try {
+      URL queryUrl = Resources.getResource(path);
+      return Resources.toString(queryUrl, UTF_8);
+    } catch (IOException e) {
+      String message = String.format("IOException caused by invalid file: %s.", path);
+      throw new IllegalArgumentException(message, e);
+    }
   }
 }
