@@ -64,7 +64,7 @@ public class HdfsPermissionExtractionTask
   @Nonnull
   @Override
   public String getTargetPath() {
-    return ZIP_ENTRY_NAME;
+    return PermissionExtraction.ZIP_ENTRY_NAME;
   }
 
   @CheckForNull

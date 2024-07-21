@@ -21,7 +21,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
@@ -51,7 +50,7 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector
     implements HdfsPermissionExtractionDumpFormat {
 
   public HdfsPermissionExtractionConnector() {
-    super(FORMAT_NAME);
+    super("hdfs-permissions");
   }
 
   @Nonnull
@@ -63,9 +62,9 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments args)
       throws Exception {
-    // out.add(
-    //    new HdfsPermissionExtractionTask(
-    //        args.getHost(), args.getPort(/* defaultPort= */ 8020), args.getThreadPoolSize()));
+    out.add(
+        new HdfsPermissionExtractionTask(
+            args.getHost(), args.getPort(/* defaultPort= */ 8020), args.getThreadPoolSize()));
     out.add(new HdfsContentSummaryTask(args.getHost(), args.getPort(/* defaultPort= */ 8020)));
   }
 
@@ -78,12 +77,6 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector
   private static class LocalHandle implements Handle {
     @Override
     public void close() {}
-  }
-
-  @Nonnull
-  @Override
-  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-    return super.getConnectorProperties();
   }
 
   @Nonnull

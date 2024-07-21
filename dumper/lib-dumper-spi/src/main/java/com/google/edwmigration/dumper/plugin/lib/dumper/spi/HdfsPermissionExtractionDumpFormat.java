@@ -17,18 +17,21 @@
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
 public interface HdfsPermissionExtractionDumpFormat {
-  String FORMAT_NAME = "hdfs-permissions";
-  String ZIP_ENTRY_NAME = "hdfs-permissions.csv";
+  String FORMAT_NAME = "hdfs-permissions.zip";
 
-  enum Header {
-    Path,
-    Owner,
-    Group,
-    Permission,
-    ModificationTime,
-    NumberOfFilesAndSubdirs,
-    NumberOfSubdirs,
-    StoragePolicy,
+  interface PermissionExtraction {
+    String ZIP_ENTRY_NAME = "hdfs-permissions.csv";
+
+    enum Header {
+      Path,
+      Owner,
+      Group,
+      Permission,
+      ModificationTime,
+      NumberOfFilesAndSubdirs,
+      NumberOfSubdirs,
+      StoragePolicy,
+    }
   }
 
   interface ContentSummary {

@@ -24,7 +24,6 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftLogsDumpFormat.SvlStatementText.Header;
 import java.io.IOException;
 import java.io.Writer;
 import javax.annotation.Nonnull;
@@ -46,7 +45,7 @@ public class HdfsContentSummaryTask extends AbstractTask<Void>
   private final int port;
 
   HdfsContentSummaryTask(@Nonnull String clusterHost, int port) {
-    super(ZIP_ENTRY_NAME, true);
+    super(ZIP_ENTRY_NAME, /* createTarget= */ true);
     this.clusterHost = clusterHost;
     this.port = port;
   }
@@ -70,19 +69,17 @@ public class HdfsContentSummaryTask extends AbstractTask<Void>
     FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
     FileStatus[] topLevelFiles = fs.listStatus(rootDir.getPath());
     try (final Writer output = sink.asCharSink(UTF_8).openBufferedStream();
-        final CSVPrinter csvPrinter = AbstractTask.FORMAT.withHeader(Header.class).print(output)) {
+        final CSVPrinter csvPrinter = FORMAT.withHeader(Header.class).print(output)) {
       for (FileStatus file : topLevelFiles) {
         if (file.isDirectory()) {
           ContentSummary summary = fs.getContentSummary(file.getPath());
           long totalFileSize = summary.getLength();
           long totalNumberOfFiles = summary.getFileCount();
           long totalNumberOfDirectories = summary.getDirectoryCount();
-          synchronized (csvPrinter) {
-            csvPrinter.printRecord(
-                file.getPath().toUri().getPath(),
-                totalFileSize,
-                totalNumberOfDirectories + totalNumberOfFiles);
-          }
+          csvPrinter.printRecord(
+              file.getPath().toUri().getPath(),
+              totalFileSize,
+              totalNumberOfDirectories + totalNumberOfFiles);
         }
       }
     }
