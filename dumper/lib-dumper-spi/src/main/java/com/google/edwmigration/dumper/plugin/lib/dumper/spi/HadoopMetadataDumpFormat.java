@@ -14,22 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector;
+package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import java.time.Clock;
-import javax.annotation.Nonnull;
-
-/** @author shevek */
-public interface LogsConnector extends Connector {
-
-  @Nonnull
-  @Override
-  default String getDefaultFileName(boolean isAssessment, Clock clock) {
-    if (isAssessment) {
-      return ArchiveNameUtil.getFileNameWithTimestamp(getName(), clock);
-    } else {
-      return ArchiveNameUtil.getFileName(getName());
-    }
-  }
+public interface HadoopMetadataDumpFormat {
+  String FORMAT_NAME = "hadoop.dump.zip";
 }

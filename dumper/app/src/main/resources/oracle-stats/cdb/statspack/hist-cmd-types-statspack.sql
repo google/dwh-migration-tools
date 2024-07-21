@@ -13,38 +13,29 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
-  B.name "CommandName",
+  NULL "ConId",
   A.command_type "CommandType",
-  A.dbid "DbId",
   to_char(C.snap_time, 'hh24') "Hour",
-  A.instance_number "InstanceNumber",
+  B.name "CommandName",
   count(1) "Count",
-  sum(A.application_wait_time) "SumAPWait",
-  sum(A.buffer_gets) "SumBufferGets",
-  sum(A.cpu_time) "SumCpuTime",
-  sum(A.concurrency_wait_time) "SumCCWait",
-  sum(A.cluster_wait_time) "SumCLWait",
-  sum(A.direct_writes) "SumDirectWrites",
-  sum(A.disk_reads) "SumDiskReads",
-  sum(A.elapsed_time) "SumElapsedTime",
-  sum(A.executions) "SumExecutions",
-  sum(A.end_of_fetch_count) "SumFetchCount",
-  sum(A.user_io_wait_time) "SumIOWait",
-  sum(A.java_exec_time) "SumJavaExecTime",
-  sum(A.plsql_exec_time) "SumPLSExecTime",
-  sum(A.px_servers_executions) "SumPXExecutions",
-  sum(A.rows_processed) "SumRowsProcessed"
-FROM stats$SQL_SUMMARY A
+  avg(A.buffer_gets) "AvgBufferGets",
+  avg(A.elapsed_time) "AvgElapsedTime",
+  avg(A.rows_processed) "AvgRowsProcessed",
+  avg(A.executions) "AvgExecutions",
+  avg(A.cpu_time) "AvgCpuTime",
+  avg(A.user_io_wait_time) "AvgIoWait",
+  avg(A.cluster_wait_time) "AvgClWait",
+  avg(A.application_wait_time) "AvgApWait",
+  avg(A.concurrency_wait_time) "AvgCcWait",
+  avg(A.plsql_exec_time) "AvgPlsExecTime"
+FROM stats$sql_summary A
 LEFT JOIN audit_actions B ON A.command_type = B.action
 INNER JOIN stats$snapshot C
   ON A.dbid = C.dbid
   AND A.snap_id = C.snap_id
   AND A.instance_number = C.instance_number
-  AND C.snap_time > sysdate - 30
+  AND C.snap_time > sysdate - ?
 GROUP BY
-  A.dbid,
-  A.instance_number,
-  A.old_hash_value,
   A.command_type,
   to_char(C.snap_time, 'hh24'),
   B.name

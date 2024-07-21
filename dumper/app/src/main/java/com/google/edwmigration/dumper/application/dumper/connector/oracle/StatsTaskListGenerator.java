@@ -16,16 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.AWR;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.STATSPACK;
-
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import java.io.IOException;
+import java.time.Duration;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -37,23 +33,26 @@ class StatsTaskListGenerator {
   private static final ImmutableList<String> AWR_NAMES =
       ImmutableList.of("hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr");
 
-  private static final ImmutableList<String> NATIVE_NAMES =
+  private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
       ImmutableList.of(
-          "data-types",
+          "app-schemas-pdbs",
+          "app-schemas-summary",
           "db-features",
-          "db-info",
           "db-instances",
-          "db-objects",
-          // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
-          // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
-          "db-objects-synonym-public",
           "dtl-index-type",
           "dtl-source-code",
           "exttab",
           "m-view-types",
-          "pdbs-info",
-          "app-schemas-pdbs",
-          "app-schemas-summary",
+          "pdbs-info");
+
+  private static final ImmutableList<String> NATIVE_NAMES_REQUIRED =
+      ImmutableList.of(
+          "data-types",
+          "db-info",
+          "db-objects",
+          // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
+          // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
+          "db-objects-synonym-public",
           "table-types-dtl",
           "used-space-details");
 
@@ -61,20 +60,26 @@ class StatsTaskListGenerator {
       ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
 
   @Nonnull
-  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments) throws IOException {
+  ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, Duration queriedDuration) {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));
     for (String name : awrNames()) {
-      OracleStatsQuery item = OracleStatsQuery.create(name, AWR);
+      OracleStatsQuery item = OracleStatsQuery.createAwr(name, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
-    for (String name : nativeNames()) {
-      OracleStatsQuery item = OracleStatsQuery.create(name, NATIVE);
+    for (String name : nativeNames(/* required= */ true)) {
+      OracleStatsQuery item =
+          OracleStatsQuery.createNative(name, /* isRequired= */ true, queriedDuration);
+      builder.add(StatsJdbcTask.fromQuery(item));
+    }
+    for (String name : nativeNames(/* required= */ false)) {
+      OracleStatsQuery item =
+          OracleStatsQuery.createNative(name, /* isRequired= */ false, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : statspackNames()) {
-      OracleStatsQuery query = OracleStatsQuery.create(name, STATSPACK);
+      OracleStatsQuery query = OracleStatsQuery.createStatspack(name, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(query));
     }
     return builder.build();
@@ -97,8 +102,8 @@ class StatsTaskListGenerator {
     return AWR_NAMES;
   }
 
-  ImmutableList<String> nativeNames() {
-    return NATIVE_NAMES;
+  ImmutableList<String> nativeNames(boolean required) {
+    return required ? NATIVE_NAMES_REQUIRED : NATIVE_NAMES_OPTIONAL;
   }
 
   ImmutableList<String> statspackNames() {

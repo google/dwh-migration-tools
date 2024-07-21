@@ -144,11 +144,5 @@ public class DriverClasspathTest {
       newDriver(arguments.getDriverPaths(), "foo.bar.DummyDriver");
       return () -> {};
     }
-
-    @Nonnull
-    @Override
-    public String summary(@Nonnull String fileName) {
-      return "";
-    }
   }
 }

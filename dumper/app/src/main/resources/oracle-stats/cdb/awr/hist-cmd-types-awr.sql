@@ -37,7 +37,7 @@ INNER JOIN cdb_hist_snapshot C
   ON A.snap_id = C.snap_id
   AND A.dbid = C.dbid
   AND A.instance_number = C.instance_number
-  AND C.end_interval_time > sysdate - 30
+  AND C.end_interval_time > sysdate - ?
 LEFT JOIN audit_actions D
   ON B.command_type = D.action
 GROUP BY

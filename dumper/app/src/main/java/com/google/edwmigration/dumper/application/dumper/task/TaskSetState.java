@@ -67,15 +67,9 @@ public interface TaskSetState {
   @ParametersAreNonnullByDefault
   abstract static class TasksReport {
 
-    abstract long count();
+    public abstract long count();
 
-    abstract TaskState state();
-
-    @Nonnull
-    @Override
-    public String toString() {
-      return String.format("%d TASKS %s", count(), state());
-    }
+    public abstract TaskState state();
 
     static TasksReport create(long count, TaskState state) {
       return new AutoValue_TaskSetState_TasksReport(count, state);

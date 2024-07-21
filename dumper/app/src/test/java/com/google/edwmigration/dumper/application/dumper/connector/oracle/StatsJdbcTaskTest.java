@@ -16,13 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
-import java.io.IOException;
+import java.time.Duration;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -45,8 +44,10 @@ public class StatsJdbcTaskTest {
   }
 
   @Theory
-  public void toString_success(ResultProperty property) throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE);
+  public void toString_success(ResultProperty property) {
+    boolean isRequired = false;
+    OracleStatsQuery query =
+        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     // Act
@@ -57,8 +58,20 @@ public class StatsJdbcTaskTest {
   }
 
   @Test
-  public void getCategory_success() throws IOException {
-    OracleStatsQuery query = OracleStatsQuery.create("pdbs-info", NATIVE);
+  public void getCategory_isNotRequired_success() {
+    boolean isRequired = false;
+    OracleStatsQuery query =
+        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
+    Task<?> task = StatsJdbcTask.fromQuery(query);
+
+    assertEquals(TaskCategory.OPTIONAL, task.getCategory());
+  }
+
+  @Test
+  public void getCategory_isRequired_success() {
+    boolean isRequired = true;
+    OracleStatsQuery query =
+        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     assertEquals(TaskCategory.REQUIRED, task.getCategory());

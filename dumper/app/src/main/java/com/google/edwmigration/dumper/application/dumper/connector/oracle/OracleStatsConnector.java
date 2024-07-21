@@ -16,19 +16,26 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static java.time.Duration.ofDays;
+
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import java.time.Duration;
 import java.util.List;
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoService(Connector.class)
 @Description("Dumps aggregated statistics from Oracle")
 @ParametersAreNonnullByDefault
 public class OracleStatsConnector extends AbstractOracleConnector {
+
+  static final Duration DEFAULT_DURATION = ofDays(30);
+  static final Duration MAX_DURATION = ofDays(10000);
 
   public OracleStatsConnector() {
     super(OracleConnectorScope.STATS);
@@ -37,12 +44,28 @@ public class OracleStatsConnector extends AbstractOracleConnector {
   @Override
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) throws Exception {
     StatsTaskListGenerator taskListGenerator = new StatsTaskListGenerator();
-    out.addAll(taskListGenerator.createTasks(arguments));
+    Duration queriedDuration = getQueriedDuration(arguments);
+    out.addAll(taskListGenerator.createTasks(arguments, queriedDuration));
   }
 
-  @Nonnull
-  @Override
-  public String summary(String fileName) {
-    return String.format("Oracle statistics saved to %s", fileName);
+  static Duration getQueriedDuration(ConnectorArguments arguments) {
+    Duration queriedDuration = extractFromArgs(arguments);
+    if (Range.closed(ofDays(1), MAX_DURATION).contains(queriedDuration)) {
+      return queriedDuration;
+    } else {
+      throw new MetadataDumperUsageException(
+          String.format(
+              "The number of days must be positive and not greater than %s. Was: %s",
+              MAX_DURATION.toDays(), queriedDuration.toDays()));
+    }
+  }
+
+  private static Duration extractFromArgs(ConnectorArguments arguments) {
+    if (arguments.getQueryLogDays() == null) {
+      return DEFAULT_DURATION;
+    } else {
+      int queriedDays = arguments.getQueryLogDays();
+      return ofDays(queriedDays);
+    }
   }
 }

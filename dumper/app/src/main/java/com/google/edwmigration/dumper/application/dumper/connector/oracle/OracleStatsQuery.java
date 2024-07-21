@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.AWR;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.STATSPACK;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
@@ -23,12 +26,18 @@ import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource;
 import java.io.IOException;
 import java.net.URL;
+import java.time.Duration;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoValue
 @ParametersAreNonnullByDefault
 public abstract class OracleStatsQuery {
+
+  abstract boolean isRequired();
+
+  @Nonnull
+  abstract Duration queriedDuration();
 
   @Nonnull
   abstract String name();
@@ -39,9 +48,28 @@ public abstract class OracleStatsQuery {
   @Nonnull
   abstract StatsSource statsSource();
 
-  static OracleStatsQuery create(String name, StatsSource statsSource) throws IOException {
-    String path = String.format("oracle-stats/%s/%s.sql", statsSource.value, name);
-    return new AutoValue_OracleStatsQuery(name, loadFile(path), statsSource);
+  @Nonnull
+  static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
+    return create(false, queriedDuration, name, AWR);
+  }
+
+  @Nonnull
+  static OracleStatsQuery createNative(String name, boolean isRequired, Duration queriedDuration) {
+    return create(isRequired, queriedDuration, name, NATIVE);
+  }
+
+  @Nonnull
+  static OracleStatsQuery createStatspack(String name, Duration queriedDuration) {
+    return create(false, queriedDuration, name, STATSPACK);
+  }
+
+  private static OracleStatsQuery create(
+      boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource) {
+    String source = statsSource.value;
+    String tenantSetup = "cdb";
+    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup, source, name);
+    return new AutoValue_OracleStatsQuery(
+        isRequired, queriedDuration, name, loadFile(path), statsSource);
   }
 
   @Nonnull
@@ -49,8 +77,13 @@ public abstract class OracleStatsQuery {
     return String.format("Query{name=%s, statsSource=%s}", name(), statsSource());
   }
 
-  private static String loadFile(String path) throws IOException {
-    URL queryUrl = Resources.getResource(path);
-    return Resources.toString(queryUrl, UTF_8);
+  private static String loadFile(String path) {
+    try {
+      URL queryUrl = Resources.getResource(path);
+      return Resources.toString(queryUrl, UTF_8);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(
+          String.format("An invalid file was provided: '%s'.", path), e);
+    }
   }
 }
