@@ -20,7 +20,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.util.Optional;
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -29,7 +29,7 @@ public interface GroupTask extends Task<Summary> {
   @CheckForNull
   public Exception getException();
 
-  @Nonnegative
+  @Nonnull
   static GroupTask createSelect(String file, String selectQuery) {
     return new SelectTask(file, selectQuery);
   }
