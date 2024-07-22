@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.GroupTask;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;

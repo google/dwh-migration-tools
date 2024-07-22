@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.oracle;
+package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import javax.annotation.CheckForNull;
 
-interface GroupTask extends Task<Summary> {
+public interface GroupTask extends Task<Summary> {
 
   @CheckForNull
   public Exception getException();
