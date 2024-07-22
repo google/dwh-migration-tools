@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.G
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -42,8 +43,10 @@ public class OracleMetadataConnectorTest {
 
     // Assert
     ImmutableList<String> selectSqls =
-        tasks.stream() // spotless: force a line break
-            .flatMap(task -> GroupTask.getSql(task).stream())
+        tasks.stream()
+            .map(task -> GroupTask.getSql(task))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
             .collect(toImmutableList());
 
     assertEquals(
