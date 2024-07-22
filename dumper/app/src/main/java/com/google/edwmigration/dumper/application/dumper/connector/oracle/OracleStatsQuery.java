@@ -49,6 +49,9 @@ public abstract class OracleStatsQuery {
   abstract StatsSource statsSource();
 
   @Nonnull
+  abstract TenantSetup tenantSetup();
+
+  @Nonnull
   static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
     return create(false, queriedDuration, name, AWR);
   }
@@ -63,13 +66,25 @@ public abstract class OracleStatsQuery {
     return create(false, queriedDuration, name, STATSPACK);
   }
 
+  enum TenantSetup {
+    MULTI_TENANT("cdb"),
+    SINGLE_TENANT("dba");
+
+    private final String code;
+
+    TenantSetup(String code) {
+      this.code = code;
+    }
+  }
+
   private static OracleStatsQuery create(
       boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource) {
     String source = statsSource.value;
-    String tenantSetup = "cdb";
-    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup, source, name);
+    TenantSetup tenantSetup = TenantSetup.MULTI_TENANT;
+
+    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup.code, source, name);
     return new AutoValue_OracleStatsQuery(
-        isRequired, queriedDuration, name, loadFile(path), statsSource);
+        isRequired, queriedDuration, name, loadFile(path), statsSource, tenantSetup);
   }
 
   @Nonnull
