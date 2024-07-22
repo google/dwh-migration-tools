@@ -78,10 +78,4 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector
     @Override
     public void close() {}
   }
-
-  @Nonnull
-  @Override
-  public String summary(String fileName) {
-    return String.format("HDFS metadata has been saved to %s", fileName);
-  }
 }
