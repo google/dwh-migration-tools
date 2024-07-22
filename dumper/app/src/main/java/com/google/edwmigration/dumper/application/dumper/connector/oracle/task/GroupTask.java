@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyWhen;
+
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.util.Optional;
@@ -35,11 +37,6 @@ public interface GroupTask extends Task<Summary> {
   }
 
   static Optional<String> getSql(Task<?> task) {
-    if (task instanceof SelectTask) {
-      SelectTask selectTask = (SelectTask) task;
-      return Optional.of(selectTask.getSql());
-    } else {
-      return Optional.empty();
-    }
+    return optionallyWhen(task instanceof SelectTask, () -> ((SelectTask) task).getSql());
   }
 }

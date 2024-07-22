@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -55,6 +57,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   @Nonnull
   private static GroupTask newSelectStarTask(
       @Nonnull String file, @Nonnull String table, @Nonnull String where) {
+    checkArgument(table.endsWith(" ") || where.startsWith(" ") || where.isEmpty());
     return GroupTask.createSelect(file, "SELECT * FROM " + table + where);
   }
 
