@@ -62,10 +62,8 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments args)
       throws Exception {
-    out.add(
-        new HdfsPermissionExtractionTask(
-            args.getHost(), args.getPort(/* defaultPort= */ 8020), args.getThreadPoolSize()));
-    out.add(new HdfsContentSummaryTask(args.getHost(), args.getPort(/* defaultPort= */ 8020)));
+    out.add(new HdfsPermissionExtractionTask(args));
+    out.add(new HdfsContentSummaryTask(args));
   }
 
   @Nonnull

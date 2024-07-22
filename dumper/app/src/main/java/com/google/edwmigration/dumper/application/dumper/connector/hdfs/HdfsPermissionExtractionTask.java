@@ -20,18 +20,21 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.base.Preconditions;
+import com.google.common.io.ByteSink;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat.PermissionExtraction;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -41,8 +44,8 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HdfsPermissionExtractionTask
-    implements Task<Void>, HdfsPermissionExtractionDumpFormat {
+public class HdfsPermissionExtractionTask extends AbstractTask<Void>
+    implements PermissionExtraction, HdfsPermissionExtractionDumpFormat {
 
   private static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionTask.class);
 
@@ -50,10 +53,12 @@ public class HdfsPermissionExtractionTask
   final int port;
   final int poolSize;
 
-  HdfsPermissionExtractionTask(@Nonnull String clusterHost, int port, int poolSize) {
-    this.clusterHost = clusterHost;
-    this.port = port;
-    this.poolSize = poolSize;
+  HdfsPermissionExtractionTask(@Nonnull ConnectorArguments args) {
+    super(ZIP_ENTRY_NAME);
+    Preconditions.checkNotNull(args, "Arguments was null.");
+    clusterHost = Preconditions.checkNotNull(args.getHost(), "Host was null.");
+    port = args.getPort(/* defaultPort= */ 8020);
+    poolSize = args.getThreadPoolSize();
   }
 
   @Override
@@ -67,17 +72,8 @@ public class HdfsPermissionExtractionTask
     return PermissionExtraction.ZIP_ENTRY_NAME;
   }
 
-  @CheckForNull
-  @Override
-  public Void run(TaskRunContext context) throws Exception {
-    try (OutputHandle outputHandle = context.createOutputHandle(getTargetPath());
-        Writer out = outputHandle.asTemporaryByteSink().asCharSink(UTF_8).openBufferedStream()) {
-      doRun(out);
-    }
-    return null;
-  }
-
-  private void doRun(Writer output) throws IOException, ExecutionException, InterruptedException {
+  protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
+      throws IOException, ExecutionException, InterruptedException {
     LOG.info("clusterHost: {}", clusterHost);
     LOG.info("port: {}", port);
     LOG.info("threadPoolSize: {}", poolSize);
@@ -92,7 +88,8 @@ public class HdfsPermissionExtractionTask
     // Create a dedicated ExecutorService to use:
     ExecutorService execService =
         ExecutorManager.newExecutorServiceWithBackpressure("hdfs-permission-extraction", poolSize);
-    try (DistributedFileSystem dfs = (DistributedFileSystem) fs;
+    try (Writer output = sink.asCharSink(UTF_8).openBufferedStream();
+        DistributedFileSystem dfs = (DistributedFileSystem) fs;
         ScanContext scanCtx = new ScanContext(dfs, output);
         ExecutorManager execManager = new ExecutorManager(execService)) {
 
@@ -106,5 +103,6 @@ public class HdfsPermissionExtractionTask
       // Shutdown the dedicated ExecutorService:
       MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);
     }
+    return null;
   }
 }
