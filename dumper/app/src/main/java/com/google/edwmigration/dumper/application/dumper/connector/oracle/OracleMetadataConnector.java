@@ -45,26 +45,6 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     super(OracleConnectorScope.METADATA);
   }
 
-  public static class SelectTask extends JdbcSelectTask implements GroupTask {
-
-    private Exception throwable;
-
-    public SelectTask(@Nonnull String file, @Nonnull String selectQuery) {
-      super(file, selectQuery);
-    }
-
-    @Override
-    public boolean handleException(Exception e) {
-      throwable = e;
-      return true;
-    }
-
-    @Override
-    public Exception getException() {
-      return throwable;
-    }
-  }
-
   private static void addAtLeastOneOf(
       @Nonnull List<? super Task<?>> out, @Nonnull GroupTask... tasks) {
     for (GroupTask task : tasks) out.add(Preconditions.checkNotNull(task));

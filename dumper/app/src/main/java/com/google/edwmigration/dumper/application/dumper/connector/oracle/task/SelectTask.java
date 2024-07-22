@@ -16,20 +16,25 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
-import com.google.edwmigration.dumper.application.dumper.task.Summary;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnegative;
-import javax.annotation.ParametersAreNonnullByDefault;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import javax.annotation.Nonnull;
 
-@ParametersAreNonnullByDefault
-public interface GroupTask extends Task<Summary> {
+public class SelectTask extends JdbcSelectTask implements GroupTask {
 
-  @CheckForNull
-  public Exception getException();
+  private Exception throwable;
 
-  @Nonnegative
-  static GroupTask createSelect(String file, String selectQuery) {
-    return new SelectTask(file, selectQuery);
+  public SelectTask(@Nonnull String file, @Nonnull String selectQuery) {
+    super(file, selectQuery);
+  }
+
+  @Override
+  public boolean handleException(Exception e) {
+    throwable = e;
+    return true;
+  }
+
+  @Override
+  public Exception getException() {
+    return throwable;
   }
 }
