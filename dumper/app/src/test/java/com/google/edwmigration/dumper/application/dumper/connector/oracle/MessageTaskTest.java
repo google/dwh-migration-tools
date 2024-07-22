@@ -41,8 +41,8 @@ public class MessageTaskTest {
             "All the select tasks failed:",
             "(1): fake : RuntimeException: ExceptionCauseA",
             "(2): fake : RuntimeException: ExceptionCauseB");
-    GroupTask<?> subtaskA = new FakeTask("ExceptionCauseA");
-    GroupTask<?> subtaskB = new FakeTask("ExceptionCauseB");
+    GroupTask subtaskA = new FakeTask("ExceptionCauseA");
+    GroupTask subtaskB = new FakeTask("ExceptionCauseB");
     MessageTask task = MessageTask.create(subtaskA, subtaskB);
 
     // Act
@@ -54,8 +54,8 @@ public class MessageTaskTest {
 
   @Test
   public void toString_success() {
-    GroupTask<?> subtaskA = new FakeTask("ExceptionCauseA");
-    GroupTask<?> subtaskB = new FakeTask("ExceptionCauseB");
+    GroupTask subtaskA = new FakeTask("ExceptionCauseA");
+    GroupTask subtaskB = new FakeTask("ExceptionCauseB");
     MessageTask task = MessageTask.create(subtaskA, subtaskB);
 
     // Act
@@ -65,7 +65,7 @@ public class MessageTaskTest {
     assertEquals("[ Error if all fail: fake, fake ]", taskString);
   }
 
-  private static class FakeTask extends AbstractTask<Summary> implements GroupTask<Summary> {
+  private static class FakeTask extends AbstractTask<Summary> implements GroupTask {
     private final Exception exception;
 
     FakeTask(String message) {

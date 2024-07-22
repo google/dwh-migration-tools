@@ -24,7 +24,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.MetadataConne
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
-import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
@@ -45,7 +44,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     super(OracleConnectorScope.METADATA);
   }
 
-  static class SelectTask extends JdbcSelectTask implements GroupTask<Summary> {
+  static class SelectTask extends JdbcSelectTask implements GroupTask {
 
     private Exception throwable;
 
@@ -66,8 +65,8 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   }
 
   private static void addAtLeastOneOf(
-      @Nonnull List<? super Task<?>> out, @Nonnull GroupTask<?>... tasks) {
-    for (GroupTask<?> task : tasks) out.add(Preconditions.checkNotNull(task));
+      @Nonnull List<? super Task<?>> out, @Nonnull GroupTask... tasks) {
+    for (GroupTask task : tasks) out.add(Preconditions.checkNotNull(task));
     Task<?> msg_task = MessageTask.create(tasks).onlyIfAllFailed(tasks);
     out.add(msg_task);
   }

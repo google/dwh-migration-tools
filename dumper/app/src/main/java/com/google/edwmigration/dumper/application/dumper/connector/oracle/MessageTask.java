@@ -34,18 +34,18 @@ class MessageTask extends AbstractTask<Void> {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessageTask.class);
 
-  private final GroupTask<?>[] tasks;
+  private final GroupTask[] tasks;
   /** */
   private final String names;
 
-  private MessageTask(GroupTask<?>[] tasks, String names) {
+  private MessageTask(GroupTask[] tasks, String names) {
     super(names);
     this.tasks = tasks;
     this.names = names;
   }
 
-  static MessageTask create(@Nonnull GroupTask<?>... ts) {
-    GroupTask<?>[] tasks = ts.clone();
+  static MessageTask create(@Nonnull GroupTask... ts) {
+    GroupTask[] tasks = ts.clone();
     String names = toNames(ts);
     return new MessageTask(tasks, names);
   }
@@ -54,7 +54,7 @@ class MessageTask extends AbstractTask<Void> {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add("All the select tasks failed:");
     int i = 1;
-    for (GroupTask<?> task : tasks) {
+    for (GroupTask task : tasks) {
       String cause = ExceptionUtils.getRootCauseMessage(task.getException());
       String message = String.format("(%d): %s : %s", i, task.getName(), cause);
       builder.add(message);
@@ -79,7 +79,7 @@ class MessageTask extends AbstractTask<Void> {
     return "[ Error if all fail: " + names + " ]";
   }
 
-  private static String toNames(GroupTask<?>... tasks) {
+  private static String toNames(GroupTask... tasks) {
     return stream(tasks).map(GroupTask::getName).collect(joining(", "));
   }
 }

@@ -16,10 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import javax.annotation.CheckForNull;
 
-interface GroupTask<T> extends Task<T> {
+interface GroupTask extends Task<Summary> {
 
   @CheckForNull
   public Exception getException();
