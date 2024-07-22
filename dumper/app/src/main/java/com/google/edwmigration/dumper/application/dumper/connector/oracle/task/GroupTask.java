@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import java.util.Optional;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,5 +32,14 @@ public interface GroupTask extends Task<Summary> {
   @Nonnegative
   static GroupTask createSelect(String file, String selectQuery) {
     return new SelectTask(file, selectQuery);
+  }
+
+  static Optional<String> getSql(Task<?> task) {
+    if (task instanceof SelectTask) {
+      SelectTask selectTask = (SelectTask) task;
+      return Optional.of(selectTask.getSql());
+    } else {
+      return Optional.empty();
+    }
   }
 }

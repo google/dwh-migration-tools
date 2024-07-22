@@ -19,11 +19,11 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import javax.annotation.Nonnull;
 
-public class SelectTask extends JdbcSelectTask implements GroupTask {
+class SelectTask extends JdbcSelectTask implements GroupTask {
 
   private Exception throwable;
 
-  public SelectTask(@Nonnull String file, @Nonnull String selectQuery) {
+  SelectTask(@Nonnull String file, @Nonnull String selectQuery) {
     super(file, selectQuery);
   }
 
