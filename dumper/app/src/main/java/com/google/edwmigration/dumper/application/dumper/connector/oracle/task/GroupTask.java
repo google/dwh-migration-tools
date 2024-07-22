@@ -18,10 +18,19 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleMetadataConnector.SelectTask;
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnegative;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
 public interface GroupTask extends Task<Summary> {
 
   @CheckForNull
   public Exception getException();
+
+  @Nonnegative
+  static GroupTask createSelect(String file, String selectQuery) {
+    return new SelectTask(file, selectQuery);
+  }
 }

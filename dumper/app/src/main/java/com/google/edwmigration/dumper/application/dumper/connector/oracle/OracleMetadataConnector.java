@@ -45,7 +45,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     super(OracleConnectorScope.METADATA);
   }
 
-  static class SelectTask extends JdbcSelectTask implements GroupTask {
+  public static class SelectTask extends JdbcSelectTask implements GroupTask {
 
     private Exception throwable;
 
@@ -73,9 +73,9 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   }
 
   @Nonnull
-  private static SelectTask newSelectStarTask(
+  private static GroupTask newSelectStarTask(
       @Nonnull String file, @Nonnull String table, @Nonnull String where) {
-    return new SelectTask(file, "SELECT * FROM " + table + where);
+    return GroupTask.createSelect(file, "SELECT * FROM " + table + where);
   }
 
   private static void buildSelectStarTask(
@@ -85,19 +85,19 @@ public class OracleMetadataConnector extends AbstractOracleConnector
       @Nonnull String all_file,
       @Nonnull String all_table,
       @Nonnull String whereCond) {
-    SelectTask all_task = newSelectStarTask(all_file, all_table, whereCond);
-    SelectTask dba_task = newSelectStarTask(dba_file, dba_table, whereCond);
+    GroupTask all_task = newSelectStarTask(all_file, all_table, whereCond);
+    GroupTask dba_task = newSelectStarTask(dba_file, dba_table, whereCond);
     addAtLeastOneOf(out, all_task, dba_task);
   }
 
-  private static SelectTask newSelectXmlTask(
+  private static GroupTask newSelectXmlTask(
       @Nonnull String file,
       @Nonnull String table,
       @Nonnull String objectType,
       @Nonnull String ownerColumn,
       @Nonnull String nameColumn,
       @Nonnull String where) {
-    return new SelectTask(
+    return GroupTask.createSelect(
         file,
         String.format(
             "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s%s",
@@ -114,9 +114,9 @@ public class OracleMetadataConnector extends AbstractOracleConnector
       @Nonnull String ownerColumn,
       @Nonnull String nameColumn,
       @Nonnull String whereCond) {
-    SelectTask dba_task =
+    GroupTask dba_task =
         newSelectXmlTask(dba_file, dba_table, objectType, ownerColumn, nameColumn, whereCond);
-    SelectTask all_task =
+    GroupTask all_task =
         newSelectXmlTask(all_file, all_table, objectType, ownerColumn, nameColumn, whereCond);
     addAtLeastOneOf(out, dba_task, all_task);
   }
