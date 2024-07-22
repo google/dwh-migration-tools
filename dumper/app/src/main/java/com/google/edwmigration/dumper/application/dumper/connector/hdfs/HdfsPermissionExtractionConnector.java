@@ -21,11 +21,11 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -46,7 +46,8 @@ import javax.annotation.Nonnull;
     description = "The size of the thread pool to use when extracting hdfs permissions.")
 @AutoService({Connector.class})
 @Description("Dumps permissions from the HDFS.")
-public class HdfsPermissionExtractionConnector extends AbstractConnector {
+public class HdfsPermissionExtractionConnector extends AbstractConnector
+    implements HdfsPermissionExtractionDumpFormat {
 
   public HdfsPermissionExtractionConnector() {
     super("hdfs-permissions");
@@ -64,6 +65,7 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector {
     out.add(
         new HdfsPermissionExtractionTask(
             args.getHost(), args.getPort(/* defaultPort= */ 8020), args.getThreadPoolSize()));
+    out.add(new HdfsContentSummaryTask(args.getHost(), args.getPort(/* defaultPort= */ 8020)));
   }
 
   @Nonnull
@@ -75,11 +77,5 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector {
   private static class LocalHandle implements Handle {
     @Override
     public void close() {}
-  }
-
-  @Nonnull
-  @Override
-  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-    return super.getConnectorProperties();
   }
 }

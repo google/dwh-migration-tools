@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.ExecutionException;
@@ -40,7 +41,8 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HdfsPermissionExtractionTask implements Task<Void> {
+public class HdfsPermissionExtractionTask
+    implements Task<Void>, HdfsPermissionExtractionDumpFormat {
 
   private static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionTask.class);
 
@@ -62,7 +64,7 @@ public class HdfsPermissionExtractionTask implements Task<Void> {
   @Nonnull
   @Override
   public String getTargetPath() {
-    return "hdfs-permissions.csv";
+    return PermissionExtraction.ZIP_ENTRY_NAME;
   }
 
   @CheckForNull
