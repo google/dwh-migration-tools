@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -64,7 +65,7 @@ public class MessageTaskTest {
     assertEquals("[ Error if all fail: fake, fake ]", taskString);
   }
 
-  private static class FakeTask extends AbstractTask<Object> implements GroupTask<Object> {
+  private static class FakeTask extends AbstractTask<Summary> implements GroupTask<Summary> {
     private final Exception exception;
 
     FakeTask(String message) {
@@ -73,9 +74,9 @@ public class MessageTaskTest {
     }
 
     @Override
-    protected Object doRun(
+    protected Summary doRun(
         @CheckForNull TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle) {
-      return null;
+      return Summary.EMPTY;
     }
 
     @Override
