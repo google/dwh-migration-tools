@@ -10,7 +10,7 @@
 ## Install
 
 ```shell
-poetry install
+poetry install --all-extras
 ```
 
 ## Analyze (format, lint, type check)

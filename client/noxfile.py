@@ -49,7 +49,7 @@ def type_check(session):
     session.run("poetry", "run", "mypy", "--strict", "bqms_run")
 
 
-@nox.session(python=["3.7", "3.8", "3.9", "3.10"])
+@nox.session(python=["3.8", "3.9", "3.10", "3.11", "3.12"])
 def tests(session):
     """Execute tests."""
     with tempfile.NamedTemporaryFile() as temp_file:
@@ -60,6 +60,7 @@ def tests(session):
             "--with",
             "dev",
             "--without-hashes",
+            "--all-extras",
             "--output",
             temp_file.name,
         )
