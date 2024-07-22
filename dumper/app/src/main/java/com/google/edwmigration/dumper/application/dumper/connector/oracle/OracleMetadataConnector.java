@@ -45,12 +45,6 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     super(OracleConnectorScope.METADATA);
   }
 
-  static interface GroupTask<T> extends Task<T> {
-
-    @CheckForNull
-    public Exception getException();
-  }
-
   static class SelectTask extends JdbcSelectTask implements GroupTask<Summary> {
 
     private Exception throwable;
