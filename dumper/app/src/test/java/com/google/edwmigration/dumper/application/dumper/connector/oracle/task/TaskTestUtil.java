@@ -16,20 +16,20 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
-import com.google.edwmigration.dumper.application.dumper.task.Summary;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyWhen;
+
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import javax.annotation.CheckForNull;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-public interface GroupTask extends Task<Summary> {
-
-  @CheckForNull
-  public Exception getException();
+public class TaskTestUtil {
 
   @Nonnull
-  static GroupTask createSelect(String file, String selectQuery) {
-    return new SelectTask(file, selectQuery);
+  public static Optional<String> getSql(Task<?> task) {
+    return optionallyWhen(task instanceof SelectTask, () -> ((SelectTask) task).getSql());
   }
+
+  private TaskTestUtil() {}
 }
