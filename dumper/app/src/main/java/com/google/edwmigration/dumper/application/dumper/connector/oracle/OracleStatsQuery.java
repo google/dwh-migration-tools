@@ -24,7 +24,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.io.Resources;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource;
 import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
@@ -49,18 +48,21 @@ public abstract class OracleStatsQuery {
 
   @Nonnull
   static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
-    return create(false, queriedDuration, name, AWR, MULTI_TENANT);
+    QueryGroup queryGroup = QueryGroup.create(false, AWR, MULTI_TENANT);
+    return create(name, queryGroup, queriedDuration);
   }
 
   @Nonnull
   static OracleStatsQuery createNative(
       String name, boolean isRequired, Duration queriedDuration, TenantSetup tenantSetup) {
-    return create(isRequired, queriedDuration, name, NATIVE, tenantSetup);
+    QueryGroup queryGroup = QueryGroup.create(isRequired, NATIVE, tenantSetup);
+    return create(name, queryGroup, queriedDuration);
   }
 
   @Nonnull
   static OracleStatsQuery createStatspack(String name, Duration queriedDuration) {
-    return create(false, queriedDuration, name, STATSPACK, MULTI_TENANT);
+    QueryGroup queryGroup = QueryGroup.create(false, STATSPACK, MULTI_TENANT);
+    return create(name, queryGroup, queriedDuration);
   }
 
   enum TenantSetup {
@@ -74,15 +76,8 @@ public abstract class OracleStatsQuery {
     }
   }
 
-  private static OracleStatsQuery create(
-      boolean isRequired,
-      Duration queriedDuration,
-      String name,
-      StatsSource statsSource,
-      TenantSetup tenantSetup) {
-    QueryGroup queryGroup = QueryGroup.create(isRequired, statsSource, tenantSetup);
-    String source = statsSource.value;
-    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup.code, source, name);
+  static OracleStatsQuery create(String name, QueryGroup queryGroup, Duration queriedDuration) {
+    String path = String.format("oracle-stats/%s/%s.sql", queryGroup.path(), name);
     return new AutoValue_OracleStatsQuery(queriedDuration, queryGroup, name, loadFile(path));
   }
 
