@@ -16,12 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.MULTI_TENANT;
+import static java.time.Duration.ofDays;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
-import java.time.Duration;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -45,9 +46,7 @@ public class StatsJdbcTaskTest {
 
   @Theory
   public void toString_success(ResultProperty property) {
-    boolean isRequired = false;
-    OracleStatsQuery query =
-        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
+    OracleStatsQuery query = createQuery(/* isRequired= */ false);
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     // Act
@@ -59,9 +58,7 @@ public class StatsJdbcTaskTest {
 
   @Test
   public void getCategory_isNotRequired_success() {
-    boolean isRequired = false;
-    OracleStatsQuery query =
-        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
+    OracleStatsQuery query = createQuery(/* isRequired= */ false);
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     assertEquals(TaskCategory.OPTIONAL, task.getCategory());
@@ -69,11 +66,14 @@ public class StatsJdbcTaskTest {
 
   @Test
   public void getCategory_isRequired_success() {
-    boolean isRequired = true;
-    OracleStatsQuery query =
-        OracleStatsQuery.createNative("pdbs-info", isRequired, Duration.ofDays(30));
+    OracleStatsQuery query = createQuery(/* isRequired= */ true);
     Task<?> task = StatsJdbcTask.fromQuery(query);
 
     assertEquals(TaskCategory.REQUIRED, task.getCategory());
+  }
+
+  // use defaults to shorten tests and ease refactors
+  private static OracleStatsQuery createQuery(boolean isRequired) {
+    return OracleStatsQuery.createNative("pdbs-info", isRequired, ofDays(30), MULTI_TENANT);
   }
 }

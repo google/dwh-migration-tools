@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.MULTI_TENANT;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.AWR;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.STATSPACK;
@@ -53,17 +54,18 @@ public abstract class OracleStatsQuery {
 
   @Nonnull
   static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
-    return create(false, queriedDuration, name, AWR);
+    return create(false, queriedDuration, name, AWR, MULTI_TENANT);
   }
 
   @Nonnull
-  static OracleStatsQuery createNative(String name, boolean isRequired, Duration queriedDuration) {
-    return create(isRequired, queriedDuration, name, NATIVE);
+  static OracleStatsQuery createNative(
+      String name, boolean isRequired, Duration queriedDuration, TenantSetup tenantSetup) {
+    return create(isRequired, queriedDuration, name, NATIVE, tenantSetup);
   }
 
   @Nonnull
   static OracleStatsQuery createStatspack(String name, Duration queriedDuration) {
-    return create(false, queriedDuration, name, STATSPACK);
+    return create(false, queriedDuration, name, STATSPACK, MULTI_TENANT);
   }
 
   enum TenantSetup {
@@ -78,10 +80,12 @@ public abstract class OracleStatsQuery {
   }
 
   private static OracleStatsQuery create(
-      boolean isRequired, Duration queriedDuration, String name, StatsSource statsSource) {
+      boolean isRequired,
+      Duration queriedDuration,
+      String name,
+      StatsSource statsSource,
+      TenantSetup tenantSetup) {
     String source = statsSource.value;
-    TenantSetup tenantSetup = TenantSetup.MULTI_TENANT;
-
     String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup.code, source, name);
     return new AutoValue_OracleStatsQuery(
         isRequired, queriedDuration, name, loadFile(path), statsSource, tenantSetup);

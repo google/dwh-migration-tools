@@ -16,12 +16,16 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.MULTI_TENANT;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.SINGLE_TENANT;
+
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.time.Duration;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -34,8 +38,10 @@ class StatsTaskListGenerator {
       ImmutableList.of("hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr");
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
+      ImmutableList.of("app-schemas-pdbs");
+
+  private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL_CDB_ONLY =
       ImmutableList.of(
-          "app-schemas-pdbs",
           "app-schemas-summary",
           "db-features",
           "db-instances",
@@ -70,19 +76,35 @@ class StatsTaskListGenerator {
     }
     for (String name : nativeNames(/* required= */ true)) {
       OracleStatsQuery item =
-          OracleStatsQuery.createNative(name, /* isRequired= */ true, queriedDuration);
+          OracleStatsQuery.createNative(
+              name, /* isRequired= */ true, queriedDuration, MULTI_TENANT);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : nativeNames(/* required= */ false)) {
       OracleStatsQuery item =
-          OracleStatsQuery.createNative(name, /* isRequired= */ false, queriedDuration);
+          OracleStatsQuery.createNative(
+              name, /* isRequired= */ false, queriedDuration, MULTI_TENANT);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : statspackNames()) {
       OracleStatsQuery query = OracleStatsQuery.createStatspack(name, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(query));
     }
+    for (String name : NATIVE_NAMES_OPTIONAL) {
+      builder.addAll(createTaskWithAlternative(name, false, queriedDuration));
+    }
     return builder.build();
+  }
+
+  List<Task<?>> createTaskWithAlternative(
+      String name, boolean isRequired, Duration queriedDuration) {
+    OracleStatsQuery primary =
+        OracleStatsQuery.createNative(name, /* isRequired= */ false, queriedDuration, MULTI_TENANT);
+    StatsJdbcTask primaryTask = StatsJdbcTask.fromQuery(primary);
+    OracleStatsQuery alternative =
+        OracleStatsQuery.createNative(name, isRequired, queriedDuration, SINGLE_TENANT);
+    StatsJdbcTask alternativeTask = StatsJdbcTask.onlyIfFailed(alternative, primaryTask);
+    return ImmutableList.of(primaryTask, alternativeTask);
   }
 
   /** The source of performance statistics. */
@@ -103,7 +125,7 @@ class StatsTaskListGenerator {
   }
 
   ImmutableList<String> nativeNames(boolean required) {
-    return required ? NATIVE_NAMES_REQUIRED : NATIVE_NAMES_OPTIONAL;
+    return required ? NATIVE_NAMES_REQUIRED : NATIVE_NAMES_OPTIONAL_CDB_ONLY;
   }
 
   ImmutableList<String> statspackNames() {
