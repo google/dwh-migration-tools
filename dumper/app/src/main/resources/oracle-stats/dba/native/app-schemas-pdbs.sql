@@ -21,9 +21,9 @@ SELECT
   D.logging "Logging",
   D.con_id "ConId",
   D.con_uid "ConUid",
-  NULL "EbsOwner",
-  NULL "SiebelOwner",
-  NULL "PsftOwner",
+  F.min_owner "EbsOwner",
+  H.min_owner "SiebelOwner",
+  J.min_owner "PsftOwner",
   NULL "RdaMatchCount",
   NULL "OciAutoViewMatches",
   NULL "DbmsCloudMatches",
@@ -54,3 +54,27 @@ FROM (
   INNER JOIN sys.obj$ C
   ON B.obj# = C.obj# AND B.con_id# = 1
 ) D
+LEFT JOIN (
+  SELECT
+    min(E.owner) min_owner
+  FROM dba_tab_columns E
+  WHERE E.table_name = 'FND_PRODUCT_GROUPS'
+    AND E.column_name = 'RELEASE_NAME'
+    AND E.data_type = 'VARCHAR2'
+) F ON D.con_id = NULL
+LEFT JOIN (
+  SELECT
+    min(G.owner) min_owner
+  FROM dba_tab_columns G
+  WHERE G.table_name = 'S_REPOSITORY'
+    AND G.column_name = 'ROW_ID'
+    AND G.data_type = 'VARCHAR2'
+) H ON D.con_id = NULL
+LEFT JOIN (
+  SELECT
+    min(I.owner) min_owner
+  FROM dba_tab_columns I
+  WHERE I.table_name = 'PSSTATUS'
+    AND I.column_name = 'TOOLSREL'
+    AND I.data_type = 'VARCHAR2'
+) J ON D.con_id = NULL
