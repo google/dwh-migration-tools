@@ -72,7 +72,7 @@ public abstract class OracleStatsQuery {
     MULTI_TENANT("cdb"),
     SINGLE_TENANT("dba");
 
-    private final String code;
+    final String code;
 
     TenantSetup(String code) {
       this.code = code;
