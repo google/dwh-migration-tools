@@ -103,7 +103,7 @@ class StatsTaskListGenerator {
     StatsJdbcTask primaryTask = StatsJdbcTask.fromQuery(primary);
     OracleStatsQuery alternative =
         OracleStatsQuery.createNative(name, isRequired, queriedDuration, SINGLE_TENANT);
-    StatsJdbcTask alternativeTask = StatsJdbcTask.onlyIfFailed(alternative, primaryTask);
+    StatsJdbcTask alternativeTask = StatsJdbcTask.fromQuery(alternative).onlyIfFailed(primaryTask);
     return ImmutableList.of(primaryTask, alternativeTask);
   }
 

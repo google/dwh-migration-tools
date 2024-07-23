@@ -24,6 +24,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
@@ -56,7 +57,8 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   }
 
   @Nonnull
-  static StatsJdbcTask onlyIfFailed(OracleStatsQuery query, StatsJdbcTask prerequisite) {
+  @Override
+  public StatsJdbcTask onlyIfFailed(Task<?> prerequisite) {
     StateCondition failureCondition = new StateCondition(prerequisite, TaskState.FAILED);
     return new StatsJdbcTask(query, failureCondition);
   }
