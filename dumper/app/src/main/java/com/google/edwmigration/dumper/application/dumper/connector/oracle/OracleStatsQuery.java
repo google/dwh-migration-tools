@@ -35,27 +35,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public abstract class OracleStatsQuery {
 
-  abstract boolean isRequired();
-
   @Nonnull
   abstract Duration queriedDuration();
 
   @Nonnull
-  QueryGroup queryGroup() {
-    return QueryGroup.create(isRequired(), statsSource(), tenantSetup());
-  }
+  abstract QueryGroup queryGroup();
 
   @Nonnull
   abstract String name();
 
   @Nonnull
   abstract String queryText();
-
-  @Nonnull
-  abstract StatsSource statsSource();
-
-  @Nonnull
-  abstract TenantSetup tenantSetup();
 
   @Nonnull
   static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
@@ -90,10 +80,10 @@ public abstract class OracleStatsQuery {
       String name,
       StatsSource statsSource,
       TenantSetup tenantSetup) {
+    QueryGroup queryGroup = QueryGroup.create(isRequired, statsSource, tenantSetup);
     String source = statsSource.value;
     String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup.code, source, name);
-    return new AutoValue_OracleStatsQuery(
-        isRequired, queriedDuration, name, loadFile(path), statsSource, tenantSetup);
+    return new AutoValue_OracleStatsQuery(queriedDuration, queryGroup, name, loadFile(path));
   }
 
   @Nonnull
