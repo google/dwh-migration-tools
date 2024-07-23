@@ -16,12 +16,16 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
+import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat.FORMAT_NAME;
+
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
+import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
@@ -62,6 +66,9 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments args)
       throws Exception {
+    out.add(new DumpMetadataTask(args, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
+
     out.add(
         new HdfsPermissionExtractionTask(
             args.getHost(), args.getPort(/* defaultPort= */ 8020), args.getThreadPoolSize()));
