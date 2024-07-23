@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVFormat;
@@ -56,6 +57,7 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
     return new StatsJdbcTask(query, emptyCondition());
   }
 
+  @CheckReturnValue
   @Nonnull
   @Override
   public StatsJdbcTask onlyIfFailed(Task<?> prerequisite) {
