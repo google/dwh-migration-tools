@@ -19,7 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -44,10 +46,11 @@ public class HdfsContentSummaryTask extends AbstractTask<Void>
   private final String clusterHost;
   private final int port;
 
-  HdfsContentSummaryTask(@Nonnull String clusterHost, int port) {
-    super(ZIP_ENTRY_NAME, /* createTarget= */ true);
-    this.clusterHost = clusterHost;
-    this.port = port;
+  HdfsContentSummaryTask(@Nonnull ConnectorArguments args) {
+    super(ZIP_ENTRY_NAME);
+    Preconditions.checkNotNull(args, "Arguments was null.");
+    clusterHost = Preconditions.checkNotNull(args.getHost(), "Host was null.");
+    port = args.getPort(/* defaultPort= */ 8020);
   }
 
   @Override
