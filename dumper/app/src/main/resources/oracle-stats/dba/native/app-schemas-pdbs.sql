@@ -13,14 +13,14 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
-  NULL "Source",
-  NULL "DbId",
-  NULL "PdbId",
-  NULL "PdbName",
-  NULL "Status",
-  NULL "Logging",
-  NULL "ConId",
-  NULL "ConUid",
+  D.source "Source",
+  D.dbid "DbId",
+  D.pdb_id "PdbId",
+  D.pdb_name "PdbName",
+  D.st "Status",
+  D.logging "Logging",
+  D.con_id "ConId",
+  D.con_uid "ConUid",
   NULL "EbsOwner",
   NULL "SiebelOwner",
   NULL "PsftOwner",
@@ -29,4 +29,28 @@ SELECT
   NULL "DbmsCloudMatches",
   NULL "ApexMatches",
   NULL "SapOwner"
-FROM dba_pdbs A
+FROM (
+  SELECT
+    'pdbs' source,
+    A.dbid,
+    A.pdb_id,
+    A.pdb_name,
+    A.status st,
+    A.logging,
+    A.con_id,
+    A.con_uid
+  FROM dba_pdbs A
+  UNION
+  SELECT
+    'sys' source,
+    B.dbid,
+    B.con_id# pdb_id,
+    C.name pdb_name,
+    to_char(B.status) st,
+    to_char(B.flags) logging,
+    B.con_id# con_id,
+    B.con_uid
+  FROM sys.container$ B
+  INNER JOIN sys.obj$ C
+  ON B.obj# = C.obj# AND B.con_id# = 1
+) D
