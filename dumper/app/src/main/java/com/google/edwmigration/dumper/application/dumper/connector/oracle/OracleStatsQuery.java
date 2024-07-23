@@ -41,6 +41,11 @@ public abstract class OracleStatsQuery {
   abstract Duration queriedDuration();
 
   @Nonnull
+  QueryGroup queryGroup() {
+    return QueryGroup.create(isRequired(), statsSource(), tenantSetup());
+  }
+
+  @Nonnull
   abstract String name();
 
   @Nonnull
@@ -93,7 +98,7 @@ public abstract class OracleStatsQuery {
 
   @Nonnull
   String description() {
-    return String.format("Query{name=%s, statsSource=%s}", name(), statsSource());
+    return String.format("Query{name=%s, statsSource=%s}", name(), queryGroup().statsSource());
   }
 
   private static String loadFile(String path) {

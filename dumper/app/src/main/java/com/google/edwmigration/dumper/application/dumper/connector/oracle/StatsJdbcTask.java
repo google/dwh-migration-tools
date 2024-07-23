@@ -83,7 +83,7 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
       throws SQLException {
     ResultSetExtractor<Summary> extractor = newCsvResultSetExtractor(sink);
     Summary result;
-    if (query.statsSource() == NATIVE) {
+    if (query.queryGroup().statsSource() == NATIVE) {
       result = doSelect(connection, extractor, query.queryText());
     } else {
       long days = query.queriedDuration().toDays();
@@ -99,7 +99,7 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   @Nonnull
   @Override
   public TaskCategory getCategory() {
-    if (query.isRequired()) {
+    if (query.queryGroup().required()) {
       return TaskCategory.REQUIRED;
     } else {
       return TaskCategory.OPTIONAL;
