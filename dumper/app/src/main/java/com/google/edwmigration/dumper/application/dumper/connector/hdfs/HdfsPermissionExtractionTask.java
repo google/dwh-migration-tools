@@ -29,7 +29,6 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat.PermissionExtraction;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.ExecutionException;
@@ -45,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HdfsPermissionExtractionTask extends AbstractTask<Void>
-    implements PermissionExtraction, HdfsPermissionExtractionDumpFormat {
+    implements HdfsPermissionExtractionDumpFormat {
 
   private static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionTask.class);
 
@@ -54,7 +53,7 @@ public class HdfsPermissionExtractionTask extends AbstractTask<Void>
   final int poolSize;
 
   HdfsPermissionExtractionTask(@Nonnull ConnectorArguments args) {
-    super(ZIP_ENTRY_NAME);
+    super(PermissionExtraction.ZIP_ENTRY_NAME);
     Preconditions.checkNotNull(args, "Arguments was null.");
     clusterHost = Preconditions.checkNotNull(args.getHost(), "Host was null.");
     port = args.getPort(/* defaultPort= */ 8020);
