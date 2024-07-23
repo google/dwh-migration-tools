@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.MULTI_TENANT;
 import static java.time.Duration.ofDays;
 import static org.junit.Assert.assertEquals;
 
@@ -29,7 +30,8 @@ public class OracleStatsQueryTest {
   @Test
   public void description_success() {
     boolean isRequired = true;
-    OracleStatsQuery query = OracleStatsQuery.createNative("db-objects", isRequired, ofDays(30));
+    OracleStatsQuery query =
+        OracleStatsQuery.createNative("db-objects", isRequired, ofDays(30), MULTI_TENANT);
     assertEquals("Query{name=db-objects, statsSource=NATIVE}", query.description());
   }
 }

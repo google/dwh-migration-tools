@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.MULTI_TENANT;
+import static java.time.Duration.ofDays;
+
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.time.Duration;
@@ -46,7 +49,7 @@ public class StatsTaskListGeneratorTest {
   @Theory
   public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
       throws IOException {
-    OracleStatsQuery.createNative(name, /* isRequired= */ true, Duration.ofDays(7));
+    OracleStatsQuery.createNative(name, /* isRequired= */ true, ofDays(7), MULTI_TENANT);
   }
 
   @Theory
