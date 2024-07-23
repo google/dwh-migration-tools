@@ -29,7 +29,23 @@ public interface Task<T> {
 
   public static interface Condition {
 
+    static class AlwaysTrue implements Condition {
+
+      private static final AlwaysTrue instance = new AlwaysTrue();
+
+      @Override
+      public boolean evaluate(@Nonnull TaskSetState state) {
+        return true;
+      }
+
+      private AlwaysTrue() {}
+    }
+
     public static final Condition @ArrayLen(0) [] EMPTY_ARRAY = new Condition[0];
+
+    static Condition alwaysTrue() {
+      return AlwaysTrue.instance;
+    }
 
     public boolean evaluate(@Nonnull TaskSetState state);
 

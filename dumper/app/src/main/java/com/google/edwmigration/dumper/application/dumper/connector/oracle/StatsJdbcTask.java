@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
@@ -54,7 +53,7 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   @Nonnull
   static StatsJdbcTask fromQuery(OracleStatsQuery query) {
-    return new StatsJdbcTask(query, emptyCondition());
+    return new StatsJdbcTask(query, Condition.alwaysTrue());
   }
 
   @CheckReturnValue
@@ -117,10 +116,5 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   @Override
   public String toString() {
     return String.format("Write to %s: %s", getTargetPath(), query.description());
-  }
-
-  @Nonnull
-  private static Condition emptyCondition() {
-    return new AndCondition(ImmutableList.of());
   }
 }
