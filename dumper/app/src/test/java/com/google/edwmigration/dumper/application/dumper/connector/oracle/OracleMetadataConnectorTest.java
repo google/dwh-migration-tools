@@ -17,11 +17,12 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionalToStream;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleMetadataConnector.SelectTask;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.TaskTestUtil;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +44,7 @@ public class OracleMetadataConnectorTest {
     // Assert
     ImmutableList<String> selectSqls =
         tasks.stream()
-            .filter(task -> task instanceof SelectTask)
-            .map(task -> ((SelectTask) task).getSql())
+            .flatMap(task -> optionalToStream(TaskTestUtil.getSql(task)))
             .collect(toImmutableList());
 
     assertEquals(

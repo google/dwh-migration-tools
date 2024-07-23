@@ -21,9 +21,10 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleMetadataConnector.GroupTask;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.GroupTask;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -41,8 +42,8 @@ public class MessageTaskTest {
             "All the select tasks failed:",
             "(1): fake : RuntimeException: ExceptionCauseA",
             "(2): fake : RuntimeException: ExceptionCauseB");
-    GroupTask<?> subtaskA = new FakeTask("ExceptionCauseA");
-    GroupTask<?> subtaskB = new FakeTask("ExceptionCauseB");
+    GroupTask subtaskA = new FakeTask("ExceptionCauseA");
+    GroupTask subtaskB = new FakeTask("ExceptionCauseB");
     MessageTask task = MessageTask.create(subtaskA, subtaskB);
 
     // Act
@@ -54,8 +55,8 @@ public class MessageTaskTest {
 
   @Test
   public void toString_success() {
-    GroupTask<?> subtaskA = new FakeTask("ExceptionCauseA");
-    GroupTask<?> subtaskB = new FakeTask("ExceptionCauseB");
+    GroupTask subtaskA = new FakeTask("ExceptionCauseA");
+    GroupTask subtaskB = new FakeTask("ExceptionCauseB");
     MessageTask task = MessageTask.create(subtaskA, subtaskB);
 
     // Act
@@ -65,7 +66,7 @@ public class MessageTaskTest {
     assertEquals("[ Error if all fail: fake, fake ]", taskString);
   }
 
-  private static class FakeTask extends AbstractTask<Object> implements GroupTask<Object> {
+  private static class FakeTask extends AbstractTask<Summary> implements GroupTask {
     private final Exception exception;
 
     FakeTask(String message) {
@@ -74,9 +75,9 @@ public class MessageTaskTest {
     }
 
     @Override
-    protected Object doRun(
+    protected Summary doRun(
         @CheckForNull TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle) {
-      return null;
+      return Summary.EMPTY;
     }
 
     @Override

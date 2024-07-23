@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.utils;
 import com.google.common.base.Strings;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class OptionalUtils {
 
@@ -28,6 +29,10 @@ public class OptionalUtils {
 
   public static Optional<String> optionallyIfNotEmpty(String value) {
     return Optional.ofNullable(Strings.emptyToNull(value));
+  }
+
+  public static <T> Stream<T> optionalToStream(Optional<? extends T> optional) {
+    return optional.map(value -> Stream.<T>of(value)).orElseGet(Stream::empty);
   }
 
   private OptionalUtils() {}
