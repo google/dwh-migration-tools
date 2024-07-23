@@ -16,14 +16,15 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.MULTI_TENANT;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.AWR;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.STATSPACK;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.AWR;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.NATIVE;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.STATSPACK;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.MULTI_TENANT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.io.Resources;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup;
 import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
@@ -63,17 +64,6 @@ public abstract class OracleStatsQuery {
   static OracleStatsQuery createStatspack(String name, Duration queriedDuration) {
     QueryGroup queryGroup = QueryGroup.create(false, STATSPACK, MULTI_TENANT);
     return create(name, queryGroup, queriedDuration);
-  }
-
-  enum TenantSetup {
-    MULTI_TENANT("cdb"),
-    SINGLE_TENANT("dba");
-
-    final String code;
-
-    TenantSetup(String code) {
-      this.code = code;
-    }
   }
 
   static OracleStatsQuery create(String name, QueryGroup queryGroup, Duration queriedDuration) {

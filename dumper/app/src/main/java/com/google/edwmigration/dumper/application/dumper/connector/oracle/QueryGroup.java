@@ -17,8 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import com.google.auto.value.AutoValue;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -42,5 +40,29 @@ abstract class QueryGroup {
   @Nonnull
   String path() {
     return tenantSetup().code + "/" + statsSource().value;
+  }
+
+  /** The source of performance statistics. */
+  enum StatsSource {
+    AWR("awr"),
+    NATIVE("native"),
+    STATSPACK("statspack");
+
+    final String value;
+
+    StatsSource(String value) {
+      this.value = value;
+    }
+  }
+
+  enum TenantSetup {
+    MULTI_TENANT("cdb"),
+    SINGLE_TENANT("dba");
+
+    final String code;
+
+    TenantSetup(String code) {
+      this.code = code;
+    }
   }
 }
