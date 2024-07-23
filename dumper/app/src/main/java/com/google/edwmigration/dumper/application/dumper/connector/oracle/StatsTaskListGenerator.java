@@ -91,7 +91,7 @@ class StatsTaskListGenerator {
       builder.add(StatsJdbcTask.fromQuery(query));
     }
     for (String name : NATIVE_NAMES_OPTIONAL) {
-      builder.addAll(createTaskWithAlternative(name, false, queriedDuration));
+      builder.addAll(createTaskWithAlternative(name, /* isRequired= */ false, queriedDuration));
     }
     return builder.build();
   }
