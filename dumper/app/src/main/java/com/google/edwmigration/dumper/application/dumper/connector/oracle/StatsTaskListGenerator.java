@@ -52,14 +52,16 @@ class StatsTaskListGenerator {
           "pdbs-info");
 
   private static final ImmutableList<String> NATIVE_NAMES_REQUIRED =
-      ImmutableList.of("data-types",
+      ImmutableList.of(
+          "data-types",
+          "db-info",
           "db-objects",
           // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
           // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
           "db-objects-synonym-public");
 
   private static final ImmutableList<String> NATIVE_NAMES_REQUIRED_CDB_ONLY =
-      ImmutableList.of("db-info", "table-types-dtl", "used-space-details");
+      ImmutableList.of("table-types-dtl", "used-space-details");
 
   private static final ImmutableList<String> STATSPACK_NAMES =
       ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
