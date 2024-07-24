@@ -24,10 +24,10 @@ SELECT
   NULL "EbsOwner",
   NULL "SiebelOwner",
   NULL "PsftOwner",
-  NULL "RdaMatchCount",
-  NULL "OciAutoViewMatches",
-  NULL "DbmsCloudMatches",
-  NULL "ApexMatches",
+  0 "RdaMatchCount",
+  0 "OciAutoViewMatches",
+  0 "DbmsCloudMatches",
+  0 "ApexMatches",
   NULL "SapOwner"
 FROM (
   SELECT
