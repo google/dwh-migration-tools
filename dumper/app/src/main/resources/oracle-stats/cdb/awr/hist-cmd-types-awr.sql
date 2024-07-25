@@ -27,7 +27,13 @@ SELECT
   avg(A.clwait_delta) "AvgClWait",
   avg(A.apwait_delta) "AvgApWait",
   avg(A.ccwait_delta) "AvgCcWait",
-  avg(A.plsexec_time_delta) "AvgPlsExecTime"
+  avg(A.plsexec_time_delta) "AvgPlsExecTime",
+  avg(A.physical_write_bytes_delta) "AvgPhysicalWriteBytes",
+  avg(A.physical_write_requests_delta) "AvgPhysicalWriteRequests",
+  avg(A.direct_writes_delta) "AvgDirectWrites",
+  avg(A.disk_reads_delta) "AvgDiskReads",
+  avg(A.physical_read_requests_delta) "AvgPhysicalReadRequests",
+  avg(A.physical_read_bytes_delta) "AvgPhysicalReadBytes"
 FROM cdb_hist_sqlstat A
 INNER JOIN cdb_hist_sqltext B
   ON A.con_id = B.con_id
