@@ -46,12 +46,12 @@ class SingleDirScanJob implements Callable<Void> {
       for (FileStatus file : scanCtx.listDirectory(dir)) {
         // Process file or dir (in this case - just collect statistics)
         accumFileSize += file.getLen();
-        numFiles++;
 
         if (file.isDirectory()) {
           numDirs++;
           execManager.submit(new SingleDirScanJob(scanCtx, execManager, file));
         } else {
+          numFiles++;
           scanCtx.walkFile(file);
         }
       }
