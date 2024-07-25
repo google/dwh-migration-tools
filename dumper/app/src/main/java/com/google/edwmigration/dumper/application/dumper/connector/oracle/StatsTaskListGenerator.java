@@ -16,8 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.MULTI_TENANT;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.SINGLE_TENANT;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.AWR;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.NATIVE;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.STATSPACK;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.MULTI_TENANT;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.SINGLE_TENANT;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -72,23 +75,23 @@ class StatsTaskListGenerator {
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));
     for (String name : awrNames()) {
-      OracleStatsQuery item = OracleStatsQuery.createAwr(name, queriedDuration);
+      QueryGroup awr = QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT);
+      OracleStatsQuery item = OracleStatsQuery.create(name, awr, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : nativeNames(/* required= */ true)) {
-      OracleStatsQuery item =
-          OracleStatsQuery.createNative(
-              name, /* isRequired= */ true, queriedDuration, MULTI_TENANT);
+      QueryGroup requiredGroup = QueryGroup.create(/* required= */ true, NATIVE, MULTI_TENANT);
+      OracleStatsQuery item = OracleStatsQuery.create(name, requiredGroup, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : nativeNames(/* required= */ false)) {
-      OracleStatsQuery item =
-          OracleStatsQuery.createNative(
-              name, /* isRequired= */ false, queriedDuration, MULTI_TENANT);
+      QueryGroup optionalGroupCdb = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
+      OracleStatsQuery item = OracleStatsQuery.create(name, optionalGroupCdb, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : statspackNames()) {
-      OracleStatsQuery query = OracleStatsQuery.createStatspack(name, queriedDuration);
+      QueryGroup statspack = QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT);
+      OracleStatsQuery query = OracleStatsQuery.create(name, statspack, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(query));
     }
     for (String name : NATIVE_NAMES_OPTIONAL) {
@@ -102,26 +105,13 @@ class StatsTaskListGenerator {
 
   List<Task<?>> createTaskWithAlternative(
       String name, boolean isRequired, Duration queriedDuration) {
-    OracleStatsQuery primary =
-        OracleStatsQuery.createNative(name, /* isRequired= */ false, queriedDuration, MULTI_TENANT);
+    QueryGroup primaryGroup = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
+    OracleStatsQuery primary = OracleStatsQuery.create(name, primaryGroup, queriedDuration);
     StatsJdbcTask primaryTask = StatsJdbcTask.fromQuery(primary);
-    OracleStatsQuery alternative =
-        OracleStatsQuery.createNative(name, isRequired, queriedDuration, SINGLE_TENANT);
+    QueryGroup alternativeGroup = QueryGroup.create(isRequired, NATIVE, SINGLE_TENANT);
+    OracleStatsQuery alternative = OracleStatsQuery.create(name, alternativeGroup, queriedDuration);
     StatsJdbcTask alternativeTask = StatsJdbcTask.fromQuery(alternative).onlyIfFailed(primaryTask);
     return ImmutableList.of(primaryTask, alternativeTask);
-  }
-
-  /** The source of performance statistics. */
-  enum StatsSource {
-    AWR("awr"),
-    NATIVE("native"),
-    STATSPACK("statspack");
-
-    final String value;
-
-    StatsSource(String value) {
-      this.value = value;
-    }
   }
 
   ImmutableList<String> awrNames() {

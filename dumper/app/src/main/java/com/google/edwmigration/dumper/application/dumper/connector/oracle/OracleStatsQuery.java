@@ -16,15 +16,15 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery.TenantSetup.MULTI_TENANT;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.AWR;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.STATSPACK;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.AWR;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.NATIVE;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.STATSPACK;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.MULTI_TENANT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.io.Resources;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup;
 import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
@@ -35,10 +35,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public abstract class OracleStatsQuery {
 
-  abstract boolean isRequired();
-
   @Nonnull
   abstract Duration queriedDuration();
+
+  @Nonnull
+  abstract QueryGroup queryGroup();
 
   @Nonnull
   abstract String name();
@@ -47,53 +48,32 @@ public abstract class OracleStatsQuery {
   abstract String queryText();
 
   @Nonnull
-  abstract StatsSource statsSource();
-
-  @Nonnull
-  abstract TenantSetup tenantSetup();
-
-  @Nonnull
   static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
-    return create(false, queriedDuration, name, AWR, MULTI_TENANT);
+    QueryGroup queryGroup = QueryGroup.create(false, AWR, MULTI_TENANT);
+    return create(name, queryGroup, queriedDuration);
   }
 
   @Nonnull
   static OracleStatsQuery createNative(
       String name, boolean isRequired, Duration queriedDuration, TenantSetup tenantSetup) {
-    return create(isRequired, queriedDuration, name, NATIVE, tenantSetup);
+    QueryGroup queryGroup = QueryGroup.create(isRequired, NATIVE, tenantSetup);
+    return create(name, queryGroup, queriedDuration);
   }
 
   @Nonnull
   static OracleStatsQuery createStatspack(String name, Duration queriedDuration) {
-    return create(false, queriedDuration, name, STATSPACK, MULTI_TENANT);
+    QueryGroup queryGroup = QueryGroup.create(false, STATSPACK, MULTI_TENANT);
+    return create(name, queryGroup, queriedDuration);
   }
 
-  enum TenantSetup {
-    MULTI_TENANT("cdb"),
-    SINGLE_TENANT("dba");
-
-    private final String code;
-
-    TenantSetup(String code) {
-      this.code = code;
-    }
-  }
-
-  private static OracleStatsQuery create(
-      boolean isRequired,
-      Duration queriedDuration,
-      String name,
-      StatsSource statsSource,
-      TenantSetup tenantSetup) {
-    String source = statsSource.value;
-    String path = String.format("oracle-stats/%s/%s/%s.sql", tenantSetup.code, source, name);
-    return new AutoValue_OracleStatsQuery(
-        isRequired, queriedDuration, name, loadFile(path), statsSource, tenantSetup);
+  static OracleStatsQuery create(String name, QueryGroup queryGroup, Duration queriedDuration) {
+    String path = String.format("oracle-stats/%s/%s.sql", queryGroup.path(), name);
+    return new AutoValue_OracleStatsQuery(queriedDuration, queryGroup, name, loadFile(path));
   }
 
   @Nonnull
   String description() {
-    return String.format("Query{name=%s, statsSource=%s}", name(), statsSource());
+    return String.format("Query{name=%s, statsSource=%s}", name(), queryGroup().statsSource());
   }
 
   private static String loadFile(String path) {

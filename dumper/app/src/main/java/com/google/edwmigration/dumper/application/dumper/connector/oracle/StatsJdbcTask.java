@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsTaskListGenerator.StatsSource.NATIVE;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.NATIVE;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -83,7 +83,7 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
       throws SQLException {
     ResultSetExtractor<Summary> extractor = newCsvResultSetExtractor(sink);
     Summary result;
-    if (query.statsSource() == NATIVE) {
+    if (query.queryGroup().statsSource() == NATIVE) {
       result = doSelect(connection, extractor, query.queryText());
     } else {
       long days = query.queriedDuration().toDays();
@@ -99,7 +99,7 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   @Nonnull
   @Override
   public TaskCategory getCategory() {
-    if (query.isRequired()) {
+    if (query.queryGroup().required()) {
       return TaskCategory.REQUIRED;
     } else {
       return TaskCategory.OPTIONAL;
