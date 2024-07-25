@@ -102,11 +102,11 @@ class StatsTaskListGenerator {
       builder.add(StatsJdbcTask.fromQuery(query));
     }
     for (String name : NATIVE_NAMES_OPTIONAL) {
-      QueryGroup group = QueryGroup.create(/* isRequired= */ false, NATIVE, SINGLE_TENANT);
+      QueryGroup group = QueryGroup.create(/* required= */ false, NATIVE, SINGLE_TENANT);
       builder.addAll(createTaskWithAlternative(name, group, queriedDuration));
     }
     for (String name : NATIVE_NAMES_REQUIRED) {
-      QueryGroup group = QueryGroup.create(/* isRequired= */ true, NATIVE, SINGLE_TENANT);
+      QueryGroup group = QueryGroup.create(/* required= */ true, NATIVE, SINGLE_TENANT);
       builder.addAll(createTaskWithAlternative(name, group, queriedDuration));
     }
     return builder.build();
