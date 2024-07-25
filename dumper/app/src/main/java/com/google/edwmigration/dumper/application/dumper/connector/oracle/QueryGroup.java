@@ -17,6 +17,9 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import com.google.auto.value.AutoValue;
+
+import static com.google.common.base.Preconditions.checkState;
+
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -35,6 +38,12 @@ abstract class QueryGroup {
   @Nonnull
   static QueryGroup create(boolean required, StatsSource statsSource, TenantSetup tenantSetup) {
     return new AutoValue_QueryGroup(required, statsSource, tenantSetup);
+  }
+
+  @Nonnull
+  QueryGroup toCdbVersion() {
+    checkState(tenantSetup() == TenantSetup.SINGLE_TENANT, "Already a CDB query");
+    return QueryGroup.create(/* required= */ false, statsSource(), TenantSetup.MULTI_TENANT);
   }
 
   @Nonnull

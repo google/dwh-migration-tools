@@ -106,11 +106,10 @@ class StatsTaskListGenerator {
 
   List<StatsJdbcTask> createTaskWithAlternative(
       String name, boolean isRequired, Duration queriedDuration) {
-    QueryGroup primaryGroup = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
-    OracleStatsQuery primary = OracleStatsQuery.create(name, primaryGroup, queriedDuration);
+    QueryGroup group = QueryGroup.create(isRequired, NATIVE, SINGLE_TENANT);
+    OracleStatsQuery primary = OracleStatsQuery.create(name, group.toCdbVersion(), queriedDuration);
     StatsJdbcTask primaryTask = StatsJdbcTask.fromQuery(primary);
-    QueryGroup alternativeGroup = QueryGroup.create(isRequired, NATIVE, SINGLE_TENANT);
-    OracleStatsQuery alternative = OracleStatsQuery.create(name, alternativeGroup, queriedDuration);
+    OracleStatsQuery alternative = OracleStatsQuery.create(name, group, queriedDuration);
     StatsJdbcTask alternativeTask = StatsJdbcTask.fromQuery(alternative).onlyIfFailed(primaryTask);
     return ImmutableList.of(primaryTask, alternativeTask);
   }
