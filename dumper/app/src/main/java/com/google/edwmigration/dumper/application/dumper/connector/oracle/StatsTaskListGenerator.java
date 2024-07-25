@@ -78,7 +78,7 @@ class StatsTaskListGenerator {
       builder.add(StatsJdbcTask.fromQuery(item));
     }
     for (String name : nativeNames(/* required= */ true)) {
-      QueryGroup requiredGroup = QueryGroup.create(true, NATIVE, MULTI_TENANT);
+      QueryGroup requiredGroup = QueryGroup.create(/* required= */ true, NATIVE, MULTI_TENANT);
       OracleStatsQuery item = OracleStatsQuery.create(name, requiredGroup, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
