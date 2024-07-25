@@ -96,17 +96,18 @@ class StatsTaskListGenerator {
       builder.add(StatsJdbcTask.fromQuery(query));
     }
     for (String name : NATIVE_NAMES_OPTIONAL) {
-      builder.addAll(createTaskWithAlternative(name, /* isRequired= */ false, queriedDuration));
+      QueryGroup group = QueryGroup.create(/* isRequired= */ false, NATIVE, SINGLE_TENANT);
+      builder.addAll(createTaskWithAlternative(name, group, queriedDuration));
     }
     for (String name : NATIVE_NAMES_REQUIRED) {
-      builder.addAll(createTaskWithAlternative(name, /* isRequired= */ true, queriedDuration));
+      QueryGroup group = QueryGroup.create(/* isRequired= */ true, NATIVE, SINGLE_TENANT);
+      builder.addAll(createTaskWithAlternative(name, group, queriedDuration));
     }
     return builder.build();
   }
 
   List<StatsJdbcTask> createTaskWithAlternative(
-      String name, boolean isRequired, Duration queriedDuration) {
-    QueryGroup group = QueryGroup.create(isRequired, NATIVE, SINGLE_TENANT);
+      String name, QueryGroup group, Duration queriedDuration) {
     OracleStatsQuery primary = OracleStatsQuery.create(name, group.toCdbVersion(), queriedDuration);
     StatsJdbcTask primaryTask = StatsJdbcTask.fromQuery(primary);
     OracleStatsQuery alternative = OracleStatsQuery.create(name, group, queriedDuration);

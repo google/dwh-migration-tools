@@ -16,10 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import com.google.auto.value.AutoValue;
-
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.auto.value.AutoValue;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
