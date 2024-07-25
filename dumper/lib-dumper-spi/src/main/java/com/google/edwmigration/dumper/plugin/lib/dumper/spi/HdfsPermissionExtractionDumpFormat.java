@@ -29,8 +29,8 @@ public interface HdfsPermissionExtractionDumpFormat {
       Permission,
       FileSize, // For a directory it is the sum of sizes of (immediately) contained files
       ModificationTime,
-      NumberOfFilesAndSubdirs,
-      NumberOfSubdirs,
+      FileCount,
+      DirCount,
       StoragePolicy,
     }
   }
