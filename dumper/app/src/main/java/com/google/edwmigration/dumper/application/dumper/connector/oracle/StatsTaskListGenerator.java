@@ -70,9 +70,16 @@ class StatsTaskListGenerator {
 
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, Duration queriedDuration) {
-    ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
+    ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));
+    List<StatsJdbcTask> jdbcTasks = createJdbcTasks(queriedDuration);
+    builder.addAll(jdbcTasks);
+    return builder.build();
+  }
+
+  private List<StatsJdbcTask> createJdbcTasks(Duration queriedDuration) {
+    ImmutableList.Builder<StatsJdbcTask> builder = ImmutableList.builder();
     for (String name : awrNames()) {
       QueryGroup awr = QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT);
       OracleStatsQuery item = OracleStatsQuery.create(name, awr, queriedDuration);
@@ -97,7 +104,7 @@ class StatsTaskListGenerator {
     return builder.build();
   }
 
-  List<Task<?>> createTaskWithAlternative(
+  List<StatsJdbcTask> createTaskWithAlternative(
       String name, boolean isRequired, Duration queriedDuration) {
     QueryGroup primaryGroup = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
     OracleStatsQuery primary = OracleStatsQuery.create(name, primaryGroup, queriedDuration);
