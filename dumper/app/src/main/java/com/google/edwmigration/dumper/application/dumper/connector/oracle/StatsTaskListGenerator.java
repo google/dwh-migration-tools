@@ -38,7 +38,10 @@ class StatsTaskListGenerator {
   private final OracleConnectorScope scope = OracleConnectorScope.STATS;
 
   private static final ImmutableList<String> AWR_NAMES =
-      ImmutableList.of("hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr");
+      ImmutableList.of("sql-stats-awr");
+
+  private static final ImmutableList<String> AWR_NAMES_CDB_ONLY =
+      ImmutableList.of("hist-cmd-types-awr", "source-conn-latest");
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
       ImmutableList.of("app-schemas-pdbs");
@@ -80,6 +83,10 @@ class StatsTaskListGenerator {
 
   private List<StatsJdbcTask> createJdbcTasks(Duration queriedDuration) {
     ImmutableList.Builder<StatsJdbcTask> builder = ImmutableList.builder();
+    for (String name : AWR_NAMES) {
+      QueryGroup awr = QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT);
+      builder.addAll(createTaskWithAlternative(name, awr, queriedDuration));
+    }
     for (String name : awrNames()) {
       QueryGroup awr = QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT);
       OracleStatsQuery item = OracleStatsQuery.create(name, awr, queriedDuration);
@@ -116,7 +123,7 @@ class StatsTaskListGenerator {
   }
 
   ImmutableList<String> awrNames() {
-    return AWR_NAMES;
+    return AWR_NAMES_CDB_ONLY;
   }
 
   ImmutableList<String> optionalNativeNames() {
