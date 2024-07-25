@@ -34,11 +34,7 @@ public class StatsTaskListGeneratorTest {
   static final StatsTaskListGenerator generator = new StatsTaskListGenerator();
 
   @DataPoints("nativeNames")
-  public static final ImmutableList<String> nativeNames =
-      ImmutableList.<String>builder()
-          .addAll(generator.nativeNames(/* required= */ true))
-          .addAll(generator.nativeNames(/* required= */ false))
-          .build();
+  public static final ImmutableList<String> nativeNames = generator.optionalNativeNames();
 
   @DataPoints("awrNames")
   public static final ImmutableList<String> awrNames = generator.awrNames();
