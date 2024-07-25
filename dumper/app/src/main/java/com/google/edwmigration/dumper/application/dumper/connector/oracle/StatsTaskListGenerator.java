@@ -92,7 +92,7 @@ class StatsTaskListGenerator {
       OracleStatsQuery item = OracleStatsQuery.create(name, awr, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
-    for (String name : optionalNativeNames()) {
+    for (String name : optionalNativeNamesForCdb()) {
       QueryGroup optionalGroup = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
       OracleStatsQuery item = OracleStatsQuery.create(name, optionalGroup, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
@@ -126,7 +126,7 @@ class StatsTaskListGenerator {
     return AWR_NAMES_CDB_ONLY;
   }
 
-  ImmutableList<String> optionalNativeNames() {
+  ImmutableList<String> optionalNativeNamesForCdb() {
     return NATIVE_NAMES_OPTIONAL_CDB_ONLY;
   }
 
