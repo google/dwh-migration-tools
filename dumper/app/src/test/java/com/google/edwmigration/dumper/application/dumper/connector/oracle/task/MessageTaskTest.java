@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.oracle;
+package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
 import static com.google.common.collect.ImmutableList.copyOf;
 import static org.junit.Assert.assertEquals;

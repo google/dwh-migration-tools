@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.oracle;
+package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.GroupTask;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -31,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Task to print error messages after all queries of a certain type failed. */
-class MessageTask extends AbstractTask<Void> {
+public class MessageTask extends AbstractTask<Void> {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessageTask.class);
 
@@ -45,7 +44,7 @@ class MessageTask extends AbstractTask<Void> {
     this.names = names;
   }
 
-  static MessageTask create(@Nonnull GroupTask... ts) {
+  public static MessageTask create(@Nonnull GroupTask... ts) {
     GroupTask[] tasks = ts.clone();
     String names = toNames(ts);
     return new MessageTask(tasks, names);
