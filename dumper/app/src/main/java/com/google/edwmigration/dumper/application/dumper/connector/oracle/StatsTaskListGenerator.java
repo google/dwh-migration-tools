@@ -53,14 +53,13 @@ class StatsTaskListGenerator {
 
   private static final ImmutableList<String> NATIVE_NAMES_REQUIRED =
       ImmutableList.of(
-          "data-types",
-          "db-info",
           "db-objects",
           // The version of db-objects that gets SYNONYM objects, for which owner is PUBLIC.
           // A JOIN is performed to exclude objects which appear in the cdb_synonyms table.
-          "db-objects-synonym-public",
-          "table-types-dtl",
-          "used-space-details");
+          "db-objects-synonym-public");
+
+  private static final ImmutableList<String> NATIVE_NAMES_REQUIRED_CDB_ONLY =
+      ImmutableList.of("data-types", "db-info", "table-types-dtl", "used-space-details");
 
   private static final ImmutableList<String> STATSPACK_NAMES =
       ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
@@ -92,6 +91,9 @@ class StatsTaskListGenerator {
     }
     for (String name : NATIVE_NAMES_OPTIONAL) {
       builder.addAll(createTaskWithAlternative(name, /* isRequired= */ false, queriedDuration));
+    }
+    for (String name : NATIVE_NAMES_REQUIRED) {
+      builder.addAll(createTaskWithAlternative(name, /* isRequired= */ true, queriedDuration));
     }
     return builder.build();
   }
@@ -125,7 +127,7 @@ class StatsTaskListGenerator {
   }
 
   ImmutableList<String> nativeNames(boolean required) {
-    return required ? NATIVE_NAMES_REQUIRED : NATIVE_NAMES_OPTIONAL_CDB_ONLY;
+    return required ? NATIVE_NAMES_REQUIRED_CDB_ONLY : NATIVE_NAMES_OPTIONAL_CDB_ONLY;
   }
 
   ImmutableList<String> statspackNames() {
