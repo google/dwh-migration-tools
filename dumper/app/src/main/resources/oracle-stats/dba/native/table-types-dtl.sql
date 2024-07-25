@@ -73,7 +73,7 @@ LEFT JOIN (
     G.table_owner,
     G.table_name,
     count(1) count
-  FROM cdb_tab_subpartitions G
+  FROM dba_tab_subpartitions G
   GROUP BY
     G.table_owner,
     G.table_name
