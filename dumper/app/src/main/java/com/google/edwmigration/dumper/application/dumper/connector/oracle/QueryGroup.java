@@ -24,15 +24,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoValue
 @ParametersAreNonnullByDefault
-abstract class QueryGroup {
+public abstract class QueryGroup {
 
   abstract boolean required();
 
   @Nonnull
-  abstract StatsSource statsSource();
+  public abstract StatsSource statsSource();
 
   @Nonnull
-  abstract TenantSetup tenantSetup();
+  public abstract TenantSetup tenantSetup();
 
   @Nonnull
   static QueryGroup create(boolean required, StatsSource statsSource, TenantSetup tenantSetup) {
@@ -51,23 +51,23 @@ abstract class QueryGroup {
   }
 
   /** The source of performance statistics. */
-  enum StatsSource {
+  public enum StatsSource {
     AWR("awr"),
     NATIVE("native"),
     STATSPACK("statspack");
 
-    final String value;
+    public final String value;
 
     StatsSource(String value) {
       this.value = value;
     }
   }
 
-  enum TenantSetup {
+  public enum TenantSetup {
     MULTI_TENANT("cdb"),
     SINGLE_TENANT("dba");
 
-    final String code;
+    public final String code;
 
     TenantSetup(String code) {
       this.code = code;
