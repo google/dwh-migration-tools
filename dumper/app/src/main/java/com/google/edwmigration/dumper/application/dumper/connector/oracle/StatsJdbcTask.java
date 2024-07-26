@@ -16,8 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.NATIVE;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
@@ -30,6 +32,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -39,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 @ParametersAreNonnullByDefault
-final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
+public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
   private static final Logger LOG = LoggerFactory.getLogger(StatsJdbcTask.class);
   private final Condition condition;
@@ -104,6 +107,19 @@ final class StatsJdbcTask extends AbstractJdbcTask<Summary> {
     } else {
       return TaskCategory.OPTIONAL;
     }
+  }
+
+  @Nonnull
+  public static ImmutableList<StatsJdbcTask> findByGroup(
+      List<StatsJdbcTask> tasks, QueryGroup group) {
+    return tasks.stream()
+        .filter(item -> item.query().queryGroup().equals(group))
+        .collect(toImmutableList());
+  }
+
+  @Nonnull
+  OracleStatsQuery query() {
+    return query;
   }
 
   @Override
