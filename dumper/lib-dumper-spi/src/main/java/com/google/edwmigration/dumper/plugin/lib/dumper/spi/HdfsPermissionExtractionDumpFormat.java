@@ -24,10 +24,11 @@ public interface HdfsPermissionExtractionDumpFormat {
 
     enum Header {
       Path,
+      FileType, // "F" for a file, "D" for a directory
+      FileSize, // In case of directory it is the sum of sizes of all (immediately) contained files
       Owner,
       Group,
       Permission,
-      FileSize, // For a directory it is the sum of sizes of (immediately) contained files
       ModificationTime,
       FileCount,
       DirCount,
