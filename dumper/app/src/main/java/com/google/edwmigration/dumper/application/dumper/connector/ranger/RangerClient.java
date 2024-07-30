@@ -170,7 +170,8 @@ public class RangerClient {
     URI uri;
     try {
       uri =
-          new URIBuilder(baseUri + path)
+          new URIBuilder(baseUri)
+              .setPath(path)
               .addParameters(
                   params.entrySet().stream()
                       .map(entry -> new BasicNameValuePair(entry.getKey(), entry.getValue()))
@@ -186,23 +187,22 @@ public class RangerClient {
     } catch (AuthenticationException e) {
       throw new RangerException("Failed to initialize authentication header", e);
     }
-    CloseableHttpResponse httpResponse = null;
-    try {
-      httpResponse = httpClient.execute(httpRequest);
+    try (CloseableHttpResponse httpResponse = httpClient.execute(httpRequest)) {
+      LOG.debug("Response from Ranger({}): {}", path, httpResponse);
+      if (httpResponse.getStatusLine().getStatusCode() != SC_OK) {
+        throw new RangerException(
+            String.format(
+                "Failed to fetch data from Ranger internal API: '%s'",
+                httpResponse.getStatusLine()));
+      }
+      HttpEntity entity = httpResponse.getEntity();
+      try {
+        return MAPPER.readValue(EntityUtils.toString(entity), bodyClass);
+      } catch (IOException e) {
+        throw new RangerException("Failed to deserialize Ranger internal API response body", e);
+      }
     } catch (IOException e) {
       throw new RangerException("Failed to connect to Ranger API", e);
-    }
-    LOG.debug("Response from Ranger({}): {}", path, httpResponse);
-    if (httpResponse.getStatusLine().getStatusCode() != SC_OK) {
-      throw new RangerException(
-          String.format(
-              "Failed to fetch data from Ranger internal API: '%s'", httpResponse.getStatusLine()));
-    }
-    HttpEntity entity = httpResponse.getEntity();
-    try {
-      return MAPPER.readValue(EntityUtils.toString(entity), bodyClass);
-    } catch (IOException e) {
-      throw new RangerException("Failed to deserialize Ranger internal API response body", e);
     }
   }
 }
