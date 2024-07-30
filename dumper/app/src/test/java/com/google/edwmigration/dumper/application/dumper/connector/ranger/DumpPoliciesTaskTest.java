@@ -42,11 +42,9 @@ import org.mockito.junit.MockitoRule;
 @RunWith(JUnit4.class)
 public class DumpPoliciesTaskTest extends AbstractTaskTest {
 
-  @Rule
-  public MockitoRule mockitoRule = MockitoJUnit.rule();
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock
-  private RangerClient rangerClientMock;
+  @Mock private RangerClient rangerClientMock;
 
   private static final ImmutableList<Policy> TEST_POLICIES =
       ImmutableList.of(
