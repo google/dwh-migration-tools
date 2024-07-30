@@ -205,7 +205,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
               messagePrefix
                   + " The caller requested fallback behavior, so a client compiled against a"
                   + " superset Thrift specification will be used instead. If you encounter an error"
-                  + " when using the fallback client, please contact CompilerWorks support and"
+                  + " when using the fallback client, please contact Google support and"
                   + " provide the originally requested version number.");
           client = new HiveMetastoreThriftClient_Superset(name, protocol);
         } else {
