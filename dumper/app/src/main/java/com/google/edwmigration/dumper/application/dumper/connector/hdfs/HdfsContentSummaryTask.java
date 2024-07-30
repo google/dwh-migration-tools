@@ -30,11 +30,10 @@ import java.io.IOException;
 import java.io.Writer;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,12 +61,7 @@ public class HdfsContentSummaryTask extends AbstractTask<Void>
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws IOException {
-    LOG.info("clusterHost: {}", clusterHost);
-    LOG.info("port: {}", port);
-
-    Configuration conf = new Configuration();
-    conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
-    FileSystem fs = FileSystem.get(conf);
+    DistributedFileSystem fs = ((HdfsHandle) handle).getDfs();
     String hdfsPath = "/";
     FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
     FileStatus[] topLevelFiles = fs.listStatus(rootDir.getPath());

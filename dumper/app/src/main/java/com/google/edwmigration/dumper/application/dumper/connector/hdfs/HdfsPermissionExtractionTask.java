@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsPermissionExtractionConnector.LOG;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -35,28 +35,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HdfsPermissionExtractionTask extends AbstractTask<Void>
     implements HdfsPermissionExtractionDumpFormat {
-
-  private static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionTask.class);
-
-  final String clusterHost;
-  final int port;
-  final int poolSize;
+  private final int poolSize;
 
   HdfsPermissionExtractionTask(@Nonnull ConnectorArguments args) {
     super(PermissionExtraction.ZIP_ENTRY_NAME);
     Preconditions.checkNotNull(args, "Arguments was null.");
-    clusterHost = Preconditions.checkNotNull(args.getHost(), "Host was null.");
-    port = args.getPort(/* defaultPort= */ 8020);
     poolSize = args.getThreadPoolSize();
   }
 
@@ -73,23 +62,12 @@ public class HdfsPermissionExtractionTask extends AbstractTask<Void>
 
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws IOException, ExecutionException, InterruptedException {
-    LOG.info("clusterHost: {}", clusterHost);
-    LOG.info("port: {}", port);
-    LOG.info("threadPoolSize: {}", poolSize);
-
-    Configuration conf = new Configuration();
-    conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
-    FileSystem fs = FileSystem.get(conf);
-    checkArgument(
-        fs instanceof DistributedFileSystem,
-        "Not a DistributedFileSystem - can't create ScanContext.");
-
+    DistributedFileSystem fs = ((HdfsHandle) handle).getDfs();
     // Create a dedicated ExecutorService to use:
     ExecutorService execService =
         ExecutorManager.newExecutorServiceWithBackpressure("hdfs-permission-extraction", poolSize);
     try (Writer output = sink.asCharSink(UTF_8).openBufferedStream();
-        DistributedFileSystem dfs = (DistributedFileSystem) fs;
-        ScanContext scanCtx = new ScanContext(dfs, output);
+        ScanContext scanCtx = new ScanContext(fs, output);
         ExecutorManager execManager = new ExecutorManager(execService)) {
 
       String hdfsPath = "/";

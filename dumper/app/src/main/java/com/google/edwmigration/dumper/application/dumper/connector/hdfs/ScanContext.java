@@ -152,7 +152,8 @@ final class ScanContext implements Closeable {
     final long numFilesDivisor = numFiles > 0 ? numFiles : 1;
     StringBuilder sb =
         new StringBuilder()
-            .append("Total: num files&dirs: " + numFiles)
+            .append("[HDFS Permission extraction stats]")
+            .append("\nTotal: num files&dirs: " + numFiles)
             .append("\n       num dirs found: " + numDirs)
             .append("\n       num dirs walkd: " + numDirsWalked)
             .append("\nTotal File Size: " + accumulatedFileSize)
@@ -164,7 +165,8 @@ final class ScanContext implements Closeable {
             .append("\nAvg time per file in listStatus(..): ")
             .append(avgTimeSpentInListStatusPerFile.toMillis() + "ms")
             .append("\nAvg time per doc: ")
-            .append(timeSinceScanBegin.dividedBy(numFilesDivisor).toMillis() + "ms\n");
+            .append(timeSinceScanBegin.dividedBy(numFilesDivisor).toMillis() + "ms\n")
+            .append("\n[/HDFS Permission extraction stats]");
 
     return sb.toString();
   }
