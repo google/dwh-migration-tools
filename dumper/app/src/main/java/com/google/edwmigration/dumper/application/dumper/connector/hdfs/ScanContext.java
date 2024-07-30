@@ -104,10 +104,11 @@ final class ScanContext implements Closeable {
 
       csvPrinter.printRecord(
           absolutePath,
+          "D", // for a directory
+          accumFileSize, // Size of a directory is the sum of sizes of (immediately) contained files
           dir.getOwner(),
           dir.getGroup(),
           dir.getPermission(),
-          accumFileSize, // Size of a directory is the sum of sizes of (immediately) contained files
           strModificationTime,
           nFiles,
           nDirs,
@@ -128,10 +129,11 @@ final class ScanContext implements Closeable {
     synchronized (csvPrinter) {
       csvPrinter.printRecord(
           absolutePath,
+          "F", // for a file
+          file.getLen(),
           file.getOwner(),
           file.getGroup(),
           file.getPermission(),
-          file.getLen(),
           strModificationTime,
           /* nFiles= */ 0,
           /* nDirs= */ 0,
