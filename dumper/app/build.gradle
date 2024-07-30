@@ -60,13 +60,13 @@ dependencies {
     implementation libs.rate.limited.logger
     implementation libs.jackson.databind
     implementation libs.jackson.dataformat.yaml
+    implementation libs.jackson.datatype.guava
     implementation libs.google.cloud.bigquery
     implementation libs.google.cloud.nio
     implementation libs.google.cloud.kms
     implementation libs.httpclient5
     implementation libs.aws.java.sdk.redshift
     implementation libs.aws.java.sdk.cloudwatch
-    implementation libs.ranger.intg
 
     runtimeOnly libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j

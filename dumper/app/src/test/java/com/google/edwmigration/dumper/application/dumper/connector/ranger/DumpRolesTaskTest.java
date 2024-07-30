@@ -25,9 +25,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.DumpRolesTask;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
-import java.util.List;
-import org.apache.ranger.plugin.model.RangerRole;
-import org.apache.ranger.plugin.model.RangerRole.RoleMember;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Role;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Role.RoleMember;
+import java.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,33 +41,51 @@ public class DumpRolesTaskTest extends AbstractTaskTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private RangerInternalClient rangerInternalClientMock;
+  @Mock private RangerClient rangerClientMock;
 
-  private static final List<RangerRole> TEST_ROLES =
+  private static final ImmutableList<Role> TEST_ROLES =
       ImmutableList.of(
-          new RangerRole(
+          Role.create(
+              /* id= */ 1L,
+              /* guid= */ null,
+              /* isEnabled= */ true,
+              /* createdBy= */ "Admin",
+              /* updatedBy= */ "Admin",
+              /* createTime= */ Instant.ofEpochSecond(1722017807),
+              /* updatedTime= */ Instant.ofEpochSecond(1722017807),
+              /* version= */ 1L,
               /* name= */ "auditor",
               /* description= */ "Auditor",
               /* options= */ ImmutableMap.of(),
               /* users= */ ImmutableList.of(
-                  new RoleMember(/* name= */ "aleofreddi", /* isAdmin= */ true)),
-              /* groups= */ ImmutableList.of(),
-              /* roles= */ ImmutableList.of()),
-          new RangerRole(
+                  RoleMember.create(/* name= */ "user", /* isAdmin= */ true)),
+              /* groups= */ ImmutableList.of(
+                  RoleMember.create(/* name= */ "group", /* isAdmin= */ false)),
+              /* roles= */ ImmutableList.of(),
+              /* createdByUser= */ null),
+          Role.create(
+              /* id= */ 2L,
+              /* guid= */ null,
+              /* isEnabled= */ true,
+              /* createdBy= */ "Admin",
+              /* updatedBy= */ "Admin",
+              /* createTime= */ Instant.ofEpochSecond(1722017807),
+              /* updatedTime= */ Instant.ofEpochSecond(1722017807),
+              /* version= */ 1L,
               /* name= */ "dba",
               /* description= */ "Database administrator",
               /* options= */ ImmutableMap.of(),
               /* users= */ ImmutableList.of(
-                  new RoleMember(/* name= */ "aleofreddi", /* isAdmin= */ true)),
+                  RoleMember.create(/* name= */ "aleofreddi", /* isAdmin= */ true)),
               /* groups= */ ImmutableList.of(),
-              /* roles= */ ImmutableList.of()));
+              /* roles= */ ImmutableList.of(),
+              /* createdByUser= */ null));
 
   @Test
   public void doRun_success() throws Exception {
-    when(rangerInternalClientMock.findRoles(anyMap())).thenReturn(TEST_ROLES);
+    when(rangerClientMock.findRoles(anyMap())).thenReturn(TEST_ROLES);
     DumpRolesTask task = new DumpRolesTask();
-    RangerClientHandle handle =
-        new RangerClientHandle(/* rangerClient= */ null, rangerInternalClientMock, 1000);
+    RangerClientHandle handle = new RangerClientHandle(rangerClientMock, /* pageSize= */ 1000);
     MemoryByteSink sink = new MemoryByteSink();
 
     task.doRun(/* context= */ null, sink, handle);
