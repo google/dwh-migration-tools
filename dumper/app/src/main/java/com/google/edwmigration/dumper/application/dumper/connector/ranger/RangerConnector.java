@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Group;
@@ -46,6 +47,7 @@ import com.google.errorprone.annotations.ForOverride;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -75,8 +77,8 @@ public class RangerConnector extends AbstractConnector {
 
   @Nonnull
   @Override
-  public String getDefaultFileName(boolean isAssessment) {
-    return "dwh-migration-" + getName() + "-data.zip";
+  public String getDefaultFileName(boolean isAssessment, Clock clock) {
+    return ArchiveNameUtil.getFileName(getName());
   }
 
   @Override
@@ -91,7 +93,7 @@ public class RangerConnector extends AbstractConnector {
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    // TODO(aleofreddi): check if we need to handle SSL or Kerberos here.
+    // TODO: handle SSL or Kerberos.
     URI apiUrl = URI.create("http://" + arguments.getHost() + ":" + arguments.getPort());
     String password = arguments.getPasswordOrPrompt();
     return new RangerClientHandle(
