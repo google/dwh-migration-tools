@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -37,7 +36,6 @@ public interface RangerDumpFormat {
   ObjectMapper MAPPER =
       new ObjectMapper()
           .registerModule(new JavaTimeModule())
-          .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
           .enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
           .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
