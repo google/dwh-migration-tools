@@ -37,7 +37,6 @@ logback = "1.2.11"
 mockito = "4.11.0"
 postgresql = "42.5.4"
 rate-limited-logger = "2.0.0"
-ranger = "2.4.0"
 redshift-jdbc = "2.1.0.18"
 shadow-plugin = "8.1.1"
 slf4j = "1.7.30"
@@ -84,6 +83,7 @@ httpclient5 = { module = "org.apache.httpcomponents.client5:httpclient5", versio
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
+jackson-datatype-guava = { module = "com.fasterxml.jackson.datatype:jackson-datatype-guava", version.ref = "jackson" }
 jcip-annotations = { module = "com.github.stephenc.jcip:jcip-annotations", version.ref = "jcip" }
 jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j", version.ref = "jcl-over-slf4j" }
 jdiagnostics = { module = "org.anarres.jdiagnostics:jdiagnostics", version.ref = "jdiagnostics" }
@@ -110,7 +110,6 @@ sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 system-rules = { module = "com.github.stefanbirkner:system-rules", version.ref = "system-rules" }
 tez-common = { module = "org.apache.tez:tez-common", version.ref = "tez" }
 tez-dag = { module = "org.apache.tez:tez-dag", version.ref = "tez" }
-ranger-intg = { module = "org.apache.ranger:ranger-intg", version.ref = "ranger" }
 
 [plugins]
 ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions-plugin" }

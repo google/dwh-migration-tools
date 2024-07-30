@@ -23,7 +23,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerInternalClient.RangerInternalException;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerClient.RangerException;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerPageIterator.Page;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -35,7 +35,10 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Group;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.GroupsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.PoliciesFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Policy;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Role;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.RolesFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Service;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.ServicesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.User;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.UsersFormat;
@@ -46,11 +49,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.apache.ranger.RangerClient;
-import org.apache.ranger.RangerServiceException;
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerRole;
-import org.apache.ranger.plugin.model.RangerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,15 +95,7 @@ public class RangerConnector extends AbstractConnector {
     URI apiUrl = URI.create("http://" + arguments.getHost() + ":" + arguments.getPort());
     String password = arguments.getPasswordOrPrompt();
     return new RangerClientHandle(
-        // Public API client.
-        new RangerClient(
-            apiUrl.toString(),
-            /* authType= */ "simple", // Use basic auth instead of Kerberos.
-            arguments.getUser(),
-            password,
-            /* configFile= */ null),
-        // Internal API client.
-        new RangerInternalClient(apiUrl, arguments.getUser(), password),
+        new RangerClient(apiUrl, arguments.getUser(), password),
         arguments.getRangerPageSizeDefault());
   }
 
@@ -121,8 +111,8 @@ public class RangerConnector extends AbstractConnector {
       return new RangerPageIterator<>(
           page -> {
             try {
-              return handle.rangerInternalClient.findUsers(toParameters(page));
-            } catch (RangerInternalException e) {
+              return handle.rangerClient.findUsers(toParameters(page));
+            } catch (RangerException e) {
               throw new RuntimeException("Failed to fetch Ranger users", e);
             }
           },
@@ -147,8 +137,8 @@ public class RangerConnector extends AbstractConnector {
       return new RangerPageIterator<>(
           page -> {
             try {
-              return handle.rangerInternalClient.findGroups(toParameters(page));
-            } catch (RangerInternalException e) {
+              return handle.rangerClient.findGroups(toParameters(page));
+            } catch (RangerException e) {
               throw new RuntimeException("Failed to fetch Ranger groups", e);
             }
           },
@@ -161,20 +151,20 @@ public class RangerConnector extends AbstractConnector {
     }
   }
 
-  static class DumpRolesTask extends AbstractRangerTask<RangerRole> {
+  static class DumpRolesTask extends AbstractRangerTask<Role> {
 
     DumpRolesTask() {
       super(RolesFormat.ZIP_ENTRY_NAME);
     }
 
     @Override
-    protected Iterator<RangerRole> dataIterator(
+    protected Iterator<Role> dataIterator(
         @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
           page -> {
             try {
-              return handle.rangerInternalClient.findRoles(toParameters(page));
-            } catch (RangerInternalException e) {
+              return handle.rangerClient.findRoles(toParameters(page));
+            } catch (RangerException e) {
               throw new RuntimeException("Failed to fetch Ranger roles", e);
             }
           },
@@ -187,19 +177,19 @@ public class RangerConnector extends AbstractConnector {
     }
   }
 
-  static class DumpServicesTask extends AbstractRangerTask<RangerService> {
+  static class DumpServicesTask extends AbstractRangerTask<Service> {
 
     DumpServicesTask() {
       super(ServicesFormat.ZIP_ENTRY_NAME);
     }
 
-    protected Iterator<RangerService> dataIterator(
+    protected Iterator<Service> dataIterator(
         @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
           page -> {
             try {
               return handle.rangerClient.findServices(toParameters(page));
-            } catch (RangerServiceException e) {
+            } catch (RangerException e) {
               throw new RuntimeException("Failed to fetch Ranger services", e);
             }
           },
@@ -212,20 +202,20 @@ public class RangerConnector extends AbstractConnector {
     }
   }
 
-  static class DumpPoliciesTask extends AbstractRangerTask<RangerPolicy> {
+  static class DumpPoliciesTask extends AbstractRangerTask<Policy> {
 
     DumpPoliciesTask() {
       super(PoliciesFormat.ZIP_ENTRY_NAME);
     }
 
     @Override
-    protected Iterator<RangerPolicy> dataIterator(
+    protected Iterator<Policy> dataIterator(
         @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
           page -> {
             try {
               return handle.rangerClient.findPolicies(toParameters(page));
-            } catch (RangerServiceException e) {
+            } catch (RangerException e) {
               throw new RuntimeException("Failed to fetch Ranger policies", e);
             }
           },
@@ -282,14 +272,10 @@ public class RangerConnector extends AbstractConnector {
 
     public final RangerClient rangerClient;
 
-    public final RangerInternalClient rangerInternalClient;
-
     public final int pageSize;
 
-    RangerClientHandle(
-        RangerClient rangerClient, RangerInternalClient rangerInternalClient, int pageSize) {
+    RangerClientHandle(RangerClient rangerClient, int pageSize) {
       this.rangerClient = rangerClient;
-      this.rangerInternalClient = rangerInternalClient;
       this.pageSize = pageSize;
     }
   }

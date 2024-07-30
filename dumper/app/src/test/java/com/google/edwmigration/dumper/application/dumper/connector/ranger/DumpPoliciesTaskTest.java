@@ -25,11 +25,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.DumpPoliciesTask;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
-import java.util.List;
-import org.apache.ranger.RangerClient;
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Policy;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Policy.PolicyItem;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Policy.PolicyItemAccess;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Policy.PolicyResource;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Policy.RowFilterPolicyItem;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Policy.RowFilterPolicyItem.PolicyItemRowFilterInfo;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,75 +48,191 @@ public class DumpPoliciesTaskTest extends AbstractTaskTest {
   @Mock
   private RangerClient rangerClientMock;
 
-  private static final List<RangerPolicy> TEST_POLICIES =
+  private static final ImmutableList<Policy> TEST_POLICIES =
       ImmutableList.of(
-          new RangerPolicy(
+          // An access policy.
+          Policy.create(
+              /* id= */ 1L,
+              /* guid= */ "63bbd745-5328-4afc-b06e-cfa9fa60514b",
+              /* isEnabled= */ true,
+              /* createdBy= */ null,
+              /* updatedBy= */ null,
+              /* createDate= */ null,
+              /* updateDate= */ null,
+              /* version= */ 6L,
               /* service= */ "hive-dataproc",
               /* name= */ "all - hiveservice",
               /* policyType= */ 0,
               /* policyPriority= */ 0,
               /* description= */ "Policy for all - hiveservice",
+              /* resourceSignature= */ null,
+              /* isAuditEnabled= */ true,
               /* resources= */ ImmutableMap.of(
                   "database",
-                  new RangerPolicyResource(
-                      /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false),
+                  PolicyResource.create(
+                      /* values= */ ImmutableList.of("*"),
+                      /* isExcludes= */ false,
+                      /* isRecursive= */ false),
                   "table",
-                  new RangerPolicyResource(
-                      /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false),
+                  PolicyResource.create(
+                      /* values= */ ImmutableList.of("*"),
+                      /* isExcludes= */ false,
+                      /* isRecursive= */ false),
                   "column",
-                  new RangerPolicyResource(
-                      /* values= */ "*", /* isExcludes= */ false, /* isRecursive= */ false)),
+                  PolicyResource.create(
+                      /* values= */ ImmutableList.of("*"),
+                      /* isExcludes= */ false,
+                      /* isRecursive= */ false)),
+              /* additionalResources= */ ImmutableList.of(),
+              /* conditions= */ ImmutableList.of(),
               /* policyItems= */ ImmutableList.of(
-                  new RangerPolicyItem(
-                      /* accessTypes= */ ImmutableList.of(
-                          new RangerPolicy.RangerPolicyItemAccess("select", true),
-                          new RangerPolicy.RangerPolicyItemAccess("update", true),
-                          new RangerPolicy.RangerPolicyItemAccess("create", true),
-                          new RangerPolicy.RangerPolicyItemAccess("drop", true),
-                          new RangerPolicy.RangerPolicyItemAccess("alter", true),
-                          new RangerPolicy.RangerPolicyItemAccess("index", true),
-                          new RangerPolicy.RangerPolicyItemAccess("lock", true),
-                          new RangerPolicy.RangerPolicyItemAccess("all", true),
-                          new RangerPolicy.RangerPolicyItemAccess("read", true),
-                          new RangerPolicy.RangerPolicyItemAccess("write", true),
-                          new RangerPolicy.RangerPolicyItemAccess("repladmin", true),
-                          new RangerPolicy.RangerPolicyItemAccess("serviceadmin", true),
-                          new RangerPolicy.RangerPolicyItemAccess("tempudfadmin", true),
-                          new RangerPolicy.RangerPolicyItemAccess("refresh", true)),
+                  PolicyItem.create(
+                      /* accesses= */ ImmutableList.of(
+                          PolicyItemAccess.create("select", true),
+                          PolicyItemAccess.create("update", true),
+                          PolicyItemAccess.create("create", true),
+                          PolicyItemAccess.create("drop", true),
+                          PolicyItemAccess.create("alter", true),
+                          PolicyItemAccess.create("index", true),
+                          PolicyItemAccess.create("lock", true),
+                          PolicyItemAccess.create("all", true),
+                          PolicyItemAccess.create("read", true),
+                          PolicyItemAccess.create("write", true),
+                          PolicyItemAccess.create("repladmin", true),
+                          PolicyItemAccess.create("serviceadmin", true),
+                          PolicyItemAccess.create("tempudfadmin", true),
+                          PolicyItemAccess.create("refresh", true)),
                       /* users= */ ImmutableList.of("admin", "hive"),
                       /* groups= */ ImmutableList.of(),
                       /* roles= */ ImmutableList.of(),
                       /* conditions= */ ImmutableList.of(),
                       /* delegateAdmin= */ false)),
-              /* resourceSignature=*/ null,
+              /* denyPolicyItems= */ ImmutableList.of(),
+              /* allowExceptions= */ ImmutableList.of(),
+              /* denyExceptions= */ ImmutableList.of(),
+              /* dataMaskPolicyItems= */ ImmutableList.of(),
+              /* rowFilterPolicyItems= */ ImmutableList.of(),
+              /* serviceType= */ "1",
               /* options= */ ImmutableMap.of(),
               /* validitySchedule= */ ImmutableList.of(),
               /* policyLabels= */ ImmutableList.of(),
               /* zoneName= */ "",
-              /* conditions= */ ImmutableList.of(),
               /* isDenyAllElse= */ false),
-          new RangerPolicy(
+
+          // A row level filter policy.
+          Policy.create(
+              /* id= */ 10L,
+              /* guid= */ "e37ab2af-8a27-47dc-b7f8-896c8576a86b",
+              /* isEnabled= */ true,
+              /* createdBy= */ null,
+              /* updatedBy= */ null,
+              /* createDate= */ null,
+              /* updateDate= */ null,
+              /* version= */ 4L,
               /* service= */ "hive-dataproc",
-              /* name= */ "all - database, table, column",
-              /* policyType= */ 0,
+              /* name= */ "filter-col1",
+              /* policyType= */ 2,
               /* policyPriority= */ 0,
-              /* description= */ "Policy for all - database, table, column",
-              /* resources= */ ImmutableMap.of(),
-              /* policyItems= */ ImmutableList.of(),
+              /* description= */ "Filter col1 values",
               /* resourceSignature=*/ null,
+              /* isAuditEnabled= */ true,
+              /* resources= */ ImmutableMap.of(
+                  "database",
+                  PolicyResource.create(
+                      /* values= */ ImmutableList.of("default"),
+                      /* isExcludes= */ false,
+                      /* isRecursive= */ false),
+                  "table",
+                  PolicyResource.create(
+                      /* values= */ ImmutableList.of("table"),
+                      /* isExcludes= */ false,
+                      /* isRecursive= */ false)),
+              /* additionalResources= */ ImmutableList.of(),
+              /* conditions= */ ImmutableList.of(),
+              /* policyItems= */ ImmutableList.of(),
+              /* denyPolicyItems= */ ImmutableList.of(),
+              /* allowExceptions= */ ImmutableList.of(),
+              /* denyExceptions= */ ImmutableList.of(),
+              /* dataMaskPolicyItems= */ ImmutableList.of(),
+              /* rowFilterPolicyItems= */ ImmutableList.of(
+                  RowFilterPolicyItem.create(
+                      /* accesses= */ ImmutableList.of(PolicyItemAccess.create("select", true)),
+                      /* users= */ ImmutableList.of("admin", "hive"),
+                      /* groups= */ ImmutableList.of(),
+                      /* roles= */ ImmutableList.of(),
+                      /* conditions= */ ImmutableList.of(),
+                      /* delegateAdmin= */ false,
+                      /* rowFilterInfo= */ PolicyItemRowFilterInfo.create(
+                          /* filterExpr= */ "col1 = \"value\""))),
+              /* serviceType= */ "1",
               /* options= */ ImmutableMap.of(),
               /* validitySchedule= */ ImmutableList.of(),
               /* policyLabels= */ ImmutableList.of(),
               /* zoneName= */ "",
+              /* isDenyAllElse= */ false),
+
+          // A data masking policy.
+          Policy.create(
+              /* id= */ 11L,
+              /* guid= */ "76d66c4e-308a-4142-9285-d4da2bd15e92",
+              /* isEnabled= */ true,
+              /* createdBy= */ null,
+              /* updatedBy= */ null,
+              /* createDate= */ null,
+              /* updateDate= */ null,
+              /* version= */ 2L,
+              /* service= */ "hive-dataproc",
+              /* name= */ "mask-col2",
+              /* policyType= */ 1,
+              /* policyPriority= */ 0,
+              /* description= */ "Mask col2 values",
+              /* resourceSignature=*/ null,
+              /* isAuditEnabled= */ true,
+              /* resources= */ ImmutableMap.of(
+                  "database",
+                  PolicyResource.create(
+                      /* values= */ ImmutableList.of("default"),
+                      /* isExcludes= */ false,
+                      /* isRecursive= */ false),
+                  "table",
+                  PolicyResource.create(
+                      /* values= */ ImmutableList.of("table"),
+                      /* isExcludes= */ false,
+                      /* isRecursive= */ false),
+                  "column",
+                  PolicyResource.create(
+                      /* values= */ ImmutableList.of("col2"),
+                      /* isExcludes= */ false,
+                      /* isRecursive= */ false)),
+              /* additionalResources= */ ImmutableList.of(),
               /* conditions= */ ImmutableList.of(),
+              /* policyItems= */ ImmutableList.of(),
+              /* denyPolicyItems= */ ImmutableList.of(),
+              /* allowExceptions= */ ImmutableList.of(),
+              /* denyExceptions= */ ImmutableList.of(),
+              /* dataMaskPolicyItems= */ ImmutableList.of(),
+              /* rowFilterPolicyItems= */ ImmutableList.of(
+                  RowFilterPolicyItem.create(
+                      /* accesses= */ ImmutableList.of(PolicyItemAccess.create("select", true)),
+                      /* users= */ ImmutableList.of("admin", "hive"),
+                      /* groups= */ ImmutableList.of(),
+                      /* roles= */ ImmutableList.of(),
+                      /* conditions= */ ImmutableList.of(),
+                      /* delegateAdmin= */ false,
+                      /* rowFilterInfo= */ PolicyItemRowFilterInfo.create(
+                          /* filterExpr= */ "col1 = \"value\""))),
+              /* serviceType= */ "1",
+              /* options= */ ImmutableMap.of(),
+              /* validitySchedule= */ ImmutableList.of(),
+              /* policyLabels= */ ImmutableList.of(),
+              /* zoneName= */ "",
               /* isDenyAllElse= */ false));
 
   @Test
   public void doRun_success() throws Exception {
     when(rangerClientMock.findPolicies(anyMap())).thenReturn(TEST_POLICIES);
     DumpPoliciesTask task = new DumpPoliciesTask();
-    RangerClientHandle handle =
-        new RangerClientHandle(rangerClientMock, /* rangerInternalClient= */ null, 1000);
+    RangerClientHandle handle = new RangerClientHandle(rangerClientMock, /* pageSize= */ 1000);
     MemoryByteSink sink = new MemoryByteSink();
 
     task.doRun(/* context= */ null, sink, handle);

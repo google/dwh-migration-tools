@@ -26,7 +26,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.ranger.Ranger
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Group;
 import java.time.Instant;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,9 +39,9 @@ public class DumpGroupsTaskTest extends AbstractTaskTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private RangerInternalClient rangerInternalClientMock;
+  @Mock private RangerClient rangerClientMock;
 
-  private static final List<Group> TEST_GROUPS =
+  private static final ImmutableList<Group> TEST_GROUPS =
       ImmutableList.of(
           Group.create(
               /* id= */ 1,
@@ -75,10 +74,9 @@ public class DumpGroupsTaskTest extends AbstractTaskTest {
 
   @Test
   public void doRun_success() throws Exception {
-    when(rangerInternalClientMock.findGroups(anyMap())).thenReturn(TEST_GROUPS);
+    when(rangerClientMock.findGroups(anyMap())).thenReturn(TEST_GROUPS);
     DumpGroupsTask task = new DumpGroupsTask();
-    RangerClientHandle handle =
-        new RangerClientHandle(/* rangerClient= */ null, rangerInternalClientMock, 1000);
+    RangerClientHandle handle = new RangerClientHandle(rangerClientMock, /* pageSize= */ 1000);
     MemoryByteSink sink = new MemoryByteSink();
 
     task.doRun(/* context= */ null, sink, handle);

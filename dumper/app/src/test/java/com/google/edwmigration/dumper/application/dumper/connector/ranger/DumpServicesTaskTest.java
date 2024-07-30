@@ -25,9 +25,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.DumpServicesTask;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
-import java.util.List;
-import org.apache.ranger.RangerClient;
-import org.apache.ranger.plugin.model.RangerService;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Service;
+import java.time.Instant;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,11 +42,20 @@ public class DumpServicesTaskTest extends AbstractTaskTest {
 
   @Mock private RangerClient rangerClientMock;
 
-  private static final List<RangerService> TEST_SERVICES =
+  private static final ImmutableList<Service> TEST_SERVICES =
       ImmutableList.of(
-          new RangerService(
+          Service.create(
+              /* id= */ 1L,
+              /* guid= */ "4c2780ee-e244-4ac3-b21a-3660e6895980",
+              /* isEnabled= */ true,
+              /* createdBy= */ "Admin",
+              /* updatedBy= */ "Admin",
+              /* createTime= */ Instant.ofEpochSecond(1716795282),
+              /* updateTime= */ Instant.ofEpochSecond(1716795282),
+              /* version= */ 1L,
               /* type= */ "hdfs",
-              /* name= */ "hadoop",
+              /* name= */ "hadoop-dataproc",
+              /* displayName= */ null,
               /* description= */ "Hadoop hdfs service",
               /* tagService= */ null,
               /* configs= */ ImmutableMap.of(
@@ -56,24 +64,41 @@ public class DumpServicesTaskTest extends AbstractTaskTest {
                   "fs.default.name", "hdfs://hadoop-m:8020",
                   "username", "admin",
                   // Ranger API redacts passwords, so there's no risk of fetching these.
-                  "password", "*****")),
-          new RangerService(
+                  "password", "*****"),
+              /* policyVersion= */ 9L,
+              /* policyUpdateTime= */ Instant.ofEpochSecond(1722016701),
+              /* tagVersion= */ 1L,
+              /* tagUpdateTime= */ Instant.ofEpochSecond(1722016702)),
+          Service.create(
+              /* id= */ 2L,
+              /* guid= */ "1fe46519-233a-4780-be20-a7eb180f1ca6",
+              /* isEnabled= */ true,
+              /* createdBy= */ "Admin",
+              /* updatedBy= */ "Admin",
+              /* createTime= */ Instant.ofEpochSecond(1716795282),
+              /* updateTime= */ Instant.ofEpochSecond(1716795282),
+              /* version= */ 1L,
               /* type= */ "hive",
-              /* name= */ "hive",
+              /* name= */ "hive-dataproc",
+              /* displayName= */ null,
               /* description= */ "Hadoop HIVE service",
               /* tagService= */ null,
               /* configs= */ ImmutableMap.of(
                   "jdbc.driverClassName", "org.apache.hive.jdbc.HiveDriver",
                   "jdbc.url", "jdbc:mysql://localhost",
                   "username", "admin",
-                  "password", "*****")));
+                  // Ranger API redacts passwords, so there's no risk of fetching these.
+                  "password", "*****"),
+              /* policyVersion= */ 6L,
+              /* policyUpdateTime= */ Instant.ofEpochSecond(1722016701),
+              /* tagVersion= */ 1L,
+              /* tagUpdateTime= */ Instant.ofEpochSecond(1722016702)));
 
   @Test
   public void doRun_success() throws Exception {
     when(rangerClientMock.findServices(anyMap())).thenReturn(TEST_SERVICES);
     DumpServicesTask task = new DumpServicesTask();
-    RangerClientHandle handle =
-        new RangerClientHandle(rangerClientMock, /* rangerInternalClient= */ null, 1000);
+    RangerClientHandle handle = new RangerClientHandle(rangerClientMock, /* pageSize= */ 1000);
     MemoryByteSink sink = new MemoryByteSink();
 
     task.doRun(/* context= */ null, sink, handle);
