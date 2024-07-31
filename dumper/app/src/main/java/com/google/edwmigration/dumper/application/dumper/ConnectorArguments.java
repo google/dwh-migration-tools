@@ -915,7 +915,7 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_DATABASE, getDatabases())
             .add(OPT_USER, getUser())
             .add(OPT_CONFIG, getConfiguration())
-            .add(OPT_OUTPUT, getOutputFile())
+            .add(OPT_OUTPUT, getOutputFile().orElse(null))
             .add(OPT_QUERY_LOG_EARLIEST_TIMESTAMP, getQueryLogEarliestTimestamp())
             .add(OPT_QUERY_LOG_DAYS, getQueryLogDays())
             .add(OPT_QUERY_LOG_START, getQueryLogStart())
