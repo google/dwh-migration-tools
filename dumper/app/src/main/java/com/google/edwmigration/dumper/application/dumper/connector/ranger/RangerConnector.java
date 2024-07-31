@@ -82,7 +82,8 @@ public class RangerConnector extends AbstractConnector {
   }
 
   @Override
-  public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+  public void addTasksTo(
+      @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
     out.add(new DumpGroupsTask());
     out.add(new DumpPoliciesTask());
     out.add(new DumpRolesTask());
@@ -241,7 +242,8 @@ public class RangerConnector extends AbstractConnector {
         @Nonnull Writer writer, @Nonnull RangerClientHandle handle) throws Exception;
 
     @Override
-    protected Void doRun(TaskRunContext context, ByteSink sink, @Nonnull Handle handle)
+    protected Void doRun(
+        @Nonnull TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
         throws Exception {
       RangerClientHandle rangerClientHandler = (RangerClientHandle) handle;
       LOG.info("Writing to '{}' -> '{}'", getTargetPath(), sink);
@@ -263,7 +265,7 @@ public class RangerConnector extends AbstractConnector {
       return "from " + toCallDescription();
     }
 
-    protected ImmutableMap<String, String> toParameters(Page page) {
+    protected ImmutableMap<String, String> toParameters(@Nonnull Page page) {
       return ImmutableMap.of(
           "startIndex", String.valueOf(page.offset()),
           "pageSize", String.valueOf(page.limit()));
@@ -276,7 +278,7 @@ public class RangerConnector extends AbstractConnector {
 
     public final int pageSize;
 
-    RangerClientHandle(RangerClient rangerClient, int pageSize) {
+    RangerClientHandle(@Nonnull RangerClient rangerClient, int pageSize) {
       this.rangerClient = rangerClient;
       this.pageSize = pageSize;
     }
