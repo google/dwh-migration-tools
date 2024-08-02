@@ -494,6 +494,29 @@ public interface OracleMetadataDumpFormat {
     }
   }
 
+  interface Sequences {
+
+    final String ZIP_ENTRY_NAME_DBA = "DBA.Sequences.csv";
+    final String ZIP_ENTRY_NAME_ALL = "ALL.Sequences.csv";
+
+    enum Header {
+      SEQUENCE_OWNER,
+      SEQUENCE_NAME,
+      MIN_VALUE,
+      MAX_VALUE,
+      INCREMENT_BY,
+      CYCLE_FLAG,
+      ORDER_FLAG,
+      CACHE_SIZE,
+      LAST_NUMBER,
+      SCALE_FLAG,
+      EXTEND_FLAG,
+      SHARDED_FLAG,
+      SESSION_FLAG,
+      KEEP_VALUE
+    }
+  }
+
   interface Types {
 
     final String ZIP_ENTRY_NAME_DBA = "DBA.Types.csv";

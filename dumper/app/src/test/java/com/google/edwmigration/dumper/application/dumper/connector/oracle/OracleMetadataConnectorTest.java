@@ -68,6 +68,8 @@ public class OracleMetadataConnectorTest {
             "SELECT * FROM DBA_Plsql_Types",
             "SELECT * FROM ALL_Procedures",
             "SELECT * FROM DBA_Procedures",
+            "SELECT * FROM ALL_Sequences",
+            "SELECT * FROM DBA_Sequences",
             "SELECT * FROM ALL_Tab_Columns",
             "SELECT * FROM DBA_Tab_Columns",
             "SELECT * FROM ALL_Tab_Partitions",
