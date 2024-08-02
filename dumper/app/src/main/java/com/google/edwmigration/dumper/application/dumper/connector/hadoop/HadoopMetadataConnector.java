@@ -46,6 +46,7 @@ public class HadoopMetadataConnector implements MetadataConnector {
           "hive-version",
           "java-version",
           "lsb-release",
+          "metastore-connection-details",
           "omd-version",
           "oozie-admin-status",
           "os-release",
