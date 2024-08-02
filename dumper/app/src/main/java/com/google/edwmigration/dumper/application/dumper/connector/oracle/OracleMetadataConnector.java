@@ -204,6 +204,13 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         whereCondOwner);
     buildSelectStarTask(
         out,
+        Sequences.ZIP_ENTRY_NAME_DBA,
+        "DBA_Sequences",
+        Sequences.ZIP_ENTRY_NAME_ALL,
+        "ALL_Sequences",
+        whereCondSequenceOwner);
+    buildSelectStarTask(
+        out,
         Tab_Columns.ZIP_ENTRY_NAME_DBA,
         "DBA_Tab_Columns",
         Tab_Columns.ZIP_ENTRY_NAME_ALL,
