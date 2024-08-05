@@ -242,8 +242,7 @@ public class RangerConnector extends AbstractConnector {
         @Nonnull Writer writer, @Nonnull RangerClientHandle handle) throws Exception;
 
     @Override
-    protected Void doRun(
-        @Nonnull TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
+    protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
         throws Exception {
       RangerClientHandle rangerClientHandler = (RangerClientHandle) handle;
       LOG.info("Writing to '{}' -> '{}'", getTargetPath(), sink);
