@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.auto.value.AutoValue;
@@ -56,11 +57,12 @@ public class RangerClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(RangerConnector.class);
 
-  private static final ObjectMapper MAPPER =
+  private static final ObjectReader MAPPER =
       new ObjectMapper()
           .registerModule(new JavaTimeModule())
           .registerModule(new GuavaModule())
-          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .reader();
 
   @AutoValue
   abstract static class ListUsersResponse {
