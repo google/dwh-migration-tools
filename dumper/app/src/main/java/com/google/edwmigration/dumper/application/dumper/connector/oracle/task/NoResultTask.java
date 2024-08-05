@@ -21,7 +21,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-abstract class VoidTask implements Task<Void> {
+abstract class NoResultTask implements Task<Void> {
 
   @Override
   public final Void run(TaskRunContext context) throws Exception {

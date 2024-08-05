@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-public class ResultMessageTask extends VoidTask {
+public class ResultMessageTask extends NoResultTask {
 
   private static final Condition EMPTY_GROUP_FAILED_CONDITION = new EmptyGroupFailedCondition();
 
@@ -44,7 +44,7 @@ public class ResultMessageTask extends VoidTask {
     this.group = group;
   }
 
-  public static VoidTask create(QueryGroup group, List<StatsJdbcTask> tasks) {
+  public static NoResultTask create(QueryGroup group, List<StatsJdbcTask> tasks) {
     List<StatsJdbcTask> matches = StatsJdbcTask.findByGroup(tasks, group);
     Condition condition = onAllTasks(matches, SUCCEEDED);
     return new ResultMessageTask(condition, group);
