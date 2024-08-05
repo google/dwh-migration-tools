@@ -53,6 +53,10 @@ dependencies {
     }
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 shadowJar {
     zip64 true
     configurations = [project.configurations.hive312RuntimeClasspath]
