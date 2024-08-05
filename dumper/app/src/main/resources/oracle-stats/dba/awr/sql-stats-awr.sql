@@ -14,37 +14,37 @@
 -- limitations under the License.
 SELECT
     NULL "ConId",
-    A.dbid "Dbid",
-    A.instance_number "InstanceNumber",
-    to_char(A.force_matching_signature) "ForceMatchingSignature",
-    min(A.sql_id) "SqlId",
-    min(B.begin_interval_time) "MinBeginTime",
-    max(B.end_interval_time) "MaxEndTime",
-    sum(A.apwait_delta) "ApWaitTotal",
-    sum(A.buffer_gets_delta) "BufferGetsTotal",
-    sum(A.ccwait_delta) "CcWaitTotal",
-    sum(A.clwait_delta) "ClWaitTotal",
-    sum(A.cpu_time_delta) "CpuTimeTotal",
-    sum(A.direct_writes_delta) "DirectWritesTotal",
-    sum(A.disk_reads_delta) "DiskReadsTotal",
-    sum(A.elapsed_time_delta) "ElapsedTimeTotal",
-    sum(A.end_of_fetch_count_delta) "EndOfFetchCountTotal",
-    sum(A.executions_delta) "ExecutionsTotal",
-    sum(A.iowait_delta) "IoWaitTotal",
-    sum(A.javexec_time_delta) "JavaExecTotal",
-    sum(A.physical_read_bytes_delta) "PhysicalReadBytesTotal",
-    sum(A.physical_write_bytes_delta) "PhysicalWriteBytesTotal",
-    sum(A.plsexec_time_delta) "PlsExecTotal",
-    sum(A.px_servers_execs_delta) "PxExecutionsTotal",
-    sum(A.rows_processed_delta) "RowsTotal"
-FROM dba_hist_sqlstat A
-JOIN dba_hist_snapshot B
-ON A.dbid = B.dbid
-    AND A.instance_number = B.instance_number
-    AND A.snap_id = B.snap_id
+    SqlStat.dbid "Dbid",
+    SqlStat.instance_number "InstanceNumber",
+    to_char(SqlStat.force_matching_signature) "ForceMatchingSignature",
+    min(SqlStat.sql_id) "SqlId",
+    min(Snapshot.begin_interval_time) "MinBeginTime",
+    max(Snapshot.end_interval_time) "MaxEndTime",
+    sum(SqlStat.apwait_delta) "ApWaitTotal",
+    sum(SqlStat.buffer_gets_delta) "BufferGetsTotal",
+    sum(SqlStat.ccwait_delta) "CcWaitTotal",
+    sum(SqlStat.clwait_delta) "ClWaitTotal",
+    sum(SqlStat.cpu_time_delta) "CpuTimeTotal",
+    sum(SqlStat.direct_writes_delta) "DirectWritesTotal",
+    sum(SqlStat.disk_reads_delta) "DiskReadsTotal",
+    sum(SqlStat.elapsed_time_delta) "ElapsedTimeTotal",
+    sum(SqlStat.end_of_fetch_count_delta) "EndOfFetchCountTotal",
+    sum(SqlStat.executions_delta) "ExecutionsTotal",
+    sum(SqlStat.iowait_delta) "IoWaitTotal",
+    sum(SqlStat.javexec_time_delta) "JavaExecTotal",
+    sum(SqlStat.physical_read_bytes_delta) "PhysicalReadBytesTotal",
+    sum(SqlStat.physical_write_bytes_delta) "PhysicalWriteBytesTotal",
+    sum(SqlStat.plsexec_time_delta) "PlsExecTotal",
+    sum(SqlStat.px_servers_execs_delta) "PxExecutionsTotal",
+    sum(SqlStat.rows_processed_delta) "RowsTotal"
+FROM dba_hist_sqlstat SqlStat
+JOIN dba_hist_snapshot Snapshot
+ON SqlStat.dbid = Snapshot.dbid
+    AND SqlStat.instance_number = Snapshot.instance_number
+    AND SqlStat.snap_id = Snapshot.snap_id
   -- use a query parameter to get the number of querylog days that should be loaded
-    AND B.end_interval_time > sysdate - ?
+    AND Snapshot.end_interval_time > sysdate - ?
 GROUP BY
-    A.dbid,
-    A.instance_number,
-    to_char(A.force_matching_signature)
+    SqlStat.dbid,
+    SqlStat.instance_number,
+    to_char(SqlStat.force_matching_signature)
