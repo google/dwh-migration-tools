@@ -42,6 +42,7 @@ JOIN cdb_hist_snapshot B
 ON A.dbid = B.dbid
     AND A.instance_number = B.instance_number
     AND A.snap_id = B.snap_id
+  -- use a query parameter to get the number of querylog days that should be loaded
     AND B.end_interval_time > sysdate - ?
 GROUP BY
     A.con_id,

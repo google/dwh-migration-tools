@@ -27,6 +27,7 @@ INNER JOIN cdb_hist_snapshot B
   AND A.instance_number = B.instance_number
   AND A.dbid = B.dbid
   AND A.session_type = 'FOREGROUND'
+  -- get the number of querylog days to load from the query parameter
   AND B.end_interval_time > sysdate - ?
 INNER JOIN v$sqlcommand C
   ON A.sql_opcode = C.command_type

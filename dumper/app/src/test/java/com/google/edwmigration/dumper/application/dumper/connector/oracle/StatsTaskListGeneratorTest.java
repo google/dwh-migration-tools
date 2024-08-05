@@ -34,7 +34,7 @@ public class StatsTaskListGeneratorTest {
   static final StatsTaskListGenerator generator = new StatsTaskListGenerator();
 
   @DataPoints("nativeNames")
-  public static final ImmutableList<String> nativeNames = generator.optionalNativeNames();
+  public static final ImmutableList<String> nativeNames = generator.optionalNativeNamesForCdb();
 
   @DataPoints("awrNames")
   public static final ImmutableList<String> awrNames = generator.awrNames();

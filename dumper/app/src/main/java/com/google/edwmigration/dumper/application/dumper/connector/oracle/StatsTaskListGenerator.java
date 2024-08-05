@@ -37,8 +37,10 @@ class StatsTaskListGenerator {
 
   private final OracleConnectorScope scope = OracleConnectorScope.STATS;
 
-  private static final ImmutableList<String> AWR_NAMES =
-      ImmutableList.of("hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr");
+  private static final ImmutableList<String> AWR_NAMES = ImmutableList.of("sql-stats-awr");
+
+  private static final ImmutableList<String> AWR_NAMES_CDB_ONLY =
+      ImmutableList.of("hist-cmd-types-awr", "source-conn-latest");
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
       ImmutableList.of("app-schemas-pdbs");
@@ -70,15 +72,26 @@ class StatsTaskListGenerator {
 
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, Duration queriedDuration) {
-    ImmutableList.Builder<Task<?>> builder = ImmutableList.<Task<?>>builder();
+    ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));
+    List<StatsJdbcTask> jdbcTasks = createJdbcTasks(queriedDuration);
+    builder.addAll(jdbcTasks);
+    return builder.build();
+  }
+
+  private List<StatsJdbcTask> createJdbcTasks(Duration queriedDuration) {
+    ImmutableList.Builder<StatsJdbcTask> builder = ImmutableList.builder();
+    for (String name : AWR_NAMES) {
+      QueryGroup awr = QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT);
+      builder.addAll(createTaskWithAlternative(name, awr, queriedDuration));
+    }
     for (String name : awrNames()) {
       QueryGroup awr = QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT);
       OracleStatsQuery item = OracleStatsQuery.create(name, awr, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
     }
-    for (String name : optionalNativeNames()) {
+    for (String name : optionalNativeNamesForCdb()) {
       QueryGroup optionalGroup = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
       OracleStatsQuery item = OracleStatsQuery.create(name, optionalGroup, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
@@ -89,30 +102,30 @@ class StatsTaskListGenerator {
       builder.add(StatsJdbcTask.fromQuery(query));
     }
     for (String name : NATIVE_NAMES_OPTIONAL) {
-      builder.addAll(createTaskWithAlternative(name, /* isRequired= */ false, queriedDuration));
+      QueryGroup group = QueryGroup.create(/* required= */ false, NATIVE, SINGLE_TENANT);
+      builder.addAll(createTaskWithAlternative(name, group, queriedDuration));
     }
     for (String name : NATIVE_NAMES_REQUIRED) {
-      builder.addAll(createTaskWithAlternative(name, /* isRequired= */ true, queriedDuration));
+      QueryGroup group = QueryGroup.create(/* required= */ true, NATIVE, SINGLE_TENANT);
+      builder.addAll(createTaskWithAlternative(name, group, queriedDuration));
     }
     return builder.build();
   }
 
-  List<Task<?>> createTaskWithAlternative(
-      String name, boolean isRequired, Duration queriedDuration) {
-    QueryGroup primaryGroup = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
-    OracleStatsQuery primary = OracleStatsQuery.create(name, primaryGroup, queriedDuration);
+  List<StatsJdbcTask> createTaskWithAlternative(
+      String name, QueryGroup group, Duration queriedDuration) {
+    OracleStatsQuery primary = OracleStatsQuery.create(name, group.toCdbVersion(), queriedDuration);
     StatsJdbcTask primaryTask = StatsJdbcTask.fromQuery(primary);
-    QueryGroup alternativeGroup = QueryGroup.create(isRequired, NATIVE, SINGLE_TENANT);
-    OracleStatsQuery alternative = OracleStatsQuery.create(name, alternativeGroup, queriedDuration);
+    OracleStatsQuery alternative = OracleStatsQuery.create(name, group, queriedDuration);
     StatsJdbcTask alternativeTask = StatsJdbcTask.fromQuery(alternative).onlyIfFailed(primaryTask);
     return ImmutableList.of(primaryTask, alternativeTask);
   }
 
   ImmutableList<String> awrNames() {
-    return AWR_NAMES;
+    return AWR_NAMES_CDB_ONLY;
   }
 
-  ImmutableList<String> optionalNativeNames() {
+  ImmutableList<String> optionalNativeNamesForCdb() {
     return NATIVE_NAMES_OPTIONAL_CDB_ONLY;
   }
 
