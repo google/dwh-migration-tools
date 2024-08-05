@@ -109,8 +109,7 @@ public class RangerConnector extends AbstractConnector {
     }
 
     @Override
-    protected Iterator<User> dataIterator(
-        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
+    protected Iterator<User> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
           page -> {
             try {
@@ -135,8 +134,7 @@ public class RangerConnector extends AbstractConnector {
     }
 
     @Override
-    protected Iterator<Group> dataIterator(
-        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
+    protected Iterator<Group> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
           page -> {
             try {
@@ -161,8 +159,7 @@ public class RangerConnector extends AbstractConnector {
     }
 
     @Override
-    protected Iterator<Role> dataIterator(
-        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
+    protected Iterator<Role> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
           page -> {
             try {
@@ -186,8 +183,7 @@ public class RangerConnector extends AbstractConnector {
       super(ServicesFormat.ZIP_ENTRY_NAME);
     }
 
-    protected Iterator<Service> dataIterator(
-        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
+    protected Iterator<Service> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
           page -> {
             try {
@@ -212,8 +208,7 @@ public class RangerConnector extends AbstractConnector {
     }
 
     @Override
-    protected Iterator<Policy> dataIterator(
-        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) {
+    protected Iterator<Policy> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
           page -> {
             try {
@@ -238,8 +233,7 @@ public class RangerConnector extends AbstractConnector {
     }
 
     @ForOverride
-    protected abstract Iterator<T> dataIterator(
-        @Nonnull Writer writer, @Nonnull RangerClientHandle handle) throws Exception;
+    protected abstract Iterator<T> dataIterator(@Nonnull RangerClientHandle handle);
 
     @Override
     protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
@@ -247,8 +241,7 @@ public class RangerConnector extends AbstractConnector {
       RangerClientHandle rangerClientHandler = (RangerClientHandle) handle;
       LOG.info("Writing to '{}' -> '{}'", getTargetPath(), sink);
       try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-        for (Iterator<T> iterator = dataIterator(writer, rangerClientHandler);
-            iterator.hasNext(); ) {
+        for (Iterator<T> iterator = dataIterator(rangerClientHandler); iterator.hasNext(); ) {
           String json = RangerDumpFormat.MAPPER.writeValueAsString(iterator.next());
           writer.write(json);
           writer.write('\n');
