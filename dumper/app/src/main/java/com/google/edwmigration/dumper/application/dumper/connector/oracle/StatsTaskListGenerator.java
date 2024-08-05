@@ -24,6 +24,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.oracle
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.ResultMessageTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -75,6 +76,18 @@ class StatsTaskListGenerator {
     builder.add(new FormatTask(scope.formatName()));
     List<StatsJdbcTask> jdbcTasks = createJdbcTasks(queriedDuration);
     builder.addAll(jdbcTasks);
+
+    QueryGroup awrAndCdb = QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT);
+    QueryGroup awrAndNotCdb = QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT);
+    builder.add(ResultMessageTask.create(awrAndCdb, jdbcTasks));
+    builder.add(ResultMessageTask.create(awrAndNotCdb, jdbcTasks));
+
+    QueryGroup statspackAndCdb = QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT);
+    QueryGroup statspackAndNotCdb =
+        QueryGroup.create(/* required= */ false, STATSPACK, SINGLE_TENANT);
+    builder.add(ResultMessageTask.create(statspackAndCdb, jdbcTasks));
+    builder.add(ResultMessageTask.create(statspackAndNotCdb, jdbcTasks));
+
     return builder.build();
   }
 
