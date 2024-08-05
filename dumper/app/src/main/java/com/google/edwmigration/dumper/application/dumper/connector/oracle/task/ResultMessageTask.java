@@ -34,6 +34,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class ResultMessageTask extends VoidTask {
 
+  private static final Condition EMPTY_GROUP_FAILED_CONDITION = new EmptyGroupFailedCondition();
+
   private final Condition condition;
   private final QueryGroup group;
 
@@ -78,7 +80,7 @@ public class ResultMessageTask extends VoidTask {
 
   private static Condition onAllTasks(List<StatsJdbcTask> tasks, TaskState requiredState) {
     if (tasks.isEmpty()) {
-      return emptyGroupFailedCondition();
+      return EMPTY_GROUP_FAILED_CONDITION;
     }
     ImmutableList<Condition> conditions =
         tasks.stream()
@@ -87,18 +89,15 @@ public class ResultMessageTask extends VoidTask {
     return new AndCondition(conditions);
   }
 
-  private static Condition emptyGroupFailedCondition() {
-    return new Condition() {
+  private static final class EmptyGroupFailedCondition implements Condition {
+    @Override
+    public boolean evaluate(@Nonnull TaskSetState state) {
+      return false;
+    }
 
-      @Override
-      public boolean evaluate(@Nonnull TaskSetState state) {
-        return false;
-      }
-
-      @Override
-      public String toString() {
-        return "group is non-empty";
-      }
-    };
+    @Override
+    public String toString() {
+      return "group is non-empty";
+    }
   }
 }
