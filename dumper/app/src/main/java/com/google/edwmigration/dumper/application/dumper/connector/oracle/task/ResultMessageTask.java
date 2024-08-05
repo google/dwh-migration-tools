@@ -29,7 +29,9 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
 public class ResultMessageTask extends VoidTask {
 
   private final Condition condition;
@@ -72,7 +74,7 @@ public class ResultMessageTask extends VoidTask {
   }
 
   @Override
-  void doRun(@Nonnull TaskRunContext context) {}
+  void doRun(TaskRunContext context) {}
 
   private static Condition onAllTasks(List<StatsJdbcTask> tasks, TaskState requiredState) {
     if (tasks.isEmpty()) {
