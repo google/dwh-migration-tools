@@ -24,6 +24,10 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        name 'shibboleth'
+        url 'https://build.shibboleth.net/nexus/content/repositories/releases/'
+    }
 }
 
 configurations {
