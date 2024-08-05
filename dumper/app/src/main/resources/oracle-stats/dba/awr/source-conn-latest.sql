@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
+  NULL "ConId",
   History.dbid "DbId",
   to_char(Snapshot.begin_interval_time, 'hh24') "Hour",
   History.instance_number "InstanceNumber",
