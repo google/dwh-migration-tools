@@ -37,10 +37,11 @@ class StatsTaskListGenerator {
 
   private final OracleConnectorScope scope = OracleConnectorScope.STATS;
 
-  private static final ImmutableList<String> AWR_NAMES = ImmutableList.of("sql-stats-awr");
+  private static final ImmutableList<String> AWR_NAMES =
+      ImmutableList.of("source-conn-latest", "sql-stats-awr");
 
   private static final ImmutableList<String> AWR_NAMES_CDB_ONLY =
-      ImmutableList.of("hist-cmd-types-awr", "source-conn-latest");
+      ImmutableList.of("hist-cmd-types-awr");
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
       ImmutableList.of("app-schemas-pdbs");
