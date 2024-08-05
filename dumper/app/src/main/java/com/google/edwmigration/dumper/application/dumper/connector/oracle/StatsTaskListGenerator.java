@@ -40,9 +40,6 @@ class StatsTaskListGenerator {
   private static final ImmutableList<String> AWR_NAMES =
       ImmutableList.of("hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr");
 
-  private static final ImmutableList<String> AWR_NAMES_CDB_ONLY =
-      ImmutableList.of();
-
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
       ImmutableList.of("app-schemas-pdbs");
 
