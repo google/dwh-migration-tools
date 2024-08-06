@@ -22,7 +22,6 @@ import static com.google.edwmigration.dumper.application.dumper.task.TaskState.S
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.StatsJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;

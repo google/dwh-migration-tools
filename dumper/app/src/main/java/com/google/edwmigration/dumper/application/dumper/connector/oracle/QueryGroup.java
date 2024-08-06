@@ -26,7 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public abstract class QueryGroup {
 
-  abstract boolean required();
+  public abstract boolean required();
 
   @Nonnull
   public abstract StatsSource statsSource();

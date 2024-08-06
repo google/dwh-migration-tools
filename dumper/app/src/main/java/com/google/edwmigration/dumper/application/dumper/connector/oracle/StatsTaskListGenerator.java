@@ -25,6 +25,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.oracle
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.ResultMessageTask;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.StatsJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
