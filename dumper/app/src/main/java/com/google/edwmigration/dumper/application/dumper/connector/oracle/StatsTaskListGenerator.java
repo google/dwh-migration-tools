@@ -42,12 +42,11 @@ class StatsTaskListGenerator {
       ImmutableList.of("hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr");
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
-      ImmutableList.of("app-schemas-pdbs");
+      ImmutableList.of("app-schemas-pdbs", "db-features");
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL_CDB_ONLY =
       ImmutableList.of(
           "app-schemas-summary",
-          "db-features",
           "db-instances",
           "dtl-index-type",
           "dtl-source-code",
