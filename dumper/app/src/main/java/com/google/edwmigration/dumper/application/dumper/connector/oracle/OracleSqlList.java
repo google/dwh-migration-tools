@@ -30,9 +30,7 @@ import java.util.List;
 import java.util.function.Function;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Represents a list of oracle-stats SQL files that share a common QueryGroup.
- */
+/** Represents a list of oracle-stats SQL files that share a common QueryGroup. */
 @AutoValue
 @ParametersAreNonnullByDefault
 abstract class OracleSqlList {
