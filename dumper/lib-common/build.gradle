@@ -24,3 +24,7 @@ dependencies {
     testFixturesApi "commons-io:commons-io"
     testFixturesImplementation "org.apache.commons:commons-lang3"
 }
+
+dependencyLocking {
+    lockAllConfigurations()
+}
