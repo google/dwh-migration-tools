@@ -22,6 +22,7 @@ import static com.google.edwmigration.dumper.application.dumper.task.TaskState.S
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
@@ -46,6 +47,11 @@ public class ResultMessageTask extends NoResultTask {
   public static NoResultTask create(QueryGroup group, List<StatsJdbcTask> tasks) {
     List<StatsJdbcTask> matches = StatsJdbcTask.findByGroup(tasks, group);
     Condition condition = onAllTasks(matches, SUCCEEDED);
+    return new ResultMessageTask(condition, group);
+  }
+
+  public static NoResultTask createNoFilter(QueryGroup group, List<Task<?>> tasks) {
+    Condition condition = onAllTasks(tasks, SUCCEEDED);
     return new ResultMessageTask(condition, group);
   }
 
@@ -77,7 +83,7 @@ public class ResultMessageTask extends NoResultTask {
   @Override
   void doRun(TaskRunContext context) {}
 
-  private static Condition onAllTasks(List<StatsJdbcTask> tasks, TaskState requiredState) {
+  private static Condition onAllTasks(List<? extends Task<?>> tasks, TaskState requiredState) {
     if (tasks.isEmpty()) {
       return EMPTY_GROUP_FAILED_CONDITION;
     }

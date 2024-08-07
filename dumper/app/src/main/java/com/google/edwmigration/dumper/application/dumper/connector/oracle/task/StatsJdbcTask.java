@@ -28,6 +28,7 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.Task.StateCondition;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
@@ -67,6 +68,17 @@ public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   public StatsJdbcTask onlyIfFailed(Task<?> prerequisite) {
     StateCondition failureCondition = new StateCondition(prerequisite, TaskState.FAILED);
     return new StatsJdbcTask(query, failureCondition);
+  }
+
+  @Nonnull
+  public static StatsJdbcTask onlyIfAllSkipped(
+      OracleStatsQuery query, List<Task<?>> skippableTasks) {
+    ImmutableList<Condition> conditions =
+        skippableTasks.stream()
+            .map(item -> new StateCondition(item, TaskState.SUCCEEDED))
+            .collect(toImmutableList());
+    Condition skippingCondition = new AndCondition(conditions);
+    return new StatsJdbcTask(query, skippingCondition);
   }
 
   @Deprecated // use onlyIfFailed

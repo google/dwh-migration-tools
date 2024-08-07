@@ -36,11 +36,14 @@ public class StatsTaskListGeneratorTest {
   @DataPoints("nativeNames")
   public static final ImmutableList<String> nativeNames = generator.optionalNativeNamesForCdb();
 
-  @DataPoints("awrNames")
-  public static final ImmutableList<String> awrNames = generator.awrNames();
+  @DataPoints("awrCdbNames")
+  public static final ImmutableList<String> awrCdbNames = OracleSqlList.awrCdb().names();
+
+  @DataPoints("awrDbaNames")
+  public static final ImmutableList<String> awrDbaNames = OracleSqlList.awrCdb().names();
 
   @DataPoints("statspackNames")
-  public static final ImmutableList<String> statspackNames = generator.statspackNames();
+  public static final ImmutableList<String> statspackNames = OracleSqlList.statspack().names();
 
   @Theory
   public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
@@ -49,7 +52,13 @@ public class StatsTaskListGeneratorTest {
   }
 
   @Theory
-  public void awrNames_allNamedFilesExist(@FromDataPoints("awrNames") String name)
+  public void awrCdbNames_allNamedFilesExist(@FromDataPoints("awrCdbNames") String name)
+      throws IOException {
+    OracleStatsQuery.createAwr(name, Duration.ofDays(7));
+  }
+
+  @Theory
+  public void awrDbaNames_allNamedFilesExist(@FromDataPoints("awrDbaNames") String name)
       throws IOException {
     OracleStatsQuery.createAwr(name, Duration.ofDays(7));
   }
