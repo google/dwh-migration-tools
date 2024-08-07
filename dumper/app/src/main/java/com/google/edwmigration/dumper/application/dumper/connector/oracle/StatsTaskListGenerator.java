@@ -47,7 +47,6 @@ class StatsTaskListGenerator {
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL_CDB_ONLY =
       ImmutableList.of(
-          "app-schemas-summary",
           "db-instances",
           "dtl-index-type",
           "dtl-source-code",
