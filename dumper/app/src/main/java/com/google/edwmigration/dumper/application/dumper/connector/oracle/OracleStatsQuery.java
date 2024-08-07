@@ -36,16 +36,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public abstract class OracleStatsQuery {
 
   @Nonnull
-  abstract Duration queriedDuration();
+  public abstract Duration queriedDuration();
 
   @Nonnull
-  abstract QueryGroup queryGroup();
+  public abstract QueryGroup queryGroup();
 
   @Nonnull
-  abstract String name();
+  public abstract String name();
 
   @Nonnull
-  abstract String queryText();
+  public abstract String queryText();
 
   @Nonnull
   static OracleStatsQuery createAwr(String name, Duration queriedDuration) {
@@ -54,7 +54,7 @@ public abstract class OracleStatsQuery {
   }
 
   @Nonnull
-  static OracleStatsQuery createNative(
+  public static OracleStatsQuery createNative(
       String name, boolean isRequired, Duration queriedDuration, TenantSetup tenantSetup) {
     QueryGroup queryGroup = QueryGroup.create(isRequired, NATIVE, tenantSetup);
     return create(name, queryGroup, queriedDuration);
@@ -72,7 +72,7 @@ public abstract class OracleStatsQuery {
   }
 
   @Nonnull
-  String description() {
+  public String description() {
     return String.format("Query{name=%s, statsSource=%s}", name(), queryGroup().statsSource());
   }
 

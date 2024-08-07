@@ -14,13 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.oracle;
+package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.NATIVE;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery;
+import com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -55,7 +57,7 @@ public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   }
 
   @Nonnull
-  static StatsJdbcTask fromQuery(OracleStatsQuery query) {
+  public static StatsJdbcTask fromQuery(OracleStatsQuery query) {
     return new StatsJdbcTask(query, Condition.alwaysTrue());
   }
 
