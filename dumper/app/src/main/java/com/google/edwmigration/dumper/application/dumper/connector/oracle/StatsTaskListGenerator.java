@@ -17,9 +17,9 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlList.awrCdb;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlList.awrDba;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlList.statspack;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlListing.awrCdb;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlListing.awrDba;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlListing.statspack;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.NATIVE;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.MULTI_TENANT;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.SINGLE_TENANT;
@@ -72,9 +72,10 @@ class StatsTaskListGenerator {
     builder.add(new FormatTask(scope.formatName()));
 
     ArrayList<Task<?>> messageTasks = new ArrayList<>();
-    ImmutableList<OracleSqlList> listsInOrder = ImmutableList.of(awrCdb(), awrDba(), statspack());
+    ImmutableList<OracleSqlListing> listsInOrder =
+        ImmutableList.of(awrCdb(), awrDba(), statspack());
 
-    for (OracleSqlList sqls : listsInOrder) {
+    for (OracleSqlListing sqls : listsInOrder) {
       ImmutableList<Task<?>> messageTasksSoFar = copyOf(messageTasks);
       ImmutableList<Task<?>> queryTasks =
           sqls.toTasksIfAllSkipped(queriedDuration, messageTasksSoFar);

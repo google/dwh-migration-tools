@@ -33,7 +33,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 /** Represents a list of oracle-stats SQL files that share a common QueryGroup. */
 @AutoValue
 @ParametersAreNonnullByDefault
-abstract class OracleSqlList {
+abstract class OracleSqlListing {
 
   abstract ImmutableList<String> names();
 
@@ -44,27 +44,27 @@ abstract class OracleSqlList {
   private static final ImmutableList<String> STATSPACK_NAMES =
       ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
 
-  private static OracleSqlList AWR_CDB =
+  private static OracleSqlListing AWR_CDB =
       create(QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT), AWR_NAMES);
-  private static OracleSqlList AWR_DBA =
+  private static OracleSqlListing AWR_DBA =
       create(QueryGroup.create(/* required= */ true, AWR, MULTI_TENANT), AWR_NAMES);
-  private static OracleSqlList STATSPACK_CDB =
+  private static OracleSqlListing STATSPACK_CDB =
       create(QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT), STATSPACK_NAMES);
 
-  static OracleSqlList awrCdb() {
+  static OracleSqlListing awrCdb() {
     return AWR_CDB;
   }
 
-  static OracleSqlList awrDba() {
+  static OracleSqlListing awrDba() {
     return AWR_DBA;
   }
 
-  static OracleSqlList statspack() {
+  static OracleSqlListing statspack() {
     return STATSPACK_CDB;
   }
 
-  private static OracleSqlList create(QueryGroup group, ImmutableList<String> names) {
-    return new AutoValue_OracleSqlList(names, group);
+  private static OracleSqlListing create(QueryGroup group, ImmutableList<String> names) {
+    return new AutoValue_OracleSqlListing(names, group);
   }
 
   ImmutableList<Task<?>> toTasks(Duration queriedDuration) {

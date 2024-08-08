@@ -37,13 +37,13 @@ public class StatsTaskListGeneratorTest {
   public static final ImmutableList<String> nativeNames = generator.optionalNativeNamesForCdb();
 
   @DataPoints("awrCdbNames")
-  public static final ImmutableList<String> awrCdbNames = OracleSqlList.awrCdb().names();
+  public static final ImmutableList<String> awrCdbNames = OracleSqlListing.awrCdb().names();
 
   @DataPoints("awrDbaNames")
-  public static final ImmutableList<String> awrDbaNames = OracleSqlList.awrCdb().names();
+  public static final ImmutableList<String> awrDbaNames = OracleSqlListing.awrCdb().names();
 
   @DataPoints("statspackNames")
-  public static final ImmutableList<String> statspackNames = OracleSqlList.statspack().names();
+  public static final ImmutableList<String> statspackNames = OracleSqlListing.statspack().names();
 
   @Theory
   public void nativeNames_allNamedFilesExist(@FromDataPoints("nativeNames") String name)
