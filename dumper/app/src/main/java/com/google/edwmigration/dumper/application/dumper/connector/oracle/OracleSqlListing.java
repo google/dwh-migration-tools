@@ -70,8 +70,8 @@ abstract class OracleSqlListing {
 
   ImmutableList<Task<?>> toTasks(Duration queriedDuration) {
     Function<String, Task<?>> mapper =
-        x -> {
-          OracleStatsQuery query = OracleStatsQuery.create(x, group(), queriedDuration);
+        name -> {
+          OracleStatsQuery query = OracleStatsQuery.create(name, group(), queriedDuration);
           return StatsJdbcTask.fromQuery(query);
         };
     return names().stream().map(mapper).collect(toImmutableList());
@@ -80,8 +80,8 @@ abstract class OracleSqlListing {
   ImmutableList<Task<?>> toTasksIfAllSkipped(
       Duration queriedDuration, List<Task<?>> skippableTasks) {
     Function<String, Task<?>> mapper =
-        x -> {
-          OracleStatsQuery query = OracleStatsQuery.create(x, group(), queriedDuration);
+        name -> {
+          OracleStatsQuery query = OracleStatsQuery.create(name, group(), queriedDuration);
           return StatsJdbcTask.onlyIfAllSkipped(query, skippableTasks);
         };
     return names().stream().map(mapper).collect(toImmutableList());
