@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyWhen;
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -594,8 +595,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   @Nonnull
   public String getHost(@Nonnull String defaultHost) {
-    String nullableHost = getHostOrNull();
-    return nullableHost != null ? nullableHost : OPT_HOST_DEFAULT;
+    return firstNonNull(getHostOrNull(), defaultHost);
   }
 
   @CheckForNull
