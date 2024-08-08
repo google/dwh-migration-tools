@@ -298,7 +298,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     String requestedClientVersion = arguments.getHiveMetastoreVersion();
     HiveMetastoreThriftClient.Builder thriftClientBuilder =
         new HiveMetastoreThriftClient.Builder(requestedClientVersion)
-            .withHost(arguments.getHost())
+            .withHost(arguments.getHostOrDefault())
             .withPort(
                 arguments.getPort(
                     Integer.parseInt(ConnectorArguments.OPT_HIVE_METASTORE_PORT_DEFAULT)))

@@ -82,7 +82,7 @@ public class AbstractOracleConnectorTest {
   @Test
   public void buildUrl_providedServiceName_success() {
     when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
-    when(arguments.getHost()).thenReturn("localhost");
+    when(arguments.getHostOrDefault()).thenReturn("localhost");
     when(arguments.getPort(anyInt())).thenReturn(1521);
 
     // Act
@@ -95,7 +95,7 @@ public class AbstractOracleConnectorTest {
   @Test
   public void buildUrl_providedSid_success() {
     when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
-    when(arguments.getHost()).thenReturn("localhost");
+    when(arguments.getHostOrDefault()).thenReturn("localhost");
     when(arguments.getPort(anyInt())).thenReturn(1521);
 
     // Act
@@ -108,7 +108,7 @@ public class AbstractOracleConnectorTest {
   @Test
   public void buildUrl_customArguments_containsCustomValues() {
     when(arguments.getOracleSID()).thenReturn("MYPDB1");
-    when(arguments.getHost()).thenReturn("sample-host-123");
+    when(arguments.getHostOrDefault()).thenReturn("sample-host-123");
     when(arguments.getPort(anyInt())).thenReturn(8081);
 
     // Act

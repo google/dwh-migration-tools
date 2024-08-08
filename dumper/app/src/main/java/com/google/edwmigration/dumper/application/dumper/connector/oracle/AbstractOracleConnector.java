@@ -185,7 +185,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   // jdbc:oracle:thin:<TNSName> (from 10.2.0.1.0)
   static String buildUrl(ConnectorArguments arguments) {
     String url = arguments.getUri();
-    String host = arguments.getHost();
+    String host = arguments.getHostOrDefault();
     int port = arguments.getPort(OPT_PORT_DEFAULT);
     if (url != null) {
       checkNonUriFlags(arguments);
@@ -200,7 +200,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   }
 
   private static void checkNonUriFlags(ConnectorArguments arguments) {
-    if (arguments.getHost() != null) {
+    if (arguments.getHostOrNull() != null) {
       throw extraFlagProvided(OPT_HOST);
     } else if (arguments.getPort() != null) {
       throw extraFlagProvided(OPT_PORT);

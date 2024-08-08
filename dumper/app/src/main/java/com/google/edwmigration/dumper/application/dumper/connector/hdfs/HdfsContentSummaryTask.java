@@ -48,7 +48,7 @@ public class HdfsContentSummaryTask extends AbstractTask<Void>
   HdfsContentSummaryTask(@Nonnull ConnectorArguments args) {
     super(ZIP_ENTRY_NAME);
     Preconditions.checkNotNull(args, "Arguments was null.");
-    clusterHost = Preconditions.checkNotNull(args.getHost(), "Host was null.");
+    clusterHost = Preconditions.checkNotNull(args.getHostOrDefault(), "Host was null.");
     port = args.getPort(/* defaultPort= */ 8020);
   }
 
