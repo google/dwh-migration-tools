@@ -28,7 +28,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.S
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.time.Duration;
 import java.util.List;
-import java.util.function.Function;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /** Represents a list of oracle-stats SQL files that share a common QueryGroup. */
@@ -69,21 +68,23 @@ abstract class OracleSqlListing {
   }
 
   ImmutableList<Task<?>> toTasks(Duration queriedDuration) {
-    Function<String, Task<?>> mapper =
-        name -> {
-          OracleStatsQuery query = OracleStatsQuery.create(name, group(), queriedDuration);
-          return StatsJdbcTask.fromQuery(query);
-        };
-    return names().stream().map(mapper).collect(toImmutableList());
+    return names().stream()
+        .map(
+            name -> {
+              OracleStatsQuery query = OracleStatsQuery.create(name, group(), queriedDuration);
+              return StatsJdbcTask.fromQuery(query);
+            })
+        .collect(toImmutableList());
   }
 
   ImmutableList<Task<?>> toTasksIfAllSkipped(
       Duration queriedDuration, List<Task<?>> skippableTasks) {
-    Function<String, Task<?>> mapper =
-        name -> {
-          OracleStatsQuery query = OracleStatsQuery.create(name, group(), queriedDuration);
-          return StatsJdbcTask.onlyIfAllSkipped(query, skippableTasks);
-        };
-    return names().stream().map(mapper).collect(toImmutableList());
+    return names().stream()
+        .map(
+            name -> {
+              OracleStatsQuery query = OracleStatsQuery.create(name, group(), queriedDuration);
+              return StatsJdbcTask.onlyIfAllSkipped(query, skippableTasks);
+            })
+        .collect(toImmutableList());
   }
 }
