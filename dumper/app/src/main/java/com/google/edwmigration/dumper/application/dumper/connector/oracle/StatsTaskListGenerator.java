@@ -78,7 +78,7 @@ class StatsTaskListGenerator {
       ImmutableList<Task<?>> messageTasksSoFar = copyOf(messageTasks);
       ImmutableList<Task<?>> queryTasks =
           sqls.toTasksIfAllSkipped(queriedDuration, messageTasksSoFar);
-      Task<?> success = ResultMessageTask.createNoFilter(sqls.group(), queryTasks);
+      Task<?> success = ResultMessageTask.create(sqls.group(), queryTasks);
       builder.addAll(queryTasks);
       messageTasks.add(success);
     }
