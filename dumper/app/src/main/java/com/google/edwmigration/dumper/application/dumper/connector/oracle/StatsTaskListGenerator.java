@@ -16,9 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.AWR;
+import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlListing.awrCdb;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlListing.awrDba;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleSqlListing.statspack;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.NATIVE;
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.STATSPACK;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.MULTI_TENANT;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.SINGLE_TENANT;
 
@@ -30,6 +32,7 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -38,9 +41,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 class StatsTaskListGenerator {
 
   private final OracleConnectorScope scope = OracleConnectorScope.STATS;
-
-  private static final ImmutableList<String> AWR_NAMES =
-      ImmutableList.of("hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr");
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
       ImmutableList.of("app-schemas-pdbs", "db-features", "db-instances", "dtl-index-type");
@@ -59,46 +59,38 @@ class StatsTaskListGenerator {
           "table-types-dtl",
           "used-space-details");
 
-  private static final ImmutableList<String> STATSPACK_NAMES =
-      ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
-
   @Nonnull
   ImmutableList<Task<?>> createTasks(ConnectorArguments arguments, Duration queriedDuration) {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
     builder.add(new DumpMetadataTask(arguments, scope.formatName()));
     builder.add(new FormatTask(scope.formatName()));
-    List<StatsJdbcTask> jdbcTasks = createJdbcTasks(queriedDuration);
+
+    ArrayList<Task<?>> messageTasks = new ArrayList<>();
+    ImmutableList<OracleSqlListing> listsInOrder =
+        ImmutableList.of(awrCdb(), awrDba(), statspack());
+
+    for (OracleSqlListing sqls : listsInOrder) {
+      ImmutableList<Task<?>> messageTasksSoFar = copyOf(messageTasks);
+      ImmutableList<Task<?>> queryTasks =
+          sqls.toTasksIfAllSkipped(queriedDuration, messageTasksSoFar);
+      Task<?> success = ResultMessageTask.create(sqls.group(), queryTasks);
+      builder.addAll(queryTasks);
+      builder.add(success);
+      messageTasks.add(success);
+    }
+
+    // Native
+    List<StatsJdbcTask> jdbcTasks = createNativeTasks(queriedDuration);
     builder.addAll(jdbcTasks);
-
-    QueryGroup awrAndCdb = QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT);
-    QueryGroup awrAndNotCdb = QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT);
-    builder.add(ResultMessageTask.create(awrAndCdb, jdbcTasks));
-    builder.add(ResultMessageTask.create(awrAndNotCdb, jdbcTasks));
-
-    QueryGroup statspackAndCdb = QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT);
-    QueryGroup statspackAndNotCdb =
-        QueryGroup.create(/* required= */ false, STATSPACK, SINGLE_TENANT);
-    builder.add(ResultMessageTask.create(statspackAndCdb, jdbcTasks));
-    builder.add(ResultMessageTask.create(statspackAndNotCdb, jdbcTasks));
-
     return builder.build();
   }
 
-  private List<StatsJdbcTask> createJdbcTasks(Duration queriedDuration) {
+  private List<StatsJdbcTask> createNativeTasks(Duration queriedDuration) {
     ImmutableList.Builder<StatsJdbcTask> builder = ImmutableList.builder();
-    for (String name : awrNames()) {
-      QueryGroup awr = QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT);
-      builder.addAll(createTaskWithAlternative(name, awr, queriedDuration));
-    }
     for (String name : optionalNativeNamesForCdb()) {
       QueryGroup optionalGroup = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
       OracleStatsQuery item = OracleStatsQuery.create(name, optionalGroup, queriedDuration);
       builder.add(StatsJdbcTask.fromQuery(item));
-    }
-    for (String name : statspackNames()) {
-      QueryGroup statspack = QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT);
-      OracleStatsQuery query = OracleStatsQuery.create(name, statspack, queriedDuration);
-      builder.add(StatsJdbcTask.fromQuery(query));
     }
     for (String name : NATIVE_NAMES_OPTIONAL) {
       QueryGroup group = QueryGroup.create(/* required= */ false, NATIVE, SINGLE_TENANT);
@@ -120,15 +112,7 @@ class StatsTaskListGenerator {
     return ImmutableList.of(primaryTask, alternativeTask);
   }
 
-  ImmutableList<String> awrNames() {
-    return AWR_NAMES;
-  }
-
   ImmutableList<String> optionalNativeNamesForCdb() {
     return NATIVE_NAMES_OPTIONAL_CDB_ONLY;
-  }
-
-  ImmutableList<String> statspackNames() {
-    return STATSPACK_NAMES;
   }
 }

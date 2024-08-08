@@ -22,7 +22,6 @@ import static com.google.edwmigration.dumper.application.dumper.connector.oracle
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery;
-import com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -69,6 +68,15 @@ public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
     return new StatsJdbcTask(query, failureCondition);
   }
 
+  @Nonnull
+  public static StatsJdbcTask onlyIfAllSkipped(
+      OracleStatsQuery query, List<Task<?>> skippableTasks) {
+    ImmutableList<Condition> conditions =
+        skippableTasks.stream().map(StateCondition::whenSkipped).collect(toImmutableList());
+    Condition skippingCondition = new AndCondition(conditions);
+    return new StatsJdbcTask(query, skippingCondition);
+  }
+
   @Deprecated // use onlyIfFailed
   @Override
   @Nonnull
@@ -109,14 +117,6 @@ public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
     } else {
       return TaskCategory.OPTIONAL;
     }
-  }
-
-  @Nonnull
-  public static ImmutableList<StatsJdbcTask> findByGroup(
-      List<StatsJdbcTask> tasks, QueryGroup group) {
-    return tasks.stream()
-        .filter(item -> item.query().queryGroup().equals(group))
-        .collect(toImmutableList());
   }
 
   @Nonnull

@@ -60,6 +60,11 @@ public interface Task<T> {
     private final Task<?> task;
     private final TaskState taskState;
 
+    @Nonnull
+    public static Condition whenSkipped(Task<?> task) {
+      return new StateCondition(task, TaskState.SKIPPED);
+    }
+
     public StateCondition(Task<?> task, TaskState taskState) {
       this.task = task;
       this.taskState = taskState;
