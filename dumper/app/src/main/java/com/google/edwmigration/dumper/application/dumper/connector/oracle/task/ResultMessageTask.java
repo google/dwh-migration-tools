@@ -44,12 +44,6 @@ public class ResultMessageTask extends NoResultTask {
     this.group = group;
   }
 
-  public static NoResultTask create(QueryGroup group, List<StatsJdbcTask> tasks) {
-    List<StatsJdbcTask> matches = StatsJdbcTask.findByGroup(tasks, group);
-    Condition condition = onAllTasks(matches, SUCCEEDED);
-    return new ResultMessageTask(condition, group);
-  }
-
   public static NoResultTask createNoFilter(QueryGroup group, List<Task<?>> tasks) {
     Condition condition = onAllTasks(tasks, SUCCEEDED);
     return new ResultMessageTask(condition, group);
