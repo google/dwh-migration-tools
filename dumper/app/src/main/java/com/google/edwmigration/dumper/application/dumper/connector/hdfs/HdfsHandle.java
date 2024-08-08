@@ -35,7 +35,7 @@ class HdfsHandle implements Handle {
 
   HdfsHandle(@Nonnull ConnectorArguments args) throws IOException {
     Preconditions.checkNotNull(args, "Arguments was null.");
-    clusterHost = Preconditions.checkNotNull(args.getHostOrDefault(), "Host was null.");
+    clusterHost = args.getHostOrDefault();
     port = args.getPort(/* defaultPort= */ 8020);
 
     LOG.info("clusterHost: {}", clusterHost);
