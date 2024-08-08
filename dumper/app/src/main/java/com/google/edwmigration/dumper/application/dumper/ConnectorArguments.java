@@ -163,11 +163,11 @@ public class ConnectorArguments extends DefaultArguments {
           .describedAs("com.company.Driver");
   private final OptionSpec<String> optionUri =
       parser
-          .accepts(OPT_URI, "JDBC driver URI (overrides host, port, etc if given)")
+          .accepts(OPT_URI, "JDBC driver URI")
           .withRequiredArg()
           .describedAs("jdbc:dbname:host/db?param0=foo");
   private final OptionSpec<String> optionHost =
-      parser.accepts(OPT_HOST, "Database hostname").withRequiredArg().defaultsTo(OPT_HOST_DEFAULT);
+      parser.accepts(OPT_HOST, "Database hostname").withRequiredArg();
   private final OptionSpec<Integer> optionPort =
       parser
           .accepts(OPT_PORT, "Database port")
@@ -589,7 +589,6 @@ public class ConnectorArguments extends DefaultArguments {
 
   @CheckForNull
   public String getHostOrNull() {
-    // TODO: make this return null when host was not provided
     return getOptions().valueOf(optionHost);
   }
 
