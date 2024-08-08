@@ -46,11 +46,11 @@ abstract class OracleSqlListing {
       ImmutableList.of("hist-cmd-types-statspack", "sql-stats-statspack");
 
   private static OracleSqlListing AWR_CDB =
-      create(QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT), AWR_NAMES);
+      create(AWR_NAMES, QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT));
   private static OracleSqlListing AWR_DBA =
-      create(QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT), AWR_NAMES);
+      create(AWR_NAMES, QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT));
   private static OracleSqlListing STATSPACK_CDB =
-      create(QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT), STATSPACK_NAMES);
+      create(STATSPACK_NAMES, QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT));
 
   static OracleSqlListing awrCdb() {
     return AWR_CDB;
@@ -64,7 +64,7 @@ abstract class OracleSqlListing {
     return STATSPACK_CDB;
   }
 
-  private static OracleSqlListing create(QueryGroup group, ImmutableList<String> names) {
+  private static OracleSqlListing create(ImmutableList<String> names, QueryGroup group) {
     return new AutoValue_OracleSqlListing(names, group);
   }
 
