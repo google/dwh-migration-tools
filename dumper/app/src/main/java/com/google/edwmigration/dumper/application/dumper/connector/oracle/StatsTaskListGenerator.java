@@ -81,11 +81,9 @@ class StatsTaskListGenerator {
           sqls.toTasksIfAllSkipped(queriedDuration, messageTasksSoFar);
       Task<?> success = ResultMessageTask.create(sqls.group(), queryTasks);
       builder.addAll(queryTasks);
+      builder.add(success);
       messageTasks.add(success);
     }
-
-    // Summary messages
-    builder.addAll(messageTasks);
 
     // Native
     List<StatsJdbcTask> jdbcTasks = createNativeTasks(queriedDuration);
