@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.AWR;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.StatsSource.STATSPACK;
 import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.MULTI_TENANT;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.SINGLE_TENANT;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +48,7 @@ abstract class OracleSqlListing {
   private static OracleSqlListing AWR_CDB =
       create(QueryGroup.create(/* required= */ false, AWR, MULTI_TENANT), AWR_NAMES);
   private static OracleSqlListing AWR_DBA =
-      create(QueryGroup.create(/* required= */ true, AWR, MULTI_TENANT), AWR_NAMES);
+      create(QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT), AWR_NAMES);
   private static OracleSqlListing STATSPACK_CDB =
       create(QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT), STATSPACK_NAMES);
 
