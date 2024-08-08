@@ -16,9 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup.TenantSetup.MULTI_TENANT;
-import static java.time.Duration.ofDays;
-
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.time.Duration;
