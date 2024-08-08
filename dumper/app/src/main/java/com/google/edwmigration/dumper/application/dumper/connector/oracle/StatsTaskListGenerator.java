@@ -53,9 +53,6 @@ class StatsTaskListGenerator {
           "m-view-types",
           "pdbs-info");
 
-  private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL_CDB_ONLY =
-      ImmutableList.of();
-
   private static final ImmutableList<String> NATIVE_NAMES_REQUIRED =
       ImmutableList.of(
           "data-types",
@@ -98,11 +95,6 @@ class StatsTaskListGenerator {
       QueryGroup awr = QueryGroup.create(/* required= */ false, AWR, SINGLE_TENANT);
       builder.addAll(createTaskWithAlternative(name, awr, queriedDuration));
     }
-    for (String name : optionalNativeNamesForCdb()) {
-      QueryGroup optionalGroup = QueryGroup.create(/* required= */ false, NATIVE, MULTI_TENANT);
-      OracleStatsQuery item = OracleStatsQuery.create(name, optionalGroup, queriedDuration);
-      builder.add(StatsJdbcTask.fromQuery(item));
-    }
     for (String name : statspackNames()) {
       QueryGroup statspack = QueryGroup.create(/* required= */ false, STATSPACK, MULTI_TENANT);
       OracleStatsQuery query = OracleStatsQuery.create(name, statspack, queriedDuration);
@@ -130,10 +122,6 @@ class StatsTaskListGenerator {
 
   ImmutableList<String> awrNames() {
     return AWR_NAMES;
-  }
-
-  ImmutableList<String> optionalNativeNamesForCdb() {
-    return NATIVE_NAMES_OPTIONAL_CDB_ONLY;
   }
 
   ImmutableList<String> statspackNames() {
