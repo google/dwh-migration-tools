@@ -124,14 +124,6 @@ public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
   }
 
   @Nonnull
-  public static ImmutableList<StatsJdbcTask> findByGroup(
-      List<StatsJdbcTask> tasks, QueryGroup group) {
-    return tasks.stream()
-        .filter(item -> item.query().queryGroup().equals(group))
-        .collect(toImmutableList());
-  }
-
-  @Nonnull
   OracleStatsQuery query() {
     return query;
   }
