@@ -588,6 +588,11 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @Nonnull
+  public String getHostOrDefault() {
+    return getHost(OPT_HOST_DEFAULT);
+  }
+
+  @Nonnull
   public String getHost(@Nonnull String defaultHost) {
     return MoreObjects.firstNonNull(getHost(), defaultHost);
   }
