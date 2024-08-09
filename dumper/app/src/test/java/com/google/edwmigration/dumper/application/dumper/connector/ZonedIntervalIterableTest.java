@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.ZonedParser;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,14 +44,10 @@ public class ZonedIntervalIterableTest {
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterableTest.class);
 
-  private static final ConnectorArguments.ZonedParser zonedParserStart =
-      new ConnectorArguments.ZonedParser(
-          ConnectorArguments.ZonedParser.DEFAULT_PATTERN,
-          ConnectorArguments.ZonedParser.DayOffset.START_OF_DAY);
-  private static final ConnectorArguments.ZonedParser zonedParserEnd =
-      new ConnectorArguments.ZonedParser(
-          ConnectorArguments.ZonedParser.DEFAULT_PATTERN,
-          ConnectorArguments.ZonedParser.DayOffset.END_OF_DAY);
+  private static final ZonedParser zonedParserStart =
+      new ZonedParser(ZonedParser.DEFAULT_PATTERN, ZonedParser.DayOffset.START_OF_DAY);
+  private static final ZonedParser zonedParserEnd =
+      new ZonedParser(ZonedParser.DEFAULT_PATTERN, ZonedParser.DayOffset.END_OF_DAY);
 
   private void testIterable(int expectCount, @Nonnegative ZonedIntervalIterable iterable) {
     LOG.debug("Testing {}", iterable);
@@ -176,7 +173,7 @@ public class ZonedIntervalIterableTest {
     String requestedStart = "2020-06-30 09:17:00";
     String requestedEnd = "2020-07-05 10:45:00";
     DateTimeFormatter formatter =
-        DateTimeFormatter.ofPattern(ConnectorArguments.ZonedParser.DEFAULT_PATTERN, Locale.US);
+        DateTimeFormatter.ofPattern(ZonedParser.DEFAULT_PATTERN, Locale.US);
 
     LocalDateTime requestedStartParsed = LocalDateTime.parse(requestedStart, formatter);
     LocalDateTime expectedEndParsed = LocalDateTime.parse("2020-07-05 10:17:00", formatter);

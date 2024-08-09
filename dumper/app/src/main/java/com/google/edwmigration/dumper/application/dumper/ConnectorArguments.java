@@ -40,15 +40,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -57,7 +51,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -67,8 +60,6 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import joptsimple.ValueConversionException;
-import joptsimple.ValueConverter;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -940,63 +931,5 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDefinitionOrDefault(ConnectorPropertyWithDefault property) {
     return getConnectorProperties().getOrDefault(property);
-  }
-
-  public static class ZonedParser implements ValueConverter<ZonedDateTime> {
-
-    public static final String DEFAULT_PATTERN = "yyyy-MM-dd[ HH:mm:ss[.SSS]]";
-    private final DayOffset dayOffset;
-    private final DateTimeFormatter parser;
-
-    public ZonedParser(String pattern, DayOffset dayOffset) {
-      this.dayOffset = dayOffset;
-      this.parser =
-          DateTimeFormatter.ofPattern(pattern, Locale.US).withResolverStyle(ResolverStyle.LENIENT);
-    }
-
-    @Override
-    public ZonedDateTime convert(String value) {
-
-      TemporalAccessor result = parser.parseBest(value, LocalDateTime::from, LocalDate::from);
-
-      if (result instanceof LocalDateTime) {
-        return ((LocalDateTime) result).atZone(ZoneOffset.UTC);
-      }
-
-      if (result instanceof LocalDate) {
-        return ((LocalDate) result)
-            .plusDays(dayOffset.getValue())
-            .atTime(LocalTime.MIDNIGHT)
-            .atZone(ZoneOffset.UTC);
-      }
-
-      throw new ValueConversionException(
-          "Value " + value + " cannot be parsed to date or datetime");
-    }
-
-    @Override
-    public Class<ZonedDateTime> valueType() {
-      return ZonedDateTime.class;
-    }
-
-    @Override
-    public String valuePattern() {
-      return null;
-    }
-
-    public enum DayOffset {
-      START_OF_DAY(0L),
-      END_OF_DAY(1L);
-
-      private final long value;
-
-      DayOffset(long value) {
-        this.value = value;
-      }
-
-      public long getValue() {
-        return value;
-      }
-    }
   }
 }
