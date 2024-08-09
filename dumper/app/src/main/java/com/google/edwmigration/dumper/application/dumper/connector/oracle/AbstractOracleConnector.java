@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST_DEFAULT;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SERVICE;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ORACLE_SID;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_PORT;
@@ -185,13 +186,13 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   // jdbc:oracle:thin:<TNSName> (from 10.2.0.1.0)
   static String buildUrl(ConnectorArguments arguments) {
     String url = arguments.getUri();
-    String host = arguments.getHost();
-    int port = arguments.getPort(OPT_PORT_DEFAULT);
     if (url != null) {
       checkNonUriFlags(arguments);
       return url;
     }
     checkServiceAndSid(arguments);
+    String host = arguments.getHost(OPT_HOST_DEFAULT);
+    int port = arguments.getPort(OPT_PORT_DEFAULT);
     if (arguments.getOracleSID() != null) {
       return "jdbc:oracle:thin:@" + host + ":" + port + ":" + arguments.getOracleSID();
     } else {

@@ -142,7 +142,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
       throws MetadataDumperUsageException, UnsupportedEncodingException {
     String password = arguments.getPasswordIfFlagProvided().orElse(null);
     return "jdbc:postgresql://"
-        + requireNonNull(arguments.getHost(), "--host should be specified")
+        + arguments.getHostOrDefault()
         + ":"
         + arguments.getPort(5439)
         + "/"
@@ -159,7 +159,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
       throws MetadataDumperUsageException, UnsupportedEncodingException {
     String password = arguments.getPasswordIfFlagProvided().orElse(null);
     return "jdbc:redshift://"
-        + requireNonNull(arguments.getHost(), "--host should be specified")
+        + arguments.getHostOrDefault()
         + ":"
         + arguments.getPort(5439)
         + "/"
@@ -177,7 +177,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
       throws MetadataDumperUsageException, UnsupportedEncodingException {
     String url =
         "jdbc:redshift:iam://"
-            + requireNonNull(arguments.getHost(), "--host should be specified")
+            + arguments.getHostOrDefault()
             + ":"
             + arguments.getPort(5439)
             + "/"

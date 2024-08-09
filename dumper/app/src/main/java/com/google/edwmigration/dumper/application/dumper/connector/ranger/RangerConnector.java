@@ -95,7 +95,7 @@ public class RangerConnector extends AbstractConnector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     // TODO: handle SSL or Kerberos.
-    URI apiUrl = URI.create("http://" + arguments.getHost() + ":" + arguments.getPort());
+    URI apiUrl = URI.create("http://" + arguments.getHostOrDefault() + ":" + arguments.getPort());
     String password = arguments.getPasswordOrPrompt();
     return new RangerClientHandle(
         new RangerClient(apiUrl, arguments.getUser(), password),

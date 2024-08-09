@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyWhen;
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -163,11 +164,11 @@ public class ConnectorArguments extends DefaultArguments {
           .describedAs("com.company.Driver");
   private final OptionSpec<String> optionUri =
       parser
-          .accepts(OPT_URI, "JDBC driver URI (overrides host, port, etc if given)")
+          .accepts(OPT_URI, "JDBC driver URI")
           .withRequiredArg()
           .describedAs("jdbc:dbname:host/db?param0=foo");
   private final OptionSpec<String> optionHost =
-      parser.accepts(OPT_HOST, "Database hostname").withRequiredArg().defaultsTo(OPT_HOST_DEFAULT);
+      parser.accepts(OPT_HOST, "Database hostname").withRequiredArg();
   private final OptionSpec<Integer> optionPort =
       parser
           .accepts(OPT_PORT, "Database port")
@@ -582,6 +583,11 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionUri);
   }
 
+  @Nonnull
+  public String getHostOrDefault() {
+    return getHost(OPT_HOST_DEFAULT);
+  }
+
   @CheckForNull
   public String getHost() {
     return getOptions().valueOf(optionHost);
@@ -589,7 +595,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   @Nonnull
   public String getHost(@Nonnull String defaultHost) {
-    return MoreObjects.firstNonNull(getHost(), defaultHost);
+    return firstNonNull(getHost(), defaultHost);
   }
 
   @CheckForNull

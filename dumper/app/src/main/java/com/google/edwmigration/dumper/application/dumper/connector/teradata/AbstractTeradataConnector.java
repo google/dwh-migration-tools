@@ -188,7 +188,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
   public Handle open(ConnectorArguments arguments) throws Exception {
     String url = arguments.getUri();
     if (url == null) {
-      String host = arguments.getHost();
+      String host = arguments.getHostOrDefault();
       int port = arguments.getPort(OPT_PORT_DEFAULT);
       ImmutableList.Builder<String> properties = ImmutableList.builder();
       properties.add("DBS_PORT=" + port);
