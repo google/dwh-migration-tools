@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 public class BashTask implements Task<Void> {
   private static final Logger LOG = LoggerFactory.getLogger(BashTask.class);
 
-  private static final Duration SCRIPT_TIMEOUT = Duration.ofMinutes(5);
+  private static final Duration SCRIPT_TIMEOUT = Duration.ofMinutes(1);
 
   private final String scriptName;
 
