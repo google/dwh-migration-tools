@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import static com.google.edwmigration.dumper.application.dumper.ZonedParser.DayOffset.END_OF_DAY;
+import static com.google.edwmigration.dumper.application.dumper.ZonedParser.DayOffset.START_OF_DAY;
 import static org.junit.Assert.assertEquals;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -44,10 +46,8 @@ public class ZonedIntervalIterableTest {
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterableTest.class);
 
-  private static final ZonedParser zonedParserStart =
-      new ZonedParser(ZonedParser.DEFAULT_PATTERN, ZonedParser.DayOffset.START_OF_DAY);
-  private static final ZonedParser zonedParserEnd =
-      new ZonedParser(ZonedParser.DEFAULT_PATTERN, ZonedParser.DayOffset.END_OF_DAY);
+  private static final ZonedParser zonedParserStart = ZonedParser.withDefaultPattern(START_OF_DAY);
+  private static final ZonedParser zonedParserEnd = ZonedParser.withDefaultPattern(END_OF_DAY);
 
   private void testIterable(int expectCount, @Nonnegative ZonedIntervalIterable iterable) {
     LOG.debug("Testing {}", iterable);

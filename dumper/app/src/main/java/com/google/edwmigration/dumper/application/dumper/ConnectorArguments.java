@@ -30,6 +30,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.ZonedParser.DayOffset;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -273,8 +274,7 @@ public class ConnectorArguments extends DefaultArguments {
               "Inclusive start date for query logs to export, value will be truncated to hour")
           .withOptionalArg()
           .ofType(Date.class)
-          .withValuesConvertedBy(
-              new ZonedParser(ZonedParser.DEFAULT_PATTERN, ZonedParser.DayOffset.START_OF_DAY))
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
           .describedAs("2001-01-01[ 00:00:00.[000]]");
   private final OptionSpec<ZonedDateTime> optionQueryLogEnd =
       parser
@@ -283,8 +283,7 @@ public class ConnectorArguments extends DefaultArguments {
               "Exclusive end date for query logs to export, value will be truncated to hour")
           .withOptionalArg()
           .ofType(Date.class)
-          .withValuesConvertedBy(
-              new ZonedParser(ZonedParser.DEFAULT_PATTERN, ZonedParser.DayOffset.END_OF_DAY))
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.END_OF_DAY))
           .describedAs("2001-01-01[ 00:00:00.[000]]");
 
   // This is intentionally NOT provided as a default value to the optionQueryLogEnd OptionSpec,

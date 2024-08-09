@@ -34,7 +34,11 @@ public class ZonedParser implements ValueConverter<ZonedDateTime> {
   private final DayOffset dayOffset;
   private final DateTimeFormatter parser;
 
-  public ZonedParser(String pattern, DayOffset dayOffset) {
+  public static ZonedParser withDefaultPattern(DayOffset dayOffset) {
+    return new ZonedParser(DEFAULT_PATTERN, dayOffset);
+  }
+
+  private ZonedParser(String pattern, DayOffset dayOffset) {
     this.dayOffset = dayOffset;
     this.parser =
         DateTimeFormatter.ofPattern(pattern, Locale.US).withResolverStyle(ResolverStyle.LENIENT);
