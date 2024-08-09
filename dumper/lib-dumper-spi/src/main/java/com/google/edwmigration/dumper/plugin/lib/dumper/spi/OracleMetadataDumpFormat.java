@@ -687,7 +687,9 @@ public interface OracleMetadataDumpFormat {
     final String ZIP_ENTRY_NAME_ALL = "ALL.Sequences-XML.csv";
 
     enum Header {
+      @Deprecated // `OWNER` is not associated with any column. Please use 'SEQUENCE_OWNER' instead.
       OWNER,
+      SEQUENCE_OWNER,
       SEQUENCE_NAME,
       XML
     }
