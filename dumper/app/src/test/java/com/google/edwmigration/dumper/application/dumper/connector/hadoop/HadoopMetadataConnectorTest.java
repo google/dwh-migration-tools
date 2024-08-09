@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import org.junit.BeforeClass;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
@@ -28,6 +29,11 @@ import org.junit.runner.RunWith;
 
 @RunWith(Theories.class)
 public class HadoopMetadataConnectorTest {
+
+  @BeforeClass
+  public static void setUp() {
+    ScriptTmpDirCleanup.cleanupAfterAllTestsAreFinished();
+  }
 
   @DataPoints("scriptNames")
   public static final ImmutableList<String> SCRIPT_NAMES = HadoopMetadataConnector.SCRIPT_NAMES;

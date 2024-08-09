@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,6 +31,11 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class HadoopScriptsTest {
   Path extractedFile;
+
+  @BeforeClass
+  public static void setUp() {
+    ScriptTmpDirCleanup.cleanupAfterAllTestsAreFinished();
+  }
 
   @After
   public void tearDown() throws IOException {
