@@ -15,17 +15,13 @@
 
 set -e
 
-BASE_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>&1 > /dev/null && pwd -P)"
-SCRIPT_DIR="${BASE_DIR}/scripts"
-if [ ! -d "$SCRIPT_DIR" ] ; then
-  SCRIPT_DIR="$(cd -- "${BASE_DIR}/../dumper/app/build/install/app/bin/scripts/" 2>&1 > /dev/null && pwd -P)"
+BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>&1 > /dev/null && cd .. && pwd)
+BIN="${BASE_DIR}/dumper/app/build/install/app/bin/dwh-migration-dumper-starter"
+
+if [ ! -x "$BIN" ] ; then
+  (cd "${BASE_DIR}" && ./gradlew --parallel :dumper:app:installDist)
 fi
 
-if [ ! -d "$SCRIPT_DIR" ] ; then
-  (cd "${BASE_DIR}/.." && ./gradlew --parallel :dumper:app:installDist)
-fi
-
-. "${SCRIPT_DIR}/java_versioning.sh"
-BIN="$(is_java_greater_than_8 && echo "${SCRIPT_DIR}/dwh-migration-dumper-latest" || echo "${SCRIPT_DIR}/dwh-migration-dumper-java8")"
+export JDK_JAVA_OPTIONS="--add-opens=java.base/java.nio=ALL-UNNAMED"
 
 exec "$BIN" "$@"

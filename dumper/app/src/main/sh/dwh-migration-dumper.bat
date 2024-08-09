@@ -13,5 +13,7 @@
 @rem limitations under the License.
 
 @if "%DEBUG%"=="" @echo off
+set JDK_JAVA_OPTIONS="--add-opens=java.base/java.nio=ALL-UNNAMED"
+
 set "DIRNAME=%~dp0"
-"%DIRNAME%\scripts\dwh-migration-dumper-java8.bat" %*
+"%DIRNAME%\dwh-migration-dumper-starter.bat" %*
