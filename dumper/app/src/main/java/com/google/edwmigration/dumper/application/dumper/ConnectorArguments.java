@@ -589,13 +589,13 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @CheckForNull
-  public String getHostOrNull() {
+  public String getHost() {
     return getOptions().valueOf(optionHost);
   }
 
   @Nonnull
   public String getHost(@Nonnull String defaultHost) {
-    return firstNonNull(getHostOrNull(), defaultHost);
+    return firstNonNull(getHost(), defaultHost);
   }
 
   @CheckForNull
@@ -933,7 +933,7 @@ public class ConnectorArguments extends DefaultArguments {
         MoreObjects.toStringHelper(this)
             .add(OPT_CONNECTOR, getConnectorName())
             .add(OPT_DRIVER, getDriverPaths())
-            .add(OPT_HOST, getHostOrNull())
+            .add(OPT_HOST, getHost())
             .add(OPT_PORT, getPort())
             .add(OPT_WAREHOUSE, getWarehouse())
             .add(OPT_DATABASE, getDatabases())

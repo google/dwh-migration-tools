@@ -200,7 +200,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   }
 
   private static void checkNonUriFlags(ConnectorArguments arguments) {
-    if (arguments.getHostOrNull() != null) {
+    if (arguments.getHost() != null) {
       throw extraFlagProvided(OPT_HOST);
     } else if (arguments.getPort() != null) {
       throw extraFlagProvided(OPT_PORT);
