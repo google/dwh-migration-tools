@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -82,7 +83,7 @@ public class AbstractOracleConnectorTest {
   @Test
   public void buildUrl_providedServiceName_success() {
     when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
-    when(arguments.getHostOrDefault()).thenReturn("localhost");
+    when(arguments.getHost(anyString())).thenReturn("localhost");
     when(arguments.getPort(anyInt())).thenReturn(1521);
 
     // Act
@@ -95,7 +96,7 @@ public class AbstractOracleConnectorTest {
   @Test
   public void buildUrl_providedSid_success() {
     when(arguments.getOracleSID()).thenReturn("ORCLPDB1");
-    when(arguments.getHostOrDefault()).thenReturn("localhost");
+    when(arguments.getHost(anyString())).thenReturn("localhost");
     when(arguments.getPort(anyInt())).thenReturn(1521);
 
     // Act
@@ -108,7 +109,7 @@ public class AbstractOracleConnectorTest {
   @Test
   public void buildUrl_customArguments_containsCustomValues() {
     when(arguments.getOracleSID()).thenReturn("MYPDB1");
-    when(arguments.getHostOrDefault()).thenReturn("sample-host-123");
+    when(arguments.getHost(anyString())).thenReturn("sample-host-123");
     when(arguments.getPort(anyInt())).thenReturn(8081);
 
     // Act
