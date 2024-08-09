@@ -229,9 +229,6 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(String.class)
           .withValuesSeparatedBy(';')
           .describedAs("key=val;key1=val1");
-  // private final OptionSpec<String> optionDatabase = parser.accepts("database", "database (can be
-  // repeated; all if not
-  // specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
   private final OptionSpec<String> optionOutput =
       parser
           .accepts(
@@ -311,15 +308,6 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(String.class);
 
-  // TODO: private final OptionSpec<String> optionAuth = parser.accepts("auth", "extra key=value
-  // params for connector").withRequiredArg().withValuesSeparatedBy(",").forHelp();
-  // pa.add_argument('auth', help="extra key=value params for connector",
-  // nargs=argparse.REMAINDER, type=lambda x: x.split("="))
-  // private final OptionSpec<String> optionVerbose = parser.accepts("verbose", "enable verbose
-  // info").withOptionalArg().forHelp();
-  // final OptionSpec<Boolean> optionAppend = parser.accepts("append", "accumulate meta from
-  // multiple runs in one
-  // directory").withRequiredArg().ofType(Boolean.class).defaultsTo(false).forHelp();
   private final OptionSpec<Void> optionDryrun =
       parser
           .acceptsAll(Arrays.asList("dry-run", "n"), "Show export actions without executing.")
@@ -510,7 +498,6 @@ public class ConnectorArguments extends DefaultArguments {
     while (connectorType != null) {
       Set<RespectsInput> respectsInputs =
           AnnotationUtils.getDeclaredRepeatableAnnotations(connectorType, RespectsInput.class);
-      // LOG.debug(connectorType + " -> " + respectsInputs);
       for (RespectsInput respectsInput : respectsInputs) {
         InputDescriptor descriptor = new InputDescriptor(respectsInput);
         tmp.putIfAbsent(descriptor.getKey(), descriptor);
