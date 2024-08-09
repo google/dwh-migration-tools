@@ -30,6 +30,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.ZonedParser.DayOffset;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -40,15 +41,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -57,7 +52,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -67,8 +61,6 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import joptsimple.ValueConversionException;
-import joptsimple.ValueConverter;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -229,9 +221,6 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(String.class)
           .withValuesSeparatedBy(';')
           .describedAs("key=val;key1=val1");
-  // private final OptionSpec<String> optionDatabase = parser.accepts("database", "database (can be
-  // repeated; all if not
-  // specified)").withRequiredArg().describedAs("my_dbname").withValuesSeparatedBy(',');
   private final OptionSpec<String> optionOutput =
       parser
           .accepts(
@@ -285,8 +274,7 @@ public class ConnectorArguments extends DefaultArguments {
               "Inclusive start date for query logs to export, value will be truncated to hour")
           .withOptionalArg()
           .ofType(Date.class)
-          .withValuesConvertedBy(
-              new ZonedParser(ZonedParser.DEFAULT_PATTERN, ZonedParser.DayOffset.START_OF_DAY))
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
           .describedAs("2001-01-01[ 00:00:00.[000]]");
   private final OptionSpec<ZonedDateTime> optionQueryLogEnd =
       parser
@@ -295,8 +283,7 @@ public class ConnectorArguments extends DefaultArguments {
               "Exclusive end date for query logs to export, value will be truncated to hour")
           .withOptionalArg()
           .ofType(Date.class)
-          .withValuesConvertedBy(
-              new ZonedParser(ZonedParser.DEFAULT_PATTERN, ZonedParser.DayOffset.END_OF_DAY))
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.END_OF_DAY))
           .describedAs("2001-01-01[ 00:00:00.[000]]");
 
   // This is intentionally NOT provided as a default value to the optionQueryLogEnd OptionSpec,
@@ -311,15 +298,6 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(String.class);
 
-  // TODO: private final OptionSpec<String> optionAuth = parser.accepts("auth", "extra key=value
-  // params for connector").withRequiredArg().withValuesSeparatedBy(",").forHelp();
-  // pa.add_argument('auth', help="extra key=value params for connector",
-  // nargs=argparse.REMAINDER, type=lambda x: x.split("="))
-  // private final OptionSpec<String> optionVerbose = parser.accepts("verbose", "enable verbose
-  // info").withOptionalArg().forHelp();
-  // final OptionSpec<Boolean> optionAppend = parser.accepts("append", "accumulate meta from
-  // multiple runs in one
-  // directory").withRequiredArg().ofType(Boolean.class).defaultsTo(false).forHelp();
   private final OptionSpec<Void> optionDryrun =
       parser
           .acceptsAll(Arrays.asList("dry-run", "n"), "Show export actions without executing.")
@@ -510,7 +488,6 @@ public class ConnectorArguments extends DefaultArguments {
     while (connectorType != null) {
       Set<RespectsInput> respectsInputs =
           AnnotationUtils.getDeclaredRepeatableAnnotations(connectorType, RespectsInput.class);
-      // LOG.debug(connectorType + " -> " + respectsInputs);
       for (RespectsInput respectsInput : respectsInputs) {
         InputDescriptor descriptor = new InputDescriptor(respectsInput);
         tmp.putIfAbsent(descriptor.getKey(), descriptor);
@@ -953,63 +930,5 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDefinitionOrDefault(ConnectorPropertyWithDefault property) {
     return getConnectorProperties().getOrDefault(property);
-  }
-
-  public static class ZonedParser implements ValueConverter<ZonedDateTime> {
-
-    public static final String DEFAULT_PATTERN = "yyyy-MM-dd[ HH:mm:ss[.SSS]]";
-    private final DayOffset dayOffset;
-    private final DateTimeFormatter parser;
-
-    public ZonedParser(String pattern, DayOffset dayOffset) {
-      this.dayOffset = dayOffset;
-      this.parser =
-          DateTimeFormatter.ofPattern(pattern, Locale.US).withResolverStyle(ResolverStyle.LENIENT);
-    }
-
-    @Override
-    public ZonedDateTime convert(String value) {
-
-      TemporalAccessor result = parser.parseBest(value, LocalDateTime::from, LocalDate::from);
-
-      if (result instanceof LocalDateTime) {
-        return ((LocalDateTime) result).atZone(ZoneOffset.UTC);
-      }
-
-      if (result instanceof LocalDate) {
-        return ((LocalDate) result)
-            .plusDays(dayOffset.getValue())
-            .atTime(LocalTime.MIDNIGHT)
-            .atZone(ZoneOffset.UTC);
-      }
-
-      throw new ValueConversionException(
-          "Value " + value + " cannot be parsed to date or datetime");
-    }
-
-    @Override
-    public Class<ZonedDateTime> valueType() {
-      return ZonedDateTime.class;
-    }
-
-    @Override
-    public String valuePattern() {
-      return null;
-    }
-
-    public enum DayOffset {
-      START_OF_DAY(0L),
-      END_OF_DAY(1L);
-
-      private final long value;
-
-      DayOffset(long value) {
-        this.value = value;
-      }
-
-      public long getValue() {
-        return value;
-      }
-    }
   }
 }
