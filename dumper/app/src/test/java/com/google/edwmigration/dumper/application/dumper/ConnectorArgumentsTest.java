@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST_DEFAULT;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -70,6 +72,48 @@ public class ConnectorArgumentsTest {
   }
 
   @Test
+  public void getHost_notProvidedInFlag_useArgument() {
+    ConnectorArguments arguments = arguments("--connector", "oracle");
+
+    assertEquals("default-host-789", arguments.getHost("default-host-789"));
+  }
+
+  @Test
+  public void getHost_providedInFlag_useFlagAndIgnoreArgument() {
+    ConnectorArguments arguments = arguments("--connector", "oracle", "--host", "example-host-123");
+
+    assertEquals("example-host-123", arguments.getHost("default-host-789"));
+  }
+
+  @Test
+  public void getHostOrDefault_notProvidedInFlag_useDefault() {
+    ConnectorArguments arguments = arguments("--connector", "oracle");
+
+    assertEquals(OPT_HOST_DEFAULT, arguments.getHostOrDefault());
+  }
+
+  @Test
+  public void getHostOrDefault_providedInFlag_useFlag() {
+    ConnectorArguments arguments = arguments("--connector", "oracle", "--host", "example-host-123");
+
+    assertEquals("example-host-123", arguments.getHostOrDefault());
+  }
+
+  @Test
+  public void getHost_notProvidedInFlag_returnNull() {
+    ConnectorArguments arguments = arguments("--connector", "oracle");
+
+    assertNull(arguments.getHost());
+  }
+
+  @Test
+  public void getHost_providedInFlag_useFlag() {
+    ConnectorArguments arguments = arguments("--connector", "oracle", "--host", "example-host-123");
+
+    assertEquals("example-host-123", arguments.getHost());
+  }
+
+  @Test
   public void getUserOrFail_noUserFlag_throwsException() throws IOException {
     ConnectorArguments arguments = new ConnectorArguments("--connector", "abcABC123");
 
@@ -90,5 +134,14 @@ public class ConnectorArgumentsTest {
     String actualName = arguments.getUserOrFail();
 
     assertEquals(expectedName, actualName);
+  }
+
+  // helper method to suppress IOException
+  private static ConnectorArguments arguments(String... terms) {
+    try {
+      return new ConnectorArguments(terms);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
