@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Suppliers.memoize;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
@@ -68,5 +69,10 @@ class HadoopScripts {
     Files.write(scriptPath, scriptBody);
     scriptPath.toFile().setExecutable(true);
     return scriptPath;
+  }
+
+  @VisibleForTesting
+  static Path getScriptDir() {
+    return SCRIPT_DIR_SUPPLIER.get();
   }
 }
