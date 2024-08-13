@@ -18,9 +18,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.AbstractIterator;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerClient.RangerException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
 import javax.annotation.CheckForNull;
 
 /**
@@ -31,6 +31,7 @@ class RangerPageIterator<T> extends AbstractIterator<T> {
 
   @AutoValue
   public abstract static class Page {
+
     static Page create(int offset, int limit) {
       return new AutoValue_RangerPageIterator_Page(offset, limit);
     }
@@ -40,13 +41,19 @@ class RangerPageIterator<T> extends AbstractIterator<T> {
     abstract int limit();
   }
 
-  private final Function<Page, List<T>> fetcher;
+  @FunctionalInterface
+  public interface RangerFetcher<T> {
+
+    List<T> fetch(Page page) throws RangerException;
+  }
+
+  private final RangerFetcher<T> fetcher;
   private final int pageSize;
   private int offset;
   private Iterator<T> pageIterator;
   private boolean lastPage = false;
 
-  RangerPageIterator(Function<Page, List<T>> fetcher, int pageSize) {
+  RangerPageIterator(RangerFetcher<T> fetcher, int pageSize) {
     this.fetcher = fetcher;
     this.pageSize = pageSize;
     offset = 0;
@@ -56,7 +63,16 @@ class RangerPageIterator<T> extends AbstractIterator<T> {
   @Override
   protected T computeNext() {
     if (pageIterator == null || !pageIterator.hasNext() && !lastPage) {
-      List<T> entries = fetcher.apply(Page.create(offset, pageSize));
+      List<T> entries;
+      try {
+        entries = fetcher.fetch(Page.create(offset, pageSize));
+      } catch (RangerException e) {
+        throw new RuntimeException(
+            String.format(
+                "Failed to fetch collection data from Ranger at offset %d with page size %d",
+                offset, pageSize),
+            e);
+      }
       offset += pageSize;
       lastPage = entries.size() < pageSize;
       pageIterator = entries.iterator();

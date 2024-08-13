@@ -23,7 +23,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerClient.RangerException;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerPageIterator.Page;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -33,15 +32,10 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Group;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.GroupsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.PoliciesFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Policy;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Role;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.RolesFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Service;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.ServicesFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.User;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.UsersFormat;
 import com.google.errorprone.annotations.ForOverride;
 import java.io.Writer;
@@ -51,6 +45,7 @@ import java.time.Clock;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,27 +93,20 @@ public class RangerConnector extends AbstractConnector {
     URI apiUrl = URI.create("http://" + arguments.getHostOrDefault() + ":" + arguments.getPort());
     String password = arguments.getPasswordOrPrompt();
     return new RangerClientHandle(
-        new RangerClient(apiUrl, arguments.getUser(), password),
+        new RangerClient(HttpClients.createMinimal(), apiUrl, arguments.getUser(), password),
         arguments.getRangerPageSizeDefault());
   }
 
-  static class DumpUsersTask extends AbstractRangerTask<User> {
+  static class DumpUsersTask extends AbstractRangerTask {
 
     DumpUsersTask() {
       super(UsersFormat.ZIP_ENTRY_NAME);
     }
 
     @Override
-    protected Iterator<User> dataIterator(@Nonnull RangerClientHandle handle) {
+    protected Iterator<Object> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
-          page -> {
-            try {
-              return handle.rangerClient.findUsers(toParameters(page));
-            } catch (RangerException e) {
-              throw new RuntimeException("Failed to fetch Ranger users", e);
-            }
-          },
-          handle.pageSize);
+          page -> handle.rangerClient.findUsers(toParameters(page)), handle.pageSize);
     }
 
     @Override
@@ -127,23 +115,16 @@ public class RangerConnector extends AbstractConnector {
     }
   }
 
-  static class DumpGroupsTask extends AbstractRangerTask<Group> {
+  static class DumpGroupsTask extends AbstractRangerTask {
 
     DumpGroupsTask() {
       super(GroupsFormat.ZIP_ENTRY_NAME);
     }
 
     @Override
-    protected Iterator<Group> dataIterator(@Nonnull RangerClientHandle handle) {
+    protected Iterator<Object> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
-          page -> {
-            try {
-              return handle.rangerClient.findGroups(toParameters(page));
-            } catch (RangerException e) {
-              throw new RuntimeException("Failed to fetch Ranger groups", e);
-            }
-          },
-          handle.pageSize);
+          page -> handle.rangerClient.findGroups(toParameters(page)), handle.pageSize);
     }
 
     @Override
@@ -152,23 +133,16 @@ public class RangerConnector extends AbstractConnector {
     }
   }
 
-  static class DumpRolesTask extends AbstractRangerTask<Role> {
+  static class DumpRolesTask extends AbstractRangerTask {
 
     DumpRolesTask() {
       super(RolesFormat.ZIP_ENTRY_NAME);
     }
 
     @Override
-    protected Iterator<Role> dataIterator(@Nonnull RangerClientHandle handle) {
+    protected Iterator<Object> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
-          page -> {
-            try {
-              return handle.rangerClient.findRoles(toParameters(page));
-            } catch (RangerException e) {
-              throw new RuntimeException("Failed to fetch Ranger roles", e);
-            }
-          },
-          handle.pageSize);
+          page -> handle.rangerClient.findRoles(toParameters(page)), handle.pageSize);
     }
 
     @Override
@@ -177,22 +151,15 @@ public class RangerConnector extends AbstractConnector {
     }
   }
 
-  static class DumpServicesTask extends AbstractRangerTask<Service> {
+  static class DumpServicesTask extends AbstractRangerTask {
 
     DumpServicesTask() {
       super(ServicesFormat.ZIP_ENTRY_NAME);
     }
 
-    protected Iterator<Service> dataIterator(@Nonnull RangerClientHandle handle) {
+    protected Iterator<Object> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
-          page -> {
-            try {
-              return handle.rangerClient.findServices(toParameters(page));
-            } catch (RangerException e) {
-              throw new RuntimeException("Failed to fetch Ranger services", e);
-            }
-          },
-          handle.pageSize);
+          page -> handle.rangerClient.findServices(toParameters(page)), handle.pageSize);
     }
 
     @Override
@@ -201,23 +168,16 @@ public class RangerConnector extends AbstractConnector {
     }
   }
 
-  static class DumpPoliciesTask extends AbstractRangerTask<Policy> {
+  static class DumpPoliciesTask extends AbstractRangerTask {
 
     DumpPoliciesTask() {
       super(PoliciesFormat.ZIP_ENTRY_NAME);
     }
 
     @Override
-    protected Iterator<Policy> dataIterator(@Nonnull RangerClientHandle handle) {
+    protected Iterator<Object> dataIterator(@Nonnull RangerClientHandle handle) {
       return new RangerPageIterator<>(
-          page -> {
-            try {
-              return handle.rangerClient.findPolicies(toParameters(page));
-            } catch (RangerException e) {
-              throw new RuntimeException("Failed to fetch Ranger policies", e);
-            }
-          },
-          handle.pageSize);
+          page -> handle.rangerClient.findPolicies(toParameters(page)), handle.pageSize);
     }
 
     @Override
@@ -226,14 +186,14 @@ public class RangerConnector extends AbstractConnector {
     }
   }
 
-  private abstract static class AbstractRangerTask<T> extends AbstractTask<Void> {
+  private abstract static class AbstractRangerTask extends AbstractTask<Void> {
 
     public AbstractRangerTask(String targetPath) {
       super(targetPath);
     }
 
     @ForOverride
-    protected abstract Iterator<T> dataIterator(@Nonnull RangerClientHandle handle);
+    protected abstract Iterator<Object> dataIterator(@Nonnull RangerClientHandle handle);
 
     @Override
     protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
@@ -241,7 +201,7 @@ public class RangerConnector extends AbstractConnector {
       RangerClientHandle rangerClientHandler = (RangerClientHandle) handle;
       LOG.info("Writing to '{}' -> '{}'", getTargetPath(), sink);
       try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-        for (Iterator<T> iterator = dataIterator(rangerClientHandler); iterator.hasNext(); ) {
+        for (Iterator<Object> iterator = dataIterator(rangerClientHandler); iterator.hasNext(); ) {
           String json = RangerDumpFormat.MAPPER.writeValueAsString(iterator.next());
           writer.write(json);
           writer.write('\n');

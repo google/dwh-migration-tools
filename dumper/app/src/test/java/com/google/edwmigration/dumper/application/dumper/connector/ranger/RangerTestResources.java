@@ -19,7 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Resources;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class RangerTestResources {
 
@@ -27,5 +29,9 @@ public class RangerTestResources {
 
   public static String getResourceAsString(String name) throws IOException {
     return Resources.toString(Resources.getResource(name), UTF_8);
+  }
+
+  public static InputStream getResourceAsInputStream(String name) throws IOException {
+    return new ByteArrayInputStream(Resources.toByteArray(Resources.getResource(name)));
   }
 }

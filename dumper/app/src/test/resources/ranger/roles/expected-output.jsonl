@@ -1,0 +1,2 @@
+{"createTime":1722017807000,"createdBy":"Admin","description":"","groups":[],"id":1,"isEnabled":true,"name":"dba","options":{},"roles":[],"updateTime":1723645991000,"updatedBy":"Admin","users":[]}
+{"createTime":1723645984000,"createdBy":"Admin","description":"","groups":[],"id":2,"isEnabled":true,"name":"auditor","options":{},"roles":[],"updateTime":1723645984000,"updatedBy":"Admin","users":[{"isAdmin":false,"name":"aleofreddi"}]}
