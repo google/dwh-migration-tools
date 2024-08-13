@@ -61,7 +61,8 @@ public class RangerClient {
       new ObjectMapper()
           .registerModule(new JavaTimeModule())
           .registerModule(new GuavaModule())
-          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+          .disable(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS)
           .reader();
 
   @AutoValue

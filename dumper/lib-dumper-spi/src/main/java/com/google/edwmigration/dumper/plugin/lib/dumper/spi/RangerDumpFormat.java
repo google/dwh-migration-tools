@@ -135,12 +135,12 @@ public interface RangerDumpFormat {
     public abstract String updatedBy();
 
     @JsonProperty
-    @JsonFormat(shape = Shape.STRING)
+    @JsonFormat(shape = Shape.NUMBER_INT)
     @Nullable
     public abstract Instant createDate();
 
     @JsonProperty
-    @JsonFormat(shape = Shape.STRING)
+    @JsonFormat(shape = Shape.NUMBER_INT)
     @Nullable
     public abstract Instant updateDate();
 
