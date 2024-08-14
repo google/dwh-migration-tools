@@ -23,3 +23,7 @@ dependencies {
     implementation libs.jackson.dataformat.yaml
     implementation libs.jackson.datatype.jsr310
 }
+
+dependencyLocking {
+    lockAllConfigurations()
+}

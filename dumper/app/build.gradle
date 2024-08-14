@@ -100,6 +100,10 @@ dependencies {
     sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 jacoco {
     toolVersion = "0.8.11"
 }

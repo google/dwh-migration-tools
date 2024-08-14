@@ -22,3 +22,7 @@ dependencies {
     implementation "com.swrve:rate-limited-logger"
     implementation "com.google.cloud:google-cloud-bigquery"
 }
+
+dependencyLocking {
+    lockAllConfigurations()
+}
