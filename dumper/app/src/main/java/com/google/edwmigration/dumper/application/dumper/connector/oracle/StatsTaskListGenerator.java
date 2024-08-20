@@ -41,7 +41,11 @@ class StatsTaskListGenerator {
 
   private static final ImmutableList<String> AWR_NAMES =
       ImmutableList.of(
-          "hist-cmd-types-awr", "source-conn-latest", "sql-stats-awr", "sys-metric-history");
+          "hist-cmd-types-awr",
+          "source-conn-latest",
+          "sql-stats-awr",
+          "sys-metric-history",
+          "segment-stats");
 
   private static final ImmutableList<String> NATIVE_NAMES_OPTIONAL =
       ImmutableList.of(
