@@ -1,12 +1,27 @@
-#!/bin/sh -ex
+#!/bin/bash
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
 
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>&1 > /dev/null && cd .. && pwd)
-. "${BASE_DIR}/dumper/app/src/main/sh/java_versioning.sh"
-BASE_BIN_DIR="${BASE_DIR}/dumper/app/build/install/app/bin"
-BIN=$(is_java_greater_than_8 && echo "${BASE_BIN_DIR}/dwh-migration-dumper" || echo "${BASE_BIN_DIR}/dwh-migration-dumper-java8")
+BIN="${BASE_DIR}/dumper/app/build/install/app/bin/dwh-migration-dumper-starter"
 
 if [ ! -x "$BIN" ] ; then
   (cd "${BASE_DIR}" && ./gradlew --parallel :dumper:app:installDist)
 fi
+
+export JDK_JAVA_OPTIONS="--add-opens=java.base/java.nio=ALL-UNNAMED"
 
 exec "$BIN" "$@"
