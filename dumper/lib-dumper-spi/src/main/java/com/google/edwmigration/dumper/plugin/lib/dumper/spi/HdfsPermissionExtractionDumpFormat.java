@@ -45,4 +45,8 @@ public interface HdfsPermissionExtractionDumpFormat {
       TotalSubtreeNumberOfFiles,
     }
   }
+
+  interface StatusReport {
+    String ZIP_ENTRY_NAME = "hdfs-status-report.json";
+  }
 }
