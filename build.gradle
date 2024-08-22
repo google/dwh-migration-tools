@@ -12,9 +12,6 @@ distributions {
                 exclude "**/__pycache__"
                 into "client"
             }
-            from("bin/dwh-migration-client") {
-                into "bin"
-            }
             project(":dumper:app").afterEvaluate {
                 from it.tasks.installPublishedDist
             }
