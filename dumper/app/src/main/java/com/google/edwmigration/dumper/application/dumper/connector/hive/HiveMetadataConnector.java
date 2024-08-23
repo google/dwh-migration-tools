@@ -64,7 +64,6 @@ import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.thrift.TBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -693,19 +692,15 @@ public class HiveMetadataConnector extends AbstractHiveConnector
 
     out.add(new SchemataTask(databasePredicate));
     out.add(new FunctionsTask(databasePredicate));
-    if (BooleanUtils.toBoolean(
-        arguments.getDefinitionOrDefault(HiveConnectorProperty.MIGRATION_METADATA))) {
-      out.add(new CatalogsJsonlTask());
-      out.add(new DatabasesJsonlTask());
-      out.add(new MasterKeysTask());
-      out.add(new DelegationTokensTask());
-      out.add(new FunctionsJsonlTask());
-      out.add(new ResourcePlansJsonlTask());
-      out.add(new TablesRawJsonlTask(databasePredicate));
-      out.add(new PartitionsJsonlTask());
-    } else {
-      out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
-    }
+    out.add(new CatalogsJsonlTask());
+    out.add(new DatabasesJsonlTask());
+    out.add(new MasterKeysTask());
+    out.add(new DelegationTokensTask());
+    out.add(new FunctionsJsonlTask());
+    out.add(new ResourcePlansJsonlTask());
+    out.add(new TablesRawJsonlTask(databasePredicate));
+    out.add(new PartitionsJsonlTask());
+    out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
 
     if (arguments.isAssessment()) {
       out.add(new DatabasesTask(databasePredicate));
