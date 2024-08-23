@@ -66,7 +66,7 @@ public class HdfsPermissionExtractionTask extends AbstractTask<Void>
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws IOException, ExecutionException, InterruptedException {
     DistributedFileSystem fs = ((HdfsHandle) handle).getDfs();
-    String hdfsPath = "/user/hive";
+    String hdfsPath = "/";
     org.apache.hadoop.fs.ContentSummary contentSummary = fs.getContentSummary(new Path(hdfsPath));
     ExecutorService execService =
         ExecutorManager.newExecutorServiceWithBackpressure("hdfs-permission-extraction", poolSize);
