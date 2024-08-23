@@ -2,5 +2,11 @@
   "ip-address": "ip -o -4 a show",
   "ls-usr-local-lib": "ls -l /usr/local/lib",
   "ls-var-log": "ls -l /var/log",
-  "os-release": "cat /etc/os-release"
+  "os-release": "cat /etc/os-release",
+  "hive-concurrency-beeline": "beeline -u jdbc:hive2:// -e 'set hive.support.concurrency'",
+  "hive-txn-manager-beeline": "beeline -u jdbc:hive2:// -e 'set hive.txn.manager'",
+  "hive-execution-engine-beeline": "beeline -u jdbc:hive2:// -e 'set hive.execution.engine'",
+  "hive-concurrency": "hive -e 'set hive.support.concurrency'",
+  "hive-txn-manager": "hive -e 'set hive.txn.manager'",
+  "hive-execution-engine": "hive -e 'set hive.execution.engine'"
 }
