@@ -25,6 +25,7 @@ import static org.apache.hadoop.thirdparty.com.google.common.collect.Maps.immuta
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -126,8 +128,18 @@ class HadoopScripts {
     LOG.info("Extracting '{}' to '{}'...", scriptFilename, scriptDir);
     Path scriptPath = scriptDir.resolve(scriptFilename);
     Files.write(scriptPath, scriptBody);
+    sanityCheckFileContents(scriptPath, scriptBody);
     scriptPath.toFile().setExecutable(true);
     return scriptPath;
+  }
+
+  private static void sanityCheckFileContents(Path scriptPath, byte[] expectedScriptBody)
+      throws IOException {
+    byte[] scriptBody = Files.readAllBytes(scriptPath);
+    Preconditions.checkState(
+        Arrays.equals(expectedScriptBody, scriptBody),
+        "Sanity check failed: File contents doesn't match the script body. Path='%s'.",
+        scriptPath);
   }
 
   @VisibleForTesting
