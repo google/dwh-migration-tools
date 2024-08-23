@@ -66,10 +66,6 @@ public class HadoopMetadataConnector implements MetadataConnector {
           "spark-shell-version",
           "sqoop-version");
 
-  @VisibleForTesting
-  static final ImmutableList<String> SINGLE_LINE_SCRIPT_NAMES =
-      ImmutableList.of("ip-address", "ls-usr-local-lib", "ls-var-log", "os-release");
-
   @Nonnull
   @Override
   public String getName() {
@@ -82,11 +78,14 @@ public class HadoopMetadataConnector implements MetadataConnector {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     SCRIPT_NAMES.stream()
-        .map(scriptName -> new BashTask(scriptName, /* isSingleLineScript= */ false))
+        .map(scriptName -> new BashTask(scriptName, HadoopScripts.extract(scriptName + ".sh")))
         .forEach(out::add);
-    SINGLE_LINE_SCRIPT_NAMES.stream()
-        .map(scriptName -> new BashTask(scriptName, /* isSingleLineScript= */ true))
-        .forEach(out::add);
+    addTasksForSingleLineScripts(out);
+  }
+
+  private void addTasksForSingleLineScripts(List<? super Task<?>> out) {
+    HadoopScripts.extractSingleLineScripts()
+        .forEach((scriptName, scriptFile) -> out.add(new BashTask(scriptName, scriptFile)));
   }
 
   @Nonnull
