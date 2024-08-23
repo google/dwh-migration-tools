@@ -68,6 +68,7 @@ public class HadoopMetadataConnector implements MetadataConnector {
           "ruby-version",
           "scala-version",
           "spark-shell-version",
+          "spark-submit-version",
           "sqoop-version");
 
   @Nonnull
