@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsPermissionExtractionConnector.LOG;
 
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -27,8 +26,12 @@ import javax.annotation.Nonnull;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class HdfsHandle implements Handle {
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsHandle.class);
+
   private final String clusterHost;
   private final int port;
   private final DistributedFileSystem dfs;
@@ -38,8 +41,8 @@ class HdfsHandle implements Handle {
     clusterHost = args.getHostOrDefault();
     port = args.getPort(/* defaultPort= */ 8020);
 
-    LOG.info("clusterHost: {}", clusterHost);
-    LOG.info("port: {}", port);
+    LOG.info("clusterHost: '{}'", clusterHost);
+    LOG.info("port: '{}'", port);
 
     Configuration conf = new Configuration();
     conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");

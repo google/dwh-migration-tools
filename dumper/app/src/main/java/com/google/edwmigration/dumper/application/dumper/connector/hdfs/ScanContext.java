@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
+import com.google.common.primitives.Longs;
+import com.google.edwmigration.dumper.application.dumper.PartialProgressLogger;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat.PermissionExtraction;
 import java.io.Closeable;
@@ -40,10 +42,16 @@ final class ScanContext implements Closeable {
   private static final DateTimeFormatter DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
 
+  private static final Duration LOG_PROGRESS_DELAY = Duration.ofSeconds(10);
+
   private final DistributedFileSystem dfs;
   private final DFSClient dfsClient;
   private final CSVPrinter csvPrinter;
   private final Instant instantScanBegin;
+  private final long totalDirectoryCount;
+  private final PartialProgressLogger partialProgressLogger;
+
+  private long lastLogTime;
   private LongAdder timeSpentInListStatus = new LongAdder();
   private LongAdder numFilesByListStatus = new LongAdder();
 
@@ -59,12 +67,19 @@ final class ScanContext implements Closeable {
   @GuardedBy("csvPrinter")
   private long numDirsWalked = 0L;
 
-  ScanContext(DistributedFileSystem dfs, @WillClose Writer outputSink) throws IOException {
+  ScanContext(
+      DistributedFileSystem dfs,
+      @WillClose Writer outputSink,
+      long totalDirectoryCount,
+      PartialProgressLogger partialProgressLogger)
+      throws IOException {
     this.dfs = dfs;
     this.dfsClient = dfs.getClient();
     this.csvPrinter =
         AbstractTask.FORMAT.withHeader(PermissionExtraction.Header.class).print(outputSink);
     this.instantScanBegin = Instant.now();
+    this.totalDirectoryCount = totalDirectoryCount;
+    this.partialProgressLogger = partialProgressLogger;
   }
 
   @Override
@@ -80,13 +95,12 @@ final class ScanContext implements Closeable {
     return files;
   }
 
-  void beginWalkDir(FileStatus dir) {}
-
   /*
    * CsvPrint the directory attributes of the specified dir
    * and incrementally update the scan statistics (this is what the rest of the parameters are for)
    */
   void endWalkDir(FileStatus dir, long nFiles, long nDirs, long accumFileSize) throws IOException {
+    logProgress();
     String absolutePath = dir.getPath().toUri().getPath();
     HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
     String strModificationTime =
@@ -113,6 +127,16 @@ final class ScanContext implements Closeable {
           nFiles,
           nDirs,
           strStoragePolicy);
+    }
+  }
+
+  private void logProgress() {
+    long now = System.currentTimeMillis();
+    if (now - lastLogTime > LOG_PROGRESS_DELAY.toMillis()) {
+      lastLogTime = now;
+      long percentFinished =
+          Longs.constrainToRange(this.numDirsWalked * 100 / totalDirectoryCount, 0, 99);
+      partialProgressLogger.logProgress("HDFS scan " + percentFinished + "% completed");
     }
   }
 
@@ -152,24 +176,22 @@ final class ScanContext implements Closeable {
             : Duration.ZERO;
 
     final long numFilesDivisor = numFiles > 0 ? numFiles : 1;
-    StringBuilder sb =
-        new StringBuilder()
-            .append("[HDFS Permission extraction stats]")
-            .append("\nTotal: num files&dirs: " + numFiles)
-            .append("\n       num dirs found: " + numDirs)
-            .append("\n       num dirs walkd: " + numDirsWalked)
-            .append("\nTotal File Size: " + accumulatedFileSize)
-            .append("\nAvg File Size: " + accumulatedFileSize / numFilesDivisor)
-            .append("\nTotal time: ")
-            .append(timeSinceScanBegin.getSeconds() + "s")
-            .append("\nTotal time in listStatus(..): ")
-            .append(timeSpentInListStatus.getSeconds() + "s")
-            .append("\nAvg time per file in listStatus(..): ")
-            .append(avgTimeSpentInListStatusPerFile.toMillis() + "ms")
-            .append("\nAvg time per doc: ")
-            .append(timeSinceScanBegin.dividedBy(numFilesDivisor).toMillis() + "ms\n")
-            .append("\n[/HDFS Permission extraction stats]");
-
-    return sb.toString();
+    return new StringBuilder()
+        .append("[HDFS Permission extraction stats]")
+        .append("\nTotal: num files&dirs: " + numFiles)
+        .append("\n       num dirs found: " + numDirs)
+        .append("\n       num dirs walkd: " + numDirsWalked)
+        .append("\nTotal File Size: " + accumulatedFileSize)
+        .append("\nAvg File Size: " + accumulatedFileSize / numFilesDivisor)
+        .append("\nTotal time: ")
+        .append(timeSinceScanBegin.getSeconds() + "s")
+        .append("\nTotal time in listStatus(..): ")
+        .append(timeSpentInListStatus.getSeconds() + "s")
+        .append("\nAvg time per file in listStatus(..): ")
+        .append(avgTimeSpentInListStatusPerFile.toMillis() + "ms")
+        .append("\nAvg time per doc: ")
+        .append(timeSinceScanBegin.dividedBy(numFilesDivisor).toMillis() + "ms\n")
+        .append("\n[/HDFS Permission extraction stats]")
+        .toString();
   }
 }

@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.PartialProgressLogger;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
@@ -27,7 +28,7 @@ import java.util.concurrent.Executor;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
-public abstract class TaskRunContext implements OutputHandleFactory {
+public abstract class TaskRunContext implements OutputHandleFactory, PartialProgressLogger {
 
   private final OutputHandleFactory sinkFactory;
   private final Handle handle;

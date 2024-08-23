@@ -42,4 +42,9 @@ public class DummyTaskRunContext extends TaskRunContext {
   public <T> T runChildTask(Task<T> task) {
     throw new UnsupportedOperationException("Not supported.");
   }
+
+  @Override
+  public void logProgress(String partialProgressMessage) {
+    throw new UnsupportedOperationException("Not supported.");
+  }
 }

@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsPermissionExtractionConnector.LOG;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -38,9 +37,13 @@ import javax.annotation.Nonnull;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HdfsPermissionExtractionTask extends AbstractTask<Void>
     implements HdfsPermissionExtractionDumpFormat {
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionTask.class);
+
   private final int poolSize;
 
   HdfsPermissionExtractionTask(@Nonnull ConnectorArguments args) {
@@ -63,21 +66,21 @@ public class HdfsPermissionExtractionTask extends AbstractTask<Void>
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws IOException, ExecutionException, InterruptedException {
     DistributedFileSystem fs = ((HdfsHandle) handle).getDfs();
-    // Create a dedicated ExecutorService to use:
+    String hdfsPath = "/user/hive";
+    org.apache.hadoop.fs.ContentSummary contentSummary = fs.getContentSummary(new Path(hdfsPath));
     ExecutorService execService =
         ExecutorManager.newExecutorServiceWithBackpressure("hdfs-permission-extraction", poolSize);
     try (Writer output = sink.asCharSink(UTF_8).openBufferedStream();
-        ScanContext scanCtx = new ScanContext(fs, output);
+        ScanContext scanCtx =
+            new ScanContext(fs, output, contentSummary.getDirectoryCount(), context);
         ExecutorManager execManager = new ExecutorManager(execService)) {
 
-      String hdfsPath = "/";
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
       SingleDirScanJob rootJob = new SingleDirScanJob(scanCtx, execManager, rootDir);
-      execManager.execute(rootJob); // The root job executes immediately
-      execManager.await(); // Wait until all (recursive) tasks are done executing
+      execManager.execute(rootJob);
+      execManager.await();
       LOG.info(scanCtx.getFormattedStats());
     } finally {
-      // Shutdown the dedicated ExecutorService:
       MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);
     }
     return null;

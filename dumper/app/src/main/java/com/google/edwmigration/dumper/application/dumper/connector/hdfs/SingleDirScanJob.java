@@ -42,9 +42,7 @@ class SingleDirScanJob implements Callable<Void> {
     long accumFileSize = 0;
 
     try {
-      scanCtx.beginWalkDir(dir);
       for (FileStatus file : scanCtx.listDirectory(dir)) {
-        // Process file or dir (in this case - just collect statistics)
         accumFileSize += file.getLen();
 
         if (file.isDirectory()) {
@@ -56,10 +54,11 @@ class SingleDirScanJob implements Callable<Void> {
         }
       }
       scanCtx.endWalkDir(dir, numFiles, numDirs, accumFileSize);
-    } catch (Exception exn) {
+    } catch (Exception e) {
       LOG.error(
-          "Unexpected exception while scanning HDFS folder " + dir.getPath().toUri().getPath(),
-          exn);
+          "Unexpected exception while scanning HDFS folder '{}'",
+          dir.getPath().toUri().getPath(),
+          e);
     }
     return null;
   }

@@ -31,8 +31,6 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtrac
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RespectsInput(
     order = 100,
@@ -52,7 +50,6 @@ import org.slf4j.LoggerFactory;
 @Description("Dumps permissions from the HDFS.")
 public class HdfsPermissionExtractionConnector extends AbstractConnector
     implements HdfsPermissionExtractionDumpFormat {
-  static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionConnector.class);
 
   public HdfsPermissionExtractionConnector() {
     super("hdfs-permissions");
