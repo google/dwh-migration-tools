@@ -80,7 +80,8 @@ public class HadoopScriptsTest {
             "ls-usr-local-lib",
             "hive-txn-manager-beeline",
             "hive-execution-engine",
-            "timedatectl-status"),
+            "timedatectl-status",
+            "hadoop-checknative"),
         singleLineScripts.keySet());
   }
 
