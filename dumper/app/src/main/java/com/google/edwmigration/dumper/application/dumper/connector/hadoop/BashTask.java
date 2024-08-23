@@ -45,9 +45,11 @@ public class BashTask implements Task<Void> {
   private static final Duration SCRIPT_TIMEOUT = Duration.ofMinutes(1);
 
   private final String scriptName;
+  private final boolean isSingleLineScript;
 
-  public BashTask(String scriptName) {
+  public BashTask(String scriptName, boolean isSingleLineScript) {
     this.scriptName = scriptName;
+    this.isSingleLineScript = isSingleLineScript;
   }
 
   @Override
@@ -58,7 +60,12 @@ public class BashTask implements Task<Void> {
   private void doRun(ByteSink outputSink, ByteSink errorSink, ByteSink exitStatusSink)
       throws IOException, ExecutionException {
     String scriptFilename = scriptName + ".sh";
-    Path scriptFile = HadoopScripts.extract(scriptFilename);
+    Path scriptFile;
+    if (isSingleLineScript) {
+      scriptFile = HadoopScripts.extractSingleLineScript(scriptName);
+    } else {
+      scriptFile = HadoopScripts.extract(scriptFilename);
+    }
     Process process =
         new ProcessBuilder("/bin/bash", scriptFile.toAbsolutePath().toString()).start();
     Future<Void> outputStreamPump;

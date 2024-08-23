@@ -17,8 +17,10 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,5 +61,18 @@ public class HadoopScriptsTest {
 
     // Assert
     assertArrayEquals(HadoopScripts.read(scriptFilename), Files.readAllBytes(extractedFile));
+  }
+
+  @Test
+  public void extractSingleLineScript_success() throws IOException {
+    String scriptName = "os-release";
+
+    // Act
+    extractedFile = HadoopScripts.extractSingleLineScript(scriptName);
+
+    // Assert
+    assertEquals(
+        ImmutableList.of("#!/bin/bash", "", "cat /etc/os-release"),
+        Files.readAllLines(extractedFile));
   }
 }

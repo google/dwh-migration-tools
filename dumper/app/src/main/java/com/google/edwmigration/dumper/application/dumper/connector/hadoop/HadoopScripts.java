@@ -18,8 +18,12 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Suppliers.memoize;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
@@ -27,6 +31,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +56,35 @@ class HadoopScripts {
             return tmpDir;
           });
 
+  private static final Supplier<ImmutableMap<String, String>> SINGLE_LINE_SCRIPTS =
+      memoize(
+          () -> {
+            String filename = "single-line-scripts.txt";
+            try {
+              return Splitter.on('\n')
+                  .trimResults()
+                  .omitEmptyStrings()
+                  .splitToStream(new String(read(filename)))
+                  .flatMap(
+                      line -> {
+                        int firstColon = line.indexOf(':');
+                        if (firstColon > 0) {
+                          return Stream.of(
+                              Pair.of(
+                                  line.substring(0, firstColon).trim(),
+                                  "#!/bin/bash\n\n"
+                                      + line.substring(firstColon + 1).trim()
+                                      + "\n"));
+                        } else {
+                          return Stream.empty();
+                        }
+                      })
+                  .collect(toImmutableMap(Pair::getLeft, Pair::getRight));
+            } catch (IOException e) {
+              throw new IllegalStateException(String.format("Cannot read '%s'", filename), e);
+            }
+          });
+
   /** Reads the script from the resources directory inside the jar. */
   static byte[] read(String scriptFilename) throws IOException {
     URL resourceUrl = Resources.getResource("hadoop-scripts/" + scriptFilename);
@@ -58,7 +93,14 @@ class HadoopScripts {
 
   /** Extracts the script from the resources directory inside the jar to the local filesystem. */
   static Path extract(String scriptFilename) throws IOException {
-    byte[] scriptBody = HadoopScripts.read(scriptFilename);
+    return extract(scriptFilename, HadoopScripts.read(scriptFilename));
+  }
+
+  static Path extractSingleLineScript(String scriptName) throws IOException {
+    return extract(scriptName + ".sh", SINGLE_LINE_SCRIPTS.get().get(scriptName).getBytes(UTF_8));
+  }
+
+  private static Path extract(String scriptFilename, byte[] scriptBody) throws IOException {
     Path scriptDir = SCRIPT_DIR_SUPPLIER.get();
     checkState(
         Files.exists(scriptDir) && Files.isDirectory(scriptDir),

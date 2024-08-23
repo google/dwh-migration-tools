@@ -50,16 +50,12 @@ public class HadoopMetadataConnector implements MetadataConnector {
           "hbase-shell-version",
           "hbase-version",
           "hive-version",
-          "ip-address",
           "java-version",
-          "ls-usr-local-lib",
-          "ls-var-log",
           "lsb-release",
           "metastore-connection-details",
           "omd-version",
           "oozie-admin-status",
           "oozie-version",
-          "os-release",
           "perl-version",
           "pig-version",
           "python-version",
@@ -69,6 +65,10 @@ public class HadoopMetadataConnector implements MetadataConnector {
           "scala-version",
           "spark-shell-version",
           "sqoop-version");
+
+  @VisibleForTesting
+  static final ImmutableList<String> SINGLE_LINE_SCRIPT_NAMES =
+      ImmutableList.of("ip-address", "ls-usr-local-lib", "ls-var-log", "os-release");
 
   @Nonnull
   @Override
@@ -81,7 +81,12 @@ public class HadoopMetadataConnector implements MetadataConnector {
       throws Exception {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
-    SCRIPT_NAMES.stream().map(BashTask::new).forEach(out::add);
+    SCRIPT_NAMES.stream()
+        .map(scriptName -> new BashTask(scriptName, /* isSingleLineScript= */ false))
+        .forEach(out::add);
+    SINGLE_LINE_SCRIPT_NAMES.stream()
+        .map(scriptName -> new BashTask(scriptName, /* isSingleLineScript= */ true))
+        .forEach(out::add);
   }
 
   @Nonnull
