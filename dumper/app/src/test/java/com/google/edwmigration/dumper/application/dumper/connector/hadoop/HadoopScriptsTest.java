@@ -79,7 +79,8 @@ public class HadoopScriptsTest {
             "hive-concurrency-beeline",
             "ls-usr-local-lib",
             "hive-txn-manager-beeline",
-            "hive-execution-engine"),
+            "hive-execution-engine",
+            "timedatectl-status"),
         singleLineScripts.keySet());
   }
 

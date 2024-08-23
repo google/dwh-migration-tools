@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
 import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.HadoopMetadataDumpFormat.FORMAT_NAME;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
@@ -29,7 +30,9 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, MetadataConnector.class})
@@ -67,6 +70,21 @@ public class HadoopMetadataConnector implements MetadataConnector {
           "spark-submit-version",
           "sqoop-version");
 
+  private static final ImmutableList<String> SERVICE_NAMES =
+      ImmutableList.of(
+          "ntpd",
+          "httpd",
+          "named",
+          "apache2",
+          "ntp",
+          "chronyd",
+          "prometheus",
+          "datadog-agent",
+          "ganglia-monitor",
+          "knox",
+          "grafana-server",
+          "crond");
+
   @Nonnull
   @Override
   public String getName() {
@@ -82,11 +100,38 @@ public class HadoopMetadataConnector implements MetadataConnector {
         .map(scriptName -> new BashTask(scriptName, HadoopScripts.extract(scriptName + ".sh")))
         .forEach(out::add);
     addTasksForSingleLineScripts(out);
+    generateServiceScripts(out);
   }
 
   private void addTasksForSingleLineScripts(List<? super Task<?>> out) {
     HadoopScripts.extractSingleLineScripts()
         .forEach((scriptName, scriptFile) -> out.add(new BashTask(scriptName, scriptFile)));
+  }
+
+  private void generateServiceScripts(List<? super Task<?>> out) {
+    SERVICE_NAMES.stream()
+        .flatMap(
+            serviceName ->
+                Stream.of(
+                    generateBashTask(
+                        serviceName + "-service-status",
+                        String.format("service %s status", serviceName)),
+                    generateBashTask(
+                        serviceName + "-systemctl-status",
+                        String.format("systemctl status %s", serviceName))))
+        .forEach(out::add);
+  }
+
+  private BashTask generateBashTask(String scriptName, String command) {
+    try {
+      return new BashTask(
+          scriptName,
+          HadoopScripts.create(
+              scriptName + ".sh", String.format("#!/bin/bash\n\n%s\n", command).getBytes(UTF_8)));
+    } catch (IOException e) {
+      throw new IllegalStateException(
+          String.format("Error generating the bash task for the script '%s'.", scriptName), e);
+    }
   }
 
   @Nonnull
