@@ -72,6 +72,7 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector
 
     out.add(new HdfsPermissionExtractionTask(args));
     out.add(new HdfsContentSummaryTask(args));
+    out.add(new HdfsStatusReportTask());
   }
 
   @Nonnull
