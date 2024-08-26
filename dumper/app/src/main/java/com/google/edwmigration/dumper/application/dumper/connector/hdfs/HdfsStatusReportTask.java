@@ -151,14 +151,14 @@ public class HdfsStatusReportTask extends AbstractTask<Void> implements StatusRe
     try {
       regularNodes = ImmutableList.copyOf(dfs.getDataNodeStats());
     } catch (Exception ex) {
-      LOG.warn("Error retrieving data node status.", ex);
+      LOG.warn("Error retrieving data node stats.", ex);
       regularNodes = ImmutableList.of();
     }
 
     try {
       slowNodes = ImmutableList.copyOf(dfs.getSlowDatanodeStats());
     } catch (Exception ex) {
-      LOG.warn("Error retrieving slow data node status.", ex);
+      LOG.warn("Error retrieving slow data node stats.", ex);
       slowNodes = ImmutableList.of();
     }
     return HdfsDataNodesStatus.create(regularNodes, slowNodes);
