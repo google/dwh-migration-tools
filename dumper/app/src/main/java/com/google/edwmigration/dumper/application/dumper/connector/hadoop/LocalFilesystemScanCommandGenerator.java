@@ -16,34 +16,37 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.joining;
 
-import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.escape.Escaper;
 import com.google.common.escape.Escapers;
-import com.google.common.io.Resources;
-import java.io.IOException;
-import java.net.URL;
 
 public class LocalFilesystemScanCommandGenerator {
   private static final Escaper SIMPLE_BASH_ESCAPER =
       Escapers.builder().addEscape('\'', "\\'").addEscape('\\', "\\\\").build();
 
+  private static final ImmutableList<String> SEARCH_EXPRESSIONS = ImmutableList.of(
+      "phoenix*.jar",
+           "*coprocessor*.jar",
+           "*jdbc*.jar",
+           "*odbc*.jar",
+           "salesforce",
+           "ngdbc.jar",
+           "*connector*.jar",
+           "oozie-site.xml",
+           "splunk",
+           "newrelic-infra.yml",
+           "elasticsearch.yml",
+           "ganglia.conf"
+  );
+
   public static String generate() {
-    try {
-      URL resourceUrl = Resources.getResource("hadoop-extraction/search-expressions.txt");
       return "find / "
-          + Splitter.on('\n')
-              .trimResults()
-              .omitEmptyStrings()
-              .splitToStream(Resources.toString(resourceUrl, UTF_8))
+          + SEARCH_EXPRESSIONS.stream()
               .map(searchExpression -> "-iname " + quote(searchExpression))
               .collect(joining(" -o "))
           + " 2>/dev/null";
-    } catch (IOException e) {
-      throw new IllegalStateException("Error generating local filesystem scan task.", e);
-    }
   }
 
   private static String quote(String expression) {
