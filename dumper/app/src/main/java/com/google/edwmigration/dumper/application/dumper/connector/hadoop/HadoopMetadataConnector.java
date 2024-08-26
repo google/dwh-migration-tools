@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.HadoopMetadataDumpFormat.FORMAT_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -99,17 +100,18 @@ public class HadoopMetadataConnector implements MetadataConnector {
     SCRIPT_NAMES.stream()
         .map(scriptName -> new BashTask(scriptName, HadoopScripts.extract(scriptName + ".sh")))
         .forEach(out::add);
-    addTasksForSingleLineScripts(out);
-    generateServiceScripts(out);
+    out.addAll(generateTasksForSingleLineScripts());
+    out.addAll(generateServiceScripts());
   }
 
-  private void addTasksForSingleLineScripts(List<? super Task<?>> out) {
-    HadoopScripts.extractSingleLineScripts()
-        .forEach((scriptName, scriptFile) -> out.add(new BashTask(scriptName, scriptFile)));
+  private ImmutableList<Task<?>> generateTasksForSingleLineScripts() {
+    return HadoopScripts.extractSingleLineScripts().entrySet().stream()
+        .map(entry -> new BashTask(entry.getKey(), entry.getValue()))
+        .collect(toImmutableList());
   }
 
-  private void generateServiceScripts(List<? super Task<?>> out) {
-    SERVICE_NAMES.stream()
+  private ImmutableList<Task<?>> generateServiceScripts() {
+    return SERVICE_NAMES.stream()
         .flatMap(
             serviceName ->
                 Stream.of(
@@ -119,7 +121,7 @@ public class HadoopMetadataConnector implements MetadataConnector {
                     generateBashTask(
                         serviceName + "-systemctl-status",
                         String.format("systemctl status %s", serviceName))))
-        .forEach(out::add);
+        .collect(toImmutableList());
   }
 
   private BashTask generateBashTask(String scriptName, String command) {
