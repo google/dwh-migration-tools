@@ -13,29 +13,38 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
-  A.dbid "DbId",
-  to_char(B.begin_interval_time, 'hh24') "Hour",
-  A.instance_number "InstanceNumber",
-  A.program "Program",
-  A.module "Module",
-  A.machine "Machine",
+  ActiveSession.con_id "ConId",
+  ActiveSession.dbid "DbId",
+  to_char(AshSnap.begin_interval_time, 'hh24') "Hour",
+  ActiveSession.instance_number "InstanceNumber",
+  ActiveSession.program "Program",
+  ActiveSession.module "Module",
+  ActiveSession.machine "Machine",
+  ActiveSession.sql_id "SqlId",
   C.command_name "CommandName",
-  count(1) "Count"
-FROM cdb_hist_active_sess_history A
-INNER JOIN cdb_hist_snapshot B
-  ON A.snap_id = B.snap_id
-  AND A.instance_number = B.instance_number
-  AND A.dbid = B.dbid
-  AND A.session_type = 'FOREGROUND'
+  COUNT(*) "Count",
+  SUM(ActiveSession.delta_read_io_bytes) "ReadIoBytesTotal",
+  SUM(ActiveSession.delta_write_io_bytes) "WriteIoBytesTotal",
+  SUM(ActiveSession.delta_read_io_requests) "ReadIoRequestsTotal",
+  SUM(ActiveSession.delta_write_io_requests) "WriteIoRequestsTotal",
+  SUM(ActiveSession.tm_delta_cpu_time) "CpuTimeTotal"
+FROM cdb_hist_active_sess_history ActiveSession
+INNER JOIN cdb_hist_ash_snapshot AshSnap
+  ON ActiveSession.snap_id = AshSnap.snap_id
+  AND ActiveSession.instance_number = AshSnap.instance_number
+  AND ActiveSession.dbid = AshSnap.dbid
+  AND ActiveSession.session_type = 'FOREGROUND'
   -- use a query parameter to get the number of querylog days that should be loaded
-  AND B.end_interval_time > sysdate - ?
+  AND AshSnap.end_interval_time > sysdate - ?
 INNER JOIN v$sqlcommand C
-  ON A.sql_opcode = C.command_type
+  ON ActiveSession.sql_opcode = C.command_type
 GROUP BY
-  A.dbid,
-  A.instance_number,
-  A.program,
-  A.module,
-  A.machine,
-  to_char(B.begin_interval_time, 'hh24'),
-  C.command_name
+  ActiveSession.con_id,
+  ActiveSession.dbid,
+  ActiveSession.instance_number,
+  ActiveSession.program,
+  ActiveSession.module,
+  ActiveSession.machine,
+  to_char(AshSnap.begin_interval_time, 'hh24'),
+  C.command_name,
+  ActiveSession.sql_id
