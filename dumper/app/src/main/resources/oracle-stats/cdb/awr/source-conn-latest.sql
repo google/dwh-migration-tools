@@ -22,7 +22,7 @@ SELECT
   ActiveSession.machine "Machine",
   ActiveSession.sql_id "SqlId",
   C.command_name "CommandName",
-  COUNT(*) "Count",
+  COUNT(1) "Count",
   SUM(ActiveSession.delta_read_io_bytes) "ReadIoBytesTotal",
   SUM(ActiveSession.delta_write_io_bytes) "WriteIoBytesTotal",
   SUM(ActiveSession.delta_read_io_requests) "ReadIoRequestsTotal",
