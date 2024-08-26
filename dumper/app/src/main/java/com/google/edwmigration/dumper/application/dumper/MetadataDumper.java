@@ -74,9 +74,13 @@ public class MetadataDumper {
   }
 
   private void checkJavaVersion() {
-    String version = System.getProperty("java.version");
-    LOG.info("Detected Java version: '{}'.", version);
-    MinimumJavaVersionChecker.check(version);
+    Integer javaVersion = JavaVersionChecker.getJavaVersion();
+    if ((javaVersion != null) && (javaVersion < 8)) {
+      throw new MetadataDumperUsageException(
+          String.format(
+              "Currently running Java version '%s'. Dumper requires Java 8 or higher.",
+              javaVersion));
+    }
   }
 
   public boolean run(@Nonnull ConnectorArguments arguments) throws Exception {
