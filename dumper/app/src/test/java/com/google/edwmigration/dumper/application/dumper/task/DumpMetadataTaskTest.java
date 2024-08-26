@@ -19,7 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import static org.junit.Assert.assertEquals;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +34,7 @@ public class DumpMetadataTaskTest extends AbstractTaskTest {
     MemoryByteSink sink = new MemoryByteSink();
     ConnectorArguments arguments = new ConnectorArguments("--connector", "bigquery-logs");
     new DumpMetadataTask(arguments, "test-format")
-        .doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
+        .doRun(DummyTaskRunContextFactory.create(HANDLE), sink, HANDLE);
   }
 
   @Test

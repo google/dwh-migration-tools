@@ -34,7 +34,7 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.io.File;
@@ -85,11 +85,11 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
                   + TeradataLogsConnector.DEF_LOG_TABLE
                   + " (UserName varchar, errorcode int, StartTime int)");
 
-      TaskRunContext runContext = new DummyTaskRunContext(sinkFactory, handle);
+      ConnectorArguments arguments =
+          new ConnectorArguments("--connector", connector.getName(), "--query-log-days", "1");
+      TaskRunContext runContext = DummyTaskRunContextFactory.create(sinkFactory, handle, arguments);
       List<Task<?>> tasks = new ArrayList<>();
-      connector.addTasksTo(
-          tasks,
-          new ConnectorArguments("--connector", connector.getName(), "--query-log-days", "1"));
+      connector.addTasksTo(tasks, arguments);
       for (Task<?> task : tasks) {
         task.run(runContext);
       }

@@ -18,7 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,7 +30,7 @@ public class FormatTaskTest extends AbstractTaskTest {
   @Test
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
-    new FormatTask("test-format").doRun(new DummyTaskRunContext(HANDLE), sink, HANDLE);
+    new FormatTask("test-format").doRun(DummyTaskRunContextFactory.create(HANDLE), sink, HANDLE);
   }
 
   @Test

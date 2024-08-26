@@ -34,6 +34,8 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HiveInitializerTask;
+import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -62,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.thrift.TBase;
@@ -72,7 +75,7 @@ import org.slf4j.LoggerFactory;
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hive metastore via Thrift.")
 public class HiveMetadataConnector extends AbstractHiveConnector
-    implements HiveMetadataDumpFormat, MetadataConnector {
+    implements HiveMetadataDumpFormat, MetadataConnector, ChildConnector {
 
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(HiveMetadataConnector.class);
@@ -678,13 +681,15 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
+  public static final String CONNECTOR_NAME = "hiveql";
+
   public HiveMetadataConnector() {
-    super("hiveql");
+    super(CONNECTOR_NAME);
   }
 
   @Override
   public void addTasksTo(List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new DumpMetadataTask(FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     Predicate<String> databasePredicate = arguments.getDatabasePredicate();
     boolean shouldDumpPartitions =
@@ -705,5 +710,11 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     if (arguments.isAssessment()) {
       out.add(new DatabasesTask(databasePredicate));
     }
+  }
+
+  @Nullable
+  @Override
+  public Task<?> createInitializerTask() {
+    return new HiveInitializerTask();
   }
 }

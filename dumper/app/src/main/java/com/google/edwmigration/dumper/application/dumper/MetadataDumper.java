@@ -178,7 +178,8 @@ public class MetadataDumper {
 
         Handle handle = closer.register(connector.open(arguments));
 
-        new TasksRunner(sinkFactory, handle, arguments.getThreadPoolSize(), state, tasks).run();
+        new TasksRunner(sinkFactory, handle, arguments.getThreadPoolSize(), state, tasks, arguments)
+            .run();
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import java.io.File;
 import java.sql.ResultSet;
@@ -66,7 +66,8 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
   public void testResultSetHeader() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-      new JdbcSelectTask("(memory)", QUERY).doRun(new DummyTaskRunContext(handle), sink, handle);
+      new JdbcSelectTask("(memory)", QUERY)
+          .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
     }
     String actualOutput = sink.openStream().toString();
     assertEquals("a,b,c\n1,2,3\n", actualOutput);
@@ -78,7 +79,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
       new JdbcSelectTask("(memory)", QUERY)
           .withHeaderClass(Header.class)
-          .doRun(new DummyTaskRunContext(handle), sink, handle);
+          .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
     }
     String actualOutput = sink.openStream().toString();
     assertEquals("Foo,Bar,Baz\n1,2,3\n", actualOutput);
@@ -99,7 +100,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
               return format;
             }
           }.withHeaderClass(Header.class);
-      task.doRun(new DummyTaskRunContext(handle), sink, handle);
+      task.doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
     }
     String actualOutput = sink.openStream().toString();
     assertEquals("Foo,Bar,Baz\n,14,3\n", actualOutput);

@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContextOps;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
@@ -60,8 +61,9 @@ public class TasksRunner {
       Handle handle,
       int threadPoolSize,
       @Nonnull TaskSetState.Impl state,
-      List<Task<?>> tasks) {
-    context = createContext(sinkFactory, handle, threadPoolSize, state);
+      List<Task<?>> tasks,
+      ConnectorArguments arguments) {
+    context = createContext(sinkFactory, handle, threadPoolSize, state, arguments);
     this.state = state;
     this.tasks = tasks;
     totalNumberOfTasks = countTasks(tasks);
@@ -70,18 +72,28 @@ public class TasksRunner {
   }
 
   private TaskRunContext createContext(
-      OutputHandleFactory sinkFactory, Handle handle, int threadPoolSize, Impl state) {
-    return new TaskRunContext(sinkFactory, handle, threadPoolSize) {
-      @Override
-      public TaskState getTaskState(Task<?> task) {
-        return state.getTaskState(task);
-      }
+      OutputHandleFactory sinkFactory,
+      Handle handle,
+      int threadPoolSize,
+      Impl state,
+      ConnectorArguments arguments) {
+    return new TaskRunContext(
+        sinkFactory,
+        handle,
+        threadPoolSize,
+        new TaskRunContextOps() {
+          @Nonnull
+          @Override
+          public TaskState getTaskState(@Nonnull Task<?> task) {
+            return state.getTaskState(task);
+          }
 
-      @Override
-      public <T> T runChildTask(Task<T> task) throws MetadataDumperUsageException {
-        return handleTask(task);
-      }
-    };
+          @Override
+          public <T> T runChildTask(@Nonnull Task<T> task) throws MetadataDumperUsageException {
+            return handleTask(task);
+          }
+        },
+        arguments);
   }
 
   public void run() throws MetadataDumperUsageException {

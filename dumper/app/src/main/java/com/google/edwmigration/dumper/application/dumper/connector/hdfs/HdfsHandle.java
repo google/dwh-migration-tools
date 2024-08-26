@@ -44,11 +44,11 @@ class HdfsHandle implements Handle {
     Configuration conf = new Configuration();
     conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
     FileSystem fs = FileSystem.get(conf);
-    checkArgument(fs instanceof DistributedFileSystem, "Not a DistributedFileSystem!");
+    checkArgument(fs instanceof DistributedFileSystem, "Not a DistributedFileSystem");
     dfs = (DistributedFileSystem) fs;
   }
 
-  DistributedFileSystem getDfs() throws IOException {
+  DistributedFileSystem getDfs() {
     return dfs;
   }
 
