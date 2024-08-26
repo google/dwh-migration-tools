@@ -18,14 +18,24 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Suppliers.memoize;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.hadoop.thirdparty.com.google.common.collect.Maps.immutableEntry;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +67,57 @@ class HadoopScripts {
   }
 
   /** Extracts the script from the resources directory inside the jar to the local filesystem. */
-  static Path extract(String scriptFilename) throws IOException {
-    byte[] scriptBody = HadoopScripts.read(scriptFilename);
+  static Path extract(String scriptFilename) {
+    try {
+      return create(scriptFilename, HadoopScripts.read(scriptFilename));
+    } catch (IOException e) {
+      throw new IllegalStateException(
+          String.format("Cannot create the bash task for the script '%s'.", scriptFilename), e);
+    }
+  }
+
+  static ImmutableMap<String, Path> extractSingleLineScripts() {
+    ImmutableMap<String, String> singleLineScripts = readSingleLineScripts();
+    return singleLineScripts.entrySet().stream()
+        .map(
+            entry -> {
+              String scriptName = entry.getKey();
+              String scriptBody = entry.getValue();
+              try {
+                return immutableEntry(
+                    scriptName,
+                    HadoopScripts.create(scriptName + ".sh", scriptBody.getBytes(UTF_8)));
+              } catch (IOException e) {
+                throw new IllegalStateException(
+                    String.format("Cannot create the bash task for the script '%s'.", scriptName),
+                    e);
+              }
+            })
+        .collect(toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  private static ImmutableMap<String, String> readSingleLineScripts() {
+    ObjectMapper mapper = new ObjectMapper();
+    String filename = "single-line-scripts.json";
+    Map<String, String> scriptMap;
+    try {
+      byte[] singleLineScriptsJson = HadoopScripts.read(filename);
+      scriptMap =
+          mapper.readValue(singleLineScriptsJson, new TypeReference<HashMap<String, String>>() {});
+    } catch (IOException e) {
+      throw new IllegalStateException(String.format("Cannot read '%s'", filename), e);
+    }
+    return scriptMap.entrySet().stream()
+        .map(valueMapper(script -> "#!/bin/bash\n\n" + script + "\n"))
+        .collect(toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  private static Function<Entry<String, String>, Entry<String, String>> valueMapper(
+      Function<String, String> mapper) {
+    return entry -> immutableEntry(entry.getKey(), mapper.apply(entry.getValue()));
+  }
+
+  static Path create(String scriptFilename, byte[] scriptBody) throws IOException {
     Path scriptDir = SCRIPT_DIR_SUPPLIER.get();
     checkState(
         Files.exists(scriptDir) && Files.isDirectory(scriptDir),

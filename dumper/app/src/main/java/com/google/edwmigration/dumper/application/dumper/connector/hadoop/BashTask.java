@@ -46,8 +46,11 @@ public class BashTask implements Task<Void> {
 
   private final String scriptName;
 
-  public BashTask(String scriptName) {
+  private final Path scriptFile;
+
+  public BashTask(String scriptName, Path scriptFile) {
     this.scriptName = scriptName;
+    this.scriptFile = scriptFile;
   }
 
   @Override
@@ -57,8 +60,6 @@ public class BashTask implements Task<Void> {
 
   private void doRun(ByteSink outputSink, ByteSink errorSink, ByteSink exitStatusSink)
       throws IOException, ExecutionException {
-    String scriptFilename = scriptName + ".sh";
-    Path scriptFile = HadoopScripts.extract(scriptFilename);
     Process process =
         new ProcessBuilder("/bin/bash", scriptFile.toAbsolutePath().toString()).start();
     Future<Void> outputStreamPump;

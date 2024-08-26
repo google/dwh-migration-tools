@@ -1,0 +1,6 @@
+{
+  "ip-address": "ip -o -4 a show",
+  "ls-usr-local-lib": "ls -l /usr/local/lib",
+  "ls-var-log": "ls -l /var/log",
+  "os-release": "cat /etc/os-release"
+}

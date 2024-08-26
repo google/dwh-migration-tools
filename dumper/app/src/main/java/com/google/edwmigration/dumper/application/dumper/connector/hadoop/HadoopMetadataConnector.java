@@ -50,16 +50,12 @@ public class HadoopMetadataConnector implements MetadataConnector {
           "hbase-shell-version",
           "hbase-version",
           "hive-version",
-          "ip-address",
           "java-version",
-          "ls-usr-local-lib",
-          "ls-var-log",
           "lsb-release",
           "metastore-connection-details",
           "omd-version",
           "oozie-admin-status",
           "oozie-version",
-          "os-release",
           "perl-version",
           "pig-version",
           "python-version",
@@ -81,7 +77,15 @@ public class HadoopMetadataConnector implements MetadataConnector {
       throws Exception {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
-    SCRIPT_NAMES.stream().map(BashTask::new).forEach(out::add);
+    SCRIPT_NAMES.stream()
+        .map(scriptName -> new BashTask(scriptName, HadoopScripts.extract(scriptName + ".sh")))
+        .forEach(out::add);
+    addTasksForSingleLineScripts(out);
+  }
+
+  private void addTasksForSingleLineScripts(List<? super Task<?>> out) {
+    HadoopScripts.extractSingleLineScripts()
+        .forEach((scriptName, scriptFile) -> out.add(new BashTask(scriptName, scriptFile)));
   }
 
   @Nonnull
