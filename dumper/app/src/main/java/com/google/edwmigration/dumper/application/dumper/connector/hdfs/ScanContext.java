@@ -180,7 +180,7 @@ final class ScanContext implements Closeable {
         .append("[HDFS Permission extraction stats]")
         .append("\nTotal: num files&dirs: " + numFiles)
         .append("\n       num dirs found: " + numDirs)
-        .append("\n       num dirs walkd: " + numDirsWalked)
+        .append("\n       num dirs walked: " + numDirsWalked)
         .append("\nTotal File Size: " + accumulatedFileSize)
         .append("\nAvg File Size: " + accumulatedFileSize / numFilesDivisor)
         .append("\nTotal time: ")
