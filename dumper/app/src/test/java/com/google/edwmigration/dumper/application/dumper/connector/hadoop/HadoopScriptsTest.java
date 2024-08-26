@@ -69,7 +69,17 @@ public class HadoopScriptsTest {
   public void extractSingleLineScripts_allScriptsPresent() {
     ImmutableMap<String, Path> singleLineScripts = HadoopScripts.extractSingleLineScripts();
     assertEquals(
-        ImmutableSet.of("ip-address", "os-release", "ls-var-log", "ls-usr-local-lib"),
+        ImmutableSet.of(
+            "hive-execution-engine-beeline",
+            "ip-address",
+            "hive-concurrency",
+            "os-release",
+            "hive-txn-manager",
+            "ls-var-log",
+            "hive-concurrency-beeline",
+            "ls-usr-local-lib",
+            "hive-txn-manager-beeline",
+            "hive-execution-engine"),
         singleLineScripts.keySet());
   }
 
