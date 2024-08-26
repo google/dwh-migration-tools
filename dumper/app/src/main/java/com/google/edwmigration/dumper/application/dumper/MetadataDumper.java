@@ -62,6 +62,7 @@ public class MetadataDumper {
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
   public boolean run(String... args) throws Exception {
+    checkJavaVersion();
     ConnectorArguments arguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
     try {
       return run(arguments);
@@ -70,6 +71,12 @@ public class MetadataDumper {
         JsonResponseFile.save(arguments);
       }
     }
+  }
+
+  private void checkJavaVersion() {
+    String version = System.getProperty("java.version");
+    LOG.info("Detected Java version: '{}'.", version);
+    MinimumJavaVersionChecker.check(version);
   }
 
   public boolean run(@Nonnull ConnectorArguments arguments) throws Exception {
