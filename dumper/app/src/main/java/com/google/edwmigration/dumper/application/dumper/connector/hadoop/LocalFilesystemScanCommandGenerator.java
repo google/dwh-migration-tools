@@ -26,27 +26,27 @@ public class LocalFilesystemScanCommandGenerator {
   private static final Escaper SIMPLE_BASH_ESCAPER =
       Escapers.builder().addEscape('\'', "\\'").addEscape('\\', "\\\\").build();
 
-  private static final ImmutableList<String> SEARCH_EXPRESSIONS = ImmutableList.of(
-      "phoenix*.jar",
-           "*coprocessor*.jar",
-           "*jdbc*.jar",
-           "*odbc*.jar",
-           "salesforce",
-           "ngdbc.jar",
-           "*connector*.jar",
-           "oozie-site.xml",
-           "splunk",
-           "newrelic-infra.yml",
-           "elasticsearch.yml",
-           "ganglia.conf"
-  );
+  private static final ImmutableList<String> SEARCH_EXPRESSIONS =
+      ImmutableList.of(
+          "phoenix*.jar",
+          "*coprocessor*.jar",
+          "*jdbc*.jar",
+          "*odbc*.jar",
+          "salesforce",
+          "ngdbc.jar",
+          "*connector*.jar",
+          "oozie-site.xml",
+          "splunk",
+          "newrelic-infra.yml",
+          "elasticsearch.yml",
+          "ganglia.conf");
 
   public static String generate() {
-      return "find / "
-          + SEARCH_EXPRESSIONS.stream()
-              .map(searchExpression -> "-iname " + quote(searchExpression))
-              .collect(joining(" -o "))
-          + " 2>/dev/null";
+    return "find / "
+        + SEARCH_EXPRESSIONS.stream()
+            .map(searchExpression -> "-iname " + quote(searchExpression))
+            .collect(joining(" -o "))
+        + " 2>/dev/null";
   }
 
   private static String quote(String expression) {
