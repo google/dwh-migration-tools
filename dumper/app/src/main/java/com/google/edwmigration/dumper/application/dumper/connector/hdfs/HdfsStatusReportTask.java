@@ -26,10 +26,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat.StatusReport;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.hadoop.fs.FsStatus;
 import org.apache.hadoop.fs.SafeModeAction;
@@ -38,8 +40,11 @@ import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ECBlockGroupStats;
 import org.apache.hadoop.hdfs.protocol.ReplicatedBlockStats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HdfsStatusReportTask extends AbstractTask<Void> implements StatusReport {
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsStatusReportTask.class);
 
   private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -50,6 +55,11 @@ public class HdfsStatusReportTask extends AbstractTask<Void> implements StatusRe
   @Override
   public String toString() {
     return format("Write HDFS status report to %s", getTargetPath());
+  }
+
+  @Override
+  public TaskCategory getCategory() {
+    return TaskCategory.OPTIONAL;
   }
 
   @AutoValue
@@ -69,13 +79,14 @@ public class HdfsStatusReportTask extends AbstractTask<Void> implements StatusRe
     @JsonProperty
     abstract HdfsDataNodesStatus dataNodes();
 
-    public static HdfsStatus create(DistributedFileSystem dfs) throws IOException {
+    public static HdfsStatus create(
+        FsStatus fsStatus,
+        boolean safeMode,
+        long bytesWithFutureGenerationStamps,
+        HdfsNameNodeStatus nameNode,
+        HdfsDataNodesStatus dataNodes) {
       return new AutoValue_HdfsStatusReportTask_HdfsStatus(
-          dfs.getStatus(),
-          dfs.setSafeMode(SafeModeAction.GET),
-          dfs.getBytesWithFutureGenerationStamps(),
-          HdfsNameNodeStatus.create(dfs.getClient().getNamenode()),
-          HdfsDataNodesStatus.create(dfs));
+          fsStatus, safeMode, bytesWithFutureGenerationStamps, nameNode, dataNodes);
     }
   }
 
@@ -87,24 +98,25 @@ public class HdfsStatusReportTask extends AbstractTask<Void> implements StatusRe
     @JsonProperty
     abstract ECBlockGroupStats ecBlockGroupStats();
 
-    public static HdfsNameNodeStatus create(ClientProtocol namenode) throws IOException {
+    public static HdfsNameNodeStatus create(
+        ReplicatedBlockStats replicatedBlockStats, ECBlockGroupStats ecBlockGroupStats) {
       return new AutoValue_HdfsStatusReportTask_HdfsNameNodeStatus(
-          namenode.getReplicatedBlockStats(), namenode.getECBlockGroupStats());
+          replicatedBlockStats, ecBlockGroupStats);
     }
   }
 
   @AutoValue
   abstract static class HdfsDataNodesStatus {
-    @JsonProperty
+    @JsonProperty("regular")
     abstract ImmutableList<DatanodeInfo> regularNodes();
 
-    @JsonProperty
+    @JsonProperty("slow")
     abstract ImmutableList<DatanodeInfo> slowNodes();
 
-    public static HdfsDataNodesStatus create(DistributedFileSystem dfs) throws IOException {
+    public static HdfsDataNodesStatus create(
+        List<DatanodeInfo> regularNodes, List<DatanodeInfo> slowNodes) {
       return new AutoValue_HdfsStatusReportTask_HdfsDataNodesStatus(
-          ImmutableList.copyOf(dfs.getDataNodeStats()),
-          ImmutableList.copyOf(dfs.getSlowDatanodeStats()));
+          ImmutableList.copyOf(regularNodes), ImmutableList.copyOf(slowNodes));
     }
   }
 
@@ -112,10 +124,43 @@ public class HdfsStatusReportTask extends AbstractTask<Void> implements StatusRe
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws IOException {
     DistributedFileSystem dfs = ((HdfsHandle) handle).getDfs();
-    HdfsStatus status = HdfsStatus.create(dfs);
+    HdfsStatus status = extractHdfsStatus(dfs);
     try (final Writer output = sink.asCharSink(UTF_8).openBufferedStream()) {
       OBJECT_MAPPER.writeValue(output, status);
     }
     return null;
+  }
+
+  private HdfsStatus extractHdfsStatus(DistributedFileSystem dfs) throws IOException {
+    return HdfsStatus.create(
+        dfs.getStatus(),
+        dfs.setSafeMode(SafeModeAction.GET),
+        dfs.getBytesWithFutureGenerationStamps(),
+        extractNameNode(dfs.getClient().getNamenode()),
+        extractDataNodes(dfs));
+  }
+
+  private HdfsNameNodeStatus extractNameNode(ClientProtocol namenode) throws IOException {
+    return HdfsNameNodeStatus.create(
+        namenode.getReplicatedBlockStats(), namenode.getECBlockGroupStats());
+  }
+
+  private HdfsDataNodesStatus extractDataNodes(DistributedFileSystem dfs) {
+    ImmutableList<DatanodeInfo> regularNodes;
+    ImmutableList<DatanodeInfo> slowNodes;
+    try {
+      regularNodes = ImmutableList.copyOf(dfs.getDataNodeStats());
+    } catch (Exception ex) {
+      LOG.warn("Error retrieving data node stats.", ex);
+      regularNodes = ImmutableList.of();
+    }
+
+    try {
+      slowNodes = ImmutableList.copyOf(dfs.getSlowDatanodeStats());
+    } catch (Exception ex) {
+      LOG.warn("Error retrieving slow data node stats.", ex);
+      slowNodes = ImmutableList.of();
+    }
+    return HdfsDataNodesStatus.create(regularNodes, slowNodes);
   }
 }
