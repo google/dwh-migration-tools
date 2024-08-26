@@ -21,6 +21,7 @@ import static java.lang.Math.max;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
@@ -35,6 +36,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -73,6 +75,11 @@ public class TasksRunner {
       OutputHandleFactory sinkFactory, Handle handle, int threadPoolSize, Impl state) {
     return new TaskRunContext(sinkFactory, handle, threadPoolSize) {
       @Override
+      public void logProgress(String partialProgressMessage) {
+        TasksRunner.this.logProgress(Optional.of(partialProgressMessage));
+      }
+
+      @Override
       public TaskState getTaskState(Task<?> task) {
         return state.getTaskState(task);
       }
@@ -96,26 +103,30 @@ public class TasksRunner {
     if (!(task instanceof TaskGroup)) {
       numberOfCompletedTasks.getAndIncrement();
     }
-    logProgress();
+    logProgress(/* partialProgressMessage= */ Optional.empty());
     return t;
   }
 
-  private void logProgress() {
+  private void logProgress(Optional<String> partialProgressMessage) {
     int numberOfCompletedTasks = this.numberOfCompletedTasks.get();
 
     Duration averageTimePerTask = stopwatch.elapsed().dividedBy(max(1, numberOfCompletedTasks));
 
-    int percentFinished = numberOfCompletedTasks * 100 / totalNumberOfTasks;
-    String progressMessage = percentFinished + "% Completed";
+    int percentFinished =
+        Ints.constrainToRange(numberOfCompletedTasks * 100 / totalNumberOfTasks, 0, 99);
+    final StringBuilder progressMessage =
+        new StringBuilder().append(percentFinished).append("% Completed");
+
+    partialProgressMessage.ifPresent(message -> progressMessage.append(", ").append(message));
 
     int remainingTasks = totalNumberOfTasks - numberOfCompletedTasks;
     Duration remainingTime = averageTimePerTask.multipliedBy(remainingTasks);
 
     if (numberOfCompletedTasks > 10 && remainingTasks > 0) {
-      progressMessage += ". ETA: " + formatApproximateDuration(remainingTime);
+      progressMessage.append(". ETA: ").append(formatApproximateDuration(remainingTime));
     }
 
-    PROGRESS_LOG.info(progressMessage);
+    PROGRESS_LOG.info(progressMessage.toString());
   }
 
   private <T> T runTask(Task<T> task) throws MetadataDumperUsageException {
