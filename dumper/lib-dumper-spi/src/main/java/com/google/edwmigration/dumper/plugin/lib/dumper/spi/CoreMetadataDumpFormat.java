@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import java.util.List;
 
 /** @author shevek */
 public interface CoreMetadataDumpFormat {
@@ -51,6 +52,7 @@ public interface CoreMetadataDumpFormat {
 
       public String version;
       public String arguments;
+      public List<String> connectors;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

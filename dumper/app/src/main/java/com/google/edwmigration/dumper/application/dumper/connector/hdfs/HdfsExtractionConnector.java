@@ -72,7 +72,7 @@ public class HdfsExtractionConnector extends AbstractConnector
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments args)
       throws Exception {
-    out.add(new DumpMetadataTask(args, FORMAT_NAME));
+    out.add(new DumpMetadataTask(FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
     out.add(new HdfsExtractionTask(args));

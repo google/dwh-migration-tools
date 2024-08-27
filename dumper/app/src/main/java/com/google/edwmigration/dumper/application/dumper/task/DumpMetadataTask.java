@@ -17,12 +17,14 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.anarres.jdiagnostics.ProductMetadata;
@@ -34,18 +36,29 @@ public class DumpMetadataTask extends AbstractTask<Void>
   @Nullable private final ConnectorArguments arguments;
   private final String format;
 
+  @Nullable private final ImmutableList<String> connectors;
+
   public DumpMetadataTask(@Nonnull ConnectorArguments arguments, @Nonnull String format) {
-    this(format, arguments);
+    this(format, arguments, /* connectors= */ null);
+  }
+
+  public DumpMetadataTask(
+      @Nonnull ConnectorArguments arguments, @Nonnull String format, List<String> connectors) {
+    this(format, arguments, connectors);
   }
 
   public DumpMetadataTask(@Nonnull String format) {
-    this(format, null);
+    this(format, /* arguments= */ null, /* connectors= */ null);
   }
 
-  private DumpMetadataTask(@Nonnull String format, @Nullable ConnectorArguments arguments) {
+  private DumpMetadataTask(
+      @Nonnull String format,
+      @Nullable ConnectorArguments arguments,
+      @Nullable List<String> connectors) {
     super(ZIP_ENTRY_NAME);
     this.arguments = arguments;
     this.format = Preconditions.checkNotNull(format, "Format was null.");
+    this.connectors = connectors != null ? ImmutableList.copyOf(connectors) : null;
   }
 
   @Override
@@ -58,6 +71,7 @@ public class DumpMetadataTask extends AbstractTask<Void>
       Product product = new Product();
       product.version = String.valueOf(new ProductMetadata());
       product.arguments = String.valueOf(getArguments(context));
+      product.connectors = connectors;
       root.product = product;
     }
 
