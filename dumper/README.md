@@ -7,6 +7,8 @@ logs. This tool generates archives in a format suitable for consumption by the
 
 The Dumper is a Java tool. **[Download the latest cross-platform release zip `dwh-migration-tools-vX.X.X.zip`.](https://github.com/google/dwh-migration-tools/releases/latest)**
 
+The Dumper requires Java 8 or higher. You can check whether you have a recent enough version of Java installed by running the command `java -version`.
+
 To get started using the Dumper, read
 [the documentation](https://cloud.google.com/bigquery/docs/generate-metadata).
 
