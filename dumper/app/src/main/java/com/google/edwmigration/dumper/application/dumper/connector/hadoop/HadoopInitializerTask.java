@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.ClouderaMetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.MetaHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -37,8 +38,8 @@ public class HadoopInitializerTask extends AbstractTask<Void> {
       throws Exception {
     MetaHandle metaHandle = (MetaHandle) handle;
     metaHandle.initializeConnector(
-        HadoopMetadataConnector.CONNECTOR_NAME,
-        new ConnectorArguments("--connector", HadoopMetadataConnector.CONNECTOR_NAME));
+        ClouderaMetadataConnector.CONNECTOR_NAME,
+        new ConnectorArguments("--connector", ClouderaMetadataConnector.CONNECTOR_NAME));
     return null;
   }
 }

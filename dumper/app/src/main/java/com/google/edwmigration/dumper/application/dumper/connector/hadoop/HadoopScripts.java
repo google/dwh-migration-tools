@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class HadoopScripts {
+public class HadoopScripts {
   private static final Logger LOG = LoggerFactory.getLogger(HadoopScripts.class);
   private static final String TMP_DIR_PREFIX = "dwh-migration-tools-tmp-";
   private static final Supplier<Path> SCRIPT_DIR_SUPPLIER =
@@ -61,13 +61,13 @@ class HadoopScripts {
           });
 
   /** Reads the script from the resources directory inside the jar. */
-  static byte[] read(String scriptFilename) throws IOException {
+  public static byte[] read(String scriptFilename) throws IOException {
     URL resourceUrl = Resources.getResource("hadoop-scripts/" + scriptFilename);
     return Resources.toByteArray(resourceUrl);
   }
 
   /** Extracts the script from the resources directory inside the jar to the local filesystem. */
-  static Path extract(String scriptFilename) {
+  public static Path extract(String scriptFilename) {
     try {
       return create(scriptFilename, HadoopScripts.read(scriptFilename));
     } catch (IOException e) {
@@ -76,7 +76,7 @@ class HadoopScripts {
     }
   }
 
-  static ImmutableMap<String, Path> extractSingleLineScripts() {
+  public static ImmutableMap<String, Path> extractSingleLineScripts() {
     ImmutableMap<String, String> singleLineScripts = readSingleLineScripts();
     return singleLineScripts.entrySet().stream()
         .map(
@@ -117,7 +117,7 @@ class HadoopScripts {
     return entry -> immutableEntry(entry.getKey(), mapper.apply(entry.getValue()));
   }
 
-  static Path create(String scriptFilename, byte[] scriptBody) throws IOException {
+  public static Path create(String scriptFilename, byte[] scriptBody) throws IOException {
     Path scriptDir = SCRIPT_DIR_SUPPLIER.get();
     checkState(
         Files.exists(scriptDir) && Files.isDirectory(scriptDir),
