@@ -43,7 +43,7 @@ public class ParallelTaskGroup extends TaskGroup {
     super.addTask(task);
   }
 
-  private static class TaskRunner<T> implements Callable<T> {
+  private static class TaskRunner<T> {
 
     private final TaskRunContext context;
     private final Task<T> task;
@@ -55,7 +55,6 @@ public class ParallelTaskGroup extends TaskGroup {
       this.printer = printer;
     }
 
-    @Override
     public T call() throws IOException {
       T result = context.runChildTask(task);
       TaskState state = context.getTaskState(task);
@@ -73,7 +72,8 @@ public class ParallelTaskGroup extends TaskGroup {
     // We safely publish the CSVPrinter to the ExecutorManager.
     try (ExecutorManager executorManager = new ExecutorManager(context.getExecutorService())) {
       for (Task<?> task : getTasks()) {
-        executorManager.execute(new TaskRunner<>(context, task, printer));
+        TaskRunner<?> runner = new TaskRunner<>(context, task, printer);
+        executorManager.execute(runner::call);
       }
     }
     // We now, by the t-w-r, safely collect the CSVPrinter from the sub-threads.
