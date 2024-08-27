@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
+package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.ClouderaMetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.MetaHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;

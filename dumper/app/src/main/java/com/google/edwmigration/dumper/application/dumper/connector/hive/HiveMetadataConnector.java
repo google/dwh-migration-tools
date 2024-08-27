@@ -34,7 +34,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HiveInitializerTask;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.HiveInitializerTask;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
