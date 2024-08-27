@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
+  Links.con_id "ConId",
   Links.owner "Owner",
   Links.db_link "Link",
   Links.username "Username",
