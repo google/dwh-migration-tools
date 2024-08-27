@@ -18,11 +18,12 @@ package com.google.edwmigration.dumper.application.dumper.connector.meta;
 
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import javax.annotation.Nullable;
+import java.util.Optional;
+import javax.annotation.Nonnull;
 
 public interface ChildConnector extends Connector {
-  @Nullable
-  default Task<?> createInitializerTask() {
-    return null;
+  @Nonnull
+  default Optional<Task<?>> createInitializerTask() {
+    return Optional.empty();
   }
 }

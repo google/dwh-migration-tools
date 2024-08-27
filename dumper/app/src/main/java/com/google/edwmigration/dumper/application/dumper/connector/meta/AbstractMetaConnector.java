@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
@@ -67,10 +68,7 @@ public abstract class AbstractMetaConnector implements Connector {
     out.add(new FormatTask(format));
     for (String connectorName : underlyingConnectors) {
       ChildConnector childConnector = getChildConnector(connectorName);
-      Task<?> initializerTask = childConnector.createInitializerTask();
-      if (initializerTask != null) {
-        out.add(initializerTask);
-      }
+      childConnector.createInitializerTask().ifPresent(out::add);
       List<Task<?>> tasks = new ArrayList<>();
       childConnector.addTasksTo(tasks, arguments);
       tasks.stream()

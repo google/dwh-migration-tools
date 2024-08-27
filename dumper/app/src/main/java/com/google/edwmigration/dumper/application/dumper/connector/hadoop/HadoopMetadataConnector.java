@@ -34,9 +34,9 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hadoop cluster via bash commands.")
@@ -146,10 +146,10 @@ public class HadoopMetadataConnector implements MetadataConnector, ChildConnecto
     return new LocalHandle();
   }
 
-  @Nullable
+  @Nonnull
   @Override
-  public Task<?> createInitializerTask() {
-    return new HadoopInitializerTask();
+  public Optional<Task<?>> createInitializerTask() {
+    return Optional.of(new HadoopInitializerTask());
   }
 
   private class LocalHandle implements Handle {

@@ -62,9 +62,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.thrift.TBase;
@@ -712,9 +712,9 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
-  @Nullable
+  @Nonnull
   @Override
-  public Task<?> createInitializerTask() {
-    return new HiveInitializerTask();
+  public Optional<Task<?>> createInitializerTask() {
+    return Optional.of(new HiveInitializerTask());
   }
 }
