@@ -42,4 +42,9 @@ public class HdfsInitializerTask extends AbstractTask<Void> {
         new ConnectorArguments("--connector", HdfsExtractionConnector.CONNECTOR_NAME));
     return null;
   }
+
+  @Override
+  public String toString() {
+    return "Connecting to HDFS";
+  }
 }

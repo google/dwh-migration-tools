@@ -41,4 +41,9 @@ public class HadoopInitializerTask extends AbstractTask<Void> {
         new ConnectorArguments("--connector", ClouderaMetadataConnector.CONNECTOR_NAME));
     return null;
   }
+
+  @Override
+  public String toString() {
+    return "Preparing Hadoop metadata extraction";
+  }
 }

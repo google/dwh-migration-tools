@@ -43,4 +43,9 @@ public class HiveInitializerTask extends AbstractTask<Void> {
             "--connector", HiveMetadataConnector.CONNECTOR_NAME, "--assessment"));
     return null;
   }
+
+  @Override
+  public String toString() {
+    return "Connecting to Hive";
+  }
 }
