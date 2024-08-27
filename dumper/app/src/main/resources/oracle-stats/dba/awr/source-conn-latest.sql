@@ -14,29 +14,37 @@
 -- limitations under the License.
 SELECT
   NULL "ConId",
-  History.dbid "DbId",
-  to_char(Snapshot.begin_interval_time, 'hh24') "Hour",
-  History.instance_number "InstanceNumber",
-  History.program "Program",
-  History.module "Module",
-  History.machine "Machine",
-  Command.command_name "CommandName",
-  count(1) "Count"
-FROM dba_hist_active_sess_history History
-INNER JOIN dba_hist_snapshot Snapshot
-  ON History.snap_id = Snapshot.snap_id
-  AND History.instance_number = Snapshot.instance_number
-  AND History.dbid = Snapshot.dbid
-  AND History.session_type = 'FOREGROUND'
+  ActiveSession.dbid "DbId",
+  to_char(AshSnap.begin_interval_time, 'hh24') "Hour",
+  ActiveSession.instance_number "InstanceNumber",
+  ActiveSession.program "Program",
+  ActiveSession.module "Module",
+  ActiveSession.machine "Machine",
+  ActiveSession.sql_id "SqlId",
+  C.command_name "CommandName",
+  COUNT(1) "Count",
+  SUM(ActiveSession.delta_read_io_bytes) "ReadIoBytesTotal",
+  SUM(ActiveSession.delta_write_io_bytes) "WriteIoBytesTotal",
+  SUM(ActiveSession.delta_read_io_requests) "ReadIoRequestsTotal",
+  SUM(ActiveSession.delta_write_io_requests) "WriteIoRequestsTotal",
+  SUM(ActiveSession.tm_delta_cpu_time) "CpuTimeTotal"
+FROM dba_hist_active_sess_history ActiveSession
+INNER JOIN dba_hist_ash_snapshot AshSnap
+  ON ActiveSession.snap_id = AshSnap.snap_id
+  AND ActiveSession.instance_number = AshSnap.instance_number
+  AND ActiveSession.dbid = AshSnap.dbid
+  AND ActiveSession.session_type = 'FOREGROUND'
   -- use a query parameter to get the number of querylog days that should be loaded
-  AND Snapshot.end_interval_time > sysdate - ?
-INNER JOIN v$sqlcommand Command
-  ON History.sql_opcode = Command.command_type
+  AND AshSnap.end_interval_time > sysdate - ?
+INNER JOIN v$sqlcommand C
+  ON ActiveSession.sql_opcode = C.command_type
 GROUP BY
-  History.dbid,
-  History.instance_number,
-  History.program,
-  History.module,
-  History.machine,
-  to_char(Snapshot.begin_interval_time, 'hh24'),
-  Command.command_name
+  ActiveSession.con_id,
+  ActiveSession.dbid,
+  ActiveSession.instance_number,
+  ActiveSession.program,
+  ActiveSession.module,
+  ActiveSession.machine,
+  to_char(AshSnap.begin_interval_time, 'hh24'),
+  C.command_name,
+  ActiveSession.sql_id
