@@ -52,6 +52,8 @@ class StatsTaskListGenerator {
           "app-schemas-pdbs",
           "db-features",
           "db-instances",
+          "db-link-sources",
+          "db-links",
           "dtl-index-type",
           "dtl-source-code",
           "exttab",
