@@ -17,7 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsPermissionExtractionConnector.LOG;
+import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector.LOG;
 
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;

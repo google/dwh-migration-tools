@@ -25,7 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat.ContentSummaryFormat;
 import java.io.IOException;
 import java.io.Writer;
 import javax.annotation.Nonnull;
@@ -37,8 +37,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HdfsContentSummaryTask extends AbstractTask<Void>
-    implements HdfsPermissionExtractionDumpFormat.ContentSummary {
+public class HdfsContentSummaryTask extends AbstractTask<Void> implements ContentSummaryFormat {
 
   private static final Logger LOG = LoggerFactory.getLogger(HdfsContentSummaryTask.class);
 
@@ -55,7 +54,8 @@ public class HdfsContentSummaryTask extends AbstractTask<Void>
   @Override
   public String toString() {
     return format(
-        "Write content summary of the top-level directories of a hdfs %s", getTargetPath());
+        "Write content summary of the top-level directories of the HDFS path '%s'",
+        getTargetPath());
   }
 
   @Override

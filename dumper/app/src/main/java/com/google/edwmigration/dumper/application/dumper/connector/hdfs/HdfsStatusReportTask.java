@@ -28,7 +28,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat.StatusReport;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat.StatusReport;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;

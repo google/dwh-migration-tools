@@ -17,7 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat.PermissionExtraction;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat.HdfsFormat;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
@@ -62,8 +62,7 @@ final class ScanContext implements Closeable {
   ScanContext(DistributedFileSystem dfs, @WillClose Writer outputSink) throws IOException {
     this.dfs = dfs;
     this.dfsClient = dfs.getClient();
-    this.csvPrinter =
-        AbstractTask.FORMAT.withHeader(PermissionExtraction.Header.class).print(outputSink);
+    this.csvPrinter = AbstractTask.FORMAT.withHeader(HdfsFormat.Header.class).print(outputSink);
     this.instantScanBegin = Instant.now();
   }
 
@@ -79,8 +78,6 @@ final class ScanContext implements Closeable {
     numFilesByListStatus.add(files.length);
     return files;
   }
-
-  void beginWalkDir(FileStatus dir) {}
 
   /*
    * CsvPrint the directory attributes of the specified dir
@@ -154,7 +151,7 @@ final class ScanContext implements Closeable {
     final long numFilesDivisor = numFiles > 0 ? numFiles : 1;
     StringBuilder sb =
         new StringBuilder()
-            .append("[HDFS Permission extraction stats]")
+            .append("[HDFS extraction stats]")
             .append("\nTotal: num files&dirs: " + numFiles)
             .append("\n       num dirs found: " + numDirs)
             .append("\n       num dirs walkd: " + numDirsWalked)
@@ -168,7 +165,7 @@ final class ScanContext implements Closeable {
             .append(avgTimeSpentInListStatusPerFile.toMillis() + "ms")
             .append("\nAvg time per doc: ")
             .append(timeSinceScanBegin.dividedBy(numFilesDivisor).toMillis() + "ms\n")
-            .append("\n[/HDFS Permission extraction stats]");
+            .append("\n[/HDFS extraction stats]");
 
     return sb.toString();
   }

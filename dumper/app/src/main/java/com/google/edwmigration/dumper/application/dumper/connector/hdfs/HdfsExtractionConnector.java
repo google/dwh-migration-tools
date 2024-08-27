@@ -27,7 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -47,15 +47,14 @@ import org.slf4j.LoggerFactory;
 @RespectsInput(
     order = 500,
     arg = ConnectorArguments.OPT_THREAD_POOL_SIZE,
-    description = "The size of the thread pool to use when extracting hdfs permissions.")
+    description = "The size of the thread pool to use when extracting hdfs filesystem.")
 @AutoService({Connector.class})
-@Description("Dumps permissions from the HDFS.")
-public class HdfsPermissionExtractionConnector extends AbstractConnector
-    implements HdfsPermissionExtractionDumpFormat {
-  static final Logger LOG = LoggerFactory.getLogger(HdfsPermissionExtractionConnector.class);
+@Description("Dumps files and directories from the HDFS.")
+public class HdfsExtractionConnector extends AbstractConnector implements HdfsExtractionDumpFormat {
+  static final Logger LOG = LoggerFactory.getLogger(HdfsExtractionConnector.class);
 
-  public HdfsPermissionExtractionConnector() {
-    super("hdfs-permissions");
+  public HdfsExtractionConnector() {
+    super("hdfs");
   }
 
   @Nonnull
@@ -70,7 +69,7 @@ public class HdfsPermissionExtractionConnector extends AbstractConnector
     out.add(new DumpMetadataTask(args, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
-    out.add(new HdfsPermissionExtractionTask(args));
+    out.add(new HdfsExtractionTask(args));
     out.add(new HdfsContentSummaryTask(args));
     out.add(new HdfsStatusReportTask());
   }
