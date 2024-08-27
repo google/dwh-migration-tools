@@ -22,7 +22,6 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import java.util.concurrent.Callable;
 import org.apache.commons.csv.CSVPrinter;
 
-// Redshift is really slow, and is the only thing that uses this.
 public class ParallelTaskGroup extends TaskGroup {
 
   public ParallelTaskGroup(String name) {
