@@ -13,12 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 SELECT
-  Sources.db_name,
-  Sources.dbid,
-  Sources.db_unique_name,
-  Sources.host_name,
-  Sources.ip_address,
-  Sources.username,
-  Sources.logon_count
+  Sources.db_name "Name",
+  Sources.dbid "Dbid",
+  Sources.db_unique_name "UniqueName",
+  Sources.host_name "HostName",
+  Sources.ip_address "IpAddress",
+  Sources.username "Username",
+  Sources.logon_count "LogonCount"
 FROM
  cdb_db_link_sources Sources
