@@ -34,14 +34,18 @@ public class DumpMetadataTask extends AbstractTask<Void>
   @Nullable private final ConnectorArguments arguments;
   private final String format;
 
-  public DumpMetadataTask(@Nullable ConnectorArguments arguments, @Nonnull String format) {
-    super(ZIP_ENTRY_NAME);
-    this.arguments = arguments;
-    this.format = Preconditions.checkNotNull(format, "Format was null.");
+  public DumpMetadataTask(@Nonnull ConnectorArguments arguments, @Nonnull String format) {
+    this(format, arguments);
   }
 
   public DumpMetadataTask(@Nonnull String format) {
-    this(null, format);
+    this(format, null);
+  }
+
+  private DumpMetadataTask(@Nonnull String format, @Nullable ConnectorArguments arguments) {
+    super(ZIP_ENTRY_NAME);
+    this.arguments = arguments;
+    this.format = Preconditions.checkNotNull(format, "Format was null.");
   }
 
   @Override
