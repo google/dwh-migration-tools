@@ -21,6 +21,8 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.HdfsInitializerTask;
+import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -30,6 +32,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,11 +53,14 @@ import org.slf4j.LoggerFactory;
     description = "The size of the thread pool to use when extracting hdfs filesystem.")
 @AutoService({Connector.class})
 @Description("Dumps files and directories from the HDFS.")
-public class HdfsExtractionConnector extends AbstractConnector implements HdfsExtractionDumpFormat {
+public class HdfsExtractionConnector extends AbstractConnector
+    implements HdfsExtractionDumpFormat, ChildConnector {
   static final Logger LOG = LoggerFactory.getLogger(HdfsExtractionConnector.class);
 
+  public static final String CONNECTOR_NAME = "hdfs";
+
   public HdfsExtractionConnector() {
-    super("hdfs");
+    super(CONNECTOR_NAME);
   }
 
   @Nonnull
@@ -78,5 +84,11 @@ public class HdfsExtractionConnector extends AbstractConnector implements HdfsEx
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     return new HdfsHandle(arguments);
+  }
+
+  @Nonnull
+  @Override
+  public Optional<Task<?>> createInitializerTask() {
+    return Optional.of(new HdfsInitializerTask());
   }
 }

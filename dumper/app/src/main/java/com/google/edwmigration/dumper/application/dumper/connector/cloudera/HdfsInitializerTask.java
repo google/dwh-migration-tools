@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
+package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.ClouderaMetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.MetaHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -26,10 +26,10 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-public class HadoopInitializerTask extends AbstractTask<Void> {
+public class HdfsInitializerTask extends AbstractTask<Void> {
 
-  public HadoopInitializerTask() {
-    super("hadoop-initializer.txt", /* createTarget= */ false);
+  public HdfsInitializerTask() {
+    super("hdfs-initializer.txt", /* createTarget= */ false);
   }
 
   @CheckForNull
@@ -38,8 +38,13 @@ public class HadoopInitializerTask extends AbstractTask<Void> {
       throws Exception {
     MetaHandle metaHandle = (MetaHandle) handle;
     metaHandle.initializeConnector(
-        ClouderaMetadataConnector.CONNECTOR_NAME,
-        new ConnectorArguments("--connector", ClouderaMetadataConnector.CONNECTOR_NAME));
+        HdfsExtractionConnector.CONNECTOR_NAME,
+        new ConnectorArguments("--connector", HdfsExtractionConnector.CONNECTOR_NAME));
     return null;
+  }
+
+  @Override
+  public String toString() {
+    return "Connecting to HDFS";
   }
 }

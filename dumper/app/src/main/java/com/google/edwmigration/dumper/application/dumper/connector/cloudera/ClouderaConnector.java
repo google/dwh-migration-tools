@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.AbstractMetaConnector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
@@ -32,6 +33,8 @@ public class ClouderaConnector extends AbstractMetaConnector {
         "cloudera",
         "cloudera.zip",
         ImmutableList.of(
-            ClouderaMetadataConnector.CONNECTOR_NAME, HiveMetadataConnector.CONNECTOR_NAME));
+            ClouderaMetadataConnector.CONNECTOR_NAME,
+            HiveMetadataConnector.CONNECTOR_NAME,
+            HdfsExtractionConnector.CONNECTOR_NAME));
   }
 }

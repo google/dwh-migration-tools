@@ -136,7 +136,9 @@ public abstract class AbstractTask<T> implements Task<T> {
 
   @Override
   public String toString() {
-    return format("Write %s %s", targetPath, describeSourceData());
+    return createTarget
+        ? format("Write %s %s", targetPath, describeSourceData())
+        : describeSourceData();
   }
 
   private static class DummyByteSink extends ByteSink {

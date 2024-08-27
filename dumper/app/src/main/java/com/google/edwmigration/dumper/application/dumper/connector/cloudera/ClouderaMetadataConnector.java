@@ -27,7 +27,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.BashTask;
-import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HadoopInitializerTask;
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HadoopScripts;
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.LocalFilesystemScanCommandGenerator;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
