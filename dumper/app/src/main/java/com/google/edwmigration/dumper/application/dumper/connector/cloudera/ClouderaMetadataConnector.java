@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
+package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.HadoopMetadataDumpFormat.FORMAT_NAME;
@@ -26,6 +26,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.hadoop.BashTask;
+import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HadoopInitializerTask;
+import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HadoopScripts;
+import com.google.edwmigration.dumper.application.dumper.connector.hadoop.LocalFilesystemScanCommandGenerator;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -40,7 +44,7 @@ import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hadoop cluster via bash commands.")
-public class HadoopMetadataConnector implements MetadataConnector, ChildConnector {
+public class ClouderaMetadataConnector implements MetadataConnector, ChildConnector {
 
   @VisibleForTesting
   static final ImmutableList<String> SCRIPT_NAMES =
@@ -74,7 +78,7 @@ public class HadoopMetadataConnector implements MetadataConnector, ChildConnecto
           "spark-submit-version",
           "sqoop-version");
 
-  static final String CONNECTOR_NAME = "hadoop";
+  public static final String CONNECTOR_NAME = "cloudera-metadata";
 
   private static final ImmutableList<String> SERVICE_NAMES =
       ImmutableList.of(
