@@ -53,7 +53,7 @@ public class ConnectorRepository {
   }
 
   @Nullable
-  Connector getByName(@Nonnull String connectorName) {
+  public Connector getByName(@Nonnull String connectorName) {
     return connectors.get(connectorName.toLowerCase());
   }
 }

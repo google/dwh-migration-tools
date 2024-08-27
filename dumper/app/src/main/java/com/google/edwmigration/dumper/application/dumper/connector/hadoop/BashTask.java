@@ -120,7 +120,7 @@ public class BashTask implements Task<Void> {
     try (OutputHandle outputHandle = context.createOutputHandle(scriptName + ".out");
         OutputHandle errorOutputHandle = context.createOutputHandle(scriptName + ".err");
         OutputHandle exitStatusOutputHandle =
-            context.createOutputHandle(scriptName + ".exit-status"); ) {
+            context.createOutputHandle(scriptName + ".exit-status")) {
       doRun(
           outputHandle.asTemporaryByteSink(),
           errorOutputHandle.asTemporaryByteSink(),
@@ -132,16 +132,6 @@ public class BashTask implements Task<Void> {
   @Override
   public TaskCategory getCategory() {
     return TaskCategory.OPTIONAL;
-  }
-
-  private OutputHandle createOutputHandle(TaskRunContext context, String targetPath)
-      throws IOException {
-    OutputHandle outputHandle = context.newOutputFileHandle(targetPath);
-    if (outputHandle.exists()) {
-      throw new IllegalStateException(
-          String.format("Attempt to create two sinks for the same target path='%s'.", targetPath));
-    }
-    return outputHandle;
   }
 
   @Override

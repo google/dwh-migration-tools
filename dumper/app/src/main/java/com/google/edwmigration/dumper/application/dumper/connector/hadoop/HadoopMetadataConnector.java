@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -33,12 +34,13 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hadoop cluster via bash commands.")
-public class HadoopMetadataConnector implements MetadataConnector {
+public class HadoopMetadataConnector implements MetadataConnector, ChildConnector {
 
   @VisibleForTesting
   static final ImmutableList<String> SCRIPT_NAMES =
@@ -72,6 +74,8 @@ public class HadoopMetadataConnector implements MetadataConnector {
           "spark-submit-version",
           "sqoop-version");
 
+  static final String CONNECTOR_NAME = "hadoop";
+
   private static final ImmutableList<String> SERVICE_NAMES =
       ImmutableList.of(
           "ntpd",
@@ -90,13 +94,13 @@ public class HadoopMetadataConnector implements MetadataConnector {
   @Nonnull
   @Override
   public String getName() {
-    return "hadoop";
+    return CONNECTOR_NAME;
   }
 
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new DumpMetadataTask(FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     SCRIPT_NAMES.stream()
         .map(scriptName -> new BashTask(scriptName, HadoopScripts.extract(scriptName + ".sh")))
@@ -147,6 +151,12 @@ public class HadoopMetadataConnector implements MetadataConnector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     return new LocalHandle();
+  }
+
+  @Nonnull
+  @Override
+  public Optional<Task<?>> createInitializerTask() {
+    return Optional.of(new HadoopInitializerTask());
   }
 
   private class LocalHandle implements Handle {

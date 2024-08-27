@@ -16,27 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
-import static org.junit.Assert.assertEquals;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import javax.annotation.Nonnull;
 
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+public interface TaskRunContextOps {
+  @Nonnull
+  TaskState getTaskState(@Nonnull Task<?> task);
 
-/** @author shevek */
-@RunWith(JUnit4.class)
-public class VersionTaskTest extends AbstractTaskTest {
-
-  @Test
-  public void testTask() throws Exception {
-    MemoryByteSink sink = new MemoryByteSink();
-    new VersionTask().doRun(DummyTaskRunContextFactory.create(HANDLE), sink, HANDLE);
-  }
-
-  @Test
-  public void toString_success() {
-    assertEquals(
-        "Write compilerworks-version.txt from product version information.",
-        new VersionTask().toString());
-  }
+  <T> T runChildTask(@Nonnull Task<T> task) throws MetadataDumperUsageException;
 }

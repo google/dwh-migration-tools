@@ -27,8 +27,8 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContextOps;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.Impl;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** @author ishmum */
-public class TasksRunner {
+public class TasksRunner implements TaskRunContextOps {
 
   private static final Logger LOG = LoggerFactory.getLogger(TasksRunner.class);
   private static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
@@ -60,8 +60,9 @@ public class TasksRunner {
       Handle handle,
       int threadPoolSize,
       @Nonnull TaskSetState.Impl state,
-      List<Task<?>> tasks) {
-    context = createContext(sinkFactory, handle, threadPoolSize, state);
+      List<Task<?>> tasks,
+      ConnectorArguments arguments) {
+    context = createContext(sinkFactory, handle, threadPoolSize, arguments);
     this.state = state;
     this.tasks = tasks;
     totalNumberOfTasks = countTasks(tasks);
@@ -70,18 +71,22 @@ public class TasksRunner {
   }
 
   private TaskRunContext createContext(
-      OutputHandleFactory sinkFactory, Handle handle, int threadPoolSize, Impl state) {
-    return new TaskRunContext(sinkFactory, handle, threadPoolSize) {
-      @Override
-      public TaskState getTaskState(Task<?> task) {
-        return state.getTaskState(task);
-      }
+      OutputHandleFactory sinkFactory,
+      Handle handle,
+      int threadPoolSize,
+      ConnectorArguments arguments) {
+    return new TaskRunContext(sinkFactory, handle, threadPoolSize, this, arguments);
+  }
 
-      @Override
-      public <T> T runChildTask(Task<T> task) throws MetadataDumperUsageException {
-        return handleTask(task);
-      }
-    };
+  @Nonnull
+  @Override
+  public TaskState getTaskState(@Nonnull Task<?> task) {
+    return state.getTaskState(task);
+  }
+
+  @Override
+  public <T> T runChildTask(@Nonnull Task<T> task) throws MetadataDumperUsageException {
+    return handleTask(task);
   }
 
   public void run() throws MetadataDumperUsageException {
