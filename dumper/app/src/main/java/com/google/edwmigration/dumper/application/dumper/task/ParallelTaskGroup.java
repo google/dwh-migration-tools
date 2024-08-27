@@ -43,20 +43,20 @@ public class ParallelTaskGroup extends TaskGroup {
     super.addTask(task);
   }
 
-  private static class TaskRunner<T> {
+  private static class TaskRunner {
 
     private final TaskRunContext context;
-    private final Task<T> task;
+    private final Task<?> task;
     private final CSVPrinter printer;
 
-    public TaskRunner(TaskRunContext context, Task<T> task, CSVPrinter printer) {
+    public TaskRunner(TaskRunContext context, Task<?> task, CSVPrinter printer) {
       this.context = context;
       this.task = task;
       this.printer = printer;
     }
 
-    public T call() throws IOException {
-      T result = context.runChildTask(task);
+    public Object call() throws IOException {
+      Object result = context.runChildTask(task);
       TaskState state = context.getTaskState(task);
       synchronized (printer) {
         printer.printRecord(task, state);
@@ -72,7 +72,7 @@ public class ParallelTaskGroup extends TaskGroup {
     // We safely publish the CSVPrinter to the ExecutorManager.
     try (ExecutorManager executorManager = new ExecutorManager(context.getExecutorService())) {
       for (Task<?> task : getTasks()) {
-        TaskRunner<?> runner = new TaskRunner<>(context, task, printer);
+        TaskRunner runner = new TaskRunner(context, task, printer);
         executorManager.execute(runner::call);
       }
     }
