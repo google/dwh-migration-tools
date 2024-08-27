@@ -81,7 +81,11 @@ public class HadoopScriptsTest {
             "hive-txn-manager-beeline",
             "hive-execution-engine",
             "timedatectl-status",
-            "hadoop-checknative"),
+            "hadoop-checknative",
+            "dmidecode-processor",
+            "blkid",
+            "hdfs-crypto-zones",
+            "hdfs-replication"),
         singleLineScripts.keySet());
   }
 

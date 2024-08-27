@@ -45,6 +45,7 @@ public class HadoopMetadataConnector implements MetadataConnector {
       ImmutableList.of(
           "airflow-version",
           "apt-list-packages",
+          "device-utilization-report",
           "docker-version",
           "gcc-version",
           "go-version",

@@ -10,5 +10,9 @@
   "hive-txn-manager": "hive -e 'set hive.txn.manager'",
   "hive-execution-engine": "hive -e 'set hive.execution.engine'",
   "timedatectl-status": "timedatectl status",
-  "hadoop-checknative": "hadoop checknative -a"
+  "hadoop-checknative": "hadoop checknative -a",
+  "dmidecode-processor": "sudo -n dmidecode --type processor",
+  "blkid": "sudo -n blkid",
+  "hdfs-crypto-zones": "hdfs crypto -listZones",
+  "hdfs-replication": "hdfs getconf -confKey dfs.replication"
 }
