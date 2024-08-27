@@ -22,6 +22,8 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.commons.csv.CSVPrinter;
 
 public class ParallelTaskGroup extends TaskGroup {
@@ -45,17 +47,20 @@ public class ParallelTaskGroup extends TaskGroup {
 
   private static class TaskRunner {
 
+    @Nonnull
     private final TaskRunContext context;
+    @Nonnull
     private final Task<?> task;
+    @Nonnull
     private final CSVPrinter printer;
 
-    public TaskRunner(TaskRunContext context, Task<?> task, CSVPrinter printer) {
+    public TaskRunner(@Nonnull TaskRunContext context, @Nonnull Task<?> task, @Nonnull CSVPrinter printer) {
       this.context = context;
       this.task = task;
       this.printer = printer;
     }
 
-    public Object call() throws IOException {
+    public @Nullable Object call() throws IOException {
       Object result = context.runChildTask(task);
       TaskState state = context.getTaskState(task);
       synchronized (printer) {
