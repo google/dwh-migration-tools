@@ -19,6 +19,8 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
+
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -54,7 +56,7 @@ public class ParallelTaskGroup extends TaskGroup {
     }
 
     @Override
-    public T call() throws Exception {
+    public T call() throws IOException {
       T result = context.runChildTask(task);
       TaskState state = context.getTaskState(task);
       synchronized (printer) {
