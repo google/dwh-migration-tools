@@ -30,7 +30,6 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /**
