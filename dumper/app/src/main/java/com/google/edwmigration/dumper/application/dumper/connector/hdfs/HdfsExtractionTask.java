@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsPermissionExtractionConnector.LOG;
+import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector.LOG;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -28,7 +28,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsPermissionExtractionDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.ExecutionException;
@@ -39,25 +39,24 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 
-public class HdfsPermissionExtractionTask extends AbstractTask<Void>
-    implements HdfsPermissionExtractionDumpFormat {
+public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtractionDumpFormat {
   private final int poolSize;
 
-  HdfsPermissionExtractionTask(@Nonnull ConnectorArguments args) {
-    super(PermissionExtraction.ZIP_ENTRY_NAME);
+  HdfsExtractionTask(@Nonnull ConnectorArguments args) {
+    super(HdfsFormat.ZIP_ENTRY_NAME);
     Preconditions.checkNotNull(args, "Arguments was null.");
     poolSize = args.getThreadPoolSize();
   }
 
   @Override
   public String toString() {
-    return format("Write hdfs permissions to %s", getTargetPath());
+    return format("Write HDFS metadata to %s", getTargetPath());
   }
 
   @Nonnull
   @Override
   public String getTargetPath() {
-    return PermissionExtraction.ZIP_ENTRY_NAME;
+    return HdfsFormat.ZIP_ENTRY_NAME;
   }
 
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
@@ -65,7 +64,7 @@ public class HdfsPermissionExtractionTask extends AbstractTask<Void>
     DistributedFileSystem fs = ((HdfsHandle) handle).getDfs();
     // Create a dedicated ExecutorService to use:
     ExecutorService execService =
-        ExecutorManager.newExecutorServiceWithBackpressure("hdfs-permission-extraction", poolSize);
+        ExecutorManager.newExecutorServiceWithBackpressure("hdfs-extraction", poolSize);
     try (Writer output = sink.asCharSink(UTF_8).openBufferedStream();
         ScanContext scanCtx = new ScanContext(fs, output);
         ExecutorManager execManager = new ExecutorManager(execService)) {

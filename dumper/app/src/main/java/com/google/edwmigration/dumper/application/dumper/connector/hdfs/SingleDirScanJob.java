@@ -42,7 +42,6 @@ class SingleDirScanJob implements Callable<Void> {
     long accumFileSize = 0;
 
     try {
-      scanCtx.beginWalkDir(dir);
       for (FileStatus file : scanCtx.listDirectory(dir)) {
         // Process file or dir (in this case - just collect statistics)
         accumFileSize += file.getLen();
