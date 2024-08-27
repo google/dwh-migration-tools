@@ -60,6 +60,7 @@ public class BashTask implements Task<Void> {
 
   private void doRun(ByteSink outputSink, ByteSink errorSink, ByteSink exitStatusSink)
       throws IOException, ExecutionException {
+    LOG.info("Running bash task '{}'", scriptName);
     Process process =
         new ProcessBuilder("/bin/bash", scriptFile.toAbsolutePath().toString()).start();
     Future<Void> outputStreamPump;

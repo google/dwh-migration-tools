@@ -103,6 +103,12 @@ public class HadoopMetadataConnector implements MetadataConnector {
         .forEach(out::add);
     out.addAll(generateTasksForSingleLineScripts());
     out.addAll(generateServiceScripts());
+    out.add(
+        new BashTask(
+            "local-filesystem",
+            HadoopScripts.create(
+                "local-filesystem.sh",
+                LocalFilesystemScanCommandGenerator.generate().getBytes(UTF_8))));
   }
 
   private ImmutableList<Task<?>> generateTasksForSingleLineScripts() {
