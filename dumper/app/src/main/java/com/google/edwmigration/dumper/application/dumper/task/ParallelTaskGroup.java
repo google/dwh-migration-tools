@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -67,7 +68,7 @@ public class ParallelTaskGroup extends TaskGroup {
   @Override
   protected void doRun(
       @Nonnull TaskRunContext context, @Nonnull CSVPrinter printer, @Nonnull Handle handle)
-      throws Exception {
+      throws ExecutionException, InterruptedException {
     // Throws ExecutionException if any sub-task threw. However, runChildTask() is nothrow, so that
     // never happens.
     // We safely publish the CSVPrinter to the ExecutorManager.
