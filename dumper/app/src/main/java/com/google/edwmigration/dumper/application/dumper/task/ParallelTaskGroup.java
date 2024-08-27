@@ -66,15 +66,13 @@ public class ParallelTaskGroup extends TaskGroup {
   }
 
   @Override
-  @SuppressWarnings(
-      "FutureReturnValueIgnored") // It's an ExecutorManager, which tracks the Future internally.
   protected void doRun(TaskRunContext context, CSVPrinter printer, Handle handle) throws Exception {
     // Throws ExecutionException if any sub-task threw. However, runChildTask() is nothrow, so that
     // never happens.
     // We safely publish the CSVPrinter to the ExecutorManager.
     try (ExecutorManager executorManager = new ExecutorManager(context.getExecutorService())) {
       for (Task<?> task : getTasks()) {
-        executorManager.submit(new TaskRunner<>(context, task, printer));
+        executorManager.execute(new TaskRunner<>(context, task, printer));
       }
     }
     // We now, by the t-w-r, safely collect the CSVPrinter from the sub-threads.
