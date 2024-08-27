@@ -26,6 +26,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 
+/**
+ * The handle to be used in metaconnector. It contains handles and connector arguments for the child
+ * connectors that should be initialized during task executions as opposed to the normal process for
+ * a single connector, where the handle and connector arguments are initialized before the task
+ * execution is started.
+ *
+ * <p>It is the responsibility of the implementor of the metaconnector to make sure that the handles
+ * and connector arguments are set in this meta-handle before the task that uses them is started.
+ * Metaconnector takes care of the proper ordering.
+ *
+ * <p>Otherwise, there are no requirements for how the handle and the connector arguments are set,
+ * i.e. they can be set in a single task or in two tasks (possibly executed in parallel), as long as
+ * these tasks finish before the task that uses them is started.
+ */
 public class MetaHandle implements Handle {
   private final ConcurrentMap<String, Handle> handleMap = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, ConnectorArguments> argumentsMap = new ConcurrentHashMap<>();
