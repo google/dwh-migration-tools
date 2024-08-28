@@ -9,7 +9,7 @@ The Dumper is a Java tool. **[Download the latest cross-platform release zip `dw
 
 The Dumper requires Java 8 or higher. To check Java version run the command
 `java -version` or refer to Java vendor documentation. Third party JDBC drivers
-that might impose additional restrictions on Java versions. Refer to the JDBC
+might impose additional restrictions on Java versions. Refer to the JDBC
 driver's manual for details.
 
 To get started using the Dumper, read
