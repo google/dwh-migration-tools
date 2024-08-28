@@ -76,7 +76,7 @@ public class HdfsExtractionConnector extends AbstractConnector
     out.add(new FormatTask(FORMAT_NAME));
 
     out.add(new HdfsExtractionTask(args));
-    out.add(new HdfsContentSummaryTask(args));
+    out.add(new HdfsContentSummaryTask());
     out.add(new HdfsStatusReportTask());
   }
 
