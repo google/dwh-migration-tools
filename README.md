@@ -13,7 +13,7 @@ and generating an archive of DDL metadata or logs for consumption by Assessment
 or the Translation Service. For more information, [read the tool
 documentation](https://cloud.google.com/bigquery/docs/generate-metadata).
 
-    The Dumper requires Java 8 or higher. You can check whether you have a recent enough version of Java installed by running the command `java -version`.
+    The Dumper requires Java 8 or higher. To check Java version run the command `java -version` or refer to Java vendor documentation.
 
 - **Batch SQL Translation Client:** Command line utility to run a Batch SQL
 Translation job with support for macro expansion/unexpansion. For more
