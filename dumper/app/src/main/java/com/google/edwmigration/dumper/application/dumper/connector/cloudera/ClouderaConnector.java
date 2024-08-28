@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
@@ -26,6 +27,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 
 @AutoService(Connector.class)
 @Description("Dumps metadata from the Cloudera (Hadoop on-prem) cluster.")
+@RespectsArgumentAssessment
 public class ClouderaConnector extends AbstractMetaConnector {
 
   public ClouderaConnector() {
