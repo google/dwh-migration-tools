@@ -63,7 +63,7 @@ public abstract class AbstractMetaConnector implements Connector {
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
-    out.add(new DumpMetadataTask(arguments, format, underlyingConnectors));
+    out.add(DumpMetadataTask.create(arguments, format, underlyingConnectors));
     out.add(new FormatTask(format));
     for (String connectorName : underlyingConnectors) {
       ChildConnector childConnector = getChildConnector(connectorName);

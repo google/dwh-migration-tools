@@ -39,26 +39,28 @@ public class DumpMetadataTask extends AbstractTask<Void>
   @Nullable private final ImmutableList<String> connectors;
 
   public DumpMetadataTask(@Nonnull ConnectorArguments arguments, @Nonnull String format) {
-    this(format, arguments, /* connectors= */ null);
-  }
-
-  public DumpMetadataTask(
-      @Nonnull ConnectorArguments arguments, @Nonnull String format, List<String> connectors) {
-    this(format, arguments, connectors);
+    this(arguments, format, /* connectors= */ null);
   }
 
   public DumpMetadataTask(@Nonnull String format) {
-    this(format, /* arguments= */ null, /* connectors= */ null);
+    this(/* arguments= */ null, format, /* connectors= */ null);
   }
 
   private DumpMetadataTask(
-      @Nonnull String format,
       @Nullable ConnectorArguments arguments,
+      @Nonnull String format,
       @Nullable List<String> connectors) {
     super(ZIP_ENTRY_NAME);
     this.arguments = arguments;
     this.format = Preconditions.checkNotNull(format, "Format was null.");
     this.connectors = connectors != null ? ImmutableList.copyOf(connectors) : null;
+  }
+
+  public static DumpMetadataTask create(
+      @Nonnull ConnectorArguments arguments,
+      @Nonnull String format,
+      @Nonnull List<String> connectors) {
+    return new DumpMetadataTask(arguments, format, connectors);
   }
 
   @Override
