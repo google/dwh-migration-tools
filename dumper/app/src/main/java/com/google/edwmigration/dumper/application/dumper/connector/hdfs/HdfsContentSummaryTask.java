@@ -19,11 +19,10 @@ package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat.ContentSummaryFormat;
 import java.io.IOException;
@@ -34,21 +33,11 @@ import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HdfsContentSummaryTask extends AbstractTask<Void> implements ContentSummaryFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HdfsContentSummaryTask.class);
-
-  private final String clusterHost;
-  private final int port;
-
-  HdfsContentSummaryTask(@Nonnull ConnectorArguments args) {
+  HdfsContentSummaryTask() {
     super(ZIP_ENTRY_NAME);
-    Preconditions.checkNotNull(args, "Arguments was null.");
-    clusterHost = args.getHostOrDefault();
-    port = args.getPort(/* defaultPort= */ 8020);
   }
 
   @Override
@@ -56,6 +45,12 @@ public class HdfsContentSummaryTask extends AbstractTask<Void> implements Conten
     return format(
         "Write content summary of the top-level directories of the HDFS path '%s'",
         getTargetPath());
+  }
+
+  @Nonnull
+  @Override
+  public TaskCategory getCategory() {
+    return TaskCategory.OPTIONAL;
   }
 
   @Override
