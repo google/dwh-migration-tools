@@ -34,8 +34,6 @@ import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RespectsInput(
     order = 100,
@@ -55,7 +53,6 @@ import org.slf4j.LoggerFactory;
 @Description("Dumps files and directories from the HDFS.")
 public class HdfsExtractionConnector extends AbstractConnector
     implements HdfsExtractionDumpFormat, ChildConnector {
-  static final Logger LOG = LoggerFactory.getLogger(HdfsExtractionConnector.class);
 
   public static final String CONNECTOR_NAME = "hdfs";
 
