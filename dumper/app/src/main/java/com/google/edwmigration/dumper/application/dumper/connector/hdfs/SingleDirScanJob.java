@@ -55,10 +55,11 @@ class SingleDirScanJob implements Callable<Void> {
         }
       }
       scanCtx.endWalkDir(dir, numFiles, numDirs, accumFileSize);
-    } catch (Exception exn) {
+    } catch (Exception e) {
       LOG.error(
-          "Unexpected exception while scanning HDFS folder " + dir.getPath().toUri().getPath(),
-          exn);
+          "Unexpected exception while scanning HDFS folder '{}'",
+          dir.getPath().toUri().getPath(),
+          e);
     }
     return null;
   }

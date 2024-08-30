@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector.LOG;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -39,8 +38,12 @@ import javax.annotation.Nonnull;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtractionDumpFormat {
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsExtractionTask.class);
+
   private final int poolSize;
 
   HdfsExtractionTask(@Nonnull ConnectorArguments args) {
