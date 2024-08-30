@@ -20,10 +20,13 @@ import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.AbstractMetaConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import javax.annotation.Nonnull;
 
 @AutoService(Connector.class)
 @Description("Dumps metadata from the Cloudera (Hadoop on-prem) cluster.")
@@ -35,8 +38,38 @@ public class ClouderaConnector extends AbstractMetaConnector {
         "cloudera",
         "cloudera.zip",
         ImmutableList.of(
-            ClouderaMetadataConnector.CONNECTOR_NAME,
-            HiveMetadataConnector.CONNECTOR_NAME,
-            HdfsExtractionConnector.CONNECTOR_NAME));
+            ClouderaMetadataConnector.NAME,
+            HiveMetadataConnector.NAME,
+            HdfsExtractionConnector.NAME,
+            RangerConnector.NAME));
+  }
+
+  @Nonnull
+  @Override
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return ClouderaConnectorProperty.class;
+  }
+
+  public enum ClouderaConnectorProperty implements ConnectorProperty {
+    USER("ranger.user", "Ranger API username"),
+    PASSWORD("ranger.password", "Ranger API password");
+
+    private final String name;
+    private final String description;
+
+    ClouderaConnectorProperty(String name, String description) {
+      this.name = name;
+      this.description = description;
+    }
+
+    @Nonnull
+    public String getName() {
+      return name;
+    }
+
+    @Nonnull
+    public String getDescription() {
+      return description;
+    }
   }
 }

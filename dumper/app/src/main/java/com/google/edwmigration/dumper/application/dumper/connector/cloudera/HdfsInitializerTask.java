@@ -38,8 +38,8 @@ public class HdfsInitializerTask extends AbstractTask<Void> {
       throws Exception {
     MetaHandle metaHandle = (MetaHandle) handle;
     metaHandle.initializeConnector(
-        HdfsExtractionConnector.CONNECTOR_NAME,
-        new ConnectorArguments("--connector", HdfsExtractionConnector.CONNECTOR_NAME));
+        HdfsExtractionConnector.NAME,
+        new ConnectorArguments("--connector", HdfsExtractionConnector.NAME));
     return null;
   }
 
