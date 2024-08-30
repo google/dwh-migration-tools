@@ -16,19 +16,24 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.ClouderaConnector.ClouderaConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.MetaHandle;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.io.IOException;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-public class HadoopInitializerTask extends AbstractTask<Void> {
+public class RangerInitializerTask extends AbstractTask<Void> {
 
-  public HadoopInitializerTask() {
-    super("hadoop-initializer.txt", /* createTarget= */ false);
+  public RangerInitializerTask() {
+    super("ranger-initializer.txt", /* createTarget= */ false);
   }
 
   @CheckForNull
@@ -36,14 +41,30 @@ public class HadoopInitializerTask extends AbstractTask<Void> {
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
     MetaHandle metaHandle = (MetaHandle) handle;
-    metaHandle.initializeConnector(
-        ClouderaMetadataConnector.NAME,
-        new ConnectorArguments("--connector", ClouderaMetadataConnector.NAME));
+    ConnectorArguments childConnectorArguments =
+        tunnelPropertiesToChildConnector(context.getArguments());
+    metaHandle.initializeConnector(RangerConnector.NAME, childConnectorArguments);
     return null;
+  }
+
+  private ConnectorArguments tunnelPropertiesToChildConnector(
+      ConnectorArguments metaconnectorArguments) throws IOException {
+    ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
+    argumentsBuilder.add("--connector").add(RangerConnector.NAME);
+    @Nullable String user = metaconnectorArguments.getDefinition(ClouderaConnectorProperty.USER);
+    if (user != null) {
+      argumentsBuilder.add("--user").add(user);
+    }
+    @Nullable
+    String password = metaconnectorArguments.getDefinition(ClouderaConnectorProperty.PASSWORD);
+    if (password != null) {
+      argumentsBuilder.add("--password").add(password);
+    }
+    return new ConnectorArguments(argumentsBuilder.build().toArray(new String[0]));
   }
 
   @Override
   public String toString() {
-    return "Preparing Hadoop metadata extraction";
+    return "Connecting to Ranger";
   }
 }

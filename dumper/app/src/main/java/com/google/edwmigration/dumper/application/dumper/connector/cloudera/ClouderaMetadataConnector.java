@@ -77,7 +77,7 @@ public class ClouderaMetadataConnector implements MetadataConnector, ChildConnec
           "spark-submit-version",
           "sqoop-version");
 
-  public static final String CONNECTOR_NAME = "cloudera-metadata";
+  public static final String NAME = "cloudera-metadata";
 
   private static final ImmutableList<String> SERVICE_NAMES =
       ImmutableList.of(
@@ -97,7 +97,7 @@ public class ClouderaMetadataConnector implements MetadataConnector, ChildConnec
   @Nonnull
   @Override
   public String getName() {
-    return CONNECTOR_NAME;
+    return NAME;
   }
 
   @Override

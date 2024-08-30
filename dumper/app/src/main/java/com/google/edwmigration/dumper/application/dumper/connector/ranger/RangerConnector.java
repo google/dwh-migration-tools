@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_RANGER_PORT_DEFAULT;
+import static java.lang.Integer.parseInt;
+
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
@@ -23,6 +26,8 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.RangerInitializerTask;
+import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerClient.RangerException;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerPageIterator.Page;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
@@ -50,6 +55,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,16 +69,18 @@ import org.slf4j.LoggerFactory;
     order = 101,
     arg = ConnectorArguments.OPT_PORT,
     description = "The port of the Ranger server.",
-    defaultValue = ConnectorArguments.OPT_RANGER_PORT_DEFAULT)
+    defaultValue = OPT_RANGER_PORT_DEFAULT)
 @AutoService({Connector.class})
 @Description("Dumps services and policies from Apache Ranger.")
-public class RangerConnector extends AbstractConnector {
+public class RangerConnector extends AbstractConnector implements ChildConnector {
 
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(RangerConnector.class);
 
+  public static final String NAME = "ranger";
+
   public RangerConnector() {
-    super("ranger");
+    super(NAME);
   }
 
   @Nonnull
@@ -95,11 +103,22 @@ public class RangerConnector extends AbstractConnector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     // TODO: handle SSL or Kerberos.
-    URI apiUrl = URI.create("http://" + arguments.getHostOrDefault() + ":" + arguments.getPort());
+    URI apiUrl =
+        URI.create(
+            "http://"
+                + arguments.getHostOrDefault()
+                + ":"
+                + arguments.getPort(parseInt(OPT_RANGER_PORT_DEFAULT)));
     String password = arguments.getPasswordOrPrompt();
     return new RangerClientHandle(
         new RangerClient(apiUrl, arguments.getUser(), password),
         arguments.getRangerPageSizeDefault());
+  }
+
+  @Nonnull
+  @Override
+  public Optional<Task<?>> createInitializerTask() {
+    return Optional.of(new RangerInitializerTask());
   }
 
   static class DumpUsersTask extends AbstractRangerTask<User> {

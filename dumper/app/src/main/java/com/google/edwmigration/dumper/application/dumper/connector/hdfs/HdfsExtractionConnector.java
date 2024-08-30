@@ -54,10 +54,10 @@ import javax.annotation.Nonnull;
 public class HdfsExtractionConnector extends AbstractConnector
     implements HdfsExtractionDumpFormat, ChildConnector {
 
-  public static final String CONNECTOR_NAME = "hdfs";
+  public static final String NAME = "hdfs";
 
   public HdfsExtractionConnector() {
-    super(CONNECTOR_NAME);
+    super(NAME);
   }
 
   @Nonnull

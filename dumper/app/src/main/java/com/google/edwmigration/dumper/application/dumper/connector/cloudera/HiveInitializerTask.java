@@ -38,9 +38,8 @@ public class HiveInitializerTask extends AbstractTask<Void> {
       throws Exception {
     MetaHandle metaHandle = (MetaHandle) handle;
     metaHandle.initializeConnector(
-        HiveMetadataConnector.CONNECTOR_NAME,
-        new ConnectorArguments(
-            "--connector", HiveMetadataConnector.CONNECTOR_NAME, "--assessment"));
+        HiveMetadataConnector.NAME,
+        new ConnectorArguments("--connector", HiveMetadataConnector.NAME, "--assessment"));
     return null;
   }
 

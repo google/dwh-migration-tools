@@ -681,10 +681,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
-  public static final String CONNECTOR_NAME = "hiveql";
+  public static final String NAME = "hiveql";
 
   public HiveMetadataConnector() {
-    super(CONNECTOR_NAME);
+    super(NAME);
   }
 
   @Override
