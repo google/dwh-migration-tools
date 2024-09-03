@@ -159,6 +159,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       StringWriter w = new StringWriter();
       IOUtils.copy(in, w);
       return w.toString();
+    } else if (object != null && object.toString() == null) {
+      return null;
     } else {
       return object;
     }
