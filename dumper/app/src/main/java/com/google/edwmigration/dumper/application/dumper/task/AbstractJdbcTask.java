@@ -144,11 +144,13 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         monitor.count();
         for (int i = 1; i <= columnCount; i++) {
           Object resultItem = resultSet.getObject(i);
-          String csvCandidate = fromByteBufferOrClob(resultItem);
+          String csvItemCandidate = fromByteBufferOrClob(resultItem);
           String itemString;
-          if (csvCandidate != null || resultItem == null) {
-            printer.print(csvCandidate);
+          if (csvItemCandidate != null || resultItem == null) {
+            // Item was recognized by the helper method or it was null.
+            printer.print(csvItemCandidate);
           } else if ((itemString = resultItem.toString()) == null) {
+            // Item violated usual toStringRules
             Class<?> itemClass = resultItem.getClass();
             LOG.warn("Unexpected toString result for class {} - null", itemClass);
             printer.print(null);
