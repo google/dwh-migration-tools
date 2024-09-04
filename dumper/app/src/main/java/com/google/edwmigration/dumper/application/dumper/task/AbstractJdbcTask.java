@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -57,7 +58,6 @@ import org.springframework.jdbc.support.JdbcUtils;
 /** @author shevek */
 public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
-  @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcTask.class);
 
   @CheckForNull private Class<? extends Enum<?>> headerClass;
@@ -143,15 +143,28 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       while (resultSet.next()) {
         monitor.count();
         for (int i = 1; i <= columnCount; i++) {
-          Object object = resultSet.getObject(i);
-          printer.print(convertObject(object));
+          Object resultItem = resultSet.getObject(i);
+          String csvItemCandidate = fromByteBufferOrClob(resultItem);
+          String itemString;
+          if (csvItemCandidate != null || resultItem == null) {
+            // Item was recognized by the helper method or it was null.
+            printer.print(csvItemCandidate);
+          } else if ((itemString = resultItem.toString()) == null) {
+            // Item violated usual toStringRules
+            Class<?> itemClass = resultItem.getClass();
+            LOG.warn("Unexpected toString result for class {} - null", itemClass);
+            printer.print(null);
+          } else {
+            printer.print(itemString);
+          }
         }
         printer.println();
       }
     }
   }
 
-  private static Object convertObject(Object object) throws IOException, SQLException {
+  @Nullable
+  private static String fromByteBufferOrClob(Object object) throws IOException, SQLException {
     if (object instanceof byte[]) {
       return Base64.getEncoder().encodeToString((byte[]) object);
     } else if (object instanceof Clob) {
@@ -160,7 +173,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       IOUtils.copy(in, w);
       return w.toString();
     } else {
-      return object;
+      return null;
     }
   }
 
