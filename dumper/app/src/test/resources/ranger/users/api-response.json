@@ -1,0 +1,47 @@
+{
+  "startIndex": 0,
+  "pageSize": 2,
+  "totalCount": 2,
+  "resultSize": 2,
+  "sortType": "asc",
+  "sortBy": "id",
+  "queryTimeMS": 1723634833803,
+  "vXUsers": [
+    {
+      "id": 1,
+      "createDate": "2024-05-22T18:07:35Z",
+      "updateDate": "2024-05-27T18:07:35Z",
+      "name": "admin",
+      "firstName": "Admin",
+      "lastName": "",
+      "password": "*****",
+      "description": "Administrator",
+      "groupIdList": [],
+      "groupNameList": [],
+      "status": 1,
+      "isVisible": 1,
+      "userSource": 0,
+      "userRoleList": [
+        "ROLE_SYS_ADMIN"
+      ]
+    },
+    {
+      "id": 2,
+      "createDate": "2024-05-22T18:06:55Z",
+      "updateDate": "2024-05-27T18:06:55Z",
+      "name": "rangerusersync",
+      "firstName": "rangerusersync",
+      "lastName": "",
+      "password": "*****",
+      "description": "rangerusersync",
+      "groupIdList": [],
+      "groupNameList": [],
+      "status": 1,
+      "isVisible": 1,
+      "userSource": 0,
+      "userRoleList": [
+        "ROLE_SYS_ADMIN"
+      ]
+    }
+  ]
+}

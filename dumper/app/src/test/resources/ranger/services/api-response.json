@@ -1,0 +1,82 @@
+{
+  "startIndex": 0,
+  "pageSize": 100,
+  "totalCount": 3,
+  "resultSize": 3,
+  "sortType": "asc",
+  "sortBy": "serviceId",
+  "queryTimeMS": 1723646709814,
+  "services": [
+    {
+      "id": 1,
+      "guid": "4c2780ee-e244-4ac3-b21a-3660e6895980",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": 1716795282000,
+      "updateTime": 1716795282000,
+      "version": 1,
+      "type": "hdfs",
+      "name": "hadoop-dataproc",
+      "description": "Hadoop hdfs service",
+      "configs": {
+        "password": "*****",
+        "hadoop.security.authentication": "Simple",
+        "hadoop.security.authorization": "No",
+        "fs.default.name": "hdfs://aleofreddi-ranger-cluster-m:8020",
+        "username": "admin"
+      },
+      "policyVersion": 10,
+      "policyUpdateTime": 1723040787000,
+      "tagVersion": 1,
+      "tagUpdateTime": 1716795282000
+    },
+    {
+      "id": 2,
+      "guid": "1fe46519-233a-4780-be20-a7eb180f1ca6",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": 1716795292000,
+      "updateTime": 1716795292000,
+      "version": 1,
+      "type": "hive",
+      "name": "hive-dataproc",
+      "description": "Hadoop HIVE service",
+      "configs": {
+        "password": "*****",
+        "jdbc.driverClassName": "org.apache.hive.jdbc.HiveDriver",
+        "jdbc.url": "jdbc:mysql://localhost",
+        "username": "admin"
+      },
+      "policyVersion": 21,
+      "policyUpdateTime": 1723645991000,
+      "tagVersion": 1,
+      "tagUpdateTime": 1716795292000
+    },
+    {
+      "id": 3,
+      "guid": "25eaf802-23cd-4920-9dbb-e32eaaf6d421",
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": 1716795315000,
+      "updateTime": 1716795315000,
+      "version": 1,
+      "type": "yarn",
+      "name": "yarn-dataproc",
+      "description": "Hadoop YARN service",
+      "configs": {
+        "password": "*****",
+        "yarn.url": "http://aleofreddi-ranger-cluster-m:8088",
+        "policy.download.auth.users": "yarn",
+        "hadoop.security.authentication": "simple",
+        "username": "admin"
+      },
+      "policyVersion": 2,
+      "policyUpdateTime": 1716795315000,
+      "tagVersion": 1,
+      "tagUpdateTime": 1716795315000
+    }
+  ]
+}

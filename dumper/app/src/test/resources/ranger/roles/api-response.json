@@ -1,0 +1,42 @@
+{
+  "startIndex": 0,
+  "pageSize": 0,
+  "totalCount": 2,
+  "resultSize": 2,
+  "queryTimeMS": 1723645991233,
+  "roles": [
+    {
+      "id": 1,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": 1722017807000,
+      "updateTime": 1723645991000,
+      "name": "dba",
+      "description": "",
+      "options": {},
+      "users": [],
+      "groups": [],
+      "roles": []
+    },
+    {
+      "id": 2,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin",
+      "createTime": 1723645984000,
+      "updateTime": 1723645984000,
+      "name": "auditor",
+      "description": "",
+      "options": {},
+      "users": [
+        {
+          "name": "aleofreddi",
+          "isAdmin": false
+        }
+      ],
+      "groups": [],
+      "roles": []
+    }
+  ]
+}

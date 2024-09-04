@@ -1,0 +1,35 @@
+{
+  "startIndex": 0,
+  "pageSize": 2,
+  "totalCount": 2,
+  "resultSize": 2,
+  "sortType": "asc",
+  "sortBy": "id",
+  "queryTimeMS": 1723634845533,
+  "vXGroups": [
+    {
+      "id": 1,
+      "createDate": "2024-05-27T07:33:38Z",
+      "updateDate": "2024-05-27T07:33:38Z",
+      "owner": "Admin",
+      "updatedBy": "Admin",
+      "name": "public",
+      "description": "public group",
+      "groupType": 0,
+      "groupSource": 0,
+      "isVisible": 1
+    },
+    {
+      "id": 2,
+      "createDate": "2024-05-27T07:34:24Z",
+      "updateDate": "2024-05-27T07:34:24Z",
+      "owner": "rangerusersync",
+      "updatedBy": "rangerusersync",
+      "name": "backup",
+      "description": "backup - add from Unix box",
+      "groupType": 1,
+      "groupSource": 1,
+      "isVisible": 1
+    }
+  ]
+}

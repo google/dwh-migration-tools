@@ -23,10 +23,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerClient.RangerException;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerPageIterator.Page;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerPageIterator.RangerFetcher;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import junit.framework.TestCase;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,52 +42,52 @@ public class RangerPageIteratorTest extends TestCase {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private Function<Page, List<Integer>> apiMock;
+  @Mock private RangerFetcher<Integer> apiMock;
 
   @Test
-  public void next_worksWithEmptyPage() {
-    when(apiMock.apply(Page.create(0, 100))).thenReturn(ImmutableList.of());
+  public void next_worksWithEmptyPage() throws RangerException {
+    when(apiMock.fetch(Page.create(0, 100))).thenReturn(ImmutableList.of());
 
     List<Integer> actualList = new ArrayList<>();
     new RangerPageIterator<>(apiMock, 100).forEachRemaining(actualList::add);
 
     assertTrue(actualList.isEmpty());
-    verify(apiMock, times(1)).apply(any(Page.class));
+    verify(apiMock, times(1)).fetch(any(Page.class));
   }
 
   @Test
-  public void next_worksWithSinglePage() {
-    when(apiMock.apply(Page.create(0, 100))).thenReturn(ImmutableList.of(0, 1, 2));
+  public void next_worksWithSinglePage() throws RangerException {
+    when(apiMock.fetch(Page.create(0, 100))).thenReturn(ImmutableList.of(0, 1, 2));
 
     List<Integer> actualList = new ArrayList<>();
     new RangerPageIterator<>(apiMock, 100).forEachRemaining(actualList::add);
 
     assertEquals(ImmutableList.of(0, 1, 2), actualList);
-    verify(apiMock, times(1)).apply(any(Page.class));
+    verify(apiMock, times(1)).fetch(any(Page.class));
   }
 
   @Test
-  public void next_worksWithMultiplePagesLastPageNotEmpty() {
-    when(apiMock.apply(Page.create(0, 3))).thenReturn(ImmutableList.of(0, 1, 2));
-    when(apiMock.apply(Page.create(3, 3))).thenReturn(ImmutableList.of(3, 4));
+  public void next_worksWithMultiplePagesLastPageNotEmpty() throws RangerException {
+    when(apiMock.fetch(Page.create(0, 3))).thenReturn(ImmutableList.of(0, 1, 2));
+    when(apiMock.fetch(Page.create(3, 3))).thenReturn(ImmutableList.of(3, 4));
 
     List<Integer> actualList = new ArrayList<>();
     new RangerPageIterator<>(apiMock, 3).forEachRemaining(actualList::add);
 
     assertEquals(ImmutableList.of(0, 1, 2, 3, 4), actualList);
-    verify(apiMock, times(2)).apply(any(Page.class));
+    verify(apiMock, times(2)).fetch(any(Page.class));
   }
 
   @Test
-  public void next_worksWithMultiplePagesLastPageEmpty() {
-    when(apiMock.apply(Page.create(0, 3))).thenReturn(ImmutableList.of(0, 1, 2));
-    when(apiMock.apply(Page.create(3, 3))).thenReturn(ImmutableList.of(3, 4, 5));
-    when(apiMock.apply(Page.create(6, 3))).thenReturn(emptyList());
+  public void next_worksWithMultiplePagesLastPageEmpty() throws RangerException {
+    when(apiMock.fetch(Page.create(0, 3))).thenReturn(ImmutableList.of(0, 1, 2));
+    when(apiMock.fetch(Page.create(3, 3))).thenReturn(ImmutableList.of(3, 4, 5));
+    when(apiMock.fetch(Page.create(6, 3))).thenReturn(emptyList());
 
     List<Integer> actualList = new ArrayList<>();
     new RangerPageIterator<>(apiMock, 3).forEachRemaining(actualList::add);
 
     assertEquals(ImmutableList.of(0, 1, 2, 3, 4, 5), actualList);
-    verify(apiMock, times(3)).apply(any(Page.class));
+    verify(apiMock, times(3)).fetch(any(Page.class));
   }
 }

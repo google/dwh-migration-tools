@@ -17,72 +17,25 @@
 package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.DumpGroupsTask;
-import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Group;
-import java.time.Instant;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 @RunWith(JUnit4.class)
-public class DumpGroupsTaskTest extends AbstractTaskTest {
-
-  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-
-  @Mock private RangerClient rangerClientMock;
-
-  private static final ImmutableList<Group> TEST_GROUPS =
-      ImmutableList.of(
-          Group.create(
-              /* id= */ 1,
-              /* createDate= */ Instant.ofEpochSecond(1716401255),
-              /* updateDate= */ Instant.ofEpochSecond(1716487655),
-              /* owner= */ "admin",
-              /* updatedBy= */ "admin",
-              /* name= */ "public",
-              /* description= */ "public group",
-              /* groupType= */ 0,
-              /* groupSource= */ 0,
-              /* credStoreId= */ null,
-              /* isVisible= */ 1,
-              /* otherAttributes= */ null,
-              /* syncSource= */ null),
-          Group.create(
-              /* id= */ 21,
-              /* createDate= */ Instant.ofEpochSecond(1716401255),
-              /* updateDate= */ Instant.ofEpochSecond(1716487655),
-              /* owner= */ "rangerusersync",
-              /* updatedBy= */ "rangerusersync",
-              /* name= */ "backup",
-              /* description= */ "backup - add from Unix box",
-              /* groupType= */ 1,
-              /* groupSource= */ 1,
-              /* credStoreId= */ null,
-              /* isVisible= */ 1,
-              /* otherAttributes= */ null,
-              /* syncSource= */ null));
+public class DumpGroupsTaskTest extends AbstractRangerTaskTest {
 
   @Test
   public void doRun_success() throws Exception {
-    when(rangerClientMock.findGroups(anyMap())).thenReturn(TEST_GROUPS);
     DumpGroupsTask task = new DumpGroupsTask();
-    RangerClientHandle handle = new RangerClientHandle(rangerClientMock, /* pageSize= */ 1000);
-    MemoryByteSink sink = new MemoryByteSink();
+    mockSuccessfulResponseFromResource("ranger/groups/api-response.json");
 
     task.doRun(/* context= */ null, sink, handle);
 
     String actual = sink.openStream().toString();
-    String expected = RangerTestResources.getResourceAsString("ranger/groups.success.jsonl");
+    String expected =
+        RangerTestResources.getResourceAsString("ranger/groups/expected-output.jsonl");
     assertEquals(expected, actual);
   }
 }
