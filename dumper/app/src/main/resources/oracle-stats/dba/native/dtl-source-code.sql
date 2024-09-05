@@ -34,7 +34,6 @@ FROM (
     CASE WHEN lower(A.text) LIKE '%execute%immediate%' THEN 1 ELSE 0 END exec_im,
     CASE WHEN lower(A.text) LIKE '%utl_%' THEN 1 ELSE 0 END utl
   FROM dba_source A
-  WHERE A.owner NOT LIKE '%SYS'
 ) Source
 GROUP BY
   Source.owner,

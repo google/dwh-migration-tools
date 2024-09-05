@@ -19,7 +19,6 @@ SELECT
   A.segment_type "SegmentType",
   SUM(bytes) "Bytes"
 FROM dba_segments A
-WHERE A.owner NOT LIKE '%SYS'
 GROUP BY
   A.owner,
   A.segment_name,

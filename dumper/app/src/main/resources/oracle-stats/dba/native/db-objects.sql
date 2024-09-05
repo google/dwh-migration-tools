@@ -20,8 +20,7 @@ SELECT
   A.editionable "Editionable",
   count(1) "Count"
 FROM dba_objects A
-WHERE A.owner NOT LIKE '%SYS'
-  AND A.object_name NOT LIKE 'BIN$%'
+WHERE A.object_name NOT LIKE 'BIN$%'
   AND (A.object_type <> 'SYNONYM' OR A.owner <> 'PUBLIC')
 GROUP BY
   A.owner,

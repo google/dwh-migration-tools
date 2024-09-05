@@ -36,7 +36,6 @@ FROM (
     CASE WHEN lower(A.text) LIKE '%execute%immediate%' THEN 1 ELSE 0 END exec_im,
     CASE WHEN lower(A.text) LIKE '%utl_%' THEN 1 ELSE 0 END utl
   FROM cdb_source A
-  WHERE A.owner NOT LIKE '%SYS'
 ) B
 GROUP BY
   B.con_id,

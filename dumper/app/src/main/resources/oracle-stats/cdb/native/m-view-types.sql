@@ -25,4 +25,3 @@ SELECT
   A.mview_name "MViewName"
 FROM
   cdb_mviews A
-WHERE A.owner NOT LIKE '%SYS'

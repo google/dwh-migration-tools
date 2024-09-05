@@ -25,7 +25,6 @@ SELECT
 FROM dba_tab_columns A
 INNER JOIN dba_objects B
   ON A.owner = B.owner
-  AND A.owner NOT LIKE '%SYS'
   AND A.table_name = B.object_name
   AND B.object_type = 'TABLE'
 GROUP BY
