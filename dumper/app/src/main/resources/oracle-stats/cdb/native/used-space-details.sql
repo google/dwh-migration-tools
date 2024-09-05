@@ -18,7 +18,6 @@ SELECT A.con_id "ConId",
        A.segment_type "SegmentType",
        SUM(bytes) "Bytes"
 FROM cdb_segments A
-WHERE A.owner NOT LIKE '%SYS'
 GROUP BY
   A.con_id,
   A.owner,

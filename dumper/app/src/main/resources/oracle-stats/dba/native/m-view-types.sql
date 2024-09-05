@@ -25,4 +25,3 @@ SELECT
   Views.mview_name "MViewName"
 FROM
   dba_mviews Views
-WHERE Views.owner NOT LIKE '%SYS'

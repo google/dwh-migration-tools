@@ -26,7 +26,6 @@ FROM cdb_tab_columns A
 JOIN cdb_objects B
   ON A.con_id = B.con_id
   AND A.owner = B.owner
-  AND A.owner NOT LIKE '%SYS'
   AND A.table_name = B.object_name
   AND B.object_type = 'TABLE'
 GROUP BY

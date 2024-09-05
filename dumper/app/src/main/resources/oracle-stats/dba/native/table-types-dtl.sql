@@ -39,7 +39,6 @@ FROM (
     A.cluster_name,
     'TAB' source
   FROM dba_tables A
-  WHERE A.owner NOT LIKE '%SYS'
   UNION ALL SELECT
     B.owner,
     B.table_name,
@@ -51,7 +50,6 @@ FROM (
     NULL cluster_name,
     'XML' source
   FROM dba_xml_tables B
-  WHERE B.owner NOT LIKE '%SYS'
   UNION ALL SELECT
     C.owner,
     C.table_name,
@@ -63,7 +61,6 @@ FROM (
     C.cluster_name,
     'OBJ' source
   FROM dba_object_tables C
-  WHERE C.owner NOT LIKE '%SYS'
 ) D
 LEFT JOIN dba_part_tables E
   ON D.owner = E.owner
