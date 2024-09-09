@@ -14,33 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.task;
+package com.google.edwmigration.dumper.application.dumper.test;
 
-import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.connector.meta.MetaHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import javax.annotation.Nullable;
 
-/** @author shevek */
-public abstract class AbstractTaskTest {
+public class DummyMetaHandle extends MetaHandle {
 
-  protected static class DummyHandle extends AbstractHandle {}
+  private final ConnectorArguments connectorArguments;
 
-  protected static Handle HANDLE = new DummyHandle();
+  public DummyMetaHandle(ConnectorArguments connectorArguments) {
+    this.connectorArguments = connectorArguments;
+  }
 
-  public static class MemoryByteSink extends ByteSink {
+  @Nullable
+  @Override
+  public Handle getHandleByConnectorName(String connectorName) {
+    return new AbstractHandle() {};
+  }
 
-    private final ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-    @Override
-    public OutputStream openStream() throws IOException {
-      return out;
-    }
-
-    public String getContent() {
-      return out.toString();
-    }
+  @Nullable
+  @Override
+  public ConnectorArguments getArgumentsByConnectorName(String connectorName) {
+    return connectorArguments;
   }
 }
