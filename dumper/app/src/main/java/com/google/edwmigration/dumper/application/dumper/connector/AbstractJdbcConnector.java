@@ -98,7 +98,10 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
       String message = String.format("File does not exist: '%s'", absolutePath);
       throw new IllegalArgumentException(message);
     } else if (!result.isFile()) {
-      String message = String.format("Not a driver JAR file: %s", absolutePath);
+      String message =
+          String.format(
+              "The path '%s' is not a regular file. Please provide a path to a driver JAR file.",
+              absolutePath);
       throw new IllegalArgumentException(message);
     }
     return result.toURI();
