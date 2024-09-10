@@ -40,9 +40,10 @@ public abstract class AbstractMetaConnector implements Connector {
 
   private final String name;
   private final String format;
-  private final ImmutableList<String> underlyingConnectors;
+  private final ImmutableList<UnderlyingConnector> underlyingConnectors;
 
-  public AbstractMetaConnector(String name, String format, List<String> underlyingConnectors) {
+  public AbstractMetaConnector(
+      String name, String format, List<UnderlyingConnector> underlyingConnectors) {
     this.name = name;
     this.format = format;
     this.underlyingConnectors = ImmutableList.copyOf(underlyingConnectors);
@@ -65,13 +66,13 @@ public abstract class AbstractMetaConnector implements Connector {
       throws Exception {
     out.add(DumpMetadataTask.create(arguments, format, underlyingConnectors));
     out.add(new FormatTask(format));
-    for (String connectorName : underlyingConnectors) {
-      ChildConnector childConnector = getChildConnector(connectorName);
+    for (UnderlyingConnector underlyingConnector : underlyingConnectors) {
+      ChildConnector childConnector = getChildConnector(underlyingConnector.name());
       childConnector.createInitializerTask().ifPresent(out::add);
       List<Task<?>> tasks = new ArrayList<>();
       childConnector.addTasksTo(tasks, arguments);
       tasks.stream()
-          .map(task -> new AsMetaConnectorTask<>(task, connectorName, name))
+          .map(task -> new AsMetaConnectorTask<>(task, underlyingConnector, name))
           .forEach(out::add);
     }
   }

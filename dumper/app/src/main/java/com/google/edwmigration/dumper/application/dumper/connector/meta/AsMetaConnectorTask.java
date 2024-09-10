@@ -28,13 +28,15 @@ import javax.annotation.Nonnull;
 public class AsMetaConnectorTask<T> implements Task<T> {
 
   private final Task<T> underlyingTask;
-  private final String underlyingConnectorName;
+  private final UnderlyingConnector underlyingConnector;
   private final String metaconnectorName;
 
   public AsMetaConnectorTask(
-      @Nonnull Task<T> underlyingTask, String underlyingConnectorName, String metaconnectorName) {
+      @Nonnull Task<T> underlyingTask,
+      UnderlyingConnector underlyingConnector,
+      String metaconnectorName) {
     this.underlyingTask = underlyingTask;
-    this.underlyingConnectorName = underlyingConnectorName;
+    this.underlyingConnector = underlyingConnector;
     this.metaconnectorName = metaconnectorName;
   }
 
@@ -66,12 +68,12 @@ public class AsMetaConnectorTask<T> implements Task<T> {
   @Override
   public T run(@Nonnull TaskRunContext context) throws Exception {
     MetaHandle metaHandle = (MetaHandle) context.getHandle();
-    Handle connectorHandle = metaHandle.getHandleByConnectorName(underlyingConnectorName);
+    Handle connectorHandle = metaHandle.getHandleByConnectorName(underlyingConnector.name());
     ConnectorArguments childConnectorArguments =
-        metaHandle.getArgumentsByConnectorName(underlyingConnectorName);
+        metaHandle.getArgumentsByConnectorName(underlyingConnector.name());
     return underlyingTask.run(
         context.forChildConnector(
-            connectorHandle, Paths.get(underlyingConnectorName), childConnectorArguments));
+            connectorHandle, Paths.get(underlyingConnector.path()), childConnectorArguments));
   }
 
   public boolean handleException(Exception e) {

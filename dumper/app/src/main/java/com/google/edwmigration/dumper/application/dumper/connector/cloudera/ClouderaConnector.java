@@ -23,7 +23,9 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.meta.AbstractMetaConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.meta.UnderlyingConnector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.ClouderaMetaConnectorDumpFormat;
 
 @AutoService(Connector.class)
 @Description("Dumps metadata from the Cloudera (Hadoop on-prem) cluster.")
@@ -33,10 +35,16 @@ public class ClouderaConnector extends AbstractMetaConnector {
   public ClouderaConnector() {
     super(
         "cloudera",
-        "cloudera.zip",
+        ClouderaMetaConnectorDumpFormat.FORMAT_NAME,
         ImmutableList.of(
-            ClouderaMetadataConnector.CONNECTOR_NAME,
-            HiveMetadataConnector.CONNECTOR_NAME,
-            HdfsExtractionConnector.CONNECTOR_NAME));
+            UnderlyingConnector.create(
+                ClouderaMetadataConnector.CONNECTOR_NAME,
+                ClouderaMetaConnectorDumpFormat.CLOUDERA_METADATA_PATH),
+            UnderlyingConnector.create(
+                HiveMetadataConnector.CONNECTOR_NAME,
+                ClouderaMetaConnectorDumpFormat.HIVE_METADATA_PATH),
+            UnderlyingConnector.create(
+                HdfsExtractionConnector.CONNECTOR_NAME,
+                ClouderaMetaConnectorDumpFormat.HDFS_METADATA_PATH)));
   }
 }
