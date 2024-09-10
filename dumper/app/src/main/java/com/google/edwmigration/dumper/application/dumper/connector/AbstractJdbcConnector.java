@@ -20,6 +20,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
@@ -76,11 +77,8 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
     if (driverPaths == null || driverPaths.isEmpty()) return parentClassLoader;
     List<URL> urls = new ArrayList<>();
     for (String driverPath : driverPaths) {
-      File driverFile = new File(driverPath);
-      if (!driverFile.isFile())
-        throw new IllegalArgumentException(
-            "Not a driver JAR-file: " + driverFile.getAbsolutePath());
-      URL u = new URL("jar:" + driverFile.toURI() + "!/");
+      URI driverUri = getDriverUri(driverPath);
+      URL u = new URL("jar:" + driverUri + "!/");
       urls.add(u);
     }
     final URL[] urls_array = urls.toArray(new URL[0]);
@@ -91,6 +89,22 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
             return new URLClassLoader(urls_array, parentClassLoader);
           }
         });
+  }
+
+  private static URI getDriverUri(String driverPath) {
+    File result = new File(driverPath);
+    String absolutePath = result.getAbsolutePath();
+    if (!result.exists()) {
+      String message = String.format("File does not exist: '%s'", absolutePath);
+      throw new IllegalArgumentException(message);
+    } else if (!result.isFile()) {
+      String message =
+          String.format(
+              "The path '%s' is not a regular file. Please provide a path to a driver JAR file.",
+              absolutePath);
+      throw new IllegalArgumentException(message);
+    }
+    return result.toURI();
   }
 
   @Nonnull
