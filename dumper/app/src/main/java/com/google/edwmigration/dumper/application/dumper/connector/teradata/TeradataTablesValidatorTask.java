@@ -59,7 +59,7 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
-    LOG.debug("Checking accessible for the tables {}", tableNames);
+    LOG.debug("Checking availability for the tables {}", tableNames);
 
     List<String> notAccessibleTables = new ArrayList<>();
 
