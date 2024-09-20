@@ -23,16 +23,16 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Validate if the provided tables exist/are accessible for the task and can be used later in the
@@ -61,14 +61,18 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
       throws SQLException {
     LOG.debug("Checking accessible for the tables {}", tableNames);
 
-    JdbcTemplate jdbcTemplate = jdbcHandle.getJdbcTemplate();
     List<String> notAccessibleTables = new ArrayList<>();
 
     for (String table : tableNames) {
       try {
-        jdbcTemplate.queryForRowSet("select top 1 1 from " + table);
+        try (PreparedStatement statement = connection.prepareStatement("select 1 from " + table)) {
+          // `select top 1  1 from X` doesn't work for SQLlite which is used in unit-tests
+          // so the limitation is made with the statement/driver to support Teradata and SQLlite
+          statement.setMaxRows(1);
+          statement.execute();
+        }
         LOG.trace("The table {} is accessible.", table);
-      } catch (DataAccessException e) {
+      } catch (SQLException e) {
         LOG.error("The table {} is not accessible.", table, e);
         notAccessibleTables.add(table);
       }

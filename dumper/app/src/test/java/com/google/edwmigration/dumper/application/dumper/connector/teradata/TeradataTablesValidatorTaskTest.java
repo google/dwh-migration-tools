@@ -16,16 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.sql.Connection;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,8 +27,14 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.jdbc.BadSqlGrammarException;
-import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TeradataTablesValidatorTaskTest {
@@ -46,7 +46,7 @@ public class TeradataTablesValidatorTaskTest {
 
   @Mock private Connection connection;
 
-  @Mock private JdbcTemplate jdbcTemplate;
+  @Mock private PreparedStatement statement;
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
@@ -54,14 +54,16 @@ public class TeradataTablesValidatorTaskTest {
   public void tablesExists() throws Exception {
     TeradataTablesValidatorTask task = new TeradataTablesValidatorTask("x", "y", "z");
 
-    when(jdbcHandle.getJdbcTemplate()).thenReturn(jdbcTemplate);
-    when(jdbcTemplate.queryForRowSet(anyString())).thenReturn(null); // no exception is ok
+    when(connection.prepareStatement(anyString())).thenReturn(statement);
 
     task.doInConnection(context, jdbcHandle, sink, connection);
 
-    verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from x"));
-    verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from y"));
-    verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from z"));
+    verify(connection).prepareStatement(eq("select 1 from x"));
+    verify(connection).prepareStatement(eq("select 1 from y"));
+    verify(connection).prepareStatement(eq("select 1 from z"));
+
+    verify(statement, times(3)).setMaxRows(1);
+    verify(statement, times(3)).execute();
   }
 
   @Test
@@ -71,13 +73,9 @@ public class TeradataTablesValidatorTaskTest {
 
     TeradataTablesValidatorTask task = new TeradataTablesValidatorTask("x", "y", "z");
 
-    when(jdbcHandle.getJdbcTemplate()).thenReturn(jdbcTemplate);
-    when(jdbcTemplate.queryForRowSet(eq("select top 1 1 from x")))
-        .thenReturn(null); // no exception is ok
-    when(jdbcTemplate.queryForRowSet(eq("select top 1 1 from y")))
-        .thenThrow(BadSqlGrammarException.class);
-    when(jdbcTemplate.queryForRowSet(eq("select top 1 1 from z")))
-        .thenReturn(null); // no exception is ok
+    when(connection.prepareStatement(eq("select 1 from x"))).thenReturn(statement);
+    when(connection.prepareStatement(eq("select 1 from y"))).thenThrow(SQLException.class);
+    when(connection.prepareStatement(eq("select 1 from z"))).thenReturn(statement);
 
     try {
       task.doInConnection(context, jdbcHandle, sink, connection);
@@ -86,9 +84,9 @@ public class TeradataTablesValidatorTaskTest {
     } catch (Exception e) {
       // make sure all tables have been checked,
       // even with an exception for any
-      verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from x"));
-      verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from y"));
-      verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from z"));
+      verify(connection).prepareStatement(eq("select 1 from x"));
+      verify(connection).prepareStatement(eq("select 1 from y"));
+      verify(connection).prepareStatement(eq("select 1 from z"));
 
       throw e;
     }
