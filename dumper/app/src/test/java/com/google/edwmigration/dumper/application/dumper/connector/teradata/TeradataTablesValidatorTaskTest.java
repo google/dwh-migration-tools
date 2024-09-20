@@ -33,8 +33,7 @@ public class TeradataTablesValidatorTaskTest {
 
     @Mock private JdbcTemplate jdbcTemplate;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    @Rule public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void tablesExists() throws Exception {
@@ -67,8 +66,8 @@ public class TeradataTablesValidatorTaskTest {
 
             Assert.fail("Exception is expected");
         } catch (Exception e) {
-            //verify that all the tables were validated
-            //even with an exception for any
+            // make sure all tables have been checked,
+            // even with an exception for any
             verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from x"));
             verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from y"));
             verify(jdbcTemplate).queryForRowSet(eq("select top 1 1 from z"));
