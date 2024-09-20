@@ -210,9 +210,9 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         tableNames.queryLogsTableName(),
         tableNames.sqlLogsTableName());
 
-    out.add(new TeradataTablesValidatorTask(
-            tableNames.queryLogsTableName(), tableNames.sqlLogsTableName()
-    ));
+    out.add(
+        new TeradataTablesValidatorTask(
+            tableNames.queryLogsTableName(), tableNames.sqlLogsTableName()));
 
     ImmutableSet.Builder<String> conditionsBuilder = ImmutableSet.builder();
     // if the user specifies an earliest start time there will be extraneous empty dump files
