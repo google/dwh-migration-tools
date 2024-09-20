@@ -86,10 +86,7 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
                   + " (UserName varchar, errorcode int, StartTime int)");
       handle
           .getJdbcTemplate()
-          .execute(
-              "create table "
-                  + TeradataLogsConnector.DEF_SQL_TABLE
-                  + " (QueryID int)");
+          .execute("create table " + TeradataLogsConnector.DEF_SQL_TABLE + " (QueryID int)");
 
       ConnectorArguments arguments =
           new ConnectorArguments("--connector", connector.getName(), "--query-log-days", "1");
