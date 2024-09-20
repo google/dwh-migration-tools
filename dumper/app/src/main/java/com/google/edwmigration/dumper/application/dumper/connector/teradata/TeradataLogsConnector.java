@@ -209,6 +209,11 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         "Extracting query logs from tables: '{}' and '{}'",
         tableNames.queryLogsTableName(),
         tableNames.sqlLogsTableName());
+
+    out.add(new TeradataTablesValidatorTask(
+            tableNames.queryLogsTableName(), tableNames.sqlLogsTableName()
+    ));
+
     ImmutableSet.Builder<String> conditionsBuilder = ImmutableSet.builder();
     // if the user specifies an earliest start time there will be extraneous empty dump files
     // because we always iterate over the full 7 trailing days; maybe it's worth
