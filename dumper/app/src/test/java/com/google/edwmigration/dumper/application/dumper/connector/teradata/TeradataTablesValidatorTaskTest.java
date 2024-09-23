@@ -28,9 +28,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -47,10 +45,8 @@ public class TeradataTablesValidatorTaskTest {
 
   @Mock private PreparedStatement statement;
 
-  @Rule public ExpectedException expectedException = ExpectedException.none();
-
   @Test
-  public void tablesExists() throws Exception {
+  public void tablesExists_success() throws Exception {
     TeradataTablesValidatorTask task = new TeradataTablesValidatorTask("x", "y", "z");
 
     when(connection.prepareStatement(anyString())).thenReturn(statement);
@@ -66,44 +62,34 @@ public class TeradataTablesValidatorTaskTest {
   }
 
   @Test
-  public void someTablesDoNotExist() throws Exception {
-    expectedException.expect(MetadataDumperUsageException.class);
-    expectedException.expectMessage("The tables [y] do not exists or are not accessible.");
-
+  public void someTablesDoNotExist_throwsUsageException() throws Exception {
     TeradataTablesValidatorTask task = new TeradataTablesValidatorTask("x", "y", "z");
 
     when(connection.prepareStatement(eq("select 1 from x"))).thenReturn(statement);
     when(connection.prepareStatement(eq("select 1 from y"))).thenThrow(SQLException.class);
     when(connection.prepareStatement(eq("select 1 from z"))).thenReturn(statement);
 
-    try {
-      task.doInConnection(context, jdbcHandle, sink, connection);
+    MetadataDumperUsageException exception =
+        Assert.assertThrows(
+            MetadataDumperUsageException.class,
+            () -> task.doInConnection(context, jdbcHandle, sink, connection));
 
-      Assert.fail("Exception is expected");
-    } catch (Exception e) {
-      // make sure all tables have been checked,
-      // even with an exception for any
-      verify(connection).prepareStatement(eq("select 1 from x"));
-      verify(connection).prepareStatement(eq("select 1 from y"));
-      verify(connection).prepareStatement(eq("select 1 from z"));
-
-      throw e;
-    }
+    Assert.assertEquals(
+        exception.getMessage(), "The tables [y] do not exists or are not accessible.");
+    // make sure all tables have been checked,
+    // even with an exception for any
+    verify(connection).prepareStatement(eq("select 1 from x"));
+    verify(connection).prepareStatement(eq("select 1 from y"));
+    verify(connection).prepareStatement(eq("select 1 from z"));
   }
 
   @Test
-  public void noTables() {
-    expectedException.expect(IllegalArgumentException.class);
-
-    new TeradataTablesValidatorTask();
-    Assert.fail("At least 1 table name must be provided to the task.");
+  public void noTables_throwsException() {
+    Assert.assertThrows(IllegalArgumentException.class, TeradataTablesValidatorTask::new);
   }
 
   @Test
-  public void nullTables() {
-    expectedException.expect(NullPointerException.class);
-
-    new TeradataTablesValidatorTask(null);
-    Assert.fail("At least 1 table name must be provided to the task.");
+  public void nullTables_throwsException() {
+    Assert.assertThrows(NullPointerException.class, () -> new TeradataTablesValidatorTask(null));
   }
 }
