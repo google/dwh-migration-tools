@@ -67,6 +67,10 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     super(targetPath);
   }
 
+  public AbstractJdbcTask(String targetPath, boolean createTarget) {
+    super(targetPath, createTarget);
+  }
+
   @CheckForNull
   public Class<? extends Enum<?>> getHeaderClass() {
     return headerClass;
@@ -251,7 +255,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         // debug(statement);
         Stopwatch stopwatch = Stopwatch.createStarted();
         statement.execute(); // Must return true to indicate a ResultSet object.
-        LOG.debug("Statement execution took " + stopwatch + ". Extracting results...");
+        LOG.debug("Statement execution took {}. Extracting results...", stopwatch);
         // debug(statement);
       }
 
@@ -261,7 +265,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         Stopwatch stopwatch = Stopwatch.createStarted();
         rs = statement.getResultSet();
         result = resultSetExtractor.extractData(rs);
-        LOG.debug("Result set extraction took " + stopwatch + ".");
+        LOG.debug("Result set extraction took {}.", stopwatch);
       } finally {
         JdbcUtils.closeResultSet(rs);
       }
@@ -295,7 +299,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   @Override
   protected T doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
     JdbcHandle jdbcHandle = (JdbcHandle) handle;
-    LOG.info("Writing to " + getTargetPath() + " -> " + sink);
+    LOG.info("Writing to {} -> {}", getTargetPath(), sink);
 
     DataSource dataSource = jdbcHandle.getDataSource();
     // We could use JdbcUtils, but that would prevent us from getting a .exception.txt.

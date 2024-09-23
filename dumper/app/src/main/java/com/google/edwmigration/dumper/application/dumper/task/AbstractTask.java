@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 /** @author shevek */
 public abstract class AbstractTask<T> implements Task<T> {
 
-  @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(AbstractTask.class);
 
   public static final CSVFormat FORMAT =
@@ -110,9 +109,10 @@ public abstract class AbstractTask<T> implements Task<T> {
     if (!createTarget) {
       return doRun(context, DummyByteSink.INSTANCE, context.getHandle());
     }
+
     OutputHandle sink = context.newOutputFileHandle(getTargetPath());
     if (sink.exists()) {
-      LOG.info("Skipping " + getName() + ": " + sink + " already exists.");
+      LOG.info("Skipping {}: {} already exists.", getName(), sink);
       return null;
     }
     T result = doRun(context, sink.asTemporaryByteSink(), context.getHandle());
