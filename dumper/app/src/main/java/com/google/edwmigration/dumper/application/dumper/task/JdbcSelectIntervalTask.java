@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.QueryLogDates;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import java.sql.Connection;
@@ -48,6 +49,10 @@ public class JdbcSelectIntervalTask extends JdbcSelectTask {
       @Nonnull Connection connection)
       throws SQLException {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
-    return doSelect(connection, withInterval(rse, interval), getSql());
+    Summary summary = doSelect(connection, withInterval(rse, interval), getSql());
+    if (summary.rowCount() > 0) {
+      QueryLogDates.updateQueryLogStartDate(interval.getStart());
+    }
+    return summary;
   }
 }

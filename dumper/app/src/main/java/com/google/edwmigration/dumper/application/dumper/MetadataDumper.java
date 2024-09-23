@@ -24,6 +24,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
+import com.google.edwmigration.dumper.application.dumper.SummaryPrinter.SummaryLinePrinter;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
@@ -43,6 +44,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -193,6 +196,7 @@ public class MetadataDumper {
           checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
       logFinalSummary(
           summaryPrinter,
+          arguments,
           state,
           outputFileLength,
           stopwatch,
@@ -265,8 +269,32 @@ public class MetadataDumper {
     return true;
   }
 
+  private void outputCorrectLogStartAndEndDates(
+      SummaryLinePrinter linePrinter, ConnectorArguments connectorArguments) {
+    ZonedDateTime queryLogStartDate = connectorArguments.getQueryLogStart();
+    ZonedDateTime queryLogEndDate = connectorArguments.getQueryLogEnd();
+    ZonedDateTime actualQueryLogStartDate = QueryLogDates.getQueryLogStartDate();
+    ZonedDateTime actualQueryLogEndDate = QueryLogDates.getQueryLogStartDate();
+
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-DD");
+
+    if (queryLogStartDate == null && queryLogEndDate == null) {
+      linePrinter.println(
+          "Query log contains data from '%s' to '%s'",
+          actualQueryLogStartDate.format(formatter), actualQueryLogEndDate.format(formatter));
+      return;
+    }
+
+    // TODO: compare actual query log ranges with requested ones
+
+    linePrinter.println(
+        "Requested query log range was from '%s' to '%s', but actual data contained from '%s' to '%s'",
+        queryLogStartDate, queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
+  }
+
   private void logFinalSummary(
       SummaryPrinter summaryPrinter,
+      ConnectorArguments connectorArguments,
       TaskSetState state,
       long outputFileLength,
       Stopwatch stopwatch,
@@ -281,6 +309,9 @@ public class MetadataDumper {
                   + state.getTasksReports().stream()
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
+          if (connectorArguments.isLogConnector()) {
+            outputCorrectLogStartAndEndDates(linePrinter, connectorArguments);
+          }
           if (requiredTaskSucceeded) {
             linePrinter.println("Output saved to '%s'", outputFileLocation);
           } else {
