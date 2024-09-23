@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -27,7 +29,6 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -70,12 +71,11 @@ public class TeradataTablesValidatorTaskTest {
     when(connection.prepareStatement(eq("select 1 from z"))).thenReturn(statement);
 
     MetadataDumperUsageException exception =
-        Assert.assertThrows(
+        assertThrows(
             MetadataDumperUsageException.class,
             () -> task.doInConnection(context, jdbcHandle, sink, connection));
 
-    Assert.assertEquals(
-        exception.getMessage(), "The tables [y] do not exists or are not accessible.");
+    assertEquals(exception.getMessage(), "The tables [y] do not exists or are not accessible.");
     // make sure all tables have been checked,
     // even with an exception for any
     verify(connection).prepareStatement(eq("select 1 from x"));
@@ -85,11 +85,11 @@ public class TeradataTablesValidatorTaskTest {
 
   @Test
   public void noTables_throwsException() {
-    Assert.assertThrows(IllegalArgumentException.class, TeradataTablesValidatorTask::new);
+    assertThrows(IllegalArgumentException.class, TeradataTablesValidatorTask::new);
   }
 
   @Test
   public void nullTables_throwsException() {
-    Assert.assertThrows(NullPointerException.class, () -> new TeradataTablesValidatorTask(null));
+    assertThrows(NullPointerException.class, () -> new TeradataTablesValidatorTask(null));
   }
 }
