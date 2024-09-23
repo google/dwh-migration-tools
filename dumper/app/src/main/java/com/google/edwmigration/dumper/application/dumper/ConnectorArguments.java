@@ -809,7 +809,7 @@ public class ConnectorArguments extends DefaultArguments {
         getOptions().valueOf(optionQueryLogEnd), OPT_QUERY_LOG_END_DEFAULT);
   }
 
-  @CheckForNull
+  @Nonnull
   public List<String> getQueryLogAlternates() {
     return getOptions().valuesOf(optionQueryLogAlternates);
   }
