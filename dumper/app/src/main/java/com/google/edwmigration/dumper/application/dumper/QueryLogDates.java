@@ -22,8 +22,7 @@ import javax.annotation.Nonnull;
 public class QueryLogDates {
   @Nonnull private static ZonedDateTime queryLogStartDate = ZonedDateTime.now();
 
-  @Nonnull
-  private static ZonedDateTime queryLogEndDate = ZonedDateTime.of(1970, 1, 1, 0, 0, 0, 0, null);
+  @Nonnull private static ZonedDateTime queryLogEndDate = ZonedDateTime.now();
 
   public static ZonedDateTime getQueryLogStartDate() {
     return queryLogStartDate;

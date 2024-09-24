@@ -37,6 +37,8 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
 
   @Nonnull private final TaskCategory taskCategory;
 
+  private ZonedDateTime logQueryStarDate, logQueryEndDate;
+
   public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
     this(targetPath, sql, TaskCategory.REQUIRED);
   }
@@ -46,6 +48,17 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
     super(targetPath);
     this.sql = sql;
     this.taskCategory = taskCategory;
+  }
+
+  public JdbcSelectTask(
+      @Nonnull String targetPath,
+      @Nonnull String sql,
+      TaskCategory taskCategory,
+      ZonedDateTime logQueryStartDate,
+      ZonedDateTime logQueryEndDate) {
+    this(targetPath, sql, taskCategory);
+    this.logQueryStarDate = logQueryStartDate;
+    this.logQueryEndDate = logQueryEndDate;
   }
 
   @Override
@@ -69,7 +82,7 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, rse, sql);
     if (summary.rowCount() > 0) {
-      QueryLogDates.updateQueryLogStartDate(ZonedDateTime.now());
+      QueryLogDates.updateQueryLogStartDate(logQueryStarDate);
       QueryLogDates.updateQueryLogEndDate(ZonedDateTime.now());
     }
     return summary;

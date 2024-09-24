@@ -393,7 +393,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         task.zipPrefix
             + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
             + ".csv";
-    out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
+    out.add(
+        new JdbcSelectTask(
+                file, query, task.taskCategory, interval.getStart(), interval.getEndExclusive())
+            .withHeaderClass(task.headerClass));
   }
 
   private String getOverrideableQuery(

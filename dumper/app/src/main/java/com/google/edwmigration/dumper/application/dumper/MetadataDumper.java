@@ -276,8 +276,8 @@ public class MetadataDumper {
     ZonedDateTime actualQueryLogStartDate = QueryLogDates.getQueryLogStartDate();
     ZonedDateTime actualQueryLogEndDate = QueryLogDates.getQueryLogStartDate();
 
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-DD");
-
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-DDThh:mm");
+    linePrinter.println(actualQueryLogStartDate + " ");
     if (queryLogStartDate == null && queryLogEndDate == null) {
       linePrinter.println(
           "Query log contains data from '%s' to '%s'",
