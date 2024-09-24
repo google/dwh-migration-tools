@@ -44,6 +44,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -271,17 +272,19 @@ public class MetadataDumper {
 
   private void outputCorrectLogStartAndEndDates(
       SummaryLinePrinter linePrinter, ConnectorArguments connectorArguments) {
+
     ZonedDateTime queryLogStartDate = connectorArguments.getQueryLogStart();
     ZonedDateTime queryLogEndDate = connectorArguments.getQueryLogEnd();
     ZonedDateTime actualQueryLogStartDate = QueryLogDates.getQueryLogStartDate();
     ZonedDateTime actualQueryLogEndDate = QueryLogDates.getQueryLogStartDate();
 
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYY-MM-DDThh:mm");
-    linePrinter.println(actualQueryLogStartDate + " ");
+    DateTimeFormatter DATE_FORMAT =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneOffset.UTC);
+
     if (queryLogStartDate == null && queryLogEndDate == null) {
       linePrinter.println(
           "Query log contains data from '%s' to '%s'",
-          actualQueryLogStartDate.format(formatter), actualQueryLogEndDate.format(formatter));
+          actualQueryLogStartDate.format(DATE_FORMAT), actualQueryLogEndDate.format(DATE_FORMAT));
       return;
     }
 

@@ -81,15 +81,19 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       throws SQLException {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, rse, sql);
-    if (summary.rowCount() > 0) {
-      QueryLogDates.updateQueryLogStartDate(logQueryStarDate);
-      QueryLogDates.updateQueryLogEndDate(ZonedDateTime.now());
-    }
+    updateQueryLogDates(summary);
     return summary;
   }
 
   @Override
   public String describeSourceData() {
     return createSourceDataDescriptionForQuery(getSql());
+  }
+
+  private void updateQueryLogDates(Summary summary) {
+    if (summary.rowCount() > 0) {
+      QueryLogDates.updateQueryLogStartDate(logQueryStarDate);
+      QueryLogDates.updateQueryLogEndDate(ZonedDateTime.now());
+    }
   }
 }
