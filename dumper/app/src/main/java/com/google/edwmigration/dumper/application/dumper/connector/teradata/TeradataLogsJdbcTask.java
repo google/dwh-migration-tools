@@ -39,6 +39,8 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
@@ -157,7 +159,11 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       throws SQLException {
     String sql = getOrCreateSql(jdbcHandle);
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
-    return doSelect(connection, withInterval(rse, interval), sql);
+    Summary summary = doSelect(connection, withInterval(rse, interval), sql);
+    if (summary.rowCount() > 0) {
+      QueryLogDateUtil.updateQueryLogDates(interval.getStart(), interval.getEndExclusive());
+    }
+    return summary;
   }
 
   @Nonnull

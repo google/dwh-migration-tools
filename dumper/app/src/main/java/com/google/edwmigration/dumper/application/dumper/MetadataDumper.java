@@ -299,15 +299,15 @@ public class MetadataDumper {
           actualQueryLogStartDate, actualQueryLogEndDate);
     } else if (queryLogStartDate == null) {
       linePrinter.println(
-          "Requested query logs range was until '%s', and actual data contains logs from '%s' to '%s'",
+          "Requested query logs range was until '%s'. Actual data contains logs from '%s' to '%s'",
           queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
     } else if (queryLogEndDate == null) {
       linePrinter.println(
-          "Requested query logs range was starting from '%s' and actual data contains logs from '%s' to '%s'",
+          "Requested query logs range was starting from '%s'. Actual data contains logs from '%s' to '%s'",
           queryLogStartDate, actualQueryLogStartDate, actualQueryLogEndDate);
     } else {
       linePrinter.println(
-          "Requested query logs range was from '%s' to '%s' and actual data contains logs from '%s' to '%s'",
+          "Requested query logs range was from '%s' to '%s'. Actual data contains logs from '%s' to '%s'",
           queryLogStartDate, queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
     }
   }

@@ -138,7 +138,9 @@ public class GenericConnector extends AbstractJdbcConnector implements LogsConne
         String finalFile =
             this.entryName.replace(
                 "{period}", DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()));
-        out.add(new JdbcSelectTask(finalFile, finalQuery));
+        out.add(
+            new JdbcSelectTask(
+                finalFile, finalQuery, interval.getStart(), interval.getEndInclusive()));
       }
 
     } else {

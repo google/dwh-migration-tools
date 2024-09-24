@@ -53,6 +53,16 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
   public JdbcSelectTask(
       @Nonnull String targetPath,
       @Nonnull String sql,
+      ZonedDateTime logQueryStartDate,
+      ZonedDateTime logQueryEndDate) {
+    this(targetPath, sql);
+    this.logQueryStarDate = logQueryStartDate;
+    this.logQueryEndDate = logQueryEndDate;
+  }
+
+  public JdbcSelectTask(
+      @Nonnull String targetPath,
+      @Nonnull String sql,
       TaskCategory taskCategory,
       ZonedDateTime logQueryStartDate,
       ZonedDateTime logQueryEndDate) {
@@ -81,19 +91,16 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       throws SQLException {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, rse, sql);
-    updateQueryLogDates(summary);
+    LOG.info("ROW_COUNT FOR " + logQueryStarDate + " " + logQueryEndDate + " is " + summary.rowCount());
+    if (summary.rowCount() > 0) {
+      // TODO: update only for query log history
+      QueryLogDateUtil.updateQueryLogDates(logQueryStarDate, logQueryEndDate);
+    }
     return summary;
   }
 
   @Override
   public String describeSourceData() {
     return createSourceDataDescriptionForQuery(getSql());
-  }
-
-  private void updateQueryLogDates(Summary summary) {
-    if (summary.rowCount() > 0) {
-      QueryLogDateUtil.updateQueryLogStartDate(logQueryStarDate);
-      QueryLogDateUtil.updateQueryLogEndDate(logQueryEndDate);
-    }
   }
 }

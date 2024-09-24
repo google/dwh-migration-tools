@@ -16,13 +16,17 @@
  */
 package com.google.edwmigration.dumper.application.dumper.utils;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import javax.annotation.Nonnull;
 
 public class QueryLogDateUtil {
+
   @Nonnull private static ZonedDateTime queryLogStartDate = ZonedDateTime.now();
 
-  @Nonnull private static ZonedDateTime queryLogEndDate = ZonedDateTime.now();
+  @Nonnull
+  private static ZonedDateTime queryLogEndDate =
+      ZonedDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
   public static ZonedDateTime getActualQueryLogStartDate() {
     return queryLogStartDate;
@@ -32,13 +36,19 @@ public class QueryLogDateUtil {
     return queryLogEndDate;
   }
 
-  public static void updateQueryLogStartDate(ZonedDateTime newQueryLogStartDate) {
+  public static void updateQueryLogDates(
+      ZonedDateTime logQueryStarDate, ZonedDateTime logQueryEndDate) {
+    QueryLogDateUtil.updateQueryLogStartDate(logQueryStarDate);
+    QueryLogDateUtil.updateQueryLogEndDate(logQueryEndDate);
+  }
+
+  private static void updateQueryLogStartDate(ZonedDateTime newQueryLogStartDate) {
     if (newQueryLogStartDate.isBefore(queryLogStartDate)) {
       queryLogStartDate = newQueryLogStartDate;
     }
   }
 
-  public static void updateQueryLogEndDate(ZonedDateTime newQueryLogEndDate) {
+  private static void updateQueryLogEndDate(ZonedDateTime newQueryLogEndDate) {
     if (newQueryLogEndDate.isAfter(queryLogEndDate)) {
       queryLogEndDate = newQueryLogEndDate;
     }
