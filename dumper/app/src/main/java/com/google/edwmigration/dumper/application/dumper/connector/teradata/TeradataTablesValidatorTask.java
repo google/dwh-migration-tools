@@ -17,7 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
   private static final Logger LOG = LoggerFactory.getLogger(TeradataTablesValidatorTask.class);
 
-  private final ImmutableList<String> tableNames;
+  private final ImmutableSet<String> tableNames;
 
   public TeradataTablesValidatorTask(@Nonnull String... tableNames) {
     super(
@@ -49,7 +49,7 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
     Preconditions.checkNotNull(tableNames, "Validated table names are null");
     Preconditions.checkArgument(tableNames.length > 0, "Validated table names are empty");
 
-    this.tableNames = ImmutableList.copyOf(tableNames);
+    this.tableNames = ImmutableSet.copyOf(tableNames);
   }
 
   @CheckForNull
@@ -85,5 +85,15 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
 
     LOG.debug("Success. The tables are accessible.");
     return null;
+  }
+
+  /**
+   * The getter exists mostly for unit-tests purpose
+   *
+   * @return validated table names
+   */
+  @Nonnull
+  public ImmutableSet<String> getTableNames() {
+    return tableNames;
   }
 }

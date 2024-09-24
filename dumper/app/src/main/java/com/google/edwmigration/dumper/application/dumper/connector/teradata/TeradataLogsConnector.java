@@ -46,6 +46,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalLong;
@@ -228,10 +229,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         ZonedIntervalIterableGenerator.forConnectorArguments(
             arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
     LOG.info("Exporting query logs for '{}'", intervals);
-    SharedState queryLogsState = new SharedState();
-    SharedState utilityLogsState = new SharedState();
-    String utilityLogsTable =
-        arguments.getDefinitionOrDefault(TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
+
     String logDateColumn = arguments.getDefinition(TeradataLogsConnectorProperty.LOG_DATE_COLUMN);
     if (isAssessment
         && tableNames.usingAtLeastOneAlternate()
@@ -251,10 +249,33 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     if (!isAssessment) {
       conditionsBuilder.add("L.UserName <> 'DBC'");
     }
+
+    SharedState queryLogsState = new SharedState();
+    SharedState utilityLogsState = new SharedState();
     ImmutableSet<String> conditions = conditionsBuilder.build();
-    for (ZonedInterval interval : intervals) {
-      String file = createFilename(ZIP_ENTRY_PREFIX, interval);
-      if (isAssessment) {
+
+    if (isAssessment) {
+      String utilityLogsTable =
+          arguments.getDefinitionOrDefault(TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
+
+      { // fail fast validation step
+        List<String> optionalTablesToCheck = new ArrayList<>();
+        optionalTablesToCheck.add(utilityLogsTable);
+
+        if (arguments.isDefinitionSpecified(TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE)) {
+          optionalTablesToCheck.add(
+              arguments.getDefinition(TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE));
+        }
+        if (arguments.isDefinitionSpecified(TeradataLogsConnectorProperty.RES_USAGE_SPMA_TABLE)) {
+          optionalTablesToCheck.add(
+              arguments.getDefinition(TeradataLogsConnectorProperty.RES_USAGE_SPMA_TABLE));
+        }
+
+        out.add(new TeradataTablesValidatorTask(optionalTablesToCheck.toArray(new String[] {})));
+      }
+
+      for (ZonedInterval interval : intervals) {
+        String file = createFilename(ZIP_ENTRY_PREFIX, interval);
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
         out.add(
             new TeradataAssessmentLogsJdbcTask(
@@ -274,7 +295,10 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                 utilityLogsState,
                 utilityLogsTable,
                 interval));
-      } else {
+      }
+    } else {
+      for (ZonedInterval interval : intervals) {
+        String file = createFilename(ZIP_ENTRY_PREFIX, interval);
         out.add(
             new TeradataLogsJdbcTask(file, queryLogsState, tableNames, conditions, interval)
                 .withHeaderClass(Header.class));
