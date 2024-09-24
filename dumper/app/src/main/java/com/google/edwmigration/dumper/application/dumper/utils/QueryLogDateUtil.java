@@ -14,18 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper;
+package com.google.edwmigration.dumper.application.dumper.utils;
 
 import java.time.ZonedDateTime;
 import javax.annotation.Nonnull;
 
-public class QueryLogDates {
+public class QueryLogDateUtil {
   @Nonnull private static ZonedDateTime queryLogStartDate = ZonedDateTime.now();
 
   @Nonnull private static ZonedDateTime queryLogEndDate = ZonedDateTime.now();
 
-  public static ZonedDateTime getQueryLogStartDate() {
+  public static ZonedDateTime getActualQueryLogStartDate() {
     return queryLogStartDate;
+  }
+
+  public static ZonedDateTime getActualQueryLogEndDate() {
+    return queryLogEndDate;
   }
 
   public static void updateQueryLogStartDate(ZonedDateTime newQueryLogStartDate) {

@@ -36,6 +36,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TaskResultSummary;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
+import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -45,7 +46,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +61,9 @@ import org.slf4j.LoggerFactory;
 public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
+
+  private static DateTimeFormatter OUTPUT_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneOffset.UTC);
 
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
@@ -273,26 +276,40 @@ public class MetadataDumper {
   private void outputCorrectLogStartAndEndDates(
       SummaryLinePrinter linePrinter, ConnectorArguments connectorArguments) {
 
-    ZonedDateTime queryLogStartDate = connectorArguments.getQueryLogStart();
-    ZonedDateTime queryLogEndDate = connectorArguments.getQueryLogEnd();
-    ZonedDateTime actualQueryLogStartDate = QueryLogDates.getQueryLogStartDate();
-    ZonedDateTime actualQueryLogEndDate = QueryLogDates.getQueryLogStartDate();
-
-    DateTimeFormatter DATE_FORMAT =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneOffset.UTC);
+    String queryLogStartDate =
+        connectorArguments.getQueryLogStart() == null
+            ? null
+            : connectorArguments.getQueryLogStart().format(OUTPUT_DATE_FORMAT);
+    String queryLogEndDate =
+        connectorArguments.getQueryLogEnd() == null
+            ? null
+            : connectorArguments.getQueryLogStart().format(OUTPUT_DATE_FORMAT);
+    String actualQueryLogStartDate =
+        QueryLogDateUtil.getActualQueryLogStartDate() == null
+            ? null
+            : QueryLogDateUtil.getActualQueryLogStartDate().format(OUTPUT_DATE_FORMAT);
+    String actualQueryLogEndDate =
+        QueryLogDateUtil.getActualQueryLogEndDate() == null
+            ? null
+            : QueryLogDateUtil.getActualQueryLogEndDate().format(OUTPUT_DATE_FORMAT);
 
     if (queryLogStartDate == null && queryLogEndDate == null) {
       linePrinter.println(
-          "Query log contains data from '%s' to '%s'",
-          actualQueryLogStartDate.format(DATE_FORMAT), actualQueryLogEndDate.format(DATE_FORMAT));
-      return;
+          "Query logs contain data from '%s' to '%s'",
+          actualQueryLogStartDate, actualQueryLogEndDate);
+    } else if (queryLogStartDate == null) {
+      linePrinter.println(
+          "Requested query logs range was until '%s', and actual data contains logs from '%s' to '%s'",
+          queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
+    } else if (queryLogEndDate == null) {
+      linePrinter.println(
+          "Requested query logs range was starting from '%s' and actual data contains logs from '%s' to '%s'",
+          queryLogStartDate, actualQueryLogStartDate, actualQueryLogEndDate);
+    } else {
+      linePrinter.println(
+          "Requested query logs range was from '%s' to '%s' and actual data contains logs from '%s' to '%s'",
+          queryLogStartDate, queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
     }
-
-    // TODO: compare actual query log ranges with requested ones
-
-    linePrinter.println(
-        "Requested query log range was from '%s' to '%s', but actual data contained from '%s' to '%s'",
-        queryLogStartDate, queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
   }
 
   private void logFinalSummary(
