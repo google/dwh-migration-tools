@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
@@ -87,13 +88,9 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
     return null;
   }
 
-  /**
-   * The getter exists mostly for unit-tests purpose
-   *
-   * @return validated table names
-   */
+  @VisibleForTesting
   @Nonnull
-  public ImmutableSet<String> getTableNames() {
+  ImmutableSet<String> getTableNames() {
     return tableNames;
   }
 }
