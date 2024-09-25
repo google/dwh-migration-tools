@@ -1,0 +1,67 @@
+Name,QueryText,ConditionText,SchemaName,TaskSchemaId,DatabaseName,TaskDatabaseId,ScheduledTime,CompletedTime,State,ReturnValue,QueryId,QueryStartTime,ErrorCode,ErrorMessage,GraphVersion,RunId,RootTaskId,ScheduledFrom,InstanceId,AttemptNumber,Config
+MONITOR_TASK,"BEGIN
+              call trust_center.process_deferred_registration();
+              alter task trust_center_state.monitor_task suspend;
+
+              -- To execute the first run of the SECURITY_ESSENTIALS scanner_package, we are relying
+              -- on threat_vuln_vault table. If there is no record in the threat_vuln_vault table
+              -- for the SECURITY_ESSENTIALS scanner_package, we can imply that SECURITY_ESSENTIALS
+              -- scanner package never ran. This definitely does not look clean but given all the workarounds,
+              -- this seems better to me.
+              IF (not exists(select * from trust_center_state.threat_vuln_vault
+                                    where scanner_package_id = 'SECURITY_ESSENTIALS')) THEN
+                call trust_center.log_info('TRUSTCENTER: SECURITY_ESSENTIALS package is getting executed');
+                call trust_center.execute_scanner_internal('SECURITY_ESSENTIALS');
+                call trust_center.log_info('TRUSTCENTER: SECURITY_ESSENTIALS package is successfully executed');
+              END IF;
+
+              -- We are resuming the CIS_BENCHMARKS_CIS4_7 scanner. It is currently suspended
+              -- after having failed for 10 consecutive runs.
+              -- We are resuming the CIS_BENCHMARKS_CIS4_7 scanner only if ENABLED configuration
+              -- is TRUE for the scanner i.e. only if customer has enabled the scanner.
+              let config_value varchar := '';
+              select configuration_value into config_value from trust_center_state.running_configuration
+                where scanner_id = 'CIS_BENCHMARKS_CIS4_7' and
+                      scanner_package_id = 'CIS_BENCHMARKS' and
+                      configuration_name = 'ENABLED';
+              IF (config_value = 'TRUE') THEN
+                call trust_center.log_info('TRUSTCENTER: CIS_BENCHMARKS_CIS4_7_task scanner is getting resumed');
+                alter task trust_center_state.CIS_BENCHMARKS_CIS4_7_task resume;
+                call trust_center.log_info('TRUSTCENTER: CIS_BENCHMARKS_CIS4_7_task scanner is  successfully resumed');
+              END IF;
+
+              drop task if exists snowflake.trust_center_state.CIS_BENCHMARKS_CIS1_3_TASK;
+
+              -- perform data migrations in the background
+              call trust_center.safe_migrate_timestamp_ltz('scanner_package_registry', 'registered_timestamp', 'registered_timestamp_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('scanner_package_registry', 'deregistered_timestamp', 'deregistered_timestamp_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('scanner_registry', 'registered_timestamp', 'registered_timestamp_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('scanner_registry', 'deregistered_timestamp', 'deregistered_timestamp_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('threat_vuln_vault', 'start_timestamp', 'start_timestamp_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('threat_vuln_vault', 'end_timestamp', 'end_timestamp_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('threat_vuln_vault', 'created_on', 'created_on_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('configuration_log', 'modified_timestamp', 'modified_timestamp_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('deferred_registration', 'created', 'created_ltz');
+              call trust_center.safe_migrate_timestamp_ltz('deferred_registration', 'started', 'started_ltz');
+
+              -- Auto resume enabled but suspended tasks
+              call trust_center.auto_resume_enabled_but_suspended_tasks();
+
+              call trust_center.log_info('TRUSTCENTER: monitor_task executed successfully');
+              call trust_center_state.grant_operate_on_tasks_in_debug_mode();
+    
+            EXCEPTION
+              WHEN OTHER THEN
+                alter task trust_center_state.monitor_task suspend;
+                let error_message varchar := SQLERRM;
+                let error_code varchar := SQLCODE;
+                call trust_center.log_error('TRUSTCENTER: monitor_task failed with error_code: ' || :error_code || ' and error_message: ' || :error_message);
+            END",,TRUST_CENTER_STATE,130,SNOWFLAKE,1,2024-09-20 09:04:25.501,2024-09-20 09:07:06.319,SUCCEEDED,,01b72904-0002-e3f3-0001-c3de037f143e,2024-09-20 09:04:26.277,,,1,1726848265501,01b726d4-6108-d90e-0000-00000000005c,SCHEDULE,,1,
+_FINALIZER_TASK,call finalize_measurement_task(),,,,,,2024-09-20 00:07:56.702,2024-09-20 00:07:59.284,SUCCEEDED,,01b726eb-0002-e3ca-0001-c3de037f702e,2024-09-20 00:07:58.226,,,1,1726816055440,01b6ce53-56b1-19f7-0000-000000000058,SCHEDULE,1,1,
+_MEASUREMENT_TASK,call insert_table_and_send_email(),,,,,,2024-09-20 00:07:35.44,2024-09-20 00:07:56.702,SUCCEEDED,,01b726eb-0002-e377-0001-c3de037fe022,2024-09-20 00:07:36.016,,,1,1726816055440,01b6ce53-56b1-19f7-0000-000000000058,SCHEDULE,1,1,
+_FINALIZER_TASK,call finalize_measurement_task(),,,,,,2024-09-19 18:07:52.953,2024-09-19 18:07:54.809,SUCCEEDED,,01b72583-0002-e2e7-0001-c3de037ef006,2024-09-19 18:07:53.709,,,1,1726794455420,01b6ce53-56b1-19f7-0000-000000000058,SCHEDULE,1,1,
+_MEASUREMENT_TASK,call insert_table_and_send_email(),,,,,,2024-09-19 18:07:35.42,2024-09-19 18:07:52.953,SUCCEEDED,,01b72583-0002-e11e-0001-c3de037e418a,2024-09-19 18:07:37.21,,,1,1726794455420,01b6ce53-56b1-19f7-0000-000000000058,SCHEDULE,1,1,
+_FINALIZER_TASK,call finalize_measurement_task(),,,,,,2024-09-20 12:07:54.512,2024-09-20 12:07:56.324,SUCCEEDED,,01b729bb-0002-e3ca-0001-c3de037f7402,2024-09-20 12:07:55.467,,,1,1726859255440,01b6ce53-56b1-19f7-0000-000000000058,SCHEDULE,1,1,
+_MEASUREMENT_TASK,call insert_table_and_send_email(),,,,,,2024-09-20 12:07:35.44,2024-09-20 12:07:54.512,SUCCEEDED,,01b729bb-0002-e3e0-0001-c3de037ff4b6,2024-09-20 12:07:36.294,,,1,1726859255440,01b6ce53-56b1-19f7-0000-000000000058,SCHEDULE,1,1,
+_FINALIZER_TASK,call finalize_measurement_task(),,,,,,2024-09-20 06:07:53.455,2024-09-20 06:07:55.267,SUCCEEDED,,01b72853-0002-e3d9-0001-c3de037f228a,2024-09-20 06:07:54.442,,,1,1726837655440,01b6ce53-56b1-19f7-0000-000000000058,SCHEDULE,1,1,
+_MEASUREMENT_TASK,call insert_table_and_send_email(),,,,,,2024-09-20 06:07:35.44,2024-09-20 06:07:53.455,SUCCEEDED,,01b72853-0002-e3c6-0001-c3de0380333e,2024-09-20 06:07:36.116,,,1,1726837655440,01b6ce53-56b1-19f7-0000-000000000058,SCHEDULE,1,1,

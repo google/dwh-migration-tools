@@ -1,0 +1,1 @@
+EventId,EventTimestamp,EventType,UserName,ClientIp,ReportedClientType,ReportedClientVersion,FirstAuthenticationFactor,SecondAuthenticationFactor,IsSuccess,ErrorCode,ErrorMessage,RelatedEventId,Connection
