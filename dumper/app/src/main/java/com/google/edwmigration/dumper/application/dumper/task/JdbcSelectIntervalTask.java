@@ -50,7 +50,7 @@ public class JdbcSelectIntervalTask extends JdbcSelectTask {
       throws SQLException {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, withInterval(rse, interval), getSql());
-    if (summary.rowCount() > 0) {
+    if (summary != null && summary.rowCount() > 0) {
       QueryLogDateUtil.updateQueryLogDates(interval.getStart(), interval.getEndInclusive());
     }
     return summary;

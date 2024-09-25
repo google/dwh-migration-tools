@@ -717,10 +717,6 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().has(optionDryrun);
   }
 
-  public boolean isLogConnector() {
-    return getConnectorName().contains("logs");
-  }
-
   @CheckForNull
   @Deprecated
   public String getQueryLogEarliestTimestamp() {

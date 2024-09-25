@@ -200,6 +200,7 @@ public class MetadataDumper {
           checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
       logFinalSummary(
           summaryPrinter,
+          connector,
           arguments,
           state,
           outputFileLength,
@@ -283,7 +284,7 @@ public class MetadataDumper {
     String queryLogEndDate =
         connectorArguments.getQueryLogEnd() == null
             ? null
-            : connectorArguments.getQueryLogStart().format(OUTPUT_DATE_FORMAT);
+            : connectorArguments.getQueryLogEnd().format(OUTPUT_DATE_FORMAT);
     String actualQueryLogStartDate =
         QueryLogDateUtil.getActualQueryLogStartDate() == null
             ? null
@@ -299,21 +300,22 @@ public class MetadataDumper {
           actualQueryLogStartDate, actualQueryLogEndDate);
     } else if (queryLogStartDate == null) {
       linePrinter.println(
-          "Requested query logs range was until '%s'. Actual data contains logs from '%s' to '%s'",
+          "Requested query logs range was until '%s'. The first entry of logs is on '%s' and the last entry is on '%s'",
           queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
     } else if (queryLogEndDate == null) {
       linePrinter.println(
-          "Requested query logs range was starting from '%s'. Actual data contains logs from '%s' to '%s'",
+          "Requested query logs range was starting from '%s'. The first entry of logs is on '%s' and the last entry is on '%s'",
           queryLogStartDate, actualQueryLogStartDate, actualQueryLogEndDate);
     } else {
       linePrinter.println(
-          "Requested query logs range was from '%s' to '%s'. Actual data contains logs from '%s' to '%s'",
+          "Requested query logs range was from '%s' to '%s'. The first entry of logs is on '%s' and the last entry is on '%s'",
           queryLogStartDate, queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
     }
   }
 
   private void logFinalSummary(
       SummaryPrinter summaryPrinter,
+      Connector connector,
       ConnectorArguments connectorArguments,
       TaskSetState state,
       long outputFileLength,
@@ -329,7 +331,7 @@ public class MetadataDumper {
                   + state.getTasksReports().stream()
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
-          if (connectorArguments.isLogConnector()) {
+          if (connector.isLogsConnector()) {
             outputCorrectLogStartAndEndDates(linePrinter, connectorArguments);
           }
           if (requiredTaskSucceeded) {

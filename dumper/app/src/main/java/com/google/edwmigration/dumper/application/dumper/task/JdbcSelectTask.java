@@ -37,6 +37,9 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
 
   @Nonnull private final TaskCategory taskCategory;
 
+  // TODO: change the name
+  private boolean considerForQueryLogDate;
+
   private ZonedDateTime logQueryStarDate, logQueryEndDate;
 
   public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
@@ -71,6 +74,17 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
     this.logQueryEndDate = logQueryEndDate;
   }
 
+  public JdbcSelectTask(
+      @Nonnull String targetPath,
+      @Nonnull String sql,
+      TaskCategory taskCategory,
+      ZonedDateTime logQueryStartDate,
+      ZonedDateTime logQueryEndDate,
+      boolean considerForQueryLogDate) {
+    this(targetPath, sql, taskCategory, logQueryStartDate, logQueryEndDate);
+    this.considerForQueryLogDate = considerForQueryLogDate;
+  }
+
   @Override
   @Nonnull
   public TaskCategory getCategory() {
@@ -91,8 +105,7 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       throws SQLException {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, rse, sql);
-    if (summary.rowCount() > 0) {
-      // TODO: update only for query log history
+    if (this.considerForQueryLogDate && summary != null && summary.rowCount() > 0) {
       QueryLogDateUtil.updateQueryLogDates(logQueryStarDate, logQueryEndDate);
     }
     return summary;

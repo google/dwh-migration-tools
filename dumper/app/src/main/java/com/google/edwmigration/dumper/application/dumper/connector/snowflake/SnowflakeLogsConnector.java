@@ -364,7 +364,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     if (!arguments.isAssessment()) {
       TaskDescription queryHistoryTask =
           new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
-      queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
+      queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask, true));
       return;
     }
 
@@ -373,17 +373,21 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
             createExtendedQueryFromAccountUsage(arguments),
             QueryHistoryExtendedFormat.Header.class);
-    queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
+    queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask, true));
 
     List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
     Duration duration = Duration.ofDays(1);
     ZonedIntervalIterableGenerator.forConnectorArguments(
             arguments, duration, IntervalExpander.createBasedOnDuration(duration))
-        .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
+        .forEach(
+            interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task, false)));
   }
 
   private static void addJdbcTask(
-      List<? super Task<?>> out, ZonedInterval interval, TaskDescription task) {
+      List<? super Task<?>> out,
+      ZonedInterval interval,
+      TaskDescription task,
+      boolean considerForQueryLogDate) {
     String query =
         String.format(
             task.unformattedQuery,
@@ -395,7 +399,12 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             + ".csv";
     out.add(
         new JdbcSelectTask(
-                file, query, task.taskCategory, interval.getStart(), interval.getEndExclusive())
+                file,
+                query,
+                task.taskCategory,
+                interval.getStart(),
+                interval.getEndExclusive(),
+                considerForQueryLogDate)
             .withHeaderClass(task.headerClass));
   }
 

@@ -38,6 +38,7 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.sql.Connection;
@@ -133,7 +134,11 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
         throws SQLException {
       String sql = getSql(jdbcHandle);
       ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
-      return doSelect(connection, withInterval(rse, interval), sql);
+      Summary summary = doSelect(connection, withInterval(rse, interval), sql);
+      if (summary != null && summary.rowCount() > 0) {
+        QueryLogDateUtil.updateQueryLogDates(interval.getStart(), interval.getEndExclusive());
+      }
+      return summary;
     }
 
     @Nonnull

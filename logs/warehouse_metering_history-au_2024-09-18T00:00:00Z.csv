@@ -1,2 +1,0 @@
-StartTime,EndTime,WarehouseId,WarehouseName,CreditsUsed,CreditsUsedCompute,CreditsUsedCloudServices
-2024-09-18 04:00:00.0,2024-09-18 05:00:00.0,3,COMPUTE_WH,0.455286112,0.398055556,0.057230556
