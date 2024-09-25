@@ -91,7 +91,6 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       throws SQLException {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, rse, sql);
-    LOG.info("ROW_COUNT FOR " + logQueryStarDate + " " + logQueryEndDate + " is " + summary.rowCount());
     if (summary.rowCount() > 0) {
       // TODO: update only for query log history
       QueryLogDateUtil.updateQueryLogDates(logQueryStarDate, logQueryEndDate);

@@ -43,12 +43,18 @@ public class QueryLogDateUtil {
   }
 
   private static void updateQueryLogStartDate(ZonedDateTime newQueryLogStartDate) {
+    if (newQueryLogStartDate == null) {
+      return;
+    }
     if (newQueryLogStartDate.isBefore(queryLogStartDate)) {
       queryLogStartDate = newQueryLogStartDate;
     }
   }
 
   private static void updateQueryLogEndDate(ZonedDateTime newQueryLogEndDate) {
+    if (newQueryLogEndDate == null) {
+      return;
+    }
     if (newQueryLogEndDate.isAfter(queryLogEndDate)) {
       queryLogEndDate = newQueryLogEndDate;
     }
