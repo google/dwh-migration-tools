@@ -18,7 +18,8 @@ SELECT
   A.object_name "ObjectName",
   A.object_type "ObjectType",
   A.editionable "Editionable",
-  count(1) "Count"
+  count(1) "Count",
+  NULL "TableOwner"
 FROM dba_objects A
 WHERE A.object_name NOT LIKE 'BIN$%'
   AND (A.object_type <> 'SYNONYM' OR A.owner <> 'PUBLIC')
