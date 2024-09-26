@@ -29,7 +29,7 @@ import javax.annotation.Nonnull;
 public class HdfsInitializerTask extends AbstractTask<Void> {
 
   public HdfsInitializerTask() {
-    super("hdfs-initializer.txt", /* createTarget= */ false);
+    super("hdfs-initializer.txt", TargetInitialization.DO_NOT_CREATE);
   }
 
   @CheckForNull

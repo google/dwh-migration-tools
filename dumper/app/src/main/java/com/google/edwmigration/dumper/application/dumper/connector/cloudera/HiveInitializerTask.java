@@ -29,7 +29,7 @@ import javax.annotation.Nonnull;
 public class HiveInitializerTask extends AbstractTask<Void> {
 
   public HiveInitializerTask() {
-    super("hive-initializer.txt", /* createTarget= */ false);
+    super("hive-initializer.txt", TargetInitialization.DO_NOT_CREATE);
   }
 
   @CheckForNull

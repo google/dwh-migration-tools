@@ -28,7 +28,7 @@ import javax.annotation.Nonnull;
 public class HadoopInitializerTask extends AbstractTask<Void> {
 
   public HadoopInitializerTask() {
-    super("hadoop-initializer.txt", /* createTarget= */ false);
+    super("hadoop-initializer.txt", TargetInitialization.DO_NOT_CREATE);
   }
 
   @CheckForNull
