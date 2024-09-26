@@ -286,13 +286,13 @@ public class MetadataDumper {
             ? null
             : connectorArguments.getQueryLogEnd().format(OUTPUT_DATE_FORMAT);
     String actualQueryLogStartDate =
-        QueryLogDateUtil.getActualQueryLogStartDate() == null
+        QueryLogDateUtil.getlQueryLogFirstEntry() == null
             ? null
-            : QueryLogDateUtil.getActualQueryLogStartDate().format(OUTPUT_DATE_FORMAT);
+            : QueryLogDateUtil.getlQueryLogFirstEntry().format(OUTPUT_DATE_FORMAT);
     String actualQueryLogEndDate =
-        QueryLogDateUtil.getActualQueryLogEndDate() == null
+        QueryLogDateUtil.getQueryLogLastEntry() == null
             ? null
-            : QueryLogDateUtil.getActualQueryLogEndDate().format(OUTPUT_DATE_FORMAT);
+            : QueryLogDateUtil.getQueryLogLastEntry().format(OUTPUT_DATE_FORMAT);
 
     if (queryLogStartDate == null && queryLogEndDate == null) {
       linePrinter.println(

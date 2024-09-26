@@ -387,7 +387,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       List<? super Task<?>> out,
       ZonedInterval interval,
       TaskDescription task,
-      boolean considerForQueryLogDate) {
+      boolean shouldCalculateQueryLogDates) {
     String query =
         String.format(
             task.unformattedQuery,
@@ -404,7 +404,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 task.taskCategory,
                 interval.getStart(),
                 interval.getEndExclusive(),
-                considerForQueryLogDate)
+                shouldCalculateQueryLogDates)
             .withHeaderClass(task.headerClass));
   }
 

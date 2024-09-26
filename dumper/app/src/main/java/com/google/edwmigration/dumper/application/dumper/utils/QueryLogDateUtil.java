@@ -28,21 +28,15 @@ public class QueryLogDateUtil {
   private static ZonedDateTime queryLogEndDate =
       ZonedDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
-  public static ZonedDateTime getActualQueryLogStartDate() {
+  public static ZonedDateTime getlQueryLogFirstEntry() {
     return queryLogStartDate;
   }
 
-  public static ZonedDateTime getActualQueryLogEndDate() {
+  public static ZonedDateTime getQueryLogLastEntry() {
     return queryLogEndDate;
   }
 
-  public static void updateQueryLogDates(
-      ZonedDateTime logQueryStarDate, ZonedDateTime logQueryEndDate) {
-    QueryLogDateUtil.updateQueryLogStartDate(logQueryStarDate);
-    QueryLogDateUtil.updateQueryLogEndDate(logQueryEndDate);
-  }
-
-  private static void updateQueryLogStartDate(ZonedDateTime newQueryLogStartDate) {
+  public static void updateQueryLogFirstEntry(ZonedDateTime newQueryLogStartDate) {
     if (newQueryLogStartDate == null) {
       return;
     }
@@ -51,7 +45,7 @@ public class QueryLogDateUtil {
     }
   }
 
-  private static void updateQueryLogEndDate(ZonedDateTime newQueryLogEndDate) {
+  public static void updateQueryLogLastEntry(ZonedDateTime newQueryLogEndDate) {
     if (newQueryLogEndDate == null) {
       return;
     }

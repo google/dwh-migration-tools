@@ -206,7 +206,8 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, withInterval(rse, interval), sql);
     if (summary != null && summary.rowCount() > 0) {
-      QueryLogDateUtil.updateQueryLogDates(interval.getStart(), interval.getEndExclusive());
+      QueryLogDateUtil.updateQueryLogFirstEntry(interval.getStart());
+      QueryLogDateUtil.updateQueryLogLastEntry(interval.getEndExclusive());
     }
     return summary;
   }
