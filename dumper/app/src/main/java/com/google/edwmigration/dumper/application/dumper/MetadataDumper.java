@@ -274,7 +274,7 @@ public class MetadataDumper {
     return true;
   }
 
-  private void outputCorrectLogStartAndEndDates(
+  private void outputLogStartAndEndDates(
       SummaryLinePrinter linePrinter, ConnectorArguments connectorArguments) {
 
     String queryLogStartDate =
@@ -332,7 +332,7 @@ public class MetadataDumper {
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
           if (connector.isLogsConnector()) {
-            outputCorrectLogStartAndEndDates(linePrinter, connectorArguments);
+            outputLogStartAndEndDates(linePrinter, connectorArguments);
           }
           if (requiredTaskSucceeded) {
             linePrinter.println("Output saved to '%s'", outputFileLocation);

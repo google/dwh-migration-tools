@@ -17,14 +17,18 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
+import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.junit.BeforeClass;
@@ -38,12 +42,13 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class JdbcSelectTaskTest extends AbstractTaskTest {
 
-  @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
-
   private static final String NAME = JdbcSelectTaskTest.class.getSimpleName();
   private static final File FILE = DumperTestUtils.newJdbcFile(NAME);
   private static final String QUERY = "SELECT a, b, c FROM foo";
+  private static final ZonedDateTime queryLogStartDate =
+      ZonedDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
+  private static final ZonedDateTime queryLogEndDate = ZonedDateTime.now();
 
   private enum Header {
     Foo,
@@ -120,5 +125,33 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
     String taskDescription = task.toString();
 
     assertEquals("Write /dir1/dir2/sample.txt from\n        SELECT 123;", taskDescription);
+  }
+
+  @Test
+  public void shouldUpdateQueryLogDates() throws Exception {
+    MemoryByteSink sink = new MemoryByteSink();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      new JdbcSelectTask(
+              "(memory)", QUERY, TaskCategory.REQUIRED, queryLogStartDate, queryLogEndDate, true)
+          .withHeaderClass(Header.class)
+          .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+    }
+
+    assertEquals(queryLogStartDate, QueryLogDateUtil.getlQueryLogFirstEntry());
+    assertEquals(queryLogEndDate, QueryLogDateUtil.getQueryLogLastEntry());
+  }
+
+  @Test
+  public void shouldNotUpdateQueryLogDates() throws Exception {
+    MemoryByteSink sink = new MemoryByteSink();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      new JdbcSelectTask(
+              "(memory)", QUERY, TaskCategory.REQUIRED, queryLogStartDate, queryLogEndDate)
+          .withHeaderClass(Header.class)
+          .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+    }
+
+    assertNotEquals(queryLogStartDate, QueryLogDateUtil.getlQueryLogFirstEntry());
+    assertNotEquals(queryLogEndDate, QueryLogDateUtil.getQueryLogLastEntry());
   }
 }
