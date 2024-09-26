@@ -21,11 +21,18 @@ SELECT
   -- "Count" is kept for backwards compatibility
   CASE WHEN A.object_name LIKE '/%' THEN 0
     WHEN A.object_name LIKE 'BIN$%' THEN 0
-    ELSE 1 END "Count"
+    ELSE 1 END "Count",
+  C.table_owner "TableOwner"
 FROM cdb_objects A
-  WHERE A.object_type = 'SYNONYM'
-    AND A.owner = 'PUBLIC'
+LEFT OUTER JOIN cdb_synonyms C
+  ON A.owner = C.owner
+  AND C.table_owner IS NOT NULL
+  AND A.object_name = C.synonym_name
+  AND A.con_id = C.con_id
+WHERE A.object_type = 'SYNONYM'
+  AND A.owner = 'PUBLIC'
 GROUP BY
   A.con_id,
   A.editionable,
-  A.object_name
+  A.object_name,
+  C.table_owner
