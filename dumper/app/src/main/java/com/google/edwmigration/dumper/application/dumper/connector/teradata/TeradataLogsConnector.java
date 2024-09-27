@@ -258,21 +258,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       String utilityLogsTable =
           arguments.getDefinitionOrDefault(TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
 
-      { // fail fast validation step
-        List<String> optionalTablesToCheck = new ArrayList<>();
-        optionalTablesToCheck.add(utilityLogsTable);
-
-        if (arguments.isDefinitionSpecified(TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE)) {
-          optionalTablesToCheck.add(
-              arguments.getDefinition(TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE));
-        }
-        if (arguments.isDefinitionSpecified(TeradataLogsConnectorProperty.RES_USAGE_SPMA_TABLE)) {
-          optionalTablesToCheck.add(
-              arguments.getDefinition(TeradataLogsConnectorProperty.RES_USAGE_SPMA_TABLE));
-        }
-
-        out.add(new TeradataTablesValidatorTask(optionalTablesToCheck.toArray(new String[] {})));
-      }
+      addFailFastValidationStepForAssesment(out, arguments, utilityLogsTable);
 
       for (ZonedInterval interval : intervals) {
         String file = createFilename(ZIP_ENTRY_PREFIX, interval);
@@ -304,5 +290,22 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                 .withHeaderClass(Header.class));
       }
     }
+  }
+
+  private void addFailFastValidationStepForAssesment(
+      List<? super Task<?>> out, ConnectorArguments arguments, String utilityLogsTable) {
+    List<String> optionalTablesToCheck = new ArrayList<>();
+    optionalTablesToCheck.add(utilityLogsTable);
+
+    if (arguments.isDefinitionSpecified(TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE)) {
+      optionalTablesToCheck.add(
+          arguments.getDefinition(TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE));
+    }
+    if (arguments.isDefinitionSpecified(TeradataLogsConnectorProperty.RES_USAGE_SPMA_TABLE)) {
+      optionalTablesToCheck.add(
+          arguments.getDefinition(TeradataLogsConnectorProperty.RES_USAGE_SPMA_TABLE));
+    }
+
+    out.add(new TeradataTablesValidatorTask(optionalTablesToCheck.toArray(new String[] {})));
   }
 }
