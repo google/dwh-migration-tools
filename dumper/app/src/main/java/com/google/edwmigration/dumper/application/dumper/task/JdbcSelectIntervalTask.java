@@ -20,7 +20,6 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.Nonnull;

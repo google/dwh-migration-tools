@@ -29,7 +29,6 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;

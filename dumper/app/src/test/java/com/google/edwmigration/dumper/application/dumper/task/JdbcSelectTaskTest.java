@@ -24,7 +24,6 @@ import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
-
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;

@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZonedDateTime;

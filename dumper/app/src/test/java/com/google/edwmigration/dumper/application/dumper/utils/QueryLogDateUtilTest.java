@@ -19,13 +19,12 @@ package com.google.edwmigration.dumper.application.dumper.utils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 
 @RunWith(JUnit4.class)
 public class QueryLogDateUtilTest {
