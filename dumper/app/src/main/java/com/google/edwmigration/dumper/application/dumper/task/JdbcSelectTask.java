@@ -17,8 +17,9 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
@@ -105,8 +106,8 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, rse, sql);
     if (this.calculateQueryLogDates && summary != null && summary.rowCount() > 0) {
-      QueryLogDateUtil.updateQueryLogFirstEntry(logQueryStarDate);
-      QueryLogDateUtil.updateQueryLogLastEntry(logQueryEndDate);
+      QueryLogDateState.updateQueryLogFirstEntry(logQueryStarDate);
+      QueryLogDateState.updateQueryLogLastEntry(logQueryEndDate);
     }
     return summary;
   }

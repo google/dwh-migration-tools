@@ -36,7 +36,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TaskResultSummary;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
-import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -285,14 +285,8 @@ public class MetadataDumper {
         connectorArguments.getQueryLogEnd() == null
             ? null
             : connectorArguments.getQueryLogEnd().format(OUTPUT_DATE_FORMAT);
-    String actualQueryLogStartDate =
-        QueryLogDateUtil.getlQueryLogFirstEntry() == null
-            ? null
-            : QueryLogDateUtil.getlQueryLogFirstEntry().format(OUTPUT_DATE_FORMAT);
-    String actualQueryLogEndDate =
-        QueryLogDateUtil.getQueryLogLastEntry() == null
-            ? null
-            : QueryLogDateUtil.getQueryLogLastEntry().format(OUTPUT_DATE_FORMAT);
+    String actualQueryLogStartDate = QueryLogDateState.getlQueryLogFirstEntry().format(OUTPUT_DATE_FORMAT);
+    String actualQueryLogEndDate = QueryLogDateState.getQueryLogLastEntry().format(OUTPUT_DATE_FORMAT);
 
     if (queryLogStartDate == null && queryLogEndDate == null) {
       linePrinter.println(

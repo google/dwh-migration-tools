@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
+
 @RunWith(JUnit4.class)
 public class QueryLogDateUtilTest {
 
@@ -34,10 +36,10 @@ public class QueryLogDateUtilTest {
     ZonedDateTime queryLogStartDate = ZonedDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
     // Act
-    QueryLogDateUtil.updateQueryLogFirstEntry(queryLogStartDate);
+    QueryLogDateState.updateQueryLogFirstEntry(queryLogStartDate);
 
     // Assert
-    assertEquals(QueryLogDateUtil.getlQueryLogFirstEntry(), queryLogStartDate);
+    assertEquals(QueryLogDateState.getlQueryLogFirstEntry(), queryLogStartDate);
   }
 
   @Test
@@ -46,10 +48,10 @@ public class QueryLogDateUtilTest {
     ZonedDateTime queryLogStartDate = ZonedDateTime.of(2025, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
     // Act
-    QueryLogDateUtil.updateQueryLogFirstEntry(queryLogStartDate);
+    QueryLogDateState.updateQueryLogFirstEntry(queryLogStartDate);
 
     // Assert
-    assertNotEquals(QueryLogDateUtil.getlQueryLogFirstEntry(), queryLogStartDate);
+    assertNotEquals(QueryLogDateState.getlQueryLogFirstEntry(), queryLogStartDate);
   }
 
   @Test
@@ -58,10 +60,10 @@ public class QueryLogDateUtilTest {
     ZonedDateTime queryLogStartDate = ZonedDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
     // Act
-    QueryLogDateUtil.updateQueryLogLastEntry(queryLogStartDate);
+    QueryLogDateState.updateQueryLogLastEntry(queryLogStartDate);
 
     // Assert
-    assertEquals(QueryLogDateUtil.getlQueryLogFirstEntry(), queryLogStartDate);
+    assertEquals(QueryLogDateState.getlQueryLogFirstEntry(), queryLogStartDate);
   }
 
   @Test
@@ -70,9 +72,9 @@ public class QueryLogDateUtilTest {
     ZonedDateTime queryLogStartDate = ZonedDateTime.of(1960, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
     // Act
-    QueryLogDateUtil.updateQueryLogLastEntry(queryLogStartDate);
+    QueryLogDateState.updateQueryLogLastEntry(queryLogStartDate);
 
     // Assert
-    assertNotEquals(QueryLogDateUtil.getlQueryLogFirstEntry(), queryLogStartDate);
+    assertNotEquals(QueryLogDateState.getlQueryLogFirstEntry(), queryLogStartDate);
   }
 }

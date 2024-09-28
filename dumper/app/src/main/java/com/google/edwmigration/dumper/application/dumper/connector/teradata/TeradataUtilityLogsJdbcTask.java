@@ -21,6 +21,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -28,7 +29,7 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
@@ -206,8 +207,8 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, withInterval(rse, interval), sql);
     if (summary != null && summary.rowCount() > 0) {
-      QueryLogDateUtil.updateQueryLogFirstEntry(interval.getStart());
-      QueryLogDateUtil.updateQueryLogLastEntry(interval.getEndExclusive());
+      QueryLogDateState.updateQueryLogFirstEntry(interval.getStart());
+      QueryLogDateState.updateQueryLogLastEntry(interval.getEndExclusive());
     }
     return summary;
   }

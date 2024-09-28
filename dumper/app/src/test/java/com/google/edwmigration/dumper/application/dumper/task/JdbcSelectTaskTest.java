@@ -20,10 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
-import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
+
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -137,8 +138,8 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
           .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
     }
 
-    assertEquals(queryLogStartDate, QueryLogDateUtil.getlQueryLogFirstEntry());
-    assertEquals(queryLogEndDate, QueryLogDateUtil.getQueryLogLastEntry());
+    assertEquals(queryLogStartDate, QueryLogDateState.getlQueryLogFirstEntry());
+    assertEquals(queryLogEndDate, QueryLogDateState.getQueryLogLastEntry());
   }
 
   @Test
@@ -151,7 +152,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
           .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
     }
 
-    assertNotEquals(queryLogStartDate, QueryLogDateUtil.getlQueryLogFirstEntry());
-    assertNotEquals(queryLogEndDate, QueryLogDateUtil.getQueryLogLastEntry());
+    assertNotEquals(queryLogStartDate, QueryLogDateState.getlQueryLogFirstEntry());
+    assertNotEquals(queryLogEndDate, QueryLogDateState.getQueryLogLastEntry());
   }
 }

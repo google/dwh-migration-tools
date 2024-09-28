@@ -23,6 +23,7 @@ import com.google.common.base.Predicates;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
@@ -38,7 +39,6 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.utils.QueryLogDateUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.sql.Connection;
@@ -136,8 +136,8 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
       ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
       Summary summary = doSelect(connection, withInterval(rse, interval), sql);
       if (summary != null && summary.rowCount() > 0) {
-        QueryLogDateUtil.updateQueryLogFirstEntry(interval.getStart());
-        QueryLogDateUtil.updateQueryLogLastEntry(interval.getEndExclusive());
+        QueryLogDateState.updateQueryLogFirstEntry(interval.getStart());
+        QueryLogDateState.updateQueryLogLastEntry(interval.getEndExclusive());
       }
       return summary;
     }
