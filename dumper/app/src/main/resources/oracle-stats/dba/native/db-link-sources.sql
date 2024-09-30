@@ -14,7 +14,7 @@
 -- limitations under the License.
 SELECT
   Sources.db_name "Name",
-  Sources.dbid "Dbid",
+  Sources.dbid "DbId",
   Sources.db_unique_name "UniqueName",
   Sources.host_name "HostName",
   Sources.ip_address "IpAddress",
