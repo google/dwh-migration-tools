@@ -76,7 +76,10 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
     ImmutableList<Integer> jdbcTaskOrders =
         IntStream.range(0, tasks.size())
             .filter(i -> tasks.get(i) instanceof AbstractJdbcTask)
-            .filter(i -> !(tasks.get(i) instanceof TeradataTablesValidatorTask)) // filter out validation tasks
+            .filter(
+                i ->
+                    !(tasks.get(i)
+                        instanceof TeradataTablesValidatorTask)) // filter out validation tasks
             .boxed()
             .collect(toImmutableList());
 
