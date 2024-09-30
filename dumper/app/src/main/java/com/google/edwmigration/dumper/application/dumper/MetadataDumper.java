@@ -285,7 +285,7 @@ public class MetadataDumper {
             ? null
             : connectorArguments.getQueryLogEnd().format(OUTPUT_DATE_FORMAT);
     String actualQueryLogStartDate =
-        QueryLogDateState.getlQueryLogFirstEntry().format(OUTPUT_DATE_FORMAT);
+        QueryLogDateState.getQueryLogFirstEntry().format(OUTPUT_DATE_FORMAT);
     String actualQueryLogEndDate =
         QueryLogDateState.getQueryLogLastEntry().format(OUTPUT_DATE_FORMAT);
 

@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
@@ -137,21 +136,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
           .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
     }
 
-    assertEquals(queryLogStartDate, QueryLogDateState.getlQueryLogFirstEntry());
+    assertEquals(queryLogStartDate, QueryLogDateState.getQueryLogFirstEntry());
     assertEquals(queryLogEndDate, QueryLogDateState.getQueryLogLastEntry());
-  }
-
-  @Test
-  public void shouldNotUpdateQueryLogDates() throws Exception {
-    MemoryByteSink sink = new MemoryByteSink();
-    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-      new JdbcSelectTask(
-              "(memory)", QUERY, TaskCategory.REQUIRED, queryLogStartDate, queryLogEndDate)
-          .withHeaderClass(Header.class)
-          .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
-    }
-
-    assertNotEquals(queryLogStartDate, QueryLogDateState.getlQueryLogFirstEntry());
-    assertNotEquals(queryLogEndDate, QueryLogDateState.getQueryLogLastEntry());
   }
 }

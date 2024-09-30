@@ -28,11 +28,11 @@ public class QueryLogDateState {
   private static ZonedDateTime queryLogEndDate =
       ZonedDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
-  public static ZonedDateTime getlQueryLogFirstEntry() {
+  public static synchronized ZonedDateTime getQueryLogFirstEntry() {
     return queryLogStartDate;
   }
 
-  public static ZonedDateTime getQueryLogLastEntry() {
+  public static synchronized ZonedDateTime getQueryLogLastEntry() {
     return queryLogEndDate;
   }
 

@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.utils;
+package com.google.edwmigration.dumper.application.dumper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import org.junit.Test;
@@ -27,7 +26,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class QueryLogDateUtilTest {
+public class QueryLogDateStateTest {
 
   @Test
   public void updateQueryLogFirstEntry_shouldUpdateToNewValue() {
@@ -38,7 +37,7 @@ public class QueryLogDateUtilTest {
     QueryLogDateState.updateQueryLogFirstEntry(queryLogStartDate);
 
     // Assert
-    assertEquals(QueryLogDateState.getlQueryLogFirstEntry(), queryLogStartDate);
+    assertEquals(QueryLogDateState.getQueryLogFirstEntry(), queryLogStartDate);
   }
 
   @Test
@@ -50,7 +49,7 @@ public class QueryLogDateUtilTest {
     QueryLogDateState.updateQueryLogFirstEntry(queryLogStartDate);
 
     // Assert
-    assertNotEquals(QueryLogDateState.getlQueryLogFirstEntry(), queryLogStartDate);
+    assertNotEquals(QueryLogDateState.getQueryLogFirstEntry(), queryLogStartDate);
   }
 
   @Test
@@ -62,7 +61,7 @@ public class QueryLogDateUtilTest {
     QueryLogDateState.updateQueryLogLastEntry(queryLogStartDate);
 
     // Assert
-    assertEquals(QueryLogDateState.getlQueryLogFirstEntry(), queryLogStartDate);
+    assertEquals(QueryLogDateState.getQueryLogFirstEntry(), queryLogStartDate);
   }
 
   @Test
@@ -74,6 +73,6 @@ public class QueryLogDateUtilTest {
     QueryLogDateState.updateQueryLogLastEntry(queryLogStartDate);
 
     // Assert
-    assertNotEquals(QueryLogDateState.getlQueryLogFirstEntry(), queryLogStartDate);
+    assertNotEquals(QueryLogDateState.getQueryLogFirstEntry(), queryLogStartDate);
   }
 }
