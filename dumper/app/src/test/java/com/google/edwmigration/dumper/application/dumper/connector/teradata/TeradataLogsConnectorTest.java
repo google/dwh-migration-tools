@@ -30,10 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractConne
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
-import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.task.*;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
@@ -45,6 +42,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +54,167 @@ import org.junit.runners.JUnit4;
 public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
 
   private final TeradataLogsConnector connector = new TeradataLogsConnector();
+
+  @Test
+  public void addTaskTo_TableValidationTasksBeforeSelectTasks() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+    ConnectorArguments arguments =
+        new ConnectorArguments(
+            "--connector",
+            connector.getName(),
+            "--assessment",
+            "-D"
+                + TeradataLogsConnector.TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE.getName()
+                + "=scpu-table");
+    connector.addTasksTo(tasks, arguments);
+
+    final int latesTableValidationTaskOrder =
+        IntStream.range(0, tasks.size())
+            .filter(i -> tasks.get(i) instanceof TeradataTablesValidatorTask)
+            .max()
+            .getAsInt();
+    ImmutableList<Integer> jdbcTaskOrders =
+        IntStream.range(0, tasks.size())
+            .filter(i -> tasks.get(i) instanceof AbstractJdbcTask)
+            .filter(
+                i ->
+                    !(tasks.get(i)
+                        instanceof TeradataTablesValidatorTask)) // filter out validation tasks
+            .boxed()
+            .collect(toImmutableList());
+
+    for (int jdbcTaskOrder : jdbcTaskOrders) {
+      assertTrue(
+          TeradataTablesValidatorTask.class.getSimpleName()
+              + " must be executed before any other JDBC task",
+          latesTableValidationTaskOrder < jdbcTaskOrder);
+    }
+  }
+
+  @Test
+  public void addTaskTo_additionalTablesOnlyIfUserDefineSCPU() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+    ConnectorArguments arguments =
+        new ConnectorArguments(
+            "--connector",
+            connector.getName(),
+            "--assessment",
+            "-D"
+                + TeradataLogsConnector.TeradataLogsConnectorProperty.RES_USAGE_SCPU_TABLE.getName()
+                + "=scpu-table");
+    connector.addTasksTo(tasks, arguments);
+
+    String utilityLogsTable =
+        arguments.getDefinitionOrDefault(
+            TeradataLogsConnector.TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
+
+    assertEquals(
+        2, tasks.stream().filter(task -> task instanceof TeradataTablesValidatorTask).count());
+    assertEquals(
+        1,
+        tasks.stream()
+            .filter(task -> task instanceof TeradataTablesValidatorTask)
+            .filter(
+                (t) -> ((TeradataTablesValidatorTask) t).getTableNames().contains(utilityLogsTable))
+            .count());
+    assertEquals(
+        1,
+        tasks.stream()
+            .filter(task -> task instanceof TeradataTablesValidatorTask)
+            .filter((t) -> ((TeradataTablesValidatorTask) t).getTableNames().contains("scpu-table"))
+            .count());
+  }
+
+  @Test
+  public void addTaskTo_additionalTablesOnlyIfUserDefineSPMA() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+    ConnectorArguments arguments =
+        new ConnectorArguments(
+            "--connector",
+            connector.getName(),
+            "--assessment",
+            "-D"
+                + TeradataLogsConnector.TeradataLogsConnectorProperty.RES_USAGE_SPMA_TABLE.getName()
+                + "=spma-table");
+    connector.addTasksTo(tasks, arguments);
+
+    String utilityLogsTable =
+        arguments.getDefinitionOrDefault(
+            TeradataLogsConnector.TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
+
+    assertEquals(
+        2, tasks.stream().filter(task -> task instanceof TeradataTablesValidatorTask).count());
+    assertEquals(
+        1,
+        tasks.stream()
+            .filter(task -> task instanceof TeradataTablesValidatorTask)
+            .filter(
+                (t) -> ((TeradataTablesValidatorTask) t).getTableNames().contains(utilityLogsTable))
+            .count());
+    assertEquals(
+        1,
+        tasks.stream()
+            .filter(task -> task instanceof TeradataTablesValidatorTask)
+            .filter((t) -> ((TeradataTablesValidatorTask) t).getTableNames().contains("spma-table"))
+            .count());
+  }
+
+  @Test
+  public void addTaskTo_additionalTablesCheckForAssessment() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(
+        tasks, new ConnectorArguments("--connector", connector.getName(), "--assessment"));
+
+    Stream<Task<?>> taskStream =
+        tasks.stream().filter(task -> task instanceof TeradataTablesValidatorTask);
+    assertEquals(2, taskStream.count());
+  }
+
+  @Test
+  public void addTasksTo_containsValidationTaskForRequiredTables() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    ConnectorArguments arguments = new ConnectorArguments("--connector", connector.getName());
+    connector.addTasksTo(tasks, arguments);
+
+    String utilityLogsTable =
+        arguments.getDefinitionOrDefault(
+            TeradataLogsConnector.TeradataLogsConnectorProperty.UTILITY_LOGS_TABLE);
+    QueryLogTableNames logTableNames = QueryLogTableNamesResolver.resolve(arguments);
+
+    assertEquals(
+        1, tasks.stream().filter(task -> task instanceof TeradataTablesValidatorTask).count());
+    assertEquals(
+        0,
+        tasks.stream()
+            .filter(task -> task instanceof TeradataTablesValidatorTask)
+            .filter(
+                (t) -> ((TeradataTablesValidatorTask) t).getTableNames().contains(utilityLogsTable))
+            .count());
+    assertEquals(
+        1,
+        tasks.stream()
+            .filter(task -> task instanceof TeradataTablesValidatorTask)
+            .filter(
+                (t) ->
+                    ((TeradataTablesValidatorTask) t)
+                        .getTableNames()
+                        .contains(logTableNames.queryLogsTableName()))
+            .count());
+    assertEquals(
+        1,
+        tasks.stream()
+            .filter(task -> task instanceof TeradataTablesValidatorTask)
+            .filter(
+                (t) ->
+                    ((TeradataTablesValidatorTask) t)
+                        .getTableNames()
+                        .contains(logTableNames.sqlLogsTableName()))
+            .count());
+  }
 
   @Test
   public void addTasksTo_commonConnectorTest_success() throws Exception {

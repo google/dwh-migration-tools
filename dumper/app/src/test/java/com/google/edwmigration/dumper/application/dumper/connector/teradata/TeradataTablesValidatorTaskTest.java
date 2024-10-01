@@ -90,6 +90,8 @@ public class TeradataTablesValidatorTaskTest {
 
   @Test
   public void nullTables_throwsException() {
-    assertThrows(NullPointerException.class, () -> new TeradataTablesValidatorTask(null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new TeradataTablesValidatorTask((String[]) null)); // cast to avoid compiler warnings
   }
 }
