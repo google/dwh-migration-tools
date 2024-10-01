@@ -109,7 +109,7 @@ public abstract class AbstractTask<T> implements Task<T> {
 
   @Override
   public T run(TaskRunContext context) throws Exception {
-    if (TargetInitialization.DO_NOT_CREATE == targetInitialization) {
+    if (targetInitialization == TargetInitialization.DO_NOT_CREATE) {
       return doRun(context, DummyByteSink.INSTANCE, context.getHandle());
     }
 
@@ -139,7 +139,7 @@ public abstract class AbstractTask<T> implements Task<T> {
 
   @Override
   public String toString() {
-    return TargetInitialization.CREATE == targetInitialization
+    return targetInitialization == TargetInitialization.CREATE
         ? format("Write %s %s", targetPath, describeSourceData())
         : describeSourceData();
   }
