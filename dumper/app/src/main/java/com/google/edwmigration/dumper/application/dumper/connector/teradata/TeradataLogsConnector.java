@@ -260,6 +260,12 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
 
       addFailFastValidationStepForAssesment(out, arguments, utilityLogsTable);
 
+      out.add(
+          new TeradataQueryLogsJdbcTask(
+              arguments.getQueryLogStart(),
+              arguments.getQueryLogEndOrDefault(),
+              tableNames.queryLogsTableName()));
+
       for (ZonedInterval interval : intervals) {
         String file = createFilename(ZIP_ENTRY_PREFIX, interval);
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
