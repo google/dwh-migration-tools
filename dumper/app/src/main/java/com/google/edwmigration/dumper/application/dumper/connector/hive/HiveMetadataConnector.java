@@ -399,7 +399,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         new PercentEscaper("._,@=", /* plusForSpace= */ false);
 
     private PartitionsJsonlTask() {
-      super("partitions.jsonl", /* createTarget= */ false);
+      super("partitions.jsonl", TargetInitialization.DO_NOT_CREATE);
     }
 
     @Override

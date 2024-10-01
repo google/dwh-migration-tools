@@ -67,8 +67,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     super(targetPath);
   }
 
-  public AbstractJdbcTask(String targetPath, boolean createTarget) {
-    super(targetPath, createTarget);
+  public AbstractJdbcTask(String targetPath, TargetInitialization targetInitialization) {
+    super(targetPath, targetInitialization);
   }
 
   @CheckForNull

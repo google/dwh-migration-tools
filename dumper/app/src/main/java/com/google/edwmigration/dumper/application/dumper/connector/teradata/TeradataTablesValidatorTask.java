@@ -43,7 +43,9 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
   private final ImmutableList<String> tableNames;
 
   public TeradataTablesValidatorTask(@Nonnull String... tableNames) {
-    super(TeradataTablesValidatorTask.class.getSimpleName() + ".txt", false);
+    super(
+        TeradataTablesValidatorTask.class.getSimpleName() + ".txt",
+        TargetInitialization.DO_NOT_CREATE);
     Preconditions.checkNotNull(tableNames, "Validated table names are null");
     Preconditions.checkArgument(tableNames.length > 0, "Validated table names are empty");
 

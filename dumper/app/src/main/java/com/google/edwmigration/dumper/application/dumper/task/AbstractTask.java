@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 import static java.lang.String.format;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -52,16 +53,18 @@ public abstract class AbstractTask<T> implements Task<T> {
           .withQuoteMode(QuoteMode.MINIMAL);
 
   private final String targetPath;
-  private final boolean createTarget;
+  private final TargetInitialization targetInitialization;
   protected Condition[] conditions = Condition.EMPTY_ARRAY;
 
   public AbstractTask(String targetPath) {
-    this(targetPath, /* createTarget= */ true);
+    this(targetPath, TargetInitialization.CREATE);
   }
 
-  public AbstractTask(String targetPath, boolean createTarget) {
+  public AbstractTask(String targetPath, TargetInitialization targetInitialization) {
+    Preconditions.checkNotNull(
+        targetInitialization, "Target initialization behavior must be defined.");
     this.targetPath = targetPath;
-    this.createTarget = createTarget;
+    this.targetInitialization = targetInitialization;
   }
 
   @Override
@@ -106,7 +109,7 @@ public abstract class AbstractTask<T> implements Task<T> {
 
   @Override
   public T run(TaskRunContext context) throws Exception {
-    if (!createTarget) {
+    if (targetInitialization == TargetInitialization.DO_NOT_CREATE) {
       return doRun(context, DummyByteSink.INSTANCE, context.getHandle());
     }
 
@@ -136,9 +139,14 @@ public abstract class AbstractTask<T> implements Task<T> {
 
   @Override
   public String toString() {
-    return createTarget
+    return targetInitialization == TargetInitialization.CREATE
         ? format("Write %s %s", targetPath, describeSourceData())
         : describeSourceData();
+  }
+
+  public enum TargetInitialization {
+    CREATE,
+    DO_NOT_CREATE
   }
 
   private static class DummyByteSink extends ByteSink {
