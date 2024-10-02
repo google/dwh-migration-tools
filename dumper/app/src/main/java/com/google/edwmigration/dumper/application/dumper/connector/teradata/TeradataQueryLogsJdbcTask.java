@@ -16,64 +16,55 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
-import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.ResultSetExtractor;
 
-public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<TeradataQueryLogResults> {
+public class TeradataQueryLogsJdbcTask extends JdbcSelectTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(TeradataQueryLogsJdbcTask.class);
-  private static final DateTimeFormatter SQL_FORMAT =
-      DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
 
-  private String queryLogsTableName;
-  private ZonedDateTime queryLogStartDate, queryLogEndDate;
-
-  public TeradataQueryLogsJdbcTask(
-      ZonedDateTime queryLogStartDate, ZonedDateTime queryLogEndDate, String queryLogTableNames) {
-    super(
-        TeradataQueryLogsJdbcTask.class.getSimpleName() + ".txt",
-        TargetInitialization.DO_NOT_CREATE);
-    Preconditions.checkNotNull(queryLogTableNames, "Query log table names are null");
-    this.queryLogsTableName = queryLogTableNames;
-    this.queryLogStartDate = queryLogStartDate;
-    this.queryLogEndDate = queryLogEndDate;
+  public TeradataQueryLogsJdbcTask(String targetPath, String sql) {
+    super(targetPath, sql);
   }
 
   @Override
-  protected TeradataQueryLogResults doInConnection(
+  protected Summary doInConnection(
       @Nonnull TaskRunContext context,
       @Nonnull JdbcHandle jdbcHandle,
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
 
-    LOG.info("Getting first and last entry of query logs from '%s", queryLogsTableName);
-
-    String sql =
-        String.format(
-            "SELECT MIN(StartTime) as queryLogFirstEntry, MAX(StartTime) as queryLogLastEntry FROM '%s' WHERE ErrorCode = 0 AND\n"
-                + "StartTime >= CAST('%s' AS TIMESTAMP) AND L.StartTime < CAST('%s' AS TIMESTAMP)\n",
-            queryLogsTableName,
-            SQL_FORMAT.format(queryLogStartDate),
-            SQL_FORMAT.format(queryLogEndDate));
-
+    LOG.info("Starting getting first and last entry of query logs from");
+    ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
+    Summary summary = doSelect(connection, rse, getSql());
+    LOG.info("Result of getting first and last entry is '%s", summary);
     return null;
   }
-}
 
-/** TeradataQueryLogResults */
-class TeradataQueryLogResults {
-  ZonedDateTime queryLogFirstEntry;
-  ZonedDateTime queryLogLastEntry;
+  // protected ResultSetExtractor<TeradataQueryLogResults> newResultSetExtractor(
+  //     @Nonnull ByteSink sink) {
+  //   return new ResultSetExtractor<TeradataQueryLogResults>() {
+  //     @Override
+  //     public TeradataQueryLogResults extractData(ResultSet rs)
+  //         throws SQLException, DataAccessException {
+  //       TeradataQueryLogResults out = new TeradataQueryLogResults();
+  //       try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+
+  //         return out;
+  //       } catch (IOException e) {
+  //         throw new SQLException(e);
+  //       }
+  //     }
+  //   };
+  // }
 }

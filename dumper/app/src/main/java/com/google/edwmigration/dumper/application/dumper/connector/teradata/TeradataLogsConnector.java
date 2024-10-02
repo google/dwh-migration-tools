@@ -45,6 +45,7 @@ import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -260,11 +261,9 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
 
       addFailFastValidationStepForAssesment(out, arguments, utilityLogsTable);
 
-      out.add(
-          new TeradataQueryLogsJdbcTask(
-              arguments.getQueryLogStart(),
-              arguments.getQueryLogEndOrDefault(),
-              tableNames.queryLogsTableName()));
+      LOG.info(
+          "Extracting query logs first and last entries from tables: '%s'",
+          tableNames.queryLogsTableName());
 
       for (ZonedInterval interval : intervals) {
         String file = createFilename(ZIP_ENTRY_PREFIX, interval);
@@ -288,6 +287,14 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                 utilityLogsTable,
                 interval));
       }
+
+      out.add(
+          new TeradataQueryLogsJdbcTask(
+              "queryLogsFirstAndLastEntry.csv",
+              sqlForQueryLogDates(
+                  tableNames.queryLogsTableName(),
+                  arguments.getQueryLogStart(),
+                  arguments.getQueryLogEndOrDefault())));
     } else {
       for (ZonedInterval interval : intervals) {
         String file = createFilename(ZIP_ENTRY_PREFIX, interval);
@@ -313,5 +320,17 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     }
 
     out.add(new TeradataTablesValidatorTask(optionalTablesToCheck.toArray(new String[] {})));
+  }
+
+  private String sqlForQueryLogDates(
+      String queryLogsTableName, ZonedDateTime queryLogStartDate, ZonedDateTime queryLogEndDate) {
+    String sql =
+        String.format(
+            "SELECT MIN(StartTime) as queryLogFirstEntry, MAX(StartTime) as queryLogLastEntry FROM '%s' WHERE ErrorCode = 0 AND\n"
+                + "StartTime >= CAST('%s' AS TIMESTAMP) AND L.StartTime < CAST('%s' AS TIMESTAMP)\n",
+            queryLogsTableName,
+            SQL_FORMAT.format(queryLogStartDate),
+            SQL_FORMAT.format(queryLogEndDate));
+    return sql;
   }
 }
