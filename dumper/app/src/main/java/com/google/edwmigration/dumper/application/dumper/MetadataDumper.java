@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.TeradataExternalSharedState;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.TeradataQueryLogEntries;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
@@ -194,6 +196,7 @@ public class MetadataDumper {
       logFinalSummary(
           summaryPrinter,
           state,
+          connector,
           outputFileLength,
           stopwatch,
           outputFileLocation,
@@ -268,6 +271,7 @@ public class MetadataDumper {
   private void logFinalSummary(
       SummaryPrinter summaryPrinter,
       TaskSetState state,
+      Connector connector,
       long outputFileLength,
       Stopwatch stopwatch,
       String outputFileLocation,
@@ -281,6 +285,14 @@ public class MetadataDumper {
                   + state.getTasksReports().stream()
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
+          if (connector.isLogConnector()) {
+            linePrinter.println(
+                "First query log entry is '%s' and last query log entry is '%s'",
+                TeradataExternalSharedState.queryLogEntries.get(
+                    TeradataQueryLogEntries.QUERY_LOG_FIRST_ENTRY),
+                TeradataExternalSharedState.queryLogEntries.get(
+                    TeradataQueryLogEntries.QUERY_LOG_LAST_ENTRY));
+          }
           if (requiredTaskSucceeded) {
             linePrinter.println("Output saved to '%s'", outputFileLocation);
           } else {
