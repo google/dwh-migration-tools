@@ -24,6 +24,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
+import com.google.edwmigration.dumper.application.dumper.SummaryPrinter.SummaryLinePrinter;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.TeradataExternalSharedState;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.TeradataQueryLogEntries;
@@ -268,6 +269,20 @@ public class MetadataDumper {
     return true;
   }
 
+  private void outputFirstAndLastQueryLogEnries(SummaryLinePrinter linePrinter) {
+
+    if (TeradataExternalSharedState.queryLogEntries.size() == 0) {
+      return;
+    }
+
+    linePrinter.println(
+        "First query log entry is '%s' and last query log entry is '%s'",
+        TeradataExternalSharedState.queryLogEntries.get(
+            TeradataQueryLogEntries.QUERY_LOG_FIRST_ENTRY),
+        TeradataExternalSharedState.queryLogEntries.get(
+            TeradataQueryLogEntries.QUERY_LOG_LAST_ENTRY));
+  }
+
   private void logFinalSummary(
       SummaryPrinter summaryPrinter,
       TaskSetState state,
@@ -286,12 +301,7 @@ public class MetadataDumper {
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
           if (connector.isLogConnector()) {
-            linePrinter.println(
-                "First query log entry is '%s' and last query log entry is '%s'",
-                TeradataExternalSharedState.queryLogEntries.get(
-                    TeradataQueryLogEntries.QUERY_LOG_FIRST_ENTRY),
-                TeradataExternalSharedState.queryLogEntries.get(
-                    TeradataQueryLogEntries.QUERY_LOG_LAST_ENTRY));
+            outputFirstAndLastQueryLogEnries(linePrinter);
           }
           if (requiredTaskSucceeded) {
             linePrinter.println("Output saved to '%s'", outputFileLocation);

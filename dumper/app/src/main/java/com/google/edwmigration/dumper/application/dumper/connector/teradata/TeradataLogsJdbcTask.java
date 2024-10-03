@@ -325,6 +325,9 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
                     tableNames.queryLogsTableName(), tableNames.sqlLogsTableName()));
   }
 
+  /*
+   * Calculates first and last query log entries, by applying 'min' and 'max' logic.
+   */
   private void updateTeradaQueryLogEntries(
       TeradataQueryLogEntries logEntry, ZonedDateTime newDateTime) {
     ZonedDateTime currentDateTime = TeradataExternalSharedState.queryLogEntries.get(logEntry);
