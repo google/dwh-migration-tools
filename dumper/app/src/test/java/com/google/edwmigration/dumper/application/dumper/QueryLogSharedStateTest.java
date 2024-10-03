@@ -78,7 +78,7 @@ public class QueryLogSharedStateTest {
   }
 
   @Test
-  public void queryLogFirstEntryUpdatedSuccessfullyForLaterDate() {
+  public void queryLogLastEntryUpdatedSuccessfullyForLaterDate() {
     // Arrange
     ZonedDateTime date = ZonedDateTime.of(2000, 1, 1, 1, 1, 1, 1, ZoneId.of("UTC"));
     ZonedDateTime laterDate = ZonedDateTime.now();
