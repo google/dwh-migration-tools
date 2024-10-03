@@ -177,7 +177,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
 
   /*
    * Overriding it only for Teradata logs connectors, so in MetadataDumper summary section
-   * only them can output first and last entries of query logs for now
+   * only they can output first and last entries of query logs for now
    */
   @Override
   public boolean isLogConnector() {
