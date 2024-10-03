@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.time.ZonedDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -43,5 +44,10 @@ public class QueryLogSharedState {
         QueryLogSharedState.queryLogEntries.put(logEntry, newDateTime);
       }
     }
+  }
+
+  @VisibleForTesting
+  static void clearQueryLogEntries() {
+    queryLogEntries.clear();
   }
 }

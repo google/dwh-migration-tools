@@ -44,6 +44,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +63,9 @@ public class MetadataDumper {
 
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
+
+  private static DateTimeFormatter OUTPUT_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneOffset.UTC);
 
   public boolean run(String... args) throws Exception {
     ConnectorArguments arguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
@@ -274,11 +279,13 @@ public class MetadataDumper {
     }
 
     linePrinter.println(
-        "First query log entry is '%s' and last query log entry is '%s'",
-        QueryLogSharedState.queryLogEntries.get(
-            QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY),
-        QueryLogSharedState.queryLogEntries.get(
-            QueryLogSharedState.QueryLogEntry.QUERY_LOG_LAST_ENTRY));
+        "The first query log entry is '%s' and the last query log entry is '%s'",
+        QueryLogSharedState.queryLogEntries
+            .get(QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY)
+            .format(OUTPUT_DATE_FORMAT),
+        QueryLogSharedState.queryLogEntries
+            .get(QueryLogSharedState.QueryLogEntry.QUERY_LOG_LAST_ENTRY)
+            .format(OUTPUT_DATE_FORMAT));
   }
 
   private void logFinalSummary(
