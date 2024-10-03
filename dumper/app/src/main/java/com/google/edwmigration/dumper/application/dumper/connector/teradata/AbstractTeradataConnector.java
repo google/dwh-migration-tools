@@ -45,7 +45,6 @@ import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -119,11 +118,6 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
     }
   }
 
-  public enum TeradataQueryLogEntries {
-    QUERY_LOG_FIRST_ENTRY,
-    QUERY_LOG_LAST_ENTRY
-  }
-
   protected static class TeradataJdbcSelectTask extends JdbcSelectTask {
 
     private final String sqlCount;
@@ -179,11 +173,6 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
      * is a concurrent Map of immutable objects, so is threadsafe overall.
      */
     protected final ConcurrentMap<String, Boolean> expressionValidity = new ConcurrentHashMap<>();
-  }
-
-  public static class TeradataExternalSharedState {
-    public static final ConcurrentMap<TeradataQueryLogEntries, ZonedDateTime> queryLogEntries =
-        new ConcurrentHashMap<>();
   }
 
   protected static boolean isQueryTable(@Nonnull String expression) {

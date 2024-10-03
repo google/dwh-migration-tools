@@ -31,10 +31,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.primitives.Ints;
+import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState;
+import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState.QueryLogEntries;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
-import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.TeradataExternalSharedState;
-import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.TeradataQueryLogEntries;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
@@ -44,7 +44,6 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -162,10 +161,10 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, withInterval(rse, interval), sql);
     if (summary != null && summary.rowCount() > 0) {
-      updateTeradaQueryLogEntries(
-          TeradataQueryLogEntries.QUERY_LOG_FIRST_ENTRY, interval.getStart());
-      updateTeradaQueryLogEntries(
-          TeradataQueryLogEntries.QUERY_LOG_LAST_ENTRY, interval.getEndExclusive());
+      QueryLogSharedState.updateQueryLogEntries(
+          QueryLogEntries.QUERY_LOG_FIRST_ENTRY, interval.getStart());
+      QueryLogSharedState.updateQueryLogEntries(
+          QueryLogEntries.QUERY_LOG_LAST_ENTRY, interval.getEndExclusive());
     }
     return summary;
   }
@@ -323,23 +322,5 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
                 String.format(
                     "from tables '%s' and '%s'",
                     tableNames.queryLogsTableName(), tableNames.sqlLogsTableName()));
-  }
-
-  /*
-   * Calculates first and last query log entries, by applying 'min' and 'max' logic.
-   */
-  private void updateTeradaQueryLogEntries(
-      TeradataQueryLogEntries logEntry, ZonedDateTime newDateTime) {
-    ZonedDateTime currentDateTime = TeradataExternalSharedState.queryLogEntries.get(logEntry);
-    if (currentDateTime == null) {
-      TeradataExternalSharedState.queryLogEntries.put(logEntry, newDateTime);
-    } else {
-      if (logEntry == TeradataQueryLogEntries.QUERY_LOG_FIRST_ENTRY
-              && newDateTime.isBefore(currentDateTime)
-          || logEntry == TeradataQueryLogEntries.QUERY_LOG_LAST_ENTRY
-              && newDateTime.isAfter(currentDateTime)) {
-        TeradataExternalSharedState.queryLogEntries.put(logEntry, newDateTime);
-      }
-    }
   }
 }

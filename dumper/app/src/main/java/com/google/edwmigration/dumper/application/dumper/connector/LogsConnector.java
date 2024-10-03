@@ -32,9 +32,4 @@ public interface LogsConnector extends Connector {
       return ArchiveNameUtil.getFileName(getName());
     }
   }
-
-  @Override
-  default boolean isLogConnector() {
-    return true;
-  }
 }

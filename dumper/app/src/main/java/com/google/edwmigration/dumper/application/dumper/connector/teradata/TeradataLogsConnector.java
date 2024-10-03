@@ -175,6 +175,15 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     super("teradata-logs");
   }
 
+  /*
+   * Overriding it only for Teradata logs connectors, so in MetadataDumper summary section
+   * only them can output first and last entries of query logs for now
+   */
+  @Override
+  public boolean isLogConnector() {
+    return true;
+  }
+
   private ImmutableList<TeradataJdbcSelectTask> createTimeSeriesTasks(
       ZonedInterval interval, @Nonnull ConnectorArguments arguments) {
     return TIME_SERIES_PROPERTY_TO_FILENAME_PREFIX_MAP.keySet().stream()
