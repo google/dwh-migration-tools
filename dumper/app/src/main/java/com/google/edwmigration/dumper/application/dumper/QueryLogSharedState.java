@@ -21,10 +21,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class QueryLogSharedState {
-  public static final ConcurrentMap<QueryLogEntries, ZonedDateTime> queryLogEntries =
+  public static final ConcurrentMap<QueryLogEntry, ZonedDateTime> queryLogEntries =
       new ConcurrentHashMap<>();
 
-  public enum QueryLogEntries {
+  public enum QueryLogEntry {
     QUERY_LOG_FIRST_ENTRY,
     QUERY_LOG_LAST_ENTRY
   }
@@ -32,15 +32,13 @@ public class QueryLogSharedState {
   /*
    * Calculates first and last query log entries, by applying 'min' and 'max' logic.
    */
-  public static void updateQueryLogEntries(
-      QueryLogSharedState.QueryLogEntries logEntry, ZonedDateTime newDateTime) {
+  public static void updateQueryLogEntries(QueryLogEntry logEntry, ZonedDateTime newDateTime) {
     ZonedDateTime currentDateTime = QueryLogSharedState.queryLogEntries.get(logEntry);
     if (currentDateTime == null) {
       QueryLogSharedState.queryLogEntries.put(logEntry, newDateTime);
     } else {
-      if (logEntry == QueryLogSharedState.QueryLogEntries.QUERY_LOG_FIRST_ENTRY
-              && newDateTime.isBefore(currentDateTime)
-          || logEntry == QueryLogSharedState.QueryLogEntries.QUERY_LOG_LAST_ENTRY
+      if (logEntry == QueryLogEntry.QUERY_LOG_FIRST_ENTRY && newDateTime.isBefore(currentDateTime)
+          || logEntry == QueryLogEntry.QUERY_LOG_LAST_ENTRY
               && newDateTime.isAfter(currentDateTime)) {
         QueryLogSharedState.queryLogEntries.put(logEntry, newDateTime);
       }

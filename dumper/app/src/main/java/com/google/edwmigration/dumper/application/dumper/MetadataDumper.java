@@ -267,9 +267,6 @@ public class MetadataDumper {
     return true;
   }
 
-  /*
-   * This logic works for only Teradata logs connector for now
-   */
   private void outputFirstAndLastQueryLogEnries(SummaryLinePrinter linePrinter) {
 
     if (QueryLogSharedState.queryLogEntries.size() == 0) {
@@ -279,9 +276,9 @@ public class MetadataDumper {
     linePrinter.println(
         "First query log entry is '%s' and last query log entry is '%s'",
         QueryLogSharedState.queryLogEntries.get(
-            QueryLogSharedState.QueryLogEntries.QUERY_LOG_FIRST_ENTRY),
+            QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY),
         QueryLogSharedState.queryLogEntries.get(
-            QueryLogSharedState.QueryLogEntries.QUERY_LOG_LAST_ENTRY));
+            QueryLogSharedState.QueryLogEntry.QUERY_LOG_LAST_ENTRY));
   }
 
   private void logFinalSummary(

@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState;
-import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState.QueryLogEntries;
+import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState.QueryLogEntry;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
@@ -162,9 +162,9 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     Summary summary = doSelect(connection, withInterval(rse, interval), sql);
     if (summary != null && summary.rowCount() > 0) {
       QueryLogSharedState.updateQueryLogEntries(
-          QueryLogEntries.QUERY_LOG_FIRST_ENTRY, interval.getStart());
+          QueryLogEntry.QUERY_LOG_FIRST_ENTRY, interval.getStart());
       QueryLogSharedState.updateQueryLogEntries(
-          QueryLogEntries.QUERY_LOG_LAST_ENTRY, interval.getEndExclusive());
+          QueryLogEntry.QUERY_LOG_LAST_ENTRY, interval.getEndExclusive());
     }
     return summary;
   }

@@ -24,7 +24,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState;
-import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState.QueryLogEntries;
+import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState.QueryLogEntry;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
@@ -148,9 +148,9 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
       Summary summary = doSelect(connection, withInterval(rse, interval), sql);
       if (summary != null && summary.rowCount() > 0) {
         QueryLogSharedState.updateQueryLogEntries(
-            QueryLogEntries.QUERY_LOG_FIRST_ENTRY, interval.getStart());
+            QueryLogEntry.QUERY_LOG_FIRST_ENTRY, interval.getStart());
         QueryLogSharedState.updateQueryLogEntries(
-            QueryLogEntries.QUERY_LOG_LAST_ENTRY, interval.getEndExclusive());
+            QueryLogEntry.QUERY_LOG_LAST_ENTRY, interval.getEndExclusive());
       }
       return summary;
     }
