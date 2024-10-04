@@ -30,21 +30,19 @@ class CsvReportRenderer implements ReportRenderer {
 
     @Input
     String filename
-    @Input
-    /** Custom CSV reporter that gets the license from the POM or the manifest but does not try to deduce it from a LICENSE file. */
-    Map<String, Map<String, String>> projectInfoOverrides
 
-    CsvReportRenderer(String filename = 'licenses.csv', Map<String, Map<String, String>> projectInfoOverrides) {
+    CsvReportRenderer(String filename = 'licenses.csv') {
         this.filename = filename
-        this.projectInfoOverrides = projectInfoOverrides
     }
 
     @Override
     void render(ProjectData projectData) {
+        Map<String, Map<String, String>> allOverrides = OverridesUtil.projectOverrides()
+
         List<Map<String, ?>> records = projectData.allDependencies.sort().stream().map {
             String project = "${it.group}:${it.name}"
             String artifact = "${it.group}:${it.name}:${it.version}"
-            Map<String, String> projectInfoOverride = projectInfoOverrides.getOrDefault(project, [:])
+            Map<String, String> projectInfoOverride = allOverrides.getOrDefault(project, [:])
             License license = getLicense(it)
             String projectUrl = it.poms.find { it.projectUrl }?.projectUrl
             [
