@@ -66,15 +66,15 @@ public class QueryLogSharedStateTest {
   public void queryLogFirstEntryUpdatedSuccessfullyForEarlierDate() {
     // Arrange
     ZonedDateTime now = ZonedDateTime.now();
-    ZonedDateTime olderDate = ZonedDateTime.of(1970, 1, 1, 1, 1, 1, 1, ZoneId.of("UTC"));
+    ZonedDateTime earlierDate = ZonedDateTime.of(1970, 1, 1, 1, 1, 1, 1, ZoneId.of("UTC"));
 
     // Act
     QueryLogSharedState.updateQueryLogEntries(QueryLogEntry.QUERY_LOG_FIRST_ENTRY, now);
-    QueryLogSharedState.updateQueryLogEntries(QueryLogEntry.QUERY_LOG_FIRST_ENTRY, olderDate);
+    QueryLogSharedState.updateQueryLogEntries(QueryLogEntry.QUERY_LOG_FIRST_ENTRY, earlierDate);
 
     // Assert
     assertEquals(
-        olderDate, QueryLogSharedState.queryLogEntries.get(QueryLogEntry.QUERY_LOG_FIRST_ENTRY));
+        earlierDate, QueryLogSharedState.queryLogEntries.get(QueryLogEntry.QUERY_LOG_FIRST_ENTRY));
   }
 
   @Test

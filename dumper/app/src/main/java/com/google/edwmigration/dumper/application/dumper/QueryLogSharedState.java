@@ -38,9 +38,9 @@ public class QueryLogSharedState {
     if (currentDateTime == null) {
       QueryLogSharedState.queryLogEntries.put(logEntry, newDateTime);
     } else {
-      if (logEntry == QueryLogEntry.QUERY_LOG_FIRST_ENTRY && newDateTime.isBefore(currentDateTime)
-          || logEntry == QueryLogEntry.QUERY_LOG_LAST_ENTRY
-              && newDateTime.isAfter(currentDateTime)) {
+      if ((logEntry == QueryLogEntry.QUERY_LOG_FIRST_ENTRY && newDateTime.isBefore(currentDateTime))
+          || (logEntry == QueryLogEntry.QUERY_LOG_LAST_ENTRY
+              && newDateTime.isAfter(currentDateTime))) {
         QueryLogSharedState.queryLogEntries.put(logEntry, newDateTime);
       }
     }
