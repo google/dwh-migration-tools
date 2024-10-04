@@ -517,37 +517,37 @@ licenseReport {
             ],
             "io.opentelemetry:opentelemetry-api": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
-            ],            
+            ],
             "io.opentelemetry:opentelemetry-api-incubator": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
-            ],            
+            ],
             "io.opentelemetry:opentelemetry-bom": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
             ],
             "io.opentelemetry:opentelemetry-context": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
-            ],            
+            ],
             "io.opentelemetry:opentelemetry-sdk": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
-            ],            
+            ],
             "io.opentelemetry:opentelemetry-sdk-common": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
             ],
             "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
-            ],            
+            ],
             "io.opentelemetry:opentelemetry-sdk-logs": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
-            ],            
+            ],
             "io.opentelemetry:opentelemetry-sdk-metrics": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
             ],
             "io.opentelemetry:opentelemetry-sdk-trace": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
-            ],            
+            ],
             "io.opentelemetry.contrib:opentelemetry-gcp-resources": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
-            ],            
+            ],
             "io.opentelemetry.semconv:opentelemetry-semconv": [
                 licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
             ],
