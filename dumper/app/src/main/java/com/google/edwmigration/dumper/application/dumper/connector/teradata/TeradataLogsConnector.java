@@ -288,9 +288,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
           new TeradataQueryLogsJdbcTask(
               "queryLogsFirstAndLastEntry.csv",
               sqlForQueryLogDates(
-                  tableNames.queryLogsTableName(),
-                  arguments.getQueryLogStart(),
-                  arguments.getQueryLogEndOrDefault())));
+                  tableNames.queryLogsTableName(), intervals.getStart(), intervals.getEnd())));
     } else {
       for (ZonedInterval interval : intervals) {
         String file = createFilename(ZIP_ENTRY_PREFIX, interval);
