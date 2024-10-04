@@ -44,7 +44,7 @@ public class TeradataQueryLogsJdbcTask extends JdbcSelectTask {
       @Nonnull Connection connection)
       throws SQLException {
 
-    LOG.info("Starting getting first and last entry of query logs from");
+    LOG.info("Getting first and last query log entry");
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, rse, getSql());
     LOG.info("Result of getting first and last entry is '%s", summary);

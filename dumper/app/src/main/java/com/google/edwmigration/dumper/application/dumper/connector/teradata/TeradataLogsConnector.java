@@ -261,10 +261,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
 
       addFailFastValidationStepForAssesment(out, arguments, utilityLogsTable);
 
-      LOG.info(
-          "Extracting query logs first and last entries from tables: '%s'",
-          tableNames.queryLogsTableName());
-
       for (ZonedInterval interval : intervals) {
         String file = createFilename(ZIP_ENTRY_PREFIX, interval);
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
