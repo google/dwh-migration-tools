@@ -23,6 +23,7 @@ import com.google.common.base.Predicates;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
@@ -133,7 +134,12 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
         throws SQLException {
       String sql = getSql(jdbcHandle);
       ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
-      return doSelect(connection, withInterval(rse, interval), sql);
+      Summary summary = doSelect(connection, withInterval(rse, interval), sql);
+      if (summary != null && summary.rowCount() > 0) {
+        QueryLogDateState.updateQueryLogFirstEntry(interval.getStart());
+        QueryLogDateState.updateQueryLogLastEntry(interval.getEndExclusive());
+      }
+      return summary;
     }
 
     @Nonnull

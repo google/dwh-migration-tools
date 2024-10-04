@@ -17,9 +17,11 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,10 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
 
   @Nonnull private final TaskCategory taskCategory;
 
+  private boolean calculateQueryLogDates;
+
+  private ZonedDateTime logQueryStarDate, logQueryEndDate;
+
   public JdbcSelectTask(@Nonnull String targetPath, @Nonnull String sql) {
     this(targetPath, sql, TaskCategory.REQUIRED);
   }
@@ -44,6 +50,38 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
     super(targetPath);
     this.sql = sql;
     this.taskCategory = taskCategory;
+  }
+
+  public JdbcSelectTask(
+      @Nonnull String targetPath,
+      @Nonnull String sql,
+      ZonedDateTime logQueryStartDate,
+      ZonedDateTime logQueryEndDate) {
+    this(targetPath, sql);
+    this.logQueryStarDate = logQueryStartDate;
+    this.logQueryEndDate = logQueryEndDate;
+  }
+
+  public JdbcSelectTask(
+      @Nonnull String targetPath,
+      @Nonnull String sql,
+      TaskCategory taskCategory,
+      ZonedDateTime logQueryStartDate,
+      ZonedDateTime logQueryEndDate) {
+    this(targetPath, sql, taskCategory);
+    this.logQueryStarDate = logQueryStartDate;
+    this.logQueryEndDate = logQueryEndDate;
+  }
+
+  public JdbcSelectTask(
+      @Nonnull String targetPath,
+      @Nonnull String sql,
+      TaskCategory taskCategory,
+      ZonedDateTime logQueryStartDate,
+      ZonedDateTime logQueryEndDate,
+      boolean calculateQueryLogDates) {
+    this(targetPath, sql, taskCategory, logQueryStartDate, logQueryEndDate);
+    this.calculateQueryLogDates = calculateQueryLogDates;
   }
 
   @Override
@@ -65,7 +103,12 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       @Nonnull Connection connection)
       throws SQLException {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
-    return doSelect(connection, rse, sql);
+    Summary summary = doSelect(connection, rse, sql);
+    if (this.calculateQueryLogDates && summary != null && summary.rowCount() > 0) {
+      QueryLogDateState.updateQueryLogFirstEntry(logQueryStarDate);
+      QueryLogDateState.updateQueryLogLastEntry(logQueryEndDate);
+    }
+    return summary;
   }
 
   @Override
