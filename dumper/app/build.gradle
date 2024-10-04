@@ -189,6 +189,9 @@ licenseReport {
                 licenseName: "Apache License, Version 2.0",
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-bom/2.16/LICENSE",
             ],
+            "com.fasterxml.jackson.datatype:jackson-datatype-guava": [
+                licenseUrl: "https://github.com/FasterXML/jackson-datatypes-collections/raw/refs/heads/2.19/LICENSE",
+            ],
             "com.fasterxml.jackson.core:jackson-annotations": [
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-core/2.16/LICENSE",
             ],
@@ -277,6 +280,9 @@ licenseReport {
             "com.google.api.grpc:proto-google-cloud-kms-v1": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
             ],
+            "com.google.api.grpc:proto-google-cloud-monitoring-v3": [
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
+            ],
             "com.google.api.grpc:proto-google-cloud-storage-v2": [
                 projectUrl: "https://github.com/googleapis/googleapis",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
@@ -329,6 +335,9 @@ licenseReport {
             ],
             "com.google.cloud:google-cloud-kms": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
+            ],
+            "com.google.cloud:google-cloud-monitoring": [
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/java-core/main/LICENSE",
             ],
             "com.google.cloud:google-cloud-nio": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-storage-nio/main/LICENSE",
@@ -395,6 +404,18 @@ licenseReport {
                 projectUrl: "https://github.com/googleapis/google-oauth-java-client",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-oauth-java-client/main/LICENSE",
             ],
+            "com.google.cloud:libraries-bom": [
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/java-cloud-bom/refs/heads/main/LICENSE",
+            ],
+            "com.google.cloud.opentelemetry:detector-resources-support": [
+                licenseUrl: "https://raw.githubusercontent.com/GoogleCloudPlatform/opentelemetry-operations-java/refs/heads/main/LICENSE",
+            ],
+            "com.google.cloud.opentelemetry:exporter-metrics": [
+                licenseUrl: "https://raw.githubusercontent.com/GoogleCloudPlatform/opentelemetry-operations-java/refs/heads/main/LICENSE",
+            ],
+            "com.google.cloud.opentelemetry:shared-resourcemapping": [
+                licenseUrl: "https://raw.githubusercontent.com/GoogleCloudPlatform/opentelemetry-operations-java/refs/heads/main/LICENSE",
+            ],
             "com.google.protobuf:protobuf-java": [
                 projectUrl: "https://github.com/protocolbuffers/protobuf",
                 licenseUrl: "https://raw.githubusercontent.com/protocolbuffers/protobuf/main/LICENSE",
@@ -447,7 +468,13 @@ licenseReport {
             "io.grpc:grpc-grpclb": [
                 licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
             ],
+            "io.grpc:grpc-inprocess": [
+                licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
+            ],
             "io.grpc:grpc-netty-shaded": [
+                licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
+            ],
+            "io.grpc:grpc-opentelemetry": [
                 licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
             ],
             "io.grpc:grpc-protobuf": [
@@ -463,6 +490,9 @@ licenseReport {
                 licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
             ],
             "io.grpc:grpc-stub": [
+                licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
+            ],
+            "io.grpc:grpc-util": [
                 licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
             ],
             "io.grpc:grpc-xds": [
@@ -484,6 +514,42 @@ licenseReport {
             ],
             "io.opencensus:opencensus-proto": [
                 licenseUrl: "https://raw.githubusercontent.com/census-instrumentation/opencensus-java/master/LICENSE",
+            ],
+            "io.opentelemetry:opentelemetry-api": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],            
+            "io.opentelemetry:opentelemetry-api-incubator": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],            
+            "io.opentelemetry:opentelemetry-bom": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],
+            "io.opentelemetry:opentelemetry-context": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],            
+            "io.opentelemetry:opentelemetry-sdk": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],            
+            "io.opentelemetry:opentelemetry-sdk-common": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],
+            "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],            
+            "io.opentelemetry:opentelemetry-sdk-logs": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],            
+            "io.opentelemetry:opentelemetry-sdk-metrics": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],
+            "io.opentelemetry:opentelemetry-sdk-trace": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],            
+            "io.opentelemetry.contrib:opentelemetry-gcp-resources": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
+            ],            
+            "io.opentelemetry.semconv:opentelemetry-semconv": [
+                licenseUrl: "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java/refs/heads/main/LICENSE",
             ],
             "io.perfmark:perfmark-api": [
                 licenseUrl: "https://raw.githubusercontent.com/perfmark/perfmark/master/LICENSE",
