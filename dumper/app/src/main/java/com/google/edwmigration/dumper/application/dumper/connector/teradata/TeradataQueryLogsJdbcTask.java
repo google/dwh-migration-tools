@@ -44,27 +44,9 @@ public class TeradataQueryLogsJdbcTask extends JdbcSelectTask {
       @Nonnull Connection connection)
       throws SQLException {
 
-    LOG.info("Getting first and last query log entry");
+    LOG.info("Getting first and last query log entries");
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
     Summary summary = doSelect(connection, rse, getSql());
-    LOG.info("Result of getting first and last entry is '%s", summary);
-    return null;
+    return summary;
   }
-
-  // protected ResultSetExtractor<TeradataQueryLogResults> newResultSetExtractor(
-  //     @Nonnull ByteSink sink) {
-  //   return new ResultSetExtractor<TeradataQueryLogResults>() {
-  //     @Override
-  //     public TeradataQueryLogResults extractData(ResultSet rs)
-  //         throws SQLException, DataAccessException {
-  //       TeradataQueryLogResults out = new TeradataQueryLogResults();
-  //       try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-
-  //         return out;
-  //       } catch (IOException e) {
-  //         throw new SQLException(e);
-  //       }
-  //     }
-  //   };
-  // }
 }

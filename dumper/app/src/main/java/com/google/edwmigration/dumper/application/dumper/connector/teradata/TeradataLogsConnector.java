@@ -320,8 +320,8 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       String queryLogsTableName, ZonedDateTime queryLogStartDate, ZonedDateTime queryLogEndDate) {
     String sql =
         String.format(
-            "SELECT MIN(StartTime) as queryLogFirstEntry, MAX(StartTime) as queryLogLastEntry FROM '%s' WHERE ErrorCode = 0 AND\n"
-                + "StartTime >= CAST('%s' AS TIMESTAMP) AND L.StartTime < CAST('%s' AS TIMESTAMP)\n",
+            "SELECT MIN(StartTime), MAX(StartTime) FROM %s WHERE ErrorCode = 0"
+                + " AND StartTime >= CAST('%s' AS TIMESTAMP) AND StartTime < CAST('%s' AS TIMESTAMP)",
             queryLogsTableName,
             SQL_FORMAT.format(queryLogStartDate),
             SQL_FORMAT.format(queryLogEndDate));
