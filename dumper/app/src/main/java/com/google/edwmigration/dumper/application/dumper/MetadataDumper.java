@@ -279,7 +279,7 @@ public class MetadataDumper {
     }
 
     linePrinter.println(
-        "The first query log entry is '%s' and the last query log entry is '%s'",
+        "The first query log entry is '%s' UTC and the last query log entry is '%s' UTC",
         QueryLogSharedState.queryLogEntries
             .get(QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY)
             .format(OUTPUT_DATE_FORMAT),
