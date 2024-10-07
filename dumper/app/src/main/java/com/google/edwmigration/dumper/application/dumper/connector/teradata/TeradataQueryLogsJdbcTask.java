@@ -23,26 +23,21 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.io.Writer;
-import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import org.apache.commons.io.IOUtils;
+import javax.annotation.ParametersAreNonnullByDefault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
-public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<Void> {
+@ParametersAreNonnullByDefault
+public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<QueryLogEntries> {
 
   private static final Logger LOG = LoggerFactory.getLogger(TeradataQueryLogsJdbcTask.class);
   private final DateTimeFormatter SQL_FORMAT =
@@ -61,78 +56,59 @@ public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<Void> {
     this.queryLogEndDate = queryLogEndDate;
   }
 
-  @CheckForNull
   @Override
-  protected Void doInConnection(
+  protected QueryLogEntries doInConnection(
       @Nonnull TaskRunContext context,
       @Nonnull JdbcHandle jdbcHandle,
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
     LOG.info("Getting first and last query log entries");
-
-    String[] queryLogsFirstAndLastEntries = new String[2];
     String sql = sqlForQueryLogDates(tableName, queryLogStartDate, queryLogEndDate);
-    doSelect(connection, newCsvResultSetExtractor(sink, queryLogsFirstAndLastEntries), sql);
+    QueryLogEntries queryLogEntries = doSelect(connection, csvResultSetExtractor(sink), sql);
 
-    LOG.info(
-        "The first query log entry is {} UTC and the last query log entry is {} UTC",
-        queryLogsFirstAndLastEntries[0],
-        queryLogsFirstAndLastEntries[1]);
-
-    return null;
+    /* If the values are null, means that there is no query log dates in db,
+        so we dont output any message
+    */
+    if (queryLogEntries.queryLogFirstEntry != null && queryLogEntries.queryLogLastEntry != null) {
+      LOG.info(
+          "The first query log entry is {} UTC and the last query log entry is {} UTC",
+          queryLogEntries.queryLogFirstEntry,
+          queryLogEntries.queryLogLastEntry);
+    }
+    return queryLogEntries;
   }
 
-  private ResultSetExtractor<Void> newCsvResultSetExtractor(
-      @Nonnull ByteSink sink, String[] queryLogsFirstAndLastEntries) {
+  private ResultSetExtractor<QueryLogEntries> csvResultSetExtractor(ByteSink sink) {
     return rs -> {
       try {
-        printAllResults(sink, rs, queryLogsFirstAndLastEntries);
-        return null;
+        return getFirstAndLastQueryLogEntries(sink, rs);
       } catch (IOException e) {
         throw new SQLException(e);
       }
     };
   }
 
-  private void printAllResults(
-      ByteSink sink, ResultSet resultSet, String[] queryLogsFirstAndLastEntries)
+  private QueryLogEntries getFirstAndLastQueryLogEntries(ByteSink sink, ResultSet resultSet)
       throws IOException, SQLException {
+    QueryLogEntries queryLogEntries = new QueryLogEntries();
     try (Writer writer = sink.asCharSink(UTF_8).openBufferedStream()) {
-      int columnCount = resultSet.getMetaData().getColumnCount();
-      int index = 0;
-      while (resultSet.next()) {
-        for (int i = 1; i <= columnCount; i++) {
-          Object resultItem = resultSet.getObject(i);
-          String csvItemCandidate = fromByteBufferOrClob(resultItem);
-          String itemString;
-          if (csvItemCandidate != null || resultItem == null) {
-            // Item was recognized by the helper method or it was null.
-            LOG.info(csvItemCandidate);
-          } else if ((itemString = resultItem.toString()) == null) {
-            // Item violated usual toStringRules
-            Class<?> itemClass = resultItem.getClass();
-            LOG.warn("Unexpected toString result for class {} - null", itemClass);
-          } else {
-            queryLogsFirstAndLastEntries[index++] = itemString;
-          }
+      /*
+       * We query only min and max, so returning set should contain only 1 row and 2 values
+       */
+      if (resultSet.next()) {
+        Object firstEntryObject = resultSet.getObject(1);
+        Object lastEntryObject = resultSet.getObject(2);
+
+        if (firstEntryObject != null) {
+          queryLogEntries.queryLogFirstEntry = firstEntryObject.toString();
+        }
+        if (lastEntryObject != null) {
+          queryLogEntries.queryLogLastEntry = lastEntryObject.toString();
         }
       }
     }
-  }
-
-  @Nullable
-  private static String fromByteBufferOrClob(Object object) throws IOException, SQLException {
-    if (object instanceof byte[]) {
-      return Base64.getEncoder().encodeToString((byte[]) object);
-    } else if (object instanceof Clob) {
-      InputStream in = ((Clob) object).getAsciiStream();
-      StringWriter w = new StringWriter();
-      IOUtils.copy(in, w);
-      return w.toString();
-    } else {
-      return null;
-    }
+    return queryLogEntries;
   }
 
   private String sqlForQueryLogDates(
@@ -146,4 +122,9 @@ public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<Void> {
             SQL_FORMAT.format(queryLogEndDate));
     return sql;
   }
+}
+
+class QueryLogEntries {
+  String queryLogFirstEntry;
+  String queryLogLastEntry;
 }
