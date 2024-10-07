@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,10 +57,7 @@ public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<QueryLogEntries>
 
   @Override
   protected QueryLogEntries doInConnection(
-      @Nonnull TaskRunContext context,
-      @Nonnull JdbcHandle jdbcHandle,
-      @Nonnull ByteSink sink,
-      @Nonnull Connection connection)
+      TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
     LOG.info("Getting first and last query log entries");
     String sql = sqlForQueryLogDates(tableName, queryLogStartDate, queryLogEndDate);
