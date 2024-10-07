@@ -36,7 +36,6 @@ public class QueryLogSharedStateTest {
 
   @Test
   public void queryLogFirstEntryUpdatedSuccessfully() {
-    // Arrange
     ZonedDateTime newQueryLogDate = ZonedDateTime.now();
 
     // Act
@@ -50,7 +49,6 @@ public class QueryLogSharedStateTest {
 
   @Test
   public void queryLogLastEntryUpdatedSuccessfully() {
-    // Arrange
     ZonedDateTime newQueryLogDate = ZonedDateTime.now();
 
     // Act
@@ -64,7 +62,6 @@ public class QueryLogSharedStateTest {
 
   @Test
   public void queryLogFirstEntryUpdatedSuccessfullyForEarlierDate() {
-    // Arrange
     ZonedDateTime now = ZonedDateTime.now();
     ZonedDateTime earlierDate = ZonedDateTime.of(1970, 1, 1, 1, 1, 1, 1, ZoneId.of("UTC"));
 
@@ -79,7 +76,6 @@ public class QueryLogSharedStateTest {
 
   @Test
   public void queryLogLastEntryUpdatedSuccessfullyForLaterDate() {
-    // Arrange
     ZonedDateTime date = ZonedDateTime.of(2000, 1, 1, 1, 1, 1, 1, ZoneId.of("UTC"));
     ZonedDateTime laterDate = ZonedDateTime.now();
 
