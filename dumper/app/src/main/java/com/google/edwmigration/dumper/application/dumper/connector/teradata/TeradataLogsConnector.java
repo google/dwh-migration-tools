@@ -45,7 +45,6 @@ import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.time.Duration;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -287,8 +286,9 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       out.add(
           new TeradataQueryLogsJdbcTask(
               "queryLogsFirstAndLastEntry.csv",
-              sqlForQueryLogDates(
-                  tableNames.queryLogsTableName(), intervals.getStart(), intervals.getEnd())));
+              tableNames.queryLogsTableName(),
+              intervals.getStart(),
+              intervals.getEnd()));
     } else {
       for (ZonedInterval interval : intervals) {
         String file = createFilename(ZIP_ENTRY_PREFIX, interval);
@@ -314,17 +314,5 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     }
 
     out.add(new TeradataTablesValidatorTask(optionalTablesToCheck.toArray(new String[] {})));
-  }
-
-  private String sqlForQueryLogDates(
-      String queryLogsTableName, ZonedDateTime queryLogStartDate, ZonedDateTime queryLogEndDate) {
-    String sql =
-        String.format(
-            "SELECT MIN(StartTime), MAX(StartTime) FROM %s WHERE ErrorCode = 0"
-                + " AND StartTime >= CAST('%s' AS TIMESTAMP) AND StartTime < CAST('%s' AS TIMESTAMP)",
-            queryLogsTableName,
-            SQL_FORMAT.format(queryLogStartDate),
-            SQL_FORMAT.format(queryLogEndDate));
-    return sql;
   }
 }
