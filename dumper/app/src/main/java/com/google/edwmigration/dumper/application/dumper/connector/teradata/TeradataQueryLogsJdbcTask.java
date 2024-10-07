@@ -45,10 +45,10 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<Void> {
 
   private static final Logger LOG = LoggerFactory.getLogger(TeradataQueryLogsJdbcTask.class);
-  private ZonedDateTime queryLogStartDate, queryLogEndDate;
-  private final String tableName;
   private final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
+  private ZonedDateTime queryLogStartDate, queryLogEndDate;
+  private final String tableName;
 
   public TeradataQueryLogsJdbcTask(
       String targetPath,
