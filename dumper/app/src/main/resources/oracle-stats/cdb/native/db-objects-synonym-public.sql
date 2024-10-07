@@ -19,9 +19,7 @@ SELECT
   A.editionable "Editionable",
   A.object_name "ObjectName",
   -- "Count" is kept for backwards compatibility
-  CASE WHEN A.object_name LIKE '/%' THEN 0
-    WHEN A.object_name LIKE 'BIN$%' THEN 0
-    ELSE 1 END "Count",
+  1 "Count",
   C.table_owner "TableOwner"
 FROM cdb_objects A
 LEFT OUTER JOIN cdb_synonyms C
@@ -30,6 +28,8 @@ LEFT OUTER JOIN cdb_synonyms C
   AND A.object_name = C.synonym_name
   AND A.con_id = C.con_id
 WHERE A.object_type = 'SYNONYM'
+  AND A.object_name NOT LIKE '/%'
+  AND A.object_name NOT LIKE 'BIN$%'
   AND A.owner = 'PUBLIC'
 GROUP BY
   A.con_id,
