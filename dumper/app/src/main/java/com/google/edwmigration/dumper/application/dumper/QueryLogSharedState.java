@@ -21,6 +21,11 @@ import java.time.ZonedDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/*
+ * Shared state class for calculating first and last query log entries.
+ * Class could be used inside different tasks, which run concurrently,
+ * so class designed to be thread-safe, by using ConcurrentMap.
+ */
 public class QueryLogSharedState {
   private static final ConcurrentMap<QueryLogEntry, ZonedDateTime> queryLogEntries =
       new ConcurrentHashMap<>();
