@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -274,18 +275,28 @@ public class MetadataDumper {
 
   private void outputFirstAndLastQueryLogEnries(SummaryLinePrinter linePrinter) {
 
-    if (QueryLogSharedState.queryLogEntries.size() == 0) {
+    if (QueryLogSharedState.sizeOfQueryLogEntries() == 0) {
       return;
     }
 
-    linePrinter.println(
-        "The first query log entry is '%s' UTC and the last query log entry is '%s' UTC",
-        QueryLogSharedState.queryLogEntries
-            .get(QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY)
-            .format(OUTPUT_DATE_FORMAT),
-        QueryLogSharedState.queryLogEntries
-            .get(QueryLogSharedState.QueryLogEntry.QUERY_LOG_LAST_ENTRY)
-            .format(OUTPUT_DATE_FORMAT));
+    ZonedDateTime queryLogFirstEntry =
+        QueryLogSharedState.getQueryLogEntry(
+            QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY);
+
+    ZonedDateTime queryLogLastEntry =
+        QueryLogSharedState.getQueryLogEntry(
+            QueryLogSharedState.QueryLogEntry.QUERY_LOG_LAST_ENTRY);
+
+    if (queryLogFirstEntry != null && queryLogLastEntry != null) {
+      linePrinter.println(
+          "The first query log entry is '%s' UTC and the last query log entry is '%s' UTC",
+          QueryLogSharedState.getQueryLogEntry(
+                  QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY)
+              .format(OUTPUT_DATE_FORMAT),
+          QueryLogSharedState.getQueryLogEntry(
+                  QueryLogSharedState.QueryLogEntry.QUERY_LOG_LAST_ENTRY)
+              .format(OUTPUT_DATE_FORMAT));
+    }
   }
 
   private void logFinalSummary(
@@ -306,7 +317,7 @@ public class MetadataDumper {
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
           // For now, it will return true only for TeradataLogsConnector and Terada14LogsConnector
-          if (connector.isLogConnector()) {
+          if (connector.shouldOutputFirstAndLastQueryLog()) {
             outputFirstAndLastQueryLogEnries(linePrinter);
           }
           if (requiredTaskSucceeded) {

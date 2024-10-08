@@ -22,12 +22,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class QueryLogSharedState {
-  public static final ConcurrentMap<QueryLogEntry, ZonedDateTime> queryLogEntries =
+  private static final ConcurrentMap<QueryLogEntry, ZonedDateTime> queryLogEntries =
       new ConcurrentHashMap<>();
 
   public enum QueryLogEntry {
     QUERY_LOG_FIRST_ENTRY,
     QUERY_LOG_LAST_ENTRY
+  }
+
+  public static ZonedDateTime getQueryLogEntry(QueryLogEntry queryLogEntry) {
+    return queryLogEntries.getOrDefault(queryLogEntry, null);
+  }
+
+  public static int sizeOfQueryLogEntries() {
+    return queryLogEntries.size();
   }
 
   /*

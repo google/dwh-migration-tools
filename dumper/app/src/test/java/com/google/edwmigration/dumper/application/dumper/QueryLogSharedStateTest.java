@@ -43,8 +43,7 @@ public class QueryLogSharedStateTest {
 
     // Assert
     assertEquals(
-        newQueryLogDate,
-        QueryLogSharedState.queryLogEntries.get(QueryLogEntry.QUERY_LOG_FIRST_ENTRY));
+        newQueryLogDate, QueryLogSharedState.getQueryLogEntry(QueryLogEntry.QUERY_LOG_FIRST_ENTRY));
   }
 
   @Test
@@ -56,8 +55,7 @@ public class QueryLogSharedStateTest {
 
     // Assert
     assertEquals(
-        newQueryLogDate,
-        QueryLogSharedState.queryLogEntries.get(QueryLogEntry.QUERY_LOG_LAST_ENTRY));
+        newQueryLogDate, QueryLogSharedState.getQueryLogEntry(QueryLogEntry.QUERY_LOG_LAST_ENTRY));
   }
 
   @Test
@@ -71,7 +69,7 @@ public class QueryLogSharedStateTest {
 
     // Assert
     assertEquals(
-        earlierDate, QueryLogSharedState.queryLogEntries.get(QueryLogEntry.QUERY_LOG_FIRST_ENTRY));
+        earlierDate, QueryLogSharedState.getQueryLogEntry(QueryLogEntry.QUERY_LOG_FIRST_ENTRY));
   }
 
   @Test
@@ -85,6 +83,6 @@ public class QueryLogSharedStateTest {
 
     // Assert
     assertEquals(
-        laterDate, QueryLogSharedState.queryLogEntries.get(QueryLogEntry.QUERY_LOG_LAST_ENTRY));
+        laterDate, QueryLogSharedState.getQueryLogEntry(QueryLogEntry.QUERY_LOG_LAST_ENTRY));
   }
 }

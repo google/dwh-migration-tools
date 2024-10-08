@@ -46,7 +46,7 @@ public interface Connector {
     return DefaultProperties.class;
   }
 
-  default boolean isLogConnector() {
+  default boolean shouldOutputFirstAndLastQueryLog() {
     return false;
   }
 }

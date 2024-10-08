@@ -180,7 +180,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
    * only they can output first and last entries of query logs for now
    */
   @Override
-  public boolean isLogConnector() {
+  public boolean shouldOutputFirstAndLastQueryLog() {
     return true;
   }
 
