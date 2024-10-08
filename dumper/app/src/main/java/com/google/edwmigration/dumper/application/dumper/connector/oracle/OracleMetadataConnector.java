@@ -125,6 +125,9 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     String ownerInList = toInList(arguments.getSchemata());
     String whereCondOwner = ownerInList == null ? "" : " WHERE OWNER IN " + ownerInList;
     String whereCondTableOwner = ownerInList == null ? "" : " WHERE TABLE_OWNER IN " + ownerInList;
+    String whereCondSequenceNotSystemGeneratedAndOwner =
+        ownerInList == null ? " WHERE SEQUENCE_NAME NOT LIKE 'ISEQ$$_%'"
+            : " WHERE SEQUENCE_NAME NOT LIKE 'ISEQ$$_%' AND SEQUENCE_OWNER IN " + ownerInList;
     String whereCondSequenceOwner =
         ownerInList == null ? "" : " WHERE SEQUENCE_OWNER IN " + ownerInList;
     String whereCondFunctionOwner =
@@ -298,7 +301,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         "SEQUENCE",
         "SEQUENCE_OWNER",
         "SEQUENCE_NAME",
-        whereCondSequenceOwner);
+        whereCondSequenceNotSystemGeneratedAndOwner);
 
     buildSelectXmlTask(
         out,
