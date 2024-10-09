@@ -16,37 +16,21 @@ SELECT
   NULL "ConId",
   'PUBLIC' "Owner",
   'SYNONYM' "ObjectType",
-  B.editionable "Editionable",
-  B.object_name "ObjectName",
-  -- This looks similar to filtering with WHERE and using count() instead of sum().
-  --
-  -- It is not similar. DB will see the LIKE inside a WHERE predicate and decide to
-  -- replace a HASH JOIN with NESTED LOOPS. The JOIN arguments have >10k rows each,
-  -- so performance-wise the nested loop would be terrible.
-  sum(
-    CASE WHEN B.object_name LIKE '/%' THEN 0
-    WHEN B.object_name LIKE 'BIN$%' THEN 0
-    ELSE 1 END
-  ) "Count"
-FROM (
-  SELECT
-    A.editionable,
-    A.object_name,
-    A.owner
-  FROM dba_objects A
-  WHERE A.object_type = 'SYNONYM'
-    AND A.owner = 'PUBLIC'
-) B
-LEFT JOIN (
-  SELECT
-    C.synonym_name,
-    C.table_owner
-  FROM dba_synonyms C
-  WHERE C.owner = 'PUBLIC'
-    AND C.table_owner IS NOT NULL
-) D ON B.object_name = D.synonym_name
-WHERE D.table_owner IS NULL
-    AND B.owner = 'PUBLIC'
+  A.editionable "Editionable",
+  A.object_name "ObjectName",
+  -- "Count" is kept for backwards compatibility
+  1 "Count",
+  C.table_owner "TableOwner"
+FROM dba_objects A
+LEFT OUTER JOIN dba_synonyms C
+  ON A.owner = C.owner
+  AND C.table_owner IS NOT NULL
+  AND A.object_name = C.synonym_name
+WHERE A.object_type = 'SYNONYM'
+  AND A.object_name NOT LIKE '/%'
+  AND A.object_name NOT LIKE 'BIN$%'
+  AND A.owner = 'PUBLIC'
 GROUP BY
-  B.editionable,
-  B.object_name
+  A.editionable,
+  A.object_name,
+  C.table_owner
