@@ -19,14 +19,13 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.util.List;
 
 /** @author shevek */
-@AutoService({Connector.class, MetadataConnector.class})
+@AutoService(Connector.class)
 @Description("Dumps metadata from Snowflake, using ACCOUNT_USAGE only.")
 public class SnowflakeAccountUsageMetadataConnector extends SnowflakeMetadataConnector {
 
