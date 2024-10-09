@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author matt
  */
-@AutoService({Connector.class, MetadataConnector.class})
+@AutoService(Connector.class)
 @Description("Dumps metadata from Snowflake.")
 public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
