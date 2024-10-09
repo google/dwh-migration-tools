@@ -1,4 +1,5 @@
-build
+/build
+/buildSrc/build
 .svn
 .sw?
 .*.swp
