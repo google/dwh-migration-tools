@@ -23,6 +23,8 @@ import com.google.common.base.Predicates;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState;
+import com.google.edwmigration.dumper.application.dumper.QueryLogSharedState.QueryLogEntry;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
@@ -86,6 +88,15 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     super("teradata14-logs");
   }
 
+  /*
+   * Overriding it only for Teradata logs connectors, so in MetadataDumper summary
+   * section only they can output first and last entries of query logs for now
+   */
+  @Override
+  public boolean shouldOutputFirstAndLastQueryLog() {
+    return true;
+  }
+
   private abstract static class Teradata14LogsJdbcTask extends AbstractJdbcTask<Summary> {
 
     protected static String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
@@ -133,7 +144,14 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
         throws SQLException {
       String sql = getSql(jdbcHandle);
       ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
-      return doSelect(connection, withInterval(rse, interval), sql);
+      Summary summary = doSelect(connection, withInterval(rse, interval), sql);
+      if (summary != null && summary.rowCount() > 0) {
+        QueryLogSharedState.updateQueryLogEntries(
+            QueryLogEntry.QUERY_LOG_FIRST_ENTRY, interval.getStart());
+        QueryLogSharedState.updateQueryLogEntries(
+            QueryLogEntry.QUERY_LOG_LAST_ENTRY, interval.getEndExclusive());
+      }
+      return summary;
     }
 
     @Nonnull

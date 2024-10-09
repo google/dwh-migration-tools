@@ -24,6 +24,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
+import com.google.edwmigration.dumper.application.dumper.SummaryPrinter.SummaryLinePrinter;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
@@ -43,6 +44,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +64,9 @@ public class MetadataDumper {
 
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
+
+  private static DateTimeFormatter OUTPUT_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneOffset.UTC);
 
   public boolean run(String... args) throws Exception {
     ConnectorArguments arguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
@@ -194,6 +201,7 @@ public class MetadataDumper {
       logFinalSummary(
           summaryPrinter,
           state,
+          connector,
           outputFileLength,
           stopwatch,
           outputFileLocation,
@@ -265,9 +273,36 @@ public class MetadataDumper {
     return true;
   }
 
+  private void outputFirstAndLastQueryLogEnries(SummaryLinePrinter linePrinter) {
+
+    if (QueryLogSharedState.sizeOfQueryLogEntries() == 0) {
+      return;
+    }
+
+    ZonedDateTime queryLogFirstEntry =
+        QueryLogSharedState.getQueryLogEntry(
+            QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY);
+
+    ZonedDateTime queryLogLastEntry =
+        QueryLogSharedState.getQueryLogEntry(
+            QueryLogSharedState.QueryLogEntry.QUERY_LOG_LAST_ENTRY);
+
+    if (queryLogFirstEntry != null && queryLogLastEntry != null) {
+      linePrinter.println(
+          "The first query log entry is '%s' UTC and the last query log entry is '%s' UTC",
+          QueryLogSharedState.getQueryLogEntry(
+                  QueryLogSharedState.QueryLogEntry.QUERY_LOG_FIRST_ENTRY)
+              .format(OUTPUT_DATE_FORMAT),
+          QueryLogSharedState.getQueryLogEntry(
+                  QueryLogSharedState.QueryLogEntry.QUERY_LOG_LAST_ENTRY)
+              .format(OUTPUT_DATE_FORMAT));
+    }
+  }
+
   private void logFinalSummary(
       SummaryPrinter summaryPrinter,
       TaskSetState state,
+      Connector connector,
       long outputFileLength,
       Stopwatch stopwatch,
       String outputFileLocation,
@@ -281,6 +316,10 @@ public class MetadataDumper {
                   + state.getTasksReports().stream()
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
+          // For now, it will return true only for TeradataLogsConnector and Terada14LogsConnector
+          if (connector.shouldOutputFirstAndLastQueryLog()) {
+            outputFirstAndLastQueryLogEnries(linePrinter);
+          }
           if (requiredTaskSucceeded) {
             linePrinter.println("Output saved to '%s'", outputFileLocation);
           } else {
