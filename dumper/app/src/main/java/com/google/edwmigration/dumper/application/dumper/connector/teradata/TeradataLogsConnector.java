@@ -282,6 +282,13 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                 utilityLogsTable,
                 interval));
       }
+
+      out.add(
+          new TeradataQueryLogsJdbcTask(
+              "queryLogsFirstAndLastEntry.csv",
+              tableNames.queryLogsTableName(),
+              intervals.getStart(),
+              intervals.getEnd()));
     } else {
       for (ZonedInterval interval : intervals) {
         String file = createFilename(ZIP_ENTRY_PREFIX, interval);
