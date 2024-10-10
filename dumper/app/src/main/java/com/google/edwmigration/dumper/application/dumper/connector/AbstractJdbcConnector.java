@@ -95,7 +95,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
     File result = new File(driverPath);
     String absolutePath = result.getAbsolutePath();
     if (!result.exists()) {
-      String message = String.format("File does not exist: '%s'", absolutePath);
+      String message = String.format("Jdbc driver does not exist: '%s'", absolutePath);
       throw new IllegalArgumentException(message);
     } else if (!result.isFile()) {
       String message =
@@ -138,22 +138,33 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
           } catch (PrivilegedActionException e) {
             if (e.getCause() instanceof ClassNotFoundException)
               LOG.warn(
-                  "Cannot load " + driverClassName + " from " + driverPaths + ": " + e.getCause());
+                  "Cannot load driver class [{}] from path {}: {}",
+                  driverClassName,
+                  driverPaths,
+                  e.getCause());
             else throw e;
           }
         }
         throw new SQLException(
-            "Failed to load any of " + Arrays.toString(driverClassNames) + " from " + driverPaths);
+            "Failed to load any driver of "
+                + Arrays.toString(driverClassNames)
+                + " from path "
+                + driverPaths);
       }
 
-      LOG.info("Using JDBC Driver " + driverClass);
+      LOG.info("Using JDBC Driver: {}", driverClass);
       return driverClass.asSubclass(Driver.class).getConstructor().newInstance();
     } catch (ReflectiveOperationException
         | PrivilegedActionException
         | MalformedURLException
         | RuntimeException e) {
       throw new SQLException(
-          "Failed to load or instantiate " + driverClass + " from " + driverPaths + ": " + e, e);
+          "Failed to load or instantiate jdbc driver: ["
+              + driverClass
+              + "] from path: "
+              + driverPaths
+              + "",
+          e);
     }
   }
 
