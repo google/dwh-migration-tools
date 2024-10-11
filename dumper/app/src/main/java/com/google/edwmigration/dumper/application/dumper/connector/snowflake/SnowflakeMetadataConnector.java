@@ -39,7 +39,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.function.Function;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,26 +136,31 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
-      ConnectorArguments arguments) {
-    Function<SnowflakeInput, ImmutableList<Task<?>>> getSqlTasks =
-        (input) -> {
-          switch (input) {
-            case USAGE_THEN_SCHEMA:
-              {
-                AbstractJdbcTask<Summary> schemaTask = taskFromVariant(format, is_task, header);
-                AbstractJdbcTask<Summary> usageTask = taskFromVariant(format, au_task, header);
-                if (arguments.isAssessment()) {
-                  return ImmutableList.of(usageTask);
-                }
-                return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
-              }
-            case SCHEMA_ONLY:
-              return ImmutableList.of(taskFromVariant(format, is_task, header));
-            case USAGE_ONLY:
-              return ImmutableList.of(taskFromVariant(format, au_task, header));
+      @Nonnull ConnectorArguments arguments) {
+    out.addAll(getSqlTasks(header, format, is_task, au_task, arguments));
+  }
+
+  private ImmutableList<Task<?>> getSqlTasks(
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull TaskVariant is_task,
+      @Nonnull TaskVariant au_task,
+      @Nonnull ConnectorArguments arguments) {
+    switch (inputSource) {
+      case USAGE_THEN_SCHEMA:
+        {
+          AbstractJdbcTask<Summary> schemaTask = taskFromVariant(format, is_task, header);
+          AbstractJdbcTask<Summary> usageTask = taskFromVariant(format, au_task, header);
+          if (arguments.isAssessment()) {
+            return ImmutableList.of(usageTask);
           }
-        };
-    out.addAll(getSqlTasks.apply(inputSource));
+          return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
+        }
+      case SCHEMA_ONLY:
+        return ImmutableList.of(taskFromVariant(format, is_task, header));
+      case USAGE_ONLY:
+        return ImmutableList.of(taskFromVariant(format, au_task, header));
+    }
   }
 
   private static AbstractJdbcTask<Summary> taskFromVariant(
