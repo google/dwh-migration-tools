@@ -161,6 +161,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       case USAGE_ONLY:
         return ImmutableList.of(taskFromVariant(format, au_task, header));
     }
+    throw new AssertionError();
   }
 
   private static AbstractJdbcTask<Summary> taskFromVariant(
