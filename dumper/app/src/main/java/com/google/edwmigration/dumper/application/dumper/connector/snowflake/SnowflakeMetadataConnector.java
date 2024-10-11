@@ -98,7 +98,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
   private final SnowflakeInput inputSource;
 
-  protected SnowflakeMetadataConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
+  SnowflakeMetadataConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
     super(name);
     this.inputSource = inputSource;
   }
@@ -113,7 +113,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     return SnowflakeMetadataConnectorProperties.class;
   }
 
-  protected static class TaskVariant {
+  private static class TaskVariant {
 
     public final String zipEntryName;
     public final String schemaName;
