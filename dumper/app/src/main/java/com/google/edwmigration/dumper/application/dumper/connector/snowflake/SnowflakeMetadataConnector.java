@@ -34,7 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat.Header;
-import com.google.errorprone.annotations.ForOverride;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -152,18 +151,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     switch (inputType) {
       case USAGE_THEN_SCHEMA:
         {
-          AbstractJdbcTask<Summary> schemaTask =
-              new JdbcSelectTask(
-                      is_task.zipEntryName,
-                      String.format(format, is_task.schemaName, is_task.whereClause))
-                  .withHeaderClass(header);
-
-          AbstractJdbcTask<Summary> usageTask =
-              new JdbcSelectTask(
-                      au_task.zipEntryName,
-                      String.format(format, au_task.schemaName, au_task.whereClause))
-                  .withHeaderClass(header);
-
+          AbstractJdbcTask<Summary> schemaTask = taskFromVariant(format, is_task, header);
+          AbstractJdbcTask<Summary> usageTask = taskFromVariant(format, au_task, header);
           if (arguments.isAssessment()) {
             out.add(usageTask);
           } else {
@@ -174,24 +163,23 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         }
       case SCHEMA_ONLY:
         {
-          Task<?> schemaTask =
-              new JdbcSelectTask(
-                      is_task.zipEntryName,
-                      String.format(format, is_task.schemaName, is_task.whereClause))
-                  .withHeaderClass(header);
-          out.add(schemaTask);
+          out.add(taskFromVariant(format, is_task, header));
           return;
         }
       case USAGE_ONLY:
         {
-          Task<?> usageTask =
-              new JdbcSelectTask(
-                      au_task.zipEntryName,
-                      String.format(format, au_task.schemaName, au_task.whereClause))
-                  .withHeaderClass(header);
-          out.add(usageTask);
+          out.add(taskFromVariant(format, au_task, header));
+          return;
         }
     }
+  }
+
+  private static AbstractJdbcTask<Summary> taskFromVariant(
+      String formatString, TaskVariant variant, Class<? extends Enum<?>> header) {
+    return new JdbcSelectTask(
+            variant.zipEntryName,
+            String.format(formatString, variant.schemaName, variant.whereClause))
+        .withHeaderClass(header);
   }
 
   private void addSingleSqlTask(

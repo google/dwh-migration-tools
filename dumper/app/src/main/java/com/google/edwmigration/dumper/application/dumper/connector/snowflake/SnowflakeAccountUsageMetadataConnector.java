@@ -19,11 +19,8 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY;
 
 import com.google.auto.service.AutoService;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-import java.util.List;
 
 /** @author shevek */
 @AutoService(Connector.class)
