@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA;
+
 import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -38,6 +40,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,23 +137,59 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
       ConnectorArguments arguments) {
-    AbstractJdbcTask<Summary> is_jdbcTask =
-        new JdbcSelectTask(
-                is_task.zipEntryName,
-                String.format(format, is_task.schemaName, is_task.whereClause))
-            .withHeaderClass(header);
+    doAddSqlTasks(out, header, format, is_task, au_task, arguments, USAGE_THEN_SCHEMA);
+  }
 
-    AbstractJdbcTask<Summary> au_jdbcTask =
-        new JdbcSelectTask(
-                au_task.zipEntryName,
-                String.format(format, au_task.schemaName, au_task.whereClause))
-            .withHeaderClass(header);
+  protected final void doAddSqlTasks(
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull TaskVariant is_task,
+      @Nonnull TaskVariant au_task,
+      @Nullable ConnectorArguments arguments,
+      @Nonnull SnowflakeInput inputType) {
+    switch (inputType) {
+      case USAGE_THEN_SCHEMA:
+        {
+          AbstractJdbcTask<Summary> schemaTask =
+              new JdbcSelectTask(
+                      is_task.zipEntryName,
+                      String.format(format, is_task.schemaName, is_task.whereClause))
+                  .withHeaderClass(header);
 
-    if (arguments.isAssessment()) {
-      out.add(au_jdbcTask);
-    } else {
-      out.add(au_jdbcTask);
-      out.add(is_jdbcTask.onlyIfFailed(au_jdbcTask));
+          AbstractJdbcTask<Summary> usageTask =
+              new JdbcSelectTask(
+                      au_task.zipEntryName,
+                      String.format(format, au_task.schemaName, au_task.whereClause))
+                  .withHeaderClass(header);
+
+          if (arguments.isAssessment()) {
+            out.add(usageTask);
+          } else {
+            out.add(usageTask);
+            out.add(schemaTask.onlyIfFailed(usageTask));
+          }
+          return;
+        }
+      case SCHEMA_ONLY:
+        {
+          Task<?> schemaTask =
+              new JdbcSelectTask(
+                      is_task.zipEntryName,
+                      String.format(format, is_task.schemaName, is_task.whereClause))
+                  .withHeaderClass(header);
+          out.add(schemaTask);
+          return;
+        }
+      case USAGE_ONLY:
+        {
+          Task<?> usageTask =
+              new JdbcSelectTask(
+                      au_task.zipEntryName,
+                      String.format(format, au_task.schemaName, au_task.whereClause))
+                  .withHeaderClass(header);
+          out.add(usageTask);
+        }
     }
   }
 
