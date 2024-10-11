@@ -131,7 +131,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  final void addSqlTasksWithInfoSchemaFallback(
+  private void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
