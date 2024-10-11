@@ -31,17 +31,6 @@ import java.util.List;
 public class SnowflakeInformationSchemaMetadataConnector extends SnowflakeMetadataConnector {
 
   public SnowflakeInformationSchemaMetadataConnector() {
-    super("snowflake-information-schema-metadata");
-  }
-
-  @Override
-  protected void addSqlTasksWithInfoSchemaFallback(
-      List<? super Task<?>> out,
-      Class<? extends Enum<?>> header,
-      String format,
-      TaskVariant is_task,
-      TaskVariant au_task,
-      ConnectorArguments arguments) {
-    doAddSqlTasks(out, header, format, is_task, au_task, arguments, SCHEMA_ONLY);
+    super("snowflake-information-schema-metadata", SCHEMA_ONLY);
   }
 }

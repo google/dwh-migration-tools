@@ -97,12 +97,15 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  protected SnowflakeMetadataConnector(@Nonnull String name) {
+  private final SnowflakeInput inputSource;
+
+  protected SnowflakeMetadataConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
     super(name);
+    this.inputSource = inputSource;
   }
 
   public SnowflakeMetadataConnector() {
-    this("snowflake");
+    this("snowflake", USAGE_THEN_SCHEMA);
   }
 
   @Nonnull
@@ -128,19 +131,17 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  /** Adds the ACCOUNT_USAGE task, with a fallback to the INFORMATION_SCHEMA task. */
-  @ForOverride
-  protected void addSqlTasksWithInfoSchemaFallback(
+  final void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
       ConnectorArguments arguments) {
-    doAddSqlTasks(out, header, format, is_task, au_task, arguments, USAGE_THEN_SCHEMA);
+    doAddSqlTasks(out, header, format, is_task, au_task, arguments, inputSource);
   }
 
-  protected final void doAddSqlTasks(
+  private void doAddSqlTasks(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
@@ -216,7 +217,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   @Override
-  public void addTasksTo(
+  public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));

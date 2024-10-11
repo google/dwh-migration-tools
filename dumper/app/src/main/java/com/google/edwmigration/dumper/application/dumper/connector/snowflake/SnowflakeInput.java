@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 enum SnowflakeInput {
+  /** Adds the ACCOUNT_USAGE task, with a fallback to the INFORMATION_SCHEMA task. */
   USAGE_THEN_SCHEMA,
   SCHEMA_ONLY,
   USAGE_ONLY;

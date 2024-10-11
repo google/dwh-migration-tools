@@ -31,17 +31,6 @@ import java.util.List;
 public class SnowflakeAccountUsageMetadataConnector extends SnowflakeMetadataConnector {
 
   public SnowflakeAccountUsageMetadataConnector() {
-    super("snowflake-account-usage-metadata");
-  }
-
-  @Override
-  protected void addSqlTasksWithInfoSchemaFallback(
-      List<? super Task<?>> out,
-      Class<? extends Enum<?>> header,
-      String format,
-      TaskVariant is_task,
-      TaskVariant au_task,
-      ConnectorArguments arguments) {
-    doAddSqlTasks(out, header, format, is_task, au_task, arguments, USAGE_ONLY);
+    super("snowflake-account-usage-metadata", USAGE_ONLY);
   }
 }
