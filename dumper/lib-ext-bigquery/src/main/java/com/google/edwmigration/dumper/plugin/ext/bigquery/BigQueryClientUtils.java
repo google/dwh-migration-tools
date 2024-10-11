@@ -30,9 +30,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author shevek
- */
+/** @author shevek */
 public class BigQueryClientUtils {
 
   @SuppressWarnings("UnusedVariable")
