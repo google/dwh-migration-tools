@@ -53,7 +53,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author miguel */
+/**
+ * @author miguel
+ */
 public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);

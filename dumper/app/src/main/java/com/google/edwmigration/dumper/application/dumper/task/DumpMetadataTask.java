@@ -32,7 +32,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.anarres.jdiagnostics.ProductMetadata;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class DumpMetadataTask extends AbstractTask<Void>
     implements CoreMetadataDumpFormat.CompilerWorksDumpMetadataTaskFormat {
 

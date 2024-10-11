@@ -25,7 +25,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import java.util.List;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface CoreMetadataDumpFormat {
 
   public static final YAMLFactory FACTORY =
@@ -60,6 +62,7 @@ public interface CoreMetadataDumpFormat {
     public static class Root {
 
       public String format;
+
       /** In milliseconds since the epoch. */
       public long timestamp;
 

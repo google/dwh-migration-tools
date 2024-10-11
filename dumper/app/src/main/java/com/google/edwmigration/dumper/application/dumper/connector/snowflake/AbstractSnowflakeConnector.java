@@ -40,7 +40,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RespectsArgumentHostUnlessUrl
 @RespectsArgumentUser
 @RespectsArgumentPassword

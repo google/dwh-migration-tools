@@ -26,13 +26,19 @@ import com.google.common.base.Preconditions;
 @AutoValue
 abstract class QueryLogTableNames {
 
-  /** @return query logs table name */
+  /**
+   * @return query logs table name
+   */
   abstract String queryLogsTableName();
 
-  /** @return SQL logs table name */
+  /**
+   * @return SQL logs table name
+   */
   abstract String sqlLogsTableName();
 
-  /** @return whether at least one alternate table is being used */
+  /**
+   * @return whether at least one alternate table is being used
+   */
   abstract boolean usingAtLeastOneAlternate();
 
   static QueryLogTableNames create(

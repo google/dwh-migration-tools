@@ -30,7 +30,9 @@ import org.anarres.jdiagnostics.TmpDirQuery;
 import org.anarres.jdiagnostics.XalanQuery;
 import org.anarres.jdiagnostics.XercesQuery;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class DumperDiagnosticQuery extends CompositeQuery {
 
   public DumperDiagnosticQuery(Throwable t) {

@@ -495,8 +495,8 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
             client
                 .get_foreign_keys(
                     new ForeignKeysRequest(
-                        /*parent_db_name=*/ null,
-                        /*parent_tbl_name=*/ null,
+                        /* parent_db_name= */ null,
+                        /* parent_tbl_name= */ null,
                         databaseName,
                         tableName))
                 .getForeignKeys());

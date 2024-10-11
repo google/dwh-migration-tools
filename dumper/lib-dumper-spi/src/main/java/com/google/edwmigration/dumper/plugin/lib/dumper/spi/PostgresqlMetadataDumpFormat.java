@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface PostgresqlMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "postgresql.dump.zip";

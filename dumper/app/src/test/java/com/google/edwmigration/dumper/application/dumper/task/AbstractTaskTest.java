@@ -23,7 +23,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public abstract class AbstractTaskTest {
 
   protected static class DummyHandle extends AbstractHandle {}

@@ -30,7 +30,9 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.PostgresqlMetadataDumpFormat;
 import java.util.List;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from PostgreSQL.")
 @RespectsInput(

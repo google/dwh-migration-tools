@@ -55,7 +55,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Teradata version >=15.")
 @RespectsArgumentQueryLogDays

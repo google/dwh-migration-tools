@@ -55,7 +55,9 @@ import org.springframework.jdbc.core.StatementCreatorUtils;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.support.JdbcUtils;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcTask.class);

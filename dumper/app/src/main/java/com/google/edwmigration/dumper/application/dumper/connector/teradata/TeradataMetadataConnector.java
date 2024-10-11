@@ -51,7 +51,9 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import javax.annotation.Nonnull;
 
-/** @author miguel */
+/**
+ * @author miguel
+ */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Teradata.")
 @RespectsArgumentDatabasePredicate

@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author swapnil */
+/**
+ * @author swapnil
+ */
 public interface SqlServerMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "sqlserver.dump.zip";

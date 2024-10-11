@@ -19,7 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.test;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class DummyByteSinkFactory implements OutputHandleFactory {
 
   @Override

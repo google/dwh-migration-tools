@@ -25,7 +25,9 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 public abstract class AbstractBigQueryConnectorExecutionTest
     extends AbstractConnectorExecutionTest {
 

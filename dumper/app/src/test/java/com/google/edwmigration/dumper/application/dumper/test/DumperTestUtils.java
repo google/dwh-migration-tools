@@ -33,7 +33,9 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class DumperTestUtils {
 
   private static final String JDBC_URL_PREFIX = "jdbc:sqlite:";

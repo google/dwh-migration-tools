@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.CheckForNull;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 public interface BigQueryLogsDumpFormat {
 
   ObjectMapper MAPPER = BigQueryMetadataDumpFormat.MAPPER;
@@ -75,6 +77,7 @@ public interface BigQueryLogsDumpFormat {
 
       /** From JobStatus.BigQueryError. */
       @CheckForNull public String message;
+
       /** From JobStatus.BigQueryError. */
       @CheckForNull public String reason;
     }
@@ -99,6 +102,7 @@ public interface BigQueryLogsDumpFormat {
 
       /** The project in which the job was executed. */
       @CheckForNull public String project;
+
       /** The default dataset in which the job was executed. */
       @CheckForNull public String defaultDataset;
 
@@ -155,8 +159,10 @@ public interface BigQueryLogsDumpFormat {
       @CheckForNull public Map<String, String> labels;
       @CheckForNull public String userEmail;
       @CheckForNull public JobStatus jobStatus;
+
       /** In milliseconds since epoch. */
       @CheckForNull public Long startTime;
+
       /** In milliseconds since epoch. */
       @CheckForNull public Long endTime;
 

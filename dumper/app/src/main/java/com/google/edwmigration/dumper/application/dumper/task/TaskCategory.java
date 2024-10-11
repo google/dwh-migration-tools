@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public enum TaskCategory {
   INFORMATIONAL,
   OPTIONAL,

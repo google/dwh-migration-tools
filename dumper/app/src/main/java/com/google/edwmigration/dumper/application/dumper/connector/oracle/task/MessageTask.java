@@ -35,6 +35,7 @@ public class MessageTask extends AbstractTask<Void> {
   private static final Logger LOG = LoggerFactory.getLogger(MessageTask.class);
 
   private final GroupTask[] tasks;
+
   /** */
   private final String names;
 

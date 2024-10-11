@@ -23,7 +23,9 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.MetadataDumperConstants;
 import java.nio.charset.StandardCharsets;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class FormatTask extends AbstractTask<Void> {
 
   private final String format;

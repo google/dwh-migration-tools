@@ -30,7 +30,9 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author ishmum */
+/**
+ * @author ishmum
+ */
 public class ZonedIntervalIterableGenerator {
 
   @SuppressWarnings("UnusedVariable")

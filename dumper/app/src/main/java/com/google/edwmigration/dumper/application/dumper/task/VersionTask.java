@@ -22,7 +22,9 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.MetadataDumperConsta
 import java.nio.charset.StandardCharsets;
 import org.anarres.jdiagnostics.ProductMetadata;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class VersionTask extends AbstractTask<Void> {
 
   public VersionTask(String targetPath) {

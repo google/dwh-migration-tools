@@ -26,7 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
-/** @author ishmum */
+/**
+ * @author ishmum
+ */
 public class JdbcSelectIntervalTask extends JdbcSelectTask {
 
   @SuppressWarnings("UnusedVariable")

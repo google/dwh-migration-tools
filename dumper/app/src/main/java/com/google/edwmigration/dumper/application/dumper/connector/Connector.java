@@ -23,7 +23,9 @@ import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface Connector {
 
   // Empty

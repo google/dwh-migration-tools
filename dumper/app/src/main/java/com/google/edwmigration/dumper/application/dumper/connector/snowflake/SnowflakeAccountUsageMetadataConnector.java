@@ -24,7 +24,9 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.util.List;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService(Connector.class)
 @Description("Dumps metadata from Snowflake, using ACCOUNT_USAGE only.")
 public class SnowflakeAccountUsageMetadataConnector extends SnowflakeMetadataConnector {

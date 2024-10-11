@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.util.List;
 import javax.annotation.CheckForNull;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 public interface BigQueryMetadataDumpFormat {
 
   public static final ObjectMapper MAPPER =
@@ -81,6 +83,7 @@ public interface BigQueryMetadataDumpFormat {
         }
 
         public String name;
+
         /** LegacySQLTypeName. */
         public String type;
 
@@ -100,8 +103,10 @@ public interface BigQueryMetadataDumpFormat {
       @CheckForNull public TimePartitioningType timePartitioningType = TimePartitioningType.DAY;
       public boolean timePartitioningRequired;
       @CheckForNull public String viewQuery;
+
       /** In milliseconds, since the epoch. */
       @CheckForNull public Long creationTime;
+
       /** In milliseconds, since the epoch. Null means the table does not expire. */
       @CheckForNull public Long expirationTime;
     }

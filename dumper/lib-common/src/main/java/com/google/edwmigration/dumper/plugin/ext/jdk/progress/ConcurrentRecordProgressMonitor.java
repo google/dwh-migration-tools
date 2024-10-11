@@ -32,7 +32,9 @@ import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressMonitor {
 
   private static class ExecutorHolder {

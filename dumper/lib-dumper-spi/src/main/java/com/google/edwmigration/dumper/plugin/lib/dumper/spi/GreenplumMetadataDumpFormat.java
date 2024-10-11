@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author zzwang */
+/**
+ * @author zzwang
+ */
 public interface GreenplumMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "greenplum.dump.zip";

@@ -19,7 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/** @author ishmumkhan */
+/**
+ * @author ishmumkhan
+ */
 public interface ResultSetTransformer<T> {
   T transform(ResultSet resultSet) throws SQLException;
 }

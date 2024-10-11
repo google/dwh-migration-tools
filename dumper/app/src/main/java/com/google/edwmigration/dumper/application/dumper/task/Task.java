@@ -24,7 +24,9 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.checkerframework.common.value.qual.ArrayLen;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface Task<T> {
 
   public static interface Condition {

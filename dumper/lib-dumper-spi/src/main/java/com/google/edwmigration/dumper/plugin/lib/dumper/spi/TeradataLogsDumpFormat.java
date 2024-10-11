@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 public interface TeradataLogsDumpFormat {
 
   String FORMAT_NAME = "teradata.logs.zip"; // Has Header or (HeaderLSql+HeaderLog )

@@ -24,7 +24,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Inherited // It's not clear whether we should set this here, or always use Spring's
 // AnnotationUtils.findAnnotation.

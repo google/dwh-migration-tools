@@ -31,7 +31,9 @@ import java.util.List;
 import javax.sql.DataSource;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RespectsArgumentDriverRequired
 @RespectsArgumentHostUnlessUrl
 @RespectsInput(

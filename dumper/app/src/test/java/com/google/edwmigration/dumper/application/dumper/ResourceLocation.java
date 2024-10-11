@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ResourceLocation {
 
   private ResourceLocation() {}

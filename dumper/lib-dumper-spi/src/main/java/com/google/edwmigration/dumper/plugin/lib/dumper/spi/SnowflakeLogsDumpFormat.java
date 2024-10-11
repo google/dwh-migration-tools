@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 public interface SnowflakeLogsDumpFormat {
 
   String FORMAT_NAME = "snowflake.logs.zip";

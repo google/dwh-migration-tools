@@ -18,7 +18,9 @@ package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
 import java.util.concurrent.TimeUnit;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class CloseShieldProgressMonitor extends AbstractProgressMonitor {
 
   private final ProgressMonitor monitor;

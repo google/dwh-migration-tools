@@ -19,7 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import com.google.common.base.Preconditions;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public abstract class AbstractConnector implements Connector {
 
   private final String name;

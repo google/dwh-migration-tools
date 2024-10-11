@@ -22,7 +22,9 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @Immutable // Not technically, because value might be mutable.
 public class TaskResult<T> {
 

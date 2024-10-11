@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface NetezzaMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "netezza.dump.zip";

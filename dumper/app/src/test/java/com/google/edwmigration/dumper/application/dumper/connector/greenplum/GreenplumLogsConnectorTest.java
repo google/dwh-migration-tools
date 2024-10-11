@@ -23,7 +23,9 @@ import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author zzwang */
+/**
+ * @author zzwang
+ */
 @RunWith(JUnit4.class)
 public class GreenplumLogsConnectorTest extends AbstractConnectorExecutionTest {
 

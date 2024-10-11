@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.util.List;
 import javax.annotation.CheckForNull;
 
-/** @author swapnil */
+/**
+ * @author swapnil
+ */
 public interface HiveMetadataDumpFormat {
 
   public static final ObjectMapper MAPPER =

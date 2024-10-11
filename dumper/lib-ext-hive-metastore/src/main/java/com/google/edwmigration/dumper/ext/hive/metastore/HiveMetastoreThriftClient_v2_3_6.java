@@ -487,8 +487,8 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
             client
                 .get_foreign_keys(
                     new ForeignKeysRequest(
-                        /*parent_db_name=*/ null,
-                        /*parent_tbl_name=*/ null,
+                        /* parent_db_name= */ null,
+                        /* parent_tbl_name= */ null,
                         databaseName,
                         tableName))
                 .getForeignKeys());

@@ -25,7 +25,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RunWith(JUnit4.class)
 public class SnowflakeAccountUsageLogsConnectorTest
     extends AbstractSnowflakeConnectorExecutionTest {

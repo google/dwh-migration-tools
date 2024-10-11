@@ -18,7 +18,9 @@ package com.google.edwmigration.dumper.application.dumper.io;
 
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface OutputHandleFactory {
 
   @Nonnull

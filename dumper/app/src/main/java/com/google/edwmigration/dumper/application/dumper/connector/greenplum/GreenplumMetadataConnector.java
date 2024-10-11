@@ -29,7 +29,9 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.GreenplumMetadataDumpFormat;
 import java.util.List;
 
-/** @author zzwang */
+/**
+ * @author zzwang
+ */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Greenplum.")
 @RespectsInput(

@@ -33,7 +33,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface TaskSetState {
 
   @AutoValue

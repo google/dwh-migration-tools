@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author dave */
+/**
+ * @author dave
+ */
 public interface SnowflakeMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "snowflake.dump.zip";

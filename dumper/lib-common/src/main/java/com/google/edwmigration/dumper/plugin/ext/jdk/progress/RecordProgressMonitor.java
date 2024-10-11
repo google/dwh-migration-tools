@@ -26,7 +26,9 @@ import net.jcip.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @NotThreadSafe
 public class RecordProgressMonitor extends AbstractProgressMonitor {
 

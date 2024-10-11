@@ -19,7 +19,9 @@ package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface RedshiftMetadataDumpFormat extends PostgresqlMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "redshift.dump.zip";

@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Amazon Redshift.")
 @RespectsInput(

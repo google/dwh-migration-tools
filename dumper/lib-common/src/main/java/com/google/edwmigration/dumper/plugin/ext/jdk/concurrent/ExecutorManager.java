@@ -42,7 +42,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ExecutorManager implements AutoCloseable, Executor {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExecutorManager.class);

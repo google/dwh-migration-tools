@@ -18,7 +18,9 @@ package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public abstract class AbstractConcurrentProgressMonitor implements ConcurrentProgressMonitor {
 
   @Nonnull

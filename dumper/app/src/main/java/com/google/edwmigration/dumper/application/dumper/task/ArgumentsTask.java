@@ -24,7 +24,9 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.MetadataDumperConsta
 import java.nio.charset.StandardCharsets;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ArgumentsTask extends AbstractTask<Void> {
 
   @Nonnull private final ConnectorArguments arguments;

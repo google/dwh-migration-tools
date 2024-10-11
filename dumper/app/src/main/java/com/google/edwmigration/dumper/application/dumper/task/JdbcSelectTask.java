@@ -25,7 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
 
   @SuppressWarnings("UnusedVariable")

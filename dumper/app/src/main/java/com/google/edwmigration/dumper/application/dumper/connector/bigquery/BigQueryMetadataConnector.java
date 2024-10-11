@@ -66,7 +66,9 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Google BigQuery.")
 @RespectsInput(

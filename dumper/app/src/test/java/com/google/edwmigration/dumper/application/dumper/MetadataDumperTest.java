@@ -33,7 +33,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RunWith(JUnit4.class)
 public class MetadataDumperTest {
   private static final String DEFAULT_FILENAME = "dwh-migration-test-metadata.zip";

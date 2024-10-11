@@ -30,7 +30,9 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import java.sql.Driver;
 import javax.sql.DataSource;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RespectsArgumentDriver
 @RespectsArgumentDriverClass
 @RespectsArgumentHostUnlessUrl

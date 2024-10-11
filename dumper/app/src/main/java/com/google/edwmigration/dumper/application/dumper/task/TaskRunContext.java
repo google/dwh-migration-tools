@@ -29,7 +29,9 @@ import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class TaskRunContext implements OutputHandleFactory {
 
   private final OutputHandleFactory sinkFactory;

@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 public class MetadataDumperConstants {
 
   public static final String FORMAT_ZIP_ENTRY_NAME = "compilerworks-format.txt";

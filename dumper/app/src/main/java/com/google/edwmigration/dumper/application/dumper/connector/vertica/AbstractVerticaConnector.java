@@ -33,7 +33,9 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
-/** @author matt */
+/**
+ * @author matt
+ */
 @RespectsArgumentDriverRequired
 @RespectsArgumentHostUnlessUrl
 @RespectsInput(

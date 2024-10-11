@@ -20,7 +20,9 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import java.time.Clock;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface MetadataConnector extends Connector {
 
   @Nonnull

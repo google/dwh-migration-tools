@@ -20,7 +20,9 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public interface ProgressMonitor extends AutoCloseable {
 
   /** The divisor for memory measurements: 1 Mb. */

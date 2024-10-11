@@ -22,7 +22,9 @@ import java.nio.file.Path;
 import javax.annotation.Nonnull;
 import net.jcip.annotations.ThreadSafe;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @ThreadSafe
 public class FileSystemOutputHandleFactory implements OutputHandleFactory {
 

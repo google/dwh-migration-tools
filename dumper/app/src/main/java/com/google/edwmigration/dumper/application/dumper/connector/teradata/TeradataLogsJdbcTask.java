@@ -64,6 +64,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
   protected static final DateTimeFormatter SQL_DATE_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE.withZone(ZoneOffset.UTC);
+
   // Docref: https://docs.teradata.com/reader/wada1XMYPkZVTqPKz2CNaw/F7f64mU9~e4s03UAdorEHw
   // According to one customer, the attributes "SQLTextInfo", "LastRespTime",
   // "RequestMode", and "Statements" are all absent from DBQLogTbl in version 14.10.07.10,
@@ -274,7 +275,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
             "SqlTextInfo",
             "SqlRowNo",
             tableNames.sqlLogsTableName(),
-            /* whereCondition=*/ optionallyWhen(
+            /* whereCondition= */ optionallyWhen(
                 logDateColumn != null, this::createLogDateColumnCondition),
             DBQLSQLTBL_SQLTEXTINFO_LENGTH,
             maxLength)

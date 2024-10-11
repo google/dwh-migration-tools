@@ -28,7 +28,9 @@ import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFormat {
 
   private final List<Task<?>> tasks = new ArrayList<>();

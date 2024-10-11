@@ -22,7 +22,9 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService(Connector.class)
 @Description("Dumps logs from Snowflake, using ACCOUNT_USAGE only.")
 public class SnowflakeAccountUsageLogsConnector extends SnowflakeLogsConnector {

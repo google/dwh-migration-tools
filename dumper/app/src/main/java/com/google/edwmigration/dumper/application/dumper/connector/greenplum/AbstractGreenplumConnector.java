@@ -27,7 +27,9 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import javax.annotation.Nonnull;
 
-/** @author zzwang */
+/**
+ * @author zzwang
+ */
 @RespectsArgumentDriver
 @RespectsArgumentDriverClass
 @RespectsArgumentHostUnlessUrl

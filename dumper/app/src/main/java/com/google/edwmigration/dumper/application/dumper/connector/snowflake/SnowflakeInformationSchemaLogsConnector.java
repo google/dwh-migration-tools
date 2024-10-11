@@ -23,7 +23,9 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @AutoService(Connector.class)
 @Description("Dumps logs from Snowflake, using INFORMATION_SCHEMA only.")
 public class SnowflakeInformationSchemaLogsConnector extends SnowflakeLogsConnector {

@@ -26,7 +26,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.ArrayUtils;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public abstract class AbstractSnowflakeConnectorExecutionTest
     extends AbstractConnectorExecutionTest {
 

@@ -27,7 +27,9 @@ import javax.annotation.Nonnull;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 public class ZipArchiveEntryByteSource extends PathByteSource {
 
   @CheckForNull
