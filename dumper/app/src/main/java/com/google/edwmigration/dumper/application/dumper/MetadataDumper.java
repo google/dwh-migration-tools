@@ -24,6 +24,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
+import com.google.edwmigration.dumper.application.dumper.SummaryPrinter.SummaryLinePrinter;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
@@ -43,6 +44,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +60,9 @@ import org.slf4j.LoggerFactory;
 public class MetadataDumper {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
+
+  private static DateTimeFormatter OUTPUT_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneOffset.UTC);
 
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
@@ -193,6 +199,8 @@ public class MetadataDumper {
           checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
       logFinalSummary(
           summaryPrinter,
+          connector,
+          arguments,
           state,
           outputFileLength,
           stopwatch,
@@ -265,8 +273,45 @@ public class MetadataDumper {
     return true;
   }
 
+  private void outputLogStartAndEndDates(
+      SummaryLinePrinter linePrinter, ConnectorArguments connectorArguments) {
+
+    String queryLogStartDate =
+        connectorArguments.getQueryLogStart() == null
+            ? null
+            : connectorArguments.getQueryLogStart().format(OUTPUT_DATE_FORMAT);
+    String queryLogEndDate =
+        connectorArguments.getQueryLogEnd() == null
+            ? null
+            : connectorArguments.getQueryLogEnd().format(OUTPUT_DATE_FORMAT);
+    String actualQueryLogStartDate =
+        QueryLogDateState.getQueryLogFirstEntry().format(OUTPUT_DATE_FORMAT);
+    String actualQueryLogEndDate =
+        QueryLogDateState.getQueryLogLastEntry().format(OUTPUT_DATE_FORMAT);
+
+    if (queryLogStartDate == null && queryLogEndDate == null) {
+      linePrinter.println(
+          "Query logs contain data from '%s' to '%s'",
+          actualQueryLogStartDate, actualQueryLogEndDate);
+    } else if (queryLogStartDate == null) {
+      linePrinter.println(
+          "Requested query logs range was until '%s'. The first entry of logs is on '%s' and the last entry is on '%s'",
+          queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
+    } else if (queryLogEndDate == null) {
+      linePrinter.println(
+          "Requested query logs range was starting from '%s'. The first entry of logs is on '%s' and the last entry is on '%s'",
+          queryLogStartDate, actualQueryLogStartDate, actualQueryLogEndDate);
+    } else {
+      linePrinter.println(
+          "Requested query logs range was from '%s' to '%s'. The first entry of logs is on '%s' and the last entry is on '%s'",
+          queryLogStartDate, queryLogEndDate, actualQueryLogStartDate, actualQueryLogEndDate);
+    }
+  }
+
   private void logFinalSummary(
       SummaryPrinter summaryPrinter,
+      Connector connector,
+      ConnectorArguments connectorArguments,
       TaskSetState state,
       long outputFileLength,
       Stopwatch stopwatch,
@@ -281,6 +326,9 @@ public class MetadataDumper {
                   + state.getTasksReports().stream()
                       .map(taskReport -> taskReport.count() + " " + taskReport.state())
                       .collect(joining(", ")));
+          if (connector.isLogsConnector()) {
+            outputLogStartAndEndDates(linePrinter, connectorArguments);
+          }
           if (requiredTaskSucceeded) {
             linePrinter.println("Output saved to '%s'", outputFileLocation);
           } else {

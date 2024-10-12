@@ -21,6 +21,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.QueryLogDateState;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
@@ -203,7 +204,12 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
       throws SQLException {
     String sql = getOrCreateSql(jdbcHandle);
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
-    return doSelect(connection, withInterval(rse, interval), sql);
+    Summary summary = doSelect(connection, withInterval(rse, interval), sql);
+    if (summary != null && summary.rowCount() > 0) {
+      QueryLogDateState.updateQueryLogFirstEntry(interval.getStart());
+      QueryLogDateState.updateQueryLogLastEntry(interval.getEndExclusive());
+    }
+    return summary;
   }
 
   @Nonnull

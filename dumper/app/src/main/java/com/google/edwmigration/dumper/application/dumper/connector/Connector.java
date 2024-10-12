@@ -45,4 +45,8 @@ public interface Connector {
   public default Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
     return DefaultProperties.class;
   }
+
+  default boolean isLogsConnector() {
+    return false;
+  }
 }
