@@ -95,7 +95,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
     File result = new File(driverPath);
     String absolutePath = result.getAbsolutePath();
     if (!result.exists()) {
-      String message = String.format("Jdbc driver does not exist: '%s'", absolutePath);
+      String message = String.format("Jdbc driver does not exist at : '%s'", absolutePath);
       throw new IllegalArgumentException(message);
     } else if (!result.isFile()) {
       String message =
@@ -162,8 +162,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
           "Failed to load or instantiate jdbc driver: ["
               + driverClass
               + "] from path: "
-              + driverPaths
-              + "",
+              + driverPaths,
           e);
     }
   }
