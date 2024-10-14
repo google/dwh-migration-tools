@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY;
 import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
 
 import com.google.auto.service.AutoService;
@@ -68,12 +69,15 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   private static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
 
-  protected SnowflakeLogsConnector(@Nonnull String name) {
+  private final SnowflakeInput inputSource;
+
+  protected SnowflakeLogsConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
     super(name);
+    this.inputSource = inputSource;
   }
 
   public SnowflakeLogsConnector() {
-    this("snowflake-logs");
+    this("snowflake-logs", SCHEMA_ONLY);
   }
 
   public enum SnowflakeLogConnectorProperties implements ConnectorProperty {
@@ -168,7 +172,15 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       throws MetadataDumperUsageException {
     // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
     // Per the docref, Snowflake only retains/returns seven trailing days of logs.
-    return createQueryFromInformationSchema(arguments);
+    switch (inputSource) {
+      case USAGE_THEN_SCHEMA:
+        throw new IllegalArgumentException("Unsupported input source for Snowflake logs.");
+      case USAGE_ONLY:
+        return createQueryFromAccountUsage(arguments);
+      case SCHEMA_ONLY:
+        return createQueryFromInformationSchema(arguments);
+    }
+    throw new AssertionError();
   }
 
   protected String createQueryFromAccountUsage(ConnectorArguments arguments)

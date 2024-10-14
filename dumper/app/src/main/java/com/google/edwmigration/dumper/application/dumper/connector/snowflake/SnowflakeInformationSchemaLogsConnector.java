@@ -16,12 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY;
+
 import com.google.auto.service.AutoService;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-import javax.annotation.Nonnull;
 
 /** @author shevek */
 @AutoService(Connector.class)
@@ -29,12 +28,6 @@ import javax.annotation.Nonnull;
 public class SnowflakeInformationSchemaLogsConnector extends SnowflakeLogsConnector {
 
   public SnowflakeInformationSchemaLogsConnector() {
-    super("snowflake-information-schema-logs");
-  }
-
-  @Override
-  protected String newQueryFormat(@Nonnull ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
-    return createQueryFromInformationSchema(arguments);
+    super("snowflake-information-schema-logs", SCHEMA_ONLY);
   }
 }
