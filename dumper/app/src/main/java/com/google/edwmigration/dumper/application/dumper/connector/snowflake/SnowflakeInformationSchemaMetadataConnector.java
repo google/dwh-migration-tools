@@ -16,13 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY;
+
 import com.google.auto.service.AutoService;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-import java.util.List;
 
 /** @author shevek */
 @AutoService(Connector.class)
@@ -30,22 +28,6 @@ import java.util.List;
 public class SnowflakeInformationSchemaMetadataConnector extends SnowflakeMetadataConnector {
 
   public SnowflakeInformationSchemaMetadataConnector() {
-    super("snowflake-information-schema-metadata");
-  }
-
-  @Override
-  protected void addSqlTasksWithInfoSchemaFallback(
-      List<? super Task<?>> out,
-      Class<? extends Enum<?>> header,
-      String format,
-      TaskVariant is_task,
-      TaskVariant au_task,
-      ConnectorArguments arguments) {
-    Task<?> t0 =
-        new JdbcSelectTask(
-                is_task.zipEntryName,
-                String.format(format, is_task.schemaName, is_task.whereClause))
-            .withHeaderClass(header);
-    out.add(t0);
+    super("snowflake-information-schema-metadata", SCHEMA_ONLY);
   }
 }

@@ -16,18 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY;
-
-import com.google.auto.service.AutoService;
-import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-
-/** @author shevek */
-@AutoService(Connector.class)
-@Description("Dumps metadata from Snowflake, using ACCOUNT_USAGE only.")
-public class SnowflakeAccountUsageMetadataConnector extends SnowflakeMetadataConnector {
-
-  public SnowflakeAccountUsageMetadataConnector() {
-    super("snowflake-account-usage-metadata", USAGE_ONLY);
-  }
+enum SnowflakeInput {
+  /** Adds the ACCOUNT_USAGE task, with a fallback to the INFORMATION_SCHEMA task. */
+  USAGE_THEN_SCHEMA,
+  SCHEMA_ONLY,
+  USAGE_ONLY;
 }

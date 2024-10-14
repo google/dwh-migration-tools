@@ -16,8 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA;
+
 import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -32,7 +35,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat.Header;
-import com.google.errorprone.annotations.ForOverride;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -94,12 +96,15 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  protected SnowflakeMetadataConnector(@Nonnull String name) {
+  private final SnowflakeInput inputSource;
+
+  SnowflakeMetadataConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
     super(name);
+    this.inputSource = inputSource;
   }
 
   public SnowflakeMetadataConnector() {
-    this("snowflake");
+    this("snowflake", USAGE_THEN_SCHEMA);
   }
 
   @Nonnull
@@ -108,7 +113,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     return SnowflakeMetadataConnectorProperties.class;
   }
 
-  protected static class TaskVariant {
+  private static class TaskVariant {
 
     public final String zipEntryName;
     public final String schemaName;
@@ -125,33 +130,46 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  /** Adds the ACCOUNT_USAGE task, with a fallback to the INFORMATION_SCHEMA task. */
-  @ForOverride
-  protected void addSqlTasksWithInfoSchemaFallback(
+  private void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
-      ConnectorArguments arguments) {
-    AbstractJdbcTask<Summary> is_jdbcTask =
-        new JdbcSelectTask(
-                is_task.zipEntryName,
-                String.format(format, is_task.schemaName, is_task.whereClause))
-            .withHeaderClass(header);
+      @Nonnull ConnectorArguments arguments) {
+    out.addAll(getSqlTasks(header, format, is_task, au_task, arguments));
+  }
 
-    AbstractJdbcTask<Summary> au_jdbcTask =
-        new JdbcSelectTask(
-                au_task.zipEntryName,
-                String.format(format, au_task.schemaName, au_task.whereClause))
-            .withHeaderClass(header);
-
-    if (arguments.isAssessment()) {
-      out.add(au_jdbcTask);
-    } else {
-      out.add(au_jdbcTask);
-      out.add(is_jdbcTask.onlyIfFailed(au_jdbcTask));
+  private ImmutableList<Task<?>> getSqlTasks(
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull TaskVariant is_task,
+      @Nonnull TaskVariant au_task,
+      @Nonnull ConnectorArguments arguments) {
+    switch (inputSource) {
+      case USAGE_THEN_SCHEMA:
+        {
+          AbstractJdbcTask<Summary> schemaTask = taskFromVariant(format, is_task, header);
+          AbstractJdbcTask<Summary> usageTask = taskFromVariant(format, au_task, header);
+          if (arguments.isAssessment()) {
+            return ImmutableList.of(usageTask);
+          }
+          return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
+        }
+      case SCHEMA_ONLY:
+        return ImmutableList.of(taskFromVariant(format, is_task, header));
+      case USAGE_ONLY:
+        return ImmutableList.of(taskFromVariant(format, au_task, header));
     }
+    throw new AssertionError();
+  }
+
+  private static AbstractJdbcTask<Summary> taskFromVariant(
+      String formatString, TaskVariant variant, Class<? extends Enum<?>> header) {
+    return new JdbcSelectTask(
+            variant.zipEntryName,
+            String.format(formatString, variant.schemaName, variant.whereClause))
+        .withHeaderClass(header);
   }
 
   private void addSingleSqlTask(
@@ -177,7 +195,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   @Override
-  public void addTasksTo(
+  public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
