@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricConfig;
 import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
 import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
+import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Joiner;
@@ -46,7 +47,6 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectInterval
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.ParallelTaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
@@ -243,7 +243,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
                       "%s < TIMESTAMP '%s'",
                       startField, SQL_FORMAT.format(interval.getEndExclusive()))));
 
-      String file = ArchiveNameUtil.getEntryFileNameWithTimestamp(filePrefix, interval);
+      String file = getEntryFileNameWithTimestamp(filePrefix, interval);
       out.addTask(new JdbcSelectIntervalTask(file, query, interval));
     }
   }
@@ -259,7 +259,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
             awsCredentials -> {
               for (ZonedInterval interval : intervals) {
                 String file =
-                    ArchiveNameUtil.getEntryFileNameWithTimestamp(
+                    getEntryFileNameWithTimestamp(
                         RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX, interval);
                 out.add(
                     new RedshiftClusterUsageMetricsTask(
