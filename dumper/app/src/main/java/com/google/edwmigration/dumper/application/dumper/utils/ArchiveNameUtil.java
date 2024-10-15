@@ -23,7 +23,11 @@ import java.time.format.DateTimeFormatter;
 
 public class ArchiveNameUtil {
 
-  public static final String ZIP_ENTRY_SUFFIX = ".csv";
+  private static final String ZIP_ENTRY_SUFFIX = ".csv";
+  private static final DateTimeFormatter ENTRY_FILE_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmmss'Z'");
+  private static final DateTimeFormatter ARCHIVE_FILE_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
 
   /**
    * Generate the archive file name that includes creation time. Typically this is used with a logs
@@ -35,8 +39,7 @@ public class ArchiveNameUtil {
    * @return Full name for the .zip archive.
    */
   public static String getFileNameWithTimestamp(String name, Clock clock) {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
-    String timeSuffix = formatter.withZone(clock.getZone()).format(clock.instant());
+    String timeSuffix = ARCHIVE_FILE_DATE_FORMAT.withZone(clock.getZone()).format(clock.instant());
     return formatFileName(name, timeSuffix);
   }
 
@@ -46,9 +49,11 @@ public class ArchiveNameUtil {
 
   public static String getEntryFileNameWithTimestamp(
       String prefix, ZonedInterval interval, String suffix) {
-    DateTimeFormatter formatter =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmmss'Z'").withZone(ZoneOffset.UTC);
-    return String.join("", prefix, formatter.format(interval.getStartUTC()), suffix);
+    return String.join(
+        "",
+        prefix,
+        ENTRY_FILE_DATE_FORMAT.withZone(ZoneOffset.UTC).format(interval.getStartUTC()),
+        suffix);
   }
 
   /**
