@@ -19,8 +19,11 @@ package com.google.edwmigration.dumper.application.dumper.utils;
 import static java.time.ZoneOffset.UTC;
 import static org.junit.Assert.assertEquals;
 
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,5 +48,22 @@ public class ArchiveNameUtilTest {
     assertEquals(
         "dwh-migration-snowflake-information-schema-logs-20240510T130210.zip",
         ArchiveNameUtil.getFileNameWithTimestamp(name, clock));
+  }
+
+  @Test
+  public void getEntryFileNameWithTimestamp_success() {
+    ZonedInterval interval =
+        new ZonedInterval(
+            ZonedDateTime.of(2023, 3, 4, 16, 0, 0, 0, ZoneOffset.UTC),
+            ZonedDateTime.of(2023, 3, 4, 17, 0, 0, 0, ZoneOffset.UTC));
+    String prefix = "wlm_query_";
+
+    /*
+     * The expected result should be a valid filename for Linux and Windows filesystems.
+     * Invalid characters: NUL, \, /, :, *, ?, ", <, >, |
+     */
+    assertEquals(
+        "wlm_query_2023-03-04T160000Z.csv",
+        ArchiveNameUtil.getEntryFileNameWithTimestamp(prefix, interval));
   }
 }
