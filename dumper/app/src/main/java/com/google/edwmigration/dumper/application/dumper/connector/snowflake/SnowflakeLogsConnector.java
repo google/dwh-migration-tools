@@ -35,6 +35,7 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
 import com.google.errorprone.annotations.ForOverride;
@@ -389,10 +390,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             task.unformattedQuery,
             SQL_FORMAT.format(interval.getStart()),
             SQL_FORMAT.format(interval.getEndInclusive()));
-    String file =
-        task.zipPrefix
-            + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
-            + ".csv";
+
+    String file = ArchiveNameUtil.getEntryFileNameWithTimestamp(task.zipPrefix, interval);
     out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
   }
 
