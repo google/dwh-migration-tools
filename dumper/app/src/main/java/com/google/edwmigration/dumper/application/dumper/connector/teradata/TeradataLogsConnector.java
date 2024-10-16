@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +46,6 @@ import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -181,7 +181,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         .map(
             property ->
                 new TeradataJdbcSelectTask(
-                    createFilename(
+                    getEntryFileNameWithTimestamp(
                         TIME_SERIES_PROPERTY_TO_FILENAME_PREFIX_MAP.get(property), interval),
                     TaskCategory.OPTIONAL,
                     String.format(
@@ -190,12 +190,6 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
                         interval.getStart().toEpochSecond(),
                         interval.getEndExclusive().toEpochSecond())))
         .collect(toImmutableList());
-  }
-
-  private String createFilename(String zipEntryPrefix, ZonedInterval interval) {
-    return zipEntryPrefix
-        + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
-        + ".csv";
   }
 
   @Override
@@ -261,7 +255,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       addFailFastValidationStepForAssesment(out, arguments, utilityLogsTable);
 
       for (ZonedInterval interval : intervals) {
-        String file = createFilename(ZIP_ENTRY_PREFIX, interval);
+        String file = getEntryFileNameWithTimestamp(ZIP_ENTRY_PREFIX, interval);
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
         out.add(
             new TeradataAssessmentLogsJdbcTask(
@@ -277,7 +271,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         out.addAll(createTimeSeriesTasks(interval, arguments));
         out.add(
             new TeradataUtilityLogsJdbcTask(
-                createFilename("utility_logs_", interval),
+                getEntryFileNameWithTimestamp("utility_logs_", interval),
                 utilityLogsState,
                 utilityLogsTable,
                 interval));
@@ -291,7 +285,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
               intervals.getEnd()));
     } else {
       for (ZonedInterval interval : intervals) {
-        String file = createFilename(ZIP_ENTRY_PREFIX, interval);
+        String file = getEntryFileNameWithTimestamp(ZIP_ENTRY_PREFIX, interval);
         out.add(
             new TeradataLogsJdbcTask(file, queryLogsState, tableNames, conditions, interval)
                 .withHeaderClass(Header.class));

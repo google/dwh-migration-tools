@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricConfig;
 import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
 import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
+import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Joiner;
@@ -50,9 +51,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.time.Duration;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -243,10 +242,8 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
                   String.format(
                       "%s < TIMESTAMP '%s'",
                       startField, SQL_FORMAT.format(interval.getEndExclusive()))));
-      String file =
-          filePrefix
-              + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
-              + RedshiftRawLogsDumpFormat.ZIP_ENTRY_SUFFIX;
+
+      String file = getEntryFileNameWithTimestamp(filePrefix, interval);
       out.addTask(new JdbcSelectIntervalTask(file, query, interval));
     }
   }
@@ -257,17 +254,13 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
       ZonedIntervalIterable intervals,
       ImmutableList<MetricConfig> metrics,
       List<? super Task<?>> out) {
-    DateTimeFormatter dateFormat =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmmss'Z'").withZone(ZoneOffset.UTC);
-
     AbstractAwsApiTask.createCredentialsProvider(arguments)
         .ifPresent(
             awsCredentials -> {
               for (ZonedInterval interval : intervals) {
                 String file =
-                    RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX
-                        + dateFormat.format(interval.getStartUTC())
-                        + RedshiftRawLogsDumpFormat.ZIP_ENTRY_SUFFIX;
+                    getEntryFileNameWithTimestamp(
+                        RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX, interval);
                 out.add(
                     new RedshiftClusterUsageMetricsTask(
                         awsCredentials, ZonedDateTime.now(), interval, file, metrics));

@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
+
 import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -389,10 +391,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             task.unformattedQuery,
             SQL_FORMAT.format(interval.getStart()),
             SQL_FORMAT.format(interval.getEndInclusive()));
-    String file =
-        task.zipPrefix
-            + DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC())
-            + ".csv";
+
+    String file = getEntryFileNameWithTimestamp(task.zipPrefix, interval);
     out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
   }
 
