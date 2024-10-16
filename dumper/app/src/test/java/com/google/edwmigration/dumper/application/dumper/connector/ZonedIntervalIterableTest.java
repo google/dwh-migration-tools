@@ -87,8 +87,8 @@ public class ZonedIntervalIterableTest {
     Duration durationOfDay = Duration.ofDays(1);
     IntervalExpander dayExpander = IntervalExpander.createBasedOnDuration(durationOfDay);
 
-    Duration durationOfHour = Duration.ofDays(1);
-    IntervalExpander hourExpander = IntervalExpander.createBasedOnDuration(durationOfDay);
+    Duration durationOfHour = Duration.ofHours(1);
+    IntervalExpander hourExpander = IntervalExpander.createBasedOnDuration(durationOfHour);
 
     testIterable(
         169,
