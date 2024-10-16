@@ -32,7 +32,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,7 +48,7 @@ public class ZonedIntervalIterableTest {
   private static final ZonedParser zonedParserStart = ZonedParser.withDefaultPattern(START_OF_DAY);
   private static final ZonedParser zonedParserEnd = ZonedParser.withDefaultPattern(END_OF_DAY);
 
-  private void testIterable(int expectCount, @Nonnegative ZonedIntervalIterable iterable) {
+  private void testIterable(int expectCount, ZonedIntervalIterable iterable) {
     LOG.debug("Testing {}", iterable);
     int actualCount = 0;
     for (ZonedInterval interval : iterable) {
