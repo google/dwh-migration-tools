@@ -322,8 +322,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   private String getOverrideableQuery(
       @Nonnull ConnectorArguments arguments,
       @Nonnull String defaultSql,
-      @Nonnull SnowflakeMetadataConnectorProperties queryProperty,
-      @Nonnull SnowflakeMetadataConnectorProperties whereProperty) {
+      @Nonnull ConnectorProperty queryProperty,
+      @Nonnull ConnectorProperty whereProperty) {
 
     String overrideQuery = arguments.getDefinition(queryProperty);
     if (overrideQuery != null) {
