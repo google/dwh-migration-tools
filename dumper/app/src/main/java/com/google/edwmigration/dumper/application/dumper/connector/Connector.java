@@ -42,7 +42,5 @@ public interface Connector {
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
 
   @Nonnull
-  public default Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-    return DefaultProperties.class;
-  }
+  public Iterable<ConnectorProperty> getPropertyConstants();
 }

@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.BashTask;
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HadoopScripts;
@@ -160,6 +161,12 @@ public class ClouderaMetadataConnector implements MetadataConnector, ChildConnec
   @Override
   public Optional<Task<?>> createInitializerTask() {
     return Optional.of(new HadoopInitializerTask());
+  }
+
+  @Override
+  @Nonnull
+  public Iterable<ConnectorProperty> getPropertyConstants() {
+    return ImmutableList.of();
   }
 
   private class LocalHandle implements Handle {
