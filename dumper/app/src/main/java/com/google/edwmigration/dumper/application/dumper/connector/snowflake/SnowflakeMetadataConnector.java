@@ -63,8 +63,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     COLUMNS("columns"),
     VIEWS("views"),
     FUNCTIONS("functions"),
-    // TODO: fix misleading nameComponent value
-    TABLE_STORAGE_METRICS("table", "table storage metrics");
+    TABLE_STORAGE_METRICS("storagemetrics", "table storage metrics");
 
     private final String descriptionComponent;
     private final String nameComponent;
