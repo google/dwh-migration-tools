@@ -16,8 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import autovalue.shaded.com.google.errorprone.annotations.ForOverride;
 import com.google.common.base.Preconditions;
-import java.util.Iterator;
+
+import static java.util.Arrays.stream;
+
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -35,30 +38,35 @@ public abstract class AbstractConnector implements Connector {
     return name;
   }
 
+  /**
+   * Get the list of this Connector's properties, wrapped inside an enum class.
+   *
+   * <p>Overriding this method changes the behavior of {@link
+   * AbstractConnector#getPropertyConstants}. If you override it, don't override this method - it
+   * will have no effect.
+   *
+   * @return An enum where the values represent the properties supported by this connector.
+   */
+  @ForOverride
   @Nonnull
-  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+  protected Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
     return DefaultProperties.class;
   }
 
+  /**
+   * Get the list of this Connector's properties.
+   *
+   * <p>You may override this method to set the ConnectorProperties of this Connector.
+   * Implementations should behave like a getter of a constant field. Overriding this method is an
+   * alternative to overriding {@link AbstractConnector#getConnectorProperties}. When both are
+   * overriden, this will take precedence.
+   *
+   * @return An array of the properties supported by this connector.
+   */
   @Nonnull
   @Override
   public Iterable<ConnectorProperty> getPropertyConstants() {
     Enum<? extends ConnectorProperty>[] constants = getConnectorProperties().getEnumConstants();
-    return () ->
-        new Iterator<ConnectorProperty>() {
-          private int index = 0;
-
-          @Override
-          public boolean hasNext() {
-            return index < constants.length;
-          }
-
-          @Override
-          public ConnectorProperty next() {
-            Enum<? extends ConnectorProperty> propertyEnum = constants[index];
-            index++;
-            return (ConnectorProperty) propertyEnum;
-          }
-        };
+    return () -> stream(constants).map(property -> (ConnectorProperty) property).iterator();
   }
 }
