@@ -114,10 +114,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     };
   }
 
-  static boolean isWhere(String name) {
-    return name.endsWith("WHERE");
-  }
-
   private final SnowflakeInput inputSource;
 
   SnowflakeMetadataConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
@@ -341,12 +337,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull ConnectorArguments arguments,
       @Nonnull String defaultSql,
       @Nonnull MetadataView metadataView) {
-    String overrideQuery = arguments.getDefinition(metadataView.toQueryProperty());
+    String overrideQuery = arguments.getDefinition(metadataView.toProperty(PropertyAction.QUERY));
     if (overrideQuery != null) {
       return overrideQuery;
     }
 
-    String overrideWhere = arguments.getDefinition(metadataView.toWhereProperty());
+    String overrideWhere = arguments.getDefinition(metadataView.toProperty(PropertyAction.WHERE));
     if (overrideWhere != null) {
       return defaultSql + " WHERE " + overrideWhere;
     }
