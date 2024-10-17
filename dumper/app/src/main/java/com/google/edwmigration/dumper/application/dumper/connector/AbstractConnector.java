@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector;
 
 import com.google.common.base.Preconditions;
+import java.util.Iterator;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -28,8 +29,36 @@ public abstract class AbstractConnector implements Connector {
     this.name = Preconditions.checkNotNull(name, "Name was null.");
   }
 
+  @Nonnull
   @Override
   public String getName() {
     return name;
+  }
+
+  @Nonnull
+  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return DefaultProperties.class;
+  }
+
+  @Nonnull
+  @Override
+  public Iterable<ConnectorProperty> getPropertyConstants() {
+    Enum<? extends ConnectorProperty>[] constants = getConnectorProperties().getEnumConstants();
+    return () ->
+        new Iterator<ConnectorProperty>() {
+          private int index = 0;
+
+          @Override
+          public boolean hasNext() {
+            return index < constants.length;
+          }
+
+          @Override
+          public ConnectorProperty next() {
+            Enum<? extends ConnectorProperty> propertyEnum = constants[index];
+            index++;
+            return (ConnectorProperty) propertyEnum;
+          }
+        };
   }
 }

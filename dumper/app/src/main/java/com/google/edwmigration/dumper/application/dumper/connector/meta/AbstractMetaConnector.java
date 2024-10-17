@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.ConnectorRepository;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -91,5 +92,11 @@ public abstract class AbstractMetaConnector implements Connector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     return new MetaHandle();
+  }
+
+  @Override
+  @Nonnull
+  public final Iterable<ConnectorProperty> getPropertyConstants() {
+    return ImmutableList.of();
   }
 }

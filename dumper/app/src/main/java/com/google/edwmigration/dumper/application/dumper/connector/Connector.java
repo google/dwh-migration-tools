@@ -20,7 +20,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.time.Clock;
-import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -43,28 +42,5 @@ public interface Connector {
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
 
   @Nonnull
-  public default Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-    return DefaultProperties.class;
-  }
-
-  @Nonnull
-  public default Iterable<ConnectorProperty> getPropertyConstants() {
-    Enum<? extends ConnectorProperty>[] constants = getConnectorProperties().getEnumConstants();
-    return () ->
-        new Iterator<ConnectorProperty>() {
-          private int index = 0;
-
-          @Override
-          public boolean hasNext() {
-            return index < constants.length;
-          }
-
-          @Override
-          public ConnectorProperty next() {
-            Enum<? extends ConnectorProperty> propertyEnum = constants[index];
-            index++;
-            return (ConnectorProperty) propertyEnum;
-          }
-        };
-  }
+  public Iterable<ConnectorProperty> getPropertyConstants();
 }
