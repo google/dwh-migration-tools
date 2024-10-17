@@ -64,11 +64,17 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     VIEWS("views"),
     FUNCTIONS("functions"),
     // TODO: fix misleading nameComponent value
-    TABLE_STORAGE_METRICS("table");
+    TABLE_STORAGE_METRICS("table", "table storage metrics");
 
+    private final String descriptionComponent;
     private final String nameComponent;
 
     MetadataView(String nameComponent) {
+      this(nameComponent, nameComponent);
+    }
+
+    MetadataView(String nameComponent, String descriptionComponent) {
+      this.descriptionComponent = descriptionComponent;
       this.nameComponent = nameComponent;
     }
 
@@ -83,7 +89,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     ConnectorProperty toQueryProperty() {
       String enumName = queryOverride();
       String name = "snowflake.metadata." + nameComponent + ".query";
-      String description = "Custom query for metadata " + nameComponent + " dump.";
+      String description = "Custom query for metadata " + descriptionComponent + " dump.";
       return createProperty(name, description);
     }
 
@@ -91,7 +97,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       String enumName = whereOverride();
       String name = "snowflake.metadata." + nameComponent + ".where";
       String description =
-          "Custom where condition to append to query for metadata " + nameComponent + " dump.";
+          "Custom where condition to append to query for metadata " + descriptionComponent + " dump.";
       return createProperty(name, description);
     }
   }
