@@ -108,12 +108,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     this("snowflake", USAGE_THEN_SCHEMA_SOURCE);
   }
 
-  @Nonnull
-  @Override
-  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-    return SnowflakeMetadataConnectorProperties.class;
-  }
-
   @Override
   @Nonnull
   public Iterable<ConnectorProperty> getPropertyConstants() {
