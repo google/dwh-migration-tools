@@ -38,6 +38,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -111,6 +112,13 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Override
   public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
     return SnowflakeMetadataConnectorProperties.class;
+  }
+
+  @Override
+  @Nonnull
+  public Iterable<ConnectorProperty> getPropertyConstants() {
+    ConnectorProperty[] values = SnowflakeMetadataConnectorProperties.values();
+    return Arrays.asList(values);
   }
 
   private static class TaskVariant {
