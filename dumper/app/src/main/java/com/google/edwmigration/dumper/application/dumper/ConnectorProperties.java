@@ -65,9 +65,7 @@ public class ConnectorProperties {
   }
 
   static void printHelp(@Nonnull Appendable out, @Nonnull Connector connector) throws IOException {
-    for (Enum<? extends ConnectorProperty> enumConstant :
-        connector.getConnectorProperties().getEnumConstants()) {
-      ConnectorProperty property = (ConnectorProperty) enumConstant;
+    for (ConnectorProperty property : connector.getPropertyConstants()) {
       out.append("        ")
           .append("-D")
           .append(property.getName())
@@ -110,9 +108,8 @@ public class ConnectorProperties {
         ImmutableSetMultimap.builder();
     for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
       String connectorName = connector.getName();
-      for (Enum<? extends ConnectorProperty> enumConstant :
-          connector.getConnectorProperties().getEnumConstants()) {
-        connectorPropertyNames.put(connectorName, ((ConnectorProperty) enumConstant).getName());
+      for (ConnectorProperty enumConstant : connector.getPropertyConstants()) {
+        connectorPropertyNames.put(connectorName, enumConstant.getName());
       }
     }
     return connectorPropertyNames.build();
