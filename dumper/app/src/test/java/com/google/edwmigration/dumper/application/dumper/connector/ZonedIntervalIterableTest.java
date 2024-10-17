@@ -32,7 +32,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,7 +48,7 @@ public class ZonedIntervalIterableTest {
   private static final ZonedParser zonedParserStart = ZonedParser.withDefaultPattern(START_OF_DAY);
   private static final ZonedParser zonedParserEnd = ZonedParser.withDefaultPattern(END_OF_DAY);
 
-  private void testIterable(int expectCount, @Nonnegative ZonedIntervalIterable iterable) {
+  private void testIterable(int expectCount, ZonedIntervalIterable iterable) {
     LOG.debug("Testing {}", iterable);
     int actualCount = 0;
     for (ZonedInterval interval : iterable) {
@@ -86,23 +85,25 @@ public class ZonedIntervalIterableTest {
   public void testHours() {
     Duration durationOfDay = Duration.ofDays(1);
     IntervalExpander dayExpander = IntervalExpander.createBasedOnDuration(durationOfDay);
-
-    Duration durationOfHour = Duration.ofDays(1);
-    IntervalExpander hourExpander = IntervalExpander.createBasedOnDuration(durationOfDay);
-
-    testIterable(
-        169,
-        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24 * 7, durationOfDay, dayExpander));
-    testIterable(
-        8, ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, durationOfDay, dayExpander));
-
-    testIterable(
-        1,
+    Duration durationOfHour = Duration.ofHours(1);
+    IntervalExpander hourExpander = IntervalExpander.createBasedOnDuration(durationOfHour);
+    ZonedIntervalIterable weekInHours =
+        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24 * 7, durationOfHour, hourExpander);
+    ZonedIntervalIterable weekInDays =
+        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(7, durationOfDay, dayExpander);
+    ZonedIntervalIterable lastHourBefore2020 =
         ZonedIntervalIterableGenerator.forTimeUnitsUntil(
             ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")),
             1,
             durationOfHour,
-            hourExpander));
+            hourExpander);
+    ZonedIntervalIterable dayInHours =
+        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(24, durationOfHour, hourExpander);
+
+    // Act + Assert
+    testIterable(8, weekInDays);
+    testIterable(169, weekInHours);
+    testIterable(1, lastHourBefore2020);
     // Testing from 2019-12-31T23:00Z[UTC] to 2020-01-01T01:00Z[UTC] every Hours
     // Interval is 2019-12-31T23:00Z[UTC]...2019-12-31T23:59:59.999Z[UTC]
     // Interval is 2020-01-01T00:00Z[UTC]...2020-01-01T00:59:59.999Z[UTC]
@@ -114,11 +115,7 @@ public class ZonedIntervalIterableTest {
     // I will get 24 full hours + 1 partial hour, the partial hour will be included in the first
     // slice of
     // next dump, assuming nightly dumps at midnight + some seconds/minutes
-    int daysToExport = 1;
-    testIterable(
-        25,
-        ZonedIntervalIterableGenerator.forTimeUnitsUntilNow(
-            24 * daysToExport, durationOfHour, hourExpander));
+    testIterable(25, dayInHours);
   }
 
   @Test
