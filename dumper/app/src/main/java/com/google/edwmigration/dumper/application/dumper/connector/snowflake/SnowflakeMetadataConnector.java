@@ -38,6 +38,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -56,22 +57,26 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
 
+  private enum MetadataView {
+    DATABASES,
+    SCHEMATA,
+    TABLES,
+    COLUMNS,
+    VIEWS,
+    FUNCTIONS,
+    TABLE_STORAGE_METRICS;
+
+    ImmutableList<String> propertyNames() {
+      String where = String.format("%s_OVERRIDE_WHERE", name());
+      String query = String.format("%s_OVERRIDE_QUERY", name());
+      return ImmutableList.of(where, query);
+    }
+  }
+
   private final ImmutableList<String> SNOWFLAKE_METADATA_CONNECTOR_PROPERTIES =
-      ImmutableList.of(
-          "DATABASES_OVERRIDE_QUERY",
-          "DATABASES_OVERRIDE_WHERE",
-          "SCHEMATA_OVERRIDE_QUERY",
-          "SCHEMATA_OVERRIDE_WHERE",
-          "TABLES_OVERRIDE_QUERY",
-          "TABLES_OVERRIDE_WHERE",
-          "COLUMNS_OVERRIDE_QUERY",
-          "COLUMNS_OVERRIDE_WHERE",
-          "VIEWS_OVERRIDE_QUERY",
-          "VIEWS_OVERRIDE_WHERE",
-          "FUNCTIONS_OVERRIDE_QUERY",
-          "FUNCTIONS_OVERRIDE_WHERE",
-          "TABLE_STORAGE_METRICS_OVERRIDE_QUERY",
-          "TABLE_STORAGE_METRICS_OVERRIDE_WHERE");
+      Arrays.stream(MetadataView.values())
+          .flatMap(value -> value.propertyNames().stream())
+          .collect(ImmutableList.toImmutableList());
 
   static boolean isWhere(String name) {
     return name.endsWith("WHERE");
