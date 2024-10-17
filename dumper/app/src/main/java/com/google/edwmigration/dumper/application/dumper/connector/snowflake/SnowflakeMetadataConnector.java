@@ -38,7 +38,6 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -57,7 +56,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
 
-  public enum SnowflakeMetadataConnectorProperties implements ConnectorProperty {
+  public enum SnowflakeMetadataConnectorProperties {
     DATABASES_OVERRIDE_QUERY,
     DATABASES_OVERRIDE_WHERE,
     SCHEMATA_OVERRIDE_QUERY,
@@ -72,29 +71,48 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     FUNCTIONS_OVERRIDE_WHERE,
     TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
     TABLE_STORAGE_METRICS_OVERRIDE_WHERE;
+  }
 
-    private final String name;
-    private final String description;
+  static boolean isWhere(String name) {
+    return name.endsWith("WHERE");
+  }
 
-    SnowflakeMetadataConnectorProperties() {
-      boolean isWhere = name().endsWith("WHERE");
-      String name = name().split("_")[0].toLowerCase();
-      this.name = "snowflake.metadata." + name + (isWhere ? ".where" : ".query");
-      this.description =
-          isWhere
-              ? "Custom where condition to append to query for metadata " + name + " dump."
-              : "Custom query for metadata " + name + " dump.";
-    }
+  static String toNameComponent(String enumName) {
+    return enumName.split("_")[0].toLowerCase();
+  }
 
-    @Nonnull
-    public String getName() {
-      return name;
-    }
+  static String toSuffix(String enumName) {
+    return isWhere(enumName) ? ".where" : ".query";
+  }
 
-    @Nonnull
-    public String getDescription() {
-      return description;
-    }
+  static String toDescription(String enumName) {
+    String name = toNameComponent(enumName);
+    boolean isWhere = isWhere(enumName);
+    return isWhere
+        ? "Custom where condition to append to query for metadata " + name + " dump."
+        : "Custom query for metadata " + name + " dump.";
+  }
+
+  static String toName(String enumName) {
+    return "snowflake.metadata." + toNameComponent(enumName) + toSuffix(enumName);
+  }
+
+  static ConnectorProperty parseProperty(String enumName) {
+    String name = toName(enumName);
+    String description = toDescription(enumName);
+    return new ConnectorProperty() {
+      @Override
+      @Nonnull
+      public String getDescription() {
+        return description;
+      }
+
+      @Override
+      @Nonnull
+      public String getName() {
+        return name;
+      }
+    };
   }
 
   private final SnowflakeInput inputSource;
@@ -111,8 +129,14 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Override
   @Nonnull
   public Iterable<ConnectorProperty> getPropertyConstants() {
-    ConnectorProperty[] values = SnowflakeMetadataConnectorProperties.values();
-    return Arrays.asList(values);
+    ImmutableList.Builder<ConnectorProperty> builder = ImmutableList.builder();
+    for (SnowflakeMetadataConnectorProperties item :
+        SnowflakeMetadataConnectorProperties.values()) {
+      String name = item.name();
+      ConnectorProperty property = parseProperty(name);
+      builder.add(property);
+    }
+    return builder.build();
   }
 
   private static class TaskVariant {
@@ -219,8 +243,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         getOverrideableQuery(
             arguments,
             "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-            SnowflakeMetadataConnectorProperties.DATABASES_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.DATABASES_OVERRIDE_WHERE),
+            SnowflakeMetadataConnectorProperties.DATABASES_OVERRIDE_QUERY.name(),
+            SnowflakeMetadataConnectorProperties.DATABASES_OVERRIDE_WHERE.name()),
         new TaskVariant(DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
@@ -231,8 +255,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         getOverrideableQuery(
             arguments,
             "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-            SnowflakeMetadataConnectorProperties.SCHEMATA_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.SCHEMATA_OVERRIDE_WHERE),
+            SnowflakeMetadataConnectorProperties.SCHEMATA_OVERRIDE_QUERY.name(),
+            SnowflakeMetadataConnectorProperties.SCHEMATA_OVERRIDE_WHERE.name()),
         new TaskVariant(SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
@@ -244,8 +268,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             arguments,
             "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
                 + " clustering_key FROM %1$s.TABLES%2$s",
-            SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_WHERE),
+            SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_QUERY.name(),
+            SnowflakeMetadataConnectorProperties.TABLES_OVERRIDE_WHERE.name()),
         new TaskVariant(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments); // Painfully slow.
@@ -257,8 +281,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             arguments,
             "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name,"
                 + " data_type FROM %1$s.COLUMNS%2$s",
-            SnowflakeMetadataConnectorProperties.COLUMNS_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.COLUMNS_OVERRIDE_WHERE),
+            SnowflakeMetadataConnectorProperties.COLUMNS_OVERRIDE_QUERY.name(),
+            SnowflakeMetadataConnectorProperties.COLUMNS_OVERRIDE_WHERE.name()),
         new TaskVariant(ColumnsFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(ColumnsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments); // Very fast.
@@ -269,8 +293,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         getOverrideableQuery(
             arguments,
             "SELECT table_catalog, table_schema, table_name, view_definition FROM %1$s.VIEWS%2$s",
-            SnowflakeMetadataConnectorProperties.VIEWS_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.VIEWS_OVERRIDE_WHERE),
+            SnowflakeMetadataConnectorProperties.VIEWS_OVERRIDE_QUERY.name(),
+            SnowflakeMetadataConnectorProperties.VIEWS_OVERRIDE_WHERE.name()),
         new TaskVariant(ViewsFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(ViewsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
@@ -282,8 +306,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             arguments,
             "SELECT function_schema, function_name, data_type, argument_signature FROM"
                 + " %1$s.FUNCTIONS%2$s",
-            SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_QUERY,
-            SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_WHERE),
+            SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_QUERY.name(),
+            SnowflakeMetadataConnectorProperties.FUNCTIONS_OVERRIDE_WHERE.name()),
         new TaskVariant(FunctionsFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(FunctionsFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
@@ -294,8 +318,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
           getOverrideableQuery(
               arguments,
               "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
-              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
-              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
+              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY.name(),
+              SnowflakeMetadataConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE.name()),
           new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
           rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE));
 
@@ -322,15 +346,15 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   private String getOverrideableQuery(
       @Nonnull ConnectorArguments arguments,
       @Nonnull String defaultSql,
-      @Nonnull ConnectorProperty queryProperty,
-      @Nonnull ConnectorProperty whereProperty) {
+      @Nonnull String queryProperty,
+      @Nonnull String whereProperty) {
 
-    String overrideQuery = arguments.getDefinition(queryProperty);
+    String overrideQuery = arguments.getDefinition(parseProperty(queryProperty));
     if (overrideQuery != null) {
       return overrideQuery;
     }
 
-    String overrideWhere = arguments.getDefinition(whereProperty);
+    String overrideWhere = arguments.getDefinition(parseProperty(whereProperty));
     if (overrideWhere != null) {
       return defaultSql + " WHERE " + overrideWhere;
     }
