@@ -38,9 +38,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,13 +57,20 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
 
   private enum MetadataView {
-    DATABASES,
-    SCHEMATA,
-    TABLES,
-    COLUMNS,
-    VIEWS,
-    FUNCTIONS,
-    TABLE_STORAGE_METRICS;
+    DATABASES("databases"),
+    SCHEMATA("schemata"),
+    TABLES("tables"),
+    COLUMNS("columns"),
+    VIEWS("views"),
+    FUNCTIONS("functions"),
+    // TODO: fix misleading nameComponent value
+    TABLE_STORAGE_METRICS("table");
+
+    private final String nameComponent;
+
+    MetadataView(String nameComponent) {
+      this.nameComponent = nameComponent;
+    }
 
     String queryOverride() {
       return String.format("%s_OVERRIDE_WHERE", name());
@@ -77,15 +82,16 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     ConnectorProperty toQueryProperty() {
       String enumName = queryOverride();
-      String name = toName(enumName);
-      String description = toDescription(enumName);
+      String name = "snowflake.metadata." + nameComponent + ".query";
+      String description = "Custom query for metadata " + nameComponent + " dump.";
       return createProperty(name, description);
     }
 
     ConnectorProperty toWhereProperty() {
       String enumName = whereOverride();
-      String name = toName(enumName);
-      String description = toDescription(enumName);
+      String name = "snowflake.metadata." + nameComponent + ".where";
+      String description =
+          "Custom where condition to append to query for metadata " + nameComponent + " dump.";
       return createProperty(name, description);
     }
   }
@@ -107,33 +113,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     };
   }
 
-  private final ImmutableList<String> SNOWFLAKE_METADATA_CONNECTOR_PROPERTIES =
-      Arrays.stream(MetadataView.values())
-          .flatMap(value -> Stream.of(value.queryOverride(), value.whereOverride()))
-          .collect(ImmutableList.toImmutableList());
-
   static boolean isWhere(String name) {
     return name.endsWith("WHERE");
-  }
-
-  static String toNameComponent(String enumName) {
-    return enumName.split("_")[0].toLowerCase();
-  }
-
-  static String toSuffix(String enumName) {
-    return isWhere(enumName) ? ".where" : ".query";
-  }
-
-  static String toDescription(String enumName) {
-    String name = toNameComponent(enumName);
-    boolean isWhere = isWhere(enumName);
-    return isWhere
-        ? "Custom where condition to append to query for metadata " + name + " dump."
-        : "Custom query for metadata " + name + " dump.";
-  }
-
-  static String toName(String enumName) {
-    return "snowflake.metadata." + toNameComponent(enumName) + toSuffix(enumName);
   }
 
   private final SnowflakeInput inputSource;
@@ -151,11 +132,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Nonnull
   public Iterable<ConnectorProperty> getPropertyConstants() {
     ImmutableList.Builder<ConnectorProperty> builder = ImmutableList.builder();
-    for (String enumName : SNOWFLAKE_METADATA_CONNECTOR_PROPERTIES) {
-      String name = toName(enumName);
-      String description = toDescription(enumName);
-      ConnectorProperty property = createProperty(name, description);
-      builder.add(property);
+    for (MetadataView metadataView : MetadataView.values()) {
+      builder.add(metadataView.toQueryProperty());
+      builder.add(metadataView.toWhereProperty());
     }
     return builder.build();
   }
