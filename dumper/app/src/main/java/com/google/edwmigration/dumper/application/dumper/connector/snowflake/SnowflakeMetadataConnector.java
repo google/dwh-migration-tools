@@ -65,7 +65,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     FUNCTIONS("functions"),
     TABLE_STORAGE_METRICS("storagemetrics", "table storage metrics");
 
-    private final String descriptionComponent;
+    private final String description;
     private final String nameComponent;
 
     MetadataView(String nameComponent) {
@@ -73,32 +73,28 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
 
     MetadataView(String nameComponent, String descriptionComponent) {
-      this.descriptionComponent = descriptionComponent;
+      this.description = descriptionComponent;
       this.nameComponent = nameComponent;
     }
 
-    String queryOverride() {
-      return String.format("%s_OVERRIDE_WHERE", name());
-    }
-
-    String whereOverride() {
-      return String.format("%s_OVERRIDE_QUERY", name());
-    }
-
-    ConnectorProperty toQueryProperty() {
-      String enumName = queryOverride();
-      String name = "snowflake.metadata." + nameComponent + ".query";
-      String description = "Custom query for metadata " + descriptionComponent + " dump.";
+    ConnectorProperty toProperty(PropertyAction action) {
+      String name = String.format("snowflake.metadata.%s.%s", nameComponent, action.value);
+      String description = String.format("Custom %s for %s dump.", action.description, description);
       return createProperty(name, description);
     }
+  }
 
-    ConnectorProperty toWhereProperty() {
-      String enumName = whereOverride();
-      String name = "snowflake.metadata." + nameComponent + ".where";
-      String description =
-          "Custom where condition to append to query for metadata " + descriptionComponent + " dump.";
-      return createProperty(name, description);
+  private enum PropertyAction {
+    QUERY("query", "query"),
+    WHERE("where", "where condition to append to query");
+
+    PropertyAction(String value, String description) {
+      this.description = description;
+      this.value = value;
     }
+
+    final String description;
+    final String value;
   }
 
   private static ConnectorProperty createProperty(String name, String description) {
@@ -137,9 +133,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Nonnull
   public Iterable<ConnectorProperty> getPropertyConstants() {
     ImmutableList.Builder<ConnectorProperty> builder = ImmutableList.builder();
-    for (MetadataView metadataView : MetadataView.values()) {
-      builder.add(metadataView.toQueryProperty());
-      builder.add(metadataView.toWhereProperty());
+    for (MetadataView view : MetadataView.values()) {
+      builder.add(view.toProperty(PropertyAction.QUERY));
+      builder.add(view.toProperty(PropertyAction.WHERE));
     }
     return builder.build();
   }
