@@ -16,11 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
-import autovalue.shaded.com.google.errorprone.annotations.ForOverride;
-import com.google.common.base.Preconditions;
-
 import static java.util.Arrays.stream;
 
+import autovalue.shaded.com.google.errorprone.annotations.ForOverride;
+import com.google.common.base.Preconditions;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
