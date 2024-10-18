@@ -79,8 +79,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     ConnectorProperty toProperty(PropertyAction action) {
       String name = String.format("snowflake.metadata.%s.%s", nameComponent, action.value);
-      String description = String.format("Custom %s for %s dump.", action.description, description);
-      return createProperty(name, description);
+      String propertyDescription =
+          String.format("Custom %s for %s dump.", action.description, description);
+      return createProperty(name, propertyDescription);
     }
   }
 
