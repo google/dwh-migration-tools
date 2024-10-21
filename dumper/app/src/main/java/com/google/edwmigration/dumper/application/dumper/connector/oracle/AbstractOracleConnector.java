@@ -164,11 +164,11 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     } catch (Exception e) {
       throw new IOException(
           String.format(
-              "Failed connecting to the Oracle database on %s URL.\n"
+              "Failed connecting to the Oracle database on %s.\n"
                   + "Check if the connection attributes are correct and try again.\n"
                   + "For more details check the troubleshooting section: "
                   + "https://cloud.google.com/bigquery/docs/generate-metadata#oracle_connection_issue",
-              url, "https://todo"),
+              url),
           e);
     }
   }
