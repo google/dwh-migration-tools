@@ -38,7 +38,9 @@ import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProp
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
+import java.io.IOException;
 import java.sql.Driver;
+import java.sql.SQLRecoverableException;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.Properties;
@@ -156,9 +158,20 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
-    DataSource dataSource =
-        new SimpleDriverDataSource(driver, buildUrl(arguments), buildProperties(arguments));
-    return new JdbcHandle(dataSource);
+    String url = buildUrl(arguments);
+    DataSource dataSource = new SimpleDriverDataSource(driver, url, buildProperties(arguments));
+    try {
+      return new JdbcHandle(dataSource);
+    } catch (SQLRecoverableException e) {
+      throw new IOException(
+          String.format(
+              "Failed connecting to the Oracle database on %s.\n"
+                  + "Check if the connection attributes are correct and try again.\n"
+                  + "For more details check the troubleshooting section: "
+                  + "https://cloud.google.com/bigquery/docs/generate-metadata#oracle_connection_issue",
+              url),
+          e);
+    }
   }
 
   @Nonnull
