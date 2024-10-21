@@ -40,6 +40,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import java.io.IOException;
 import java.sql.Driver;
+import java.sql.SQLRecoverableException;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.Properties;
@@ -161,7 +162,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
     DataSource dataSource = new SimpleDriverDataSource(driver, url, buildProperties(arguments));
     try {
       return new JdbcHandle(dataSource);
-    } catch (Exception e) {
+    } catch (SQLRecoverableException e) {
       throw new IOException(
           String.format(
               "Failed connecting to the Oracle database on %s.\n"
