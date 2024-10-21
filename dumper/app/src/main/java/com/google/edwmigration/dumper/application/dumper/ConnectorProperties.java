@@ -104,14 +104,12 @@ public class ConnectorProperties {
   }
 
   private static ImmutableSetMultimap<String, String> allPropertyNamesByConnector() {
-    ImmutableSetMultimap.Builder<String, String> connectorPropertyNames =
-        ImmutableSetMultimap.builder();
+    ImmutableSetMultimap.Builder<String, String> namesBuilder = ImmutableSetMultimap.builder();
     for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
-      String connectorName = connector.getName();
-      for (ConnectorProperty enumConstant : connector.getPropertyConstants()) {
-        connectorPropertyNames.put(connectorName, enumConstant.getName());
+      for (ConnectorProperty property : connector.getPropertyConstants()) {
+        namesBuilder.put(connector.getName(), property.getName());
       }
     }
-    return connectorPropertyNames.build();
+    return namesBuilder.build();
   }
 }
