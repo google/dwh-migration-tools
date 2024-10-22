@@ -541,9 +541,7 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
       @Override
       public ImmutableList<? extends TBase<?, ?>> getRawTableStatistics() throws Exception {
         ImmutableList columnNames =
-            client.get_fields(databaseName, tableName).stream()
-                .map(FieldSchema::getName)
-                .collect(toImmutableList());
+            getFields().stream().map(Field::getFieldName).collect(toImmutableList());
         return ImmutableList.copyOf(
             client
                 .get_table_statistics_req(
