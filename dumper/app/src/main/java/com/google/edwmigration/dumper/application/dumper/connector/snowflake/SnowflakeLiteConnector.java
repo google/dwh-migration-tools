@@ -92,12 +92,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     }
   }
 
-  @Nonnull
-  @Override
-  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-    return SnowflakeLiteConnectorProperties.class;
-  }
-
   private static class TaskVariant {
 
     public final String zipEntryName;
@@ -200,7 +194,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         out,
         DatabasesFormat.Header.class,
         getOverrideableQuery(
-            arguments,
             "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
             SnowflakeLiteConnectorProperties.DATABASES_OVERRIDE_QUERY,
             SnowflakeLiteConnectorProperties.DATABASES_OVERRIDE_WHERE),
@@ -212,7 +205,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         out,
         SchemataFormat.Header.class,
         getOverrideableQuery(
-            arguments,
             "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
             SnowflakeLiteConnectorProperties.SCHEMATA_OVERRIDE_QUERY,
             SnowflakeLiteConnectorProperties.SCHEMATA_OVERRIDE_WHERE),
@@ -224,7 +216,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         out,
         TablesFormat.Header.class,
         getOverrideableQuery(
-            arguments,
             "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
                 + " clustering_key FROM %1$s.TABLES%2$s",
             SnowflakeLiteConnectorProperties.TABLES_OVERRIDE_QUERY,
@@ -237,7 +228,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       addSingleSqlTask(
           out,
           getOverrideableQuery(
-              arguments,
               "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
               SnowflakeLiteConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
               SnowflakeLiteConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
@@ -265,20 +255,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
   }
 
   private String getOverrideableQuery(
-      @Nonnull ConnectorArguments arguments,
       @Nonnull String defaultSql,
       @Nonnull ConnectorProperty queryProperty,
       @Nonnull ConnectorProperty whereProperty) {
-
-    String overrideQuery = arguments.getDefinition(queryProperty);
-    if (overrideQuery != null) {
-      return overrideQuery;
-    }
-
-    String overrideWhere = arguments.getDefinition(whereProperty);
-    if (overrideWhere != null) {
-      return defaultSql + " WHERE " + overrideWhere;
-    }
 
     return defaultSql;
   }
