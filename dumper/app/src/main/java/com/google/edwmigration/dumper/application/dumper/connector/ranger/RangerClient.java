@@ -132,6 +132,7 @@ public class RangerClient {
       }
       HttpEntity entity = httpResponse.getEntity();
       try {
+        @SuppressWarnings("unchecked")
         Map<String, Object> payload = MAPPER.readValue(EntityUtils.toString(entity), Map.class);
         if (!payload.containsKey(payloadProperty)) {
           throw new RangerException("Missing key " + payloadProperty + " in Ranger response");
