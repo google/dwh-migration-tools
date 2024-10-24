@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.SingleDirScanJob.trimExceptionMessage;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -33,8 +34,12 @@ import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HdfsContentSummaryTask extends AbstractTask<Void> implements ContentSummaryFormat {
+
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsContentSummaryTask.class);
 
   HdfsContentSummaryTask() {
     super(ZIP_ENTRY_NAME);
@@ -43,7 +48,7 @@ public class HdfsContentSummaryTask extends AbstractTask<Void> implements Conten
   @Override
   public String toString() {
     return format(
-        "Write content summary of the top-level directories of the HDFS path '%s'",
+        "Write content summary of the top-level directories of the HDFS path to '%s'",
         getTargetPath());
   }
 
@@ -64,14 +69,18 @@ public class HdfsContentSummaryTask extends AbstractTask<Void> implements Conten
         final CSVPrinter csvPrinter = FORMAT.withHeader(Header.class).print(output)) {
       for (FileStatus file : topLevelFiles) {
         if (file.isDirectory()) {
-          ContentSummary summary = fs.getContentSummary(file.getPath());
-          long totalFileSize = summary.getLength();
-          long totalNumberOfFiles = summary.getFileCount();
-          long totalNumberOfDirectories = summary.getDirectoryCount();
-          csvPrinter.printRecord(
-              file.getPath().toUri().getPath(),
-              totalFileSize,
-              totalNumberOfDirectories + totalNumberOfFiles);
+          try {
+            ContentSummary summary = fs.getContentSummary(file.getPath());
+            long totalFileSize = summary.getLength();
+            long totalNumberOfFiles = summary.getFileCount();
+            long totalNumberOfDirectories = summary.getDirectoryCount();
+            csvPrinter.printRecord(
+                file.getPath().toUri().getPath(),
+                totalFileSize,
+                totalNumberOfDirectories + totalNumberOfFiles);
+          } catch (org.apache.hadoop.security.AccessControlException exn) {
+            LOG.error("AccessControlException: {}", trimExceptionMessage(exn.getMessage()));
+          }
         }
       }
     }
