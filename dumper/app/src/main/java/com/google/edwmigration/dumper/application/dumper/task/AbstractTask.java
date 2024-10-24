@@ -103,7 +103,6 @@ public abstract class AbstractTask<T> implements Task<T> {
    * @throws Exception If the task fails.
    */
   @CheckForNull
-  // @VisibleForTesting @ForOverride
   protected abstract T doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception;
 

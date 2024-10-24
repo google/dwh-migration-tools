@@ -9,6 +9,7 @@ auto-value = "1.11.0"
 aws-java-sdk = "1.12.773"
 ben-manes-versions-plugin = "0.51.0"
 checkerframework = "3.48.0"
+cloudera-manager = "7.11.0"
 commons-io = "2.17.0"
 datanucleus-api-jdo = "4.2.5"
 datanucleus-core = "4.1.17"
@@ -61,6 +62,7 @@ auto-value-annotations = { module = "com.google.auto.value:auto-value-annotation
 aws-java-sdk-cloudwatch = { module = "com.amazonaws:aws-java-sdk-cloudwatch", version.ref = "aws-java-sdk" }
 aws-java-sdk-redshift = { module = "com.amazonaws:aws-java-sdk-redshift", version.ref = "aws-java-sdk" }
 checker-qual = { module = "org.checkerframework:checker-qual", version.ref = "checkerframework" }
+cloudera-manager = { module = "com.cloudera.api.swagger:cloudera-manager-api-swagger", version.ref = "cloudera-manager" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 datanucleus-api-jdo = { module = "org.datanucleus:datanucleus-api-jdo", version.ref = "datanucleus-api-jdo" }
 datanucleus-core = { module = "org.datanucleus:datanucleus-core", version.ref = "datanucleus-core" }

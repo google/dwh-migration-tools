@@ -95,6 +95,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final int OPT_PORT_ORDER = 200;
   public static final String OPT_USER = "user";
   public static final String OPT_PASSWORD = "password";
+
+  public static final String OPT_CLUSTER = "cluster";
   public static final String OPT_ROLE = "role";
   public static final String OPT_WAREHOUSE = "warehouse";
   public static final String OPT_DATABASE = "database";
@@ -200,6 +202,13 @@ public class ConnectorArguments extends DefaultArguments {
           .accepts(OPT_PASSWORD, "Database password, prompted if not provided")
           .withOptionalArg()
           .describedAs("sekr1t");
+
+  private final OptionSpec<String> optionCluster =
+      parser
+          .accepts(OPT_CLUSTER, "Cluster name to dump metadata")
+          .withOptionalArg()
+          .describedAs("name")
+          .ofType(String.class);
   private final OptionSpec<String> optionRole =
       parser.accepts(OPT_ROLE, "Database role").withRequiredArg().describedAs("dumper");
   private final OptionSpec<String> optionOracleService =
@@ -693,6 +702,11 @@ public class ConnectorArguments extends DefaultArguments {
     } else {
       return passwordReader.getOrPrompt();
     }
+  }
+
+  @CheckForNull
+  public String getCluster() {
+    return getOptions().valueOf(optionCluster);
   }
 
   @CheckForNull
