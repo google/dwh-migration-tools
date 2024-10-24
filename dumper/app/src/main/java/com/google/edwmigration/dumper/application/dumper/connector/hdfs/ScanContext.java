@@ -34,9 +34,11 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants.StoragePolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class ScanContext implements Closeable {
-
+  private static final Logger LOG = LoggerFactory.getLogger(ScanContext.class);
   private static final DateTimeFormatter DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
 
@@ -116,6 +118,10 @@ final class ScanContext implements Closeable {
   void walkFile(FileStatus file) throws IOException {
     String absolutePath = file.getPath().toUri().getPath();
     HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
+    if (hdfsFileStatus == null) {
+      LOG.error("Unable to scan file {}", absolutePath);
+      return;
+    }
     String strModificationTime =
         DATE_FORMAT.format(Instant.ofEpochMilli(file.getModificationTime()));
     byte byteStoragePolicy = hdfsFileStatus.getStoragePolicy();

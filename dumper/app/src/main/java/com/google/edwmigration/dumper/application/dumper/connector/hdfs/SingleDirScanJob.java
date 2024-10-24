@@ -55,12 +55,24 @@ class SingleDirScanJob implements Callable<Void> {
         }
       }
       scanCtx.endWalkDir(dir, numFiles, numDirs, accumFileSize);
+    } catch (org.apache.hadoop.security.AccessControlException exn) {
+      LOG.error("AccessControlException: {}", trimExceptionMessage(exn.getMessage()));
     } catch (Exception e) {
       LOG.error(
-          "Unexpected exception while scanning HDFS folder '{}'",
-          dir.getPath().toUri().getPath(),
-          e);
+          "Unexpected exception while scanning directory '{}'", dir.getPath().toUri().getPath(), e);
     }
     return null;
+  }
+
+  /**
+   * Get rid of the stack trace part of the message, which should not be there anyway according to
+   * the JVM spec.
+   */
+  static String trimExceptionMessage(String exnMessage) {
+    int i = exnMessage.indexOf("\n\tat ");
+    if (i > 0) {
+      return exnMessage.substring(0, i).trim();
+    }
+    return exnMessage;
   }
 }
