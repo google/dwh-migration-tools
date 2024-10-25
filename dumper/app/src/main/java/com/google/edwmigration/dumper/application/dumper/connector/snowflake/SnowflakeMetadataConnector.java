@@ -176,7 +176,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
-  private Task<Summary> createSingleSqlTask(@Nonnull AssessmentQuery args, @Nonnull String usage) {
+  private static Task<Summary> createSingleSqlTask(
+      @Nonnull AssessmentQuery args, @Nonnull String usage) {
     TaskVariant variant = new TaskVariant(args.zipEntryName, usage);
     String query = String.format(args.formatString, variant.schemaName, variant.whereClause);
     ResultSetTransformer<String[]> transformer =

@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
+import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -46,6 +47,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
   private static final String NAME = "snowflake-lite";
 
   private final SnowflakeInput inputSource = USAGE_THEN_SCHEMA_SOURCE;
+  private final SnowflakePlanner planner = new SnowflakePlanner();
 
   public SnowflakeLiteConnector() {
     super(NAME);
@@ -116,23 +118,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
-  private Task<Summary> createSingleSqlTask(
-      @Nonnull String format,
-      @Nonnull TaskVariant task,
-      @Nonnull ResultSetTransformer<String[]> transformer) {
-    String query = String.format(format, task.schemaName, task.whereClause);
-    return new JdbcSelectTask(task.zipEntryName, query).withHeaderTransformer(transformer);
-  }
-
-  private void addSingleSqlTask(
-      @Nonnull List<? super Task<?>> out,
-      @Nonnull String format,
-      @Nonnull TaskVariant task,
-      @Nonnull ResultSetTransformer<String[]> transformer) {
-    out.add(createSingleSqlTask(format, task, transformer));
-  }
-
-  private String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
+  private static String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
       throws SQLException {
     ResultSetMetaData metaData = rs.getMetaData();
     int columnCount = metaData.getColumnCount();
@@ -180,29 +166,20 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         arguments); // Painfully slow.
 
     if (arguments.isAssessment()) {
-      addSingleSqlTask(
-          out,
-          "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
-          new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE));
-
-      ResultSetTransformer<String[]> lowerUnderscoreTransformer =
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE);
-      addSingleSqlTask(
-          out,
-          "SHOW WAREHOUSES",
-          new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
-      addSingleSqlTask(
-          out,
-          "SHOW EXTERNAL TABLES",
-          new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
-      addSingleSqlTask(
-          out,
-          "SHOW FUNCTIONS",
-          new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
+      String overrideableQuery = "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s";
+      ImmutableList<AssessmentQuery> list = planner.generateAssessmentQueries(overrideableQuery);
+      for (AssessmentQuery item : list) {
+        out.add(createSingleSqlTask(item, AU));
+      }
     }
+  }
+
+  private static Task<Summary> createSingleSqlTask(
+      @Nonnull AssessmentQuery args, @Nonnull String usage) {
+    TaskVariant variant = new TaskVariant(args.zipEntryName, usage);
+    String query = String.format(args.formatString, variant.schemaName, variant.whereClause);
+    ResultSetTransformer<String[]> transformer =
+        rs -> transformHeaderToCamelCase(rs, args.caseFormat);
+    return new JdbcSelectTask(variant.zipEntryName, query).withHeaderTransformer(transformer);
   }
 }
