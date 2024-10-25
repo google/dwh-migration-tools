@@ -16,29 +16,39 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.ExternalTablesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FunctionInfoFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TableStorageMetricsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
 final class SnowflakePlanner {
+
+  private enum Format {
+    EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
+    FUNCTION_INFO(FunctionInfoFormat.AU_ZIP_ENTRY_NAME),
+    TABLE_STORAGE_METRICS(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME),
+    WAREHOUSES(WarehousesFormat.AU_ZIP_ENTRY_NAME);
+
+    private final String value;
+
+    Format(String value) {
+      this.value = value;
+    }
+  }
 
   ImmutableList<AssessmentQuery> generateAssessmentQueries(String overrideableQuery) {
     return ImmutableList.of(
-        AssessmentQuery.create(
-            overrideableQuery,
-            TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
-            CaseFormat.UPPER_UNDERSCORE),
-        AssessmentQuery.create(
-            "SHOW WAREHOUSES", WarehousesFormat.AU_ZIP_ENTRY_NAME, CaseFormat.LOWER_UNDERSCORE),
-        AssessmentQuery.create(
-            "SHOW EXTERNAL TABLES",
-            ExternalTablesFormat.AU_ZIP_ENTRY_NAME,
-            CaseFormat.LOWER_UNDERSCORE),
-        AssessmentQuery.create(
-            "SHOW FUNCTIONS", FunctionInfoFormat.AU_ZIP_ENTRY_NAME, CaseFormat.LOWER_UNDERSCORE));
+        AssessmentQuery.create(overrideableQuery, Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
+        AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
+        AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES, LOWER_UNDERSCORE),
+        AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
   }
 
   static class AssessmentQuery {
@@ -53,8 +63,15 @@ final class SnowflakePlanner {
     }
 
     private static AssessmentQuery create(
-        String formatString, String zipEntryName, CaseFormat caseFormat) {
+        String formatString, Format zipFormat, CaseFormat caseFormat) {
+      String zipEntryName = zipFormat.value;
       return new AssessmentQuery(formatString, zipEntryName, caseFormat);
+    }
+
+    private static AssessmentQuery createShow(
+        String view, Format zipFormat, CaseFormat caseFormat) {
+      String queryString = String.format("SHOW %s", view);
+      return new AssessmentQuery(queryString, zipFormat.value, caseFormat);
     }
   }
 }
