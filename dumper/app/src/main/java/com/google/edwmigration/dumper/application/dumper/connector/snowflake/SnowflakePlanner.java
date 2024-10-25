@@ -25,6 +25,8 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FunctionInfoFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TableStorageMetricsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -43,9 +45,9 @@ final class SnowflakePlanner {
     }
   }
 
-  ImmutableList<AssessmentQuery> generateAssessmentQueries(String overrideableQuery) {
+  ImmutableList<AssessmentQuery> generateAssessmentQueries() {
     return ImmutableList.of(
-        AssessmentQuery.create(overrideableQuery, Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
+        AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
         AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
         AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES, LOWER_UNDERSCORE),
         AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
@@ -55,23 +57,33 @@ final class SnowflakePlanner {
     final String formatString;
     final String zipEntryName;
     final CaseFormat caseFormat;
+    @Nullable private final MetadataView view;
 
-    private AssessmentQuery(String formatString, String zipEntryName, CaseFormat caseFormat) {
+    private AssessmentQuery(
+        String formatString,
+        String zipEntryName,
+        CaseFormat caseFormat,
+        @Nullable MetadataView view) {
       this.formatString = formatString;
       this.zipEntryName = zipEntryName;
       this.caseFormat = caseFormat;
+      this.view = view;
     }
 
-    private static AssessmentQuery create(
-        String formatString, Format zipFormat, CaseFormat caseFormat) {
+    static AssessmentQuery createMetricsSelect(Format zipFormat, CaseFormat caseFormat) {
+      String formatString = "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s";
       String zipEntryName = zipFormat.value;
-      return new AssessmentQuery(formatString, zipEntryName, caseFormat);
+      return new AssessmentQuery(
+          formatString, zipEntryName, caseFormat, MetadataView.TABLE_STORAGE_METRICS);
     }
 
-    private static AssessmentQuery createShow(
-        String view, Format zipFormat, CaseFormat caseFormat) {
+    static AssessmentQuery createShow(String view, Format zipFormat, CaseFormat caseFormat) {
       String queryString = String.format("SHOW %s", view);
-      return new AssessmentQuery(queryString, zipFormat.value, caseFormat);
+      return new AssessmentQuery(queryString, zipFormat.value, caseFormat, null);
+    }
+
+    Optional<MetadataView> getView() {
+      return Optional.ofNullable(view);
     }
   }
 }

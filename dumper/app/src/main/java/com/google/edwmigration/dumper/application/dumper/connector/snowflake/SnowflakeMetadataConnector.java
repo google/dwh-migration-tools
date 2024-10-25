@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.MetadataView.TABLE_STORAGE_METRICS;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 
 import com.google.auto.service.AutoService;
@@ -40,6 +41,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,15 +178,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
-  private static Task<Summary> createSingleSqlTask(
-      @Nonnull AssessmentQuery args, @Nonnull String usage) {
-    TaskVariant variant = new TaskVariant(args.zipEntryName, usage);
-    String query = String.format(args.formatString, variant.schemaName, variant.whereClause);
-    ResultSetTransformer<String[]> transformer =
-        rs -> transformHeaderToCamelCase(rs, args.caseFormat);
-    return new JdbcSelectTask(variant.zipEntryName, query).withHeaderTransformer(transformer);
-  }
-
   private static String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
       throws SQLException {
     ResultSetMetaData metaData = rs.getMetaData();
@@ -277,16 +270,23 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         arguments);
 
     if (arguments.isAssessment()) {
-      String overrideableQuery =
-          getOverrideableQuery(
-              arguments,
-              "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
-              MetadataView.TABLE_STORAGE_METRICS);
-      ImmutableList<AssessmentQuery> list = planner.generateAssessmentQueries(overrideableQuery);
-
-      for (AssessmentQuery item : list) {
-        out.add(createSingleSqlTask(item, AU));
+      for (AssessmentQuery item : planner.generateAssessmentQueries()) {
+        String formatString = overrideFormatString(item, arguments);
+        String query = String.format(formatString, AU, /* an empty WHERE clause */ "");
+        ResultSetTransformer<String[]> transformer =
+            rs -> transformHeaderToCamelCase(rs, item.caseFormat);
+        String zipName = item.zipEntryName;
+        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(transformer);
+        out.add(task);
       }
+    }
+  }
+
+  private String overrideFormatString(AssessmentQuery query, ConnectorArguments arguments) {
+    if (query.getView().equals(Optional.of(TABLE_STORAGE_METRICS))) {
+      return getOverrideableQuery(arguments, query.formatString, TABLE_STORAGE_METRICS);
+    } else {
+      return query.formatString;
     }
   }
 

@@ -166,20 +166,14 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         arguments); // Painfully slow.
 
     if (arguments.isAssessment()) {
-      String overrideableQuery = "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s";
-      ImmutableList<AssessmentQuery> list = planner.generateAssessmentQueries(overrideableQuery);
-      for (AssessmentQuery item : list) {
-        out.add(createSingleSqlTask(item, AU));
+      for (AssessmentQuery item : planner.generateAssessmentQueries()) {
+        String query = String.format(item.formatString, AU, /* an empty WHERE clause */ "");
+        ResultSetTransformer<String[]> transformer =
+            rs -> transformHeaderToCamelCase(rs, item.caseFormat);
+        String zipName = item.zipEntryName;
+        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(transformer);
+        out.add(task);
       }
     }
-  }
-
-  private static Task<Summary> createSingleSqlTask(
-      @Nonnull AssessmentQuery args, @Nonnull String usage) {
-    TaskVariant variant = new TaskVariant(args.zipEntryName, usage);
-    String query = String.format(args.formatString, variant.schemaName, variant.whereClause);
-    ResultSetTransformer<String[]> transformer =
-        rs -> transformHeaderToCamelCase(rs, args.caseFormat);
-    return new JdbcSelectTask(variant.zipEntryName, query).withHeaderTransformer(transformer);
   }
 }
