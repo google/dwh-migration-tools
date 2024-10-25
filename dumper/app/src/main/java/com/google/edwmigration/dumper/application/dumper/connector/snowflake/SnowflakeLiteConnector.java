@@ -77,8 +77,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
-      @Nonnull ConnectorArguments arguments) {
-    out.addAll(getSqlTasks(header, format, is_task, au_task, arguments));
+      boolean isAssessment) {
+    out.addAll(getSqlTasks(header, format, is_task, au_task, isAssessment));
   }
 
   private ImmutableList<Task<?>> getSqlTasks(
@@ -86,13 +86,13 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
-      @Nonnull ConnectorArguments arguments) {
+      boolean isAssessment) {
     switch (inputSource) {
       case USAGE_THEN_SCHEMA_SOURCE:
         {
           AbstractJdbcTask<Summary> schemaTask = taskFromVariant(format, is_task, header);
           AbstractJdbcTask<Summary> usageTask = taskFromVariant(format, au_task, header);
-          if (arguments.isAssessment()) {
+          if (isAssessment) {
             return ImmutableList.of(usageTask);
           }
           return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
@@ -124,13 +124,14 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
     final String AU_WHERE = " WHERE DELETED IS NULL";
 
+    boolean isAssessment = arguments.isAssessment();
     addSqlTasksWithInfoSchemaFallback(
         out,
         DatabasesFormat.Header.class,
         "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
         new TaskVariant(DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        arguments);
+        isAssessment);
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -138,7 +139,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
         new TaskVariant(SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        arguments);
+        isAssessment);
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -147,9 +148,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
             + " clustering_key FROM %1$s.TABLES%2$s",
         new TaskVariant(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        arguments); // Painfully slow.
+        isAssessment); // Painfully slow.
 
-    if (arguments.isAssessment()) {
+    if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
         String query = String.format(item.formatString, AU, /* an empty WHERE clause */ "");
         String zipName = item.zipEntryName;
