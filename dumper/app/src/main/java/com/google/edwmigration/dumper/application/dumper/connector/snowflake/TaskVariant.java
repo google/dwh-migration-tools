@@ -16,13 +16,18 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 
-final class TaskVariant {
+@AutoValue
+@ParametersAreNonnullByDefault
+abstract class TaskVariant {
 
-  public final String zipEntryName;
-  public final String schemaName;
-  public final String whereClause;
+  public abstract String zipEntryName();
+  public abstract  String schemaName();
+  public abstract String whereClause();
 
   static TaskVariant createWithFilter(String zipEntryName, String schemaName, String whereClause) {
     Preconditions.checkArgument(!whereClause.isEmpty(), "Provided WHERE clause was empty");
@@ -34,13 +39,6 @@ final class TaskVariant {
   }
 
   private static TaskVariant create(String zipEntryName, String schemaName, String whereClause) {
-    return new TaskVariant(zipEntryName, schemaName, whereClause);
+    return new AutoValue_TaskVariant(zipEntryName, schemaName, whereClause);
   }
-
-  private TaskVariant(String zipEntryName, String schemaName, String whereClause) {
-    this.zipEntryName = zipEntryName;
-    this.schemaName = schemaName;
-    this.whereClause = whereClause;
-  }
-
 }
