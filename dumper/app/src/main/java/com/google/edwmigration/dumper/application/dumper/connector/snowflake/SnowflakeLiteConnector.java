@@ -105,16 +105,16 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         out,
         DatabasesFormat.Header.class,
         "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-        new TaskVariant(DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        TaskVariant.createWithNoFilter(DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
+        TaskVariant.createWithFilter(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         isAssessment);
 
     addSqlTasksWithInfoSchemaFallback(
         out,
         SchemataFormat.Header.class,
         "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-        new TaskVariant(SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+        TaskVariant.createWithNoFilter(SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
+        TaskVariant.createWithFilter(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         isAssessment);
 
     addSqlTasksWithInfoSchemaFallback(
@@ -122,8 +122,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         TablesFormat.Header.class,
         "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
             + " clustering_key FROM %1$s.TABLES%2$s",
-        new TaskVariant(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
+            TaskVariant.createWithNoFilter(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
+        TaskVariant.createWithFilter(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         isAssessment); // Painfully slow.
 
     if (isAssessment) {
