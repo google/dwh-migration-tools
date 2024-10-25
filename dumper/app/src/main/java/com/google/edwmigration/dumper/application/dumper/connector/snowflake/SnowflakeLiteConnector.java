@@ -116,15 +116,21 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
+
+  private Task<Summary> createSingleSqlTask(
+      @Nonnull String format,
+      @Nonnull TaskVariant task,
+      @Nonnull ResultSetTransformer<String[]> transformer) {
+    String query = String.format(format, task.schemaName, task.whereClause);
+    return new JdbcSelectTask(task.zipEntryName, query).withHeaderTransformer(transformer);
+  }
+
   private void addSingleSqlTask(
       @Nonnull List<? super Task<?>> out,
       @Nonnull String format,
       @Nonnull TaskVariant task,
       @Nonnull ResultSetTransformer<String[]> transformer) {
-    out.add(
-        new JdbcSelectTask(
-                task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
-            .withHeaderTransformer(transformer));
+    out.add(createSingleSqlTask(format, task, transformer));
   }
 
   private String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
