@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTasks.fromVariant;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
@@ -73,27 +74,19 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     switch (inputSource) {
       case USAGE_THEN_SCHEMA_SOURCE:
         {
-          AbstractJdbcTask<Summary> schemaTask = taskFromVariant(format, is_task, header);
-          AbstractJdbcTask<Summary> usageTask = taskFromVariant(format, au_task, header);
+          AbstractJdbcTask<Summary> schemaTask = fromVariant(format, is_task, header);
+          AbstractJdbcTask<Summary> usageTask = fromVariant(format, au_task, header);
           if (isAssessment) {
             return ImmutableList.of(usageTask);
           }
           return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
         }
       case SCHEMA_ONLY_SOURCE:
-        return ImmutableList.of(taskFromVariant(format, is_task, header));
+        return ImmutableList.of(fromVariant(format, is_task, header));
       case USAGE_ONLY_SOURCE:
-        return ImmutableList.of(taskFromVariant(format, au_task, header));
+        return ImmutableList.of(fromVariant(format, au_task, header));
     }
     throw new AssertionError();
-  }
-
-  private static AbstractJdbcTask<Summary> taskFromVariant(
-      String formatString, TaskVariant variant, Class<? extends Enum<?>> header) {
-    return new JdbcSelectTask(
-            variant.zipEntryName,
-            String.format(formatString, variant.schemaName, variant.whereClause))
-        .withHeaderClass(header);
   }
 
   @Override
