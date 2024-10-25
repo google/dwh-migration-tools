@@ -21,6 +21,7 @@ import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.ExternalTablesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FunctionInfoFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TableStorageMetricsFormat;
@@ -56,7 +57,7 @@ final class SnowflakePlanner {
   static class AssessmentQuery {
     final String formatString;
     final String zipEntryName;
-    final CaseFormat caseFormat;
+    private final CaseFormat caseFormat;
     @Nullable private final MetadataView view;
 
     private AssessmentQuery(
@@ -84,6 +85,10 @@ final class SnowflakePlanner {
 
     Optional<MetadataView> getView() {
       return Optional.ofNullable(view);
+    }
+
+    ResultSetTransformer<String[]> transformer() {
+      return HeaderTransformers.toCamelCaseFrom(caseFormat);
     }
   }
 }

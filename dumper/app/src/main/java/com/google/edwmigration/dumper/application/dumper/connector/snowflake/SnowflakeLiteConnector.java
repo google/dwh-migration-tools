@@ -19,11 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -33,9 +31,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -118,17 +113,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
-  private static String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
-      throws SQLException {
-    ResultSetMetaData metaData = rs.getMetaData();
-    int columnCount = metaData.getColumnCount();
-    String[] columns = new String[columnCount];
-    for (int i = 0; i < columnCount; i++) {
-      columns[i] = baseFormat.to(CaseFormat.UPPER_CAMEL, metaData.getColumnLabel(i + 1));
-    }
-    return columns;
-  }
-
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
@@ -168,10 +152,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     if (arguments.isAssessment()) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
         String query = String.format(item.formatString, AU, /* an empty WHERE clause */ "");
-        ResultSetTransformer<String[]> transformer =
-            rs -> transformHeaderToCamelCase(rs, item.caseFormat);
         String zipName = item.zipEntryName;
-        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(transformer);
+        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
         out.add(task);
       }
     }
