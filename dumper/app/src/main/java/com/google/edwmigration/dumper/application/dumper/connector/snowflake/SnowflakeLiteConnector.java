@@ -184,12 +184,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
     final String AU_WHERE = " WHERE DELETED IS NULL";
 
-    // Docref: https://docs.snowflake.net/manuals/sql-reference/info-schema.html#list-of-views
-    // ACCOUNT_USAGE is much faster than INFORMATION_SCHEMA and does not have the size limitations,
-    // but requires extra privileges to be granted.
-    // https://docs.snowflake.net/manuals/sql-reference/account-usage.html
-    // https://docs.snowflake.net/manuals/user-guide/data-share-consumers.html
-    // You must: GRANT IMPORTED PRIVILEGES ON DATABASE snowflake TO ROLE <SOMETHING>;
     addSqlTasksWithInfoSchemaFallback(
         out,
         DatabasesFormat.Header.class,
