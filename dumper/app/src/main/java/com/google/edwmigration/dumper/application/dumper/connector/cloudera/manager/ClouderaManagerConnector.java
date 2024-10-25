@@ -101,8 +101,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
 
   private void doClouderaManagerLogin(
       URI baseURI, CloseableHttpClient httpClient, String user, String password) throws Exception {
-    ClouderaManagerLoginHelper loginHelper = new ClouderaManagerLoginHelper();
-    loginHelper.login(baseURI, httpClient, user, password);
+    ClouderaManagerLoginHelper.login(baseURI, httpClient, user, password);
   }
 
   private HttpClientBuilder disableSSLVerification(HttpClientBuilder builder) throws Exception {

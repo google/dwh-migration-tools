@@ -30,7 +30,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 
 /**
- * The tasks dum data from the <a
+ * The tasks dump data from the <a
  * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/json_ApiHostList.html">Hosts
  * API</a> which doesn't contain usage and disk data and collected as a fallback.
  */

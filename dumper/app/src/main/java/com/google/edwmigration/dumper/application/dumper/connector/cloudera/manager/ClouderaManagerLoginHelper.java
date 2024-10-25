@@ -31,7 +31,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClouderaManagerLoginHelper {
+/** The helper does login into Cloudera Manager UI for {@code CloseableHttpClient} */
+public final class ClouderaManagerLoginHelper {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaManagerLoginHelper.class);
 
@@ -45,7 +46,8 @@ public class ClouderaManagerLoginHelper {
    * @param password password
    * @throws Exception throws {@code Exception} for any unsuccessful login
    */
-  public void login(URI baseURI, CloseableHttpClient httpClient, String username, String password)
+  public static void login(
+      URI baseURI, CloseableHttpClient httpClient, String username, String password)
       throws Exception {
     HttpPost post = new HttpPost(baseURI + "/j_spring_security_check");
     List<NameValuePair> urlParameters = new ArrayList<>();
@@ -60,7 +62,7 @@ public class ClouderaManagerLoginHelper {
         if (HttpStatus.SC_OK != home.getStatusLine().getStatusCode()) {
           LOG.error(
               "Login to Cloudera Manager wasn't successful. "
-                  + "The response code for /home page is [{}] and response: {}",
+                  + "The response code for /cmf/home page is [{}] and response: {}",
               home.getStatusLine().getStatusCode(),
               home);
 
