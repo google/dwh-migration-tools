@@ -290,24 +290,21 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
               MetadataView.TABLE_STORAGE_METRICS),
           new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
           rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE));
-
-      ResultSetTransformer<String[]> lowerUnderscoreTransformer =
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE);
       addSingleSqlTask(
           out,
           "SHOW WAREHOUSES",
           new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
+          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE));
       addSingleSqlTask(
           out,
           "SHOW EXTERNAL TABLES",
           new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
+          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE));
       addSingleSqlTask(
           out,
           "SHOW FUNCTIONS",
           new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
+          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE));
     }
   }
 
