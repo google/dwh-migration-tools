@@ -180,10 +180,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     return new JdbcSelectTask(task.zipEntryName, query).withHeaderTransformer(args.transformer);
   }
 
-  private void addSingleSqlTask(@Nonnull List<? super Task<?>> out, @Nonnull Args args) {
-    out.add(createSingleSqlTask(args));
-  }
-
   private String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
       throws SQLException {
     ResultSetMetaData metaData = rs.getMetaData();
@@ -298,7 +294,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                   new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
                   rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE)));
       for (Args item : list) {
-        addSingleSqlTask(out, item);
+        out.add(createSingleSqlTask(item));
       }
     }
   }
