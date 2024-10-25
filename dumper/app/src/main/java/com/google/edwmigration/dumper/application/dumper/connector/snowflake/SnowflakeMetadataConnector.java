@@ -174,10 +174,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
-  private Task<Summary> createSingleSqlTask(@Nonnull Args args) {
-    TaskVariant task = args.variant;
-    String query = String.format(args.formatString, task.schemaName, task.whereClause);
-    return new JdbcSelectTask(task.zipEntryName, query).withHeaderTransformer(args.transformer);
+  private Task<Summary> createSingleSqlTask(@Nonnull Args args, @Nonnull String usage) {
+    TaskVariant variant = new TaskVariant(args.zipEntryName, usage);
+    String query = String.format(args.formatString, variant.schemaName, variant.whereClause);
+    ResultSetTransformer<String[]> transformer =
+        rs -> transformHeaderToCamelCase(rs, args.caseFormat);
+    return new JdbcSelectTask(variant.zipEntryName, query).withHeaderTransformer(transformer);
   }
 
   private static String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
@@ -279,41 +281,39 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                       arguments,
                       "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
                       MetadataView.TABLE_STORAGE_METRICS),
-                  new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
+                  TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
                   CaseFormat.UPPER_UNDERSCORE),
               Args.create(
                   "SHOW WAREHOUSES",
-                  new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU),
+                  WarehousesFormat.AU_ZIP_ENTRY_NAME,
                   CaseFormat.LOWER_UNDERSCORE),
               Args.create(
                   "SHOW EXTERNAL TABLES",
-                  new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU),
+                  ExternalTablesFormat.AU_ZIP_ENTRY_NAME,
                   CaseFormat.LOWER_UNDERSCORE),
               Args.create(
                   "SHOW FUNCTIONS",
-                  new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
+                  FunctionInfoFormat.AU_ZIP_ENTRY_NAME,
                   CaseFormat.LOWER_UNDERSCORE));
       for (Args item : list) {
-        out.add(createSingleSqlTask(item));
+        out.add(createSingleSqlTask(item, AU));
       }
     }
   }
 
   private static class Args {
     private final String formatString;
-    private final TaskVariant variant;
-    private final ResultSetTransformer<String[]> transformer;
+    private final String zipEntryName;
+    private final CaseFormat caseFormat;
 
-    private Args(
-        String formatString, TaskVariant variant, ResultSetTransformer<String[]> transformer) {
+    private Args(String formatString, String zipEntryName, CaseFormat caseFormat) {
       this.formatString = formatString;
-      this.variant = variant;
-      this.transformer = transformer;
+      this.zipEntryName = zipEntryName;
+      this.caseFormat = caseFormat;
     }
 
-    private static Args create(String formatString, TaskVariant variant, CaseFormat caseFormat) {
-      ResultSetTransformer<String[]> transformer = rs -> transformHeaderToCamelCase(rs, caseFormat);
-      return new Args(formatString, variant, transformer);
+    private static Args create(String formatString, String zipEntryName, CaseFormat caseFormat) {
+      return new Args(formatString, zipEntryName, caseFormat);
     }
   }
 
