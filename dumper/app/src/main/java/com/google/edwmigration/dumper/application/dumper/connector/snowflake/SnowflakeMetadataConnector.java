@@ -114,23 +114,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     return builder.build();
   }
 
-  private static class TaskVariant {
-
-    public final String zipEntryName;
-    public final String schemaName;
-    public final String whereClause;
-
-    public TaskVariant(String zipEntryName, String schemaName, String whereClause) {
-      this.zipEntryName = zipEntryName;
-      this.schemaName = schemaName;
-      this.whereClause = whereClause;
-    }
-
-    public TaskVariant(String zipEntryName, String schemaName) {
-      this(zipEntryName, schemaName, "");
-    }
-  }
-
   private void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
