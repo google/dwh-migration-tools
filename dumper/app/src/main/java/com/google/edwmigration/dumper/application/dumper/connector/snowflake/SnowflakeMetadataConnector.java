@@ -26,6 +26,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
+import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -94,6 +95,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   private final SnowflakeInput inputSource;
+  private final SnowflakePlanner planner = new SnowflakePlanner();
 
   SnowflakeMetadataConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
     super(name);
@@ -174,7 +176,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
-  private Task<Summary> createSingleSqlTask(@Nonnull Args args, @Nonnull String usage) {
+  private Task<Summary> createSingleSqlTask(@Nonnull AssessmentQuery args, @Nonnull String usage) {
     TaskVariant variant = new TaskVariant(args.zipEntryName, usage);
     String query = String.format(args.formatString, variant.schemaName, variant.whereClause);
     ResultSetTransformer<String[]> transformer =
@@ -274,46 +276,16 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         arguments);
 
     if (arguments.isAssessment()) {
-      ImmutableList<Args> list =
-          ImmutableList.of(
-              Args.create(
-                  getOverrideableQuery(
-                      arguments,
-                      "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
-                      MetadataView.TABLE_STORAGE_METRICS),
-                  TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
-                  CaseFormat.UPPER_UNDERSCORE),
-              Args.create(
-                  "SHOW WAREHOUSES",
-                  WarehousesFormat.AU_ZIP_ENTRY_NAME,
-                  CaseFormat.LOWER_UNDERSCORE),
-              Args.create(
-                  "SHOW EXTERNAL TABLES",
-                  ExternalTablesFormat.AU_ZIP_ENTRY_NAME,
-                  CaseFormat.LOWER_UNDERSCORE),
-              Args.create(
-                  "SHOW FUNCTIONS",
-                  FunctionInfoFormat.AU_ZIP_ENTRY_NAME,
-                  CaseFormat.LOWER_UNDERSCORE));
-      for (Args item : list) {
+      String overrideableQuery =
+          getOverrideableQuery(
+              arguments,
+              "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
+              MetadataView.TABLE_STORAGE_METRICS);
+      ImmutableList<AssessmentQuery> list = planner.generateAssessmentQueries(overrideableQuery);
+
+      for (AssessmentQuery item : list) {
         out.add(createSingleSqlTask(item, AU));
       }
-    }
-  }
-
-  private static class Args {
-    private final String formatString;
-    private final String zipEntryName;
-    private final CaseFormat caseFormat;
-
-    private Args(String formatString, String zipEntryName, CaseFormat caseFormat) {
-      this.formatString = formatString;
-      this.zipEntryName = zipEntryName;
-      this.caseFormat = caseFormat;
-    }
-
-    private static Args create(String formatString, String zipEntryName, CaseFormat caseFormat) {
-      return new Args(formatString, zipEntryName, caseFormat);
     }
   }
 
