@@ -23,7 +23,6 @@ import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -56,40 +55,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
   @Nonnull
   public String getDefaultFileName(boolean isAssessment, Clock clock) {
     return ArchiveNameUtil.getFileName(NAME);
-  }
-
-  public enum SnowflakeLiteConnectorProperties implements ConnectorProperty {
-    DATABASES_OVERRIDE_QUERY,
-    DATABASES_OVERRIDE_WHERE,
-    SCHEMATA_OVERRIDE_QUERY,
-    SCHEMATA_OVERRIDE_WHERE,
-    TABLES_OVERRIDE_QUERY,
-    TABLES_OVERRIDE_WHERE,
-    TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
-    TABLE_STORAGE_METRICS_OVERRIDE_WHERE;
-
-    private final String name;
-    private final String description;
-
-    SnowflakeLiteConnectorProperties() {
-      boolean isWhere = name().endsWith("WHERE");
-      String name = name().split("_")[0].toLowerCase();
-      this.name = "snowflake.metadata." + name + (isWhere ? ".where" : ".query");
-      this.description =
-          isWhere
-              ? "Custom where condition to append to query for metadata " + name + " dump."
-              : "Custom query for metadata " + name + " dump.";
-    }
-
-    @Nonnull
-    public String getName() {
-      return name;
-    }
-
-    @Nonnull
-    public String getDescription() {
-      return description;
-    }
   }
 
   private static class TaskVariant {
@@ -187,10 +152,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     addSqlTasksWithInfoSchemaFallback(
         out,
         DatabasesFormat.Header.class,
-        getOverrideableQuery(
-            "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-            SnowflakeLiteConnectorProperties.DATABASES_OVERRIDE_QUERY,
-            SnowflakeLiteConnectorProperties.DATABASES_OVERRIDE_WHERE),
+        "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
         new TaskVariant(DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
@@ -198,10 +160,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     addSqlTasksWithInfoSchemaFallback(
         out,
         SchemataFormat.Header.class,
-        getOverrideableQuery(
-            "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-            SnowflakeLiteConnectorProperties.SCHEMATA_OVERRIDE_QUERY,
-            SnowflakeLiteConnectorProperties.SCHEMATA_OVERRIDE_WHERE),
+        "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
         new TaskVariant(SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments);
@@ -209,11 +168,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     addSqlTasksWithInfoSchemaFallback(
         out,
         TablesFormat.Header.class,
-        getOverrideableQuery(
-            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
-                + " clustering_key FROM %1$s.TABLES%2$s",
-            SnowflakeLiteConnectorProperties.TABLES_OVERRIDE_QUERY,
-            SnowflakeLiteConnectorProperties.TABLES_OVERRIDE_WHERE),
+        "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+            + " clustering_key FROM %1$s.TABLES%2$s",
         new TaskVariant(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
         new TaskVariant(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         arguments); // Painfully slow.
@@ -221,10 +177,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     if (arguments.isAssessment()) {
       addSingleSqlTask(
           out,
-          getOverrideableQuery(
-              "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
-              SnowflakeLiteConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
-              SnowflakeLiteConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
+          "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
           new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
           rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE));
 
@@ -246,13 +199,5 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
           new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
           lowerUnderscoreTransformer);
     }
-  }
-
-  private String getOverrideableQuery(
-      @Nonnull String defaultSql,
-      @Nonnull ConnectorProperty queryProperty,
-      @Nonnull ConnectorProperty whereProperty) {
-
-    return defaultSql;
   }
 }
