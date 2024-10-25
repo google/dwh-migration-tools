@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 
 import static java.util.Arrays.stream;
 
-import autovalue.shaded.com.google.errorprone.annotations.ForOverride;
 import com.google.common.base.Preconditions;
 import javax.annotation.Nonnull;
 
@@ -46,7 +45,6 @@ public abstract class AbstractConnector implements Connector {
    *
    * @return An enum where the values represent the properties supported by this connector.
    */
-  @ForOverride
   @Nonnull
   protected Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
     return DefaultProperties.class;
