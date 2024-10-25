@@ -116,7 +116,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
-
   private Task<Summary> createSingleSqlTask(
       @Nonnull String format,
       @Nonnull TaskVariant task,

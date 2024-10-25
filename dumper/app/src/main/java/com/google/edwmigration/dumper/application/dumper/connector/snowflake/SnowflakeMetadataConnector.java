@@ -174,20 +174,14 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         .withHeaderClass(header);
   }
 
-  private Task<Summary> createSingleSqlTask(
-      @Nonnull String format,
-      @Nonnull TaskVariant task,
-      @Nonnull ResultSetTransformer<String[]> transformer) {
-    String query = String.format(format, task.schemaName, task.whereClause);
-    return new JdbcSelectTask(task.zipEntryName, query).withHeaderTransformer(transformer);
+  private Task<Summary> createSingleSqlTask(@Nonnull Args args) {
+    TaskVariant task = args.variant;
+    String query = String.format(args.formatString, task.schemaName, task.whereClause);
+    return new JdbcSelectTask(task.zipEntryName, query).withHeaderTransformer(args.transformer);
   }
 
-  private void addSingleSqlTask(
-      @Nonnull List<? super Task<?>> out,
-      @Nonnull String format,
-      @Nonnull TaskVariant task,
-      @Nonnull ResultSetTransformer<String[]> transformer) {
-    out.add(createSingleSqlTask(format, task, transformer));
+  private void addSingleSqlTask(@Nonnull List<? super Task<?>> out, @Nonnull Args args) {
+    out.add(createSingleSqlTask(args));
   }
 
   private String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
@@ -282,29 +276,30 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         arguments);
 
     if (arguments.isAssessment()) {
-      addSingleSqlTask(
-          out,
-          getOverrideableQuery(
-              arguments,
-              "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
-              MetadataView.TABLE_STORAGE_METRICS),
-          new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE));
-      addSingleSqlTask(
-          out,
-          "SHOW WAREHOUSES",
-          new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU),
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE));
-      addSingleSqlTask(
-          out,
-          "SHOW EXTERNAL TABLES",
-          new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU),
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE));
-      addSingleSqlTask(
-          out,
-          "SHOW FUNCTIONS",
-          new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE));
+      ImmutableList<Args> list =
+          ImmutableList.of(
+              new Args(
+                  getOverrideableQuery(
+                      arguments,
+                      "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
+                      MetadataView.TABLE_STORAGE_METRICS),
+                  new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
+                  rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE)),
+              new Args(
+                  "SHOW WAREHOUSES",
+                  new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU),
+                  rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE)),
+              new Args(
+                  "SHOW EXTERNAL TABLES",
+                  new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU),
+                  rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE)),
+              new Args(
+                  "SHOW FUNCTIONS",
+                  new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
+                  rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE)));
+      for (Args item : list) {
+        addSingleSqlTask(out, item);
+      }
     }
   }
 
@@ -313,7 +308,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     private final TaskVariant variant;
     private final ResultSetTransformer<String[]> transformer;
 
-    private Args(String formatString, TaskVariant variant, ResultSetTransformer<String[]> transformer) {
+    private Args(
+        String formatString, TaskVariant variant, ResultSetTransformer<String[]> transformer) {
       this.formatString = formatString;
       this.variant = variant;
       this.transformer = transformer;
