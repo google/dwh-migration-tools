@@ -180,7 +180,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     return new JdbcSelectTask(task.zipEntryName, query).withHeaderTransformer(args.transformer);
   }
 
-  private String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
+  private static String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
       throws SQLException {
     ResultSetMetaData metaData = rs.getMetaData();
     int columnCount = metaData.getColumnCount();
@@ -274,25 +274,25 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (arguments.isAssessment()) {
       ImmutableList<Args> list =
           ImmutableList.of(
-              new Args(
+              Args.create(
                   getOverrideableQuery(
                       arguments,
                       "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
                       MetadataView.TABLE_STORAGE_METRICS),
                   new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
-                  rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE)),
-              new Args(
+                  CaseFormat.UPPER_UNDERSCORE),
+              Args.create(
                   "SHOW WAREHOUSES",
                   new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU),
-                  rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE)),
-              new Args(
+                  CaseFormat.LOWER_UNDERSCORE),
+              Args.create(
                   "SHOW EXTERNAL TABLES",
                   new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU),
-                  rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE)),
-              new Args(
+                  CaseFormat.LOWER_UNDERSCORE),
+              Args.create(
                   "SHOW FUNCTIONS",
                   new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
-                  rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE)));
+                  CaseFormat.LOWER_UNDERSCORE));
       for (Args item : list) {
         out.add(createSingleSqlTask(item));
       }
@@ -309,6 +309,11 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       this.formatString = formatString;
       this.variant = variant;
       this.transformer = transformer;
+    }
+
+    private static Args create(String formatString, TaskVariant variant, CaseFormat caseFormat) {
+      ResultSetTransformer<String[]> transformer = rs -> transformHeaderToCamelCase(rs, caseFormat);
+      return new Args(formatString, variant, transformer);
     }
   }
 
