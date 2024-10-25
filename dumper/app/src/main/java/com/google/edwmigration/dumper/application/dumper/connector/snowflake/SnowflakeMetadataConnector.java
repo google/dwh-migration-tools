@@ -308,6 +308,18 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
+  private static class Args {
+    private final String formatString;
+    private final TaskVariant variant;
+    private final ResultSetTransformer<String[]> transformer;
+
+    private Args(String formatString, TaskVariant variant, ResultSetTransformer<String[]> transformer) {
+      this.formatString = formatString;
+      this.variant = variant;
+      this.transformer = transformer;
+    }
+  }
+
   private String getOverrideableQuery(
       @Nonnull ConnectorArguments arguments,
       @Nonnull String defaultSql,
