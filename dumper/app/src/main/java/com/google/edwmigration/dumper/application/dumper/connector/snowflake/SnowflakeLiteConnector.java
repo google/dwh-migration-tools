@@ -122,7 +122,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         TablesFormat.Header.class,
         "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
             + " clustering_key FROM %1$s.TABLES%2$s",
-            TaskVariant.createWithNoFilter(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
+        TaskVariant.createWithNoFilter(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
         TaskVariant.createWithFilter(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
         isAssessment); // Painfully slow.
 

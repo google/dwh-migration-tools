@@ -16,17 +16,18 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoValue
 @ParametersAreNonnullByDefault
 abstract class TaskVariant {
 
   public abstract String zipEntryName();
-  public abstract  String schemaName();
+
+  public abstract String schemaName();
+
   public abstract String whereClause();
 
   static TaskVariant createWithFilter(String zipEntryName, String schemaName, String whereClause) {
