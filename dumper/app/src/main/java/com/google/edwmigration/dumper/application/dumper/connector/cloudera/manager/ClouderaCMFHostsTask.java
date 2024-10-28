@@ -21,6 +21,7 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -54,6 +55,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
           "Cloudera clusters must be initialized before hosts dumping.");
     }
 
+    final URI baseURI = handle.getBaseURI();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
@@ -63,10 +65,9 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
               cluster.getName());
           continue;
         }
+
         String hostPerClusterUrl =
-            handle.getBaseURI()
-                + "/cmf/hardware/hosts/hostsOverview.json?clusterId="
-                + cluster.getId();
+            baseURI + "/cmf/hardware/hosts/hostsOverview.json?clusterId=" + cluster.getId();
 
         try (CloseableHttpResponse hosts = httpClient.execute(new HttpGet(hostPerClusterUrl))) {
           String json = EntityUtils.toString(hosts.getEntity());

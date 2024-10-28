@@ -100,6 +100,7 @@ libthrift = { module = "org.apache.thrift:libthrift", version.ref = "thrift" }
 log4j-over-slf4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "log4j-over-slf4j" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 rate-limited-logger = { module = "com.swrve:rate-limited-logger", version.ref = "rate-limited-logger" }

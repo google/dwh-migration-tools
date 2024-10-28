@@ -85,8 +85,10 @@ public class ClouderaManagerHandleTest {
 
     handle.initClusters(first);
 
-    assertThrows(IllegalStateException.class, () -> handle.initClusters(second));
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> handle.initClusters(second));
 
     assertEquals(first, handle.getClusters());
+    assertEquals("The cluster already initialized!", exception.getMessage());
   }
 }
