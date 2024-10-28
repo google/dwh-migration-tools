@@ -36,11 +36,6 @@ configurations {
     }
 
 }
-repositories {
-    maven {
-        url 'https://repository.cloudera.com/artifactory/cloudera-repos'
-    }
-}
 
 dependencies {
     compileOnly libs.auto.value.annotations
@@ -73,12 +68,6 @@ dependencies {
     implementation libs.httpclient5
     implementation libs.aws.java.sdk.redshift
     implementation libs.aws.java.sdk.cloudwatch
-    implementation (libs.cloudera.manager) { //only data models used
-        exclude(group : "com.google.code.gson", module : "gson")
-        exclude(group : "io.swagger", module : "swagger-annotations")
-        exclude(group : "com.squareup.okhttp", module : "okhttp")
-        exclude(group : "com.squareup.okhttp", module : "logging-interceptor")
-    }
 
     runtimeOnly libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j
@@ -166,22 +155,21 @@ task cloudExtractorStartScripts(type: CreateStartScripts) {
     dependsOn 'cloudExtractorStartScriptsForJava8'
 }
 
-//todo temporary disable license check. Clouder Case Number:  1077072
-//licenseReport {
-//    // onlyIf { ! gradle.startParameter.offline }
-//    filters = [
-//        new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
-//    ]
-//    renderers = [
-//        new com.google.edwmigration.dumper.build.licensereport.CsvReportRenderer(),
-//        new com.github.jk1.license.render.JsonReportRenderer('index.json', false),
-//        new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
-//    ]
-//    allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
-//}
+licenseReport {
+    // onlyIf { ! gradle.startParameter.offline }
+    filters = [
+        new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
+    ]
+    renderers = [
+        new com.google.edwmigration.dumper.build.licensereport.CsvReportRenderer(),
+        new com.github.jk1.license.render.JsonReportRenderer('index.json', false),
+        new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
+    ]
+    allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
+}
 
 tasks.named('check') {
-//    dependsOn 'checkLicense'
+    dependsOn 'checkLicense'
 }
 
 tasks.named('distTar') {
@@ -246,5 +234,5 @@ distributions {
 }
 
 ['publishedDistZip', 'publishedDistTar', 'installPublishedDist'].collect(tasks::named).each {
-//    it.configure { dependsOn('checkLicense') }
+    it.configure { dependsOn('checkLicense') }
 }

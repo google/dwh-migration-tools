@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import java.io.IOException;
@@ -33,6 +34,9 @@ public class ClouderaManagerHandle implements Handle {
   private ImmutableList<ClouderaClusterDTO> clusters;
 
   public ClouderaManagerHandle(URI apiURI, CloseableHttpClient httpClient) {
+    Preconditions.checkNotNull(apiURI, "Cloudera's apiURI can't null.");
+    Preconditions.checkNotNull(httpClient, "httpClient can't be null.");
+
     this.apiURI = apiURI;
     this.httpClient = httpClient;
   }

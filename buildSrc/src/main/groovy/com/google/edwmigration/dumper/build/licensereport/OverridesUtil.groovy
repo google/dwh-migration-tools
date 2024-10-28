@@ -789,12 +789,6 @@ class OverridesUtil {
                 projectUrl: "https://github.com/jakartaee/jaxb-api",
                 licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaxb-api/master/LICENSE.md",
             ],
-            "com.cloudera.api.swagger:cloudera-manager-api-swagger": [
-                //todo clarify license ticket https://my.cloudera.com/1077072/
-                projectUrl: "https://github.com/cloudera/cm_api",
-                licenseName: "Apache License, Version 2.0",
-                licenseUrl: "https://raw.githubusercontent.com/cloudera/cm_api/master/LICENSE.txt",
-            ]
         ]
     }
 }
