@@ -22,7 +22,11 @@ import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 
-/** @author shevek */
+/**
+ * This is identical to snowflake-logs, because the SCHEMA_ONLY input setting is the default one.
+ *
+ * @author shevek
+ */
 @AutoService(Connector.class)
 @Description("Dumps logs from Snowflake, using INFORMATION_SCHEMA only.")
 public class SnowflakeInformationSchemaLogsConnector extends SnowflakeLogsConnector {
