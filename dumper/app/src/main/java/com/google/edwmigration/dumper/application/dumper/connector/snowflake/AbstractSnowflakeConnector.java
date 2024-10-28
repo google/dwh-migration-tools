@@ -16,8 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTasks.fromVariant;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -31,6 +34,9 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,6 +107,31 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
     setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
     return jdbcHandle;
+  }
+
+  final ImmutableList<Task<?>> getSqlTasks(
+      @Nonnull SnowflakeInput inputSource,
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull TaskVariant is_task,
+      @Nonnull TaskVariant au_task,
+      boolean isAssessment) {
+    switch (inputSource) {
+      case USAGE_THEN_SCHEMA_SOURCE:
+        {
+          AbstractJdbcTask<Summary> schemaTask = fromVariant(format, is_task, header);
+          AbstractJdbcTask<Summary> usageTask = fromVariant(format, au_task, header);
+          if (isAssessment) {
+            return ImmutableList.of(usageTask);
+          }
+          return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
+        }
+      case SCHEMA_ONLY_SOURCE:
+        return ImmutableList.of(fromVariant(format, is_task, header));
+      case USAGE_ONLY_SOURCE:
+        return ImmutableList.of(fromVariant(format, au_task, header));
+    }
+    throw new AssertionError();
   }
 
   private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)

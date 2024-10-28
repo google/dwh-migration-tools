@@ -17,18 +17,15 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTasks.fromVariant;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
-import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
@@ -62,31 +59,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
       boolean isAssessment) {
-    out.addAll(getSqlTasks(header, format, is_task, au_task, isAssessment));
-  }
-
-  private ImmutableList<Task<?>> getSqlTasks(
-      @Nonnull Class<? extends Enum<?>> header,
-      @Nonnull String format,
-      @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task,
-      boolean isAssessment) {
-    switch (inputSource) {
-      case USAGE_THEN_SCHEMA_SOURCE:
-        {
-          AbstractJdbcTask<Summary> schemaTask = fromVariant(format, is_task, header);
-          AbstractJdbcTask<Summary> usageTask = fromVariant(format, au_task, header);
-          if (isAssessment) {
-            return ImmutableList.of(usageTask);
-          }
-          return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
-        }
-      case SCHEMA_ONLY_SOURCE:
-        return ImmutableList.of(fromVariant(format, is_task, header));
-      case USAGE_ONLY_SOURCE:
-        return ImmutableList.of(fromVariant(format, au_task, header));
-    }
-    throw new AssertionError();
+    ImmutableList<Task<?>> tasks =
+        getSqlTasks(inputSource, header, format, is_task, au_task, isAssessment);
+    out.addAll(tasks);
   }
 
   @Override
