@@ -57,8 +57,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task,
-      boolean isAssessment) {
+      @Nonnull TaskVariant au_task) {
     ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, is_task, au_task);
     out.addAll(tasks);
   }
@@ -74,22 +73,19 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
     final String AU_WHERE = " WHERE DELETED IS NULL";
 
-    boolean isAssessment = arguments.isAssessment();
     addSqlTasksWithInfoSchemaFallback(
         out,
         DatabasesFormat.Header.class,
         "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
         TaskVariant.createWithNoFilter(DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
-        TaskVariant.createWithFilter(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        isAssessment);
+        TaskVariant.createWithFilter(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
         SchemataFormat.Header.class,
         "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
         TaskVariant.createWithNoFilter(SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
-        TaskVariant.createWithFilter(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        isAssessment);
+        TaskVariant.createWithFilter(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -97,10 +93,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
             + " clustering_key FROM %1$s.TABLES%2$s",
         TaskVariant.createWithNoFilter(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
-        TaskVariant.createWithFilter(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        isAssessment); // Painfully slow.
+        TaskVariant.createWithFilter(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
 
-    if (isAssessment) {
+    if (arguments.isAssessment()) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
         String query = String.format(item.formatString, AU, /* an empty WHERE clause */ "");
         String zipName = item.zipEntryName;
