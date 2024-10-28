@@ -16,25 +16,22 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY_SOURCE;
+
 import com.google.auto.service.AutoService;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-import javax.annotation.Nonnull;
 
-/** @author shevek */
+/**
+ * This is identical to snowflake-logs, because the SCHEMA_ONLY input setting is the default one.
+ *
+ * @author shevek
+ */
 @AutoService(Connector.class)
 @Description("Dumps logs from Snowflake, using INFORMATION_SCHEMA only.")
 public class SnowflakeInformationSchemaLogsConnector extends SnowflakeLogsConnector {
 
   public SnowflakeInformationSchemaLogsConnector() {
-    super("snowflake-information-schema-logs");
-  }
-
-  @Override
-  protected String newQueryFormat(@Nonnull ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
-    return createQueryFromInformationSchema(arguments);
+    super("snowflake-information-schema-logs", SCHEMA_ONLY_SOURCE);
   }
 }

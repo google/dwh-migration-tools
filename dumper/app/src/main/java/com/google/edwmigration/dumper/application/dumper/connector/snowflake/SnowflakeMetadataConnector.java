@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
@@ -104,7 +104,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   public SnowflakeMetadataConnector() {
-    this("snowflake", USAGE_THEN_SCHEMA);
+    this("snowflake", USAGE_THEN_SCHEMA_SOURCE);
   }
 
   @Nonnull
@@ -147,7 +147,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull TaskVariant au_task,
       @Nonnull ConnectorArguments arguments) {
     switch (inputSource) {
-      case USAGE_THEN_SCHEMA:
+      case USAGE_THEN_SCHEMA_SOURCE:
         {
           AbstractJdbcTask<Summary> schemaTask = taskFromVariant(format, is_task, header);
           AbstractJdbcTask<Summary> usageTask = taskFromVariant(format, au_task, header);
@@ -156,9 +156,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
           }
           return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
         }
-      case SCHEMA_ONLY:
+      case SCHEMA_ONLY_SOURCE:
         return ImmutableList.of(taskFromVariant(format, is_task, header));
-      case USAGE_ONLY:
+      case USAGE_ONLY_SOURCE:
         return ImmutableList.of(taskFromVariant(format, au_task, header));
     }
     throw new AssertionError();

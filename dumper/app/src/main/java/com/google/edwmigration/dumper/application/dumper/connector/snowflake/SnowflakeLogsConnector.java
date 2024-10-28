@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY_SOURCE;
 import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
 
 import com.google.auto.service.AutoService;
@@ -39,7 +40,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
-import com.google.errorprone.annotations.ForOverride;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -68,12 +68,15 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   private static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
 
-  protected SnowflakeLogsConnector(@Nonnull String name) {
+  private final SnowflakeInput inputSource;
+
+  SnowflakeLogsConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
     super(name);
+    this.inputSource = inputSource;
   }
 
   public SnowflakeLogsConnector() {
-    this("snowflake-logs");
+    this("snowflake-logs", SCHEMA_ONLY_SOURCE);
   }
 
   public enum SnowflakeLogConnectorProperties implements ConnectorProperty {
@@ -163,15 +166,22 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     return SnowflakeLogConnectorProperties.class;
   }
 
-  @ForOverride
-  protected String newQueryFormat(@Nonnull ConnectorArguments arguments)
+  private String newQueryFormat(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
     // Per the docref, Snowflake only retains/returns seven trailing days of logs.
-    return createQueryFromInformationSchema(arguments);
+    switch (inputSource) {
+      case USAGE_THEN_SCHEMA_SOURCE:
+        throw new IllegalArgumentException("Unsupported input source for Snowflake logs.");
+      case USAGE_ONLY_SOURCE:
+        return createQueryFromAccountUsage(arguments);
+      case SCHEMA_ONLY_SOURCE:
+        return createQueryFromInformationSchema(arguments);
+    }
+    throw new AssertionError();
   }
 
-  protected String createQueryFromAccountUsage(ConnectorArguments arguments)
+  private String createQueryFromAccountUsage(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     String overrideQuery = getOverrideQuery(arguments);
     if (overrideQuery != null) return overrideQuery;
@@ -209,7 +219,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     return queryBuilder.toString().replace('\n', ' ');
   }
 
-  protected String createQueryFromInformationSchema(ConnectorArguments arguments)
+  private String createQueryFromInformationSchema(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
     // Per the docref, Snowflake only retains/returns seven trailing days of logs in
@@ -260,7 +270,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     return queryBuilder.toString().replace('\n', ' ');
   }
 
-  protected String createExtendedQueryFromAccountUsage(ConnectorArguments arguments)
+  private String createExtendedQueryFromAccountUsage(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     String overrideQuery = getOverrideQuery(arguments);
     if (overrideQuery != null) return overrideQuery;
@@ -327,7 +337,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   }
 
   @CheckForNull
-  protected String getOverrideQuery(@Nonnull ConnectorArguments arguments)
+  private String getOverrideQuery(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     String overrideQuery = arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_QUERY);
     if (overrideQuery != null) {
@@ -341,13 +351,14 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   }
 
   @CheckForNull
-  protected String getOverrideWhere(@Nonnull ConnectorArguments arguments)
+  private String getOverrideWhere(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     return arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_WHERE);
   }
 
   @Override
-  public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
+  public final void addTasksTo(
+      @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));

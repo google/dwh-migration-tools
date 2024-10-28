@@ -16,9 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
+
 import com.google.auto.service.AutoService;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 
@@ -28,12 +28,6 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 public class SnowflakeAccountUsageLogsConnector extends SnowflakeLogsConnector {
 
   public SnowflakeAccountUsageLogsConnector() {
-    super("snowflake-account-usage-logs");
-  }
-
-  @Override
-  protected String newQueryFormat(ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
-    return createQueryFromAccountUsage(arguments);
+    super("snowflake-account-usage-logs", USAGE_ONLY_SOURCE);
   }
 }
