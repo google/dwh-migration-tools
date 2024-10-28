@@ -16,9 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+/** Represents a strategy of getting Snowflake data. */
 enum SnowflakeInput {
-  /** Adds the ACCOUNT_USAGE task, with a fallback to the INFORMATION_SCHEMA task. */
-  USAGE_THEN_SCHEMA,
-  SCHEMA_ONLY,
-  USAGE_ONLY;
+  /** Get data from ACCOUNT_USAGE contents, with a fallback to INFORMATION_SCHEMA. */
+  USAGE_THEN_SCHEMA_SOURCE,
+  /** Get data relying only on the contents of INFORMATION_SCHEMA */
+  SCHEMA_ONLY_SOURCE,
+  /** Get data relying only on the contents of ACCOUNT_USAGE */
+  USAGE_ONLY_SOURCE;
 }

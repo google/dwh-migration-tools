@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY_SOURCE;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -32,6 +32,6 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 public class SnowflakeInformationSchemaLogsConnector extends SnowflakeLogsConnector {
 
   public SnowflakeInformationSchemaLogsConnector() {
-    super("snowflake-information-schema-logs", SCHEMA_ONLY);
+    super("snowflake-information-schema-logs", SCHEMA_ONLY_SOURCE);
   }
 }
