@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.MetadataView.TABLE_STORAGE_METRICS;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 
 import com.google.auto.service.AutoService;
@@ -32,7 +33,6 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat.Header;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -119,8 +119,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
       boolean isAssessment) {
-    ImmutableList<Task<?>> tasks =
-        getSqlTasks(inputSource, header, format, is_task, au_task, isAssessment);
+    SnowflakeInput adjustedInput = inputSource;
+    // skip fallback if assessment is enabled
+    if (adjustedInput == USAGE_THEN_SCHEMA_SOURCE && isAssessment) {
+      adjustedInput = USAGE_ONLY_SOURCE;
+    }
+    ImmutableList<Task<?>> tasks = getSqlTasks(adjustedInput, header, format, is_task, au_task);
     out.addAll(tasks);
   }
 
@@ -138,7 +142,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     boolean isAssessment = arguments.isAssessment();
     addSqlTasksWithInfoSchemaFallback(
         out,
-        Header.class,
+        DatabasesFormat.Header.class,
         getOverrideableQuery(
             arguments,
             "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",

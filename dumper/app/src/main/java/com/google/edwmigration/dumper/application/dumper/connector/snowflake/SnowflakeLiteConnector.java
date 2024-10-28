@@ -59,8 +59,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task,
       boolean isAssessment) {
-    ImmutableList<Task<?>> tasks =
-        getSqlTasks(inputSource, header, format, is_task, au_task, isAssessment);
+    ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, is_task, au_task);
     out.addAll(tasks);
   }
 

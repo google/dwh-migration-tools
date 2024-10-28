@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTasks.fromVariant;
 
 import com.google.common.base.CharMatcher;
@@ -114,16 +116,12 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task,
-      boolean isAssessment) {
+      @Nonnull TaskVariant au_task) {
     switch (inputSource) {
       case USAGE_THEN_SCHEMA_SOURCE:
         {
           AbstractJdbcTask<Summary> schemaTask = fromVariant(format, is_task, header);
           AbstractJdbcTask<Summary> usageTask = fromVariant(format, au_task, header);
-          if (isAssessment) {
-            return ImmutableList.of(usageTask);
-          }
           return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
         }
       case SCHEMA_ONLY_SOURCE:
