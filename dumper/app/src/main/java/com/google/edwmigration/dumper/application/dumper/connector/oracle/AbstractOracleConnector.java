@@ -29,7 +29,7 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInputs;
@@ -72,7 +72,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
     defaultValue = "" + AbstractOracleConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentUser
 @RespectsArgumentPassword
-@RespectsArgumentUri
+@RespectsArgumentJDBCUri
 @RespectsInputs({
   @RespectsInput(
       arg = OPT_QUERY_LOG_DAYS,

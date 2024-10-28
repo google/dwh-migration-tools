@@ -19,9 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -43,9 +41,24 @@ import org.apache.http.ssl.SSLContextBuilder;
 
 @AutoService({Connector.class})
 @Description("Dumps metadata from Cloudera Manager.")
-@RespectsArgumentUser
-@RespectsArgumentPassword
-@RespectsArgumentUri
+@RespectsInput(
+    order = 100,
+    arg = ConnectorArguments.OPT_URI,
+    description = "The Cloudera's Manager API HTTP(s) endpoint.")
+@RespectsInput(
+    order = 200,
+    arg = ConnectorArguments.OPT_USER,
+    description = "The username for Cloudera's Manager.")
+@RespectsInput(
+    order = 300,
+    arg = ConnectorArguments.OPT_PASSWORD,
+    description = "The password for Cloudera's Manager.",
+    required = "If not specified as an argument, will use a secure prompt")
+@RespectsInput(
+    order = 400,
+    arg = ConnectorArguments.OPT_CLUSTER,
+    description = "The name of Cloudera's cluster.",
+    required = "Only if you need to dump data for a single Cloudera cluster")
 public class ClouderaManagerConnector extends AbstractConnector {
 
   public static final String FORMAT_NAME = "cloudera-manager.dump.zip";
@@ -75,8 +88,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
   @Override
   public ClouderaManagerHandle open(@Nonnull ConnectorArguments arguments) throws Exception {
     List<String> errors = new ArrayList<>();
-    if (arguments.getUri()
-        == null) { // todo --url currently used for JDBC drivers, think about another param
+    if (arguments.getUri() == null) {
       errors.add("--url for Cloudera Manager API is required");
     }
     if (arguments.getUser() == null) {

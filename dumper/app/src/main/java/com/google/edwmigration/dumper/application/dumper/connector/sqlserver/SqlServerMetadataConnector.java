@@ -22,7 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
@@ -66,7 +66,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @RespectsArgumentPassword
 @RespectsArgumentDriver
 @RespectsArgumentDatabaseForConnection
-@RespectsArgumentUri
+@RespectsArgumentJDBCUri
 public class SqlServerMetadataConnector extends AbstractJdbcConnector
     implements MetadataConnector, SqlServerMetadataDumpFormat {
 

@@ -34,4 +34,4 @@ import java.lang.annotation.Target;
     arg = ConnectorArguments.OPT_URI,
     description = "Overrides the generated JDBC URI for the database connection.",
     required = "only for complex installations")
-public @interface RespectsArgumentUri {}
+public @interface RespectsArgumentJDBCUri {}

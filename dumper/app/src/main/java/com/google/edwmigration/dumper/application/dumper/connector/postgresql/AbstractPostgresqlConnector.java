@@ -22,7 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverClass;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -36,7 +36,7 @@ import javax.sql.DataSource;
 @RespectsArgumentHostUnlessUrl
 @RespectsArgumentUser
 @RespectsArgumentPassword
-@RespectsArgumentUri
+@RespectsArgumentJDBCUri
 public abstract class AbstractPostgresqlConnector extends AbstractJdbcConnector {
 
   public static final int OPT_PORT_DEFAULT = 5432;

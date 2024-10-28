@@ -85,9 +85,7 @@ public class ClouderaManagerHandleTest {
 
     handle.initClusters(first);
 
-    assertThrows(
-        IllegalStateException.class,
-        () -> handle.initClusters(second));
+    assertThrows(IllegalStateException.class, () -> handle.initClusters(second));
 
     assertEquals(first, handle.getClusters());
   }

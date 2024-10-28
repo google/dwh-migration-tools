@@ -158,9 +158,15 @@ public class ConnectorArguments extends DefaultArguments {
           .describedAs("com.company.Driver");
   private final OptionSpec<String> optionUri =
       parser
-          .accepts(OPT_URI, "JDBC driver URI")
+          .accepts(
+              OPT_URI,
+              "The main Connector's URI to dump metadata. "
+                  + "It can JDBC driver URI or HTTP endpoint URL, must be specified "
+                  + "by connector.")
           .withRequiredArg()
-          .describedAs("jdbc:dbname:host/db?param0=foo");
+          .describedAs(
+              "JDBC looks like: [jdbc:dbname:host/db?param0=foo], "
+                  + "HTTP looks like: [http://localhost:8080/api/v1/]");
   private final OptionSpec<String> optionHost =
       parser.accepts(OPT_HOST, "Database hostname").withRequiredArg();
   private final OptionSpec<Integer> optionPort =

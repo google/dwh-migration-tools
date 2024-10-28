@@ -20,7 +20,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverClass;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.connector.postgresql.AbstractPostgresqlConnector;
 import java.time.ZoneOffset;
@@ -33,7 +33,7 @@ import javax.annotation.Nonnull;
 @RespectsArgumentHostUnlessUrl
 @RespectsArgumentUser
 @RespectsArgumentPassword
-@RespectsArgumentUri
+@RespectsArgumentJDBCUri
 public abstract class AbstractGreenplumConnector extends AbstractPostgresqlConnector {
 
   protected static final DateTimeFormatter SQL_FORMAT =
