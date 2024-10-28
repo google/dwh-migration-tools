@@ -30,7 +30,7 @@ public class ClouderaManagerHandle implements Handle {
   private final URI apiURI;
   private final CloseableHttpClient httpClient;
 
-  private List<ClouderaClusterDTO> clusters;
+  private ImmutableList<ClouderaClusterDTO> clusters;
 
   public ClouderaManagerHandle(URI apiURI, CloseableHttpClient httpClient) {
     this.apiURI = apiURI;
@@ -50,7 +50,7 @@ public class ClouderaManagerHandle implements Handle {
   }
 
   @CheckForNull
-  public synchronized List<ClouderaClusterDTO> getClusters() {
+  public synchronized ImmutableList<ClouderaClusterDTO> getClusters() {
     return clusters;
   }
 
