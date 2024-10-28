@@ -788,7 +788,7 @@ class OverridesUtil {
             "javax.xml.stream:stax-api": [
                 projectUrl: "https://github.com/jakartaee/jaxb-api",
                 licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaxb-api/master/LICENSE.md",
-            ],
+            ]
         ]
     }
 }
