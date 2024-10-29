@@ -34,7 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import java.util.List;
-import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,7 +220,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   private String overrideFormatString(AssessmentQuery query, ConnectorArguments arguments) {
-    if (query.getView().equals(Optional.of(TABLE_STORAGE_METRICS))) {
+    if (query.needsOverride) {
       return getOverrideableQuery(arguments, query.formatString, TABLE_STORAGE_METRICS);
     } else {
       return query.formatString;

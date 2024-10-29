@@ -26,8 +26,6 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FunctionInfoFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TableStorageMetricsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
-import java.util.Optional;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -55,36 +53,27 @@ final class SnowflakePlanner {
   }
 
   static class AssessmentQuery {
+    final boolean needsOverride;
     final String formatString;
     final String zipEntryName;
     private final CaseFormat caseFormat;
-    @Nullable private final MetadataView view;
 
     private AssessmentQuery(
-        String formatString,
-        String zipEntryName,
-        CaseFormat caseFormat,
-        @Nullable MetadataView view) {
+        boolean needsOverride, String formatString, String zipEntryName, CaseFormat caseFormat) {
+      this.needsOverride = needsOverride;
       this.formatString = formatString;
       this.zipEntryName = zipEntryName;
       this.caseFormat = caseFormat;
-      this.view = view;
     }
 
     static AssessmentQuery createMetricsSelect(Format zipFormat, CaseFormat caseFormat) {
       String formatString = "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s";
-      String zipEntryName = zipFormat.value;
-      return new AssessmentQuery(
-          formatString, zipEntryName, caseFormat, MetadataView.TABLE_STORAGE_METRICS);
+      return new AssessmentQuery(true, formatString, zipFormat.value, caseFormat);
     }
 
     static AssessmentQuery createShow(String view, Format zipFormat, CaseFormat caseFormat) {
       String queryString = String.format("SHOW %s", view);
-      return new AssessmentQuery(queryString, zipFormat.value, caseFormat, null);
-    }
-
-    Optional<MetadataView> getView() {
-      return Optional.ofNullable(view);
+      return new AssessmentQuery(false, queryString, zipFormat.value, caseFormat);
     }
 
     ResultSetTransformer<String[]> transformer() {
