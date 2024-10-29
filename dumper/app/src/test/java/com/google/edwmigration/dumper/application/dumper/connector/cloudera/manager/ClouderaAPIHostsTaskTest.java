@@ -59,14 +59,14 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaCMFHostsTaskTest {
+public class ClouderaAPIHostsTaskTest {
 
-  private ClouderaCMFHostsTask task = new ClouderaCMFHostsTask();
-
+  private ClouderaAPIHostsTask task = new ClouderaAPIHostsTask();
   private ClouderaManagerHandle handle;
 
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
+
   @Mock private Writer writer;
   @Mock private CharSink charSink;
   @Mock private CloseableHttpClient httpClient;
@@ -74,7 +74,7 @@ public class ClouderaCMFHostsTaskTest {
 
   @Before
   public void setUp() throws Exception {
-    uri = URI.create("http://localhost/");
+    uri = URI.create("http://localhost/api");
     handle = new ClouderaManagerHandle(uri, httpClient);
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
@@ -82,34 +82,36 @@ public class ClouderaCMFHostsTaskTest {
   }
 
   @Test
-  public void clusterIdExists_success() throws Exception {
+  public void clustersExists_do_writes_success() throws Exception {
     handle.initClusters(
         ImmutableList.of(
             new ClouderaClusterDTO("id1", "first-cluster"),
-            new ClouderaClusterDTO("id34", "next-cluster")));
+            new ClouderaClusterDTO("id125", "second-cluster")));
 
     try (MockedStatic<EntityUtils> mockedUtils = mockStatic(EntityUtils.class)) {
       CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);
       HttpEntity entityId1 = mock(HttpEntity.class);
       when(responseId1.getEntity()).thenReturn(entityId1);
 
-      CloseableHttpResponse responseNext = mock(CloseableHttpResponse.class);
-      HttpEntity entityNext = mock(HttpEntity.class);
-      when(responseNext.getEntity()).thenReturn(entityNext);
+      CloseableHttpResponse responseCldClst = mock(CloseableHttpResponse.class);
+      HttpEntity entityCldClst = mock(HttpEntity.class);
+      when(responseCldClst.getEntity()).thenReturn(entityCldClst);
 
       when(httpClient.execute(
-              argThat(get -> get != null && get.getURI().toString().endsWith("=id1"))))
+              argThat(
+                  get -> get != null && get.getURI().toString().endsWith("/first-cluster/hosts"))))
           .thenReturn(responseId1);
       when(httpClient.execute(
-              argThat(get -> get != null && get.getURI().toString().endsWith("=id34"))))
-          .thenReturn(responseNext);
+              argThat(
+                  get -> get != null && get.getURI().toString().endsWith("/second-cluster/hosts"))))
+          .thenReturn(responseCldClst);
 
       mockedUtils
           .when(() -> EntityUtils.toString(entityId1))
           .thenReturn("{'clusterName':'first-cluster'}");
       mockedUtils
-          .when(() -> EntityUtils.toString(entityNext))
-          .thenReturn("{\n'clusterName':'next-cluster'\n\r}");
+          .when(() -> EntityUtils.toString(entityCldClst))
+          .thenReturn("{\n'clusterName':'second-cluster'\n\r}");
 
       task.doRun(context, sink, handle);
 
@@ -125,8 +127,8 @@ public class ClouderaCMFHostsTaskTest {
 
       assertEquals(
           ImmutableSet.of(
-              URI.create("http://localhost//cmf/hardware/hosts/hostsOverview.json?clusterId=id1"),
-              URI.create("http://localhost//cmf/hardware/hosts/hostsOverview.json?clusterId=id34")),
+              URI.create("http://localhost/api/clusters/first-cluster/hosts"),
+              URI.create("http://localhost/api/clusters/second-cluster/hosts")),
           requestedUrls);
 
       // write jsonl. https://jsonlines.org/
@@ -144,24 +146,13 @@ public class ClouderaCMFHostsTaskTest {
                       }));
       verify(writer, times(2)).write('\n');
       assertEquals(
-          ImmutableSet.of("{'clusterName':'first-cluster'}", "{'clusterName':'next-cluster'}"),
+          ImmutableSet.of("{'clusterName':'first-cluster'}", "{'clusterName':'second-cluster'}"),
           fileLines);
 
       verify(responseId1).close();
-      verify(responseNext).close();
+      verify(responseCldClst).close();
       verify(writer).close();
     }
-  }
-
-  @Test
-  public void noClusterId_skip_writes() throws Exception {
-    handle.initClusters(ImmutableList.of(new ClouderaClusterDTO(null, "single cluster")));
-
-    task.doRun(context, sink, handle);
-
-    verify(httpClient, never()).execute(any());
-
-    verifyNoWrites();
   }
 
   @Test
