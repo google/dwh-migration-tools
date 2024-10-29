@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * DTO class for the official Cloudera API <a
  * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/json_ApiEntityTag.html">json</a>
@@ -24,6 +26,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
  * href="https://mvnrepository.com/artifact/com.cloudera.api.swagger/cloudera-manager-api-swagger/7.11.0">generated</a>
  * code is unclear, the own model for public schema used instead of it.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiEntityTag {
   private String name;
   private String value;

@@ -97,7 +97,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
 
     if (!errors.isEmpty()) {
       throw new MetadataDumperUsageException(
-          "Missing arguments for connector generic-args :", errors);
+          "Missing arguments for connector generic-args : ", errors);
     }
     URI uri = new URI(arguments.getUri());
 

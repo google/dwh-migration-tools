@@ -22,6 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.CheckForNull;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -84,6 +85,28 @@ public class ClouderaManagerHandle implements Handle {
     public ClouderaClusterDTO(String id, String name) {
       this.id = id;
       this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof ClouderaClusterDTO)) {
+        return false;
+      }
+      ClouderaClusterDTO that = (ClouderaClusterDTO) o;
+      return Objects.equals(id, that.id) && Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(id, name);
+    }
+
+    @Override
+    public String toString() {
+      return "ClouderaClusterDTO{" + "id='" + id + '\'' + ", name='" + name + '\'' + '}';
     }
 
     @CheckForNull

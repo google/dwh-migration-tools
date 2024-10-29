@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /**
@@ -26,9 +28,11 @@ import java.util.List;
  * href="https://mvnrepository.com/artifact/com.cloudera.api.swagger/cloudera-manager-api-swagger/7.11.0">generated</a>
  * code is unclear, the own model for public schema used instead of it.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiClusterListDto {
 
-  List<ApiClusterDto> items;
+  @JsonProperty(required = true)
+  private List<ApiClusterDto> items;
 
   public List<ApiClusterDto> getItems() {
     return items;

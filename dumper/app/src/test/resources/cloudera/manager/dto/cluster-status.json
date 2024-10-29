@@ -1,0 +1,476 @@
+{
+  "hmonFailed": false,
+  "smonFailed": false,
+  "clusterModel": {
+    "addServicesLink": null,
+    "clusterDisplayStatus": "GOOD_HEALTH",
+    "clusterInfo": {
+      "displayName": "cldr2-aw-dl",
+      "id": 1546336862,
+      "name": "cldr2-aw-dl",
+      "type": "BASE_CLUSTER"
+    },
+    "clusterMetadata": "Cloudera Runtime 7.2.18 (Parcels)",
+    "displayName": "cldr2-aw-dl",
+    "hostsBadgesModel": {
+      "actionablesCount": 1,
+      "actionablesLevel": "WARN",
+      "canViewStaleness": false,
+      "clientConfigStalenessStatus": "FRESH",
+      "configIssuesTitle": "1 Warning Configuration Issue(s)",
+      "healthIssuesCount": 2,
+      "healthIssuesLevel": "DISABLED",
+      "healthIssuesTitle": "",
+      "stalenessStatus": "FRESH",
+      "suppressedActionablesCount": 0,
+      "suppressedActionablesLevel": null,
+      "suppressedHealthIssuesCount": 0,
+      "suppressedHealthIssuesLevel": "DISABLED"
+    },
+    "hostsCount": 2,
+    "hostsDisplayStatus": "GOOD_HEALTH",
+    "id": 1546336862,
+    "isCDHCluster": true,
+    "isExperienceCluster": false,
+    "isVersionDifferent": false,
+    "maintenanceModeLink": {
+      "class": "AjaxLink",
+      "iconClass": null,
+      "url": "/cmf/clusters/1546336862/maintenanceModeDependency"
+    },
+    "menuItem": {
+      "attributesMap": {
+        "role": "menuitem"
+      },
+      "iconClass": "fa fa-ellipsis-v fa-lg",
+      "items": [
+        {
+          "attributesMap": {
+            "data-event-category": "Cluster Actions Menu",
+            "role": "menuitem",
+            "data-event": "View Client Configuration URLs"
+          },
+          "class": "AjaxLink",
+          "href": "/cmf/clusters/1546336862/client-config-urls",
+          "text": "View Client Configuration URLs",
+          "type": "link"
+        }
+      ],
+      "type": "dropdown"
+    },
+    "mgmtService": false,
+    "name": "cldr2-aw-dl",
+    "serviceModels": [
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 0,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 0,
+          "suppressedActionablesLevel": null,
+          "suppressedHealthIssuesCount": 0,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "NONE",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546336864/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "CORE_SETTINGS-1",
+          "id": 1546336864,
+          "name": "CORE_SETTINGS-1",
+          "serviceType": "CORE_SETTINGS"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 1,
+          "actionablesLevel": "WARN",
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "1 Warning Configuration Issue(s)",
+          "healthIssuesCount": 6,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 0,
+          "suppressedActionablesLevel": null,
+          "suppressedHealthIssuesCount": 4,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546336936/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "Hive Metastore",
+          "id": 1546336936,
+          "name": "hive",
+          "serviceType": "HIVE"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 6,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 0,
+          "suppressedActionablesLevel": null,
+          "suppressedHealthIssuesCount": 5,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546336891/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "atlas",
+          "id": 1546336891,
+          "name": "atlas",
+          "serviceType": "ATLAS"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 11,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 1,
+          "suppressedActionablesLevel": "WARN",
+          "suppressedHealthIssuesCount": 10,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546336900/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "hbase",
+          "id": 1546336900,
+          "name": "hbase",
+          "serviceType": "HBASE"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 11,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 2,
+          "suppressedActionablesLevel": "WARN",
+          "suppressedHealthIssuesCount": 11,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546336912/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "hdfs",
+          "id": 1546336912,
+          "name": "hdfs",
+          "serviceType": "HDFS"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 5,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 3,
+          "suppressedActionablesLevel": "WARN",
+          "suppressedHealthIssuesCount": 4,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546336946/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "kafka",
+          "id": 1546336946,
+          "name": "kafka",
+          "serviceType": "KAFKA"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 8,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 0,
+          "suppressedActionablesLevel": null,
+          "suppressedHealthIssuesCount": 6,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546336962/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "knox",
+          "id": 1546336962,
+          "name": "knox",
+          "serviceType": "KNOX"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 1,
+          "actionablesLevel": "WARN",
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "1 Warning Configuration Issue(s)",
+          "healthIssuesCount": 15,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 0,
+          "suppressedActionablesLevel": null,
+          "suppressedHealthIssuesCount": 12,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546336995/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "ranger",
+          "id": 1546336995,
+          "name": "ranger",
+          "serviceType": "RANGER"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 5,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 0,
+          "suppressedActionablesLevel": null,
+          "suppressedHealthIssuesCount": 4,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546337010/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "ranger-RANGER_RAZ",
+          "id": 1546337010,
+          "name": "ranger-RANGER_RAZ",
+          "serviceType": "RANGER_RAZ"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 5,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 0,
+          "suppressedActionablesLevel": null,
+          "suppressedHealthIssuesCount": 4,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546337015/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "solr",
+          "id": 1546337015,
+          "name": "solr",
+          "serviceType": "SOLR"
+        }
+      },
+      {
+        "badgesModel": {
+          "actionablesCount": 0,
+          "actionablesLevel": null,
+          "canViewStaleness": false,
+          "clientConfigStalenessStatus": "FRESH",
+          "configIssuesTitle": "",
+          "healthIssuesCount": 8,
+          "healthIssuesLevel": "DISABLED",
+          "healthIssuesTitle": "",
+          "stalenessStatus": "FRESH",
+          "suppressedActionablesCount": 1,
+          "suppressedActionablesLevel": "WARN",
+          "suppressedHealthIssuesCount": 7,
+          "suppressedHealthIssuesLevel": "DISABLED"
+        },
+        "displayStatus": "GOOD_HEALTH",
+        "maintenanceModeLink": {
+          "class": "AjaxLink",
+          "iconClass": null,
+          "url": "/cmf/services/1546337024/maintenanceModeDependency"
+        },
+        "menuItem": {
+          "attributesMap": {
+            "role": "menuitem"
+          },
+          "iconClass": "fa fa-ellipsis-v fa-lg",
+          "items": [],
+          "type": "dropdown"
+        },
+        "serviceInfo": {
+          "displayName": "zookeeper",
+          "id": 1546337024,
+          "name": "zookeeper",
+          "serviceType": "ZOOKEEPER"
+        }
+      }
+    ],
+    "statusUrl": "/cmf/clusters/1546336862/status",
+    "usingParcels": true,
+    "version": "CDH 7.2.18"
+  }
+}
