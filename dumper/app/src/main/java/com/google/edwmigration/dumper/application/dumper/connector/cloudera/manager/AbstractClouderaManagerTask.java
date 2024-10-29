@@ -23,13 +23,9 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-public abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
+abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
   public AbstractClouderaManagerTask(String targetPath) {
     super(targetPath);
-  }
-
-  public AbstractClouderaManagerTask() {
-    super("no-file.txt", TargetInitialization.DO_NOT_CREATE);
   }
 
   @CheckForNull

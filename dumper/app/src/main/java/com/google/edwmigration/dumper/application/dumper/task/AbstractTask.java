@@ -24,6 +24,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import com.google.errorprone.annotations.ForOverride;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,6 +104,7 @@ public abstract class AbstractTask<T> implements Task<T> {
    * @throws Exception If the task fails.
    */
   @CheckForNull
+  @ForOverride
   protected abstract T doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception;
 

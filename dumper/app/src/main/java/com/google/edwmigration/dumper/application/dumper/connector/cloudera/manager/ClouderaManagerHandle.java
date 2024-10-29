@@ -72,7 +72,9 @@ public class ClouderaManagerHandle implements Handle {
       try {
         httpClient.close();
       } catch (IOException ignore) {
-
+        // The intention is to do graceful shutdown and try to release the resource.
+        // In case of errors we do not need to interrupt the execution flow
+        // because the e2e use case might be successful
       }
     }
   }
