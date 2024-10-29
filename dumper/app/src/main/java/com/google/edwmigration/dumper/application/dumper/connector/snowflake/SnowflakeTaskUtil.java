@@ -24,10 +24,8 @@ final class SnowflakeTaskUtil {
 
   static AbstractJdbcTask<Summary> fromVariant(
       String format, TaskVariant variant, Class<? extends Enum<?>> header) {
-    return new JdbcSelectTask(
-            variant.zipEntryName(),
-            String.format(format, variant.schemaName(), variant.whereClause()))
-        .withHeaderClass(header);
+    String sql = String.format(format, variant.schemaName(), variant.whereClause());
+    return new JdbcSelectTask(variant.zipEntryName(), sql).withHeaderClass(header);
   }
 
   private SnowflakeTaskUtil() {}
