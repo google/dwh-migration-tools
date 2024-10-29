@@ -20,7 +20,7 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 
-final class SnowflakeTasks {
+final class SnowflakeTaskUtil {
 
   static AbstractJdbcTask<Summary> fromVariant(
       String format, TaskVariant variant, Class<? extends Enum<?>> header) {
@@ -30,5 +30,5 @@ final class SnowflakeTasks {
         .withHeaderClass(header);
   }
 
-  private SnowflakeTasks() {}
+  private SnowflakeTaskUtil() {}
 }

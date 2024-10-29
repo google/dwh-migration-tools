@@ -26,7 +26,7 @@ import java.sql.SQLException;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-final class HeaderTransformers {
+final class HeaderTransformerUtil {
 
   static ResultSetTransformer<String[]> toCamelCaseFrom(CaseFormat format) {
     return resultSet -> transformToCamelCase(resultSet, format);
@@ -43,5 +43,5 @@ final class HeaderTransformers {
     return columns;
   }
 
-  private HeaderTransformers() {}
+  private HeaderTransformerUtil() {}
 }

@@ -18,7 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTasks.fromVariant;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTaskUtil.fromVariant;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;

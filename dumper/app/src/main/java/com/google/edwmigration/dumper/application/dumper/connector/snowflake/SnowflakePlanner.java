@@ -88,7 +88,7 @@ final class SnowflakePlanner {
     }
 
     ResultSetTransformer<String[]> transformer() {
-      return HeaderTransformers.toCamelCaseFrom(caseFormat);
+      return HeaderTransformerUtil.toCamelCaseFrom(caseFormat);
     }
   }
 }
