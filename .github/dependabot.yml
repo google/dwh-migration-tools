@@ -10,4 +10,4 @@ updates:
     ignore:
       - dependency-name: " ch.qos.logback:logback-*"
         # start from 1.4.x JDK 11 is required, but dumper's minimal is JDK 8
-        versions: ["1.4.x", "1.5.x"]
+        versions: [">=1.4.x"]
