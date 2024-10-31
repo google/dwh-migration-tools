@@ -135,6 +135,22 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     out.addAll(tasks);
   }
 
+  private void addSqlTasksWithInfoSchemaFallback(
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull String schemaZip,
+      @Nonnull String alteredSchemaView,
+      @Nonnull String usageZip,
+      @Nonnull String usageView,
+      @Nonnull String usageFilter,
+      boolean isAssessment) {
+    TaskVariant schemaVariant = TaskVariant.createWithNoFilter(schemaZip, alteredSchemaView);
+    TaskVariant usageVariant = TaskVariant.createWithFilter(usageZip, usageView, usageFilter);
+    addSqlTasksWithInfoSchemaFallback(
+        out, header, format, schemaVariant, usageVariant, isAssessment);
+  }
+
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
