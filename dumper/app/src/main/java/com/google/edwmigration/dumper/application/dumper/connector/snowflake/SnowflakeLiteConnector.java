@@ -60,8 +60,12 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task) {
-    AbstractJdbcTask<Summary> schemaTask = SnowflakeTaskUtil.fromVariant(format, is_task, header);
-    AbstractJdbcTask<Summary> usageTask = SnowflakeTaskUtil.fromVariant(format, au_task, header);
+    AbstractJdbcTask<Summary> schemaTask =
+        SnowflakeTaskUtil.withNoFilter(
+            format, is_task.schemaName(), is_task.zipEntryName(), header);
+    AbstractJdbcTask<Summary> usageTask =
+        SnowflakeTaskUtil.withFilter(
+            format, au_task.schemaName(), au_task.zipEntryName(), au_task.whereClause(), header);
     ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, schemaTask, usageTask);
     out.addAll(tasks);
   }
