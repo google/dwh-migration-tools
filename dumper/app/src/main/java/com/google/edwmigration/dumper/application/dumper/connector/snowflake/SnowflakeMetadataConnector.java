@@ -27,9 +27,11 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
@@ -123,7 +125,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (adjustedInput == USAGE_THEN_SCHEMA_SOURCE && isAssessment) {
       adjustedInput = USAGE_ONLY_SOURCE;
     }
-    ImmutableList<Task<?>> tasks = getSqlTasks(adjustedInput, header, format, is_task, au_task);
+    AbstractJdbcTask<Summary> schemaTask = SnowflakeTaskUtil.fromVariant(format, is_task, header);
+    AbstractJdbcTask<Summary> usageTask = SnowflakeTaskUtil.fromVariant(format, au_task, header);
+    ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, schemaTask, usageTask);
     out.addAll(tasks);
   }
 

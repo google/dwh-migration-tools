@@ -16,8 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTaskUtil.fromVariant;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -113,19 +111,15 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       @Nonnull SnowflakeInput inputSource,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
-      @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task) {
+      @Nonnull AbstractJdbcTask<Summary> schemaTask,
+      @Nonnull AbstractJdbcTask<Summary> usageTask) {
     switch (inputSource) {
       case USAGE_THEN_SCHEMA_SOURCE:
-        {
-          AbstractJdbcTask<Summary> schemaTask = fromVariant(format, is_task, header);
-          AbstractJdbcTask<Summary> usageTask = fromVariant(format, au_task, header);
-          return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
-        }
+        return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
       case SCHEMA_ONLY_SOURCE:
-        return ImmutableList.of(fromVariant(format, is_task, header));
+        return ImmutableList.of(schemaTask);
       case USAGE_ONLY_SOURCE:
-        return ImmutableList.of(fromVariant(format, au_task, header));
+        return ImmutableList.of(usageTask);
     }
     throw new AssertionError();
   }

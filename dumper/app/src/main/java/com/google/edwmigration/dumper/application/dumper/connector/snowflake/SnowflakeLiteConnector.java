@@ -23,9 +23,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
@@ -58,7 +60,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       @Nonnull String format,
       @Nonnull TaskVariant is_task,
       @Nonnull TaskVariant au_task) {
-    ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, is_task, au_task);
+    AbstractJdbcTask<Summary> schemaTask = SnowflakeTaskUtil.fromVariant(format, is_task, header);
+    AbstractJdbcTask<Summary> usageTask = SnowflakeTaskUtil.fromVariant(format, au_task, header);
+    ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, schemaTask, usageTask);
     out.addAll(tasks);
   }
 
