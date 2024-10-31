@@ -28,6 +28,12 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+/**
+ * Generates task lists for Snowflake connectors.
+ *
+ * <p>The generated lists consist of tasks that serve a single purpose (e.g. Assessment metadata
+ * tasks).
+ */
 @ParametersAreNonnullByDefault
 final class SnowflakePlanner {
 
