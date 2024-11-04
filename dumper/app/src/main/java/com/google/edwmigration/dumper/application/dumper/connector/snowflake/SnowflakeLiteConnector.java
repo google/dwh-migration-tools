@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +41,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
 
   private static final String NAME = "snowflake-lite";
 
-  private final SnowflakeInput inputSource = USAGE_THEN_SCHEMA_SOURCE;
+  private final SnowflakeInput inputSource = USAGE_ONLY_SOURCE;
   private final SnowflakePlanner planner = new SnowflakePlanner();
 
   public SnowflakeLiteConnector() {
