@@ -16,19 +16,21 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.Objects;
 import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 @ThreadSafe
 public class ClouderaManagerHandle implements Handle {
+
   private final URI apiURI;
   private final CloseableHttpClient httpClient;
 
@@ -79,45 +81,16 @@ public class ClouderaManagerHandle implements Handle {
     }
   }
 
-  public static class ClouderaClusterDTO {
-
-    private final String id;
-    private final String name;
-
-    public ClouderaClusterDTO(String id, String name) {
-      this.id = id;
-      this.name = name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof ClouderaClusterDTO)) {
-        return false;
-      }
-      ClouderaClusterDTO that = (ClouderaClusterDTO) o;
-      return Objects.equals(id, that.id) && Objects.equals(name, that.name);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(id, name);
-    }
-
-    @Override
-    public String toString() {
-      return "ClouderaClusterDTO{" + "id='" + id + '\'' + ", name='" + name + '\'' + '}';
+  @AutoValue
+  public abstract static class ClouderaClusterDTO {
+    public static ClouderaClusterDTO create(String id, String name) {
+      return new AutoValue_ClouderaManagerHandle_ClouderaClusterDTO(id, name);
     }
 
     @CheckForNull
-    public String getId() {
-      return id;
-    }
+    @Nullable
+    public abstract String getId();
 
-    public String getName() {
-      return name;
-    }
+    public abstract String getName();
   }
 }

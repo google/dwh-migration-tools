@@ -178,7 +178,7 @@ public class ClouderaClustersTaskTest {
       assertNotNull(clusters);
       assertEquals(
           ImmutableList.of(
-              new ClouderaClusterDTO("111", "aaa"), new ClouderaClusterDTO(null, "bbb")),
+              ClouderaClusterDTO.create("111", "aaa"), ClouderaClusterDTO.create(null, "bbb")),
           clusters);
 
       verify(clustersResponse).close();
@@ -256,7 +256,7 @@ public class ClouderaClustersTaskTest {
 
       ImmutableList<ClouderaClusterDTO> clusters = handle.getClusters();
       assertNotNull(clusters);
-      assertEquals(ImmutableList.of(new ClouderaClusterDTO("123", "my-cluster")), clusters);
+      assertEquals(ImmutableList.of(ClouderaClusterDTO.create("123", "my-cluster")), clusters);
 
       verify(clustersResponse).close();
       verify(writer).close();

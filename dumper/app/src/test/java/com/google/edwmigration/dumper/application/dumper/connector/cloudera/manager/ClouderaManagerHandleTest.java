@@ -63,8 +63,8 @@ public class ClouderaManagerHandleTest {
     ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
 
     List<ClouderaClusterDTO> dtos = new ArrayList<>();
-    dtos.add(new ClouderaClusterDTO("1", "first"));
-    dtos.add(new ClouderaClusterDTO("2", "second"));
+    dtos.add(ClouderaClusterDTO.create("1", "first"));
+    dtos.add(ClouderaClusterDTO.create("2", "second"));
 
     handle.initClusters(dtos);
 
@@ -76,12 +76,12 @@ public class ClouderaManagerHandleTest {
     ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
 
     List<ClouderaClusterDTO> first = new ArrayList<>();
-    first.add(new ClouderaClusterDTO("1", "first"));
-    first.add(new ClouderaClusterDTO("2", "second"));
+    first.add(ClouderaClusterDTO.create("1", "first"));
+    first.add(ClouderaClusterDTO.create("2", "second"));
 
     List<ClouderaClusterDTO> second = new ArrayList<>();
-    first.add(new ClouderaClusterDTO("I", "prime"));
-    first.add(new ClouderaClusterDTO("II", "backup"));
+    first.add(ClouderaClusterDTO.create("I", "prime"));
+    first.add(ClouderaClusterDTO.create("II", "backup"));
 
     handle.initClusters(first);
 

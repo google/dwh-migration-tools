@@ -89,7 +89,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
     List<ClouderaClusterDTO> clusters = new ArrayList<>();
     for (ApiClusterDto item : clusterList.getItems()) {
       String clusterId = requestClusterIdByName(httpClient, handle.getBaseURI(), item.getName());
-      clusters.add(new ClouderaClusterDTO(clusterId, item.getName()));
+      clusters.add(ClouderaClusterDTO.create(clusterId, item.getName()));
     }
     LOG.info(
         "Dump metadata for clusters: {}",

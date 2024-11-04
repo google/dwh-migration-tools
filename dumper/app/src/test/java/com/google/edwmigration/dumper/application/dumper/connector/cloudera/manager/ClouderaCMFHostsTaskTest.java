@@ -85,8 +85,8 @@ public class ClouderaCMFHostsTaskTest {
   public void clusterIdExists_success() throws Exception {
     handle.initClusters(
         ImmutableList.of(
-            new ClouderaClusterDTO("id1", "first-cluster"),
-            new ClouderaClusterDTO("id34", "next-cluster")));
+            ClouderaClusterDTO.create("id1", "first-cluster"),
+            ClouderaClusterDTO.create("id34", "next-cluster")));
 
     try (MockedStatic<EntityUtils> mockedUtils = mockStatic(EntityUtils.class)) {
       CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);
@@ -155,7 +155,7 @@ public class ClouderaCMFHostsTaskTest {
 
   @Test
   public void noClusterId_skip_writes() throws Exception {
-    handle.initClusters(ImmutableList.of(new ClouderaClusterDTO(null, "single cluster")));
+    handle.initClusters(ImmutableList.of(ClouderaClusterDTO.create(null, "single cluster")));
 
     task.doRun(context, sink, handle);
 

@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * code is unclear, the own model for public schema used instead of it.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ApiEntityTag {
+public final class ApiEntityTag {
   private String name;
   private String value;
 

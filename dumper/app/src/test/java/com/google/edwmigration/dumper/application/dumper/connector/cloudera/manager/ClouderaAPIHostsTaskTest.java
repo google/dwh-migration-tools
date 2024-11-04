@@ -85,8 +85,8 @@ public class ClouderaAPIHostsTaskTest {
   public void clustersExists_do_writes_success() throws Exception {
     handle.initClusters(
         ImmutableList.of(
-            new ClouderaClusterDTO("id1", "first-cluster"),
-            new ClouderaClusterDTO("id125", "second-cluster")));
+            ClouderaClusterDTO.create("id1", "first-cluster"),
+            ClouderaClusterDTO.create("id125", "second-cluster")));
 
     try (MockedStatic<EntityUtils> mockedUtils = mockStatic(EntityUtils.class)) {
       CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);

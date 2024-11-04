@@ -29,8 +29,7 @@ import java.util.List;
  * code is unclear, the own model for public schema used instead of it.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ApiClusterDto {
-
+public final class ApiClusterDto {
   @JsonProperty(required = true)
   private String name;
 
@@ -43,7 +42,6 @@ public class ApiClusterDto {
   private String entityStatus;
   private String uuid;
   private String clusterType;
-
   private List<ApiEntityTag> tags;
 
   public String getName() {
