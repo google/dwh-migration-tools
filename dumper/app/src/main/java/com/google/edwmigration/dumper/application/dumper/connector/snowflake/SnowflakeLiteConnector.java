@@ -34,11 +34,14 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import org.apache.commons.csv.CSVFormat;
 
 @AutoService(Connector.class)
 @ParametersAreNonnullByDefault
@@ -98,6 +101,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
             TablesFormat.IS_ZIP_ENTRY_NAME,
             TablesFormat.AU_ZIP_ENTRY_NAME));
 
+    out.add(createWarehouseEvents());
+
     if (arguments.isAssessment()) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
         String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
@@ -107,6 +112,32 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
         Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
         out.add(task);
       }
+    }
+  }
+
+  private static Task<?> createWarehouseEvents() {
+    String query =
+        "SELECT event_name, cluster_number, warehouse_id, warehouse_name, count(1)"
+            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
+            + " GROUP BY event_name, cluster_number, warehouse_id, warehouse_name";
+    ImmutableList<String> header =
+        ImmutableList.of("Name", "Cluster", "WarehouseId", "WarehouseName", "Count");
+    return new LiteLogsTask("warehouse_events.csv", query, header);
+  }
+
+  private static final class LiteLogsTask extends JdbcSelectTask {
+
+    private final ImmutableList<String> header;
+
+    LiteLogsTask(String csvName, String sql, ImmutableList<String> header) {
+      super(csvName, sql);
+      this.header = header;
+    }
+
+    @Override
+    @Nonnull
+    protected CSVFormat newCsvFormat(ResultSet rs) throws SQLException {
+      return FORMAT.builder().setHeader(header.toArray(new String[0])).build();
     }
   }
 }
