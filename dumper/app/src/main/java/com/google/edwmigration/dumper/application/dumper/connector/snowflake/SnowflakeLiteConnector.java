@@ -19,12 +19,10 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
-import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
+import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -33,9 +31,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -47,6 +42,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
   private static final String NAME = "snowflake-lite";
 
   private final SnowflakeInput inputSource = USAGE_THEN_SCHEMA_SOURCE;
+  private final SnowflakePlanner planner = new SnowflakePlanner();
 
   public SnowflakeLiteConnector() {
     super(NAME);
@@ -58,119 +54,21 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     return ArchiveNameUtil.getFileName(NAME);
   }
 
-  public enum SnowflakeLiteConnectorProperties implements ConnectorProperty {
-    DATABASES_OVERRIDE_QUERY,
-    DATABASES_OVERRIDE_WHERE,
-    SCHEMATA_OVERRIDE_QUERY,
-    SCHEMATA_OVERRIDE_WHERE,
-    TABLES_OVERRIDE_QUERY,
-    TABLES_OVERRIDE_WHERE,
-    TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
-    TABLE_STORAGE_METRICS_OVERRIDE_WHERE;
-
-    private final String name;
-    private final String description;
-
-    SnowflakeLiteConnectorProperties() {
-      boolean isWhere = name().endsWith("WHERE");
-      String name = name().split("_")[0].toLowerCase();
-      this.name = "snowflake.metadata." + name + (isWhere ? ".where" : ".query");
-      this.description =
-          isWhere
-              ? "Custom where condition to append to query for metadata " + name + " dump."
-              : "Custom query for metadata " + name + " dump.";
-    }
-
-    @Nonnull
-    public String getName() {
-      return name;
-    }
-
-    @Nonnull
-    public String getDescription() {
-      return description;
-    }
-  }
-
-  private static class TaskVariant {
-
-    public final String zipEntryName;
-    public final String schemaName;
-    public final String whereClause;
-
-    public TaskVariant(String zipEntryName, String schemaName, String whereClause) {
-      this.zipEntryName = zipEntryName;
-      this.schemaName = schemaName;
-      this.whereClause = whereClause;
-    }
-
-    public TaskVariant(String zipEntryName, String schemaName) {
-      this(zipEntryName, schemaName, "");
-    }
-  }
-
   private void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
-      @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task,
-      @Nonnull ConnectorArguments arguments) {
-    out.addAll(getSqlTasks(header, format, is_task, au_task, arguments));
-  }
-
-  private ImmutableList<Task<?>> getSqlTasks(
-      @Nonnull Class<? extends Enum<?>> header,
-      @Nonnull String format,
-      @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task,
-      @Nonnull ConnectorArguments arguments) {
-    switch (inputSource) {
-      case USAGE_THEN_SCHEMA_SOURCE:
-        {
-          AbstractJdbcTask<Summary> schemaTask = taskFromVariant(format, is_task, header);
-          AbstractJdbcTask<Summary> usageTask = taskFromVariant(format, au_task, header);
-          if (arguments.isAssessment()) {
-            return ImmutableList.of(usageTask);
-          }
-          return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
-        }
-      case SCHEMA_ONLY_SOURCE:
-        return ImmutableList.of(taskFromVariant(format, is_task, header));
-      case USAGE_ONLY_SOURCE:
-        return ImmutableList.of(taskFromVariant(format, au_task, header));
-    }
-    throw new AssertionError();
-  }
-
-  private static AbstractJdbcTask<Summary> taskFromVariant(
-      String formatString, TaskVariant variant, Class<? extends Enum<?>> header) {
-    return new JdbcSelectTask(
-            variant.zipEntryName,
-            String.format(formatString, variant.schemaName, variant.whereClause))
-        .withHeaderClass(header);
-  }
-
-  private void addSingleSqlTask(
-      @Nonnull List<? super Task<?>> out,
-      @Nonnull String format,
-      @Nonnull TaskVariant task,
-      @Nonnull ResultSetTransformer<String[]> transformer) {
-    out.add(
-        new JdbcSelectTask(
-                task.zipEntryName, String.format(format, task.schemaName, task.whereClause))
-            .withHeaderTransformer(transformer));
-  }
-
-  private String[] transformHeaderToCamelCase(ResultSet rs, CaseFormat baseFormat)
-      throws SQLException {
-    ResultSetMetaData metaData = rs.getMetaData();
-    int columnCount = metaData.getColumnCount();
-    String[] columns = new String[columnCount];
-    for (int i = 0; i < columnCount; i++) {
-      columns[i] = baseFormat.to(CaseFormat.UPPER_CAMEL, metaData.getColumnLabel(i + 1));
-    }
-    return columns;
+      @Nonnull String schemaZip,
+      @Nonnull String alteredSchemaView,
+      @Nonnull String usageZip,
+      @Nonnull String usageView,
+      @Nonnull String usageFilter) {
+    AbstractJdbcTask<Summary> schemaTask =
+        SnowflakeTaskUtil.withNoFilter(format, alteredSchemaView, schemaZip, header);
+    AbstractJdbcTask<Summary> usageTask =
+        SnowflakeTaskUtil.withFilter(format, usageView, usageZip, usageFilter, header);
+    ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, schemaTask, usageTask);
+    out.addAll(tasks);
   }
 
   @Override
@@ -184,81 +82,44 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
     final String AU_WHERE = " WHERE DELETED IS NULL";
 
-    // Docref: https://docs.snowflake.net/manuals/sql-reference/info-schema.html#list-of-views
-    // ACCOUNT_USAGE is much faster than INFORMATION_SCHEMA and does not have the size limitations,
-    // but requires extra privileges to be granted.
-    // https://docs.snowflake.net/manuals/sql-reference/account-usage.html
-    // https://docs.snowflake.net/manuals/user-guide/data-share-consumers.html
-    // You must: GRANT IMPORTED PRIVILEGES ON DATABASE snowflake TO ROLE <SOMETHING>;
     addSqlTasksWithInfoSchemaFallback(
         out,
         DatabasesFormat.Header.class,
-        getOverrideableQuery(
-            "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-            SnowflakeLiteConnectorProperties.DATABASES_OVERRIDE_QUERY,
-            SnowflakeLiteConnectorProperties.DATABASES_OVERRIDE_WHERE),
-        new TaskVariant(DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        arguments);
+        "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
+        DatabasesFormat.IS_ZIP_ENTRY_NAME,
+        IS,
+        DatabasesFormat.AU_ZIP_ENTRY_NAME,
+        AU,
+        AU_WHERE);
 
     addSqlTasksWithInfoSchemaFallback(
         out,
         SchemataFormat.Header.class,
-        getOverrideableQuery(
-            "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-            SnowflakeLiteConnectorProperties.SCHEMATA_OVERRIDE_QUERY,
-            SnowflakeLiteConnectorProperties.SCHEMATA_OVERRIDE_WHERE),
-        new TaskVariant(SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        arguments);
+        "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
+        SchemataFormat.IS_ZIP_ENTRY_NAME,
+        IS,
+        SchemataFormat.AU_ZIP_ENTRY_NAME,
+        AU,
+        AU_WHERE);
 
     addSqlTasksWithInfoSchemaFallback(
         out,
         TablesFormat.Header.class,
-        getOverrideableQuery(
-            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
-                + " clustering_key FROM %1$s.TABLES%2$s",
-            SnowflakeLiteConnectorProperties.TABLES_OVERRIDE_QUERY,
-            SnowflakeLiteConnectorProperties.TABLES_OVERRIDE_WHERE),
-        new TaskVariant(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
-        new TaskVariant(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE),
-        arguments); // Painfully slow.
+        "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+            + " clustering_key FROM %1$s.TABLES%2$s",
+        TablesFormat.IS_ZIP_ENTRY_NAME,
+        IS,
+        TablesFormat.AU_ZIP_ENTRY_NAME,
+        AU,
+        AU_WHERE);
 
     if (arguments.isAssessment()) {
-      addSingleSqlTask(
-          out,
-          getOverrideableQuery(
-              "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s",
-              SnowflakeLiteConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_QUERY,
-              SnowflakeLiteConnectorProperties.TABLE_STORAGE_METRICS_OVERRIDE_WHERE),
-          new TaskVariant(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME, AU),
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.UPPER_UNDERSCORE));
-
-      ResultSetTransformer<String[]> lowerUnderscoreTransformer =
-          rs -> transformHeaderToCamelCase(rs, CaseFormat.LOWER_UNDERSCORE);
-      addSingleSqlTask(
-          out,
-          "SHOW WAREHOUSES",
-          new TaskVariant(WarehousesFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
-      addSingleSqlTask(
-          out,
-          "SHOW EXTERNAL TABLES",
-          new TaskVariant(ExternalTablesFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
-      addSingleSqlTask(
-          out,
-          "SHOW FUNCTIONS",
-          new TaskVariant(FunctionInfoFormat.AU_ZIP_ENTRY_NAME, AU),
-          lowerUnderscoreTransformer);
+      for (AssessmentQuery item : planner.generateAssessmentQueries()) {
+        String query = String.format(item.formatString, AU, /* an empty WHERE clause */ "");
+        String zipName = item.zipEntryName;
+        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
+        out.add(task);
+      }
     }
-  }
-
-  private String getOverrideableQuery(
-      @Nonnull String defaultSql,
-      @Nonnull ConnectorProperty queryProperty,
-      @Nonnull ConnectorProperty whereProperty) {
-
-    return defaultSql;
   }
 }

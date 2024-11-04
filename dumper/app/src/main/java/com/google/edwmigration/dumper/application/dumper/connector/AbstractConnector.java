@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import static java.util.Arrays.stream;
+
 import com.google.common.base.Preconditions;
 import javax.annotation.Nonnull;
 
@@ -28,8 +30,40 @@ public abstract class AbstractConnector implements Connector {
     this.name = Preconditions.checkNotNull(name, "Name was null.");
   }
 
+  @Nonnull
   @Override
   public String getName() {
     return name;
+  }
+
+  /**
+   * Get the list of this Connector's properties, wrapped inside an enum class.
+   *
+   * <p>Overriding this method changes the behavior of {@link
+   * AbstractConnector#getPropertyConstants}. If you override it, don't override this method - it
+   * will have no effect.
+   *
+   * @return An enum where the values represent the properties supported by this connector.
+   */
+  @Nonnull
+  protected Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
+    return DefaultProperties.class;
+  }
+
+  /**
+   * Get the list of this Connector's properties.
+   *
+   * <p>You may override this method to set the ConnectorProperties of this Connector.
+   * Implementations should behave like a getter of a constant field. Overriding this method is an
+   * alternative to overriding {@link AbstractConnector#getConnectorProperties}. When both are
+   * overriden, this will take precedence.
+   *
+   * @return An array of the properties supported by this connector.
+   */
+  @Nonnull
+  @Override
+  public Iterable<ConnectorProperty> getPropertyConstants() {
+    Enum<? extends ConnectorProperty>[] constants = getConnectorProperties().getEnumConstants();
+    return () -> stream(constants).map(property -> (ConnectorProperty) property).iterator();
   }
 }

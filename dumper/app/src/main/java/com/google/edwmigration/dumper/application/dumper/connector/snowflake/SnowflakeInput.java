@@ -16,7 +16,19 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-/** Represents a strategy of getting Snowflake data. */
+/**
+ * Represents a strategy of getting Snowflake data.
+ *
+ * <p>A strategy for getting data from Snowflake. USAGE stands for ACCOUNT_USAGE, SCHEMA is
+ * INFORMATION_SCHEMA.
+ *
+ * <p>Docref: https://docs.snowflake.net/manuals/sql-reference/info-schema.html#list-of-views
+ * ACCOUNT_USAGE is much faster than INFORMATION_SCHEMA and does not have the size limitations, but
+ * requires extra privileges to be granted.
+ * https://docs.snowflake.net/manuals/sql-reference/account-usage.html
+ * https://docs.snowflake.net/manuals/user-guide/data-share-consumers.html You must: GRANT IMPORTED
+ * PRIVILEGES ON DATABASE snowflake TO ROLE <SOMETHING>;
+ */
 enum SnowflakeInput {
   /** Get data from ACCOUNT_USAGE contents, with a fallback to INFORMATION_SCHEMA. */
   USAGE_THEN_SCHEMA_SOURCE,

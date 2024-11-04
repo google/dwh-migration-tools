@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -31,6 +32,9 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,6 +105,23 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
     setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
     return jdbcHandle;
+  }
+
+  final ImmutableList<Task<?>> getSqlTasks(
+      @Nonnull SnowflakeInput inputSource,
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull AbstractJdbcTask<Summary> schemaTask,
+      @Nonnull AbstractJdbcTask<Summary> usageTask) {
+    switch (inputSource) {
+      case USAGE_THEN_SCHEMA_SOURCE:
+        return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
+      case SCHEMA_ONLY_SOURCE:
+        return ImmutableList.of(schemaTask);
+      case USAGE_ONLY_SOURCE:
+        return ImmutableList.of(usageTask);
+    }
+    throw new AssertionError();
   }
 
   private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
