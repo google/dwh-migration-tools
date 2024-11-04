@@ -35,7 +35,6 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -136,7 +135,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
     @Override
     @Nonnull
-    protected CSVFormat newCsvFormat(ResultSet rs) throws SQLException {
+    protected CSVFormat newCsvFormat(ResultSet rs) {
       return FORMAT.builder().setHeader(header.toArray(new String[0])).build();
     }
   }
