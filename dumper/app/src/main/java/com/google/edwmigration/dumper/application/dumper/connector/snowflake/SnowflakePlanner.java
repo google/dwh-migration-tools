@@ -29,7 +29,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Generates task lists for Snowflake connectors.
+ * The generator of task lists for Snowflake connectors.
  *
  * <p>The generated lists consist of tasks that serve a single purpose (e.g. Assessment metadata
  * tasks).
