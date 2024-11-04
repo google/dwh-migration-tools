@@ -77,8 +77,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
-    boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
-    final String IS = INJECT_IS_FAULT ? "__NONEXISTENT__" : "INFORMATION_SCHEMA";
+    final String IS = "INFORMATION_SCHEMA";
     final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
     final String AU_WHERE = " WHERE DELETED IS NULL";
 
