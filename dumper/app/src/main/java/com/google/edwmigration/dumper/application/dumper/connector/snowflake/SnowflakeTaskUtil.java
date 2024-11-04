@@ -24,26 +24,22 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 final class SnowflakeTaskUtil {
 
-  private static AbstractJdbcTask<Summary> fromVariant(
-      String format, TaskVariant variant, Class<? extends Enum<?>> header) {
-    String sql = String.format(format, variant.schemaName(), variant.whereClause());
-    return new JdbcSelectTask(variant.zipEntryName(), sql).withHeaderClass(header);
-  }
-
   static AbstractJdbcTask<Summary> withFilter(
       String format,
       String schemaName,
       String zipEntryName,
       String whereClause,
       Class<? extends Enum<?>> header) {
-    TaskVariant variant = TaskVariant.createWithFilter(zipEntryName, schemaName, whereClause);
-    return fromVariant(format, variant, header);
+    String sql = String.format(format, schemaName, whereClause);
+    return new JdbcSelectTask(zipEntryName, sql).withHeaderClass(header);
   }
 
   static AbstractJdbcTask<Summary> withNoFilter(
       String format, String schemaName, String zipEntryName, Class<? extends Enum<?>> header) {
-    TaskVariant variant = TaskVariant.createWithNoFilter(zipEntryName, schemaName);
-    return fromVariant(format, variant, header);
+    // required, because the format string parameter takes two args
+    String whereClause = "";
+    String sql = String.format(format, schemaName, whereClause);
+    return new JdbcSelectTask(zipEntryName, sql).withHeaderClass(header);
   }
 
   private SnowflakeTaskUtil() {}

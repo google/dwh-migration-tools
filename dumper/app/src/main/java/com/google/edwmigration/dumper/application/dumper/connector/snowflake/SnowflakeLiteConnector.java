@@ -58,14 +58,15 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
-      @Nonnull TaskVariant is_task,
-      @Nonnull TaskVariant au_task) {
+      @Nonnull String schemaZip,
+      @Nonnull String alteredSchemaView,
+      @Nonnull String usageZip,
+      @Nonnull String usageView,
+      @Nonnull String usageFilter) {
     AbstractJdbcTask<Summary> schemaTask =
-        SnowflakeTaskUtil.withNoFilter(
-            format, is_task.schemaName(), is_task.zipEntryName(), header);
+        SnowflakeTaskUtil.withNoFilter(format, alteredSchemaView, schemaZip, header);
     AbstractJdbcTask<Summary> usageTask =
-        SnowflakeTaskUtil.withFilter(
-            format, au_task.schemaName(), au_task.zipEntryName(), au_task.whereClause(), header);
+        SnowflakeTaskUtil.withFilter(format, usageView, usageZip, usageFilter, header);
     ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, schemaTask, usageTask);
     out.addAll(tasks);
   }
@@ -85,23 +86,32 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
         out,
         DatabasesFormat.Header.class,
         "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-        TaskVariant.createWithNoFilter(DatabasesFormat.IS_ZIP_ENTRY_NAME, IS),
-        TaskVariant.createWithFilter(DatabasesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+        DatabasesFormat.IS_ZIP_ENTRY_NAME,
+        IS,
+        DatabasesFormat.AU_ZIP_ENTRY_NAME,
+        AU,
+        AU_WHERE);
 
     addSqlTasksWithInfoSchemaFallback(
         out,
         SchemataFormat.Header.class,
         "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-        TaskVariant.createWithNoFilter(SchemataFormat.IS_ZIP_ENTRY_NAME, IS),
-        TaskVariant.createWithFilter(SchemataFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+        SchemataFormat.IS_ZIP_ENTRY_NAME,
+        IS,
+        SchemataFormat.AU_ZIP_ENTRY_NAME,
+        AU,
+        AU_WHERE);
 
     addSqlTasksWithInfoSchemaFallback(
         out,
         TablesFormat.Header.class,
         "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
             + " clustering_key FROM %1$s.TABLES%2$s",
-        TaskVariant.createWithNoFilter(TablesFormat.IS_ZIP_ENTRY_NAME, IS),
-        TaskVariant.createWithFilter(TablesFormat.AU_ZIP_ENTRY_NAME, AU, AU_WHERE));
+        TablesFormat.IS_ZIP_ENTRY_NAME,
+        IS,
+        TablesFormat.AU_ZIP_ENTRY_NAME,
+        AU,
+        AU_WHERE);
 
     if (arguments.isAssessment()) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
