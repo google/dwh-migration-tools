@@ -121,14 +121,14 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
             + " GROUP BY event_name, cluster_number, warehouse_id, warehouse_name";
     ImmutableList<String> header =
         ImmutableList.of("Name", "Cluster", "WarehouseId", "WarehouseName", "Count");
-    return new LiteLogsTask("warehouse_events.csv", query, header);
+    return new LiteTimeSeriesTask("warehouse_events.csv", query, header);
   }
 
-  private static final class LiteLogsTask extends JdbcSelectTask {
+  private static final class LiteTimeSeriesTask extends JdbcSelectTask {
 
     private final ImmutableList<String> header;
 
-    LiteLogsTask(String csvName, String sql, ImmutableList<String> header) {
+    LiteTimeSeriesTask(String csvName, String sql, ImmutableList<String> header) {
       super(csvName, sql);
       this.header = header;
     }
