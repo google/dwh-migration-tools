@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
+import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FORMAT_NAME;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
@@ -30,7 +31,9 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -39,8 +42,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoService(Connector.class)
 @ParametersAreNonnullByDefault
-public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
-    implements SnowflakeMetadataDumpFormat {
+public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   private static final String NAME = "snowflake-lite";
 
