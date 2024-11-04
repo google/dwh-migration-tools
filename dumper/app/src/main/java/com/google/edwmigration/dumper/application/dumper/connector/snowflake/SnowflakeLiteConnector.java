@@ -101,8 +101,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
 
     if (arguments.isAssessment()) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        String AU = "SNOWFLAKE.ACCOUNT_USAGE";
-        String query = String.format(item.formatString, AU, /* an empty WHERE clause */ "");
+        String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
+        String query =
+            String.format(item.formatString, usageSchema, /* an empty WHERE clause */ "");
         String zipName = item.zipEntryName;
         Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
         out.add(task);
