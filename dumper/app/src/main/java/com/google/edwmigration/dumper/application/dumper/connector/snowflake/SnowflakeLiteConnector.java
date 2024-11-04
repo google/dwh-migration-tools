@@ -59,12 +59,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     return ArchiveNameUtil.getFileName(NAME);
   }
 
-  private void addSqlTasksWithInfoSchemaFallback(
-      List<? super Task<?>> out,
-      Class<? extends Enum<?>> header,
-      String format,
-      String schemaZip,
-      String usageZip) {
+  private ImmutableList<Task<?>> sqlTasksWithInfoSchemaFallback(
+      Class<? extends Enum<?>> header, String format, String schemaZip, String usageZip) {
     String usageView = "SNOWFLAKE.ACCOUNT_USAGE";
     String usageFilter = " WHERE DELETED IS NULL";
     String schemaView = "INFORMATION_SCHEMA";
@@ -72,8 +68,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
         SnowflakeTaskUtil.withNoFilter(format, schemaView, schemaZip, header);
     AbstractJdbcTask<Summary> usageTask =
         SnowflakeTaskUtil.withFilter(format, usageView, usageZip, usageFilter, header);
-    ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, schemaTask, usageTask);
-    out.addAll(tasks);
+    return getSqlTasks(inputSource, header, format, schemaTask, usageTask);
   }
 
   @Override
@@ -81,27 +76,27 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
-    addSqlTasksWithInfoSchemaFallback(
-        out,
-        DatabasesFormat.Header.class,
-        "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-        DatabasesFormat.IS_ZIP_ENTRY_NAME,
-        DatabasesFormat.AU_ZIP_ENTRY_NAME);
+    out.addAll(
+        sqlTasksWithInfoSchemaFallback(
+            DatabasesFormat.Header.class,
+            "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
+            DatabasesFormat.IS_ZIP_ENTRY_NAME,
+            DatabasesFormat.AU_ZIP_ENTRY_NAME));
 
-    addSqlTasksWithInfoSchemaFallback(
-        out,
-        SchemataFormat.Header.class,
-        "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-        SchemataFormat.IS_ZIP_ENTRY_NAME,
-        SchemataFormat.AU_ZIP_ENTRY_NAME);
+    out.addAll(
+        sqlTasksWithInfoSchemaFallback(
+            SchemataFormat.Header.class,
+            "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
+            SchemataFormat.IS_ZIP_ENTRY_NAME,
+            SchemataFormat.AU_ZIP_ENTRY_NAME));
 
-    addSqlTasksWithInfoSchemaFallback(
-        out,
-        TablesFormat.Header.class,
-        "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
-            + " clustering_key FROM %1$s.TABLES%2$s",
-        TablesFormat.IS_ZIP_ENTRY_NAME,
-        TablesFormat.AU_ZIP_ENTRY_NAME);
+    out.addAll(
+        sqlTasksWithInfoSchemaFallback(
+            TablesFormat.Header.class,
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+                + " clustering_key FROM %1$s.TABLES%2$s",
+            TablesFormat.IS_ZIP_ENTRY_NAME,
+            TablesFormat.AU_ZIP_ENTRY_NAME));
 
     if (arguments.isAssessment()) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
