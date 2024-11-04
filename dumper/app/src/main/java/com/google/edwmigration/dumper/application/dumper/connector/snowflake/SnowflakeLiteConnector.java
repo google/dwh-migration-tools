@@ -34,8 +34,11 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoService(Connector.class)
+@ParametersAreNonnullByDefault
 public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
     implements SnowflakeMetadataDumpFormat {
 
@@ -50,16 +53,16 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
 
   @Override
   @Nonnull
-  public String getDefaultFileName(boolean isAssessment, Clock clock) {
+  public String getDefaultFileName(boolean isAssessment, @Nullable Clock clock) {
     return ArchiveNameUtil.getFileName(NAME);
   }
 
   private void addSqlTasksWithInfoSchemaFallback(
-      @Nonnull List<? super Task<?>> out,
-      @Nonnull Class<? extends Enum<?>> header,
-      @Nonnull String format,
-      @Nonnull String schemaZip,
-      @Nonnull String usageZip) {
+      List<? super Task<?>> out,
+      Class<? extends Enum<?>> header,
+      String format,
+      String schemaZip,
+      String usageZip) {
     String usageView = "SNOWFLAKE.ACCOUNT_USAGE";
     String usageFilter = " WHERE DELETED IS NULL";
     String schemaView = "INFORMATION_SCHEMA";
@@ -72,8 +75,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
   }
 
   @Override
-  public final void addTasksTo(
-      @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+  public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
