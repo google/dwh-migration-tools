@@ -16,7 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
+import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FORMAT_NAME;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
@@ -30,18 +31,22 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoService(Connector.class)
-public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
-    implements SnowflakeMetadataDumpFormat {
+@ParametersAreNonnullByDefault
+public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   private static final String NAME = "snowflake-lite";
 
-  private final SnowflakeInput inputSource = USAGE_THEN_SCHEMA_SOURCE;
+  private final SnowflakeInput inputSource = USAGE_ONLY_SOURCE;
   private final SnowflakePlanner planner = new SnowflakePlanner();
 
   public SnowflakeLiteConnector() {
@@ -50,72 +55,54 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector
 
   @Override
   @Nonnull
-  public String getDefaultFileName(boolean isAssessment, Clock clock) {
+  public String getDefaultFileName(boolean isAssessment, @Nullable Clock clock) {
     return ArchiveNameUtil.getFileName(NAME);
   }
 
-  private void addSqlTasksWithInfoSchemaFallback(
-      @Nonnull List<? super Task<?>> out,
-      @Nonnull Class<? extends Enum<?>> header,
-      @Nonnull String format,
-      @Nonnull String schemaZip,
-      @Nonnull String alteredSchemaView,
-      @Nonnull String usageZip,
-      @Nonnull String usageView,
-      @Nonnull String usageFilter) {
+  private ImmutableList<Task<?>> sqlTasksWithInfoSchemaFallback(
+      Class<? extends Enum<?>> header, String format, String schemaZip, String usageZip) {
+    String usageView = "SNOWFLAKE.ACCOUNT_USAGE";
+    String usageFilter = " WHERE DELETED IS NULL";
+    String schemaView = "INFORMATION_SCHEMA";
     AbstractJdbcTask<Summary> schemaTask =
-        SnowflakeTaskUtil.withNoFilter(format, alteredSchemaView, schemaZip, header);
+        SnowflakeTaskUtil.withNoFilter(format, schemaView, schemaZip, header);
     AbstractJdbcTask<Summary> usageTask =
         SnowflakeTaskUtil.withFilter(format, usageView, usageZip, usageFilter, header);
-    ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, schemaTask, usageTask);
-    out.addAll(tasks);
+    return getSqlTasks(inputSource, header, format, schemaTask, usageTask);
   }
 
   @Override
-  public final void addTasksTo(
-      @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+  public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
-    boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
-    final String IS = INJECT_IS_FAULT ? "__NONEXISTENT__" : "INFORMATION_SCHEMA";
-    final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
-    final String AU_WHERE = " WHERE DELETED IS NULL";
+    out.addAll(
+        sqlTasksWithInfoSchemaFallback(
+            DatabasesFormat.Header.class,
+            "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
+            DatabasesFormat.IS_ZIP_ENTRY_NAME,
+            DatabasesFormat.AU_ZIP_ENTRY_NAME));
 
-    addSqlTasksWithInfoSchemaFallback(
-        out,
-        DatabasesFormat.Header.class,
-        "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-        DatabasesFormat.IS_ZIP_ENTRY_NAME,
-        IS,
-        DatabasesFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE);
+    out.addAll(
+        sqlTasksWithInfoSchemaFallback(
+            SchemataFormat.Header.class,
+            "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
+            SchemataFormat.IS_ZIP_ENTRY_NAME,
+            SchemataFormat.AU_ZIP_ENTRY_NAME));
 
-    addSqlTasksWithInfoSchemaFallback(
-        out,
-        SchemataFormat.Header.class,
-        "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-        SchemataFormat.IS_ZIP_ENTRY_NAME,
-        IS,
-        SchemataFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE);
-
-    addSqlTasksWithInfoSchemaFallback(
-        out,
-        TablesFormat.Header.class,
-        "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
-            + " clustering_key FROM %1$s.TABLES%2$s",
-        TablesFormat.IS_ZIP_ENTRY_NAME,
-        IS,
-        TablesFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE);
+    out.addAll(
+        sqlTasksWithInfoSchemaFallback(
+            TablesFormat.Header.class,
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+                + " clustering_key FROM %1$s.TABLES%2$s",
+            TablesFormat.IS_ZIP_ENTRY_NAME,
+            TablesFormat.AU_ZIP_ENTRY_NAME));
 
     if (arguments.isAssessment()) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        String query = String.format(item.formatString, AU, /* an empty WHERE clause */ "");
+        String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
+        String query =
+            String.format(item.formatString, usageSchema, /* an empty WHERE clause */ "");
         String zipName = item.zipEntryName;
         Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
         out.add(task);
