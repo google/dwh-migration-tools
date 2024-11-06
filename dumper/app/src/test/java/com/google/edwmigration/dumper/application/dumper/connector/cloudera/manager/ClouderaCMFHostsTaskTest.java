@@ -27,7 +27,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -40,6 +39,7 @@ import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -50,12 +50,10 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -88,69 +86,67 @@ public class ClouderaCMFHostsTaskTest {
             ClouderaClusterDTO.create("id1", "first-cluster"),
             ClouderaClusterDTO.create("id34", "next-cluster")));
 
-    try (MockedStatic<EntityUtils> mockedUtils = mockStatic(EntityUtils.class)) {
-      CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);
-      HttpEntity entityId1 = mock(HttpEntity.class);
-      when(responseId1.getEntity()).thenReturn(entityId1);
+    CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);
+    HttpEntity entityId1 = mock(HttpEntity.class);
+    when(responseId1.getEntity()).thenReturn(entityId1);
 
-      CloseableHttpResponse responseNext = mock(CloseableHttpResponse.class);
-      HttpEntity entityNext = mock(HttpEntity.class);
-      when(responseNext.getEntity()).thenReturn(entityNext);
+    CloseableHttpResponse responseNext = mock(CloseableHttpResponse.class);
+    HttpEntity entityNext = mock(HttpEntity.class);
+    when(responseNext.getEntity()).thenReturn(entityNext);
 
-      when(httpClient.execute(
-              argThat(get -> get != null && get.getURI().toString().endsWith("=id1"))))
-          .thenReturn(responseId1);
-      when(httpClient.execute(
-              argThat(get -> get != null && get.getURI().toString().endsWith("=id34"))))
-          .thenReturn(responseNext);
+    when(httpClient.execute(
+            argThat(get -> get != null && get.getURI().toString().endsWith("=id1"))))
+        .thenReturn(responseId1);
+    when(httpClient.execute(
+            argThat(get -> get != null && get.getURI().toString().endsWith("=id34"))))
+        .thenReturn(responseNext);
 
-      mockedUtils
-          .when(() -> EntityUtils.toString(entityId1))
-          .thenReturn("{'clusterName':'first-cluster'}");
-      mockedUtils
-          .when(() -> EntityUtils.toString(entityNext))
-          .thenReturn("{\n'clusterName':'next-cluster'\n\r}");
+    when(entityId1.getContent())
+        .thenReturn(new ByteArrayInputStream("{\"clusterName\" :\"first-cluster\"}".getBytes()));
+    when(entityNext.getContent())
+        .thenReturn(
+            new ByteArrayInputStream("{\n\"clusterName\": \"next-cluster\"\n\r}".getBytes()));
 
-      task.doRun(context, sink, handle);
+    task.doRun(context, sink, handle);
 
-      Set<URI> requestedUrls = new HashSet<>();
-      verify(httpClient, times(2))
-          .execute(
-              argThat(
-                  request -> {
-                    assertEquals(HttpGet.class, request.getClass());
-                    requestedUrls.add(request.getURI());
-                    return true;
-                  }));
+    Set<URI> requestedUrls = new HashSet<>();
+    verify(httpClient, times(2))
+        .execute(
+            argThat(
+                request -> {
+                  assertEquals(HttpGet.class, request.getClass());
+                  requestedUrls.add(request.getURI());
+                  return true;
+                }));
 
-      assertEquals(
-          ImmutableSet.of(
-              URI.create("http://localhost//cmf/hardware/hosts/hostsOverview.json?clusterId=id1"),
-              URI.create("http://localhost//cmf/hardware/hosts/hostsOverview.json?clusterId=id34")),
-          requestedUrls);
+    assertEquals(
+        ImmutableSet.of(
+            URI.create("http://localhost//cmf/hardware/hosts/hostsOverview.json?clusterId=id1"),
+            URI.create("http://localhost//cmf/hardware/hosts/hostsOverview.json?clusterId=id34")),
+        requestedUrls);
 
-      // write jsonl. https://jsonlines.org/
-      Set<String> fileLines = new HashSet<>();
-      verify(writer, times(2))
-          .write(
-              (String)
-                  argThat(
-                      content -> {
-                        String str = (String) content;
-                        assertFalse(str.contains("\n"));
-                        assertFalse(str.contains("\r"));
-                        fileLines.add(str);
-                        return true;
-                      }));
-      verify(writer, times(2)).write('\n');
-      assertEquals(
-          ImmutableSet.of("{'clusterName':'first-cluster'}", "{'clusterName':'next-cluster'}"),
-          fileLines);
+    // write jsonl. https://jsonlines.org/
+    Set<String> fileLines = new HashSet<>();
+    verify(writer, times(2))
+        .write(
+            (String)
+                argThat(
+                    content -> {
+                      String str = (String) content;
+                      assertFalse(str.contains("\n"));
+                      assertFalse(str.contains("\r"));
+                      fileLines.add(str);
+                      return true;
+                    }));
+    verify(writer, times(2)).write('\n');
+    assertEquals(
+        ImmutableSet.of(
+            "{\"clusterName\":\"first-cluster\"}", "{\"clusterName\":\"next-cluster\"}"),
+        fileLines);
 
-      verify(responseId1).close();
-      verify(responseNext).close();
-      verify(writer).close();
-    }
+    verify(responseId1).close();
+    verify(responseNext).close();
+    verify(writer).close();
   }
 
   @Test

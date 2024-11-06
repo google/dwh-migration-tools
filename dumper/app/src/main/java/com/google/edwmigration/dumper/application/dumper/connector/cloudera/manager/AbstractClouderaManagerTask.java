@@ -38,10 +38,4 @@ abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
   protected abstract Void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception;
-
-  protected final String jsonToJsonl(String json) {
-    json = json.replaceAll("\n", "");
-    json = json.replaceAll("\r", "");
-    return json;
-  }
 }

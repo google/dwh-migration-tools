@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
@@ -28,7 +30,6 @@ import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,8 @@ import org.slf4j.LoggerFactory;
 public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public ClouderaCMFHostsTask() {
     super("cmf-hosts.jsonl");
@@ -70,8 +73,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
             baseURI + "/cmf/hardware/hosts/hostsOverview.json?clusterId=" + cluster.getId();
 
         try (CloseableHttpResponse hosts = httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          String json = EntityUtils.toString(hosts.getEntity());
-          writer.write(jsonToJsonl(json));
+          JsonNode jsonNode = objectMapper.readTree(hosts.getEntity().getContent());
+          writer.write(jsonNode.toString());
           writer.write('\n');
         }
       }

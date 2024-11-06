@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
@@ -27,9 +29,10 @@ import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 
 public class ClouderaServicesTask extends AbstractClouderaManagerTask {
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public ClouderaServicesTask() {
     super("services.jsonl");
@@ -52,8 +55,8 @@ public class ClouderaServicesTask extends AbstractClouderaManagerTask {
             handle.getApiURI() + "/clusters/" + cluster.getName() + "/services";
 
         try (CloseableHttpResponse services = httpClient.execute(new HttpGet(servicesPerCluster))) {
-          String json = EntityUtils.toString(services.getEntity());
-          writer.write(jsonToJsonl(json));
+          JsonNode jsonNode = objectMapper.readTree(services.getEntity().getContent());
+          writer.write(jsonNode.toString());
           writer.write('\n');
         }
       }

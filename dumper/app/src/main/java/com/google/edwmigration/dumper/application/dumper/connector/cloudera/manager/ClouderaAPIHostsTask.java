@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
@@ -27,7 +29,6 @@ import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 
 /**
  * The tasks dump data from the <a
@@ -35,6 +36,8 @@ import org.apache.http.util.EntityUtils;
  * API</a> which doesn't contain usage and disk data and collected as a fallback.
  */
 public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public ClouderaAPIHostsTask() {
     super("api-hosts.jsonl");
@@ -56,8 +59,8 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
         String hostPerClusterUrl = handle.getApiURI() + "/clusters/" + cluster.getName() + "/hosts";
 
         try (CloseableHttpResponse hosts = httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          String json = EntityUtils.toString(hosts.getEntity());
-          writer.write(jsonToJsonl(json));
+          JsonNode jsonNode = objectMapper.readTree(hosts.getEntity().getContent());
+          writer.write(jsonNode.toString());
           writer.write('\n');
         }
       }
