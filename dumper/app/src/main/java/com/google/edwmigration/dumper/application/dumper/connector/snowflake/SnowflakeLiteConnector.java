@@ -77,22 +77,26 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
+    out.addAll(createTaskList());
+  }
 
-    out.addAll(
+  private ImmutableList<Task<?>> createTaskList() {
+    ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
+    builder.addAll(
         sqlTasksWithInfoSchemaFallback(
             DatabasesFormat.Header.class,
             "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
             DatabasesFormat.IS_ZIP_ENTRY_NAME,
             DatabasesFormat.AU_ZIP_ENTRY_NAME));
 
-    out.addAll(
+    builder.addAll(
         sqlTasksWithInfoSchemaFallback(
             SchemataFormat.Header.class,
             "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
             SchemataFormat.IS_ZIP_ENTRY_NAME,
             SchemataFormat.AU_ZIP_ENTRY_NAME));
 
-    out.addAll(
+    builder.addAll(
         sqlTasksWithInfoSchemaFallback(
             TablesFormat.Header.class,
             "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
@@ -100,18 +104,16 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
             TablesFormat.IS_ZIP_ENTRY_NAME,
             TablesFormat.AU_ZIP_ENTRY_NAME));
 
-    out.add(createWarehouseEvents());
+    builder.add(createWarehouseEvents());
 
-    if (arguments.isAssessment()) {
-      for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
-        String query =
-            String.format(item.formatString, usageSchema, /* an empty WHERE clause */ "");
-        String zipName = item.zipEntryName;
-        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
-        out.add(task);
-      }
+    for (AssessmentQuery item : planner.generateAssessmentQueries()) {
+      String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
+      String query = String.format(item.formatString, usageSchema, /* an empty WHERE clause */ "");
+      String zipName = item.zipEntryName;
+      Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
+      builder.add(task);
     }
+    return builder.build();
   }
 
   private static Task<?> createWarehouseEvents() {
