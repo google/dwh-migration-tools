@@ -59,13 +59,11 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     return ArchiveNameUtil.getFileName(NAME);
   }
 
-  private Task<?> createTask(
-      Class<? extends Enum<?>> header, String format, String schemaZip, String usageZip) {
+  private AbstractJdbcTask<Summary> createTask(String format, String usageZip) {
     String usageView = "SNOWFLAKE.ACCOUNT_USAGE";
     String usageFilter = " WHERE DELETED IS NULL";
-    AbstractJdbcTask<Summary> usageTask =
-        SnowflakeTaskUtil.withFilter(format, usageView, usageZip, usageFilter, header);
-    return usageTask;
+    String sql = String.format(format, usageView, usageFilter);
+    return new JdbcSelectTask(usageZip, sql);
   }
 
   @Override
@@ -79,26 +77,22 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
     builder.add(
         createTask(
-            DatabasesFormat.Header.class,
-            "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-            DatabasesFormat.IS_ZIP_ENTRY_NAME,
-            DatabasesFormat.AU_ZIP_ENTRY_NAME));
+                "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
+                DatabasesFormat.AU_ZIP_ENTRY_NAME)
+            .withHeaderClass(DatabasesFormat.Header.class));
 
     builder.add(
         createTask(
-            SchemataFormat.Header.class,
-            "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-            SchemataFormat.IS_ZIP_ENTRY_NAME,
-            SchemataFormat.AU_ZIP_ENTRY_NAME));
+                "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
+                SchemataFormat.AU_ZIP_ENTRY_NAME)
+            .withHeaderClass(SchemataFormat.Header.class));
 
     builder.add(
         createTask(
-            TablesFormat.Header.class,
-            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
-                + " clustering_key FROM %1$s.TABLES%2$s",
-            TablesFormat.IS_ZIP_ENTRY_NAME,
-            TablesFormat.AU_ZIP_ENTRY_NAME));
-
+                "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+                    + " clustering_key FROM %1$s.TABLES%2$s",
+                TablesFormat.AU_ZIP_ENTRY_NAME)
+            .withHeaderClass(TablesFormat.Header.class));
     builder.add(createWarehouseEvents());
 
     for (AssessmentQuery item : planner.generateAssessmentQueries()) {
