@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
 import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FORMAT_NAME;
 
 import com.google.auto.service.AutoService;
@@ -48,7 +47,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   private static final String NAME = "snowflake-lite";
 
-  private final SnowflakeInput inputSource = USAGE_ONLY_SOURCE;
   private final SnowflakePlanner planner = new SnowflakePlanner();
 
   public SnowflakeLiteConnector() {
@@ -61,16 +59,13 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     return ArchiveNameUtil.getFileName(NAME);
   }
 
-  private ImmutableList<Task<?>> sqlTasksWithInfoSchemaFallback(
+  private Task<?> createTask(
       Class<? extends Enum<?>> header, String format, String schemaZip, String usageZip) {
     String usageView = "SNOWFLAKE.ACCOUNT_USAGE";
     String usageFilter = " WHERE DELETED IS NULL";
-    String schemaView = "INFORMATION_SCHEMA";
-    AbstractJdbcTask<Summary> schemaTask =
-        SnowflakeTaskUtil.withNoFilter(format, schemaView, schemaZip, header);
     AbstractJdbcTask<Summary> usageTask =
         SnowflakeTaskUtil.withFilter(format, usageView, usageZip, usageFilter, header);
-    return getSqlTasks(inputSource, header, format, schemaTask, usageTask);
+    return usageTask;
   }
 
   @Override
@@ -82,22 +77,22 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   private ImmutableList<Task<?>> createTaskList() {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
-    builder.addAll(
-        sqlTasksWithInfoSchemaFallback(
+    builder.add(
+        createTask(
             DatabasesFormat.Header.class,
             "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
             DatabasesFormat.IS_ZIP_ENTRY_NAME,
             DatabasesFormat.AU_ZIP_ENTRY_NAME));
 
-    builder.addAll(
-        sqlTasksWithInfoSchemaFallback(
+    builder.add(
+        createTask(
             SchemataFormat.Header.class,
             "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
             SchemataFormat.IS_ZIP_ENTRY_NAME,
             SchemataFormat.AU_ZIP_ENTRY_NAME));
 
-    builder.addAll(
-        sqlTasksWithInfoSchemaFallback(
+    builder.add(
+        createTask(
             TablesFormat.Header.class,
             "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
                 + " clustering_key FROM %1$s.TABLES%2$s",
