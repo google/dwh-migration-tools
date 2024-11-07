@@ -26,6 +26,7 @@ import javax.annotation.Nonnull;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,19 @@ class HdfsHandle implements Handle {
     LOG.info("port: '{}'", port);
 
     Configuration conf = new Configuration();
+    if (args.getKerberosKeytabPath() != null) {
+      conf.set("hadoop.security.authentication", "kerberos");
+      conf.set("hadoop.security.authorization", "true");
+      conf.set("dfs.namenode.kerberos.principal", args.getKerberosPrincipal());
+      conf.set("dfs.datanode.kerberos.principal", args.getKerberosPrincipal());
+
+      // Login using principal and its keytab:
+      UserGroupInformation.setConfiguration(conf);
+      UserGroupInformation.loginUserFromKeytab(
+          args.getKerberosPrincipal(), args.getKerberosKeytabPath());
+    }
     conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
+    conf.set("fs.hdfs.impl", DistributedFileSystem.class.getName());
     FileSystem fs = FileSystem.get(conf);
     checkArgument(fs instanceof DistributedFileSystem, "Not a DistributedFileSystem");
     dfs = (DistributedFileSystem) fs;
