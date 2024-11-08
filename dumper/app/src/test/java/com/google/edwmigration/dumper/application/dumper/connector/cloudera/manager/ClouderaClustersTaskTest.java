@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +33,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -47,12 +47,10 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicStatusLine;
-import org.apache.http.util.EntityUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -95,174 +93,174 @@ public class ClouderaClustersTaskTest {
   public void clusterNotProvided_success() throws Exception {
     when(arguments.getCluster()).thenReturn(null);
 
-    try (MockedStatic<EntityUtils> mockedUtils = mockStatic(EntityUtils.class)) {
-      CloseableHttpResponse clustersResponse = mock(CloseableHttpResponse.class);
-      HttpEntity clustersEntity = mock(HttpEntity.class);
-      when(clustersResponse.getEntity()).thenReturn(clustersEntity);
-      when(httpClient.execute(
-              argThat(get -> get != null && get.getURI().toString().endsWith("/clusters"))))
-          .thenReturn(clustersResponse);
-      mockedUtils.when(() -> EntityUtils.toString(clustersEntity)).thenReturn(apiClusterListJson);
+    CloseableHttpResponse clustersResponse = mock(CloseableHttpResponse.class);
+    HttpEntity clustersEntity = mock(HttpEntity.class);
+    when(clustersResponse.getEntity()).thenReturn(clustersEntity);
+    when(httpClient.execute(
+            argThat(get -> get != null && get.getURI().toString().endsWith("/clusters"))))
+        .thenReturn(clustersResponse);
+    when(clustersEntity.getContent())
+        .thenReturn(new ByteArrayInputStream(apiClusterListJson.getBytes()));
 
-      // request for cluster aaa
-      CloseableHttpResponse statusAResponse = mock(CloseableHttpResponse.class);
-      HttpEntity statusAEntity = mock(HttpEntity.class);
-      when(statusAResponse.getEntity()).thenReturn(statusAEntity);
-      when(httpClient.execute(
-              argThat(get -> get != null && get.getURI().toString().endsWith("/aaa/status.json"))))
-          .thenReturn(statusAResponse);
-      mockedUtils
-          .when(() -> EntityUtils.toString(statusAEntity))
-          .thenReturn(clusterStatusJson.replaceAll("" + clusterStatusId, "111"));
-      when(statusAResponse.getStatusLine())
-          .thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "Ok"));
+    // request for cluster aaa
+    CloseableHttpResponse statusAResponse = mock(CloseableHttpResponse.class);
+    HttpEntity statusAEntity = mock(HttpEntity.class);
+    when(statusAResponse.getEntity()).thenReturn(statusAEntity);
+    when(httpClient.execute(
+            argThat(get -> get != null && get.getURI().toString().endsWith("/aaa/status.json"))))
+        .thenReturn(statusAResponse);
+    when(statusAEntity.getContent())
+        .thenReturn(
+            new ByteArrayInputStream(
+                clusterStatusJson.replaceAll("" + clusterStatusId, "111").getBytes()));
+    when(statusAResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "Ok"));
 
-      // request for cluster bbb
-      CloseableHttpResponse statusBResponse = mock(CloseableHttpResponse.class);
-      HttpEntity statusBEntity = mock(HttpEntity.class);
-      when(statusBResponse.getEntity()).thenReturn(statusBEntity);
-      when(httpClient.execute(
-              argThat(get -> get != null && get.getURI().toString().endsWith("/bbb/status.json"))))
-          .thenReturn(statusBResponse);
-      mockedUtils
-          .when(() -> EntityUtils.toString(statusBEntity))
-          .thenReturn(clusterStatusJson.replaceAll("" + clusterStatusId, "222"));
-      when(statusBResponse.getStatusLine())
-          .thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 401, "not found"));
+    // request for cluster bbb
+    CloseableHttpResponse statusBResponse = mock(CloseableHttpResponse.class);
+    HttpEntity statusBEntity = mock(HttpEntity.class);
+    when(statusBResponse.getEntity()).thenReturn(statusBEntity);
+    when(httpClient.execute(
+            argThat(get -> get != null && get.getURI().toString().endsWith("/bbb/status.json"))))
+        .thenReturn(statusBResponse);
+    when(statusBEntity.getContent())
+        .thenReturn(
+            new ByteArrayInputStream(
+                clusterStatusJson.replaceAll("" + clusterStatusId, "222").getBytes()));
+    when(statusBResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 401, "not found"));
 
-      task.doRun(context, sink, handle);
+    task.doRun(context, sink, handle);
 
-      verify(writer)
-          .write(
-              (String)
-                  argThat(
-                      content -> {
-                        try {
-                          ApiClusterListDto listDto =
-                              objectMapper.readValue((String) content, ApiClusterListDto.class);
-                          assertNotNull(listDto.getItems());
-                        } catch (JsonProcessingException e) {
-                          throw new RuntimeException(e);
-                        }
-                        return true;
-                      }));
+    verify(writer)
+        .write(
+            (String)
+                argThat(
+                    content -> {
+                      try {
+                        ApiClusterListDto listDto =
+                            objectMapper.readValue((String) content, ApiClusterListDto.class);
+                        assertNotNull(listDto.getItems());
+                      } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                      }
+                      return true;
+                    }));
 
-      verify(httpClient)
-          .execute(
-              argThat(
-                  request -> {
-                    assertEquals(HttpGet.class, request.getClass());
+    verify(httpClient)
+        .execute(
+            argThat(
+                request -> {
+                  assertEquals(HttpGet.class, request.getClass());
 
-                    return URI.create("http://localhost/api/clusters").equals(request.getURI());
-                  }));
-      verify(httpClient)
-          .execute(
-              argThat(
-                  request -> {
-                    assertEquals(HttpGet.class, request.getClass());
+                  return URI.create("http://localhost/api/clusters").equals(request.getURI());
+                }));
+    verify(httpClient)
+        .execute(
+            argThat(
+                request -> {
+                  assertEquals(HttpGet.class, request.getClass());
 
-                    return URI.create("http://localhost//cmf/clusters/aaa/status.json")
-                        .equals(request.getURI());
-                  }));
-      verify(httpClient)
-          .execute(
-              argThat(
-                  request -> {
-                    assertEquals(HttpGet.class, request.getClass());
+                  return URI.create("http://localhost//cmf/clusters/aaa/status.json")
+                      .equals(request.getURI());
+                }));
+    verify(httpClient)
+        .execute(
+            argThat(
+                request -> {
+                  assertEquals(HttpGet.class, request.getClass());
 
-                    return URI.create("http://localhost//cmf/clusters/bbb/status.json")
-                        .equals(request.getURI());
-                  }));
+                  return URI.create("http://localhost//cmf/clusters/bbb/status.json")
+                      .equals(request.getURI());
+                }));
 
-      ImmutableList<ClouderaClusterDTO> clusters = handle.getClusters();
-      assertNotNull(clusters);
-      assertEquals(
-          ImmutableList.of(
-              ClouderaClusterDTO.create("111", "aaa"), ClouderaClusterDTO.create(null, "bbb")),
-          clusters);
+    ImmutableList<ClouderaClusterDTO> clusters = handle.getClusters();
+    assertNotNull(clusters);
+    assertEquals(
+        ImmutableList.of(
+            ClouderaClusterDTO.create("111", "aaa"), ClouderaClusterDTO.create(null, "bbb")),
+        clusters);
 
-      verify(clustersResponse).close();
-      verify(writer).close();
+    verify(clustersResponse).close();
+    verify(writer).close();
 
-      verify(statusAResponse).close();
-      verify(statusBResponse).close();
-    }
+    verify(statusAResponse).close();
+    verify(statusBResponse).close();
   }
 
   @Test
   public void clusterProvided_success() throws Exception {
     when(arguments.getCluster()).thenReturn("my-cluster");
 
-    try (MockedStatic<EntityUtils> mockedUtils = mockStatic(EntityUtils.class)) {
-      CloseableHttpResponse clustersResponse = mock(CloseableHttpResponse.class);
-      HttpEntity clustersEntity = mock(HttpEntity.class);
-      when(clustersResponse.getEntity()).thenReturn(clustersEntity);
-      when(httpClient.execute(
-              argThat(
-                  get -> get != null && get.getURI().toString().endsWith("/clusters/my-cluster"))))
-          .thenReturn(clustersResponse);
-      mockedUtils.when(() -> EntityUtils.toString(clustersEntity)).thenReturn(apiClusterJson);
+    CloseableHttpResponse clustersResponse = mock(CloseableHttpResponse.class);
+    HttpEntity clustersEntity = mock(HttpEntity.class);
+    when(clustersResponse.getEntity()).thenReturn(clustersEntity);
+    when(httpClient.execute(
+            argThat(
+                get -> get != null && get.getURI().toString().endsWith("/clusters/my-cluster"))))
+        .thenReturn(clustersResponse);
+    when(clustersEntity.getContent())
+        .thenReturn(new ByteArrayInputStream(apiClusterJson.getBytes()));
 
-      // request for cluster my-Cluster
-      CloseableHttpResponse statusResponse = mock(CloseableHttpResponse.class);
-      HttpEntity statusEntity = mock(HttpEntity.class);
-      when(statusResponse.getEntity()).thenReturn(statusEntity);
-      when(httpClient.execute(
-              argThat(
-                  get ->
-                      get != null && get.getURI().toString().endsWith("/my-cluster/status.json"))))
-          .thenReturn(statusResponse);
-      mockedUtils
-          .when(() -> EntityUtils.toString(statusEntity))
-          .thenReturn(clusterStatusJson.replaceAll("" + clusterStatusId, "123"));
-      when(statusResponse.getStatusLine())
-          .thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "Ok"));
+    // request for cluster my-Cluster
+    CloseableHttpResponse statusResponse = mock(CloseableHttpResponse.class);
+    HttpEntity statusEntity = mock(HttpEntity.class);
+    when(statusResponse.getEntity()).thenReturn(statusEntity);
+    when(httpClient.execute(
+            argThat(
+                get -> get != null && get.getURI().toString().endsWith("/my-cluster/status.json"))))
+        .thenReturn(statusResponse);
+    when(statusEntity.getContent())
+        .thenReturn(
+            new ByteArrayInputStream(
+                clusterStatusJson.replaceAll("" + clusterStatusId, "123").getBytes()));
+    when(statusResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "Ok"));
 
-      task.doRun(context, sink, handle);
+    task.doRun(context, sink, handle);
 
-      verify(writer)
-          .write(
-              (String)
-                  argThat(
-                      content -> {
-                        try {
-                          ApiClusterListDto listDto =
-                              objectMapper.readValue((String) content, ApiClusterListDto.class);
-                          assertNotNull(listDto.getItems());
-                        } catch (JsonProcessingException e) {
-                          throw new RuntimeException(e);
-                        }
-                        return true;
-                      }));
+    verify(writer)
+        .write(
+            (String)
+                argThat(
+                    content -> {
+                      try {
+                        ApiClusterListDto listDto =
+                            objectMapper.readValue((String) content, ApiClusterListDto.class);
+                        assertNotNull(listDto.getItems());
+                      } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                      }
+                      return true;
+                    }));
 
-      verify(httpClient)
-          .execute(
-              argThat(
-                  request -> {
-                    assertEquals(HttpGet.class, request.getClass());
+    verify(httpClient)
+        .execute(
+            argThat(
+                request -> {
+                  assertEquals(HttpGet.class, request.getClass());
 
-                    return URI.create("http://localhost/api/clusters/my-cluster")
-                        .equals(request.getURI());
-                  }));
-      verify(httpClient)
-          .execute(
-              argThat(
-                  request -> {
-                    assertEquals(HttpGet.class, request.getClass());
+                  return URI.create("http://localhost/api/clusters/my-cluster")
+                      .equals(request.getURI());
+                }));
+    verify(httpClient)
+        .execute(
+            argThat(
+                request -> {
+                  assertEquals(HttpGet.class, request.getClass());
 
-                    return URI.create("http://localhost//cmf/clusters/my-cluster/status.json")
-                        .equals(request.getURI());
-                  }));
+                  return URI.create("http://localhost//cmf/clusters/my-cluster/status.json")
+                      .equals(request.getURI());
+                }));
 
-      ImmutableList<ClouderaClusterDTO> clusters = handle.getClusters();
-      assertNotNull(clusters);
-      assertEquals(ImmutableList.of(ClouderaClusterDTO.create("123", "my-cluster")), clusters);
+    ImmutableList<ClouderaClusterDTO> clusters = handle.getClusters();
+    assertNotNull(clusters);
+    assertEquals(ImmutableList.of(ClouderaClusterDTO.create("123", "my-cluster")), clusters);
 
-      verify(clustersResponse).close();
-      verify(writer).close();
+    verify(clustersResponse).close();
+    verify(writer).close();
 
-      verify(statusResponse).close();
-    }
+    verify(statusResponse).close();
   }
 
   private String readString(String name) throws IOException, URISyntaxException {

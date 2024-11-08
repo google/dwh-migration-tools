@@ -104,8 +104,8 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
     String requestUrl = baseUri + "/cmf/clusters/" + clusterName + "/status.json";
 
     try (CloseableHttpResponse clusterStatus = httpClient.execute(new HttpGet(requestUrl))) {
-      String responseBody = EntityUtils.toString(clusterStatus.getEntity());
       if (HttpStatus.SC_OK != clusterStatus.getStatusLine().getStatusCode()) {
+        String responseBody = EntityUtils.toString(clusterStatus.getEntity());
         LOG.warn(
             "Can't receive cluster [{}] status by url [{}]. Response status is [{}] and body: {}",
             clusterName,
@@ -115,7 +115,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
 
         return null;
       } else {
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
+        JsonNode jsonNode = objectMapper.readTree(clusterStatus.getEntity().getContent());
         // https://www.rfc-editor.org/rfc/rfc6901
         return jsonNode.at("/clusterModel/id").asText();
       }
