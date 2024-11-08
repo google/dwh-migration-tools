@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.MetadataView.TABLE_STORAGE_METRICS;
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 
 import com.google.auto.service.AutoService;
@@ -123,17 +122,17 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull String usageView,
       @Nonnull String usageFilter,
       boolean isAssessment) {
-    SnowflakeInput adjustedInput = inputSource;
-    // skip fallback if assessment is enabled
-    if (adjustedInput == USAGE_THEN_SCHEMA_SOURCE && isAssessment) {
-      adjustedInput = USAGE_ONLY_SOURCE;
-    }
     AbstractJdbcTask<Summary> schemaTask =
         SnowflakeTaskUtil.withNoFilter(format, alteredSchemaView, schemaZip, header);
     AbstractJdbcTask<Summary> usageTask =
         SnowflakeTaskUtil.withFilter(format, usageView, usageZip, usageFilter, header);
-    ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, header, format, schemaTask, usageTask);
-    out.addAll(tasks);
+    if (isAssessment) {
+      out.add(usageTask);
+    } else {
+      ImmutableList<Task<?>> tasks =
+          getSqlTasks(inputSource, header, format, schemaTask, usageTask);
+      out.addAll(tasks);
+    }
   }
 
   @Override
