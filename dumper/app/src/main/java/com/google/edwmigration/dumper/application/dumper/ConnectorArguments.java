@@ -389,7 +389,7 @@ public class ConnectorArguments extends DefaultArguments {
               OPT_KERBEROS_PRINCIPAL,
               "Set Kerberos principal. It is usually a Service principal of the form: "
                   + "DUMPER/webserver.example.com@EXAMPLE.COM . (No default value)")
-          .withOptionalArg()
+          .withRequiredArg()
           .ofType(String.class);
 
   // Kerberos keytab path
