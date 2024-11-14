@@ -87,6 +87,7 @@ dependencies {
     testImplementation libs.mockito.core
     testImplementation libs.mockito.inline
     testImplementation libs.mockito.junit.jupiter
+    testImplementation libs.wiremock
 
 
     // Test Hive 3.1.2

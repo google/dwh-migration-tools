@@ -138,6 +138,9 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_RANGER_PORT_DEFAULT = "6080";
   public static final String OPT_RANGER_PAGE_SIZE = "ranger-page-size";
   public static final int OPT_RANGER_PAGE_SIZE_DEFAULT = 1000;
+  public static final String OPT_RANGER_SCHEME = "ranger-scheme";
+  public static final String OPT_RANGER_SCHEME_DEFAULT = "http";
+  public static final String OPT_RANGER_DISABLE_TLS_VALIDATION = "ranger-disable-tls-validation";
 
   // These are blocking threads on the client side, so it doesn't really matter much.
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
@@ -385,6 +388,18 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(Integer.class)
           .defaultsTo(OPT_RANGER_PAGE_SIZE_DEFAULT);
+
+  private final OptionSpec<String> optionRangerScheme =
+      parser
+          .accepts(OPT_RANGER_SCHEME, "The uri scheme used to fetch Ranger entries.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .defaultsTo(OPT_RANGER_SCHEME_DEFAULT);
+
+  private final OptionSpec<Void> optionRangerDisableTlsValidation =
+      parser.accepts(
+          OPT_RANGER_DISABLE_TLS_VALIDATION,
+          "Disables TLS certificate validation. Set to accept self-signed certificates.");
 
   // Threading / Pooling
   private final OptionSpec<Integer> optionThreadPoolSize =
@@ -883,6 +898,14 @@ public class ConnectorArguments extends DefaultArguments {
 
   public int getRangerPageSizeDefault() {
     return getOptions().valueOf(optionRangerPageSize);
+  }
+
+  public String getRangerScheme() {
+    return getOptions().valueOf(optionRangerScheme);
+  }
+
+  public boolean hasRangerIgnoreTlsValidation() {
+    return getOptions().has(optionRangerDisableTlsValidation);
   }
 
   public int getThreadPoolSize() {

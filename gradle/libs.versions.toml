@@ -50,6 +50,7 @@ system-rules = "1.19.0"
 tez = "0.9.2"
 thrift = "0.20.0"
 version-catalog-update-plugin = "0.8.5"
+wiremock = "2.27.2"
 
 [libraries]
 apache-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-commons-compress" }
@@ -113,6 +114,7 @@ sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 system-rules = { module = "com.github.stefanbirkner:system-rules", version.ref = "system-rules" }
 tez-common = { module = "org.apache.tez:tez-common", version.ref = "tez" }
 tez-dag = { module = "org.apache.tez:tez-dag", version.ref = "tez" }
+wiremock = { module = "com.github.tomakehurst:wiremock-standalone", version.ref = "wiremock" }
 
 [plugins]
 ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions-plugin" }

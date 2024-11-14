@@ -20,8 +20,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 
 public class RangerTestResources {
 
@@ -33,5 +35,9 @@ public class RangerTestResources {
 
   public static InputStream getResourceAsInputStream(String name) throws IOException {
     return new ByteArrayInputStream(Resources.toByteArray(Resources.getResource(name)));
+  }
+
+  public static String getResourceAbsolutePath(String name) throws URISyntaxException {
+    return new File(Resources.getResource(name).toURI()).getAbsolutePath();
   }
 }
