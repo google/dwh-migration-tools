@@ -42,4 +42,3 @@ INNER JOIN dba_hist_snapshot Snap
   AND SegStat.instance_number = Snap.instance_number
   -- use a query parameter to get the number of querylog days that should be loaded
   AND Snap.end_interval_time > sysdate - ?
-  
