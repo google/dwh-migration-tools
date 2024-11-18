@@ -27,8 +27,15 @@ SELECT
   SegStat.physical_writes_delta "PhysicalWritesBlocks",
   SegStat.physical_read_requests_delta "PhysicalReadRequestsBlocks",
   SegStat.physical_write_requests_delta "PhysicalWriteRequestsBlocks",
-  SegStat.table_scans_delta "TableScans"
+  SegStat.table_scans_delta "TableScans",
+  SegStatObj.owner "ObjectOwner",
+  SegStatObj.object_name "ObjectName",
+  SegStatObj.object_type "ObjectType"
 FROM cdb_hist_seg_stat SegStat
+INNER JOIN cdb_hist_seg_stat_obj SegStatObj
+  ON SegStat.ts# = SegStatObj.ts#
+  AND SegStat.obj# = SegStatObj.obj#
+  AND SegStat.dataobj# = SegStatObj.dataobj#
 INNER JOIN cdb_hist_snapshot Snap
   ON SegStat.snap_id = Snap.snap_id
   AND SegStat.dbid = Snap.dbid
