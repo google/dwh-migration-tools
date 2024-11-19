@@ -17,6 +17,8 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_KERBEROS_KEYTAB_PATH;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_KERBEROS_PRINCIPAL;
 
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -26,6 +28,7 @@ import javax.annotation.Nonnull;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +48,22 @@ class HdfsHandle implements Handle {
     LOG.info("port: '{}'", port);
 
     Configuration conf = new Configuration();
+    String krbPrincipal = args.getKerberosPrincipal();
+    String krbKeytab = args.getKerberosKeytabPath();
+    if (krbPrincipal != null || krbKeytab != null) {
+      Preconditions.checkNotNull(krbPrincipal, "Missing argument --" + OPT_KERBEROS_PRINCIPAL);
+      Preconditions.checkNotNull(krbKeytab, "Missing argument --" + OPT_KERBEROS_KEYTAB_PATH);
+      conf.set("hadoop.security.authentication", "kerberos");
+      conf.set("hadoop.security.authorization", "true");
+      conf.set("dfs.namenode.kerberos.principal", krbPrincipal);
+      conf.set("dfs.datanode.kerberos.principal", krbPrincipal);
+
+      // Login using principal and its keytab:
+      UserGroupInformation.setConfiguration(conf);
+      UserGroupInformation.loginUserFromKeytab(krbPrincipal, krbKeytab);
+    }
     conf.set("fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
+    conf.set("fs.hdfs.impl", DistributedFileSystem.class.getName());
     FileSystem fs = FileSystem.get(conf);
     checkArgument(fs instanceof DistributedFileSystem, "Not a DistributedFileSystem");
     dfs = (DistributedFileSystem) fs;

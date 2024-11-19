@@ -132,7 +132,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_HIVE_KERBEROS_URL = "hive-kerberos-url";
   public static final String OPT_REQUIRED_IF_NOT_URL = "if --url is not specified";
   public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
-
+  public static final String OPT_KERBEROS_KEYTAB_PATH = "kerberos-keytab-path";
+  public static final String OPT_KERBEROS_PRINCIPAL = "kerberos-principal";
   // Ranger.
   public static final String OPT_RANGER_PORT_DEFAULT = "6080";
   public static final String OPT_RANGER_PAGE_SIZE = "ranger-page-size";
@@ -395,6 +396,24 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(Integer.class)
           .defaultsTo(OPT_THREAD_POOL_SIZE_DEFAULT);
+
+  // Kerberos principal
+  private final OptionSpec<String> optionKerberosPrincipal =
+      parser
+          .accepts(
+              OPT_KERBEROS_PRINCIPAL,
+              "Set Kerberos principal. It is usually a Service principal of the form: "
+                  + "DUMPER/webserver.example.com@EXAMPLE.COM . (No default value)")
+          .withRequiredArg()
+          .ofType(String.class);
+
+  // Kerberos keytab path
+  private final OptionSpec<String> optionKerberosKeytabPath =
+      parser
+          .accepts(
+              OPT_KERBEROS_KEYTAB_PATH, "Set path to Kerberos .keytab file. (No default value)")
+          .withRequiredArg()
+          .ofType(String.class);
 
   // generic connector
   private final OptionSpec<String> optionGenericQuery =
@@ -868,6 +887,14 @@ public class ConnectorArguments extends DefaultArguments {
 
   public int getThreadPoolSize() {
     return getOptions().valueOf(optionThreadPoolSize);
+  }
+
+  public String getKerberosPrincipal() {
+    return getOptions().valueOf(optionKerberosPrincipal);
+  }
+
+  public String getKerberosKeytabPath() {
+    return getOptions().valueOf(optionKerberosKeytabPath);
   }
 
   @CheckForNull
