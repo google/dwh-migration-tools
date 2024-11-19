@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022-2024 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import static org.junit.Assert.assertEquals;
@@ -53,18 +69,13 @@ public class ClouderaServicesTaskTest {
   private ClouderaManagerHandle handle;
 
   private String servicesJson;
-  @Mock
-  private TaskRunContext context;
-  @Mock
-  private ByteSink sink;
+  @Mock private TaskRunContext context;
+  @Mock private ByteSink sink;
 
-  @Mock
-  private Writer writer;
-  @Mock
-  private CharSink charSink;
+  @Mock private Writer writer;
+  @Mock private CharSink charSink;
 
-  @Mock
-  private CloseableHttpClient httpClient;
+  @Mock private CloseableHttpClient httpClient;
   private URI uri;
 
   @Before
@@ -87,11 +98,10 @@ public class ClouderaServicesTaskTest {
     CloseableHttpResponse firstResponse = mock(CloseableHttpResponse.class);
     HttpEntity firstEntity = mock(HttpEntity.class);
     when(firstResponse.getEntity()).thenReturn(firstEntity);
-    when(firstEntity.getContent())
-        .thenReturn(new ByteArrayInputStream(servicesJson.getBytes()));
+    when(firstEntity.getContent()).thenReturn(new ByteArrayInputStream(servicesJson.getBytes()));
     when(httpClient.execute(
-        argThat(
-            get -> get != null && get.getURI().toString().endsWith("/first-cluster/services"))))
+            argThat(
+                get -> get != null && get.getURI().toString().endsWith("/first-cluster/services"))))
         .thenReturn(firstResponse);
 
     CloseableHttpResponse secondResponse = mock(CloseableHttpResponse.class);
@@ -100,8 +110,9 @@ public class ClouderaServicesTaskTest {
     when(secondEntity.getContent())
         .thenReturn(new ByteArrayInputStream("{\"some\": \"json\"}".getBytes()));
     when(httpClient.execute(
-        argThat(
-            get -> get != null && get.getURI().toString().endsWith("/second-cluster/services"))))
+            argThat(
+                get ->
+                    get != null && get.getURI().toString().endsWith("/second-cluster/services"))))
         .thenReturn(secondResponse);
 
     // Act
@@ -136,11 +147,7 @@ public class ClouderaServicesTaskTest {
                       fileLines.add(str);
                       return true;
                     }));
-    assertEquals(
-        ImmutableSet.of(
-            "{\"some\":\"json\"}",
-            tojsonl(servicesJson)),
-        fileLines);
+    assertEquals(ImmutableSet.of("{\"some\":\"json\"}", tojsonl(servicesJson)), fileLines);
 
     verify(firstResponse).close();
     verify(secondResponse).close();
@@ -159,7 +166,6 @@ public class ClouderaServicesTaskTest {
 
     verifyNoWrites();
   }
-
 
   private void verifyNoWrites() throws IOException {
     verify(writer, never()).write(anyChar());
