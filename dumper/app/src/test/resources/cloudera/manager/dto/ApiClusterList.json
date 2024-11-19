@@ -1,0 +1,290 @@
+{
+  "items": [
+    {
+      "name": "aaa",
+      "displayName": "...",
+      "fullVersion": "...",
+      "maintenanceMode": true,
+      "maintenanceOwners": [
+        "HOST",
+        "SERVICE"
+      ],
+      "services": [
+        {
+          "name": "...",
+          "type": "...",
+          "clusterRef": {},
+          "serviceState": "NA",
+          "healthSummary": "DISABLED",
+          "configStalenessStatus": "STALE_REFRESHABLE",
+          "clientConfigStalenessStatus": "STALE_REFRESHABLE",
+          "healthChecks": [
+            {},
+            {}
+          ],
+          "serviceUrl": "...",
+          "roleInstancesUrl": "...",
+          "maintenanceMode": true,
+          "maintenanceOwners": [
+            "SERVICE",
+            "CLUSTER"
+          ],
+          "config": {},
+          "roles": [
+            {},
+            {}
+          ],
+          "displayName": "...",
+          "roleConfigGroups": [
+            {},
+            {}
+          ],
+          "replicationSchedules": [
+            {},
+            {}
+          ],
+          "snapshotPolicies": [
+            {},
+            {}
+          ],
+          "entityStatus": "BAD_HEALTH",
+          "tags": [
+            {},
+            {}
+          ],
+          "serviceVersion": "..."
+        },
+        {
+          "name": "...",
+          "type": "...",
+          "clusterRef": {},
+          "serviceState": "HISTORY_NOT_AVAILABLE",
+          "healthSummary": "DISABLED",
+          "configStalenessStatus": "STALE_REFRESHABLE",
+          "clientConfigStalenessStatus": "STALE",
+          "healthChecks": [
+            {},
+            {}
+          ],
+          "serviceUrl": "...",
+          "roleInstancesUrl": "...",
+          "maintenanceMode": true,
+          "maintenanceOwners": [
+            "CONTROL_PLANE",
+            "ROLE"
+          ],
+          "config": {},
+          "roles": [
+            {},
+            {}
+          ],
+          "displayName": "...",
+          "roleConfigGroups": [
+            {},
+            {}
+          ],
+          "replicationSchedules": [
+            {},
+            {}
+          ],
+          "snapshotPolicies": [
+            {},
+            {}
+          ],
+          "entityStatus": "STARTING",
+          "tags": [
+            {},
+            {}
+          ],
+          "serviceVersion": "..."
+        }
+      ],
+      "parcels": [
+        {
+          "product": "...",
+          "version": "...",
+          "stage": "...",
+          "state": {},
+          "clusterRef": {},
+          "displayName": "...",
+          "description": "..."
+        },
+        {
+          "product": "...",
+          "version": "...",
+          "stage": "...",
+          "state": {},
+          "clusterRef": {},
+          "displayName": "...",
+          "description": "..."
+        }
+      ],
+      "clusterUrl": "...",
+      "hostsUrl": "...",
+      "entityStatus": "CONCERNING_HEALTH",
+      "uuid": "...",
+      "dataContextRefs": [
+        {
+          "name": "..."
+        },
+        {
+          "name": "..."
+        }
+      ],
+      "clusterType": "...",
+      "tags": [
+        {
+          "name": "...",
+          "value": "..."
+        },
+        {
+          "name": "...",
+          "value": "..."
+        }
+      ]
+    },
+    {
+      "name": "bbb",
+      "displayName": "...",
+      "fullVersion": "...",
+      "maintenanceMode": true,
+      "maintenanceOwners": [
+        "CLUSTER",
+        "CONTROL_PLANE"
+      ],
+      "services": [
+        {
+          "name": "...",
+          "type": "...",
+          "clusterRef": {},
+          "serviceState": "UNKNOWN",
+          "healthSummary": "GOOD",
+          "configStalenessStatus": "STALE",
+          "clientConfigStalenessStatus": "FRESH",
+          "healthChecks": [
+            {},
+            {}
+          ],
+          "serviceUrl": "...",
+          "roleInstancesUrl": "...",
+          "maintenanceMode": true,
+          "maintenanceOwners": [
+            "SERVICE",
+            "CONTROL_PLANE"
+          ],
+          "config": {},
+          "roles": [
+            {},
+            {}
+          ],
+          "displayName": "...",
+          "roleConfigGroups": [
+            {},
+            {}
+          ],
+          "replicationSchedules": [
+            {},
+            {}
+          ],
+          "snapshotPolicies": [
+            {},
+            {}
+          ],
+          "entityStatus": "NONE",
+          "tags": [
+            {},
+            {}
+          ],
+          "serviceVersion": "..."
+        },
+        {
+          "name": "...",
+          "type": "...",
+          "clusterRef": {},
+          "serviceState": "HISTORY_NOT_AVAILABLE",
+          "healthSummary": "CONCERNING",
+          "configStalenessStatus": "FRESH",
+          "clientConfigStalenessStatus": "STALE",
+          "healthChecks": [
+            {},
+            {}
+          ],
+          "serviceUrl": "...",
+          "roleInstancesUrl": "...",
+          "maintenanceMode": true,
+          "maintenanceOwners": [
+            "SERVICE",
+            "CONTROL_PLANE"
+          ],
+          "config": {},
+          "roles": [
+            {},
+            {}
+          ],
+          "displayName": "...",
+          "roleConfigGroups": [
+            {},
+            {}
+          ],
+          "replicationSchedules": [
+            {},
+            {}
+          ],
+          "snapshotPolicies": [
+            {},
+            {}
+          ],
+          "entityStatus": "DOWN",
+          "tags": [
+            {},
+            {}
+          ],
+          "serviceVersion": "..."
+        }
+      ],
+      "parcels": [
+        {
+          "product": "...",
+          "version": "...",
+          "stage": "...",
+          "state": {},
+          "clusterRef": {},
+          "displayName": "...",
+          "description": "..."
+        },
+        {
+          "product": "...",
+          "version": "...",
+          "stage": "...",
+          "state": {},
+          "clusterRef": {},
+          "displayName": "...",
+          "description": "..."
+        }
+      ],
+      "clusterUrl": "...",
+      "hostsUrl": "...",
+      "entityStatus": "STOPPED",
+      "uuid": "...",
+      "dataContextRefs": [
+        {
+          "name": "..."
+        },
+        {
+          "name": "..."
+        }
+      ],
+      "clusterType": "...",
+      "tags": [
+        {
+          "name": "...",
+          "value": "..."
+        },
+        {
+          "name": "...",
+          "value": "..."
+        }
+      ]
+    }
+  ]
+}

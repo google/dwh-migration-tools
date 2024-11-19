@@ -24,8 +24,8 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
@@ -83,7 +83,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
     defaultValue = "" + NetezzaMetadataConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentUser
 @RespectsArgumentPassword
-@RespectsArgumentUri
+@RespectsArgumentJDBCUri
 @RespectsArgumentDatabasePredicate
 public class NetezzaMetadataConnector extends AbstractJdbcConnector
     implements MetadataConnector, NetezzaMetadataDumpFormat {

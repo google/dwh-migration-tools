@@ -24,8 +24,8 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInputs;
@@ -61,7 +61,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 })
 @RespectsArgumentDatabaseForConnection
 @RespectsArgumentDriver
-@RespectsArgumentUri
+@RespectsArgumentJDBCUri
 public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   public AbstractSnowflakeConnector(@Nonnull String name) {

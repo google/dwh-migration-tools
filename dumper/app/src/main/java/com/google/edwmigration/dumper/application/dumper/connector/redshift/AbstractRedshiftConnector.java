@@ -23,7 +23,7 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUri;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
@@ -66,7 +66,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
     arg = ConnectorArguments.OPT_IAM_SECRETACCESSKEY,
     description = "The IAM Secret Access Key to use for authentication.",
     required = "If present, performs explicit IAM authentication")
-@RespectsArgumentUri
+@RespectsArgumentJDBCUri
 public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
 
   @SuppressWarnings("UnusedVariable")

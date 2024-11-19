@@ -85,6 +85,7 @@ dependencies {
     testImplementation libs.system.rules
     testImplementation libs.joda.time
     testImplementation libs.mockito.core
+    testImplementation libs.mockito.inline
     testImplementation libs.mockito.junit.jupiter
 
 

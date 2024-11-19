@@ -95,6 +95,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final int OPT_PORT_ORDER = 200;
   public static final String OPT_USER = "user";
   public static final String OPT_PASSWORD = "password";
+
+  public static final String OPT_CLUSTER = "cluster";
   public static final String OPT_ROLE = "role";
   public static final String OPT_WAREHOUSE = "warehouse";
   public static final String OPT_DATABASE = "database";
@@ -156,9 +158,15 @@ public class ConnectorArguments extends DefaultArguments {
           .describedAs("com.company.Driver");
   private final OptionSpec<String> optionUri =
       parser
-          .accepts(OPT_URI, "JDBC driver URI")
+          .accepts(
+              OPT_URI,
+              "The main Connector's URI to dump metadata. "
+                  + "It can ba a JDBC driver URI or a HTTP endpoint URL, must be specified "
+                  + "by connector.")
           .withRequiredArg()
-          .describedAs("jdbc:dbname:host/db?param0=foo");
+          .describedAs(
+              "JDBC looks like: [jdbc:dbname:host/db?param0=foo], "
+                  + "HTTP looks like: [http://localhost:8080/api/v1/]");
   private final OptionSpec<String> optionHost =
       parser.accepts(OPT_HOST, "Database hostname").withRequiredArg();
   private final OptionSpec<Integer> optionPort =
@@ -200,6 +208,13 @@ public class ConnectorArguments extends DefaultArguments {
           .accepts(OPT_PASSWORD, "Database password, prompted if not provided")
           .withOptionalArg()
           .describedAs("sekr1t");
+
+  private final OptionSpec<String> optionCluster =
+      parser
+          .accepts(OPT_CLUSTER, "Cluster name to dump metadata")
+          .withOptionalArg()
+          .describedAs("name")
+          .ofType(String.class);
   private final OptionSpec<String> optionRole =
       parser.accepts(OPT_ROLE, "Database role").withRequiredArg().describedAs("dumper");
   private final OptionSpec<String> optionOracleService =
@@ -693,6 +708,11 @@ public class ConnectorArguments extends DefaultArguments {
     } else {
       return passwordReader.getOrPrompt();
     }
+  }
+
+  @CheckForNull
+  public String getCluster() {
+    return getOptions().valueOf(optionCluster);
   }
 
   @CheckForNull
