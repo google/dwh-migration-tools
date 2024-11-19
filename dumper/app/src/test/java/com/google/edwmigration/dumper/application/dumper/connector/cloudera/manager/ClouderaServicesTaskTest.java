@@ -1,19 +1,3 @@
-/*
- * Copyright 2022-2024 Google LLC
- * Copyright 2013-2021 CompilerWorks
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import static org.junit.Assert.assertEquals;
@@ -32,6 +16,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
@@ -43,7 +29,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.http.HttpEntity;
@@ -57,21 +46,30 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaAPIHostsTaskTest {
+public class ClouderaServicesTaskTest {
 
-  private final ClouderaAPIHostsTask task = new ClouderaAPIHostsTask();
+  private final ClouderaServicesTask task = new ClouderaServicesTask();
+
   private ClouderaManagerHandle handle;
 
-  @Mock private TaskRunContext context;
-  @Mock private ByteSink sink;
+  private String servicesJson;
+  @Mock
+  private TaskRunContext context;
+  @Mock
+  private ByteSink sink;
 
-  @Mock private Writer writer;
-  @Mock private CharSink charSink;
-  @Mock private CloseableHttpClient httpClient;
+  @Mock
+  private Writer writer;
+  @Mock
+  private CharSink charSink;
+
+  @Mock
+  private CloseableHttpClient httpClient;
   private URI uri;
 
   @Before
   public void setUp() throws Exception {
+    servicesJson = readString("/cloudera/manager/cluster-status.json");
     uri = URI.create("http://localhost/api");
     handle = new ClouderaManagerHandle(uri, httpClient);
 
@@ -84,33 +82,32 @@ public class ClouderaAPIHostsTaskTest {
     handle.initClusters(
         ImmutableList.of(
             ClouderaClusterDTO.create("id1", "first-cluster"),
-            ClouderaClusterDTO.create("id125", "second-cluster")));
+            ClouderaClusterDTO.create("id25", "second-cluster")));
 
-    CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);
-    HttpEntity entityId1 = mock(HttpEntity.class);
-    when(responseId1.getEntity()).thenReturn(entityId1);
-
-    CloseableHttpResponse responseCldClst = mock(CloseableHttpResponse.class);
-    HttpEntity entityCldClst = mock(HttpEntity.class);
-    when(responseCldClst.getEntity()).thenReturn(entityCldClst);
-
+    CloseableHttpResponse firstResponse = mock(CloseableHttpResponse.class);
+    HttpEntity firstEntity = mock(HttpEntity.class);
+    when(firstResponse.getEntity()).thenReturn(firstEntity);
+    when(firstEntity.getContent())
+        .thenReturn(new ByteArrayInputStream(servicesJson.getBytes()));
     when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().toString().endsWith("/first-cluster/hosts"))))
-        .thenReturn(responseId1);
+        argThat(
+            get -> get != null && get.getURI().toString().endsWith("/first-cluster/services"))))
+        .thenReturn(firstResponse);
+
+    CloseableHttpResponse secondResponse = mock(CloseableHttpResponse.class);
+    HttpEntity secondEntity = mock(HttpEntity.class);
+    when(secondResponse.getEntity()).thenReturn(secondEntity);
+    when(secondEntity.getContent())
+        .thenReturn(new ByteArrayInputStream("{\"some\": \"json\"}".getBytes()));
     when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().toString().endsWith("/second-cluster/hosts"))))
-        .thenReturn(responseCldClst);
+        argThat(
+            get -> get != null && get.getURI().toString().endsWith("/second-cluster/services"))))
+        .thenReturn(secondResponse);
 
-    when(entityId1.getContent())
-        .thenReturn(new ByteArrayInputStream("{\"clusterName\":\"first-cluster\"}".getBytes()));
-    when(entityCldClst.getContent())
-        .thenReturn(
-            new ByteArrayInputStream("{\n\"clusterName\":\"second-cluster\"\n\r}".getBytes()));
-
+    // Act
     task.doRun(context, sink, handle);
 
+    // Assert
     Set<URI> requestedUrls = new HashSet<>();
     verify(httpClient, times(2))
         .execute(
@@ -120,11 +117,10 @@ public class ClouderaAPIHostsTaskTest {
                   requestedUrls.add(request.getURI());
                   return true;
                 }));
-
     assertEquals(
         ImmutableSet.of(
-            URI.create("http://localhost/api/clusters/first-cluster/hosts"),
-            URI.create("http://localhost/api/clusters/second-cluster/hosts")),
+            URI.create("http://localhost/api/clusters/first-cluster/services"),
+            URI.create("http://localhost/api/clusters/second-cluster/services")),
         requestedUrls);
 
     // write jsonl. https://jsonlines.org/
@@ -140,14 +136,14 @@ public class ClouderaAPIHostsTaskTest {
                       fileLines.add(str);
                       return true;
                     }));
-    verify(writer, times(2)).write('\n');
     assertEquals(
         ImmutableSet.of(
-            "{\"clusterName\":\"first-cluster\"}", "{\"clusterName\":\"second-cluster\"}"),
+            "{\"some\":\"json\"}",
+            tojsonl(servicesJson)),
         fileLines);
 
-    verify(responseId1).close();
-    verify(responseCldClst).close();
+    verify(firstResponse).close();
+    verify(secondResponse).close();
     verify(writer).close();
   }
 
@@ -159,10 +155,11 @@ public class ClouderaAPIHostsTaskTest {
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
 
     assertEquals(
-        "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());
+        "Cloudera clusters must be initialized before services dumping.", exception.getMessage());
 
     verifyNoWrites();
   }
+
 
   private void verifyNoWrites() throws IOException {
     verify(writer, never()).write(anyChar());
@@ -170,5 +167,14 @@ public class ClouderaAPIHostsTaskTest {
     verify(writer, never()).write(anyString(), anyInt(), anyInt());
     verify(writer, never()).write(any(char[].class));
     verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
+  }
+
+  private String tojsonl(String json) throws Exception {
+    JsonNode jsonNode = new ObjectMapper().readTree(json);
+    return jsonNode.toString();
+  }
+
+  private String readString(String name) throws IOException, URISyntaxException {
+    return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(name).toURI())));
   }
 }
