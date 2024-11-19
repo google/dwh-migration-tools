@@ -32,7 +32,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -80,7 +79,7 @@ public class ClouderaServicesTaskTest {
 
   @Before
   public void setUp() throws Exception {
-    servicesJson = readString("/cloudera/manager/cluster-status.json");
+    servicesJson = readFileAsString("/cloudera/manager/cluster-status.json");
     uri = URI.create("http://localhost/api");
     handle = new ClouderaManagerHandle(uri, httpClient);
 
@@ -176,11 +175,10 @@ public class ClouderaServicesTaskTest {
   }
 
   private String tojsonl(String json) throws Exception {
-    JsonNode jsonNode = new ObjectMapper().readTree(json);
-    return jsonNode.toString();
+    return new ObjectMapper().readTree(json).toString();
   }
 
-  private String readString(String name) throws IOException, URISyntaxException {
-    return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(name).toURI())));
+  private String readFileAsString(String fileName) throws IOException, URISyntaxException {
+    return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(fileName).toURI())));
   }
 }
