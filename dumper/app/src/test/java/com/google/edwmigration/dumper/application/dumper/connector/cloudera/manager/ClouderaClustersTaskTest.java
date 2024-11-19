@@ -86,7 +86,7 @@ public class ClouderaClustersTaskTest {
 
     apiClusterListJson = readString("/cloudera/manager/dto/ApiClusterList.json");
     apiClusterJson = readString("/cloudera/manager/dto/ApiCluster.json");
-    clusterStatusJson = readString("/cloudera/manager/dto/cluster-status.json");
+    clusterStatusJson = readString("/cloudera/manager/cluster-status.json");
   }
 
   @Test

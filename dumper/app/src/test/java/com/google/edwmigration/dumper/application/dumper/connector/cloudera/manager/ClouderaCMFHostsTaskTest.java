@@ -59,7 +59,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaCMFHostsTaskTest {
 
-  private ClouderaCMFHostsTask task = new ClouderaCMFHostsTask();
+  private final ClouderaCMFHostsTask task = new ClouderaCMFHostsTask();
 
   private ClouderaManagerHandle handle;
 
