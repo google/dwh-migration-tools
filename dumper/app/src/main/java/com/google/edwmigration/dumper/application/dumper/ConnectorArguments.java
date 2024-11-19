@@ -161,7 +161,7 @@ public class ConnectorArguments extends DefaultArguments {
           .accepts(
               OPT_URI,
               "The main Connector's URI to dump metadata. "
-                  + "It can JDBC driver URI or HTTP endpoint URL, must be specified "
+                  + "It can ba a JDBC driver URI or a HTTP endpoint URL, must be specified "
                   + "by connector.")
           .withRequiredArg()
           .describedAs(
