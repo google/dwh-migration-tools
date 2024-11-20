@@ -46,9 +46,8 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
   /*
-      SELECT cpu_percent_across_hosts WHERE entityName = "1546336862" AND category = CLUSTER
-  https://cldr2-aw-dl-gateway.cldr2-cd.svye-dcxb.a5.cloudera.site/cmf/charts/timeSeries
-     */
+    SELECT cpu_percent_across_hosts WHERE entityName = "1546336862" AND category = CLUSTER
+  */
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
@@ -69,14 +68,13 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
           "Cloudera clusters must be initialized before CPU charts dumping.");
     }
 
-    // todo add from/to/desiredRollup
     final String timeSeriesAPIUrl = handle.getApiURI() + "/timeseries";
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
           LOG.warn(
               "Cloudera cluster id is null for cluster [{}]. "
-                  + "Skip dumping hosts overview for the cluster.",
+                  + "Skip CPU metrics for the cluster.",
               cluster.getName());
           // todo it's might be critical data for TCO calculation and we should fail the dump
           // process. Discuss with product
@@ -88,6 +86,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
             "Execute charts query: [{}] for the cluster: [{}].", currentQuery, cluster.getName());
 
         URIBuilder uriBuilder = new URIBuilder(timeSeriesAPIUrl);
+        // todo add from/to/desiredRollup
         uriBuilder.addParameter("query", currentQuery);
 
         try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
