@@ -53,10 +53,22 @@ class HdfsHandle implements Handle {
     if (krbPrincipal != null || krbKeytab != null) {
       Preconditions.checkNotNull(krbPrincipal, "Missing argument --" + OPT_KERBEROS_PRINCIPAL);
       Preconditions.checkNotNull(krbKeytab, "Missing argument --" + OPT_KERBEROS_KEYTAB_PATH);
+      LOG.info("Kerberos keytab path : {}", krbKeytab);
+      LOG.info("Kerberos principal : {}", krbPrincipal);
+      String krbRealm = extractKerberosRealmFromPrincipal(krbPrincipal);
+      Preconditions.checkNotNull(krbRealm, "Missing Kerberos realm at the end of principal");
+      LOG.info("Kerberos realm : {}", krbRealm);
       conf.set("hadoop.security.authentication", "kerberos");
       conf.set("hadoop.security.authorization", "true");
-      conf.set("dfs.namenode.kerberos.principal", krbPrincipal);
-      conf.set("dfs.datanode.kerberos.principal", krbPrincipal);
+      String rpcProtection = args.getHadoopRpcProtection();
+      if (rpcProtection != null) {
+        LOG.info("hadoop.rpc.protection: {}", rpcProtection);
+        conf.set("hadoop.rpc.protection", rpcProtection);
+      }
+      String hdfsPrinciple = args.getHdfsPrincipalPrefix() + krbRealm;
+      LOG.info("dfs.[name|data]node.kerberos.principal: {}", hdfsPrinciple);
+      conf.set("dfs.namenode.kerberos.principal", hdfsPrinciple);
+      conf.set("dfs.datanode.kerberos.principal", hdfsPrinciple);
 
       // Login using principal and its keytab:
       UserGroupInformation.setConfiguration(conf);
@@ -67,6 +79,14 @@ class HdfsHandle implements Handle {
     FileSystem fs = FileSystem.get(conf);
     checkArgument(fs instanceof DistributedFileSystem, "Not a DistributedFileSystem");
     dfs = (DistributedFileSystem) fs;
+  }
+
+  private static String extractKerberosRealmFromPrincipal(String krbPrincipal) {
+    int startIdx = krbPrincipal.lastIndexOf('@');
+    if (startIdx >= 0 && startIdx + 1 < krbPrincipal.length()) {
+      return krbPrincipal.substring(startIdx + 1);
+    }
+    return null;
   }
 
   DistributedFileSystem getDfs() {
