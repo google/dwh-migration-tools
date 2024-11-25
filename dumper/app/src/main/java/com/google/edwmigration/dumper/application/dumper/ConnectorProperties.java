@@ -110,6 +110,9 @@ public class ConnectorProperties {
       String connectorName = connector.getName();
       for (ConnectorProperty property : connector.getPropertyConstants()) {
         connectorPropertyNames.put(connectorName, property.getName());
+        // if (property.getDescription().endsWith("rpc.protection")) {
+        LOG.warn("connector name: {}, property name: {}", connector.getName(), property.getName());
+        // }
       }
     }
     return connectorPropertyNames.build();
