@@ -134,6 +134,11 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
   public static final String OPT_KERBEROS_KEYTAB_PATH = "kerberos-keytab-path";
   public static final String OPT_KERBEROS_PRINCIPAL = "kerberos-principal";
+
+  public static final String OPT_HADOOP_RPC_PROTECTION = "hadoop-rpc-protection";
+
+  public static final String OPT_HDFS_PRINCIPAL_PREFIX = "hdfs-principal-prefix";
+  public static final String OPT_HDFS_PRINCIPAL_PREFIX_DEFAULT = "hdfs/_HOST@";
   // Ranger.
   public static final String OPT_RANGER_PORT_DEFAULT = "6080";
   public static final String OPT_RANGER_PAGE_SIZE = "ranger-page-size";
@@ -429,6 +434,23 @@ public class ConnectorArguments extends DefaultArguments {
               OPT_KERBEROS_KEYTAB_PATH, "Set path to Kerberos .keytab file. (No default value)")
           .withRequiredArg()
           .ofType(String.class);
+
+  private final OptionSpec<String> optionHadoopRpcProtection =
+      parser
+          .accepts(
+              OPT_HADOOP_RPC_PROTECTION,
+              "Override default protection. Options are: authentication, privacy, integrity.")
+          .withRequiredArg()
+          .ofType(String.class);
+
+  private final OptionSpec<String> optionHdfsPrincipalPrefix =
+      parser
+          .accepts(
+              OPT_HDFS_PRINCIPAL_PREFIX,
+              "HDFS node(s) principal prefix (when using Kerberos authentication)")
+          .withRequiredArg()
+          .ofType(String.class)
+          .defaultsTo(OPT_HDFS_PRINCIPAL_PREFIX_DEFAULT);
 
   // generic connector
   private final OptionSpec<String> optionGenericQuery =
@@ -918,6 +940,15 @@ public class ConnectorArguments extends DefaultArguments {
 
   public String getKerberosKeytabPath() {
     return getOptions().valueOf(optionKerberosKeytabPath);
+  }
+
+  @CheckForNull
+  public String getHadoopRpcProtection() {
+    return getOptions().valueOf(optionHadoopRpcProtection);
+  }
+
+  public String getHdfsPrincipalPrefix() {
+    return getOptions().valueOf(optionHdfsPrincipalPrefix);
   }
 
   @CheckForNull
