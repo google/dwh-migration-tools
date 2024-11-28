@@ -89,7 +89,7 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
       printer = format.print(writer);
     }
 
-    void handleRecord(Object[] record) throws IOException {
+    void handleRecord(Object... record) throws IOException {
       monitor.count();
       printer.printRecord(record);
     }
