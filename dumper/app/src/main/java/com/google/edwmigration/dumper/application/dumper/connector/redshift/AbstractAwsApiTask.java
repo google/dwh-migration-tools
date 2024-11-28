@@ -31,7 +31,6 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMoni
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -77,15 +76,6 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
   public AmazonCloudWatch cloudWatchApiClient() {
     return cloudWatchClient.orElseGet(
         () -> AmazonCloudWatchClient.builder().withCredentials(credentialsProvider).build());
-  }
-
-  public void writeRecordsCsv(@Nonnull ByteSink sink, List<Object[]> records) throws IOException {
-    CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
-    try (CsvRecordWriter recordWriter = new CsvRecordWriter(sink, format, getName())) {
-      for (Object[] item : records) {
-        recordWriter.handleRecord(item);
-      }
-    }
   }
 
   static class CsvRecordWriter implements AutoCloseable {
