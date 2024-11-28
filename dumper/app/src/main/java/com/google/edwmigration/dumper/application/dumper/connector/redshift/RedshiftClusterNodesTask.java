@@ -49,15 +49,12 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
     try (CsvRecordWriter writer = new CsvRecordWriter(sink, format, getName())) {
       for (Cluster item : result.getClusters()) {
-        Object[] record =
-            new Object[] {
-              item.getClusterIdentifier(),
-              item.getEndpoint() != null ? item.getEndpoint().getAddress() : "",
-              item.getNumberOfNodes(),
-              item.getNodeType(),
-              item.getTotalStorageCapacityInMegaBytes()
-            };
-        writer.handleRecord(record);
+        writer.handleRecord(
+            item.getClusterIdentifier(),
+            item.getEndpoint() != null ? item.getEndpoint().getAddress() : "",
+            item.getNumberOfNodes(),
+            item.getNodeType(),
+            item.getTotalStorageCapacityInMegaBytes());
       }
     }
     return null;
