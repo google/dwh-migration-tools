@@ -16,9 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricConfig;
-import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
-import static com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
 import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
 
 import com.google.auto.service.AutoService;
@@ -38,9 +35,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
-import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricConfig;
-import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
-import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectIntervalTask;
@@ -202,13 +196,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
           "service_class_start_time",
           parallelTask);
 
-      makeClusterMetricsTasks(
-          arguments,
-          intervals,
-          ImmutableList.of(
-              MetricConfig.create(MetricName.CPUUtilization, MetricType.Average),
-              MetricConfig.create(MetricName.PercentageDiskSpaceUsed, MetricType.Average)),
-          out);
+      makeClusterMetricsTasks(arguments, intervals, out);
     }
   }
 
@@ -250,10 +238,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
 
   /** Creates tasks to get Redshift cluster metrics from AWS CloudWatch API. */
   private void makeClusterMetricsTasks(
-      ConnectorArguments arguments,
-      ZonedIntervalIterable intervals,
-      ImmutableList<MetricConfig> metrics,
-      List<? super Task<?>> out) {
+      ConnectorArguments arguments, ZonedIntervalIterable intervals, List<? super Task<?>> out) {
     AbstractAwsApiTask.createCredentialsProvider(arguments)
         .ifPresent(
             awsCredentials -> {
@@ -263,7 +248,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
                         RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX, interval);
                 out.add(
                     new RedshiftClusterUsageMetricsTask(
-                        awsCredentials, ZonedDateTime.now(), interval, file, metrics));
+                        awsCredentials, ZonedDateTime.now(), interval, file));
               }
             });
   }
