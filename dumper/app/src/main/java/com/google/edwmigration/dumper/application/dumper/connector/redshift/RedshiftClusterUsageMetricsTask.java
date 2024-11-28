@@ -19,7 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toMap;
+import static org.apache.hadoop.util.Preconditions.checkArgument;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
@@ -48,8 +48,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
 
@@ -111,6 +109,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
         credentialsProvider,
         zipEntryName,
         RedshiftRawLogsDumpFormat.ClusterUsageMetrics.Header.class);
+    checkArgument(metrics.size() < 5);
     this.interval = interval;
     this.metrics = metrics;
     this.currentTime = currentTime;
@@ -127,8 +126,11 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
       for (Cluster item : clusters) {
         String clusterId = item.getClusterIdentifier();
         ImmutableMap<Instant, List<MetricDataPoint>> clusterMetrics = getClusterMetrics(clusterId);
+        String[] record = new String[2 + metrics.size()];
+        record[0] = clusterId;
         for (Instant key : clusterMetrics.keySet()) {
-          Object[] record = serializeCsvRow(clusterId, key, clusterMetrics.get(key), metrics);
+          record[1] = DATE_FORMAT.format(key);
+          serializeCsvRow(key, clusterMetrics.get(key), record);
           writer.handleRecord(record);
         }
       }
@@ -136,17 +138,17 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
     return null;
   }
 
-  private static Object[] serializeCsvRow(
-      String clusterId,
-      Instant instant,
-      List<MetricDataPoint> dataPoints,
-      List<MetricConfig> metricConfigs) {
-    Map<MetricConfig, Double> values =
-        dataPoints.stream().collect(toMap(MetricDataPoint::metricConfig, MetricDataPoint::value));
-    return Stream.concat(
-            Stream.of(new Object[] {clusterId, DATE_FORMAT.format(instant)}),
-            metricConfigs.stream().map(values::get))
-        .toArray();
+  private void serializeCsvRow(Instant instant, List<MetricDataPoint> dataPoints, String[] result) {
+    // nested loop - this.metrics is short
+    for (int i = 0; i < metrics.size(); i++) {
+      String value = "";
+      for (MetricDataPoint dataItem : dataPoints) {
+        if (dataItem.metricConfig().equals(metrics.get(i))) {
+          value = dataItem.value().toString();
+        }
+      }
+      result[i + 2] = value;
+    }
   }
 
   private ImmutableList<MetricDataPoint> getMetricDataPoints(
