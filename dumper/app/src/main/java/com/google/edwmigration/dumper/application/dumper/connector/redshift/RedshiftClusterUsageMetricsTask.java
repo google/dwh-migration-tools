@@ -126,9 +126,9 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
       List<Cluster> clusters = client.describeClusters(new DescribeClustersRequest()).getClusters();
       for (Cluster item : clusters) {
         String clusterId = item.getClusterIdentifier();
-        ImmutableMap<Instant, List<MetricDataPoint>> metrics = getClusterMetrics(clusterId);
-        for (Instant key : metrics.keySet()) {
-          Object[] record = serializeCsvRow(clusterId, key, metrics.get(key));
+        ImmutableMap<Instant, List<MetricDataPoint>> clusterMetrics = getClusterMetrics(clusterId);
+        for (Instant key : clusterMetrics.keySet()) {
+          Object[] record = serializeCsvRow(clusterId, key, clusterMetrics.get(key), metrics);
           writer.handleRecord(record);
         }
       }
@@ -136,13 +136,16 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
     return null;
   }
 
-  private Object[] serializeCsvRow(
-      String clusterId, Instant instant, List<MetricDataPoint> dataPoints) {
+  private static Object[] serializeCsvRow(
+      String clusterId,
+      Instant instant,
+      List<MetricDataPoint> dataPoints,
+      List<MetricConfig> metricConfigs) {
     Map<MetricConfig, Double> values =
         dataPoints.stream().collect(toMap(MetricDataPoint::metricConfig, MetricDataPoint::value));
     return Stream.concat(
             Stream.of(new Object[] {clusterId, DATE_FORMAT.format(instant)}),
-            metrics.stream().map(metric -> values.get(metric)))
+            metricConfigs.stream().map(values::get))
         .toArray();
   }
 
