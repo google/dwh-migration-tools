@@ -17,18 +17,20 @@
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
-import static java.util.stream.Collectors.toList;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.redshift.AmazonRedshift;
+import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersRequest;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.connector.redshift.AbstractAwsApiTask.CsvRecordWriter;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat.ClusterNodes;
 import java.io.IOException;
 import javax.annotation.Nonnull;
+import org.apache.commons.csv.CSVFormat;
 
 /** Extraction task to get information about Redshift Cluster nodes from AWS API. */
 public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
@@ -44,19 +46,20 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
     DescribeClustersRequest request = new DescribeClustersRequest();
     DescribeClustersResult result = client.describeClusters(request);
 
-    writeRecordsCsv(
-        sink,
-        result.getClusters().stream()
-            .map(
-                cluster ->
-                    new Object[] {
-                      cluster.getClusterIdentifier(),
-                      cluster.getEndpoint() != null ? cluster.getEndpoint().getAddress() : "",
-                      cluster.getNumberOfNodes(),
-                      cluster.getNodeType(),
-                      cluster.getTotalStorageCapacityInMegaBytes()
-                    })
-            .collect(toList()));
+    CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
+    try (CsvRecordWriter writer = new CsvRecordWriter(sink, format, getName())) {
+      for (Cluster item : result.getClusters()) {
+        Object[] record =
+            new Object[] {
+              item.getClusterIdentifier(),
+              item.getEndpoint() != null ? item.getEndpoint().getAddress() : "",
+              item.getNumberOfNodes(),
+              item.getNodeType(),
+              item.getTotalStorageCapacityInMegaBytes()
+            };
+        writer.handleRecord(record);
+      }
+    }
     return null;
   }
 
