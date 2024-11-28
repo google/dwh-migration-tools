@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -33,6 +32,7 @@ import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersRequest;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import org.apache.commons.csv.CSVFormat;
 
 /** Extraction task to get Redshift time series metrics from AWS CloudWatch API. */
 public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
@@ -117,21 +118,19 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
   }
 
   @Override
-  protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, Handle handle)
+  protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws IOException {
-    writeRecordsCsv(
-        sink,
-        listClusters().stream()
-            .flatMap(
-                cluster ->
-                    getClusterMetrics(cluster.getClusterIdentifier()).entrySet().stream()
-                        .map(
-                            metricEntry ->
-                                serializeCsvRow(
-                                    cluster.getClusterIdentifier(),
-                                    metricEntry.getKey(),
-                                    metricEntry.getValue())))
-            .collect(toList()));
+    CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
+    try (CsvRecordWriter writer = new CsvRecordWriter(sink, format, getName())) {
+      for (Cluster item : listClusters()) {
+        String clusterId = item.getClusterIdentifier();
+        ImmutableMap<Instant, List<MetricDataPoint>> metrics = getClusterMetrics(clusterId);
+        for (Instant key : metrics.keySet()) {
+          Object[] record = serializeCsvRow(clusterId, key, metrics.get(key));
+          writer.handleRecord(record);
+        }
+      }
+    }
     return null;
   }
 
