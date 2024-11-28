@@ -122,7 +122,9 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
       throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
     try (CsvRecordWriter writer = new CsvRecordWriter(sink, format, getName())) {
-      for (Cluster item : listClusters()) {
+      AmazonRedshift client = redshiftApiClient();
+      List<Cluster> clusters = client.describeClusters(new DescribeClustersRequest()).getClusters();
+      for (Cluster item : clusters) {
         String clusterId = item.getClusterIdentifier();
         ImmutableMap<Instant, List<MetricDataPoint>> metrics = getClusterMetrics(clusterId);
         for (Instant key : metrics.keySet()) {
@@ -142,12 +144,6 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
             Stream.of(new Object[] {clusterId, DATE_FORMAT.format(instant)}),
             metrics.stream().map(metric -> values.get(metric)))
         .toArray();
-  }
-
-  private ImmutableList<Cluster> listClusters() {
-    AmazonRedshift client = redshiftApiClient();
-    return ImmutableList.copyOf(
-        client.describeClusters(new DescribeClustersRequest()).getClusters());
   }
 
   private ImmutableList<MetricDataPoint> getMetricDataPoints(
