@@ -79,13 +79,7 @@ public class RangerConnectorTlsTest {
 
   @Test
   public void open_noIgnoreTlsVerification_failsWhenUsingSelfSignedTls() throws Exception {
-    server =
-        new WireMockServer(
-            WireMockConfiguration.wireMockConfig()
-                .httpsPort(8443)
-                .keystorePath(
-                    RangerTestResources.getResourceAbsolutePath("ranger/keystore/selfsigned.jks"))
-                .keystorePassword("password"));
+    server = new WireMockServer(WireMockConfiguration.wireMockConfig().httpsPort(8443));
     server.start();
     configureFor("https", "localhost", 8443);
     stubFor(
@@ -111,13 +105,7 @@ public class RangerConnectorTlsTest {
 
   @Test
   public void open_selfSignedTlsWorksWithIgnoreTlsVerificationFlag() throws Exception {
-    server =
-        new WireMockServer(
-            WireMockConfiguration.wireMockConfig()
-                .httpsPort(8443)
-                .keystorePath(
-                    RangerTestResources.getResourceAbsolutePath("ranger/keystore/selfsigned.jks"))
-                .keystorePassword("password"));
+    server = new WireMockServer(WireMockConfiguration.wireMockConfig().httpsPort(8443));
     server.start();
     configureFor("https", "localhost", 8443);
     stubFor(
