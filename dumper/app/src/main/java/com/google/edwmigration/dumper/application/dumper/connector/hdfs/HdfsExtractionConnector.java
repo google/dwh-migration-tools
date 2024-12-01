@@ -22,7 +22,6 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.HdfsInitializerTask;
-import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -51,8 +50,7 @@ import javax.annotation.Nonnull;
     description = "The size of the thread pool to use when extracting hdfs filesystem.")
 @AutoService({Connector.class})
 @Description("Dumps files and directories from the HDFS.")
-public class HdfsExtractionConnector extends AbstractConnector
-    implements HdfsExtractionDumpFormat, ChildConnector {
+public class HdfsExtractionConnector extends AbstractConnector implements HdfsExtractionDumpFormat {
 
   public static final String CONNECTOR_NAME = "hdfs";
 
@@ -84,7 +82,6 @@ public class HdfsExtractionConnector extends AbstractConnector
   }
 
   @Nonnull
-  @Override
   public Optional<Task<?>> createInitializerTask() {
     return Optional.of(new HdfsInitializerTask());
   }

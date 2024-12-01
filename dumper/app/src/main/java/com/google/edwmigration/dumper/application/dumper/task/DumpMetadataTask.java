@@ -16,13 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.connector.meta.UnderlyingConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
 import java.io.Writer;
@@ -52,20 +49,17 @@ public class DumpMetadataTask extends AbstractTask<Void>
   private DumpMetadataTask(
       @Nullable ConnectorArguments arguments,
       @Nonnull String format,
-      @Nullable List<UnderlyingConnector> connectors) {
+      @Nullable List<String> connectors) {
     super(ZIP_ENTRY_NAME);
     this.arguments = arguments;
     this.format = Preconditions.checkNotNull(format, "Format was null.");
-    this.connectors =
-        connectors != null
-            ? connectors.stream().map(UnderlyingConnector::name).collect(toImmutableList())
-            : null;
+    this.connectors = connectors != null ? ImmutableList.copyOf(connectors) : null;
   }
 
   public static DumpMetadataTask create(
       @Nonnull ConnectorArguments arguments,
       @Nonnull String format,
-      @Nonnull ImmutableList<UnderlyingConnector> connectors) {
+      @Nonnull ImmutableList<String> connectors) {
     return new DumpMetadataTask(arguments, format, connectors);
   }
 
