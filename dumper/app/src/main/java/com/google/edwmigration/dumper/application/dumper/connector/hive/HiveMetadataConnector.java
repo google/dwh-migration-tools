@@ -35,7 +35,6 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.HiveInitializerTask;
-import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -75,7 +74,7 @@ import org.slf4j.LoggerFactory;
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hive metastore via Thrift.")
 public class HiveMetadataConnector extends AbstractHiveConnector
-    implements HiveMetadataDumpFormat, MetadataConnector, ChildConnector {
+    implements HiveMetadataDumpFormat, MetadataConnector {
 
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(HiveMetadataConnector.class);
@@ -713,7 +712,6 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   }
 
   @Nonnull
-  @Override
   public Optional<Task<?>> createInitializerTask() {
     return Optional.of(new HiveInitializerTask());
   }

@@ -30,7 +30,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.MetadataConne
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.BashTask;
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HadoopScripts;
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.LocalFilesystemScanCommandGenerator;
-import com.google.edwmigration.dumper.application.dumper.connector.meta.ChildConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -44,7 +43,7 @@ import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hadoop cluster via bash commands.")
-public class ClouderaMetadataConnector implements MetadataConnector, ChildConnector {
+public class ClouderaMetadataConnector implements MetadataConnector {
 
   @VisibleForTesting
   static final ImmutableList<String> SCRIPT_NAMES =
@@ -158,7 +157,6 @@ public class ClouderaMetadataConnector implements MetadataConnector, ChildConnec
   }
 
   @Nonnull
-  @Override
   public Optional<Task<?>> createInitializerTask() {
     return Optional.of(new HadoopInitializerTask());
   }

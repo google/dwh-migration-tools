@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.hdfs.HdfsExtractionConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.meta.MetaHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -36,10 +35,10 @@ public class HdfsInitializerTask extends AbstractTask<Void> {
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
-    MetaHandle metaHandle = (MetaHandle) handle;
-    metaHandle.initializeConnector(
-        HdfsExtractionConnector.CONNECTOR_NAME,
-        new ConnectorArguments("--connector", HdfsExtractionConnector.CONNECTOR_NAME));
+
+    String connectorName = HdfsExtractionConnector.CONNECTOR_NAME;
+    ConnectorArguments connectorArguments = new ConnectorArguments("--connector", connectorName);
+    // todo b/381400224 use in Hadoop
     return null;
   }
 

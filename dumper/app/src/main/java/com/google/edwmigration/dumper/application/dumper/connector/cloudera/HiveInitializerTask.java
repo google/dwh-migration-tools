@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.meta.MetaHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -36,11 +35,10 @@ public class HiveInitializerTask extends AbstractTask<Void> {
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
-    MetaHandle metaHandle = (MetaHandle) handle;
-    metaHandle.initializeConnector(
-        HiveMetadataConnector.CONNECTOR_NAME,
-        new ConnectorArguments(
-            "--connector", HiveMetadataConnector.CONNECTOR_NAME, "--assessment"));
+    String connectorName = HiveMetadataConnector.CONNECTOR_NAME;
+    ConnectorArguments connectorArguments =
+        new ConnectorArguments("--connector", connectorName, "--assessment");
+    // todo b/381400224 use in Hadoop
     return null;
   }
 
