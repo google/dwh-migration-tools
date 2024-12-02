@@ -22,6 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaClusterCPUChartTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -29,6 +30,11 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.net.URI;
 import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -82,7 +88,12 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaCMFHostsTask());
     out.add(new ClouderaAPIHostsTask());
     out.add(new ClouderaServicesTask());
-    out.add(new ClouderaClusterCPUChartTask());
+    out.add(new ClouderaClusterCPUChartTask(
+      ZonedDateTime.of(
+        LocalDate.of(2024, 11, 30),
+        LocalTime.of(10, 30, 0),
+        ZoneId.of("UTC")
+      ), TimeSeriesAggregation.HOURLY));
   }
 
   @Nonnull
