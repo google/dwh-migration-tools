@@ -38,7 +38,7 @@ public class HdfsInitializerTask extends AbstractTask<Void> {
 
     String connectorName = HdfsExtractionConnector.CONNECTOR_NAME;
     ConnectorArguments connectorArguments = new ConnectorArguments("--connector", connectorName);
-    // todo use in Hadoop
+    // todo b/381400224 use in Hadoop
     return null;
   }
 

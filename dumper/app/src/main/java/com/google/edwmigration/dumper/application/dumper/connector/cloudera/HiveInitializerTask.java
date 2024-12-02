@@ -38,7 +38,7 @@ public class HiveInitializerTask extends AbstractTask<Void> {
     String connectorName = HiveMetadataConnector.CONNECTOR_NAME;
     ConnectorArguments connectorArguments =
         new ConnectorArguments("--connector", connectorName, "--assessment");
-    // todo use in Hadoop
+    // todo b/381400224 use in Hadoop
     return null;
   }
 
