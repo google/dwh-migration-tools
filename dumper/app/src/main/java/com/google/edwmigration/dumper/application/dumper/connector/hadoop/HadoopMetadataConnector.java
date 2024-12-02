@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
+package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.HadoopMetadataDumpFormat.FORMAT_NAME;
@@ -27,9 +27,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.hadoop.BashTask;
-import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HadoopScripts;
-import com.google.edwmigration.dumper.application.dumper.connector.hadoop.LocalFilesystemScanCommandGenerator;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -37,13 +34,12 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hadoop cluster via bash commands.")
-public class ClouderaMetadataConnector implements MetadataConnector {
+public class HadoopMetadataConnector implements MetadataConnector {
 
   @VisibleForTesting
   static final ImmutableList<String> SCRIPT_NAMES =
@@ -77,7 +73,7 @@ public class ClouderaMetadataConnector implements MetadataConnector {
           "spark-submit-version",
           "sqoop-version");
 
-  public static final String CONNECTOR_NAME = "cloudera-metadata";
+  public static final String CONNECTOR_NAME = "hadoop";
 
   private static final ImmutableList<String> SERVICE_NAMES =
       ImmutableList.of(
@@ -154,11 +150,6 @@ public class ClouderaMetadataConnector implements MetadataConnector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     return new LocalHandle();
-  }
-
-  @Nonnull
-  public Optional<Task<?>> createInitializerTask() {
-    return Optional.of(new HadoopInitializerTask());
   }
 
   @Override

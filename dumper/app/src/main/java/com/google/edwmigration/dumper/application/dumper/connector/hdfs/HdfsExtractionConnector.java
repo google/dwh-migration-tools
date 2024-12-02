@@ -21,7 +21,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.HdfsInitializerTask;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -31,7 +30,6 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat;
 import java.time.Clock;
 import java.util.List;
-import java.util.Optional;
 import javax.annotation.Nonnull;
 
 @RespectsInput(
@@ -79,10 +77,5 @@ public class HdfsExtractionConnector extends AbstractConnector implements HdfsEx
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     return new HdfsHandle(arguments);
-  }
-
-  @Nonnull
-  public Optional<Task<?>> createInitializerTask() {
-    return Optional.of(new HdfsInitializerTask());
   }
 }
