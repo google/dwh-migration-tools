@@ -132,12 +132,19 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_HIVE_KERBEROS_URL = "hive-kerberos-url";
   public static final String OPT_REQUIRED_IF_NOT_URL = "if --url is not specified";
   public static final String OPT_THREAD_POOL_SIZE = "thread-pool-size";
+  public static final String OPT_KERBEROS_AUTH_FOR_HADOOP = "kerberos-auth-for-hadoop";
+  public static final String OPT_HADOOP_CORE_SITE_XML = "hadoop-core-site-xml";
+  public static final String OPT_HADOOP_HDFS_SITE_XML = "hadoop-hdfs-site-xml";
   public static final String OPT_KERBEROS_KEYTAB_PATH = "kerberos-keytab-path";
   public static final String OPT_KERBEROS_PRINCIPAL = "kerberos-principal";
 
   public static final String OPT_HADOOP_RPC_PROTECTION = "hadoop-rpc-protection";
 
   public static final String OPT_HDFS_PRINCIPAL_PREFIX = "hdfs-principal-prefix";
+  public static final String OPT_HADOOP_CORE_SITE_XML_DEFAULT =
+      "/etc/hadoop/conf.cloudera.hdfs/core-site.xml";
+  public static final String OPT_HADOOP_HDFS_SITE_XML_DEFAULT =
+      "/etc/hadoop/conf.cloudera.hdfs/hdfs-site.xml";
   public static final String OPT_HDFS_PRINCIPAL_PREFIX_DEFAULT = "hdfs/_HOST@";
   // Ranger.
   public static final String OPT_RANGER_PORT_DEFAULT = "6080";
@@ -417,21 +424,46 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(Integer.class)
           .defaultsTo(OPT_THREAD_POOL_SIZE_DEFAULT);
 
-  // Kerberos principal
-  private final OptionSpec<String> optionKerberosPrincipal =
+  public final OptionSpec<String> optionHadoopHdfsSiteXml =
       parser
           .accepts(
-              OPT_KERBEROS_PRINCIPAL,
-              "Set Kerberos principal. It is usually a Service principal of the form: "
-                  + "DUMPER/webserver.example.com@EXAMPLE.COM . (No default value)")
-          .withRequiredArg()
-          .ofType(String.class);
+              OPT_HADOOP_HDFS_SITE_XML,
+              "Path to Hadoop's hdfs-site.xml (when using Kerberos auth).")
+          .withOptionalArg()
+          .ofType(String.class)
+          .defaultsTo(OPT_HADOOP_HDFS_SITE_XML_DEFAULT);
+
+  public final OptionSpec<String> optionHadoopCoreSiteXml =
+      parser
+          .accepts(
+              OPT_HADOOP_CORE_SITE_XML,
+              "Path to Hadoop's core-site.xml (when using Kerberos auth).")
+          .withOptionalArg()
+          .ofType(String.class)
+          .defaultsTo(OPT_HADOOP_CORE_SITE_XML_DEFAULT);
 
   // Kerberos keytab path
   private final OptionSpec<String> optionKerberosKeytabPath =
       parser
           .accepts(
-              OPT_KERBEROS_KEYTAB_PATH, "Set path to Kerberos .keytab file. (No default value)")
+              OPT_KERBEROS_KEYTAB_PATH,
+              "Kerberos keytab file used by Hadoop connector. "
+                  + "Requires option "
+                  + OPT_KERBEROS_PRINCIPAL)
+          .withRequiredArg()
+          .ofType(String.class);
+
+  // Kerberos principal
+  private final OptionSpec<String> optionKerberosPrincipal =
+      parser
+          .accepts(
+              OPT_KERBEROS_PRINCIPAL,
+              "Kerberos principal used by Hadoop connector. It is usually\n"
+                  + "a Service principal of the form: DUMPER/webserver.example.com@KERBEROS.REALM\n"
+                  + "or a User principal of the form: USER@KERBEROS.REALM\n"
+                  + "This option is required by "
+                  + OPT_KERBEROS_KEYTAB_PATH)
+          .requiredIf(optionKerberosKeytabPath)
           .withRequiredArg()
           .ofType(String.class);
 
@@ -439,18 +471,27 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(
               OPT_HADOOP_RPC_PROTECTION,
-              "Override default protection. Options are: authentication, privacy, integrity.")
+              "Protection of Hadoop rpc calls (when using Kerberos auth) "
+                  + "Options are: authentication, privacy, integrity.")
           .withRequiredArg()
           .ofType(String.class);
 
   private final OptionSpec<String> optionHdfsPrincipalPrefix =
       parser
           .accepts(
-              OPT_HDFS_PRINCIPAL_PREFIX,
-              "HDFS node(s) principal prefix (when using Kerberos authentication)")
+              OPT_HDFS_PRINCIPAL_PREFIX, "HDFS node(s) principal prefix (when using Kerberos auth)")
           .withRequiredArg()
           .ofType(String.class)
           .defaultsTo(OPT_HDFS_PRINCIPAL_PREFIX_DEFAULT);
+
+  public final OptionSpec<Void> optionKerberosAuthForHadoop =
+      parser
+          .accepts(OPT_KERBEROS_AUTH_FOR_HADOOP, "Use Kerberos auth for Hadoop.")
+          .requiredIf(
+              optionKerberosKeytabPath,
+              optionKerberosPrincipal,
+              optionHadoopRpcProtection,
+              optionHdfsPrincipalPrefix);
 
   // generic connector
   private final OptionSpec<String> optionGenericQuery =
@@ -934,6 +975,18 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionThreadPoolSize);
   }
 
+  public boolean useKerberosAuthForHadoop() {
+    return getOptions().has(optionKerberosAuthForHadoop);
+  }
+
+  public String getHadoopCoreSiteXml() {
+    return getOptions().valueOf(optionHadoopCoreSiteXml);
+  }
+
+  public String getHadoopHdfsSiteXml() {
+    return getOptions().valueOf(optionHadoopHdfsSiteXml);
+  }
+
   public String getKerberosPrincipal() {
     return getOptions().valueOf(optionKerberosPrincipal);
   }
@@ -1031,5 +1084,9 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDefinitionOrDefault(ConnectorPropertyWithDefault property) {
     return getConnectorProperties().getOrDefault(property);
+  }
+
+  public boolean has(OptionSpec<?> option) {
+    return getOptions().has(option);
   }
 }
