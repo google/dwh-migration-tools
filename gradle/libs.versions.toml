@@ -1,6 +1,7 @@
 # TO FORMAT: run ./gradlew versionCatalogFormat
 # TO UPGRADE: run ./gradlew versionCatalogUpdate (accepts an --interactive flag)
 [versions]
+apache-avro = "1.11.4"
 apache-commons-compress = "1.27.1"
 apache-commons-csv = "1.12.0"
 apache-commons-lang3 = "3.17.0"
@@ -53,6 +54,7 @@ version-catalog-update-plugin = "0.8.5"
 wiremock = "2.27.2"
 
 [libraries]
+apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
 apache-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-commons-compress" }
 apache-commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "apache-commons-csv" }
 apache-commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "apache-commons-lang3" }
