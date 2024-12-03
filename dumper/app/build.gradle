@@ -41,7 +41,7 @@ dependencies {
 
     annotationProcessor libs.auto.value
 
-//    implementation("org.apache.avro:avro:1.11.4")
+    implementation("org.apache.avro:avro:1.11.4")
     implementation project(':dumper:lib-common')
     implementation project(':dumper:lib-dumper-spi')
     implementation project(':dumper:lib-ext-bigquery')
@@ -54,7 +54,9 @@ dependencies {
     implementation libs.apache.avro
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
-    implementation libs.hadoop.common
+    implementation(libs.hadoop.common) { // Replace with your Hadoop version
+        exclude group: 'org.apache.avro', module: 'avro'
+    }
     implementation libs.hadoop.hdfs.client
     implementation libs.spring.core
     implementation libs.spring.jdbc
@@ -102,12 +104,6 @@ dependencies {
 
     sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}@sources"
     sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
-
-    constraints {
-        implementation(libs.apache.avro) {
-            because("Lower avro versions have known vulnerabilities.")
-        }
-    }
 }
 
 dependencyLocking {
