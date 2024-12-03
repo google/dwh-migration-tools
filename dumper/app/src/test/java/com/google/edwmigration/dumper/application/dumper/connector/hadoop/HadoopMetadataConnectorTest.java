@@ -14,13 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.cloudera;
+package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
-import com.google.edwmigration.dumper.application.dumper.connector.hadoop.HadoopScripts;
-import com.google.edwmigration.dumper.application.dumper.connector.hadoop.ScriptTmpDirCleanup;
 import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.experimental.theories.DataPoints;
@@ -30,7 +28,7 @@ import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 
 @RunWith(Theories.class)
-public class ClouderaMetadataConnectorTest {
+public class HadoopMetadataConnectorTest {
 
   @BeforeClass
   public static void setUp() {
@@ -38,7 +36,7 @@ public class ClouderaMetadataConnectorTest {
   }
 
   @DataPoints("scriptNames")
-  public static final ImmutableList<String> SCRIPT_NAMES = ClouderaMetadataConnector.SCRIPT_NAMES;
+  public static final ImmutableList<String> SCRIPT_NAMES = HadoopMetadataConnector.SCRIPT_NAMES;
 
   @Theory
   public void readScript_startsWithShebang_success(@FromDataPoints("scriptNames") String scriptName)

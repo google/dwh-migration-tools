@@ -34,7 +34,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.HiveInitializerTask;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -61,7 +60,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -709,10 +707,5 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     if (arguments.isAssessment()) {
       out.add(new DatabasesTask(databasePredicate));
     }
-  }
-
-  @Nonnull
-  public Optional<Task<?>> createInitializerTask() {
-    return Optional.of(new HiveInitializerTask());
   }
 }
