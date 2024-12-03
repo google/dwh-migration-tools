@@ -41,6 +41,7 @@ dependencies {
 
     annotationProcessor libs.auto.value
 
+//    implementation("org.apache.avro:avro:1.11.4")
     implementation project(':dumper:lib-common')
     implementation project(':dumper:lib-dumper-spi')
     implementation project(':dumper:lib-ext-bigquery')
@@ -50,6 +51,7 @@ dependencies {
     implementation libs.jopt.simple
     implementation libs.jdiagnostics
     implementation libs.commons.io
+    implementation libs.apache.avro
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
     implementation libs.hadoop.common
@@ -100,6 +102,12 @@ dependencies {
 
     sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}@sources"
     sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
+
+    constraints {
+        implementation(libs.apache.avro) {
+            because("Lower avro versions have known vulnerabilities.")
+        }
+    }
 }
 
 dependencyLocking {

@@ -32,6 +32,7 @@ dependencies {
     implementation libs.jackson.databind
     compileOnly libs.javax.annotation.api
 
+    hive312RuntimeOnly libs.apache.avro
     hive312RuntimeOnly libs.hive.common
     hive312RuntimeOnly libs.hive.exec
     hive312RuntimeOnly libs.hive.service
