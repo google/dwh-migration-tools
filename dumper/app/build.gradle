@@ -41,7 +41,6 @@ dependencies {
 
     annotationProcessor libs.auto.value
 
-    implementation("org.apache.avro:avro:1.11.4")
     implementation project(':dumper:lib-common')
     implementation project(':dumper:lib-dumper-spi')
     implementation project(':dumper:lib-ext-bigquery')
@@ -54,9 +53,7 @@ dependencies {
     implementation libs.apache.avro
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
-    implementation(libs.hadoop.common) { // Replace with your Hadoop version
-        exclude group: 'org.apache.avro', module: 'avro'
-    }
+    implementation libs.hadoop.common
     implementation libs.hadoop.hdfs.client
     implementation libs.spring.core
     implementation libs.spring.jdbc
