@@ -30,12 +30,11 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.net.URI;
 import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -88,12 +87,12 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaCMFHostsTask());
     out.add(new ClouderaAPIHostsTask());
     out.add(new ClouderaServicesTask());
-    out.add(new ClouderaClusterCPUChartTask(
-      ZonedDateTime.of(
-        LocalDate.of(2024, 11, 30),
-        LocalTime.of(10, 30, 0),
-        ZoneId.of("UTC")
-      ), TimeSeriesAggregation.HOURLY));
+    for (int deltaInDays : Arrays.asList(1, 7, 30, 90)) {
+      out.add(
+          new ClouderaClusterCPUChartTask(
+              ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC")),
+              deltaInDays > 1 ? TimeSeriesAggregation.DAILY : TimeSeriesAggregation.HOURLY));
+    }
   }
 
   @Nonnull

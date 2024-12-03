@@ -56,6 +56,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
     DAILY,
     WEEKLY,
   }
+
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
   /*
     SELECT cpu_percent_across_hosts WHERE entityName = "1546336862" AND category = CLUSTER
@@ -65,8 +66,8 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  final private ZonedDateTime from;
-  final private TimeSeriesAggregation tsAggregation;
+  private final ZonedDateTime from;
+  private final TimeSeriesAggregation tsAggregation;
 
   public ClouderaClusterCPUChartTask() {
     this(Instant.now().atZone(ZoneId.of("UTC")), TimeSeriesAggregation.RAW);
@@ -74,12 +75,10 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
 
   public ClouderaClusterCPUChartTask(ZonedDateTime from, TimeSeriesAggregation tsAggregation) {
     super(
-      String.format(
-        "cmf-cluster-cpu-%s-%s.jsonl",
-        from.toString().replaceAll("[-:\\[\\]ZUTC]", "").toLowerCase(),
-        tsAggregation.toString().toLowerCase()
-      )
-    );
+        String.format(
+            "cmf-cluster-cpu-%s-%s.jsonl",
+            from.toString().replaceAll("[-:\\[\\]ZUTC.]", "").toLowerCase(),
+            tsAggregation.toString().toLowerCase()));
     this.from = from;
     this.tsAggregation = tsAggregation;
   }
@@ -96,12 +95,13 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
       for (ClouderaClusterDTO cluster : clusters) {
         String cpuPerClusterQuery = getQueryToFetchCPUTimeSeriesOnCluster(cluster.getId());
         LOG.debug(
-            "Execute charts query: [{}] for the cluster: [{}].", cpuPerClusterQuery, cluster.getName());
+            "Execute charts query: [{}] for the cluster: [{}].",
+            cpuPerClusterQuery,
+            cluster.getName());
 
         LOG.debug(this.tsAggregation.toString());
 
         URIBuilder uriBuilder = new URIBuilder(timeSeriesAPIUrl);
-        // todo add from/to/desiredRollup
         uriBuilder.addParameter("query", cpuPerClusterQuery);
         uriBuilder.addParameter("desiredRollup", this.tsAggregation.toString());
         uriBuilder.addParameter("mustUseDesiredRollup", "true");
@@ -125,18 +125,19 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
           "Cloudera clusters must be initialized before CPU charts dumping.");
     }
     List<ClouderaClusterDTO> cpuClusters = new ArrayList<>(clusters);
-    cpuClusters.removeIf(cluster -> {
-      if (cluster.getId() == null) {
-        LOG.warn(
-            "Cloudera cluster id is null for cluster [{}]. "
-                + "Skip CPU metrics for the cluster.",
-            cluster.getName());
-        // todo it's might be critical data for TCO calculation and we should fail the dump
-        // process. Discuss with product
-        return true;
-      }
-      return false;
-    });
+    cpuClusters.removeIf(
+        cluster -> {
+          if (cluster.getId() == null) {
+            LOG.warn(
+                "Cloudera cluster id is null for cluster [{}]. "
+                    + "Skip CPU metrics for the cluster.",
+                cluster.getName());
+            // todo it's might be critical data for TCO calculation and we should fail the dump
+            // process. Discuss with product
+            return true;
+          }
+          return false;
+        });
     return cpuClusters;
   }
 
@@ -149,7 +150,8 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
   }
 
   private String getISODateTime(ZonedDateTime datetime) {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");;
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    ;
     return datetime.format(formatter);
   }
 }
