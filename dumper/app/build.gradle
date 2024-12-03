@@ -101,6 +101,14 @@ dependencies {
 
     sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}@sources"
     sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
+
+    configurations.all {
+        resolutionStrategy {
+            preferProjectModules()
+        }
+    }
+}
+
 }
 
 dependencyLocking {
