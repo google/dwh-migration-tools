@@ -139,7 +139,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
   }
 
   private String buildTimeSeriesUrl(String apiUri) {
-    return apiUri + "timeseries";
+    return apiUri + "/timeseries";
   }
 
   private String buildQueryToFetchCPUTimeSeriesOnCluster(String clusterId) {
