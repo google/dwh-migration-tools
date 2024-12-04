@@ -24,7 +24,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -66,20 +66,19 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private final ZonedDateTime from;
+  private final int includedLastDays;
   private final TimeSeriesAggregation tsAggregation;
 
   public ClouderaClusterCPUChartTask() {
-    this(Instant.now().atZone(ZoneId.of("UTC")), TimeSeriesAggregation.RAW);
+    this(1, TimeSeriesAggregation.RAW);
   }
 
-  public ClouderaClusterCPUChartTask(ZonedDateTime from, TimeSeriesAggregation tsAggregation) {
+  public ClouderaClusterCPUChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
     super(
         String.format(
             "cmf-cluster-cpu-%s-%s.jsonl",
-            from.toString().replaceAll("[-:\\[\\]ZUTC.]", "").toLowerCase(),
-            tsAggregation.toString().toLowerCase()));
-    this.from = from;
+            includedLastDays, tsAggregation.toString().toLowerCase()));
+    this.includedLastDays = includedLastDays;
     this.tsAggregation = tsAggregation;
   }
 
@@ -90,10 +89,10 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
     CloseableHttpClient httpClient = handle.getHttpClient();
     List<ClouderaClusterDTO> clusters = getClustersFromHandle(handle);
 
-    final String timeSeriesAPIUrl = getTimeSeriesUrl(handle.getApiURI().toString());
+    final String timeSeriesAPIUrl = buildTimeSeriesUrl(handle.getApiURI().toString());
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
-        String cpuPerClusterQuery = getQueryToFetchCPUTimeSeriesOnCluster(cluster.getId());
+        String cpuPerClusterQuery = buildQueryToFetchCPUTimeSeriesOnCluster(cluster.getId());
         LOG.debug(
             "Execute charts query: [{}] for the cluster: [{}].",
             cpuPerClusterQuery,
@@ -105,7 +104,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
         uriBuilder.addParameter("query", cpuPerClusterQuery);
         uriBuilder.addParameter("desiredRollup", this.tsAggregation.toString());
         uriBuilder.addParameter("mustUseDesiredRollup", "true");
-        uriBuilder.addParameter("from", getISODateTime(this.from));
+        uriBuilder.addParameter("from", buildISODateTime(this.includedLastDays));
 
         try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
           JsonNode jsonNode = objectMapper.readTree(chart.getEntity().getContent());
@@ -124,34 +123,33 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
       throw new MetadataDumperUsageException(
           "Cloudera clusters must be initialized before CPU charts dumping.");
     }
-    List<ClouderaClusterDTO> cpuClusters = new ArrayList<>(clusters);
-    cpuClusters.removeIf(
-        cluster -> {
-          if (cluster.getId() == null) {
-            LOG.warn(
-                "Cloudera cluster id is null for cluster [{}]. "
-                    + "Skip CPU metrics for the cluster.",
-                cluster.getName());
-            // todo it's might be critical data for TCO calculation and we should fail the dump
-            // process. Discuss with product
-            return true;
-          }
-          return false;
-        });
+    List<ClouderaClusterDTO> cpuClusters = new ArrayList<>();
+    for (ClouderaClusterDTO cluster : clusters) {
+      if (cluster.getId() == null) {
+        LOG.warn(
+            "Cloudera cluster id is null for cluster [{}]. " + "Skip CPU metrics for the cluster.",
+            cluster.getName());
+        // todo it's might be critical data for TCO calculation and we should fail the dump
+        // process. Discuss with product
+      } else {
+        cpuClusters.add(cluster);
+      }
+    }
     return cpuClusters;
   }
 
-  private String getTimeSeriesUrl(String apiUri) {
+  private String buildTimeSeriesUrl(String apiUri) {
     return apiUri + "timeseries";
   }
 
-  private String getQueryToFetchCPUTimeSeriesOnCluster(String clusterId) {
+  private String buildQueryToFetchCPUTimeSeriesOnCluster(String clusterId) {
     return String.format(TS_CPU_QUERY_TEMPLATE, clusterId);
   }
 
-  private String getISODateTime(ZonedDateTime datetime) {
+  private String buildISODateTime(int deltaInDays) {
+    ZonedDateTime dt =
+        ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    ;
-    return datetime.format(formatter);
+    return dt.format(formatter);
   }
 }
