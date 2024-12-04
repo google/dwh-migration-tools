@@ -16,24 +16,39 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +60,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ClouderaClusterCPUChartTaskTest {
   private final ClouderaClusterCPUChartTask task = new ClouderaClusterCPUChartTask();
   private ClouderaManagerHandle handle;
+  private String servicesJson;
 
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
@@ -55,7 +71,8 @@ public class ClouderaClusterCPUChartTaskTest {
 
   @Before
   public void setUp() throws Exception {
-    uri = URI.create("http://localhost/");
+    servicesJson = readFileAsString("/cloudera/manager/cluster-cpu-status.json");
+    uri = URI.create("http://localhost/api");
     handle = new ClouderaManagerHandle(uri, httpClient);
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
@@ -75,11 +92,49 @@ public class ClouderaClusterCPUChartTaskTest {
     verifyNoWrites();
   }
 
+  @Test
+  public void validCluster_doWrites() throws Exception {
+    // GIVEN: Valid cluster
+    handle.initClusters(ImmutableList.of(ClouderaClusterDTO.create("id1", "first-cluster")));
+
+    CloseableHttpResponse firstResponse = mock(CloseableHttpResponse.class);
+    HttpEntity firstEntity = mock(HttpEntity.class);
+    when(firstResponse.getEntity()).thenReturn(firstEntity);
+    when(firstEntity.getContent()).thenReturn(new ByteArrayInputStream(servicesJson.getBytes()));
+    when(httpClient.execute(argThat(get -> get != null))).thenReturn(firstResponse);
+
+    // WHEN
+    task.doRun(context, sink, handle);
+
+    // THEN: the output should be dumped into the jsonl format
+    Set<String> fileLines = new HashSet<>();
+    verify(writer, times(1))
+        .write(
+            (String)
+                argThat(
+                    content -> {
+                      String str = (String) content;
+                      assertFalse(str.contains("\n"));
+                      assertFalse(str.contains("\r"));
+                      fileLines.add(str);
+                      return true;
+                    }));
+    assertEquals(ImmutableSet.of(tojsonl(servicesJson)), fileLines);
+  }
+
   private void verifyNoWrites() throws IOException {
     verify(writer, never()).write(anyChar());
     verify(writer, never()).write(anyString());
     verify(writer, never()).write(anyString(), anyInt(), anyInt());
     verify(writer, never()).write(any(char[].class));
     verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
+  }
+
+  private String readFileAsString(String fileName) throws IOException, URISyntaxException {
+    return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(fileName).toURI())));
+  }
+
+  private String tojsonl(String json) throws Exception {
+    return new ObjectMapper().readTree(json).toString();
   }
 }

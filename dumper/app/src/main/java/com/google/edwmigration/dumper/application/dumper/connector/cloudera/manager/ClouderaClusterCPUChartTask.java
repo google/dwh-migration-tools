@@ -98,8 +98,6 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
             cpuPerClusterQuery,
             cluster.getName());
 
-        LOG.debug(this.tsAggregation.toString());
-
         URIBuilder uriBuilder = new URIBuilder(timeSeriesAPIUrl);
         uriBuilder.addParameter("query", cpuPerClusterQuery);
         uriBuilder.addParameter("desiredRollup", this.tsAggregation.toString());
@@ -139,7 +137,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
   }
 
   private String buildTimeSeriesUrl(String apiUri) {
-    return apiUri + "timeseries";
+    return apiUri + "/timeseries";
   }
 
   private String buildQueryToFetchCPUTimeSeriesOnCluster(String clusterId) {
