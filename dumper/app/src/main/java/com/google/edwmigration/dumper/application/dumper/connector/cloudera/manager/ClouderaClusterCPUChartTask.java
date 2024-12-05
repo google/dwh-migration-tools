@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
@@ -39,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The task collects hosts from Cloudera Manager <a
+ * The task collects CPU usage per cluster from Cloudera Manager <a
  * href="https://cldr2-aw-dl-gateway.cldr2-cd.svye-dcxb.a5.cloudera.site/static/apidocs/resource_TimeSeriesResource.html">TimeSeries
  * API</a> The chart is for whole cluster is available on {@code /cmf/home/} and {@code
  * cmf/clusters/{clusterId}/status} pages in Cloudera Manager UI. <b/> The query to chart is written
@@ -58,26 +59,24 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
-  /*
-    SELECT cpu_percent_across_hosts WHERE entityName = "1546336862" AND category = CLUSTER
-  */
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
-
+  private static final DateTimeFormatter isoDateTimeFormatter =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   private final int includedLastDays;
   private final TimeSeriesAggregation tsAggregation;
 
-  public ClouderaClusterCPUChartTask() {
-    this(1, TimeSeriesAggregation.RAW);
-  }
-
-  public ClouderaClusterCPUChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
+  public ClouderaClusterCPUChartTask(
+      int includedLastDays, @Nonnull TimeSeriesAggregation tsAggregation) {
     super(
         String.format(
             "cmf-cluster-cpu-%s-%s.jsonl",
             includedLastDays, tsAggregation.toString().toLowerCase()));
+    Preconditions.checkArgument(
+        includedLastDays >= 1,
+        "The chart has to include at least one day. Received " + includedLastDays + " days.");
     this.includedLastDays = includedLastDays;
     this.tsAggregation = tsAggregation;
   }
@@ -147,7 +146,6 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
   private String buildISODateTime(int deltaInDays) {
     ZonedDateTime dt =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    return dt.format(formatter);
+    return dt.format(isoDateTimeFormatter);
   }
 }

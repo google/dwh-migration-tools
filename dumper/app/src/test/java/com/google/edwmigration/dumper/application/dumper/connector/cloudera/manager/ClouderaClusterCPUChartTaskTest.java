@@ -18,6 +18,8 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -35,6 +37,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaClusterCPUChartTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.ByteArrayInputStream;
@@ -58,7 +62,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaClusterCPUChartTaskTest {
-  private final ClouderaClusterCPUChartTask task = new ClouderaClusterCPUChartTask();
+  private final ClouderaClusterCPUChartTask task =
+      new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY);
   private ClouderaManagerHandle handle;
   private String servicesJson;
 
@@ -120,6 +125,38 @@ public class ClouderaClusterCPUChartTaskTest {
                       return true;
                     }));
     assertEquals(ImmutableSet.of(tojsonl(servicesJson)), fileLines);
+  }
+
+  @Test
+  public void clustersWereNotInitialized_throwsException() throws Exception {
+    // GIVEN: There is no valid cluster
+    assertNull(handle.getClusters());
+
+    // WHEN:
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    // THEN: There is a relevant exception has been raised
+    assertEquals(
+        "Cloudera clusters must be initialized before CPU charts dumping.", exception.getMessage());
+    verifyNoWrites();
+  }
+
+  @Test
+  public void chartWithEmptyDateRange_throwsException() throws Exception {
+    // GIVEN: There is a valid cluster
+    handle.initClusters(ImmutableList.of(ClouderaClusterDTO.create("id1", "first-cluster")));
+
+    // WHEN: CPU usage task with empty date range is initiated
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new ClouderaClusterCPUChartTask(0, TimeSeriesAggregation.HOURLY));
+
+    // THEN: A relevant exception has been raised
+    assertEquals(
+        "The chart has to include at least one day. Received 0 days.", exception.getMessage());
+    verifyNoWrites();
   }
 
   private void verifyNoWrites() throws IOException {
