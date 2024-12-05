@@ -112,7 +112,6 @@ jline:jline:2.14.3=hive312RuntimeClasspath
 joda-time:joda-time:2.9.9=hive312RuntimeClasspath
 junit:junit:4.13.1=hive312RuntimeClasspath
 junit:junit:4.13.2=testCompileClasspath,testRuntimeClasspath
-log4j:log4j:1.2.17=hive312RuntimeClasspath
 net.hydromatic:aggdesigner-algorithm:6.0=hive312RuntimeClasspath
 net.minidev:accessors-smart:1.2=hive312RuntimeClasspath
 net.minidev:json-smart:2.3=hive312RuntimeClasspath
