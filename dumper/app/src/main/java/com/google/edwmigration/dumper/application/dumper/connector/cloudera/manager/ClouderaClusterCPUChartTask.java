@@ -49,15 +49,6 @@ import org.slf4j.LoggerFactory;
  * language.
  */
 public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
-  enum TimeSeriesAggregation {
-    RAW,
-    TEN_MINUTELY,
-    HOURLY,
-    SIX_HOURLY,
-    DAILY,
-    WEEKLY,
-  }
-
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
@@ -71,6 +62,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
   public ClouderaClusterCPUChartTask(
       int includedLastDays, @Nonnull TimeSeriesAggregation tsAggregation) {
     super(buildOutputFileName(includedLastDays));
+    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
     Preconditions.checkArgument(
         includedLastDays >= 1,
         "The chart has to include at least one day. Received " + includedLastDays + " days.");
@@ -146,5 +138,14 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
 
   private static String buildOutputFileName(int includedLastDays) {
     return String.format("cmf-cluster-cpu-%sd.jsonl", includedLastDays);
+  }
+
+  enum TimeSeriesAggregation {
+    RAW,
+    TEN_MINUTELY,
+    HOURLY,
+    SIX_HOURLY,
+    DAILY,
+    WEEKLY,
   }
 }

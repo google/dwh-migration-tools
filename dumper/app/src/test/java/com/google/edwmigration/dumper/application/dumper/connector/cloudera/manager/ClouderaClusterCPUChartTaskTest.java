@@ -50,10 +50,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,13 +99,27 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
+  public void noAggregationParameter_throwsException() throws IOException {
+    // WHEN: CPU usage task is initiated with no aggregation parameter
+    NullPointerException exception =
+        assertThrows(NullPointerException.class, () -> new ClouderaClusterCPUChartTask(5, null));
+
+    // THEN: There is a relevant exception has been raised
+    assertEquals("TimeSeriesAggregation has not to be a null.", exception.getMessage());
+    verifyNoWrites();
+  }
+
+  @Test
   public void validCluster_doWrites() throws Exception {
-    // GIVEN: Valid two valid clusters
+    // GIVEN: Two valid clusters
     handle.initClusters(
         ImmutableList.of(
             ClouderaClusterDTO.create("id1", "first-cluster"),
             ClouderaClusterDTO.create("id2", "second-cluster")));
-    mockHttpRequest(servicesJson);
+    String firstClusterServicesJson = servicesJson;
+    String secondClusterServicesJson = servicesJson + "{}";
+    mockHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
+    mockHttpRequestToFetchClusterCPUChart("id2", secondClusterServicesJson);
 
     // WHEN
     task.doRun(context, sink, handle);
@@ -123,18 +137,9 @@ public class ClouderaClusterCPUChartTaskTest {
                       fileLines.add(str);
                       return true;
                     }));
-    assertEquals(ImmutableSet.of(tojsonl(servicesJson), tojsonl(servicesJson)), fileLines);
-  }
-
-  private void mockHttpRequest(String mockedContent) throws IOException {
-    CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    HttpEntity httpEntity = mock(HttpEntity.class);
-    when(httpResponse.getEntity()).thenReturn(httpEntity);
-    when(httpEntity.getContent())
-        .thenReturn(
-            new ByteArrayInputStream(mockedContent.getBytes()),
-            new ByteArrayInputStream(mockedContent.getBytes()));
-    when(httpClient.execute(argThat(Objects::nonNull))).thenReturn(httpResponse);
+    assertEquals(
+        ImmutableSet.of(tojsonl(firstClusterServicesJson), tojsonl(secondClusterServicesJson)),
+        fileLines);
   }
 
   @Test
@@ -166,7 +171,22 @@ public class ClouderaClusterCPUChartTaskTest {
     // THEN: A relevant exception has been raised
     assertEquals(
         "The chart has to include at least one day. Received 0 days.", exception.getMessage());
-    verifyNoWrites();
+  }
+
+  private void mockHttpRequestToFetchClusterCPUChart(String clusterName, String mockedContent)
+      throws IOException {
+    CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    when(httpResponse.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream(mockedContent.getBytes()));
+    when(httpClient.execute(
+            argThat(
+                (HttpGet get) ->
+                    get != null
+                        && get.getURI()
+                            .getQuery()
+                            .contains(String.format("entityName = \"%s\"", clusterName)))))
+        .thenReturn(httpResponse);
   }
 
   private void verifyNoWrites() throws IOException {
