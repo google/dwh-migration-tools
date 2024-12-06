@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -99,21 +100,19 @@ public class ClouderaClusterCPUChartTaskTest {
 
   @Test
   public void validCluster_doWrites() throws Exception {
-    // GIVEN: Valid cluster
-    handle.initClusters(ImmutableList.of(ClouderaClusterDTO.create("id1", "first-cluster")));
-
-    CloseableHttpResponse firstResponse = mock(CloseableHttpResponse.class);
-    HttpEntity firstEntity = mock(HttpEntity.class);
-    when(firstResponse.getEntity()).thenReturn(firstEntity);
-    when(firstEntity.getContent()).thenReturn(new ByteArrayInputStream(servicesJson.getBytes()));
-    when(httpClient.execute(argThat(get -> get != null))).thenReturn(firstResponse);
+    // GIVEN: Valid two valid clusters
+    handle.initClusters(
+        ImmutableList.of(
+            ClouderaClusterDTO.create("id1", "first-cluster"),
+            ClouderaClusterDTO.create("id2", "second-cluster")));
+    mockHttpRequest(servicesJson);
 
     // WHEN
     task.doRun(context, sink, handle);
 
-    // THEN: the output should be dumped into the jsonl format
+    // THEN: the output should be dumped into the jsonl format for both clusters
     Set<String> fileLines = new HashSet<>();
-    verify(writer, times(1))
+    verify(writer, times(2))
         .write(
             (String)
                 argThat(
@@ -124,7 +123,18 @@ public class ClouderaClusterCPUChartTaskTest {
                       fileLines.add(str);
                       return true;
                     }));
-    assertEquals(ImmutableSet.of(tojsonl(servicesJson)), fileLines);
+    assertEquals(ImmutableSet.of(tojsonl(servicesJson), tojsonl(servicesJson)), fileLines);
+  }
+
+  private void mockHttpRequest(String mockedContent) throws IOException {
+    CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
+    HttpEntity httpEntity = mock(HttpEntity.class);
+    when(httpResponse.getEntity()).thenReturn(httpEntity);
+    when(httpEntity.getContent())
+        .thenReturn(
+            new ByteArrayInputStream(mockedContent.getBytes()),
+            new ByteArrayInputStream(mockedContent.getBytes()));
+    when(httpClient.execute(argThat(Objects::nonNull))).thenReturn(httpResponse);
   }
 
   @Test

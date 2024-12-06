@@ -70,10 +70,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
 
   public ClouderaClusterCPUChartTask(
       int includedLastDays, @Nonnull TimeSeriesAggregation tsAggregation) {
-    super(
-        String.format(
-            "cmf-cluster-cpu-%s-%s.jsonl",
-            includedLastDays, tsAggregation.toString().toLowerCase()));
+    super(buildOutputFileName(includedLastDays));
     Preconditions.checkArgument(
         includedLastDays >= 1,
         "The chart has to include at least one day. Received " + includedLastDays + " days.");
@@ -124,10 +121,8 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
     for (ClouderaClusterDTO cluster : clusters) {
       if (cluster.getId() == null) {
         LOG.warn(
-            "Cloudera cluster id is null for cluster [{}]. " + "Skip CPU metrics for the cluster.",
+            "Cloudera cluster id is null for cluster [{}]. Skip CPU metrics for the cluster.",
             cluster.getName());
-        // todo it's might be critical data for TCO calculation and we should fail the dump
-        // process. Discuss with product
       } else {
         cpuClusters.add(cluster);
       }
@@ -147,5 +142,9 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
     ZonedDateTime dt =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
     return dt.format(isoDateTimeFormatter);
+  }
+
+  private static String buildOutputFileName(int includedLastDays) {
+    return String.format("cmf-cluster-cpu-%sd.jsonl", includedLastDays);
   }
 }
