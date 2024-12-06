@@ -22,6 +22,7 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaClusterCPUChartTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -82,6 +83,10 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaCMFHostsTask());
     out.add(new ClouderaAPIHostsTask());
     out.add(new ClouderaServicesTask());
+    out.add(new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY));
+    out.add(new ClouderaClusterCPUChartTask(7, TimeSeriesAggregation.DAILY));
+    out.add(new ClouderaClusterCPUChartTask(30, TimeSeriesAggregation.DAILY));
+    out.add(new ClouderaClusterCPUChartTask(90, TimeSeriesAggregation.DAILY));
   }
 
   @Nonnull
