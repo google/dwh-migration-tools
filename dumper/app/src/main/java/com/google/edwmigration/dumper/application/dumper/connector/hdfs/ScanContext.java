@@ -112,6 +112,10 @@ final class ScanContext implements Closeable {
           nFiles,
           nDirs,
           strStoragePolicy);
+
+      if (numDirsWalked % 1000 == 0) {
+        LOG.info(getFormattedStats());
+      }
     }
   }
 
