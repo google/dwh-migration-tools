@@ -16,20 +16,24 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +64,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
     final URI baseURI = handle.getBaseURI();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+      ApiHostListDto apiHosts;
+      List<ClouderaHostDTO> hosts = new ArrayList<>();
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
           LOG.warn(
@@ -72,12 +78,20 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
         String hostPerClusterUrl =
             baseURI + "/cmf/hardware/hosts/hostsOverview.json?clusterId=" + cluster.getId();
 
-        try (CloseableHttpResponse hosts = httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          JsonNode jsonNode = objectMapper.readTree(hosts.getEntity().getContent());
-          writer.write(jsonNode.toString());
-          writer.write('\n');
+        try (CloseableHttpResponse hostsResponse =
+            httpClient.execute(new HttpGet(hostPerClusterUrl))) {
+          String hostsJson = EntityUtils.toString(hostsResponse.getEntity());
+          apiHosts = objectMapper.readValue(hostsJson, ApiHostListDto.class);
+          writer.write(hostsJson);
+          writer.write("\n");
+        }
+
+        // writer.write(objectMapper.writeValueAsString(apiHosts));
+        for (ApiHostDto apiHost : apiHosts.getItems()) {
+          hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
+      handle.initHosts(hosts);
     }
     return null;
   }

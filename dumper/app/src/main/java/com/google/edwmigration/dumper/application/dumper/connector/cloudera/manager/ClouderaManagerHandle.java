@@ -35,6 +35,7 @@ public class ClouderaManagerHandle implements Handle {
   private final CloseableHttpClient httpClient;
 
   private ImmutableList<ClouderaClusterDTO> clusters;
+  private ImmutableList<ClouderaHostDTO> hosts;
 
   public ClouderaManagerHandle(URI apiURI, CloseableHttpClient httpClient) {
     Preconditions.checkNotNull(apiURI, "Cloudera's apiURI can't null.");
@@ -68,6 +69,18 @@ public class ClouderaManagerHandle implements Handle {
     this.clusters = ImmutableList.copyOf(clusters);
   }
 
+  @CheckForNull
+  public synchronized ImmutableList<ClouderaHostDTO> getHosts() {
+    return hosts;
+  }
+
+  public synchronized void initHosts(List<ClouderaHostDTO> hosts) {
+    if (this.hosts != null) {
+      throw new IllegalStateException("The cluster already initialized!");
+    }
+    this.hosts = ImmutableList.copyOf(hosts);
+  }
+
   @Override
   public void close() throws IOException {
     if (httpClient != null) {
@@ -89,8 +102,21 @@ public class ClouderaManagerHandle implements Handle {
 
     @CheckForNull
     @Nullable
-    public abstract String getId();
+    abstract String getId();
 
-    public abstract String getName();
+    abstract String getName();
+  }
+
+  @AutoValue
+  public abstract static class ClouderaHostDTO {
+    public static ClouderaHostDTO create(String id, String name) {
+      return new AutoValue_ClouderaManagerHandle_ClouderaHostDTO(id, name);
+    }
+
+    @CheckForNull
+    @Nullable
+    abstract String getId();
+
+    abstract String getName();
   }
 }
