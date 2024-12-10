@@ -38,8 +38,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaClusterCPUChartTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaTimeSeriesQueryBuilder.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -64,7 +64,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaClusterCPUChartTaskTest {
   private final ClouderaClusterCPUChartTask task =
-      new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY);
+      new ClouderaClusterCPUChartTask(
+          new ClouderaCpuTimeSeriesQueryBuilder(1, TimeSeriesAggregation.HOURLY));
   private ClouderaManagerHandle handle;
   private String servicesJson;
 
@@ -102,7 +103,9 @@ public class ClouderaClusterCPUChartTaskTest {
   public void noAggregationParameter_throwsException() throws IOException {
     // WHEN: CPU usage task is initiated with no aggregation parameter
     NullPointerException exception =
-        assertThrows(NullPointerException.class, () -> new ClouderaClusterCPUChartTask(5, null));
+        assertThrows(
+            NullPointerException.class,
+            () -> new ClouderaClusterCPUChartTask(new ClouderaCpuTimeSeriesQueryBuilder(5, null)));
 
     // THEN: There is a relevant exception has been raised
     assertEquals("TimeSeriesAggregation has not to be a null.", exception.getMessage());
@@ -166,7 +169,9 @@ public class ClouderaClusterCPUChartTaskTest {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new ClouderaClusterCPUChartTask(0, TimeSeriesAggregation.HOURLY));
+            () ->
+                new ClouderaClusterCPUChartTask(
+                    new ClouderaCpuTimeSeriesQueryBuilder(0, TimeSeriesAggregation.HOURLY)));
 
     // THEN: A relevant exception has been raised
     assertEquals(

@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
@@ -50,24 +49,15 @@ import org.slf4j.LoggerFactory;
  */
 public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
-  private static final String TS_CPU_QUERY_TEMPLATE =
-      "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private final int includedLastDays;
-  private final TimeSeriesAggregation tsAggregation;
+  private final ClouderaTimeSeriesQueryBuilder tsQueryBuilder;
 
-  public ClouderaClusterCPUChartTask(
-      int includedLastDays, @Nonnull TimeSeriesAggregation tsAggregation) {
-    super(buildOutputFileName(includedLastDays));
-    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
-    Preconditions.checkArgument(
-        includedLastDays >= 1,
-        "The chart has to include at least one day. Received " + includedLastDays + " days.");
-    this.includedLastDays = includedLastDays;
-    this.tsAggregation = tsAggregation;
+  public ClouderaClusterCPUChartTask(ClouderaTimeSeriesQueryBuilder tsQueryBuilder) {
+    super(buildOutputFileName(tsQueryBuilder.getIncludedLastDays()));
+    this.tsQueryBuilder = tsQueryBuilder;
   }
 
   @Override
@@ -80,7 +70,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
     final String timeSeriesAPIUrl = buildTimeSeriesUrl(handle.getApiURI().toString());
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
-        String cpuPerClusterQuery = buildQueryToFetchCPUTimeSeriesOnCluster(cluster.getId());
+        String cpuPerClusterQuery = tsQueryBuilder.getQuery(cluster.getId());
         LOG.debug(
             "Execute charts query: [{}] for the cluster: [{}].",
             cpuPerClusterQuery,
@@ -88,9 +78,9 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
 
         URIBuilder uriBuilder = new URIBuilder(timeSeriesAPIUrl);
         uriBuilder.addParameter("query", cpuPerClusterQuery);
-        uriBuilder.addParameter("desiredRollup", this.tsAggregation.toString());
+        uriBuilder.addParameter("desiredRollup", tsQueryBuilder.getTsAggregation().toString());
         uriBuilder.addParameter("mustUseDesiredRollup", "true");
-        uriBuilder.addParameter("from", buildISODateTime(this.includedLastDays));
+        uriBuilder.addParameter("from", buildISODateTime(tsQueryBuilder.getIncludedLastDays()));
 
         try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
           JsonNode jsonNode = objectMapper.readTree(chart.getEntity().getContent());
@@ -126,10 +116,6 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
     return apiUri + "/timeseries";
   }
 
-  private String buildQueryToFetchCPUTimeSeriesOnCluster(String clusterId) {
-    return String.format(TS_CPU_QUERY_TEMPLATE, clusterId);
-  }
-
   private String buildISODateTime(int deltaInDays) {
     ZonedDateTime dt =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
@@ -138,14 +124,5 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
 
   private static String buildOutputFileName(int includedLastDays) {
     return String.format("cmf-cluster-cpu-%sd.jsonl", includedLastDays);
-  }
-
-  enum TimeSeriesAggregation {
-    RAW,
-    TEN_MINUTELY,
-    HOURLY,
-    SIX_HOURLY,
-    DAILY,
-    WEEKLY,
   }
 }

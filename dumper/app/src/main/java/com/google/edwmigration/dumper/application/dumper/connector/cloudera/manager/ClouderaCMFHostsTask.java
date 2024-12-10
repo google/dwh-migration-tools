@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -80,15 +81,17 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
         try (CloseableHttpResponse hostsResponse =
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          String hostsJson = EntityUtils.toString(hostsResponse.getEntity());
-          apiHosts = objectMapper.readValue(hostsJson, ApiHostListDto.class);
-          writer.write(hostsJson);
-          writer.write("\n");
+          JsonNode hostsJson = objectMapper.readTree(hostsResponse.getEntity().getContent());
+          String stringifiedHosts = hostsJson.toString();
+          apiHosts = objectMapper.readValue(stringifiedHosts, ApiHostListDto.class);
+          writer.write(stringifiedHosts);
+          writer.write('\n');
         }
 
-        // writer.write(objectMapper.writeValueAsString(apiHosts));
-        for (ApiHostDto apiHost : apiHosts.getItems()) {
-          hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
+        if (apiHosts.getItems() != null) {
+          for (ApiHostDto apiHost : apiHosts.getItems()) {
+            hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
+          }
         }
       }
       handle.initHosts(hosts);

@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
@@ -29,7 +28,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.hc.core5.net.URIBuilder;
@@ -42,8 +40,8 @@ import org.slf4j.LoggerFactory;
 public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
   private final ObjectMapper objectMapper = new ObjectMapper();
-  private final int includedLastDays;
-  private final TimeSeriesAggregation tsAggregation;
+
+  private final ClouderaTimeSeriesQueryBuilder tsQueryBuilder;
 
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -51,11 +49,9 @@ public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
   private static final String TS_CPU_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
 
-  public ClouderaHostRamChartTask(
-      int includedLastDays, @Nonnull TimeSeriesAggregation tsAggregation) {
-    super("cmf-cluster-ram.jsonl");
-    this.tsAggregation = tsAggregation;
-    this.includedLastDays = includedLastDays;
+  public ClouderaHostRamChartTask(ClouderaTimeSeriesQueryBuilder tsQueryBuilder) {
+    super(buildOutputFileName(tsQueryBuilder.getIncludedLastDays()));
+    this.tsQueryBuilder = tsQueryBuilder;
   }
 
   @Override
@@ -63,22 +59,25 @@ public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
     CloseableHttpClient httpClient = handle.getHttpClient();
-    List<ClouderaClusterDTO> clusters = getClustersFromHandle(handle);
+
+    List<ClouderaHostDTO> hosts = handle.getHosts();
+    if (hosts == null) {
+      throw new MetadataDumperUsageException(
+          "Cloudera hosts must be initialized before RAM charts dumping.");
+    }
 
     final String timeSeriesAPIUrl = buildTimeSeriesUrl(handle.getApiURI().toString());
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaHostDTO host : handle.getHosts()) {
-        String cpuPerClusterQuery = buildQueryToFetchCPUTimeSeriesOnCluster(host.getId());
-        // LOG.debug(
-        //     "Execute charts query: [{}] for the cluster: [{}].",
-        //     cpuPerClusterQuery,
-        //     cluster.getName());
+        String ramPerHostQuery = tsQueryBuilder.getQuery(host.getId());
+        LOG.debug(
+            "Execute charts query: [{}] for the cluster: [{}].", ramPerHostQuery, host.getName());
 
         URIBuilder uriBuilder = new URIBuilder(timeSeriesAPIUrl);
-        uriBuilder.addParameter("query", cpuPerClusterQuery);
-        uriBuilder.addParameter("desiredRollup", this.tsAggregation.toString());
+        uriBuilder.addParameter("query", ramPerHostQuery);
+        uriBuilder.addParameter("desiredRollup", tsQueryBuilder.getTsAggregation().toString());
         uriBuilder.addParameter("mustUseDesiredRollup", "true");
-        uriBuilder.addParameter("from", buildISODateTime(this.includedLastDays));
+        uriBuilder.addParameter("from", buildISODateTime(tsQueryBuilder.getIncludedLastDays()));
 
         try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
           JsonNode jsonNode = objectMapper.readTree(chart.getEntity().getContent());
@@ -88,29 +87,6 @@ public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
       }
     }
     return null;
-  }
-
-  private List<ClouderaClusterDTO> getClustersFromHandle(@Nonnull ClouderaManagerHandle handle) {
-    List<ClouderaClusterDTO> clusters = handle.getClusters();
-    if (clusters == null) {
-      throw new MetadataDumperUsageException(
-          "Cloudera clusters must be initialized before CPU charts dumping.");
-    }
-    List<ClouderaClusterDTO> cpuClusters = new ArrayList<>();
-    for (ClouderaClusterDTO cluster : clusters) {
-      if (cluster.getId() == null) {
-        LOG.warn(
-            "Cloudera cluster id is null for cluster [{}]. Skip CPU metrics for the cluster.",
-            cluster.getName());
-      } else {
-        cpuClusters.add(cluster);
-      }
-    }
-    return cpuClusters;
-  }
-
-  private String buildQueryToFetchCPUTimeSeriesOnCluster(String clusterId) {
-    return String.format(TS_CPU_QUERY_TEMPLATE, clusterId);
   }
 
   private String buildISODateTime(int deltaInDays) {
@@ -123,12 +99,7 @@ public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
     return apiUri + "/timeseries";
   }
 
-  enum TimeSeriesAggregation {
-    RAW,
-    TEN_MINUTELY,
-    HOURLY,
-    SIX_HOURLY,
-    DAILY,
-    WEEKLY,
+  private static String buildOutputFileName(int includedLastDays) {
+    return String.format("cmf-host-ram-%sd.jsonl", includedLastDays);
   }
 }

@@ -22,7 +22,9 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaHostRamChartTask.TimeSeriesAggregation;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaTimeSeriesQueryBuilder.TimeSeriesAggregation;
+import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
+import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
@@ -75,17 +77,36 @@ public class ClouderaManagerConnector extends AbstractConnector {
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
-    // out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-    // out.add(new FormatTask(FORMAT_NAME));
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
     out.add(new ClouderaClustersTask());
     out.add(new ClouderaCMFHostsTask());
-    // out.add(new ClouderaAPIHostsTask());
-    // out.add(new ClouderaServicesTask());
-    // out.add(new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY));
-    // out.add(new ClouderaClusterCPUChartTask(7, TimeSeriesAggregation.DAILY));
-    // out.add(new ClouderaClusterCPUChartTask(30, TimeSeriesAggregation.DAILY));
-    // out.add(new ClouderaClusterCPUChartTask(90, TimeSeriesAggregation.DAILY));
-    out.add(new ClouderaHostRamChartTask(1, TimeSeriesAggregation.DAILY));
+    out.add(new ClouderaAPIHostsTask());
+    out.add(new ClouderaServicesTask());
+    out.add(
+        new ClouderaClusterCPUChartTask(
+            new ClouderaCpuTimeSeriesQueryBuilder(1, TimeSeriesAggregation.HOURLY)));
+    out.add(
+        new ClouderaClusterCPUChartTask(
+            new ClouderaCpuTimeSeriesQueryBuilder(7, TimeSeriesAggregation.DAILY)));
+    out.add(
+        new ClouderaClusterCPUChartTask(
+            new ClouderaCpuTimeSeriesQueryBuilder(30, TimeSeriesAggregation.DAILY)));
+    out.add(
+        new ClouderaClusterCPUChartTask(
+            new ClouderaCpuTimeSeriesQueryBuilder(90, TimeSeriesAggregation.DAILY)));
+    out.add(
+        new ClouderaHostRamChartTask(
+            new ClouderaRamTimeSeriesQueryBuilder(1, TimeSeriesAggregation.HOURLY)));
+    out.add(
+        new ClouderaHostRamChartTask(
+            new ClouderaRamTimeSeriesQueryBuilder(7, TimeSeriesAggregation.DAILY)));
+    out.add(
+        new ClouderaHostRamChartTask(
+            new ClouderaRamTimeSeriesQueryBuilder(30, TimeSeriesAggregation.DAILY)));
+    out.add(
+        new ClouderaHostRamChartTask(
+            new ClouderaRamTimeSeriesQueryBuilder(90, TimeSeriesAggregation.DAILY)));
   }
 
   @Nonnull
