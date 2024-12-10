@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiHostDto {
+
   @JsonProperty(required = true)
   private String hostName;
 

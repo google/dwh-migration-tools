@@ -16,20 +16,21 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiHostListDto {
-  @JsonProperty(required = true)
-  private List<ApiHostDto> hosts;
+  private final List<ApiHostDto> hosts;
+
+  @JsonCreator
+  public ApiHostListDto(@JsonProperty(value = "hosts", required = true) List<ApiHostDto> hosts) {
+    this.hosts = hosts;
+  }
 
   public List<ApiHostDto> getItems() {
     return hosts;
-  }
-
-  public void setItems(List<ApiHostDto> hosts) {
-    this.hosts = hosts;
   }
 }

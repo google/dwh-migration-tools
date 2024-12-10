@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
@@ -34,7 +35,6 @@ import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +50,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
   public ClouderaCMFHostsTask() {
     super("cmf-hosts.jsonl");
+    objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES, true);
+    objectMapper.configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
   }
 
   @Override
@@ -88,10 +90,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
           writer.write('\n');
         }
 
-        if (apiHosts.getItems() != null) {
-          for (ApiHostDto apiHost : apiHosts.getItems()) {
-            hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
-          }
+        for (ApiHostDto apiHost : apiHosts.getItems()) {
+          hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
       handle.initHosts(hosts);
