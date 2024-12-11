@@ -36,7 +36,7 @@ class SingleDirScanJob implements Callable<Void> {
     this.dir = dir;
   }
 
-  /** List directory's contents, trace/walk its files, and recursively walk it's subdirs */
+  /** List directory's contents, trace/walk its files, and recursively walk its subdirs */
   @Override
   public Void call() {
     long numFiles = 0;

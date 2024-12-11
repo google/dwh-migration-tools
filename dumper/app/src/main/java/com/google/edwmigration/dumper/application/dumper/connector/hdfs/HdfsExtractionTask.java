@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HDFS_SCAN_ROOT_PATH;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_THREAD_POOL_SIZE;
+import static com.google.edwmigration.dumper.application.dumper.connector.hdfs.SingleDirScanJob.trimExceptionMessage;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -37,6 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
+import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -51,9 +53,12 @@ public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtrac
 
   HdfsExtractionTask(@Nonnull ConnectorArguments args) {
     super(HdfsFormat.ZIP_ENTRY_NAME);
-    Preconditions.checkNotNull(args, "Arguments was null.");
     threadPoolSize = args.getThreadPoolSize();
+    Preconditions.checkArgument(
+        threadPoolSize > 0, "Argument %s should be positive number", OPT_THREAD_POOL_SIZE);
     hdfsScanRootPath = args.getHdfsScanRootPath();
+    Preconditions.checkArgument(
+        !hdfsScanRootPath.isEmpty(), "Argument %s should be non-empty", OPT_HDFS_SCAN_ROOT_PATH);
   }
 
   @Override
@@ -90,12 +95,25 @@ public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtrac
           OPT_THREAD_POOL_SIZE,
           threadPoolSize);
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsScanRootPath));
-      scanCtx.submitRootDirScanJob(rootDir);
+      scanCtx.submitRootDirScanJob(rootDir, getContentSummaryFor(fs, rootDir));
       execManager.await(); // Wait until all (recursive) tasks are done executing
       LOG.info("Final stats:\n{}", scanCtx.getFormattedStats());
     } finally {
       // Shutdown the dedicated ExecutorService:
       MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);
+    }
+    return null;
+  }
+
+  private ContentSummary getContentSummaryFor(DistributedFileSystem dfs, FileStatus file) {
+    try {
+      return dfs.getContentSummary(file.getPath());
+    } catch (org.apache.hadoop.security.AccessControlException exn) {
+      LOG.error(
+          "Progress for HDFS extraction won't be displayed due to AccessControlException: {}",
+          trimExceptionMessage(exn.getMessage()));
+    } catch (IOException exn) {
+      LOG.error("Progress for HDFS extraction won't be displayed due to IOException: ", exn);
     }
     return null;
   }

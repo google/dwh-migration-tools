@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.LongAdder;
 import javax.annotation.WillClose;
 import javax.annotation.concurrent.GuardedBy;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
@@ -43,6 +44,7 @@ final class ScanContext implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(ScanContext.class);
   private static final DateTimeFormatter DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
+  private static final long PROGRESS_UPDATE_INTERVAL = 3000; // milliseconds
 
   private final ExecutorManager execManager;
   private final DistributedFileSystem dfs;
@@ -52,6 +54,10 @@ final class ScanContext implements Closeable {
   private LongAdder timeSpentInListStatus = new LongAdder();
   private LongAdder numFilesByListStatus = new LongAdder();
   private LongAdder numCallsToListStatus = new LongAdder();
+
+  private boolean hasContentSummary = false;
+  private LongAdder numFilesByContentSummary = new LongAdder();
+  private LongAdder numDirsByContentSummary = new LongAdder();
 
   @GuardedBy("csvPrinter")
   private long accumulatedFileSize = 0L;
@@ -106,8 +112,17 @@ final class ScanContext implements Closeable {
    *
    * @param dir a hdfs directory to be scanned recursively. It should belong to the dfs file system.
    */
-  public void submitRootDirScanJob(FileStatus dir) {
-    startWalkDir(dir);
+  public void submitRootDirScanJob(FileStatus dir, ContentSummary contentSummary) {
+    if (contentSummary != null) {
+      synchronized (csvPrinter) {
+        hasContentSummary = true;
+        numFilesByContentSummary.add(contentSummary.getFileCount());
+        numDirsByContentSummary.add(contentSummary.getDirectoryCount());
+        startWalkDir(dir);
+      }
+    } else {
+      startWalkDir(dir);
+    }
   }
 
   /** Submits a recursive job for the specified dir to the execManager. Updates some HDFS stats */
@@ -187,13 +202,15 @@ final class ScanContext implements Closeable {
 
   private void maybeLogStats(FileStatus file) {
     long currentTime = System.currentTimeMillis();
-    if (currentTime - lastTimeStatsLogged >= 2000) {
+    if (currentTime - lastTimeStatsLogged >= PROGRESS_UPDATE_INTERVAL) {
       lastTimeStatsLogged = currentTime;
-      LOG.info("path scanned: {}\n{}", file.getPath().toUri().getPath(), getFormattedStats());
+      // Don't log the path as it may be sensitive information:
+      // LOG.info("path scanned: {}\n{}", file.getPath().toUri().getPath(), getFormattedStats());
+      LOG.info("\n{}", getFormattedStats());
     }
   }
 
-  /** This method is used to produce meaningful HDFS stats for log/debug purposes. */
+  /** This method is used to produce meaningful HDFS stats for logging and progress purposes. */
   public String getFormattedStats() {
     final Duration timeSinceScanBegin = Duration.between(instantScanBegin, Instant.now());
 
@@ -221,12 +238,30 @@ final class ScanContext implements Closeable {
     }
     final long totalNumFiles = numFiles > 0 ? numFiles : 1;
     final long totalNumFilesAndDirs = numFiles + numDirs > 0 ? numFiles + numDirs : 1;
+
+    String percentFiles =
+        numFilesByContentSummary.longValue() != 0
+            ? ((numFiles * 100) / numFilesByContentSummary.longValue()) + "%"
+            : "100%";
+    String percentDirsFound =
+        numDirsByContentSummary.longValue() != 0
+            ? ((numDirs * 100) / numDirsByContentSummary.longValue()) + "%"
+            : "100%";
+    String percentDirsWalkd =
+        numDirsByContentSummary.longValue() != 0
+            ? ((numDirsWalked * 100) / numDirsByContentSummary.longValue()) + "%"
+            : "100%";
+
+    if (!hasContentSummary) {
+      percentFiles = percentDirsFound = percentDirsWalkd = "--";
+    }
+
     StringBuilder sb =
         new StringBuilder()
             .append("[HDFS extraction stats]")
-            .append("\nTotal: num files     : " + numFiles)
-            .append("\n       num dirs found: " + numDirs)
-            .append("\n       num dirs walkd: " + numDirsWalked)
+            .append("\nTotal: num files     : " + numFiles + "\t(" + percentFiles + ")")
+            .append("\n       num dirs found: " + numDirs + "\t(" + percentDirsFound + ")")
+            .append("\n       num dirs walkd: " + numDirsWalked + "\t(" + percentDirsWalkd + ")")
             .append("\n    file size scanned: " + accumulatedFileSize)
             .append("\navg file size scanned: " + accumulatedFileSize / totalNumFiles)
             .append("\n      user time spent: ")
