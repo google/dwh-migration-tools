@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
@@ -151,6 +153,34 @@ public class ClouderaCMFHostsTaskTest {
     verify(responseId1).close();
     verify(responseNext).close();
     verify(writer).close();
+  }
+
+  @Test
+  public void noHostsInClusterResponse_throwsException() throws Exception {
+    // GIVEN: The cluster which has no host
+    handle.initClusters(
+        ImmutableList.of(
+            ClouderaClusterDTO.create("id1", "first-cluster")
+        ));
+    CloseableHttpResponse responseId = mock(CloseableHttpResponse.class);
+    HttpEntity entityId = mock(HttpEntity.class);
+    when(responseId.getEntity()).thenReturn(entityId);
+    when(httpClient.execute(
+        argThat(get -> get != null && get.getURI().toString().endsWith("=id1"))))
+        .thenReturn(responseId);
+    when(entityId.getContent())
+        .thenReturn(
+            new ByteArrayInputStream(
+                "{\"clusterName\" :\"first-cluster\"}".getBytes()));
+
+    // WHEN: Hosts are requested from the API and no one has been returned
+    MismatchedInputException exception =
+        assertThrows(MismatchedInputException.class, () -> task.doRun(context, sink, handle));
+
+    // THEN: The exception has to be raised
+    assertTrue(
+      exception.getMessage().contains("hosts")
+    );
   }
 
   @Test

@@ -36,6 +36,7 @@ public class ClouderaManagerHandle implements Handle {
 
   private ImmutableList<ClouderaClusterDTO> clusters;
   private ImmutableList<ClouderaHostDTO> hosts;
+  private boolean hostInitialized = false;
 
   public ClouderaManagerHandle(URI apiURI, CloseableHttpClient httpClient) {
     Preconditions.checkNotNull(apiURI, "Cloudera's apiURI can't null.");
@@ -57,6 +58,10 @@ public class ClouderaManagerHandle implements Handle {
     return httpClient;
   }
 
+  public boolean isHostInitialized() {
+    return hostInitialized;
+  }
+
   @CheckForNull
   public synchronized ImmutableList<ClouderaClusterDTO> getClusters() {
     return clusters;
@@ -75,10 +80,11 @@ public class ClouderaManagerHandle implements Handle {
   }
 
   public synchronized void initHosts(List<ClouderaHostDTO> hosts) {
-    if (this.hosts != null) {
+    if (hostInitialized) {
       throw new IllegalStateException("The cluster already initialized!");
     }
     this.hosts = ImmutableList.copyOf(hosts);
+    hostInitialized = true;
   }
 
   @Override

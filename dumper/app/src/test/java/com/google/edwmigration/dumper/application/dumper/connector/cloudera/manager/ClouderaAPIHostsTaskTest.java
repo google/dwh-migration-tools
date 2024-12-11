@@ -104,10 +104,10 @@ public class ClouderaAPIHostsTaskTest {
         .thenReturn(responseCldClst);
 
     when(entityId1.getContent())
-        .thenReturn(new ByteArrayInputStream("{\"clusterName\":\"first-cluster\"}".getBytes()));
+        .thenReturn(new ByteArrayInputStream("{\"clusterName\":\"first-cluster\",\"hosts\":[]}".getBytes()));
     when(entityCldClst.getContent())
         .thenReturn(
-            new ByteArrayInputStream("{\n\"clusterName\":\"second-cluster\"\n\r}".getBytes()));
+            new ByteArrayInputStream("{\n\"clusterName\":\"second-cluster\",\"hosts\":[]\n\r}".getBytes()));
 
     task.doRun(context, sink, handle);
 
@@ -143,7 +143,7 @@ public class ClouderaAPIHostsTaskTest {
     verify(writer, times(2)).write('\n');
     assertEquals(
         ImmutableSet.of(
-            "{\"clusterName\":\"first-cluster\"}", "{\"clusterName\":\"second-cluster\"}"),
+            "{\"clusterName\":\"first-cluster\",\"hosts\":[]}", "{\"clusterName\":\"second-cluster\",\"hosts\":[]}"),
         fileLines);
 
     verify(responseId1).close();
