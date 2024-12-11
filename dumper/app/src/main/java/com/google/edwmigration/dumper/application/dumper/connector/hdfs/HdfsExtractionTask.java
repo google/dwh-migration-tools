@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HDFS_SCAN_ROOT_PATH;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_THREAD_POOL_SIZE;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -44,12 +46,14 @@ import org.slf4j.LoggerFactory;
 public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtractionDumpFormat {
   private static final Logger LOG = LoggerFactory.getLogger(HdfsExtractionTask.class);
 
-  private final int poolSize;
+  private final int threadPoolSize;
+  private final String hdfsScanRootPath;
 
   HdfsExtractionTask(@Nonnull ConnectorArguments args) {
     super(HdfsFormat.ZIP_ENTRY_NAME);
     Preconditions.checkNotNull(args, "Arguments was null.");
-    poolSize = args.getThreadPoolSize();
+    threadPoolSize = args.getThreadPoolSize();
+    hdfsScanRootPath = args.getHdfsScanRootPath();
   }
 
   @Override
@@ -74,17 +78,21 @@ public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtrac
     DistributedFileSystem fs = ((HdfsHandle) handle).getDfs();
     // Create a dedicated ExecutorService to use:
     ExecutorService execService =
-        ExecutorManager.newExecutorServiceWithBackpressure("hdfs-extraction", poolSize);
+        ExecutorManager.newExecutorServiceWithBackpressure("hdfs-extraction", threadPoolSize);
     try (Writer output = sink.asCharSink(UTF_8).openBufferedStream();
-        ScanContext scanCtx = new ScanContext(fs, output);
-        ExecutorManager execManager = new ExecutorManager(execService)) {
+        ExecutorManager execManager = new ExecutorManager(execService);
+        ScanContext scanCtx = new ScanContext(execManager, fs, output)) {
 
-      String hdfsPath = "/";
-      FileStatus rootDir = fs.getFileStatus(new Path(hdfsPath));
-      SingleDirScanJob rootJob = new SingleDirScanJob(scanCtx, execManager, rootDir);
-      execManager.execute(rootJob); // The root job executes immediately
+      LOG.info(
+          "Running HDFS extraction\n\t{}: {}\n\t{}: {}",
+          OPT_HDFS_SCAN_ROOT_PATH,
+          hdfsScanRootPath,
+          OPT_THREAD_POOL_SIZE,
+          threadPoolSize);
+      FileStatus rootDir = fs.getFileStatus(new Path(hdfsScanRootPath));
+      scanCtx.submitRootDirScanJob(rootDir);
       execManager.await(); // Wait until all (recursive) tasks are done executing
-      LOG.info(scanCtx.getFormattedStats());
+      LOG.info("Final stats:\n{}", scanCtx.getFormattedStats());
     } finally {
       // Shutdown the dedicated ExecutorService:
       MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);
