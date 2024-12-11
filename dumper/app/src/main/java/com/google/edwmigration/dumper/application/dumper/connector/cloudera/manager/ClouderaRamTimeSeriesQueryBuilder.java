@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 public class ClouderaRamTimeSeriesQueryBuilder extends ClouderaTimeSeriesQueryBuilder {
 
   private static final String TS_CPU_QUERY_TEMPLATE =
-      "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
+      "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName=\"%s\"";
 
   public ClouderaRamTimeSeriesQueryBuilder(
       int includedLastDays, @Nonnull TimeSeriesAggregation tsAggregation) {

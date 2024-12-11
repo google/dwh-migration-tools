@@ -71,7 +71,7 @@ public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
       for (ClouderaHostDTO host : handle.getHosts()) {
         String ramPerHostQuery = tsQueryBuilder.getQuery(host.getId());
         LOG.debug(
-            "Execute charts query: [{}] for the cluster: [{}].", ramPerHostQuery, host.getName());
+            "Execute RAM charts query: [{}] for the host: [{}].", ramPerHostQuery, host.getName());
 
         URIBuilder uriBuilder = new URIBuilder(timeSeriesAPIUrl);
         uriBuilder.addParameter("query", ramPerHostQuery);
