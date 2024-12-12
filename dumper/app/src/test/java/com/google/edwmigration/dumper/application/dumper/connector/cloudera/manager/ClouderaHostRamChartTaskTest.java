@@ -83,7 +83,7 @@ public class ClouderaHostRamChartTaskTest {
 
   @Test
   public void hostsExists_doWriteSuccess() throws Exception {
-    handle.initHosts(
+    handle.initHostsIfNull(
         ImmutableList.of(
             ClouderaHostDTO.create("id1", "first-host"),
             ClouderaHostDTO.create("id125", "second-host")));

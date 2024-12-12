@@ -94,9 +94,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
-      if (!handle.isHostInitialized()) {
-        handle.initHosts(hosts);
-      }
+      handle.initHostsIfNull(hosts);
     }
     return null;
   }
