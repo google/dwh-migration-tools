@@ -67,7 +67,6 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
     final URI baseURI = handle.getBaseURI();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      ApiHostListDto apiHosts;
       List<ClouderaHostDTO> hosts = new ArrayList<>();
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
@@ -85,13 +84,13 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
           JsonNode hostsJson = objectMapper.readTree(hostsResponse.getEntity().getContent());
           String stringifiedHosts = hostsJson.toString();
-          apiHosts = objectMapper.readValue(stringifiedHosts, ApiHostListDto.class);
+          ApiHostListDto apiHosts = objectMapper.readValue(stringifiedHosts, ApiHostListDto.class);
           writer.write(stringifiedHosts);
           writer.write('\n');
-        }
 
-        for (ApiHostDto apiHost : apiHosts.getItems()) {
-          hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
+          for (ApiHostDto apiHost : apiHosts.getItems()) {
+            hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
+          }
         }
       }
       handle.initHostsIfNull(hosts);

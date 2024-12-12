@@ -67,6 +67,7 @@ public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
     }
 
     final String timeSeriesAPIUrl = buildTimeSeriesUrl(handle.getApiURI().toString());
+    String includedDaysInIsoFormat = buildISODateTime(tsQueryBuilder.getIncludedLastDays());
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaHostDTO host : handle.getHosts()) {
         String ramPerHostQuery = tsQueryBuilder.getQuery(host.getId());
@@ -77,7 +78,7 @@ public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
         uriBuilder.addParameter("query", ramPerHostQuery);
         uriBuilder.addParameter("desiredRollup", tsQueryBuilder.getTsAggregation().toString());
         uriBuilder.addParameter("mustUseDesiredRollup", "true");
-        uriBuilder.addParameter("from", buildISODateTime(tsQueryBuilder.getIncludedLastDays()));
+        uriBuilder.addParameter("from", includedDaysInIsoFormat);
 
         try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
           JsonNode jsonNode = objectMapper.readTree(chart.getEntity().getContent());
