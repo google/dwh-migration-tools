@@ -63,15 +63,16 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
       for (ClouderaClusterDTO cluster : clusters) {
         String hostPerClusterUrl = handle.getApiURI() + "/clusters/" + cluster.getName() + "/hosts";
 
-        ApiHostListDto apiHosts;
+        JsonNode jsonHosts;
         try (CloseableHttpResponse hostsResponse =
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          JsonNode jsonHosts = objectMapper.readTree(hostsResponse.getEntity().getContent());
-          String stringifiedHosts = jsonHosts.toString();
-          writer.write(stringifiedHosts);
-          writer.write('\n');
-          apiHosts = objectMapper.readValue(stringifiedHosts, ApiHostListDto.class);
+          jsonHosts = objectMapper.readTree(hostsResponse.getEntity().getContent());
         }
+        String stringifiedHosts = jsonHosts.toString();
+        writer.write(stringifiedHosts);
+        writer.write('\n');
+
+        ApiHostListDto apiHosts = objectMapper.readValue(stringifiedHosts, ApiHostListDto.class);
         for (ApiHostDto apiHost : apiHosts.getItems()) {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
