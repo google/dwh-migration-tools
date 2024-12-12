@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
+import static com.google.edwmigration.dumper.application.dumper.TasksRunner.logCustomProgress;
+
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HdfsExtractionDumpFormat.HdfsFormat;
@@ -44,7 +46,10 @@ final class ScanContext implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(ScanContext.class);
   private static final DateTimeFormatter DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
-  private static final long PROGRESS_UPDATE_INTERVAL = 3000; // milliseconds
+  private static final boolean PROGRESS_DEBUG_STATS = false;
+  /** In PROD mode update progress every 60s, In DEBUG mode update stats every 10s */
+  private static final long PROGRESS_UPDATE_INTERVAL =
+      PROGRESS_DEBUG_STATS ? 10_000 : 60_000; // millis
 
   private final ExecutorManager execManager;
   private final DistributedFileSystem dfs;
@@ -204,14 +209,17 @@ final class ScanContext implements Closeable {
     long currentTime = System.currentTimeMillis();
     if (currentTime - lastTimeStatsLogged >= PROGRESS_UPDATE_INTERVAL) {
       lastTimeStatsLogged = currentTime;
-      // Don't log the path as it may be sensitive information:
-      // LOG.info("path scanned: {}\n{}", file.getPath().toUri().getPath(), getFormattedStats());
-      LOG.info("\n{}", getFormattedStats());
+      if (PROGRESS_DEBUG_STATS) {
+        // Don't log the path in production as it may be considered 'sensitive information'!
+        LOG.info("path scanned: {}\n{}", file.getPath().toUri().getPath(), getDetailedStats());
+      } else {
+        logCustomProgress(getProgressMessage());
+      }
     }
   }
 
   /** This method is used to produce meaningful HDFS stats for logging and progress purposes. */
-  public String getFormattedStats() {
+  public String getDetailedStats() {
     final Duration timeSinceScanBegin = Duration.between(instantScanBegin, Instant.now());
 
     Duration timeSpentInListStatus = Duration.ofMillis(this.timeSpentInListStatus.longValue());
@@ -237,7 +245,7 @@ final class ScanContext implements Closeable {
       accumulatedFileSize = this.accumulatedFileSize;
     }
     final long totalNumFiles = numFiles > 0 ? numFiles : 1;
-    final long totalNumFilesAndDirs = numFiles + numDirs > 0 ? numFiles + numDirs : 1;
+    final long totalFilesAndDirs = numFiles + numDirs > 0 ? numFiles + numDirs : 1;
 
     String percentFiles =
         numFilesByContentSummary.longValue() != 0
@@ -256,27 +264,45 @@ final class ScanContext implements Closeable {
       percentFiles = percentDirsFound = percentDirsWalkd = "--";
     }
 
-    StringBuilder sb =
-        new StringBuilder()
-            .append("[HDFS extraction stats]")
-            .append("\nTotal: num files     : " + numFiles + "\t(" + percentFiles + ")")
-            .append("\n       num dirs found: " + numDirs + "\t(" + percentDirsFound + ")")
-            .append("\n       num dirs walkd: " + numDirsWalked + "\t(" + percentDirsWalkd + ")")
-            .append("\n    file size scanned: " + accumulatedFileSize)
-            .append("\navg file size scanned: " + accumulatedFileSize / totalNumFiles)
-            .append("\n      user time spent: ")
-            .append(timeSinceScanBegin.getSeconds())
-            .append("s\n  avg user time / doc: ")
-            .append(timeSinceScanBegin.dividedBy(totalNumFilesAndDirs).toMillis())
-            .append("ms\nDistributedFileSystem.listStatus(..) stats: ")
-            .append("\n\t total cpu time spent: ")
-            .append(timeSpentInListStatus.getSeconds())
-            .append("s\n\t    avg time per file: ")
-            .append(avgTimeSpentInListStatusPerFile.toMillis())
-            .append("ms\n\t    avg time per call: ")
-            .append(avgTimeSpentInListStatusPerCall.toMillis())
-            .append("ms\n[/HDFS extraction stats]");
+    String stats =
+        "[HDFS extraction stats]"
+            + f("\nTotal: num files     : %s\t(%s)", numFiles, percentFiles)
+            + f("\n       num dirs found: %s\t(%s)", numDirs, percentDirsFound)
+            + f("\n       num dirs walkd: %s\t(%s)", numDirsWalked, percentDirsWalkd)
+            + f("\n    file size scanned: %s", accumulatedFileSize)
+            + f("\navg file size scanned: %s", accumulatedFileSize / totalNumFiles)
+            + f("\n      user time spent: %ss", timeSinceScanBegin.getSeconds())
+            + f(
+                "\n  avg user time / doc: %sms",
+                timeSinceScanBegin.dividedBy(totalFilesAndDirs).toMillis())
+            + "\nDistributedFileSystem.listStatus(..) stats: "
+            + f("\n\t total cpu time spent: %ss", timeSpentInListStatus.getSeconds())
+            + f("\n\t    avg time per file: %sms", avgTimeSpentInListStatusPerFile.toMillis())
+            + f("\n\t    avg time per call: %sms", avgTimeSpentInListStatusPerCall.toMillis())
+            + "\n[/HDFS extraction stats]";
+    return stats;
+  }
 
-    return sb.toString();
+  public String getProgressMessage() {
+    if (!hasContentSummary) {
+      return f("HDFS extraction - %s files done", numFiles + numDirsWalked);
+    }
+
+    long filesToDo = numFilesByContentSummary.longValue() + numDirsByContentSummary.longValue();
+    if (filesToDo == 0) {
+      filesToDo = 1;
+    }
+    long filesDone = numFiles + numDirsWalked;
+    long secondsSinceScanBegin = Duration.between(instantScanBegin, Instant.now()).getSeconds();
+    double percentDone = (100.0 * filesDone) / filesToDo;
+    String percentDoneString =
+        filesDone == filesToDo ? "100" : f(percentDone < 10.0 ? "%.2f" : "%.1f", percentDone);
+    return f(
+        "HDFS extraction - %s%% Completed (%s file%s done in %.2fm)",
+        percentDoneString, filesDone, (filesDone > 1 ? "s" : ""), secondsSinceScanBegin / 60.0);
+  }
+
+  private static String f(String format, Object... args) {
+    return String.format(format, args);
   }
 }

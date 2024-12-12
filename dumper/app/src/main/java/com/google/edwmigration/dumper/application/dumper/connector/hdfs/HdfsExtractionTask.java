@@ -97,7 +97,7 @@ public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtrac
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsScanRootPath));
       scanCtx.submitRootDirScanJob(rootDir, getContentSummaryFor(fs, rootDir));
       execManager.await(); // Wait until all (recursive) tasks are done executing
-      LOG.info("Final stats:\n{}", scanCtx.getFormattedStats());
+      LOG.info("Final stats:\n{}", scanCtx.getDetailedStats());
     } finally {
       // Shutdown the dedicated ExecutorService:
       MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);

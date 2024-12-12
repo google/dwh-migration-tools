@@ -123,6 +123,10 @@ public class TasksRunner implements TaskRunContextOps {
     PROGRESS_LOG.info(progressMessage);
   }
 
+  public static void logCustomProgress(String progressMessage) {
+    PROGRESS_LOG.info("{}", progressMessage);
+  }
+
   private <T> T runTask(Task<T> task) throws MetadataDumperUsageException {
     try {
       CHECK:
