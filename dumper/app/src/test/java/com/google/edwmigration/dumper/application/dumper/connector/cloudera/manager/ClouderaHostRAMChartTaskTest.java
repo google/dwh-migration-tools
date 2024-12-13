@@ -96,11 +96,12 @@ public class ClouderaHostRAMChartTaskTest {
     when(responseHost2.getEntity()).thenReturn(entityHost2);
 
     when(httpClient.execute(
-            argThat(get -> get != null && get.getURI().getQuery().contains("entityName=\"id1\""))))
+            argThat(
+                get -> get != null && get.getURI().getQuery().contains("entityName = \"id1\""))))
         .thenReturn(responseHost1);
     when(httpClient.execute(
             argThat(
-                get -> get != null && get.getURI().getQuery().contains("entityName=\"id125\""))))
+                get -> get != null && get.getURI().getQuery().contains("entityName = \"id125\""))))
         .thenReturn(responseHost2);
 
     when(entityHost1.getContent())
