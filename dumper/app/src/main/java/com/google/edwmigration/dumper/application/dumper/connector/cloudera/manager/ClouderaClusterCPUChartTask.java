@@ -17,15 +17,12 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -43,20 +40,11 @@ import org.slf4j.LoggerFactory;
  */
 public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask {
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
-  private static final DateTimeFormatter isoDateTimeFormatter =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
-  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public ClouderaClusterCPUChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
-    super(buildOutputFileName(includedLastDays));
-    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
-    Preconditions.checkArgument(
-        includedLastDays >= 1,
-        "The chart has to include at least one day. Received " + includedLastDays + " days.");
-    this.includedLastDays = includedLastDays;
-    this.tsAggregation = tsAggregation;
+    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation);
   }
 
   @Override

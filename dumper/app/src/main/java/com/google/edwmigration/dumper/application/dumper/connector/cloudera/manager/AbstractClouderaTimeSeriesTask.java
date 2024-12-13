@@ -31,11 +31,14 @@ public abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaMan
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
   private final ObjectMapper objectMapper = new ObjectMapper();
-  protected int includedLastDays;
-  protected TimeSeriesAggregation tsAggregation;
+  protected final int includedLastDays;
+  protected final TimeSeriesAggregation tsAggregation;
 
-  public AbstractClouderaTimeSeriesTask(String targetPath) {
+  public AbstractClouderaTimeSeriesTask(
+      String targetPath, int includedLastDays, TimeSeriesAggregation tsAggregation) {
     super(targetPath);
+    this.includedLastDays = includedLastDays;
+    this.tsAggregation = tsAggregation;
   }
 
   protected JsonNode requestTimeSeriesChart(

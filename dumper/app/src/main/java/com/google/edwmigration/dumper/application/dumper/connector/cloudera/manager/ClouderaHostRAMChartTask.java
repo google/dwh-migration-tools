@@ -17,36 +17,34 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The task collects RAM usage per host from Cloudera Manager <a
+ * href="https://cldr2-aw-dl-gateway.cldr2-cd.svye-dcxb.a5.cloudera.site/static/apidocs/resource_TimeSeriesResource.html">TimeSeries
+ * API</a> The chart for the specific host is available on {@code /cmf/home/} and {@code
+ * cmf/hardware/hosts/{hostId}/status} pages in Cloudera Manager UI. <b/> The query to chart is
+ * written on <a
+ * href="https://docs.cloudera.com/documentation/enterprise/latest/topics/cm_dg_tsquery.html">tsquery</a>
+ * language.
+ */
 public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
-
-  private static final DateTimeFormatter isoDateTimeFormatter =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
   private static final String TS_RAM_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
 
   public ClouderaHostRAMChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
-    super(buildOutputFileName(includedLastDays));
-    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
-    Preconditions.checkArgument(
-        includedLastDays >= 1,
-        "The chart has to include at least one day. Received " + includedLastDays + " days.");
-    this.includedLastDays = includedLastDays;
-    this.tsAggregation = tsAggregation;
+    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation);
   }
 
   @Override

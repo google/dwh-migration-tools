@@ -31,13 +31,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ApiHostDto {
 
   @JsonProperty(required = true)
-  private String hostName;
+  private String hostname;
 
   @JsonProperty(required = true)
   private String hostId;
 
   public String getName() {
-    return hostName;
+    return hostname;
   }
 
   public String getId() {
