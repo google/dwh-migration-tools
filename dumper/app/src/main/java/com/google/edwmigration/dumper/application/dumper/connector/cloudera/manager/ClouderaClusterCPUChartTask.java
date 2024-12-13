@@ -123,6 +123,6 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
   }
 
   private static String buildOutputFileName(int includedLastDays) {
-    return String.format("cmf-cluster-cpu-%sd.jsonl", includedLastDays);
+    return String.format("cluster-cpu-%sd.jsonl", includedLastDays);
   }
 }

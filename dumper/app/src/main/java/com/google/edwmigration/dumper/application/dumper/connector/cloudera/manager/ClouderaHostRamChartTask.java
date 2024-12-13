@@ -101,6 +101,6 @@ public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
   }
 
   private static String buildOutputFileName(int includedLastDays) {
-    return String.format("cmf-host-ram-%sd.jsonl", includedLastDays);
+    return String.format("host-ram-%sd.jsonl", includedLastDays);
   }
 }
