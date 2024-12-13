@@ -17,90 +17,69 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.apache.hc.core5.net.URIBuilder;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClouderaHostRamChartTask extends AbstractClouderaManagerTask {
+public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
-  private final ObjectMapper objectMapper = new ObjectMapper();
-
-  private final ClouderaTimeSeriesQueryBuilder tsQueryBuilder;
 
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-  private static final String TS_CPU_QUERY_TEMPLATE =
+  private static final String TS_RAM_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
 
-  public ClouderaHostRamChartTask(ClouderaTimeSeriesQueryBuilder tsQueryBuilder) {
-    super(buildOutputFileName(tsQueryBuilder.getIncludedLastDays()));
-    this.tsQueryBuilder = tsQueryBuilder;
+  public ClouderaHostRAMChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
+    super(buildOutputFileName(includedLastDays));
+    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
+    Preconditions.checkArgument(
+        includedLastDays >= 1,
+        "The chart has to include at least one day. Received " + includedLastDays + " days.");
+    this.includedLastDays = includedLastDays;
+    this.tsAggregation = tsAggregation;
   }
 
   @Override
   protected Void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
-    CloseableHttpClient httpClient = handle.getHttpClient();
-
     List<ClouderaHostDTO> hosts = handle.getHosts();
     if (hosts == null) {
       throw new MetadataDumperUsageException(
           "Cloudera hosts must be initialized before RAM charts dumping.");
     }
 
-    final String timeSeriesAPIUrl = buildTimeSeriesUrl(handle.getApiURI().toString());
-    String includedDaysInIsoFormat = buildISODateTime(tsQueryBuilder.getIncludedLastDays());
+    String includedDaysInIsoFormat = buildISODateTime(includedLastDays);
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaHostDTO host : handle.getHosts()) {
-        String ramPerHostQuery = tsQueryBuilder.getQuery(host.getId());
+        String ramPerHostQuery = buildTimeSeriesQuery(host.getId());
         LOG.debug(
             "Execute RAM charts query: [{}] for the host: [{}].", ramPerHostQuery, host.getName());
 
-        URIBuilder uriBuilder = new URIBuilder(timeSeriesAPIUrl);
-        uriBuilder.addParameter("query", ramPerHostQuery);
-        uriBuilder.addParameter("desiredRollup", tsQueryBuilder.getTsAggregation().toString());
-        uriBuilder.addParameter("mustUseDesiredRollup", "true");
-        uriBuilder.addParameter("from", includedDaysInIsoFormat);
-
-        try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
-          JsonNode jsonNode = objectMapper.readTree(chart.getEntity().getContent());
-          writer.write(jsonNode.toString());
-          writer.write('\n');
-        }
+        JsonNode chartInJson =
+            requestTimeSeriesChart(handle, ramPerHostQuery, includedDaysInIsoFormat);
+        writer.write(chartInJson.toString());
+        writer.write('\n');
       }
     }
     return null;
   }
 
-  private String buildISODateTime(int deltaInDays) {
-    ZonedDateTime dt =
-        ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
-    return dt.format(isoDateTimeFormatter);
-  }
-
-  private String buildTimeSeriesUrl(String apiUri) {
-    return apiUri + "/timeseries";
-  }
-
-  private static String buildOutputFileName(int includedLastDays) {
+  static String buildOutputFileName(int includedLastDays) {
     return String.format("host-ram-%sd.jsonl", includedLastDays);
+  }
+
+  private String buildTimeSeriesQuery(String hostId) {
+    return String.format(TS_RAM_QUERY_TEMPLATE, hostId);
   }
 }

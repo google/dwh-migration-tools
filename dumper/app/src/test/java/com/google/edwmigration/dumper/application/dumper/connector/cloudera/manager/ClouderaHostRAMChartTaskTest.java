@@ -37,8 +37,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaTimeSeriesQueryBuilder.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -58,10 +58,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaHostRamChartTaskTest {
-  private final ClouderaHostRamChartTask task =
-      new ClouderaHostRamChartTask(
-          new ClouderaRamTimeSeriesQueryBuilder(1, TimeSeriesAggregation.HOURLY));
+public class ClouderaHostRAMChartTaskTest {
+  private final ClouderaHostRAMChartTask task =
+      new ClouderaHostRAMChartTask(1, TimeSeriesAggregation.HOURLY);
   private ClouderaManagerHandle handle;
 
   @Mock private TaskRunContext context;
