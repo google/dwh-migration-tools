@@ -38,7 +38,7 @@ public class ApiHostListDto {
     this.hosts = hosts;
   }
 
-  public List<ApiHostDto> getItems() {
+  public List<ApiHostDto> getHosts() {
     return hosts;
   }
 }

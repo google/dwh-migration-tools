@@ -34,11 +34,11 @@ public final class ApiClusterListDto {
   @JsonProperty(required = true)
   private List<ApiClusterDto> items;
 
-  public List<ApiClusterDto> getItems() {
+  public List<ApiClusterDto> getClusters() {
     return items;
   }
 
-  public void setItems(List<ApiClusterDto> items) {
+  public void setClusters(List<ApiClusterDto> items) {
     this.items = items;
   }
 }

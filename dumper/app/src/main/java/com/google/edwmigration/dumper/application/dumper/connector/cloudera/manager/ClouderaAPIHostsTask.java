@@ -73,7 +73,7 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
         writer.write('\n');
 
         ApiHostListDto apiHosts = objectMapper.readValue(stringifiedHosts, ApiHostListDto.class);
-        for (ApiHostDto apiHost : apiHosts.getItems()) {
+        for (ApiHostDto apiHost : apiHosts.getHosts()) {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
