@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -37,6 +38,10 @@ public abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaMan
   public AbstractClouderaTimeSeriesTask(
       String targetPath, int includedLastDays, TimeSeriesAggregation tsAggregation) {
     super(targetPath);
+    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
+    Preconditions.checkArgument(
+        includedLastDays >= 1,
+        "The chart has to include at least one day. Received " + includedLastDays + " days.");
     this.includedLastDays = includedLastDays;
     this.tsAggregation = tsAggregation;
   }
