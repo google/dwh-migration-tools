@@ -57,15 +57,13 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
           "Cloudera hosts must be initialized before RAM charts dumping.");
     }
 
-    String includedDaysInIsoFormat = buildISODateTime(includedLastDays);
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaHostDTO host : handle.getHosts()) {
         String ramPerHostQuery = buildTimeSeriesQuery(host.getId());
         LOG.debug(
             "Execute RAM charts query: [{}] for the host: [{}].", ramPerHostQuery, host.getName());
 
-        JsonNode chartInJson =
-            requestTimeSeriesChart(handle, ramPerHostQuery, includedDaysInIsoFormat);
+        JsonNode chartInJson = requestTimeSeriesChart(handle, ramPerHostQuery);
         writer.write(chartInJson.toString());
         writer.write('\n');
       }

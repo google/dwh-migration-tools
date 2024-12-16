@@ -46,9 +46,10 @@ public abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaMan
     this.tsAggregation = tsAggregation;
   }
 
-  protected JsonNode requestTimeSeriesChart(
-      ClouderaManagerHandle handle, String query, String fromDate) throws Exception {
+  protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query)
+      throws Exception {
     String timeSeriesUrl = handle.getApiURI().toString() + "/timeseries";
+    String fromDate = buildISODateTime(includedLastDays);
     URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
     uriBuilder.addParameter("query", query);
     uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
@@ -63,7 +64,7 @@ public abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaMan
     return chartInJson;
   }
 
-  protected String buildISODateTime(int deltaInDays) {
+  private String buildISODateTime(int deltaInDays) {
     ZonedDateTime dateTime =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
     return dateTime.format(isoDateTimeFormatter);

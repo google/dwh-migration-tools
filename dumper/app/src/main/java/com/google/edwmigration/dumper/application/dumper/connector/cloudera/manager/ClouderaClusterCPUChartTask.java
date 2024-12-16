@@ -61,9 +61,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
             cpuPerClusterQuery,
             cluster.getName());
 
-        String includedDaysInIsoFormat = buildISODateTime(includedLastDays);
-        JsonNode chartInJson =
-            requestTimeSeriesChart(handle, cpuPerClusterQuery, includedDaysInIsoFormat);
+        JsonNode chartInJson = requestTimeSeriesChart(handle, cpuPerClusterQuery);
         writer.write(chartInJson.toString());
         writer.write('\n');
       }
