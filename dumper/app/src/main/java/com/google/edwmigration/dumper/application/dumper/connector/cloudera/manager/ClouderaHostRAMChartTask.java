@@ -59,7 +59,7 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaHostDTO host : handle.getHosts()) {
-        String ramPerHostQuery = buildTimeSeriesQuery(host.getId());
+        String ramPerHostQuery = String.format(TS_RAM_QUERY_TEMPLATE, host.getId());
         LOG.debug(
             "Execute RAM charts query: [{}] for the host: [{}].", ramPerHostQuery, host.getName());
 
@@ -73,9 +73,5 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
 
   static String buildOutputFileName(int includedLastDays) {
     return String.format("host-ram-%sd.jsonl", includedLastDays);
-  }
-
-  private String buildTimeSeriesQuery(String hostId) {
-    return String.format(TS_RAM_QUERY_TEMPLATE, hostId);
   }
 }

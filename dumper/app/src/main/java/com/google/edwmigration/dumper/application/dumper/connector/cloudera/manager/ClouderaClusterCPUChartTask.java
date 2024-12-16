@@ -55,7 +55,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
-        String cpuPerClusterQuery = buildTimeSeriesQuery(cluster.getId());
+        String cpuPerClusterQuery = String.format(TS_CPU_QUERY_TEMPLATE, cluster.getId());
         LOG.debug(
             "Execute charts query: [{}] for the cluster: [{}].",
             cpuPerClusterQuery,
@@ -90,9 +90,5 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
 
   private static String buildOutputFileName(int includedLastDays) {
     return String.format("cluster-cpu-%sd.jsonl", includedLastDays);
-  }
-
-  private String buildTimeSeriesQuery(String hostId) {
-    return String.format(TS_CPU_QUERY_TEMPLATE, hostId);
   }
 }
