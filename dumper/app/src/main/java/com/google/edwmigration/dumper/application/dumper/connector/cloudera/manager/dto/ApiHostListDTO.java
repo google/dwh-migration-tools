@@ -16,26 +16,29 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
 /**
- * DTO class for the unofficial UI part of Cloudera Management. Display the host from a Memory Usage
- * chart.
+ * DTO class for the official Cloudera API <a
+ * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/json_ApiHostList.html">json</a>
+ *
+ * <p>Note: The license for <a
+ * href="https://mvnrepository.com/artifact/com.cloudera.api.swagger/cloudera-manager-api-swagger/7.11.0">generated</a>
+ * code is unclear, the own model for public schema used instead of it.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CMFHostDto {
-  @JsonProperty(required = true)
-  private String hostName;
+public class ApiHostListDTO {
+  private final List<ApiHostDTO> hosts;
 
-  @JsonProperty(required = true)
-  private String hostId;
-
-  public String getName() {
-    return hostName;
+  @JsonCreator
+  public ApiHostListDTO(@JsonProperty(value = "items", required = true) List<ApiHostDTO> hosts) {
+    this.hosts = hosts;
   }
 
-  public String getId() {
-    return hostId;
+  public List<ApiHostDTO> getHosts() {
+    return hosts;
   }
 }

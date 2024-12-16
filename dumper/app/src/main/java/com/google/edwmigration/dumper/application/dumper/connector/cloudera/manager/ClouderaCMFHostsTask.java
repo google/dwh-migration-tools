@@ -23,8 +23,8 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostDto;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostListDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostListDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
@@ -88,8 +88,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
         writer.write(stringifiedHosts);
         writer.write('\n');
 
-        CMFHostListDto apiHosts = objectMapper.readValue(stringifiedHosts, CMFHostListDto.class);
-        for (CMFHostDto apiHost : apiHosts.getHosts()) {
+        CMFHostListDTO apiHosts = objectMapper.readValue(stringifiedHosts, CMFHostListDTO.class);
+        for (CMFHostDTO apiHost : apiHosts.getHosts()) {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }

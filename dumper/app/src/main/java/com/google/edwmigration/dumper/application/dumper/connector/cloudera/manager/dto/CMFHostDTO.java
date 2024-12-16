@@ -16,25 +16,26 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
 
 /**
- * DTO class for the unofficial UI part of Cloudera Management. Display the host list from a Memory
- * Usage chart.
+ * DTO class for the unofficial UI part of Cloudera Management. Display the host from a Memory Usage
+ * chart.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CMFHostListDto {
-  private final List<CMFHostDto> hosts;
+public class CMFHostDTO {
+  @JsonProperty(required = true)
+  private String hostName;
 
-  @JsonCreator
-  public CMFHostListDto(@JsonProperty(value = "hosts", required = true) List<CMFHostDto> hosts) {
-    this.hosts = hosts;
+  @JsonProperty(required = true)
+  private String hostId;
+
+  public String getName() {
+    return hostName;
   }
 
-  public List<CMFHostDto> getHosts() {
-    return hosts;
+  public String getId() {
+    return hostId;
   }
 }
