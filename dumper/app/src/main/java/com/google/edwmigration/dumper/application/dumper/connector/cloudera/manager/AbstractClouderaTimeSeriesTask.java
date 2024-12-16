@@ -32,8 +32,8 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
   private final ObjectMapper objectMapper = new ObjectMapper();
-  protected final int includedLastDays;
-  protected final TimeSeriesAggregation tsAggregation;
+  private final int includedLastDays;
+  private final TimeSeriesAggregation tsAggregation;
 
   public AbstractClouderaTimeSeriesTask(
       String targetPath, int includedLastDays, TimeSeriesAggregation tsAggregation) {
