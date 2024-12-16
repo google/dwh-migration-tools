@@ -28,7 +28,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 
-public abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTask {
+abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTask {
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
   private final ObjectMapper objectMapper = new ObjectMapper();

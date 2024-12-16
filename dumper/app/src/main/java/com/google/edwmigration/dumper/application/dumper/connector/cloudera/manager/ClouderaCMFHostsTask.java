@@ -46,12 +46,11 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper =
+      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
 
   public ClouderaCMFHostsTask() {
     super("cmf-hosts.jsonl");
-    objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES, true);
-    objectMapper.configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
   }
 
   @Override
@@ -66,8 +65,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
     }
 
     final URI baseURI = handle.getBaseURI();
+    List<ClouderaHostDTO> hosts = new ArrayList<>();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      List<ClouderaHostDTO> hosts = new ArrayList<>();
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
           LOG.warn(
@@ -94,8 +93,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
-      handle.initHostsIfNull(hosts);
     }
+    handle.initHostsIfNull(hosts);
     return null;
   }
 }
