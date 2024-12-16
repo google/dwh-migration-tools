@@ -21,9 +21,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -54,16 +58,26 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
           "Cloudera clusters must be initialized before hosts dumping.");
     }
 
+    List<ClouderaHostDTO> hosts = new ArrayList<>();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         String hostPerClusterUrl = handle.getApiURI() + "/clusters/" + cluster.getName() + "/hosts";
 
-        try (CloseableHttpResponse hosts = httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          JsonNode jsonNode = objectMapper.readTree(hosts.getEntity().getContent());
-          writer.write(jsonNode.toString());
-          writer.write('\n');
+        JsonNode jsonHosts;
+        try (CloseableHttpResponse hostsResponse =
+            httpClient.execute(new HttpGet(hostPerClusterUrl))) {
+          jsonHosts = objectMapper.readTree(hostsResponse.getEntity().getContent());
+        }
+        String stringifiedHosts = jsonHosts.toString();
+        writer.write(stringifiedHosts);
+        writer.write('\n');
+
+        ApiHostListDto apiHosts = objectMapper.readValue(stringifiedHosts, ApiHostListDto.class);
+        for (ApiHostDto apiHost : apiHosts.getHosts()) {
+          hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
+      handle.initHostsIfNull(hosts);
     }
     return null;
   }

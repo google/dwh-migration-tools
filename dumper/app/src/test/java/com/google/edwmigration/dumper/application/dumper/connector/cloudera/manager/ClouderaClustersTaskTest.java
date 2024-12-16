@@ -140,7 +140,7 @@ public class ClouderaClustersTaskTest {
                       try {
                         ApiClusterListDto listDto =
                             objectMapper.readValue((String) content, ApiClusterListDto.class);
-                        assertNotNull(listDto.getItems());
+                        assertNotNull(listDto.getClusters());
                       } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                       }
@@ -227,7 +227,7 @@ public class ClouderaClustersTaskTest {
                       try {
                         ApiClusterListDto listDto =
                             objectMapper.readValue((String) content, ApiClusterListDto.class);
-                        assertNotNull(listDto.getItems());
+                        assertNotNull(listDto.getClusters());
                       } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                       }

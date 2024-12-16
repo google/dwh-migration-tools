@@ -17,25 +17,15 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.apache.hc.core5.net.URIBuilder;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,58 +38,34 @@ import org.slf4j.LoggerFactory;
  * href="https://docs.cloudera.com/documentation/enterprise/latest/topics/cm_dg_tsquery.html">tsquery</a>
  * language.
  */
-public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
+public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask {
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
-  private static final DateTimeFormatter isoDateTimeFormatter =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-  private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private final int includedLastDays;
-  private final TimeSeriesAggregation tsAggregation;
-
-  public ClouderaClusterCPUChartTask(
-      int includedLastDays, @Nonnull TimeSeriesAggregation tsAggregation) {
-    super(buildOutputFileName(includedLastDays));
-    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
-    Preconditions.checkArgument(
-        includedLastDays >= 1,
-        "The chart has to include at least one day. Received " + includedLastDays + " days.");
-    this.includedLastDays = includedLastDays;
-    this.tsAggregation = tsAggregation;
+  public ClouderaClusterCPUChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
+    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation);
   }
 
   @Override
   protected Void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
-    CloseableHttpClient httpClient = handle.getHttpClient();
     List<ClouderaClusterDTO> clusters = getClustersFromHandle(handle);
 
-    final String timeSeriesAPIUrl = buildTimeSeriesUrl(handle.getApiURI().toString());
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
-        String cpuPerClusterQuery = buildQueryToFetchCPUTimeSeriesOnCluster(cluster.getId());
+        String cpuPerClusterQuery = String.format(TS_CPU_QUERY_TEMPLATE, cluster.getId());
         LOG.debug(
             "Execute charts query: [{}] for the cluster: [{}].",
             cpuPerClusterQuery,
             cluster.getName());
 
-        URIBuilder uriBuilder = new URIBuilder(timeSeriesAPIUrl);
-        uriBuilder.addParameter("query", cpuPerClusterQuery);
-        uriBuilder.addParameter("desiredRollup", this.tsAggregation.toString());
-        uriBuilder.addParameter("mustUseDesiredRollup", "true");
-        uriBuilder.addParameter("from", buildISODateTime(this.includedLastDays));
-
-        try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
-          JsonNode jsonNode = objectMapper.readTree(chart.getEntity().getContent());
-          writer.write(jsonNode.toString());
-          writer.write('\n');
-        }
+        JsonNode chartInJson = requestTimeSeriesChart(handle, cpuPerClusterQuery);
+        writer.write(chartInJson.toString());
+        writer.write('\n');
       }
     }
-
     return null;
   }
 
@@ -122,30 +88,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaManagerTask {
     return cpuClusters;
   }
 
-  private String buildTimeSeriesUrl(String apiUri) {
-    return apiUri + "/timeseries";
-  }
-
-  private String buildQueryToFetchCPUTimeSeriesOnCluster(String clusterId) {
-    return String.format(TS_CPU_QUERY_TEMPLATE, clusterId);
-  }
-
-  private String buildISODateTime(int deltaInDays) {
-    ZonedDateTime dt =
-        ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
-    return dt.format(isoDateTimeFormatter);
-  }
-
   private static String buildOutputFileName(int includedLastDays) {
-    return String.format("cmf-cluster-cpu-%sd.jsonl", includedLastDays);
-  }
-
-  enum TimeSeriesAggregation {
-    RAW,
-    TEN_MINUTELY,
-    HOURLY,
-    SIX_HOURLY,
-    DAILY,
-    WEEKLY,
+    return String.format("cluster-cpu-%sd.jsonl", includedLastDays);
   }
 }

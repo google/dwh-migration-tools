@@ -16,15 +16,20 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -41,7 +46,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper =
+      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
 
   public ClouderaCMFHostsTask() {
     super("cmf-hosts.jsonl");
@@ -59,6 +65,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
     }
 
     final URI baseURI = handle.getBaseURI();
+    List<ClouderaHostDTO> hosts = new ArrayList<>();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
@@ -72,13 +79,22 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
         String hostPerClusterUrl =
             baseURI + "/cmf/hardware/hosts/hostsOverview.json?clusterId=" + cluster.getId();
 
-        try (CloseableHttpResponse hosts = httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          JsonNode jsonNode = objectMapper.readTree(hosts.getEntity().getContent());
-          writer.write(jsonNode.toString());
-          writer.write('\n');
+        JsonNode hostsJson;
+        try (CloseableHttpResponse hostsResponse =
+            httpClient.execute(new HttpGet(hostPerClusterUrl))) {
+          hostsJson = objectMapper.readTree(hostsResponse.getEntity().getContent());
+        }
+        String stringifiedHosts = hostsJson.toString();
+        writer.write(stringifiedHosts);
+        writer.write('\n');
+
+        CMFHostListDto apiHosts = objectMapper.readValue(stringifiedHosts, CMFHostListDto.class);
+        for (CMFHostDto apiHost : apiHosts.getHosts()) {
+          hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
     }
+    handle.initHostsIfNull(hosts);
     return null;
   }
 }

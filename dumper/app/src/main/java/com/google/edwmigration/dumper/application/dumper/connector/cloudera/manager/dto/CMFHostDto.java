@@ -18,27 +18,24 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
 
 /**
- * DTO class for the official Cloudera API <a
- * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/json_ApiClusterList.html">json</a>
- *
- * <p>Note: The license for <a
- * href="https://mvnrepository.com/artifact/com.cloudera.api.swagger/cloudera-manager-api-swagger/7.11.0">generated</a>
- * code is unclear, the own model for public schema used instead of it.
+ * DTO class for the unofficial UI part of Cloudera Management. Display the host from a Memory Usage
+ * chart.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class ApiClusterListDto {
+public class CMFHostDto {
+  @JsonProperty(required = true)
+  private String hostName;
 
   @JsonProperty(required = true)
-  private List<ApiClusterDto> items;
+  private String hostId;
 
-  public List<ApiClusterDto> getClusters() {
-    return items;
+  public String getName() {
+    return hostName;
   }
 
-  public void setClusters(List<ApiClusterDto> items) {
-    this.items = items;
+  public String getId() {
+    return hostId;
   }
 }

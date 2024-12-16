@@ -69,7 +69,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
                 EntityUtils.toString(clusterResponse.getEntity()), ApiClusterDto.class);
 
         clusterList = new ApiClusterListDto();
-        clusterList.setItems(ImmutableList.of(cluster));
+        clusterList.setClusters(ImmutableList.of(cluster));
       }
     } else {
       LOG.info("'--cluster' argument wasn't provided. Collect all available clusters.");
@@ -87,7 +87,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
     }
 
     List<ClouderaClusterDTO> clusters = new ArrayList<>();
-    for (ApiClusterDto item : clusterList.getItems()) {
+    for (ApiClusterDto item : clusterList.getClusters()) {
       String clusterId = requestClusterIdByName(httpClient, handle.getBaseURI(), item.getName());
       clusters.add(ClouderaClusterDTO.create(clusterId, item.getName()));
     }

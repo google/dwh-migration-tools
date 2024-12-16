@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -33,13 +32,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -59,14 +58,14 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaCMFHostsTaskTest {
-
-  private final ClouderaCMFHostsTask task = new ClouderaCMFHostsTask();
-
+public class ClouderaHostRAMChartTaskTest {
+  private final ClouderaHostRAMChartTask task =
+      new ClouderaHostRAMChartTask(1, TimeSeriesAggregation.HOURLY);
   private ClouderaManagerHandle handle;
 
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
+
   @Mock private Writer writer;
   @Mock private CharSink charSink;
   @Mock private CloseableHttpClient httpClient;
@@ -74,7 +73,7 @@ public class ClouderaCMFHostsTaskTest {
 
   @Before
   public void setUp() throws Exception {
-    uri = URI.create("http://localhost/");
+    uri = URI.create("http://localhost/api");
     handle = new ClouderaManagerHandle(uri, httpClient);
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
@@ -82,53 +81,43 @@ public class ClouderaCMFHostsTaskTest {
   }
 
   @Test
-  public void clusterIdExists_success() throws Exception {
-    handle.initClusters(
+  public void hostsExists_doWriteSuccess() throws Exception {
+    handle.initHostsIfNull(
         ImmutableList.of(
-            ClouderaClusterDTO.create("id1", "first-cluster"),
-            ClouderaClusterDTO.create("id34", "next-cluster")));
+            ClouderaHostDTO.create("id1", "first-host"),
+            ClouderaHostDTO.create("id125", "second-host")));
 
-    CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);
-    HttpEntity entityId1 = mock(HttpEntity.class);
-    when(responseId1.getEntity()).thenReturn(entityId1);
+    CloseableHttpResponse responseHost1 = mock(CloseableHttpResponse.class);
+    HttpEntity entityHost1 = mock(HttpEntity.class);
+    when(responseHost1.getEntity()).thenReturn(entityHost1);
 
-    CloseableHttpResponse responseNext = mock(CloseableHttpResponse.class);
-    HttpEntity entityNext = mock(HttpEntity.class);
-    when(responseNext.getEntity()).thenReturn(entityNext);
+    CloseableHttpResponse responseHost2 = mock(CloseableHttpResponse.class);
+    HttpEntity entityHost2 = mock(HttpEntity.class);
+    when(responseHost2.getEntity()).thenReturn(entityHost2);
 
     when(httpClient.execute(
-            argThat(get -> get != null && get.getURI().toString().endsWith("=id1"))))
-        .thenReturn(responseId1);
+            argThat(
+                get -> get != null && get.getURI().getQuery().contains("entityName = \"id1\""))))
+        .thenReturn(responseHost1);
     when(httpClient.execute(
-            argThat(get -> get != null && get.getURI().toString().endsWith("=id34"))))
-        .thenReturn(responseNext);
+            argThat(
+                get -> get != null && get.getURI().getQuery().contains("entityName = \"id125\""))))
+        .thenReturn(responseHost2);
 
-    when(entityId1.getContent())
-        .thenReturn(
-            new ByteArrayInputStream(
-                "{\"clusterName\" :\"first-cluster\", \"hosts\": []}".getBytes()));
-    when(entityNext.getContent())
-        .thenReturn(
-            new ByteArrayInputStream(
-                "{\n\"clusterName\": \"next-cluster\", \"hosts\": []\n\r}".getBytes()));
+    when(entityHost1.getContent())
+        .thenReturn(new ByteArrayInputStream("{\"items\":[\"host1\"]}".getBytes()));
+    when(entityHost2.getContent())
+        .thenReturn(new ByteArrayInputStream("{\n\"items\":[\"host2\"]\n\r}".getBytes()));
 
     task.doRun(context, sink, handle);
 
-    Set<URI> requestedUrls = new HashSet<>();
     verify(httpClient, times(2))
         .execute(
             argThat(
                 request -> {
                   assertEquals(HttpGet.class, request.getClass());
-                  requestedUrls.add(request.getURI());
                   return true;
                 }));
-
-    assertEquals(
-        ImmutableSet.of(
-            URI.create("http://localhost//cmf/hardware/hosts/hostsOverview.json?clusterId=id1"),
-            URI.create("http://localhost//cmf/hardware/hosts/hostsOverview.json?clusterId=id34")),
-        requestedUrls);
 
     // write jsonl. https://jsonlines.org/
     Set<String> fileLines = new HashSet<>();
@@ -144,47 +133,11 @@ public class ClouderaCMFHostsTaskTest {
                       return true;
                     }));
     verify(writer, times(2)).write('\n');
-    assertEquals(
-        ImmutableSet.of(
-            "{\"clusterName\":\"first-cluster\",\"hosts\":[]}",
-            "{\"clusterName\":\"next-cluster\",\"hosts\":[]}"),
-        fileLines);
+    assertEquals(ImmutableSet.of("{\"items\":[\"host1\"]}", "{\"items\":[\"host2\"]}"), fileLines);
 
-    verify(responseId1).close();
-    verify(responseNext).close();
+    verify(responseHost1).close();
+    verify(responseHost2).close();
     verify(writer).close();
-  }
-
-  @Test
-  public void noHostsInClusterResponse_throwsException() throws Exception {
-    // GIVEN: The cluster which has no host
-    handle.initClusters(ImmutableList.of(ClouderaClusterDTO.create("id1", "first-cluster")));
-    CloseableHttpResponse responseId = mock(CloseableHttpResponse.class);
-    HttpEntity entityId = mock(HttpEntity.class);
-    when(responseId.getEntity()).thenReturn(entityId);
-    when(httpClient.execute(
-            argThat(get -> get != null && get.getURI().toString().endsWith("=id1"))))
-        .thenReturn(responseId);
-    when(entityId.getContent())
-        .thenReturn(new ByteArrayInputStream("{\"clusterName\" :\"first-cluster\"}".getBytes()));
-
-    // WHEN: Hosts are requested from the API and no one has been returned
-    MismatchedInputException exception =
-        assertThrows(MismatchedInputException.class, () -> task.doRun(context, sink, handle));
-
-    // THEN: The exception has to be raised
-    assertTrue(exception.getMessage().contains("hosts"));
-  }
-
-  @Test
-  public void noClusterId_skip_writes() throws Exception {
-    handle.initClusters(ImmutableList.of(ClouderaClusterDTO.create(null, "single cluster")));
-
-    task.doRun(context, sink, handle);
-
-    verify(httpClient, never()).execute(any());
-
-    verifyNoWrites();
   }
 
   @Test
@@ -195,7 +148,7 @@ public class ClouderaCMFHostsTaskTest {
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
 
     assertEquals(
-        "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());
+        "Cloudera hosts must be initialized before RAM charts dumping.", exception.getMessage());
 
     verifyNoWrites();
   }
