@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -24,6 +26,9 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
+  private final ObjectMapper objectMapper =
+      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
+
   public AbstractClouderaManagerTask(String targetPath) {
     super(targetPath);
   }
@@ -32,10 +37,15 @@ abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
   @Override
   protected final Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
-    return doRun(context, sink, (ClouderaManagerHandle) handle);
+    doRun(context, sink, (ClouderaManagerHandle) handle);
+    return null;
   }
 
-  protected abstract Void doRun(
+  protected abstract void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception;
+
+  protected ObjectMapper getObjectMapper() {
+    return objectMapper;
+  }
 }

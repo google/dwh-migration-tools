@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
@@ -30,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -44,15 +42,12 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaClustersTask.class);
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
-
   public ClouderaClustersTask() {
     super("clusters.json");
   }
 
-  @CheckForNull
   @Override
-  protected Void doRun(
+  protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
     CloseableHttpClient httpClient = handle.getHttpClient();
@@ -65,8 +60,8 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
           httpClient.execute(new HttpGet(handle.getApiURI() + "/clusters/" + clusterName))) {
 
         ApiClusterDTO cluster =
-            objectMapper.readValue(
-                EntityUtils.toString(clusterResponse.getEntity()), ApiClusterDTO.class);
+            getObjectMapper()
+                .readValue(EntityUtils.toString(clusterResponse.getEntity()), ApiClusterDTO.class);
 
         clusterList = new ApiClusterListDTO();
         clusterList.setClusters(ImmutableList.of(cluster));
@@ -78,12 +73,12 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
           httpClient.execute(new HttpGet(handle.getApiURI() + "/clusters"))) {
         String clustersJson = EntityUtils.toString(clustersResponse.getEntity());
 
-        clusterList = objectMapper.readValue(clustersJson, ApiClusterListDTO.class);
+        clusterList = getObjectMapper().readValue(clustersJson, ApiClusterListDTO.class);
       }
     }
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      writer.write(objectMapper.writeValueAsString(clusterList));
+      writer.write(getObjectMapper().writeValueAsString(clusterList));
     }
 
     List<ClouderaClusterDTO> clusters = new ArrayList<>();
@@ -96,7 +91,6 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
         clusters.stream().map(ClouderaClusterDTO::getName).collect(Collectors.toList()));
 
     handle.initClusters(clusters);
-    return null;
   }
 
   private String requestClusterIdByName(
@@ -115,7 +109,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
 
         return null;
       } else {
-        JsonNode jsonNode = objectMapper.readTree(clusterStatus.getEntity().getContent());
+        JsonNode jsonNode = getObjectMapper().readTree(clusterStatus.getEntity().getContent());
         // https://www.rfc-editor.org/rfc/rfc6901
         return jsonNode.at("/clusterModel/id").asText();
       }

@@ -48,7 +48,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
   }
 
   @Override
-  protected Void doRun(
+  protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
     List<ClouderaClusterDTO> clusters = getClustersFromHandle(handle);
@@ -66,7 +66,6 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
         writer.write('\n');
       }
     }
-    return null;
   }
 
   private List<ClouderaClusterDTO> getClustersFromHandle(@Nonnull ClouderaManagerHandle handle) {

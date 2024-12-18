@@ -16,9 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
@@ -46,15 +44,12 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
 
-  private final ObjectMapper objectMapper =
-      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
-
   public ClouderaCMFHostsTask() {
     super("cmf-hosts.jsonl");
   }
 
   @Override
-  protected Void doRun(
+  protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
     CloseableHttpClient httpClient = handle.getHttpClient();
@@ -82,19 +77,20 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
         JsonNode hostsJson;
         try (CloseableHttpResponse hostsResponse =
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          hostsJson = objectMapper.readTree(hostsResponse.getEntity().getContent());
+          hostsJson = getObjectMapper().readTree(hostsResponse.getEntity().getContent());
         }
         String stringifiedHosts = hostsJson.toString();
         writer.write(stringifiedHosts);
         writer.write('\n');
 
-        CMFHostListDTO apiHosts = objectMapper.readValue(stringifiedHosts, CMFHostListDTO.class);
+        CMFHostListDTO apiHosts =
+            getObjectMapper().readValue(stringifiedHosts, CMFHostListDTO.class);
         for (CMFHostDTO apiHost : apiHosts.getHosts()) {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
     }
+
     handle.initHostsIfNull(hosts);
-    return null;
   }
 }
