@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import java.net.URI;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaManagerHandleTest {
+
   @Mock private CloseableHttpClient httpClient;
   private final URI localhost = URI.create("http://localhost");
 
@@ -59,7 +61,7 @@ public class ClouderaManagerHandleTest {
   }
 
   @Test
-  public void init_clusters_success() {
+  public void initClusters_success() {
     ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
 
     List<ClouderaClusterDTO> dtos = new ArrayList<>();
@@ -72,16 +74,31 @@ public class ClouderaManagerHandleTest {
   }
 
   @Test
-  public void init_clusters_twice_error() {
+  public void initClusterWithEmptyList_throwsException() {
     ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
 
-    List<ClouderaClusterDTO> first = new ArrayList<>();
-    first.add(ClouderaClusterDTO.create("1", "first"));
-    first.add(ClouderaClusterDTO.create("2", "second"));
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> handle.initClusters(ImmutableList.of()));
 
-    List<ClouderaClusterDTO> second = new ArrayList<>();
-    first.add(ClouderaClusterDTO.create("I", "prime"));
-    first.add(ClouderaClusterDTO.create("II", "backup"));
+    assertEquals("Clusters can't be initialised to empty list.", exception.getMessage());
+
+    NullPointerException npe =
+        assertThrows(NullPointerException.class, () -> handle.initClusters(null));
+
+    assertEquals("Clusters can't be initialised to null list.", npe.getMessage());
+  }
+
+  @Test
+  public void initClustersTwice_throwsException() {
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+
+    List<ClouderaClusterDTO> first =
+        ImmutableList.of(
+            ClouderaClusterDTO.create("1", "first"), ClouderaClusterDTO.create("2", "second"));
+
+    List<ClouderaClusterDTO> second =
+        ImmutableList.of(
+            ClouderaClusterDTO.create("I", "prime"), ClouderaClusterDTO.create("II", "backup"));
 
     handle.initClusters(first);
 
@@ -90,5 +107,21 @@ public class ClouderaManagerHandleTest {
 
     assertEquals(first, handle.getClusters());
     assertEquals("The cluster already initialized!", exception.getMessage());
+  }
+
+  // @Test todo
+  public void initHostsWithNullOrEmpty_throwsException() {
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class, () -> handle.initHostsIfNull(ImmutableList.of()));
+
+    assertEquals("Hosts can't be initialised to empty list.", exception.getMessage());
+
+    NullPointerException npe =
+        assertThrows(NullPointerException.class, () -> handle.initHostsIfNull(null));
+
+    assertEquals("Hosts can't be initialised to null list.", npe.getMessage());
   }
 }

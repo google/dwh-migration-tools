@@ -30,7 +30,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 /**
- * The task dump data from the <a
+ * The task dumps data from the <a
  * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/resource_HostsResource.html#resource_HostsResource_HostsResourceV55_getHostComponents_GET">Hosts
  * components API</a>
  */
