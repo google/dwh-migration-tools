@@ -48,7 +48,7 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
   }
 
   @Override
-  protected Void doRun(
+  protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
     List<ClouderaHostDTO> hosts = handle.getHosts();
@@ -68,7 +68,6 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
         writer.write('\n');
       }
     }
-    return null;
   }
 
   static String buildOutputFileName(int includedLastDays) {

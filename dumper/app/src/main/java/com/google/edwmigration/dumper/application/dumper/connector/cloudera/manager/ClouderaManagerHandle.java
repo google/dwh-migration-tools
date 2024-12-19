@@ -63,6 +63,10 @@ public class ClouderaManagerHandle implements Handle {
   }
 
   public synchronized void initClusters(List<ClouderaClusterDTO> clusters) {
+    Preconditions.checkNotNull(clusters, "Clusters can't be initialised to null list.");
+    Preconditions.checkArgument(
+        !clusters.isEmpty(), "Clusters can't be initialised to empty list.");
+
     if (this.clusters != null) {
       throw new IllegalStateException("The cluster already initialized!");
     }
@@ -75,6 +79,10 @@ public class ClouderaManagerHandle implements Handle {
   }
 
   public synchronized void initHostsIfNull(List<ClouderaHostDTO> hosts) {
+    // Todo
+    // Preconditions.checkNotNull(hosts, "Hosts can't be initialised to null list.");
+    // Preconditions.checkArgument(!hosts.isEmpty(), "Hosts can't be initialised to empty list.");
+
     if (this.hosts == null) {
       this.hosts = ImmutableList.copyOf(hosts);
     }

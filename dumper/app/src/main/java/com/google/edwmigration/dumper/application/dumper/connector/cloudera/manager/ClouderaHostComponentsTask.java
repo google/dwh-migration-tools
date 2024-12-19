@@ -19,7 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -29,10 +29,15 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 
-public class ClouderaServicesTask extends AbstractClouderaManagerTask {
+/**
+ * The task dumps data from the <a
+ * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/resource_HostsResource.html#resource_HostsResource_HostsResourceV55_getHostComponents_GET">Hosts
+ * components API</a>
+ */
+public class ClouderaHostComponentsTask extends AbstractClouderaManagerTask {
 
-  public ClouderaServicesTask() {
-    super("services.jsonl");
+  public ClouderaHostComponentsTask() {
+    super("host-components.jsonl");
   }
 
   @Override
@@ -40,20 +45,19 @@ public class ClouderaServicesTask extends AbstractClouderaManagerTask {
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
     CloseableHttpClient httpClient = handle.getHttpClient();
-    List<ClouderaClusterDTO> clusters = handle.getClusters();
-    if (clusters == null) {
+    List<ClouderaHostDTO> hosts = handle.getHosts();
+    if (hosts == null) {
       throw new MetadataDumperUsageException(
-          "Cloudera clusters must be initialized before services dumping.");
+          "Cloudera hosts must be initialized before Host's components dumping.");
     }
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      for (ClouderaClusterDTO cluster : clusters) {
-        String servicesPerCluster =
-            handle.getApiURI() + "/clusters/" + cluster.getName() + "/services";
+      for (ClouderaHostDTO host : hosts) {
+        String hostsComponentsUrl = handle.getApiURI() + "/hosts/" + host.getId() + "/components";
 
-        try (CloseableHttpResponse services = httpClient.execute(new HttpGet(servicesPerCluster))) {
-          JsonNode jsonNode = getObjectMapper().readTree(services.getEntity().getContent());
-          writer.write(jsonNode.toString());
+        try (CloseableHttpResponse response = httpClient.execute(new HttpGet(hostsComponentsUrl))) {
+          JsonNode json = getObjectMapper().readTree(response.getEntity().getContent());
+          writer.write(json.toString());
           writer.write('\n');
         }
       }
