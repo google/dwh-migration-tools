@@ -117,7 +117,11 @@ public class ClouderaHostComponentsTaskTest {
                       return true;
                     }));
     verify(writer, times(2)).write('\n');
-    assertEquals(ImmutableSet.of("{\"valid\":\"json1\"}", "{\"valid\":\"json2\"}"), fileLines);
+    assertEquals(
+        ImmutableSet.of(
+            "{\"hostId\":\"id2\",\"payload\":{\"valid\":\"json2\"}}",
+            "{\"hostId\":\"id1\",\"payload\":{\"valid\":\"json1\"}}"),
+        fileLines);
 
     verify(writer).close();
   }

@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -57,10 +58,25 @@ public class ClouderaHostComponentsTask extends AbstractClouderaManagerTask {
 
         try (CloseableHttpResponse response = httpClient.execute(new HttpGet(hostsComponentsUrl))) {
           JsonNode json = getObjectMapper().readTree(response.getEntity().getContent());
-          writer.write(json.toString());
+          writer.write(wrapResponseWithHostId(host.getId(), json));
           writer.write('\n');
         }
       }
+    }
+  }
+
+  private String wrapResponseWithHostId(String hostId, JsonNode payload) throws Exception {
+    return getObjectMapper().writeValueAsString(new PayloadEnrichedWithHostId(hostId, payload));
+  }
+
+  private static class PayloadEnrichedWithHostId {
+
+    @JsonProperty private final String hostId;
+    @JsonProperty private final JsonNode payload;
+
+    public PayloadEnrichedWithHostId(String hostId, JsonNode payload) {
+      this.hostId = hostId;
+      this.payload = payload;
     }
   }
 }
