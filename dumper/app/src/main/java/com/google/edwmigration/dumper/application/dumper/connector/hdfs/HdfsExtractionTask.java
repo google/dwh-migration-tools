@@ -109,7 +109,7 @@ public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtrac
     try {
       return dfs.getContentSummary(file.getPath());
     } catch (org.apache.hadoop.security.AccessControlException exn) {
-      LOG.error(
+      LOG.info(
           "Progress for HDFS extraction won't be displayed due to AccessControlException: {}",
           trimExceptionMessage(exn.getMessage()));
     } catch (IOException exn) {

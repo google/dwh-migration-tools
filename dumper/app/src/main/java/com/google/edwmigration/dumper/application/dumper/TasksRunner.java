@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class TasksRunner implements TaskRunContextOps {
 
   private static final Logger LOG = LoggerFactory.getLogger(TasksRunner.class);
-  private static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
+  public static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
   private AtomicInteger numberOfCompletedTasks;
   private final int totalNumberOfTasks;
@@ -121,10 +121,6 @@ public class TasksRunner implements TaskRunContextOps {
     }
 
     PROGRESS_LOG.info(progressMessage);
-  }
-
-  public static void logCustomProgress(String progressMessage) {
-    PROGRESS_LOG.info("{}", progressMessage);
   }
 
   private <T> T runTask(Task<T> task) throws MetadataDumperUsageException {

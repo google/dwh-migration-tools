@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import static com.google.edwmigration.dumper.application.dumper.TasksRunner.logCustomProgress;
+import static com.google.edwmigration.dumper.application.dumper.TasksRunner.PROGRESS_LOG;
 
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
@@ -60,7 +60,9 @@ final class ScanContext implements Closeable {
   private LongAdder numFilesByListStatus = new LongAdder();
   private LongAdder numCallsToListStatus = new LongAdder();
 
-  private boolean hasContentSummary = false;
+  @GuardedBy("csvPrinter")
+  private volatile boolean hasContentSummary = false;
+
   private LongAdder numFilesByContentSummary = new LongAdder();
   private LongAdder numDirsByContentSummary = new LongAdder();
 
@@ -123,11 +125,9 @@ final class ScanContext implements Closeable {
         hasContentSummary = true;
         numFilesByContentSummary.add(contentSummary.getFileCount());
         numDirsByContentSummary.add(contentSummary.getDirectoryCount());
-        startWalkDir(dir);
       }
-    } else {
-      startWalkDir(dir);
     }
+    startWalkDir(dir);
   }
 
   /** Submits a recursive job for the specified dir to the execManager. Updates some HDFS stats */
@@ -206,6 +206,9 @@ final class ScanContext implements Closeable {
   private long lastTimeStatsLogged;
 
   private void maybeLogStats(FileStatus file) {
+    // TODO get rid of System.currentTimeMillis() call
+    // TODO consider using  [Concurrent]RecordProgressMonitor for progress logging
+    // TODO see Shevek's comments to https://github.com/google/dwh-migration-tools/pull/534
     long currentTime = System.currentTimeMillis();
     if (currentTime - lastTimeStatsLogged >= PROGRESS_UPDATE_INTERVAL) {
       lastTimeStatsLogged = currentTime;
@@ -213,12 +216,12 @@ final class ScanContext implements Closeable {
         // Don't log the path in production as it may be considered 'sensitive information'!
         LOG.info("path scanned: {}\n{}", file.getPath().toUri().getPath(), getDetailedStats());
       } else {
-        logCustomProgress(getProgressMessage());
+        PROGRESS_LOG.info("{}", getProgressMessage());
       }
     }
   }
 
-  /** This method is used to produce meaningful HDFS stats for logging and progress purposes. */
+  /** Produce meaningful HDFS stats for logging/debug purposes. */
   public String getDetailedStats() {
     final Duration timeSinceScanBegin = Duration.between(instantScanBegin, Instant.now());
 
@@ -283,6 +286,7 @@ final class ScanContext implements Closeable {
     return stats;
   }
 
+  /** Produce meaningful Progress indicator message. */
   public String getProgressMessage() {
     if (!hasContentSummary) {
       return f("HDFS extraction - %s files done", numFiles + numDirsWalked);
