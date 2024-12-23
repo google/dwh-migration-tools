@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class TasksRunner implements TaskRunContextOps {
 
   private static final Logger LOG = LoggerFactory.getLogger(TasksRunner.class);
-  private static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
+  public static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
   private AtomicInteger numberOfCompletedTasks;
   private final int totalNumberOfTasks;

@@ -16,25 +16,27 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
-import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import java.util.concurrent.Callable;
 import org.apache.hadoop.fs.FileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * SingleDirScanJob is used solely and internally by class ScanContext. An instance of
+ * SingleDirScanJob wraps a HDFS dir and is submitted to the ScanContext.execManager
+ */
 class SingleDirScanJob implements Callable<Void> {
   private static final Logger LOG = LoggerFactory.getLogger(SingleDirScanJob.class);
 
   private final ScanContext scanCtx;
-  private final ExecutorManager execManager;
   private final FileStatus dir;
 
-  SingleDirScanJob(ScanContext scanCtx, ExecutorManager execManager, FileStatus dir) {
+  SingleDirScanJob(ScanContext scanCtx, FileStatus dir) {
     this.scanCtx = scanCtx;
     this.dir = dir;
-    this.execManager = execManager;
   }
 
+  /** List directory's contents, trace/walk its files, and recursively walk its subdirs */
   @Override
   public Void call() {
     long numFiles = 0;
@@ -48,7 +50,7 @@ class SingleDirScanJob implements Callable<Void> {
 
         if (file.isDirectory()) {
           numDirs++;
-          execManager.submit(new SingleDirScanJob(scanCtx, execManager, file));
+          scanCtx.startWalkDir(file);
         } else {
           numFiles++;
           scanCtx.walkFile(file);

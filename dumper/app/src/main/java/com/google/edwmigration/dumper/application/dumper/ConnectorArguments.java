@@ -141,11 +141,14 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_HADOOP_RPC_PROTECTION = "hadoop-rpc-protection";
 
   public static final String OPT_HDFS_PRINCIPAL_PREFIX = "hdfs-principal-prefix";
+
+  public static final String OPT_HDFS_SCAN_ROOT_PATH = "hdfs-scan-root-path";
   public static final String OPT_HADOOP_CORE_SITE_XML_DEFAULT =
       "/etc/hadoop/conf.cloudera.hdfs/core-site.xml";
   public static final String OPT_HADOOP_HDFS_SITE_XML_DEFAULT =
       "/etc/hadoop/conf.cloudera.hdfs/hdfs-site.xml";
   public static final String OPT_HDFS_PRINCIPAL_PREFIX_DEFAULT = "hdfs/_HOST@";
+  public static final String OPT_HDFS_SCAN_ROOT_PATH_DEFAULT = "/";
   // Ranger.
   public static final String OPT_RANGER_PORT_DEFAULT = "6080";
   public static final String OPT_RANGER_PAGE_SIZE = "ranger-page-size";
@@ -483,6 +486,13 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(String.class)
           .defaultsTo(OPT_HDFS_PRINCIPAL_PREFIX_DEFAULT);
+
+  private final OptionSpec<String> optionHdfsScanRootPath =
+      parser
+          .accepts(OPT_HDFS_SCAN_ROOT_PATH, "HDFS root path to be scanned recursively.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .defaultsTo(OPT_HDFS_SCAN_ROOT_PATH_DEFAULT);
 
   public final OptionSpec<Void> optionKerberosAuthForHadoop =
       parser
@@ -1002,6 +1012,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   public String getHdfsPrincipalPrefix() {
     return getOptions().valueOf(optionHdfsPrincipalPrefix);
+  }
+
+  public String getHdfsScanRootPath() {
+    return getOptions().valueOf(optionHdfsScanRootPath);
   }
 
   @CheckForNull
