@@ -16,31 +16,32 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -48,13 +49,10 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Set;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -62,26 +60,35 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaServicesTaskTest {
+  private static WireMockServer server;
 
   private final ClouderaServicesTask task = new ClouderaServicesTask();
 
   private ClouderaManagerHandle handle;
 
-  private String servicesJson;
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
 
   @Mock private Writer writer;
   @Mock private CharSink charSink;
 
-  @Mock private CloseableHttpClient httpClient;
-  private URI uri;
+  @BeforeClass
+  public static void beforeClass() throws Exception {
+    server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
+    server.start();
+  }
+
+  @AfterClass
+  public static void afterClass() throws Exception {
+    server.stop();
+  }
 
   @Before
   public void setUp() throws Exception {
-    servicesJson = readFileAsString("/cloudera/manager/cluster-status.json");
-    uri = URI.create("http://localhost/api");
-    handle = new ClouderaManagerHandle(uri, httpClient);
+    server.resetAll();
+
+    URI uri = URI.create(server.baseUrl() + "/api/vTest");
+    handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);
@@ -89,67 +96,28 @@ public class ClouderaServicesTaskTest {
 
   @Test
   public void clustersExists_do_writes_success() throws Exception {
+    String servicesJson = readFileAsString("/cloudera/manager/cluster-status.json");
     handle.initClusters(
         ImmutableList.of(
             ClouderaClusterDTO.create("id1", "first-cluster"),
             ClouderaClusterDTO.create("id25", "second-cluster")));
 
-    CloseableHttpResponse firstResponse = mock(CloseableHttpResponse.class);
-    HttpEntity firstEntity = mock(HttpEntity.class);
-    when(firstResponse.getEntity()).thenReturn(firstEntity);
-    when(firstEntity.getContent()).thenReturn(new ByteArrayInputStream(servicesJson.getBytes()));
-    when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().toString().endsWith("/first-cluster/services"))))
-        .thenReturn(firstResponse);
-
-    CloseableHttpResponse secondResponse = mock(CloseableHttpResponse.class);
-    HttpEntity secondEntity = mock(HttpEntity.class);
-    when(secondResponse.getEntity()).thenReturn(secondEntity);
-    when(secondEntity.getContent())
-        .thenReturn(new ByteArrayInputStream("{\"some\": \"json\"}".getBytes()));
-    when(httpClient.execute(
-            argThat(
-                get ->
-                    get != null && get.getURI().toString().endsWith("/second-cluster/services"))))
-        .thenReturn(secondResponse);
+    server.stubFor(
+        get("/api/vTest/clusters/first-cluster/services").willReturn(okJson(servicesJson)));
+    server.stubFor(
+        get("/api/vTest/clusters/second-cluster/services")
+            .willReturn(okJson("{\"some\": \n \"json\" \r}")));
 
     // Act
     task.doRun(context, sink, handle);
 
     // Assert
-    Set<URI> requestedUrls = new HashSet<>();
-    verify(httpClient, times(2))
-        .execute(
-            argThat(
-                request -> {
-                  assertEquals(HttpGet.class, request.getClass());
-                  requestedUrls.add(request.getURI());
-                  return true;
-                }));
-    assertEquals(
-        ImmutableSet.of(
-            URI.create("http://localhost/api/clusters/first-cluster/services"),
-            URI.create("http://localhost/api/clusters/second-cluster/services")),
-        requestedUrls);
+    server.verify(getRequestedFor(urlEqualTo("/api/vTest/clusters/first-cluster/services")));
+    server.verify(getRequestedFor(urlEqualTo("/api/vTest/clusters/second-cluster/services")));
 
-    // write jsonl. https://jsonlines.org/
-    Set<String> fileLines = new HashSet<>();
-    verify(writer, times(2))
-        .write(
-            (String)
-                argThat(
-                    content -> {
-                      String str = (String) content;
-                      assertFalse(str.contains("\n"));
-                      assertFalse(str.contains("\r"));
-                      fileLines.add(str);
-                      return true;
-                    }));
-    assertEquals(ImmutableSet.of("{\"some\":\"json\"}", tojsonl(servicesJson)), fileLines);
-
-    verify(firstResponse).close();
-    verify(secondResponse).close();
+    verify(writer).write(tojsonl(servicesJson));
+    verify(writer).write("{\"some\":\"json\"}");
+    verify(writer, times(2)).write('\n');
     verify(writer).close();
   }
 
