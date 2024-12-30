@@ -46,7 +46,7 @@ public class JdbcHandle extends AbstractHandle {
 
   public JdbcHandle(@Nonnull DataSource dataSource) throws SQLException {
     HandleUtil.verifyJdbcConnection(dataSource);
-    this.jdbcTemplate = HandleUtil.templateFromDataSource(dataSource);
+    this.jdbcTemplate = HandleUtil.createJdbcTemplate(dataSource);
   }
 
   @Nonnull

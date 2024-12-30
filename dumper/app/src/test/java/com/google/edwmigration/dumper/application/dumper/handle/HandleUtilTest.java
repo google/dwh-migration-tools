@@ -17,7 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.handle;
 
 import static com.google.edwmigration.dumper.application.dumper.handle.HandleUtil.createHikariConfig;
-import static com.google.edwmigration.dumper.application.dumper.handle.HandleUtil.templateFromDataSource;
+import static com.google.edwmigration.dumper.application.dumper.handle.HandleUtil.createJdbcTemplate;
 import static com.google.edwmigration.dumper.application.dumper.handle.HandleUtil.verifyJdbcConnection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -39,7 +39,7 @@ public class HandleUtilTest {
   public void templateFromDataSource_success_fetchSizeMatches() {
     DataSource dataSource = mock(DataSource.class);
 
-    JdbcTemplate template = templateFromDataSource(dataSource);
+    JdbcTemplate template = createJdbcTemplate(dataSource);
 
     assertEquals(1024, template.getFetchSize());
   }

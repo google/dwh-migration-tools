@@ -30,7 +30,7 @@ public class HandleUtil {
 
   private static final Logger LOG = LoggerFactory.getLogger(HandleUtil.class);
 
-  public static JdbcTemplate templateFromDataSource(DataSource dataSource) {
+  public static JdbcTemplate createJdbcTemplate(DataSource dataSource) {
     JdbcTemplate template = new JdbcTemplate(dataSource);
     template.setFetchSize(1024);
     return template;
