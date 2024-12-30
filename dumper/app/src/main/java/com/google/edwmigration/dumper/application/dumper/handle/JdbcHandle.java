@@ -16,11 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.handle;
 
-import com.google.common.base.Preconditions;
-import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
@@ -40,30 +37,15 @@ public class JdbcHandle extends AbstractHandle {
   @Nonnull
   public static JdbcHandle newPooledJdbcHandle(@Nonnull DataSource dataSource, int threadPoolSize)
       throws SQLException {
-    HikariConfig config = new HikariConfig();
-    config.setDataSource(dataSource);
-    config.setMinimumIdle(0);
-    // Question: If a connection goes out to lunch, causing getConnection() to block for a thread,
-    // can that deadlock the dumper?
-    config.setMaximumPoolSize(threadPoolSize);
-    config.setConnectionTimeout(0); // 0 equals Integer.MAX_VALUE
-    return new JdbcHandle(new HikariDataSource(config));
+    HikariDataSource hikariSource = HandleUtil.withPoolConfig(dataSource, threadPoolSize);
+    return new JdbcHandle(hikariSource);
   }
 
   private final JdbcTemplate jdbcTemplate;
 
   public JdbcHandle(@Nonnull DataSource dataSource) throws SQLException {
-    Preconditions.checkNotNull(dataSource, "DataSource was null.");
-    LOG.debug("Testing connection to database using " + dataSource + "...");
-    try (Connection connection = dataSource.getConnection()) {
-      Preconditions.checkNotNull(
-          connection,
-          "DataSource did not return a connection (Usually bad/mismatched JDBC URI?): %s",
-          dataSource);
-      LOG.debug("Connection test succeeded; obtained " + connection);
-    }
-    this.jdbcTemplate = new JdbcTemplate(dataSource);
-    jdbcTemplate.setFetchSize(1024);
+    HandleUtil.verifyJdbcConnection(dataSource);
+    this.jdbcTemplate = HandleUtil.templateFromDataSource(dataSource);
   }
 
   @Nonnull
