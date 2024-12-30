@@ -31,7 +31,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  *
  * @author shevek
  */
-public class JdbcHandle extends AbstractHandle {
+public class JdbcHandle implements Handle {
 
   private static final Logger LOG = LoggerFactory.getLogger(JdbcHandle.class);
 
@@ -71,6 +71,5 @@ public class JdbcHandle extends AbstractHandle {
         throw new IOException("Failed to close DataSource: " + e, e);
       }
     }
-    super.close();
   }
 }
