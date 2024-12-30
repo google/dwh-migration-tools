@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.handle;
 
-import static com.google.edwmigration.dumper.application.dumper.handle.HandleUtil.createConfig;
+import static com.google.edwmigration.dumper.application.dumper.handle.HandleUtil.createHikariConfig;
 import static com.google.edwmigration.dumper.application.dumper.handle.HandleUtil.templateFromDataSource;
 import static com.google.edwmigration.dumper.application.dumper.handle.HandleUtil.verifyJdbcConnection;
 import static org.junit.Assert.assertEquals;
@@ -56,7 +56,7 @@ public class HandleUtilTest {
   public void withPoolConfig_success_poolSizeMatches() {
     DataSource dataSource = mock(DataSource.class);
 
-    HikariConfig config = createConfig(dataSource, 2);
+    HikariConfig config = createHikariConfig(dataSource, 2);
 
     assertEquals(2, config.getMaximumPoolSize());
   }
@@ -65,7 +65,7 @@ public class HandleUtilTest {
   public void withPoolConfig_success_timeoutEqualsIntMax() {
     DataSource dataSource = mock(DataSource.class);
 
-    HikariConfig config = createConfig(dataSource, 1);
+    HikariConfig config = createHikariConfig(dataSource, 1);
 
     assertEquals(Integer.MAX_VALUE, config.getConnectionTimeout());
   }

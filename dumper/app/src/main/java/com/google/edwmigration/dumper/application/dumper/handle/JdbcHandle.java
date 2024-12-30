@@ -38,7 +38,7 @@ public class JdbcHandle extends AbstractHandle {
   @Nonnull
   public static JdbcHandle newPooledJdbcHandle(@Nonnull DataSource dataSource, int threadPoolSize)
       throws SQLException {
-    HikariConfig config = HandleUtil.createConfig(dataSource, threadPoolSize);
+    HikariConfig config = HandleUtil.createHikariConfig(dataSource, threadPoolSize);
     return new JdbcHandle(new HikariDataSource(config));
   }
 

@@ -51,7 +51,7 @@ public class HandleUtil {
     }
   }
 
-  public static HikariConfig createConfig(DataSource dataSource, int threadPoolSize) {
+  public static HikariConfig createHikariConfig(DataSource dataSource, int threadPoolSize) {
     HikariConfig config = new HikariConfig();
     // providing "0" sets it to Integer.MAX_VALUE
     config.setConnectionTimeout(0);
