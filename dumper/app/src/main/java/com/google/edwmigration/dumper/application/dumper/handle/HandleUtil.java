@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.handle;
 
 import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,11 +29,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class HandleUtil {
 
   private static final Logger LOG = LoggerFactory.getLogger(HandleUtil.class);
-
-  public static HikariDataSource withPoolConfig(DataSource dataSource, int threadPoolSize) {
-    HikariConfig config = createConfig(dataSource, threadPoolSize);
-    return new HikariDataSource(config);
-  }
 
   public static JdbcTemplate templateFromDataSource(DataSource dataSource) {
     JdbcTemplate template = new JdbcTemplate(dataSource);
@@ -57,7 +51,7 @@ public class HandleUtil {
     }
   }
 
-  private static HikariConfig createConfig(DataSource dataSource, int threadPoolSize) {
+  public static HikariConfig createConfig(DataSource dataSource, int threadPoolSize) {
     HikariConfig config = new HikariConfig();
     // providing "0" sets it to Integer.MAX_VALUE
     config.setConnectionTimeout(0);

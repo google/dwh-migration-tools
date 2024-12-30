@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.handle;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -37,8 +38,8 @@ public class JdbcHandle extends AbstractHandle {
   @Nonnull
   public static JdbcHandle newPooledJdbcHandle(@Nonnull DataSource dataSource, int threadPoolSize)
       throws SQLException {
-    HikariDataSource hikariSource = HandleUtil.withPoolConfig(dataSource, threadPoolSize);
-    return new JdbcHandle(hikariSource);
+    HikariConfig config = HandleUtil.createConfig(dataSource, threadPoolSize);
+    return new JdbcHandle(new HikariDataSource(config));
   }
 
   private final JdbcTemplate jdbcTemplate;
