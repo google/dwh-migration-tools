@@ -22,5 +22,5 @@ import java.io.IOException;
 public abstract class AbstractHandle implements Handle {
 
   @Override
-  public void close() throws IOException {}
+  public final void close() throws IOException {}
 }

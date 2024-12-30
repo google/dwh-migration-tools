@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,9 +25,7 @@ import java.io.OutputStream;
 /** @author shevek */
 public abstract class AbstractTaskTest {
 
-  protected static class DummyHandle extends AbstractHandle {}
-
-  protected static Handle HANDLE = new DummyHandle();
+  static final Handle HANDLE = () -> {};
 
   public static class MemoryByteSink extends ByteSink {
 
