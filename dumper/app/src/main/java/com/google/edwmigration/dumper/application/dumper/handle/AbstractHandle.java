@@ -22,5 +22,8 @@ import java.io.IOException;
 public abstract class AbstractHandle implements Handle {
 
   @Override
-  public final void close() throws IOException {}
+  public void close() throws IOException {
+    // Intentionally empty to simplify implementation of some Handles.
+    // If your subclass needs to release resources, consider implementing Handle directly.
+  }
 }
