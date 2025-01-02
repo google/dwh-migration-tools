@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URI;
@@ -45,8 +46,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RangerClient {
-
+public class RangerClient implements AutoCloseable {
   private static final Logger LOG = LoggerFactory.getLogger(RangerConnector.class);
 
   private static final ObjectReader MAPPER =
@@ -75,6 +75,9 @@ public class RangerClient {
   private final UsernamePasswordCredentials credentials;
 
   public RangerClient(CloseableHttpClient httpClient, URI baseUri, String user, String password) {
+    Preconditions.checkNotNull(httpClient, "Http client must not be null.");
+    Preconditions.checkNotNull(baseUri, "BaseUri must not be null.");
+
     this.httpClient = httpClient;
     this.baseUri = baseUri;
     credentials = new UsernamePasswordCredentials(user, password);
@@ -152,5 +155,10 @@ public class RangerClient {
     } catch (IOException e) {
       throw new RangerException("Failed to connect to Ranger API", e);
     }
+  }
+
+  @Override
+  public void close() throws Exception {
+    httpClient.close();
   }
 }

@@ -27,20 +27,20 @@ import javax.annotation.Nonnull;
 public interface Connector {
 
   // Empty
-  public enum DefaultProperties implements ConnectorProperty {}
+  enum DefaultProperties implements ConnectorProperty {}
 
   @Nonnull
-  public String getName();
+  String getName();
 
   @Nonnull
-  public String getDefaultFileName(boolean isAssessment, Clock clock);
+  String getDefaultFileName(boolean isAssessment, Clock clock);
 
-  public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
+  void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception;
 
   @Nonnull
-  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
+  Handle open(@Nonnull ConnectorArguments arguments) throws Exception;
 
   @Nonnull
-  public Iterable<ConnectorProperty> getPropertyConstants();
+  Iterable<ConnectorProperty> getPropertyConstants();
 }
