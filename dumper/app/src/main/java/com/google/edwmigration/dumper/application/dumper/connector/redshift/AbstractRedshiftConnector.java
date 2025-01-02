@@ -130,12 +130,6 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
    *
    * https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/1.2.43.1067/Amazon+Redshift+JDBC+Driver+Install+Guide.pdf
    */
-  // this SHOuLD LAND UP IN THE ARGUMENT CLASS ...
-  @Nonnull
-  private static String requireNonNull(String val, String msg) throws MetadataDumperUsageException {
-    if (val != null) return val;
-    throw new MetadataDumperUsageException(msg);
-  }
 
   @Nonnull
   private String makeJdbcUrlPostgresql(ConnectorArguments arguments)
