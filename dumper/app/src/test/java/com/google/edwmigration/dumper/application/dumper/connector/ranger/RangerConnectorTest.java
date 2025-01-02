@@ -16,18 +16,34 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
+import static org.mockito.Mockito.verify;
+
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(JUnit4.class)
+@RunWith(MockitoJUnitRunner.class)
 public class RangerConnectorTest extends AbstractConnectorTest {
+  @Mock private RangerClient rangerClient;
 
   private final RangerConnector connector = new RangerConnector();
 
   @Test
   public void testConnector() throws Exception {
     testConnectorDefaults(connector);
+  }
+
+  @Test
+  public void rangerClientClosed() throws Exception {
+    RangerClientHandle handle = new RangerClientHandle(rangerClient, 42);
+
+    // Act
+    handle.close();
+
+    // Assert
+    verify(rangerClient).close();
   }
 }
