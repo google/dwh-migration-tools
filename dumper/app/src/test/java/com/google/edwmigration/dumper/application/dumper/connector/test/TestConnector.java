@@ -22,7 +22,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractConne
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.util.List;
@@ -30,7 +29,7 @@ import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, MetadataConnector.class})
 public class TestConnector extends AbstractConnector implements MetadataConnector {
-  private static final Handle DUMMY_HANDLE = new AbstractHandle() {};
+  private static final Handle DUMMY_HANDLE = () -> {};
 
   public TestConnector() {
     super("test");
