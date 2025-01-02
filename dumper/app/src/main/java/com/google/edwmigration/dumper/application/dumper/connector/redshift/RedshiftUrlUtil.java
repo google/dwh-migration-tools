@@ -26,7 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 class RedshiftUrlUtil {
 
-  static final int DEFAULT_PORT = 5439;
+  private static final int DEFAULT_PORT = 5439;
   // for annotations
   static final String OPT_PORT_DEFAULT = "5439";
 
@@ -68,24 +68,32 @@ class RedshiftUrlUtil {
   @Nonnull
   static String makeJdbcUrlRedshiftIAM(ConnectorArguments arguments)
       throws UnsupportedEncodingException {
-    String url =
-        "jdbc:redshift:iam://"
-            + arguments.getHostOrDefault()
-            + ":"
-            + arguments.getPort(DEFAULT_PORT)
-            + "/"
-            + Iterables.getFirst(arguments.getDatabases(), "");
+    return "jdbc:redshift:iam://"
+        + arguments.getHostOrDefault()
+        + ":"
+        + arguments.getPort(DEFAULT_PORT)
+        + "/"
+        + Iterables.getFirst(arguments.getDatabases(), "")
+        + toIamProperties(arguments);
+  }
 
-    if (arguments.getIAMProfile() != null)
-      url += new JdbcPropBuilder("?=&").prop("Profile", arguments.getIAMProfile()).toJdbcPart();
-    else if (arguments.getIAMAccessKeyID() != null && arguments.getIAMSecretAccessKey() != null)
-      url +=
-          new JdbcPropBuilder("?=&")
-              .prop("AccessKeyID", arguments.getIAMAccessKeyID())
-              .prop("SecretAccessKey", arguments.getIAMSecretAccessKey())
-              .propOrError("DbUser", arguments.getUser(), "--user must be specified")
-              .toJdbcPart();
-    // Will use the default IAM from ~/.aws/credentials/
-    return url;
+  private static String toIamProperties(ConnectorArguments arguments)
+      throws UnsupportedEncodingException {
+    String profile = arguments.getIAMProfile();
+    if (profile != null) {
+      return new JdbcPropBuilder("?=&").prop("Profile", arguments.getIAMProfile()).toJdbcPart();
+    }
+    String keyId = arguments.getIAMAccessKeyID();
+    String secretKey = arguments.getIAMSecretAccessKey();
+    if (keyId != null && secretKey != null) {
+      return new JdbcPropBuilder("?=&")
+          .prop("AccessKeyID", keyId)
+          .prop("SecretAccessKey", secretKey)
+          .propOrError("DbUser", arguments.getUser(), "--user must be specified")
+          .toJdbcPart();
+    } else {
+      // Use the default IAM from ~/.aws/credentials/
+      return "";
+    }
   }
 }
