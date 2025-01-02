@@ -70,7 +70,6 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @RespectsArgumentJDBCUri
 public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
 
-  @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(AbstractRedshiftConnector.class);
 
   protected static final DateTimeFormatter SQL_FORMAT =
