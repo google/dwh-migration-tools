@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import java.io.UnsupportedEncodingException;
 import java.sql.Driver;
+import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -205,10 +206,6 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
         newDriver(
             arguments.getDriverPaths(), "com.amazon.redshift.jdbc.Driver", "org.postgresql.Driver");
 
-    //        LOG.debug("DRIVER IS " + driver.getClass().getCanonicalName());
-    //        LOG.debug("DRIVER CAN RS " + driver.acceptsURL("jdbc:redshift://host/db"));
-    //        LOG.debug("DRIVER CAN IAM " + driver.acceptsURL("jdbc:redshift:iam://host/db"));
-    //        LOG.debug("DRIVER CAN PG " + driver.acceptsURL("jdbc:postgresql://host/db"));
     String url = arguments.getUri();
     Optional<String> password = arguments.getPasswordIfFlagProvided();
     if (url == null) {
@@ -242,5 +239,12 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
         new SimpleDriverDataSource(driver, url, arguments.getUser(), password.orElse(null));
 
     return JdbcHandle.newPooledJdbcHandle(dataSource, arguments.getThreadPoolSize());
+  }
+
+  private static void logDriverInfo(@Nonnull Driver driver) throws SQLException {
+    LOG.debug("DRIVER IS " + driver.getClass().getCanonicalName());
+    LOG.debug("DRIVER CAN RS " + driver.acceptsURL("jdbc:redshift://host/db"));
+    LOG.debug("DRIVER CAN IAM " + driver.acceptsURL("jdbc:redshift:iam://host/db"));
+    LOG.debug("DRIVER CAN PG " + driver.acceptsURL("jdbc:postgresql://host/db"));
   }
 }
