@@ -193,7 +193,8 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
   }
 
   @Override
-  public Handle open(ConnectorArguments arguments) throws Exception {
+  @Nonnull
+  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
 
     Driver driver =
         newDriver(
