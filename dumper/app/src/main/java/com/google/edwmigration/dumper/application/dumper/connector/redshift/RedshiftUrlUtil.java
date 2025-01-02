@@ -34,7 +34,7 @@ class RedshiftUrlUtil {
   static String makeJdbcUrlPostgresql(ConnectorArguments arguments)
       throws MetadataDumperUsageException, UnsupportedEncodingException {
     String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    return "jdbc:postgresql://"
+    return makeScheme("postgresql")
         + arguments.getHostOrDefault()
         + ":"
         + arguments.getPort(DEFAULT_PORT)
@@ -51,7 +51,7 @@ class RedshiftUrlUtil {
   static String makeJdbcUrlRedshiftSimple(ConnectorArguments arguments)
       throws MetadataDumperUsageException, UnsupportedEncodingException {
     String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    return "jdbc:redshift://"
+    return makeScheme("redshift")
         + arguments.getHostOrDefault()
         + ":"
         + arguments.getPort(DEFAULT_PORT)
@@ -68,13 +68,17 @@ class RedshiftUrlUtil {
   @Nonnull
   static String makeJdbcUrlRedshiftIAM(ConnectorArguments arguments)
       throws UnsupportedEncodingException {
-    return "jdbc:redshift:iam://"
+    return makeScheme("redshift:iam")
         + arguments.getHostOrDefault()
         + ":"
         + arguments.getPort(DEFAULT_PORT)
         + "/"
         + Iterables.getFirst(arguments.getDatabases(), "")
         + toIamProperties(arguments);
+  }
+
+  private static String makeScheme(String urlType) {
+    return String.format("jdbc:%s://", urlType);
   }
 
   private static String toIamProperties(ConnectorArguments arguments)
