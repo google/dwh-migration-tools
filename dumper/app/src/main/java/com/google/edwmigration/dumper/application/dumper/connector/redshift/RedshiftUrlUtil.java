@@ -39,7 +39,7 @@ class RedshiftUrlUtil {
         + ":"
         + arguments.getPort(DEFAULT_PORT)
         + "/"
-        + Iterables.getFirst(arguments.getDatabases(), "") //
+        + Iterables.getFirst(arguments.getDatabases(), "")
         + new JdbcPropBuilder("?=&")
             .propOrWarn("user", arguments.getUser(), "--user must be specified")
             .propOrWarn("password", password, "--password must be specified")
@@ -56,7 +56,7 @@ class RedshiftUrlUtil {
         + ":"
         + arguments.getPort(DEFAULT_PORT)
         + "/"
-        + Iterables.getFirst(arguments.getDatabases(), "") //
+        + Iterables.getFirst(arguments.getDatabases(), "")
         + new JdbcPropBuilder("?=&")
             .propOrWarn("UID", arguments.getUser(), "--user must be specified")
             .propOrWarn("PWD", password, "--password must be specified")
@@ -86,8 +86,6 @@ class RedshiftUrlUtil {
               .propOrError("DbUser", arguments.getUser(), "--user must be specified")
               .toJdbcPart();
     // Will use the default IAM from ~/.aws/credentials/
-    // throw new MetadataDumperUsageException("Either --iam-profile or
-    // --iam-accesskeyid/--iam-secretaccesskey should be given");
     return url;
   }
 }
