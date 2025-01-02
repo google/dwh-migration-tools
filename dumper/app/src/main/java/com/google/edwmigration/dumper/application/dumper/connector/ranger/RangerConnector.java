@@ -38,6 +38,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Rol
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.ServicesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.UsersFormat;
 import com.google.errorprone.annotations.ForOverride;
+import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -261,6 +262,16 @@ public class RangerConnector extends AbstractConnector {
     RangerClientHandle(@Nonnull RangerClient rangerClient, int pageSize) {
       this.rangerClient = rangerClient;
       this.pageSize = pageSize;
+    }
+
+    @Override
+    public void close() throws IOException {
+      super.close();
+      try {
+        rangerClient.close();
+      } catch (Exception e) {
+        throw new IOException("Failed to close RangerClient: " + e, e);
+      }
     }
   }
 }

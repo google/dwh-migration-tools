@@ -18,32 +18,26 @@ package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
 import static org.mockito.Mockito.verify;
 
-import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
-import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
+import java.net.URI;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class RangerConnectorTest extends AbstractConnectorTest {
-  @Mock private RangerClient rangerClient;
+public class RangerClientTest {
 
-  private final RangerConnector connector = new RangerConnector();
-
-  @Test
-  public void testConnector() throws Exception {
-    testConnectorDefaults(connector);
-  }
+  @Mock private CloseableHttpClient httpClient;
+  @Mock private URI baseUri;
 
   @Test
-  public void rangerClientClosed() throws Exception {
-    RangerClientHandle handle = new RangerClientHandle(rangerClient, 42);
+  public void closeHttpClient() throws Exception {
+    RangerClient client = new RangerClient(httpClient, baseUri, "user", "secret");
 
     // Act
-    handle.close();
+    client.close();
 
-    // Assert
-    verify(rangerClient).close();
+    verify(httpClient).close();
   }
 }
