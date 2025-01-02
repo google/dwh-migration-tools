@@ -74,14 +74,14 @@ class RedshiftUrlUtil {
         + arguments.getPort(DEFAULT_PORT)
         + "/"
         + Iterables.getFirst(arguments.getDatabases(), "")
-        + toIamProperties(arguments);
+        + makeIamProperties(arguments);
   }
 
   private static String makeScheme(String urlType) {
     return String.format("jdbc:%s://", urlType);
   }
 
-  private static String toIamProperties(ConnectorArguments arguments)
+  private static String makeIamProperties(ConnectorArguments arguments)
       throws UnsupportedEncodingException {
     String profile = arguments.getIAMProfile();
     if (profile != null) {
