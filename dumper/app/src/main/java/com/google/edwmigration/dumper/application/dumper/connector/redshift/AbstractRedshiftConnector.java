@@ -17,9 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
@@ -29,8 +27,8 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-import java.io.UnsupportedEncodingException;
 import java.sql.Driver;
+import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -69,12 +67,10 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @RespectsArgumentJDBCUri
 public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
 
-  @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(AbstractRedshiftConnector.class);
 
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
-  public static final int OPT_PORT_DEFAULT = 5439;
 
   @Nonnull
   protected static CharSequence newWhereClause(List<String> clauseList, String... clauseArray) {
@@ -130,85 +126,15 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
    *
    * https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/1.2.43.1067/Amazon+Redshift+JDBC+Driver+Install+Guide.pdf
    */
-  // this SHOuLD LAND UP IN THE ARGUMENT CLASS ...
-  @Nonnull
-  private static String requireNonNull(String val, String msg) throws MetadataDumperUsageException {
-    if (val != null) return val;
-    throw new MetadataDumperUsageException(msg);
-  }
-
-  @Nonnull
-  private String makeJdbcUrlPostgresql(ConnectorArguments arguments)
-      throws MetadataDumperUsageException, UnsupportedEncodingException {
-    String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    return "jdbc:postgresql://"
-        + arguments.getHostOrDefault()
-        + ":"
-        + arguments.getPort(5439)
-        + "/"
-        + Iterables.getFirst(arguments.getDatabases(), "") //
-        + new JdbcPropBuilder("?=&")
-            .propOrWarn("user", arguments.getUser(), "--user must be specified")
-            .propOrWarn("password", password, "--password must be specified")
-            .prop("ssl", "true")
-            .toJdbcPart();
-  }
-
-  @Nonnull
-  private String makeJdbcUrlRedshiftSimple(ConnectorArguments arguments)
-      throws MetadataDumperUsageException, UnsupportedEncodingException {
-    String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    return "jdbc:redshift://"
-        + arguments.getHostOrDefault()
-        + ":"
-        + arguments.getPort(5439)
-        + "/"
-        + Iterables.getFirst(arguments.getDatabases(), "") //
-        + new JdbcPropBuilder("?=&")
-            .propOrWarn("UID", arguments.getUser(), "--user must be specified")
-            .propOrWarn("PWD", password, "--password must be specified")
-            .toJdbcPart();
-  }
-
-  // TODO:  [cluster-id]:[region] syntax.
-  // either profile, or key+ secret
-  @Nonnull
-  private String makeJdbcUrlRedshiftIAM(ConnectorArguments arguments)
-      throws MetadataDumperUsageException, UnsupportedEncodingException {
-    String url =
-        "jdbc:redshift:iam://"
-            + arguments.getHostOrDefault()
-            + ":"
-            + arguments.getPort(5439)
-            + "/"
-            + Iterables.getFirst(arguments.getDatabases(), "");
-
-    if (arguments.getIAMProfile() != null)
-      url += new JdbcPropBuilder("?=&").prop("Profile", arguments.getIAMProfile()).toJdbcPart();
-    else if (arguments.getIAMAccessKeyID() != null && arguments.getIAMSecretAccessKey() != null)
-      url +=
-          new JdbcPropBuilder("?=&")
-              .prop("AccessKeyID", arguments.getIAMAccessKeyID())
-              .prop("SecretAccessKey", arguments.getIAMSecretAccessKey())
-              .propOrError("DbUser", arguments.getUser(), "--user must be specified")
-              .toJdbcPart();
-    // Will use the default IAM from ~/.aws/credentials/
-    // throw new MetadataDumperUsageException("Either --iam-profile or
-    // --iam-accesskeyid/--iam-secretaccesskey should be given");
-    return url;
-  }
 
   @Override
-  public Handle open(ConnectorArguments arguments) throws Exception {
+  @Nonnull
+  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
 
     Driver driver =
         newDriver(
             arguments.getDriverPaths(), "com.amazon.redshift.jdbc.Driver", "org.postgresql.Driver");
 
-    //        LOG.debug("DRIVER IS " + driver.getClass().getCanonicalName());
-    //        LOG.debug("DRIVER CAN RS " + driver.acceptsURL("jdbc:redshift://host/db"));
-    //        LOG.debug("DRIVER CAN IAM " + driver.acceptsURL("jdbc:redshift:iam://host/db"));
-    //        LOG.debug("DRIVER CAN PG " + driver.acceptsURL("jdbc:postgresql://host/db"));
     String url = arguments.getUri();
     Optional<String> password = arguments.getPasswordIfFlagProvided();
     if (url == null) {
@@ -226,11 +152,11 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
               "The use of IAM authentication also requires the use of a Redshift-specific JDBC driver. Please use --"
                   + ConnectorArguments.OPT_DRIVER
                   + " to specify the path to the Redshift JDBC JAR, or use password authentication.");
-        url = makeJdbcUrlPostgresql(arguments);
+        url = RedshiftUrlUtil.makeJdbcUrlPostgresql(arguments);
       } else if (isAuthenticationPassword) {
-        url = makeJdbcUrlRedshiftSimple(arguments);
+        url = RedshiftUrlUtil.makeJdbcUrlRedshiftSimple(arguments);
       } else {
-        url = makeJdbcUrlRedshiftIAM(arguments);
+        url = RedshiftUrlUtil.makeJdbcUrlRedshiftIAM(arguments);
       }
     }
 
@@ -242,5 +168,12 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
         new SimpleDriverDataSource(driver, url, arguments.getUser(), password.orElse(null));
 
     return JdbcHandle.newPooledJdbcHandle(dataSource, arguments.getThreadPoolSize());
+  }
+
+  private static void logDriverInfo(@Nonnull Driver driver) throws SQLException {
+    LOG.debug("DRIVER IS " + driver.getClass().getCanonicalName());
+    LOG.debug("DRIVER CAN RS " + driver.acceptsURL("jdbc:redshift://host/db"));
+    LOG.debug("DRIVER CAN IAM " + driver.acceptsURL("jdbc:redshift:iam://host/db"));
+    LOG.debug("DRIVER CAN PG " + driver.acceptsURL("jdbc:postgresql://host/db"));
   }
 }
