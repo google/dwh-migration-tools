@@ -57,7 +57,7 @@ public class ClouderaHostComponentsTask extends AbstractClouderaManagerTask {
         String hostsComponentsUrl = handle.getApiURI() + "/hosts/" + host.getId() + "/components";
 
         try (CloseableHttpResponse response = httpClient.execute(new HttpGet(hostsComponentsUrl))) {
-          JsonNode json = getObjectMapper().readTree(response.getEntity().getContent());
+          JsonNode json = readJsonTree(response.getEntity().getContent());
           writer.write(wrapResponseWithHostId(host.getId(), json));
           writer.write('\n');
         }
@@ -66,7 +66,7 @@ public class ClouderaHostComponentsTask extends AbstractClouderaManagerTask {
   }
 
   private String wrapResponseWithHostId(String hostId, JsonNode payload) throws Exception {
-    return getObjectMapper().writeValueAsString(new PayloadEnrichedWithHostId(hostId, payload));
+    return parseObjectToJsonString(new PayloadEnrichedWithHostId(hostId, payload));
   }
 
   private static class PayloadEnrichedWithHostId {

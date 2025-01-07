@@ -52,6 +52,8 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -117,7 +119,7 @@ public class ClouderaClusterCPUChartTaskTest {
             ClouderaClusterDTO.create("id1", "first-cluster"),
             ClouderaClusterDTO.create("id2", "second-cluster")));
     String firstClusterServicesJson = servicesJson;
-    String secondClusterServicesJson = servicesJson + "{}";
+    String secondClusterServicesJson = "{\"key\":" + servicesJson + "}";
     mockHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
     mockHttpRequestToFetchClusterCPUChart("id2", secondClusterServicesJson);
 
@@ -177,6 +179,7 @@ public class ClouderaClusterCPUChartTaskTest {
       throws IOException {
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
+    mockStatusLine(httpResponse);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream(mockedContent.getBytes()));
     when(httpClient.execute(
@@ -187,6 +190,12 @@ public class ClouderaClusterCPUChartTaskTest {
                             .getQuery()
                             .contains(String.format("entityName = \"%s\"", clusterName)))))
         .thenReturn(httpResponse);
+  }
+
+  private void mockStatusLine(CloseableHttpResponse responseHost) {
+    StatusLine statusLine = mock();
+    when(responseHost.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(HttpStatus.SC_OK);
   }
 
   private void verifyNoWrites() throws IOException {

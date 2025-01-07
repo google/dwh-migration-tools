@@ -52,7 +52,7 @@ public class ClouderaServicesTask extends AbstractClouderaManagerTask {
             handle.getApiURI() + "/clusters/" + cluster.getName() + "/services";
 
         try (CloseableHttpResponse services = httpClient.execute(new HttpGet(servicesPerCluster))) {
-          JsonNode jsonNode = getObjectMapper().readTree(services.getEntity().getContent());
+          JsonNode jsonNode = readJsonTree(services.getEntity().getContent());
           writer.write(jsonNode.toString());
           writer.write('\n');
         }

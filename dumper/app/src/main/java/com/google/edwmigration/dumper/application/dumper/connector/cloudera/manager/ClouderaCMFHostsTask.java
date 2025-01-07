@@ -77,14 +77,14 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
         JsonNode hostsJson;
         try (CloseableHttpResponse hostsResponse =
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          hostsJson = getObjectMapper().readTree(hostsResponse.getEntity().getContent());
+          hostsJson = readJsonTree(hostsResponse.getEntity().getContent());
         }
         String stringifiedHosts = hostsJson.toString();
         writer.write(stringifiedHosts);
         writer.write('\n');
 
         CMFHostListDTO apiHosts =
-            getObjectMapper().readValue(stringifiedHosts, CMFHostListDTO.class);
+            parseJsonStringToObject(stringifiedHosts, CMFHostListDTO.class);
         for (CMFHostDTO apiHost : apiHosts.getHosts()) {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
