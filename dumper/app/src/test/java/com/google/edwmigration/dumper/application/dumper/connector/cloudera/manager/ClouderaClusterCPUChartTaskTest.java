@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -33,7 +34,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
@@ -49,9 +49,12 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -73,12 +76,11 @@ public class ClouderaClusterCPUChartTaskTest {
   @Mock private Writer writer;
   @Mock private CharSink charSink;
   @Mock private CloseableHttpClient httpClient;
-  private URI uri;
 
   @Before
   public void setUp() throws Exception {
     servicesJson = readFileAsString("/cloudera/manager/cluster-cpu-status.json");
-    uri = URI.create("http://localhost/api");
+    URI uri = URI.create("http://localhost/api");
     handle = new ClouderaManagerHandle(uri, httpClient);
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
@@ -86,9 +88,9 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
-  public void noClusterId_skipWrites() throws Exception {
+  public void doRun_initiatedClusterWithoutId_skipWrites() throws Exception {
     // GIVEN: There is no cluster with a valid cluster ID
-    handle.initClusters(ImmutableList.of(ClouderaClusterDTO.create(null, "single cluster")));
+    initClusters(ClouderaClusterDTO.create(null, "single cluster"));
 
     // WHEN
     task.doRun(context, sink, handle);
@@ -99,7 +101,7 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
-  public void noAggregationParameter_throwsException() throws IOException {
+  public void doRun_missedAggregationParameter_throwsException() throws IOException {
     // WHEN: CPU usage task is initiated with no aggregation parameter
     NullPointerException exception =
         assertThrows(NullPointerException.class, () -> new ClouderaClusterCPUChartTask(5, null));
@@ -110,40 +112,28 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
-  public void validCluster_doWrites() throws Exception {
+  public void doRun_clouderaReturnsValidJson_writeJsonLines() throws Exception {
     // GIVEN: Two valid clusters
-    handle.initClusters(
-        ImmutableList.of(
-            ClouderaClusterDTO.create("id1", "first-cluster"),
-            ClouderaClusterDTO.create("id2", "second-cluster")));
+    initClusters(
+        ClouderaClusterDTO.create("id1", "first-cluster"),
+        ClouderaClusterDTO.create("id2", "second-cluster"));
     String firstClusterServicesJson = servicesJson;
-    String secondClusterServicesJson = servicesJson + "{}";
+    String secondClusterServicesJson = "{\"key\":" + servicesJson + "}";
     mockHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
     mockHttpRequestToFetchClusterCPUChart("id2", secondClusterServicesJson);
 
-    // WHEN
+    // WHEN:
     task.doRun(context, sink, handle);
 
     // THEN: the output should be dumped into the jsonl format for both clusters
-    Set<String> fileLines = new HashSet<>();
-    verify(writer, times(2))
-        .write(
-            (String)
-                argThat(
-                    content -> {
-                      String str = (String) content;
-                      assertFalse(str.contains("\n"));
-                      assertFalse(str.contains("\r"));
-                      fileLines.add(str);
-                      return true;
-                    }));
+    Set<String> fileLines = getWrittenJsonLines();
     assertEquals(
         ImmutableSet.of(tojsonl(firstClusterServicesJson), tojsonl(secondClusterServicesJson)),
         fileLines);
   }
 
   @Test
-  public void clustersWereNotInitialized_throwsException() throws Exception {
+  public void doRun_clustersWereNotInitialized_throwsException() throws Exception {
     // GIVEN: There is no valid cluster
     assertNull(handle.getClusters());
 
@@ -158,9 +148,9 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
-  public void chartWithEmptyDateRange_throwsException() throws Exception {
+  public void initTask_requestChartWithEmptyDateRange_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
-    handle.initClusters(ImmutableList.of(ClouderaClusterDTO.create("id1", "first-cluster")));
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
 
     // WHEN: CPU usage task with empty date range is initiated
     IllegalArgumentException exception =
@@ -173,10 +163,70 @@ public class ClouderaClusterCPUChartTaskTest {
         "The chart has to include at least one day. Received 0 days.", exception.getMessage());
   }
 
+  @Test
+  public void doRun_clouderaReturns4xx_throwsCriticalException() throws Exception {
+    // GIVEN: There is a valid cluster
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    String firstClusterServicesJson = servicesJson;
+    mockHttpRequestToFetchClusterCPUChart(
+        "id1", firstClusterServicesJson, HttpStatus.SC_BAD_REQUEST);
+
+    // WHEN: Cloudera returns 4xx http status code
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    // THEN: There is a relevant exception has been raised
+    assertTrue(exception.getMessage().contains("Cloudera Error: "));
+    verifyNoWrites();
+  }
+
+  @Test
+  public void doRun_clouderaReturns5xx_throwsCriticalException() throws Exception {
+    // GIVEN: There is a valid cluster
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    String firstClusterServicesJson = servicesJson;
+    mockHttpRequestToFetchClusterCPUChart(
+        "id1", firstClusterServicesJson, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+
+    // WHEN: Cloudera returns 4xx http status code
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    // THEN: There is a relevant exception has been raised
+    assertTrue(exception.getMessage().contains("Cloudera Error: "));
+    verifyNoWrites();
+  }
+
+  @Test
+  public void doRun_clouderaReturnsInvalidJson_throwsCriticalException() throws Exception {
+    // GIVEN: There is a valid cluster
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    String firstClusterServicesJson = "{\"key\": []]";
+    mockHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
+
+    // WHEN: Cloudera returns 4xx http status code
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    // THEN: There is a relevant exception has been raised
+    assertTrue(exception.getMessage().contains("Cloudera Error: "));
+    verifyNoWrites();
+  }
+
+  private void initClusters(ClouderaClusterDTO... clusters) {
+    handle.initClusters(Arrays.asList(clusters));
+  }
+
   private void mockHttpRequestToFetchClusterCPUChart(String clusterName, String mockedContent)
       throws IOException {
+    mockHttpRequestToFetchClusterCPUChart(clusterName, mockedContent, HttpStatus.SC_OK);
+  }
+
+  private void mockHttpRequestToFetchClusterCPUChart(
+      String clusterName, String mockedContent, int statusCode) throws IOException {
     CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
     HttpEntity httpEntity = mock(HttpEntity.class);
+    mockStatusLine(httpResponse, statusCode);
     when(httpResponse.getEntity()).thenReturn(httpEntity);
     when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream(mockedContent.getBytes()));
     when(httpClient.execute(
@@ -189,12 +239,35 @@ public class ClouderaClusterCPUChartTaskTest {
         .thenReturn(httpResponse);
   }
 
+  private void mockStatusLine(CloseableHttpResponse responseHost, int statusCode) {
+    StatusLine statusLine = mock();
+    when(responseHost.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(statusCode);
+  }
+
   private void verifyNoWrites() throws IOException {
     verify(writer, never()).write(anyChar());
     verify(writer, never()).write(anyString());
     verify(writer, never()).write(anyString(), anyInt(), anyInt());
     verify(writer, never()).write(any(char[].class));
     verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
+  }
+
+  private Set<String> getWrittenJsonLines() throws IOException {
+    // https://jsonlines.org/
+    Set<String> fileLines = new HashSet<>();
+    verify(writer, times(2))
+        .write(
+            (String)
+                argThat(
+                    content -> {
+                      String str = (String) content;
+                      assertFalse(str.contains("\n"));
+                      assertFalse(str.contains("\r"));
+                      fileLines.add(str);
+                      return true;
+                    }));
+    return fileLines;
   }
 
   private String readFileAsString(String fileName) throws IOException, URISyntaxException {

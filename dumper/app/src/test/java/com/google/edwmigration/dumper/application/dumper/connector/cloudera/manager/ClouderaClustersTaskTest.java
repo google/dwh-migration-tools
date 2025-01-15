@@ -104,7 +104,7 @@ public class ClouderaClustersTaskTest {
   }
 
   @Test
-  public void clusterNotProvided_success() throws Exception {
+  public void doRun_clusterNotProvided_fetchAllClusters() throws Exception {
     when(arguments.getCluster()).thenReturn(null);
     URI apiUrl = URI.create(server.baseUrl() + "/api/vTest/");
     handle = new ClouderaManagerHandle(apiUrl, HttpClients.createDefault());
@@ -148,7 +148,7 @@ public class ClouderaClustersTaskTest {
   }
 
   @Test
-  public void clusterProvided_success() throws Exception {
+  public void doRun_clusterProvided_fetchOnlyProvidedCluster() throws Exception {
     when(arguments.getCluster()).thenReturn("my-cluster");
     URI apiUrl = URI.create(server.baseUrl() + "/api/vTest/");
     handle = new ClouderaManagerHandle(apiUrl, HttpClients.createDefault());

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -32,7 +33,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
@@ -45,9 +45,12 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -69,45 +72,24 @@ public class ClouderaHostRAMChartTaskTest {
   @Mock private Writer writer;
   @Mock private CharSink charSink;
   @Mock private CloseableHttpClient httpClient;
-  private URI uri;
 
   @Before
   public void setUp() throws Exception {
-    uri = URI.create("http://localhost/api");
+    URI uri = URI.create("http://localhost/api");
     handle = new ClouderaManagerHandle(uri, httpClient);
-
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);
   }
 
   @Test
-  public void hostsExists_doWriteSuccess() throws Exception {
-    handle.initHostsIfNull(
-        ImmutableList.of(
-            ClouderaHostDTO.create("id1", "first-host"),
-            ClouderaHostDTO.create("id125", "second-host")));
-
-    CloseableHttpResponse responseHost1 = mock(CloseableHttpResponse.class);
-    HttpEntity entityHost1 = mock(HttpEntity.class);
-    when(responseHost1.getEntity()).thenReturn(entityHost1);
-
-    CloseableHttpResponse responseHost2 = mock(CloseableHttpResponse.class);
-    HttpEntity entityHost2 = mock(HttpEntity.class);
-    when(responseHost2.getEntity()).thenReturn(entityHost2);
-
-    when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().getQuery().contains("entityName = \"id1\""))))
-        .thenReturn(responseHost1);
-    when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().getQuery().contains("entityName = \"id125\""))))
-        .thenReturn(responseHost2);
-
-    when(entityHost1.getContent())
-        .thenReturn(new ByteArrayInputStream("{\"items\":[\"host1\"]}".getBytes()));
-    when(entityHost2.getContent())
-        .thenReturn(new ByteArrayInputStream("{\n\"items\":[\"host2\"]\n\r}".getBytes()));
+  public void doRun_hostsExists_success() throws Exception {
+    initHosts(
+        ClouderaHostDTO.create("id1", "first-host"),
+        ClouderaHostDTO.create("id125", "second-host"));
+    CloseableHttpResponse resp1 =
+        mockHostAPIResponse("id1", HttpStatus.SC_OK, "{\"items\":[\"host1\"]}");
+    CloseableHttpResponse resp2 =
+        mockHostAPIResponse("id125", HttpStatus.SC_OK, "{\n\"items\":[\"host2\"]\n\r}");
 
     task.doRun(context, sink, handle);
 
@@ -118,8 +100,87 @@ public class ClouderaHostRAMChartTaskTest {
                   assertEquals(HttpGet.class, request.getClass());
                   return true;
                 }));
+    Set<String> fileLines = getWrittenJsonLines();
+    verify(writer, times(2)).write('\n');
+    assertEquals(ImmutableSet.of("{\"items\":[\"host1\"]}", "{\"items\":[\"host2\"]}"), fileLines);
+    verify(resp1).close();
+    verify(resp2).close();
+    verify(writer).close();
+  }
 
-    // write jsonl. https://jsonlines.org/
+  @Test
+  public void doRun_clustersWereNotInitialized_throwsCriticalException() throws Exception {
+    assertNull(handle.getClusters());
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertEquals(
+        "Cloudera hosts must be initialized before RAM charts dumping.", exception.getMessage());
+
+    verifyNoWrites();
+  }
+
+  @Test
+  public void doRun_clouderaServerReturnsInvalidJson_throwsCriticalException() throws Exception {
+    initHosts(ClouderaHostDTO.create("id1", "first-host"));
+    mockHostAPIResponse("id1", HttpStatus.SC_OK, "\"items\":[\"host1\"]}");
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+    verifyNoWrites();
+  }
+
+  @Test
+  public void doRun_clouderaServerReturns4xx_throwsCriticalException() throws Exception {
+    initHosts(ClouderaHostDTO.create("id1", "first-host"));
+    mockHostAPIResponse("id1", HttpStatus.SC_BAD_REQUEST, "{\"items\":[\"host1\"]}");
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+    verifyNoWrites();
+  }
+
+  @Test
+  public void doRun_clouderaServerReturns5xx_throwsCriticalException() throws Exception {
+    initHosts(ClouderaHostDTO.create("id1", "first-host"));
+    mockHostAPIResponse("id1", HttpStatus.SC_INTERNAL_SERVER_ERROR, "{\"items\":[\"host1\"]}");
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+    verifyNoWrites();
+  }
+
+  private void initHosts(ClouderaHostDTO... hosts) {
+    handle.initHostsIfNull(Arrays.asList(hosts));
+  }
+
+  private CloseableHttpResponse mockHostAPIResponse(
+      String hostId, int statusCode, String responseContent) throws IOException {
+    CloseableHttpResponse responseHost = mock(CloseableHttpResponse.class);
+    mockStatusLine(responseHost, statusCode);
+    HttpEntity entityHost = mock(HttpEntity.class);
+    when(responseHost.getEntity()).thenReturn(entityHost);
+
+    when(httpClient.execute(
+            argThat(
+                get ->
+                    get != null
+                        && get.getURI().getQuery().contains("entityName = \"" + hostId + "\""))))
+        .thenReturn(responseHost);
+    when(entityHost.getContent()).thenReturn(new ByteArrayInputStream(responseContent.getBytes()));
+
+    return responseHost;
+  }
+
+  private Set<String> getWrittenJsonLines() throws IOException {
+    // https://jsonlines.org/
     Set<String> fileLines = new HashSet<>();
     verify(writer, times(2))
         .write(
@@ -132,25 +193,13 @@ public class ClouderaHostRAMChartTaskTest {
                       fileLines.add(str);
                       return true;
                     }));
-    verify(writer, times(2)).write('\n');
-    assertEquals(ImmutableSet.of("{\"items\":[\"host1\"]}", "{\"items\":[\"host2\"]}"), fileLines);
-
-    verify(responseHost1).close();
-    verify(responseHost2).close();
-    verify(writer).close();
+    return fileLines;
   }
 
-  @Test
-  public void clustersWereNotInitialized_throwsException() throws Exception {
-    assertNull(handle.getClusters());
-
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
-
-    assertEquals(
-        "Cloudera hosts must be initialized before RAM charts dumping.", exception.getMessage());
-
-    verifyNoWrites();
+  private void mockStatusLine(CloseableHttpResponse responseHost, int statusCode) {
+    StatusLine statusLine = mock();
+    when(responseHost.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(statusCode);
   }
 
   private void verifyNoWrites() throws IOException {

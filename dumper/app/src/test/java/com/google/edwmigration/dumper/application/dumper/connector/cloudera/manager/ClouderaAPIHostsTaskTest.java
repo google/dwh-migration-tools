@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -32,7 +33,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
@@ -44,9 +44,12 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -68,11 +71,10 @@ public class ClouderaAPIHostsTaskTest {
   @Mock private Writer writer;
   @Mock private CharSink charSink;
   @Mock private CloseableHttpClient httpClient;
-  private URI uri;
 
   @Before
   public void setUp() throws Exception {
-    uri = URI.create("http://localhost/api");
+    URI uri = URI.create("http://localhost/api");
     handle = new ClouderaManagerHandle(uri, httpClient);
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
@@ -80,40 +82,123 @@ public class ClouderaAPIHostsTaskTest {
   }
 
   @Test
-  public void clustersExists_do_writes_success() throws Exception {
-    handle.initClusters(
-        ImmutableList.of(
-            ClouderaClusterDTO.create("id1", "first-cluster"),
-            ClouderaClusterDTO.create("id125", "second-cluster")));
+  public void doRun_clouderaReturnsValidJsonLines_writeJsonLines() throws Exception {
+    initClusters(
+        ClouderaClusterDTO.create("id1", "first-cluster"),
+        ClouderaClusterDTO.create("id125", "second-cluster"));
 
-    CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);
-    HttpEntity entityId1 = mock(HttpEntity.class);
-    when(responseId1.getEntity()).thenReturn(entityId1);
-
-    CloseableHttpResponse responseCldClst = mock(CloseableHttpResponse.class);
-    HttpEntity entityCldClst = mock(HttpEntity.class);
-    when(responseCldClst.getEntity()).thenReturn(entityCldClst);
-
-    when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().toString().endsWith("/first-cluster/hosts"))))
-        .thenReturn(responseId1);
-    when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().toString().endsWith("/second-cluster/hosts"))))
-        .thenReturn(responseCldClst);
-
-    when(entityId1.getContent())
-        .thenReturn(
-            new ByteArrayInputStream(
-                "{\"clusterName\":\"first-cluster\",\"items\":[]}".getBytes()));
-    when(entityCldClst.getContent())
-        .thenReturn(
-            new ByteArrayInputStream(
-                "{\n\"clusterName\":\"second-cluster\",\"items\":[]\n\r}".getBytes()));
+    CloseableHttpResponse resp1 = mockClouderaClusterAPIResponse("first-cluster", "[]");
+    CloseableHttpResponse resp2 = mockClouderaClusterAPIResponse("second-cluster", "[]\r\n");
 
     task.doRun(context, sink, handle);
 
+    Set<URI> requestedUrls = getCalledURLs();
+    assertEquals(
+        ImmutableSet.of(
+            URI.create("http://localhost/api/clusters/first-cluster/hosts"),
+            URI.create("http://localhost/api/clusters/second-cluster/hosts")),
+        requestedUrls);
+
+    // write jsonl. https://jsonlines.org/
+    Set<String> fileLines = getWrittenJsonLines();
+    verify(writer, times(2)).write('\n');
+    assertEquals(
+        ImmutableSet.of(
+            "{\"clusterName\":\"first-cluster\",\"items\":[]}",
+            "{\"clusterName\":\"second-cluster\",\"items\":[]}"),
+        fileLines);
+
+    verify(resp1).close();
+    verify(resp2).close();
+    verify(writer).close();
+  }
+
+  @Test
+  public void doRun_clustersWereNotInitialized_throwsCriticalException() throws Exception {
+    assertNull(handle.getClusters());
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertEquals(
+        "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());
+
+    verifyNoWrites();
+  }
+
+  @Test
+  public void doRun_clouderaReturns4xx_throwsCriticalException() throws Exception {
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    mockClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_BAD_REQUEST);
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+  }
+
+  @Test
+  public void doRun_clouderaReturns5xx_throwsCriticalException() throws Exception {
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    mockClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_INTERNAL_SERVER_ERROR);
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+  }
+
+  @Test
+  public void doRun_clouderaReturnsInvalidJsonFormat_throwsCriticalException() throws Exception {
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    mockClouderaClusterAPIResponse("first-cluster", "[}");
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+  }
+
+  private void initClusters(ClouderaClusterDTO... clusters) {
+    handle.initClusters(Arrays.asList(clusters));
+  }
+
+  private CloseableHttpResponse mockClouderaClusterAPIResponse(
+      String clusterName, String itemsJsonLine) throws IOException {
+    return mockClouderaClusterAPIResponse(clusterName, itemsJsonLine, HttpStatus.SC_OK);
+  }
+
+  private CloseableHttpResponse mockClouderaClusterAPIResponse(
+      String clusterName, String itemsJsonLine, int statusCode) throws IOException {
+    CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+    HttpEntity entity = mock(HttpEntity.class);
+    when(response.getEntity()).thenReturn(entity);
+    mockStatusLine(response, statusCode);
+
+    when(httpClient.execute(
+            argThat(
+                (HttpGet get) ->
+                    get != null
+                        && get.getURI()
+                            .toString()
+                            .endsWith(String.format("/%s/hosts", clusterName)))))
+        .thenReturn(response);
+
+    when(entity.getContent())
+        .thenReturn(
+            new ByteArrayInputStream(
+                String.format("{\"clusterName\":\"%s\",\"items\":%s}", clusterName, itemsJsonLine)
+                    .getBytes()));
+    return response;
+  }
+
+  private void mockStatusLine(CloseableHttpResponse responseHost, int statusCode) {
+    StatusLine statusLine = mock();
+    when(responseHost.getStatusLine()).thenReturn(statusLine);
+    when(statusLine.getStatusCode()).thenReturn(statusCode);
+  }
+
+  private Set<URI> getCalledURLs() throws IOException {
     Set<URI> requestedUrls = new HashSet<>();
     verify(httpClient, times(2))
         .execute(
@@ -123,14 +208,11 @@ public class ClouderaAPIHostsTaskTest {
                   requestedUrls.add(request.getURI());
                   return true;
                 }));
+    return requestedUrls;
+  }
 
-    assertEquals(
-        ImmutableSet.of(
-            URI.create("http://localhost/api/clusters/first-cluster/hosts"),
-            URI.create("http://localhost/api/clusters/second-cluster/hosts")),
-        requestedUrls);
-
-    // write jsonl. https://jsonlines.org/
+  private Set<String> getWrittenJsonLines() throws IOException {
+    // https://jsonlines.org/
     Set<String> fileLines = new HashSet<>();
     verify(writer, times(2))
         .write(
@@ -143,29 +225,7 @@ public class ClouderaAPIHostsTaskTest {
                       fileLines.add(str);
                       return true;
                     }));
-    verify(writer, times(2)).write('\n');
-    assertEquals(
-        ImmutableSet.of(
-            "{\"clusterName\":\"first-cluster\",\"items\":[]}",
-            "{\"clusterName\":\"second-cluster\",\"items\":[]}"),
-        fileLines);
-
-    verify(responseId1).close();
-    verify(responseCldClst).close();
-    verify(writer).close();
-  }
-
-  @Test
-  public void clustersWereNotInitialized_throwsException() throws Exception {
-    assertNull(handle.getClusters());
-
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
-
-    assertEquals(
-        "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());
-
-    verifyNoWrites();
+    return fileLines;
   }
 
   private void verifyNoWrites() throws IOException {

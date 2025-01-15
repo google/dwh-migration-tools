@@ -16,18 +16,24 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.io.IOException;
+import java.io.InputStream;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
   private final ObjectMapper objectMapper =
-      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true);
+      new ObjectMapper()
+          .configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true)
+          .configure(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, true);
 
   public AbstractClouderaManagerTask(String targetPath) {
     super(targetPath);
@@ -41,11 +47,24 @@ abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
     return null;
   }
 
+  protected final boolean isStatusCodeOK(int statusCode) {
+    return 200 <= statusCode && statusCode < 300;
+  }
+
   protected abstract void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception;
 
-  protected ObjectMapper getObjectMapper() {
-    return objectMapper;
+  protected JsonNode readJsonTree(InputStream inputStream) throws IOException {
+    return objectMapper.readTree(inputStream);
+  }
+
+  protected <T> T parseJsonStringToObject(String jsonString, Class<T> type)
+      throws JsonProcessingException {
+    return objectMapper.readValue(jsonString, type);
+  }
+
+  protected String parseObjectToJsonString(Object obj) throws JsonProcessingException {
+    return objectMapper.writeValueAsString(obj);
   }
 }
