@@ -73,7 +73,6 @@ public class ClouderaClustersTaskTest {
   @Mock private CharSink charSink;
   @Mock private CloseableHttpClient httpClient;
 
-
   private String apiClusterListJson;
   private String apiClusterJson;
   private String clusterStatusJson;
