@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -27,13 +30,14 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
@@ -41,7 +45,6 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -52,13 +55,11 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -70,18 +71,30 @@ public class ClouderaClusterCPUChartTaskTest {
       new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY);
   private ClouderaManagerHandle handle;
   private String servicesJson;
+  private static WireMockServer server;
 
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
   @Mock private Writer writer;
   @Mock private CharSink charSink;
-  @Mock private CloseableHttpClient httpClient;
+
+  @BeforeClass
+  public static void beforeClass() throws Exception {
+    server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
+    server.start();
+  }
+
+  @AfterClass
+  public static void afterClass() throws Exception {
+    server.stop();
+  }
 
   @Before
   public void setUp() throws Exception {
+    server.resetAll();
     servicesJson = readFileAsString("/cloudera/manager/cluster-cpu-status.json");
-    URI uri = URI.create("http://localhost/api");
-    handle = new ClouderaManagerHandle(uri, httpClient);
+    URI uri = URI.create(server.baseUrl() + "/api/vTest");
+    handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);
@@ -96,7 +109,6 @@ public class ClouderaClusterCPUChartTaskTest {
     task.doRun(context, sink, handle);
 
     // THEN: Task for such clusters should be skipped
-    verify(httpClient, never()).execute(any());
     verifyNoWrites();
   }
 
@@ -224,25 +236,9 @@ public class ClouderaClusterCPUChartTaskTest {
 
   private void mockHttpRequestToFetchClusterCPUChart(
       String clusterName, String mockedContent, int statusCode) throws IOException {
-    CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
-    HttpEntity httpEntity = mock(HttpEntity.class);
-    mockStatusLine(httpResponse, statusCode);
-    when(httpResponse.getEntity()).thenReturn(httpEntity);
-    when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream(mockedContent.getBytes()));
-    when(httpClient.execute(
-            argThat(
-                (HttpGet get) ->
-                    get != null
-                        && get.getURI()
-                            .getQuery()
-                            .contains(String.format("entityName = \"%s\"", clusterName)))))
-        .thenReturn(httpResponse);
-  }
-
-  private void mockStatusLine(CloseableHttpResponse responseHost, int statusCode) {
-    StatusLine statusLine = mock();
-    when(responseHost.getStatusLine()).thenReturn(statusLine);
-    when(statusLine.getStatusCode()).thenReturn(statusCode);
+    server.stubFor(
+        get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", clusterName)))
+            .willReturn(okJson(mockedContent).withStatus(statusCode)));
   }
 
   private void verifyNoWrites() throws IOException {

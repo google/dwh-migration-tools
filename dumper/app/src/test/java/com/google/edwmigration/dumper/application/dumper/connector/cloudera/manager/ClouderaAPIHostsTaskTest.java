@@ -134,7 +134,10 @@ public class ClouderaAPIHostsTaskTest {
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
 
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+    assertTrue(
+        exception
+            .getMessage()
+            .contains("Cloudera Error: Response status code is 400 but 2xx is expected."));
   }
 
   @Test
@@ -145,7 +148,10 @@ public class ClouderaAPIHostsTaskTest {
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
 
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+    assertTrue(
+        exception
+            .getMessage()
+            .contains("Cloudera Error: Response status code is 500 but 2xx is expected."));
   }
 
   @Test

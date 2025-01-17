@@ -66,7 +66,7 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
         JsonNode chartInJson;
         try {
           chartInJson = requestTimeSeriesChart(handle, ramPerHostQuery);
-        } catch (TimeSeriesError error) {
+        } catch (TimeSeriesException error) {
           throw new MetadataDumperUsageException("Cloudera Error: " + error.getErrorMessage());
         }
         writer.write(chartInJson.toString());

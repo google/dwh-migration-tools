@@ -48,7 +48,8 @@ abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
   }
 
   protected final boolean isStatusCodeOK(int statusCode) {
-    return 200 <= statusCode && statusCode < 300;
+    // Based on HTTP rfc: https://datatracker.ietf.org/doc/html/rfc7231#section-6.3
+    return 200 <= statusCode && statusCode <= 299;
   }
 
   protected abstract void doRun(

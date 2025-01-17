@@ -35,20 +35,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-class DummyPersonDTO {
-  private final String name;
-
-  @JsonCreator
-  public DummyPersonDTO(@JsonProperty(value = "personName", required = true) String name) {
-    this.name = name;
-  }
-
-  public String getName() {
-    return name;
-  }
-}
-
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractClouderaManagerTaskTest {
   AbstractClouderaManagerTask clouderaManagerTask;
@@ -60,7 +46,9 @@ public class AbstractClouderaManagerTaskTest {
           @Override
           protected void doRun(
               TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
-              throws Exception {}
+              throws Exception {
+            throw new UnsupportedOperationException("Test implementation");
+          }
         };
   }
 
@@ -114,5 +102,19 @@ public class AbstractClouderaManagerTaskTest {
     DummyPersonDTO albus = new DummyPersonDTO("Albus");
     String jsonLine = clouderaManagerTask.parseObjectToJsonString(albus);
     assertEquals(jsonLine, "{\"name\":\"Albus\"}");
+  }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class DummyPersonDTO {
+  private final String name;
+
+  @JsonCreator
+  public DummyPersonDTO(@JsonProperty(value = "personName", required = true) String name) {
+    this.name = name;
+  }
+
+  public String getName() {
+    return name;
   }
 }

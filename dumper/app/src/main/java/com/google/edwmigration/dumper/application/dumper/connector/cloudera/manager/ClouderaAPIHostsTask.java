@@ -67,7 +67,8 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
           final int statusCode = hostsResponse.getStatusLine().getStatusCode();
           if (!isStatusCodeOK(statusCode)) {
             throw new MetadataDumperUsageException(
-                "Cloudera Error: Response status code is not 2xx.");
+                String.format(
+                    "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
           }
           jsonHosts = readJsonTree(hostsResponse.getEntity().getContent());
         } catch (JsonParseException error) {
