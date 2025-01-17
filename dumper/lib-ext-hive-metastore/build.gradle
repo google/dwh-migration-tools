@@ -26,6 +26,7 @@ configurations {
     configureEach {
         //We use logback, so log4j implementation must be excluded
         exclude group: 'log4j', module: 'log4j'
+        exclude group: 'org.apache.hadoop', module: 'hadoop-common'
     }
 }
 
