@@ -332,6 +332,6 @@ org.threeten:threeten-extra:1.8.0=compileClasspath,runtimeClasspath,testCompileC
 org.threeten:threetenbp:1.6.9=runtimeClasspath,testFixturesRuntimeClasspath
 org.threeten:threetenbp:1.7.0=compileClasspath,testCompileClasspath,testRuntimeClasspath
 org.xerial.snappy:snappy-java:1.1.10.4=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
-org.xerial:sqlite-jdbc:3.47.0.0=testCompileClasspath,testRuntimeClasspath
+org.xerial:sqlite-jdbc:3.48.0.0=testCompileClasspath,testRuntimeClasspath
 org.yaml:snakeyaml:2.3=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 empty=
