@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -27,19 +30,19 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -47,13 +50,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -64,6 +66,7 @@ public class ClouderaAPIHostsTaskTest {
 
   private final ClouderaAPIHostsTask task = new ClouderaAPIHostsTask();
   private ClouderaManagerHandle handle;
+  private static WireMockServer server;
 
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
@@ -72,10 +75,22 @@ public class ClouderaAPIHostsTaskTest {
   @Mock private CharSink charSink;
   @Mock private CloseableHttpClient httpClient;
 
+  @BeforeClass
+  public static void beforeClass() throws Exception {
+    server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
+    server.start();
+  }
+
+  @AfterClass
+  public static void afterClass() throws Exception {
+    server.stop();
+  }
+
   @Before
   public void setUp() throws Exception {
-    URI uri = URI.create("http://localhost/api");
-    handle = new ClouderaManagerHandle(uri, httpClient);
+    server.resetAll();
+    URI uri = URI.create(server.baseUrl() + "/api/vTest");
+    handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);
@@ -87,17 +102,10 @@ public class ClouderaAPIHostsTaskTest {
         ClouderaClusterDTO.create("id1", "first-cluster"),
         ClouderaClusterDTO.create("id125", "second-cluster"));
 
-    CloseableHttpResponse resp1 = mockClouderaClusterAPIResponse("first-cluster", "[]");
-    CloseableHttpResponse resp2 = mockClouderaClusterAPIResponse("second-cluster", "[]\r\n");
+    stubClouderaClusterAPIResponse("first-cluster", "[]");
+    stubClouderaClusterAPIResponse("second-cluster", "[]\r\n");
 
     task.doRun(context, sink, handle);
-
-    Set<URI> requestedUrls = getCalledURLs();
-    assertEquals(
-        ImmutableSet.of(
-            URI.create("http://localhost/api/clusters/first-cluster/hosts"),
-            URI.create("http://localhost/api/clusters/second-cluster/hosts")),
-        requestedUrls);
 
     // write jsonl. https://jsonlines.org/
     Set<String> fileLines = getWrittenJsonLines();
@@ -108,8 +116,6 @@ public class ClouderaAPIHostsTaskTest {
             "{\"clusterName\":\"second-cluster\",\"items\":[]}"),
         fileLines);
 
-    verify(resp1).close();
-    verify(resp2).close();
     verify(writer).close();
   }
 
@@ -129,7 +135,7 @@ public class ClouderaAPIHostsTaskTest {
   @Test
   public void doRun_clouderaReturns4xx_throwsCriticalException() throws Exception {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    mockClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_BAD_REQUEST);
+    stubClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_BAD_REQUEST);
 
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
@@ -143,7 +149,7 @@ public class ClouderaAPIHostsTaskTest {
   @Test
   public void doRun_clouderaReturns5xx_throwsCriticalException() throws Exception {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    mockClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_INTERNAL_SERVER_ERROR);
+    stubClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
@@ -157,7 +163,7 @@ public class ClouderaAPIHostsTaskTest {
   @Test
   public void doRun_clouderaReturnsInvalidJsonFormat_throwsCriticalException() throws Exception {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    mockClouderaClusterAPIResponse("first-cluster", "[}");
+    stubClouderaClusterAPIResponse("first-cluster", "[}");
 
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
@@ -169,52 +175,18 @@ public class ClouderaAPIHostsTaskTest {
     handle.initClusters(Arrays.asList(clusters));
   }
 
-  private CloseableHttpResponse mockClouderaClusterAPIResponse(
-      String clusterName, String itemsJsonLine) throws IOException {
-    return mockClouderaClusterAPIResponse(clusterName, itemsJsonLine, HttpStatus.SC_OK);
+  private void stubClouderaClusterAPIResponse(String clusterName, String itemsJsonLine)
+      throws IOException {
+    stubClouderaClusterAPIResponse(clusterName, itemsJsonLine, HttpStatus.SC_OK);
   }
 
-  private CloseableHttpResponse mockClouderaClusterAPIResponse(
+  private void stubClouderaClusterAPIResponse(
       String clusterName, String itemsJsonLine, int statusCode) throws IOException {
-    CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-    HttpEntity entity = mock(HttpEntity.class);
-    when(response.getEntity()).thenReturn(entity);
-    mockStatusLine(response, statusCode);
-
-    when(httpClient.execute(
-            argThat(
-                (HttpGet get) ->
-                    get != null
-                        && get.getURI()
-                            .toString()
-                            .endsWith(String.format("/%s/hosts", clusterName)))))
-        .thenReturn(response);
-
-    when(entity.getContent())
-        .thenReturn(
-            new ByteArrayInputStream(
-                String.format("{\"clusterName\":\"%s\",\"items\":%s}", clusterName, itemsJsonLine)
-                    .getBytes()));
-    return response;
-  }
-
-  private void mockStatusLine(CloseableHttpResponse responseHost, int statusCode) {
-    StatusLine statusLine = mock();
-    when(responseHost.getStatusLine()).thenReturn(statusLine);
-    when(statusLine.getStatusCode()).thenReturn(statusCode);
-  }
-
-  private Set<URI> getCalledURLs() throws IOException {
-    Set<URI> requestedUrls = new HashSet<>();
-    verify(httpClient, times(2))
-        .execute(
-            argThat(
-                request -> {
-                  assertEquals(HttpGet.class, request.getClass());
-                  requestedUrls.add(request.getURI());
-                  return true;
-                }));
-    return requestedUrls;
+    String clusterAPIResponse =
+        String.format("{\"clusterName\":\"%s\",\"items\":%s}", clusterName, itemsJsonLine);
+    server.stubFor(
+        get(urlMatching(String.format(".*/%s/hosts.*", clusterName)))
+            .willReturn(okJson(clusterAPIResponse).withStatus(statusCode)));
   }
 
   private Set<String> getWrittenJsonLines() throws IOException {

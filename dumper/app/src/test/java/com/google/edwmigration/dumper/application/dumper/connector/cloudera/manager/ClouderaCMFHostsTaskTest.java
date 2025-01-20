@@ -101,8 +101,8 @@ public class ClouderaCMFHostsTaskTest {
         ClouderaClusterDTO.create("id1", "first-cluster"),
         ClouderaClusterDTO.create("id34", "next-cluster"));
 
-    mockCMFHostResponse("id1", "first-cluster", "[]");
-    mockCMFHostResponse("id34", "next-cluster", "[]\n\r");
+    stubCMFHostResponse("id1", "first-cluster", "[]");
+    stubCMFHostResponse("id34", "next-cluster", "[]\n\r");
 
     task.doRun(context, sink, handle);
 
@@ -158,7 +158,7 @@ public class ClouderaCMFHostsTaskTest {
   @Test
   public void doRun_clouderaReturnsInvalidJson_continueTaskWithoutWriting() throws Exception {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    mockCMFHostResponse("id1", "first-cluster", "[}");
+    stubCMFHostResponse("id1", "first-cluster", "[}");
     verifyNoWrites();
   }
 
@@ -166,15 +166,15 @@ public class ClouderaCMFHostsTaskTest {
     handle.initClusters(Arrays.asList(clusters));
   }
 
-  private void mockCMFHostResponse(String clusterId, String clusterName, String jsonHosts)
+  private void stubCMFHostResponse(String clusterId, String clusterName, String jsonHosts)
       throws IOException {
-    String mockedResponse =
+    String cmfResponse =
         String.format("{\"clusterName\" :\"%s\", \"hosts\": %s}", clusterName, jsonHosts);
     server.stubFor(
         get(urlMatching(
                 String.format(
                     "/cmf/hardware/hosts/hostsOverview\\.json\\?clusterId=%s.*", clusterId)))
-            .willReturn(okJson(mockedResponse).withStatus(HttpStatus.SC_OK)));
+            .willReturn(okJson(cmfResponse).withStatus(HttpStatus.SC_OK)));
   }
 
   private Set<String> getWrittenJsonLines() throws IOException {

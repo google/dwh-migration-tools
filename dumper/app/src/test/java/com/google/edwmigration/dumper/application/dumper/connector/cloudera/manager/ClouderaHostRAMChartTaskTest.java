@@ -99,8 +99,8 @@ public class ClouderaHostRAMChartTaskTest {
     initHosts(
         ClouderaHostDTO.create("id1", "first-host"),
         ClouderaHostDTO.create("id125", "second-host"));
-    mockHostAPIResponse("id1", HttpStatus.SC_OK, "{\"items\":[\"host1\"]}");
-    mockHostAPIResponse("id125", HttpStatus.SC_OK, "{\n\"items\":[\"host2\"]\n\r}");
+    stubHostAPIResponse("id1", HttpStatus.SC_OK, "{\"items\":[\"host1\"]}");
+    stubHostAPIResponse("id125", HttpStatus.SC_OK, "{\n\"items\":[\"host2\"]\n\r}");
 
     task.doRun(context, sink, handle);
 
@@ -126,7 +126,7 @@ public class ClouderaHostRAMChartTaskTest {
   @Test
   public void doRun_clouderaServerReturnsInvalidJson_throwsCriticalException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
-    mockHostAPIResponse("id1", HttpStatus.SC_OK, "\"items\":[\"host1\"]}");
+    stubHostAPIResponse("id1", HttpStatus.SC_OK, "\"items\":[\"host1\"]}");
 
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
@@ -138,7 +138,7 @@ public class ClouderaHostRAMChartTaskTest {
   @Test
   public void doRun_clouderaServerReturns4xx_throwsCriticalException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
-    mockHostAPIResponse("id1", HttpStatus.SC_BAD_REQUEST, "{\"items\":[\"host1\"]}");
+    stubHostAPIResponse("id1", HttpStatus.SC_BAD_REQUEST, "{\"items\":[\"host1\"]}");
 
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
@@ -150,7 +150,7 @@ public class ClouderaHostRAMChartTaskTest {
   @Test
   public void doRun_clouderaServerReturns5xx_throwsCriticalException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
-    mockHostAPIResponse("id1", HttpStatus.SC_INTERNAL_SERVER_ERROR, "{\"items\":[\"host1\"]}");
+    stubHostAPIResponse("id1", HttpStatus.SC_INTERNAL_SERVER_ERROR, "{\"items\":[\"host1\"]}");
 
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
@@ -163,7 +163,7 @@ public class ClouderaHostRAMChartTaskTest {
     handle.initHostsIfNull(Arrays.asList(hosts));
   }
 
-  private void mockHostAPIResponse(String hostId, int statusCode, String responseContent)
+  private void stubHostAPIResponse(String hostId, int statusCode, String responseContent)
       throws IOException {
     server.stubFor(
         get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", hostId)))

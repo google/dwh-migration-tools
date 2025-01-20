@@ -131,8 +131,8 @@ public class ClouderaClusterCPUChartTaskTest {
         ClouderaClusterDTO.create("id2", "second-cluster"));
     String firstClusterServicesJson = servicesJson;
     String secondClusterServicesJson = "{\"key\":" + servicesJson + "}";
-    mockHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
-    mockHttpRequestToFetchClusterCPUChart("id2", secondClusterServicesJson);
+    stubHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
+    stubHttpRequestToFetchClusterCPUChart("id2", secondClusterServicesJson);
 
     // WHEN:
     task.doRun(context, sink, handle);
@@ -180,7 +180,7 @@ public class ClouderaClusterCPUChartTaskTest {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = servicesJson;
-    mockHttpRequestToFetchClusterCPUChart(
+    stubHttpRequestToFetchClusterCPUChart(
         "id1", firstClusterServicesJson, HttpStatus.SC_BAD_REQUEST);
 
     // WHEN: Cloudera returns 4xx http status code
@@ -197,7 +197,7 @@ public class ClouderaClusterCPUChartTaskTest {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = servicesJson;
-    mockHttpRequestToFetchClusterCPUChart(
+    stubHttpRequestToFetchClusterCPUChart(
         "id1", firstClusterServicesJson, HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
     // WHEN: Cloudera returns 4xx http status code
@@ -214,7 +214,7 @@ public class ClouderaClusterCPUChartTaskTest {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = "{\"key\": []]";
-    mockHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
+    stubHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
 
     // WHEN: Cloudera returns 4xx http status code
     MetadataDumperUsageException exception =
@@ -229,12 +229,12 @@ public class ClouderaClusterCPUChartTaskTest {
     handle.initClusters(Arrays.asList(clusters));
   }
 
-  private void mockHttpRequestToFetchClusterCPUChart(String clusterName, String mockedContent)
+  private void stubHttpRequestToFetchClusterCPUChart(String clusterName, String mockedContent)
       throws IOException {
-    mockHttpRequestToFetchClusterCPUChart(clusterName, mockedContent, HttpStatus.SC_OK);
+    stubHttpRequestToFetchClusterCPUChart(clusterName, mockedContent, HttpStatus.SC_OK);
   }
 
-  private void mockHttpRequestToFetchClusterCPUChart(
+  private void stubHttpRequestToFetchClusterCPUChart(
       String clusterName, String mockedContent, int statusCode) throws IOException {
     server.stubFor(
         get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", clusterName)))
