@@ -62,12 +62,15 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
       int statusCode = chart.getStatusLine().getStatusCode();
       if (!isStatusCodeOK(statusCode)) {
-        throw new TimeSeriesException(statusCode, "Expected status code is 2xx.");
+        throw new TimeSeriesException(
+            statusCode,
+            String.format(
+                "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
       }
       try {
         chartInJson = readJsonTree(chart.getEntity().getContent());
-      } catch (JsonParseException error) {
-        throw new TimeSeriesException(statusCode, error.getMessage());
+      } catch (JsonParseException ex) {
+        throw new TimeSeriesException(statusCode, ex.getMessage());
       }
     }
     return chartInJson;
@@ -87,20 +90,20 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
      * - response with invalid JSON format.
      */
     private final int statusCode;
-    private final String errorMessage;
+    private final String message;
 
-    public TimeSeriesException(int statusCode, String errorMessage) {
-      super(errorMessage);
+    public TimeSeriesException(int statusCode, String message) {
+      super(message);
       this.statusCode = statusCode;
-      this.errorMessage = errorMessage;
+      this.message = message;
     }
 
     public int getStatusCode() {
       return statusCode;
     }
 
-    public String getErrorMessage() {
-      return errorMessage;
+    public String getMessage() {
+      return message;
     }
   }
 

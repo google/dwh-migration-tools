@@ -64,8 +64,8 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
         JsonNode chartInJson;
         try {
           chartInJson = requestTimeSeriesChart(handle, cpuPerClusterQuery);
-        } catch (TimeSeriesException error) {
-          throw new MetadataDumperUsageException("Cloudera Error: " + error.getMessage());
+        } catch (TimeSeriesException ex) {
+          throw new MetadataDumperUsageException("Cloudera Error: " + ex.getMessage());
         }
         writer.write(chartInJson.toString());
         writer.write('\n');

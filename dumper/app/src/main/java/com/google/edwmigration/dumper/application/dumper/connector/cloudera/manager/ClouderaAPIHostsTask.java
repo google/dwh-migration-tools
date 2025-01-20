@@ -71,8 +71,8 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
                     "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
           }
           jsonHosts = readJsonTree(hostsResponse.getEntity().getContent());
-        } catch (JsonParseException error) {
-          throw new MetadataDumperUsageException("Cloudera Error:" + error.getMessage());
+        } catch (JsonParseException ex) {
+          throw new MetadataDumperUsageException("Cloudera Error:" + ex.getMessage());
         }
         String stringifiedHosts = jsonHosts.toString();
         writer.write(stringifiedHosts);

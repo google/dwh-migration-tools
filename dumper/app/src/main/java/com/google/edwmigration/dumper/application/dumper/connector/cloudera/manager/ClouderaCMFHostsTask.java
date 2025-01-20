@@ -80,8 +80,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
           try {
             hostsJson = readJsonTree(hostsResponse.getEntity().getContent());
-          } catch (JsonParseException error) {
-            LOG.warn("Cloudera Error: " + error.getMessage());
+          } catch (JsonParseException ex) {
+            LOG.warn("Cloudera Error: " + ex.getMessage());
             continue;
           }
         }
