@@ -69,8 +69,10 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
     } else {
       LOG.info("'--cluster' argument wasn't provided. Collect all available clusters.");
 
+      // Cluster type doc:
+      // https://docs.cloudera.com/cdp-private-cloud-base/7.1.8/managing-clusters/topics/cm-cluster-basics-managed-hosts.html
       try (CloseableHttpResponse clustersResponse =
-          httpClient.execute(new HttpGet(handle.getApiURI() + "/clusters"))) {
+          httpClient.execute(new HttpGet(handle.getApiURI() + "/clusters?clusterType=ANY"))) {
         String clustersJson = EntityUtils.toString(clustersResponse.getEntity());
         clusterList = parseJsonStringToObject(clustersJson, ApiClusterListDTO.class);
       }
