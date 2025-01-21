@@ -109,7 +109,8 @@ public class ClouderaClustersTaskTest {
     URI apiUrl = URI.create(server.baseUrl() + "/api/vTest/");
     handle = new ClouderaManagerHandle(apiUrl, HttpClients.createDefault());
 
-    server.stubFor(get("/api/vTest/clusters").willReturn(okJson(apiClusterListJson)));
+    server.stubFor(
+        get("/api/vTest/clusters?clusterType=ANY").willReturn(okJson(apiClusterListJson)));
     server.stubFor(
         get("/cmf/clusters/aaa/status.json").willReturn(okJson(clusterStatusJsonWithId("111"))));
     server.stubFor(
@@ -118,7 +119,7 @@ public class ClouderaClustersTaskTest {
 
     task.doRun(context, sink, handle);
 
-    server.verify(getRequestedFor(urlEqualTo("/api/vTest/clusters")));
+    server.verify(getRequestedFor(urlEqualTo("/api/vTest/clusters?clusterType=ANY")));
     server.verify(getRequestedFor(urlEqualTo("/cmf/clusters/aaa/status.json")));
     server.verify(getRequestedFor(urlEqualTo("/cmf/clusters/bbb/status.json")));
     assertTrue(server.findAllUnmatchedRequests().isEmpty());
