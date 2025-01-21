@@ -43,6 +43,7 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -189,6 +190,7 @@ public class ClouderaClusterCPUChartTaskTest {
 
     // THEN: There is a relevant exception has been raised
     assertTrue(exception.getMessage().contains("Cloudera Error: "));
+    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
@@ -206,6 +208,7 @@ public class ClouderaClusterCPUChartTaskTest {
 
     // THEN: There is a relevant exception has been raised
     assertTrue(exception.getMessage().contains("Cloudera Error: "));
+    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
@@ -222,6 +225,7 @@ public class ClouderaClusterCPUChartTaskTest {
 
     // THEN: There is a relevant exception has been raised
     assertTrue(exception.getMessage().contains("Cloudera Error: "));
+    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
