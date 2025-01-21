@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -59,7 +60,18 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     CloseableHttpClient httpClient = handle.getHttpClient();
     JsonNode chartInJson;
     try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
-      chartInJson = objectMapper.readTree(chart.getEntity().getContent());
+      int statusCode = chart.getStatusLine().getStatusCode();
+      if (!isStatusCodeOK(statusCode)) {
+        throw new TimeSeriesException(
+            statusCode,
+            String.format(
+                "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
+      }
+      try {
+        chartInJson = readJsonTree(chart.getEntity().getContent());
+      } catch (JsonParseException ex) {
+        throw new TimeSeriesException(statusCode, ex.getMessage());
+      }
     }
     return chartInJson;
   }
@@ -68,6 +80,31 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     ZonedDateTime dateTime =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
     return dateTime.format(isoDateTimeFormatter);
+  }
+
+  static class TimeSeriesException extends Exception {
+    /* Exception which should be returned if something goes wrong with timeseries API.
+     *
+     * Includes:
+     * - unexpected HTTP status codes;
+     * - response with invalid JSON format.
+     */
+    private final int statusCode;
+    private final String message;
+
+    public TimeSeriesException(int statusCode, String message) {
+      super(message);
+      this.statusCode = statusCode;
+      this.message = message;
+    }
+
+    public int getStatusCode() {
+      return statusCode;
+    }
+
+    public String getMessage() {
+      return message;
+    }
   }
 
   enum TimeSeriesAggregation {

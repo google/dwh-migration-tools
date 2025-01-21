@@ -63,7 +63,15 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
         LOG.debug(
             "Execute RAM charts query: [{}] for the host: [{}].", ramPerHostQuery, host.getName());
 
-        JsonNode chartInJson = requestTimeSeriesChart(handle, ramPerHostQuery);
+        JsonNode chartInJson;
+        try {
+          chartInJson = requestTimeSeriesChart(handle, ramPerHostQuery);
+        } catch (TimeSeriesException ex) {
+          MetadataDumperUsageException dumperException =
+              new MetadataDumperUsageException("Cloudera Error: " + ex.getMessage());
+          dumperException.initCause(ex);
+          throw dumperException;
+        }
         writer.write(chartInJson.toString());
         writer.write('\n');
       }
