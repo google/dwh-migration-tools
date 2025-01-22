@@ -23,16 +23,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
-import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
 import java.sql.ResultSet;
 import java.time.Clock;
 import java.util.List;
@@ -59,10 +54,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     return ArchiveNameUtil.getFileName(NAME);
   }
 
-  private AbstractJdbcTask<Summary> createTask(String sql, String usageZip) {
-    return new JdbcSelectTask(usageZip, sql);
-  }
-
   @Override
   public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
@@ -71,31 +62,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   }
 
   private ImmutableList<Task<?>> createTaskList() {
-    String view = "SNOWFLAKE.ACCOUNT_USAGE";
-    String filter = " WHERE DELETED IS NULL";
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
 
-    String databases =
-        String.format("SELECT database_name, database_owner FROM %s.DATABASES%s", view, filter);
-    builder.add(
-        new JdbcSelectTask(DatabasesFormat.AU_ZIP_ENTRY_NAME, databases)
-            .withHeaderClass(DatabasesFormat.Header.class));
-
-    String schemata =
-        String.format("SELECT catalog_name, schema_name FROM %s.SCHEMATA%s", view, filter);
-    builder.add(
-        createTask(schemata, SchemataFormat.AU_ZIP_ENTRY_NAME)
-            .withHeaderClass(SchemataFormat.Header.class));
-
-    String tables =
-        String.format(
-            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
-                + " clustering_key FROM %s.TABLES%s",
-            view, filter);
-    builder.add(
-        createTask(tables, TablesFormat.AU_ZIP_ENTRY_NAME)
-            .withHeaderClass(TablesFormat.Header.class));
-
+    builder.addAll(planner.generateLiteSpecificQueries());
     builder.add(createWarehouseEvents());
 
     for (AssessmentQuery item : planner.generateAssessmentQueries()) {

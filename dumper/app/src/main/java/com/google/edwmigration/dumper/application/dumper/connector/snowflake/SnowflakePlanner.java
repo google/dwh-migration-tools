@@ -22,9 +22,14 @@ import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
+import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.ExternalTablesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FunctionInfoFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TableStorageMetricsFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -56,6 +61,34 @@ final class SnowflakePlanner {
         AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
         AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES, LOWER_UNDERSCORE),
         AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+  }
+
+  ImmutableList<Task<?>> generateLiteSpecificQueries() {
+    String view = "SNOWFLAKE.ACCOUNT_USAGE";
+    String filter = " WHERE DELETED IS NULL";
+    ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
+
+    String databases =
+        String.format("SELECT database_name, database_owner FROM %s.DATABASES%s", view, filter);
+    builder.add(
+        new JdbcSelectTask(DatabasesFormat.AU_ZIP_ENTRY_NAME, databases)
+            .withHeaderClass(DatabasesFormat.Header.class));
+
+    String schemata =
+        String.format("SELECT catalog_name, schema_name FROM %s.SCHEMATA%s", view, filter);
+    builder.add(
+        new JdbcSelectTask(SchemataFormat.AU_ZIP_ENTRY_NAME, schemata)
+            .withHeaderClass(SchemataFormat.Header.class));
+
+    String tables =
+        String.format(
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+                + " clustering_key FROM %s.TABLES%s",
+            view, filter);
+    builder.add(
+        new JdbcSelectTask(TablesFormat.AU_ZIP_ENTRY_NAME, tables)
+            .withHeaderClass(TablesFormat.Header.class));
+    return builder.build();
   }
 
   static class AssessmentQuery {
