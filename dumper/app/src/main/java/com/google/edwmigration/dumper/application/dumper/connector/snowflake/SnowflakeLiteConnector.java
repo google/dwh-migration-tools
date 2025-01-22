@@ -59,10 +59,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     return ArchiveNameUtil.getFileName(NAME);
   }
 
-  private AbstractJdbcTask<Summary> createTask(String format, String usageZip) {
-    String usageView = "SNOWFLAKE.ACCOUNT_USAGE";
-    String usageFilter = " WHERE DELETED IS NULL";
-    String sql = String.format(format, usageView, usageFilter);
+  private AbstractJdbcTask<Summary> createTask(String sql, String usageZip) {
     return new JdbcSelectTask(usageZip, sql);
   }
 
@@ -74,25 +71,31 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   }
 
   private ImmutableList<Task<?>> createTaskList() {
+    String view = "SNOWFLAKE.ACCOUNT_USAGE";
+    String filter = " WHERE DELETED IS NULL";
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
+
+    String databases =
+        String.format("SELECT database_name, database_owner FROM %s.DATABASES%s", view, filter);
     builder.add(
-        createTask(
-                "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-                DatabasesFormat.AU_ZIP_ENTRY_NAME)
+        new JdbcSelectTask(DatabasesFormat.AU_ZIP_ENTRY_NAME, databases)
             .withHeaderClass(DatabasesFormat.Header.class));
 
+    String schemata =
+        String.format("SELECT catalog_name, schema_name FROM %s.SCHEMATA%s", view, filter);
     builder.add(
-        createTask(
-                "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-                SchemataFormat.AU_ZIP_ENTRY_NAME)
+        createTask(schemata, SchemataFormat.AU_ZIP_ENTRY_NAME)
             .withHeaderClass(SchemataFormat.Header.class));
 
+    String tables =
+        String.format(
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
+                + " clustering_key FROM %s.TABLES%s",
+            view, filter);
     builder.add(
-        createTask(
-                "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
-                    + " clustering_key FROM %1$s.TABLES%2$s",
-                TablesFormat.AU_ZIP_ENTRY_NAME)
+        createTask(tables, TablesFormat.AU_ZIP_ENTRY_NAME)
             .withHeaderClass(TablesFormat.Header.class));
+
     builder.add(createWarehouseEvents());
 
     for (AssessmentQuery item : planner.generateAssessmentQueries()) {
