@@ -66,9 +66,8 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
 
     CloseableHttpClient httpClient = handle.getHttpClient();
     JsonNode chartInJson;
-    int statusCode = -1;
     try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(tsURI))) {
-      statusCode = chart.getStatusLine().getStatusCode();
+      int statusCode = chart.getStatusLine().getStatusCode();
       if (!isStatusCodeOK(statusCode)) {
         throw new TimeSeriesException(
             String.format(
