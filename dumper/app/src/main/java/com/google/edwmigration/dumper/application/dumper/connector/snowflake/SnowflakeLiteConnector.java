@@ -65,7 +65,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
 
     builder.addAll(planner.generateLiteSpecificQueries());
-    builder.add(createWarehouseEvents());
+    builder.add(warehouseEventsTask());
+    builder.add(warehouseMeteringTask());
 
     for (AssessmentQuery item : planner.generateAssessmentQueries()) {
       String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
@@ -77,7 +78,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     return builder.build();
   }
 
-  private static Task<?> createWarehouseEvents() {
+  private static Task<?> warehouseEventsTask() {
     String query =
         "SELECT event_name, cluster_number, warehouse_id, warehouse_name, count(1)"
             + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
@@ -85,6 +86,14 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     ImmutableList<String> header =
         ImmutableList.of("Name", "Cluster", "WarehouseId", "WarehouseName", "Count");
     return new LiteTimeSeriesTask("warehouse_events.csv", query, header);
+  }
+
+  private static Task<?> warehouseMeteringTask() {
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY";
+    String sql =
+        String.format("SELECT warehouse_name, count(1) FROM %s GROUP BY warehouse_name", view);
+    ImmutableList<String> header = ImmutableList.of("Name", "Count");
+    return new LiteTimeSeriesTask("warehouse_metering.csv", sql, header);
   }
 
   private static final class LiteTimeSeriesTask extends JdbcSelectTask {
