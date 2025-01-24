@@ -65,6 +65,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
 
     builder.addAll(planner.generateLiteSpecificQueries());
+    builder.add(proceduresTask());
     builder.add(warehouseEventsTask());
     builder.add(warehouseMeteringTask());
 
@@ -76,6 +77,15 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
       builder.add(task);
     }
     return builder.build();
+  }
+
+  private static Task<?> proceduresTask() {
+    String query =
+        "SELECT procedure_language, procedure_owner, count(1)"
+            + " FROM SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES"
+            + " GROUP BY procedure_language, procedure_owner";
+    ImmutableList<String> header = ImmutableList.of("Language", "Owner", "Count");
+    return new LiteTimeSeriesTask("procedures.csv", query, header);
   }
 
   private static Task<?> warehouseEventsTask() {
