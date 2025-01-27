@@ -4,5 +4,6 @@ include(
 	':dumper:lib-dumper-spi',
 	':dumper:lib-ext-bigquery',
 	':dumper:lib-ext-hive-metastore',
-	':dumper:app'
+	':dumper:app',
+	':validator:app'
 )
