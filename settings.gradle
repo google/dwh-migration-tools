@@ -6,3 +6,15 @@ include(
 	':dumper:lib-ext-hive-metastore',
 	':dumper:app'
 )
+
+buildscript {
+	repositories {
+		maven {
+			url "https://plugins.gradle.org/m2/"              }
+	}
+	dependencies {
+		classpath "gradle.plugin.com.google.cloud.artifactregistry:artifactregistry-gradle-plugin:2.2.2"
+	}
+}
+
+apply plugin: "com.google.cloud.artifactregistry.gradle-plugin"

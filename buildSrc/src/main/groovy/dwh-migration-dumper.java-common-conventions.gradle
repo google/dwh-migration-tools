@@ -17,13 +17,16 @@
 
 plugins {
     id 'java'
+    id "com.google.cloud.artifactregistry.gradle-plugin"
     id 'java-test-fixtures'
     id 'com.diffplug.spotless'
     id 'nebula.info'
 }
 
 repositories {
-    mavenCentral()
+    maven {
+        url "artifactregistry://us-maven.pkg.dev/artifact-foundry-prod/maven-3p-trusted"
+    }
 }
 
 configurations {
