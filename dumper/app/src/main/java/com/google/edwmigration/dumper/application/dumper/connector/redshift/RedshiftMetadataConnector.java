@@ -41,7 +41,7 @@ import javax.annotation.Nonnull;
     arg = ConnectorArguments.OPT_PORT,
     description = "The port of the server.",
     required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
-    defaultValue = "" + RedshiftMetadataConnector.OPT_PORT_DEFAULT)
+    defaultValue = RedshiftUrlUtil.OPT_PORT_DEFAULT)
 public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     implements MetadataConnector, RedshiftMetadataDumpFormat {
 

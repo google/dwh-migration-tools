@@ -19,6 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -46,20 +49,33 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     this.tsAggregation = tsAggregation;
   }
 
-  protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query)
-      throws Exception {
+  protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query) {
     String timeSeriesUrl = handle.getApiURI().toString() + "/timeseries";
     String fromDate = buildISODateTime(includedLastDays);
-    URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
-    uriBuilder.addParameter("query", query);
-    uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
-    uriBuilder.addParameter("mustUseDesiredRollup", "true");
-    uriBuilder.addParameter("from", fromDate);
+    URI tsURI;
+    try {
+      URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
+      uriBuilder.addParameter("query", query);
+      uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
+      uriBuilder.addParameter("mustUseDesiredRollup", "true");
+      uriBuilder.addParameter("from", fromDate);
+      tsURI = uriBuilder.build();
+    } catch (URISyntaxException ex) {
+      throw new TimeSeriesException(ex.getMessage(), ex);
+    }
 
     CloseableHttpClient httpClient = handle.getHttpClient();
     JsonNode chartInJson;
-    try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(uriBuilder.build()))) {
-      chartInJson = objectMapper.readTree(chart.getEntity().getContent());
+    try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(tsURI))) {
+      int statusCode = chart.getStatusLine().getStatusCode();
+      if (!isStatusCodeOK(statusCode)) {
+        throw new TimeSeriesException(
+            String.format(
+                "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
+      }
+      chartInJson = readJsonTree(chart.getEntity().getContent());
+    } catch (IOException ex) {
+      throw new TimeSeriesException(ex.getMessage(), ex);
     }
     return chartInJson;
   }
@@ -68,6 +84,23 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     ZonedDateTime dateTime =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
     return dateTime.format(isoDateTimeFormatter);
+  }
+
+  static class TimeSeriesException extends RuntimeException {
+    /* Exception which should be returned if something goes wrong with timeseries API.
+     *
+     * Includes:
+     * - unexpected HTTP status codes;
+     * - response with invalid JSON format.
+     */
+
+    public TimeSeriesException(String message) {
+      super(message);
+    }
+
+    public TimeSeriesException(String message, Throwable cause) {
+      super(message, cause);
+    }
   }
 
   enum TimeSeriesAggregation {

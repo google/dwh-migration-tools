@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -63,14 +64,21 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
         JsonNode jsonHosts;
         try (CloseableHttpResponse hostsResponse =
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          jsonHosts = getObjectMapper().readTree(hostsResponse.getEntity().getContent());
+          final int statusCode = hostsResponse.getStatusLine().getStatusCode();
+          if (!isStatusCodeOK(statusCode)) {
+            throw new MetadataDumperUsageException(
+                String.format(
+                    "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
+          }
+          jsonHosts = readJsonTree(hostsResponse.getEntity().getContent());
+        } catch (JsonParseException ex) {
+          throw new MetadataDumperUsageException("Cloudera Error:" + ex.getMessage());
         }
         String stringifiedHosts = jsonHosts.toString();
         writer.write(stringifiedHosts);
         writer.write('\n');
 
-        ApiHostListDTO apiHosts =
-            getObjectMapper().readValue(stringifiedHosts, ApiHostListDTO.class);
+        ApiHostListDTO apiHosts = parseJsonStringToObject(stringifiedHosts, ApiHostListDTO.class);
         for (ApiHostDTO apiHost : apiHosts.getHosts()) {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }

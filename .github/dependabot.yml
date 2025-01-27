@@ -3,18 +3,8 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "05:00"
-      timezone: "UTC"
-#    ignore:
-#      - dependency-name: "ch.qos.logback:logback-*"
-#        # start from 1.4.x JDK 11 is required, but dumper's minimal is JDK 8
-#        versions: [">=1.4.x"]
-#      - dependency-name: "com.zaxxer:HikariCP"
-#        # version 4.x.x is the latest for JDK 8
-#        versions: [">=5.x.x"]
-#      - dependency-name: "org.springframework:"
-#        # Spring Framework 5.3.x is the latest with JDK 8 support
-#        # https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-Versions#jdk-version-range
-#        versions: [">5.3.x"]
+      interval: "daily"
+    ignore:
+    - dependency-name: "ch.qos.logback:logback-*"
+      # start from 1.4.x JDK 11 is required, but dumper's minimal is JDK 8
+      versions: [ ">=1.4.x" ]

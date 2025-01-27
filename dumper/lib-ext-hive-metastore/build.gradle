@@ -26,6 +26,7 @@ configurations {
     configureEach {
         //We use logback, so log4j implementation must be excluded
         exclude group: 'log4j', module: 'log4j'
+        exclude group: 'org.eclipse.jetty'
     }
 }
 
@@ -48,6 +49,7 @@ dependencies {
     // For HiveServer2
     hive312RuntimeOnly libs.tez.common
     hive312RuntimeOnly libs.tez.dag
+
     // Starting from version 1.8 the binding mechanics changed
     hive312RuntimeOnly("org.slf4j:slf4j-api") {
         version {

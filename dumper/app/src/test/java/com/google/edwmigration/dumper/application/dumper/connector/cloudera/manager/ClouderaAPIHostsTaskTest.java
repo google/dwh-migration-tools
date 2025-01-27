@@ -16,41 +16,46 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.HttpStatus;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -61,6 +66,7 @@ public class ClouderaAPIHostsTaskTest {
 
   private final ClouderaAPIHostsTask task = new ClouderaAPIHostsTask();
   private ClouderaManagerHandle handle;
+  private static WireMockServer server;
 
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
@@ -68,69 +74,123 @@ public class ClouderaAPIHostsTaskTest {
   @Mock private Writer writer;
   @Mock private CharSink charSink;
   @Mock private CloseableHttpClient httpClient;
-  private URI uri;
+
+  @BeforeClass
+  public static void beforeClass() throws Exception {
+    server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
+    server.start();
+  }
+
+  @AfterClass
+  public static void afterClass() throws Exception {
+    server.stop();
+  }
 
   @Before
   public void setUp() throws Exception {
-    uri = URI.create("http://localhost/api");
-    handle = new ClouderaManagerHandle(uri, httpClient);
+    server.resetAll();
+    URI uri = URI.create(server.baseUrl() + "/api/vTest");
+    handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);
   }
 
   @Test
-  public void clustersExists_do_writes_success() throws Exception {
-    handle.initClusters(
-        ImmutableList.of(
-            ClouderaClusterDTO.create("id1", "first-cluster"),
-            ClouderaClusterDTO.create("id125", "second-cluster")));
+  public void doRun_clouderaReturnsValidJsonLines_writeJsonLines() throws Exception {
+    initClusters(
+        ClouderaClusterDTO.create("id1", "first-cluster"),
+        ClouderaClusterDTO.create("id125", "second-cluster"));
 
-    CloseableHttpResponse responseId1 = mock(CloseableHttpResponse.class);
-    HttpEntity entityId1 = mock(HttpEntity.class);
-    when(responseId1.getEntity()).thenReturn(entityId1);
-
-    CloseableHttpResponse responseCldClst = mock(CloseableHttpResponse.class);
-    HttpEntity entityCldClst = mock(HttpEntity.class);
-    when(responseCldClst.getEntity()).thenReturn(entityCldClst);
-
-    when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().toString().endsWith("/first-cluster/hosts"))))
-        .thenReturn(responseId1);
-    when(httpClient.execute(
-            argThat(
-                get -> get != null && get.getURI().toString().endsWith("/second-cluster/hosts"))))
-        .thenReturn(responseCldClst);
-
-    when(entityId1.getContent())
-        .thenReturn(
-            new ByteArrayInputStream(
-                "{\"clusterName\":\"first-cluster\",\"items\":[]}".getBytes()));
-    when(entityCldClst.getContent())
-        .thenReturn(
-            new ByteArrayInputStream(
-                "{\n\"clusterName\":\"second-cluster\",\"items\":[]\n\r}".getBytes()));
+    stubClouderaClusterAPIResponse("first-cluster", "[]");
+    stubClouderaClusterAPIResponse("second-cluster", "[]\r\n");
 
     task.doRun(context, sink, handle);
 
-    Set<URI> requestedUrls = new HashSet<>();
-    verify(httpClient, times(2))
-        .execute(
-            argThat(
-                request -> {
-                  assertEquals(HttpGet.class, request.getClass());
-                  requestedUrls.add(request.getURI());
-                  return true;
-                }));
-
+    // write jsonl. https://jsonlines.org/
+    Set<String> fileLines = getWrittenJsonLines();
+    verify(writer, times(2)).write('\n');
     assertEquals(
         ImmutableSet.of(
-            URI.create("http://localhost/api/clusters/first-cluster/hosts"),
-            URI.create("http://localhost/api/clusters/second-cluster/hosts")),
-        requestedUrls);
+            "{\"clusterName\":\"first-cluster\",\"items\":[]}",
+            "{\"clusterName\":\"second-cluster\",\"items\":[]}"),
+        fileLines);
 
-    // write jsonl. https://jsonlines.org/
+    verify(writer).close();
+  }
+
+  @Test
+  public void doRun_clustersWereNotInitialized_throwsCriticalException() throws Exception {
+    assertNull(handle.getClusters());
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertEquals(
+        "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());
+
+    verifyNoWrites();
+  }
+
+  @Test
+  public void doRun_clouderaReturns4xx_throwsCriticalException() throws Exception {
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    stubClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_BAD_REQUEST);
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(
+        exception
+            .getMessage()
+            .contains("Cloudera Error: Response status code is 400 but 2xx is expected."));
+  }
+
+  @Test
+  public void doRun_clouderaReturns5xx_throwsCriticalException() throws Exception {
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    stubClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_INTERNAL_SERVER_ERROR);
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(
+        exception
+            .getMessage()
+            .contains("Cloudera Error: Response status code is 500 but 2xx is expected."));
+  }
+
+  @Test
+  public void doRun_clouderaReturnsInvalidJsonFormat_throwsCriticalException() throws Exception {
+    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
+    stubClouderaClusterAPIResponse("first-cluster", "[}");
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+  }
+
+  private void initClusters(ClouderaClusterDTO... clusters) {
+    handle.initClusters(Arrays.asList(clusters));
+  }
+
+  private void stubClouderaClusterAPIResponse(String clusterName, String itemsJsonLine)
+      throws IOException {
+    stubClouderaClusterAPIResponse(clusterName, itemsJsonLine, HttpStatus.SC_OK);
+  }
+
+  private void stubClouderaClusterAPIResponse(
+      String clusterName, String itemsJsonLine, int statusCode) throws IOException {
+    String clusterAPIResponse =
+        String.format("{\"clusterName\":\"%s\",\"items\":%s}", clusterName, itemsJsonLine);
+    server.stubFor(
+        get(urlMatching(String.format(".*/%s/hosts.*", clusterName)))
+            .willReturn(okJson(clusterAPIResponse).withStatus(statusCode)));
+  }
+
+  private Set<String> getWrittenJsonLines() throws IOException {
+    // https://jsonlines.org/
     Set<String> fileLines = new HashSet<>();
     verify(writer, times(2))
         .write(
@@ -143,29 +203,7 @@ public class ClouderaAPIHostsTaskTest {
                       fileLines.add(str);
                       return true;
                     }));
-    verify(writer, times(2)).write('\n');
-    assertEquals(
-        ImmutableSet.of(
-            "{\"clusterName\":\"first-cluster\",\"items\":[]}",
-            "{\"clusterName\":\"second-cluster\",\"items\":[]}"),
-        fileLines);
-
-    verify(responseId1).close();
-    verify(responseCldClst).close();
-    verify(writer).close();
-  }
-
-  @Test
-  public void clustersWereNotInitialized_throwsException() throws Exception {
-    assertNull(handle.getClusters());
-
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
-
-    assertEquals(
-        "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());
-
-    verifyNoWrites();
+    return fileLines;
   }
 
   private void verifyNoWrites() throws IOException {
