@@ -53,6 +53,7 @@ dependencies {
     implementation libs.apache.avro
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
+    implementation libs.apache.yarn
     implementation libs.hadoop.common
     implementation libs.hadoop.hdfs.client
     implementation libs.spring.core

@@ -112,6 +112,14 @@
 		{
 			"moduleLicense": null,
 			"moduleName": "javax.servlet.jsp:jsp-api"
+		},
+		{
+			"moduleLicense": null,
+			"moduleName": "asm:asm"
+		},
+		{
+			"moduleLicense": null,
+			"moduleName": "javax.servlet:servlet-api"
 		}
 	]
 }
