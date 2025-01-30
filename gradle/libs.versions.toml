@@ -1,7 +1,6 @@
 # TO FORMAT: run ./gradlew versionCatalogFormat
 # TO UPGRADE: run ./gradlew versionCatalogUpdate (accepts an --interactive flag)
 [versions]
-apache-yarn = "2.7.2"
 apache-avro = "1.12.0"
 apache-commons-compress = "1.27.1"
 apache-commons-csv = "1.12.0"
@@ -55,7 +54,6 @@ version-catalog-update-plugin = "0.8.5"
 wiremock = "2.27.2"
 
 [libraries]
-apache-yarn = { module = "org.apache.hadoop:hadoop-yarn-client", version.ref = "apache-yarn" }
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
 apache-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-commons-compress" }
 apache-commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "apache-commons-csv" }

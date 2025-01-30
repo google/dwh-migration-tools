@@ -16,146 +16,133 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationListDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationTypeDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.Writer;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** The task dump job list from YARN and Cloudera Management API */
+/** The task dumps YARN applications from Cloudera Manager API */
 public class ClouderaJobsTask extends AbstractClouderaManagerTask {
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaJobsTask.class);
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-  public ClouderaJobsTask() {
-    super("jobs.jsonl");
+  private final String[] predefinedAppTypes = {
+    "MAPREDUCE",
+  };
+  private final int includedLastDays;
+
+  public ClouderaJobsTask(int days) {
+    super("yarn-applications.jsonl");
+    this.includedLastDays = days;
   }
 
   @Override
   protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
-    String[] command = {
-      "/bin/bash", "-c", "yarn application -list -appTypes MAPREDUCE -appStates ALL"
-    };
-    Process process = Runtime.getRuntime().exec(command);
-
-    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-    String line;
-    List<String> applicationIDs = new ArrayList<>();
-    while ((line = reader.readLine()) != null) {
-      String[] columns = line.split("\\s+");
-      if (columns[0].contains("application")) {
-        applicationIDs.add(columns[0]);
-      }
+    // TODO dump job information for all clusters
+    String clusterName = "cldr3-data-hub";
+    List<String> yarnAppTypes = fetchYARNApplicationTypes(handle, clusterName);
+    List<ApiYARNApplicationDTO> totalYARNApplications = new LinkedList<>();
+    for (String yarnAppType : yarnAppTypes) {
+      LOG.info(
+          String.format(
+              "Dump YARN applications with %s type from %s cluster", yarnAppType, clusterName));
+      List<ApiYARNApplicationDTO> yarnApplications =
+          fetchYARNApplicationsFromClusterByType(handle, clusterName, yarnAppType);
+      totalYARNApplications.addAll(yarnApplications);
     }
 
+    String yarnAppsJson = parseObjectToJsonString(totalYARNApplications);
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      for (String applicationID : applicationIDs) {
-        String[] applicationDetailsCommand = {
-          "/bin/bash", "-c", String.format("yarn application -status %s", applicationID),
-        };
-        Process applicationDetailsProcess = Runtime.getRuntime().exec(applicationDetailsCommand);
-        reader =
-            new BufferedReader(new InputStreamReader(applicationDetailsProcess.getInputStream()));
-        while ((line = reader.readLine()) != null) {
-          writer.write(line);
-          writer.write('\n');
-        }
-      }
+      writer.write(yarnAppsJson);
     }
-
-    // String yarnURL =
-    // "https://cldr3-data-hub-master0.cldr3-cd.svye-dcxb.a5.cloudera.site/cldr3-data-hub/cdp-proxy/yarnuiv2/ws/v1/cluster/apps";
-    // CloseableHttpClient httpClient = handle.getHttpClient();
-    // JsonNode chartInJson;
-    // try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(yarnURL))) {
-    //   Scanner sc = new Scanner(chart.getEntity().getContent());
-    //   while (sc.hasNext()) {
-    //     LOG.warn(sc.nextLine());
-    //   }
-    //   LOG.warn(Integer.toString(chart.getStatusLine().getStatusCode()));
-    //   chartInJson = readJsonTree(chart.getEntity().getContent());
-    // } catch (IOException ex) {
-    //   throw new RuntimeException(ex.getMessage(), ex);
-    // }
-    //
-    // String stringifiedApplications = chartInJson.toString();
-    // try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-    //   writer.write(stringifiedApplications);
-    // }
-
-    // String clusterName = "cldr3-data-hub";
-    // String yarnApplicationsUrl =
-    //     handle.getApiURI().toString()
-    //         + "clusters/"
-    //         + clusterName
-    //         + "/services/yarn/yarnApplications";
-    // String fromDate = buildISODateTime(100);
-    // URI tsURI;
-    // try {
-    //   URIBuilder uriBuilder = new URIBuilder(yarnApplicationsUrl);
-    //   uriBuilder.addParameter("limit", "100");
-    //   uriBuilder.addParameter("from", fromDate);
-    //   tsURI = uriBuilder.build();
-    // } catch (URISyntaxException ex) {
-    //   throw new TimeSeriesException(ex.getMessage(), ex);
-    // }
-    //
-    // CloseableHttpClient httpClient = handle.getHttpClient();
-    // JsonNode chartInJson;
-    // try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(tsURI))) {
-    //   chartInJson = readJsonTree(chart.getEntity().getContent());
-    // } catch (IOException ex) {
-    //   throw new RuntimeException(ex.getMessage(), ex);
-    // }
-    //
-    // String stringifiedApplications = chartInJson.toString();
-    // LOG.warn(tsURI.toString());
-    // try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-    //   writer.write(stringifiedApplications);
-    // }
-
-    // Configuration conf = new YarnConfiguration();
-    // conf.addResource(
-    //     new org.apache.hadoop.fs.Path(
-    //         "/opt/cloudera/parcels/CDH/lib/hadoop/etc/hadoop/core-site.xml"));
-    // conf.addResource(
-    //     new org.apache.hadoop.fs.Path(
-    //         "/opt/cloudera/parcels/CDH/lib/hadoop/etc/hadoop/hdfs-site.xml"));
-    // conf.addResource(
-    //     new org.apache.hadoop.fs.Path(
-    //         "/opt/cloudera/parcels/CDH/lib/hadoop/etc/hadoop/yarn-site.xml"));
-    //
-    // YarnClient yarnClient = YarnClient.createYarnClient();
-    // yarnClient.init(conf);
-    // LOG.warn(conf.get("hadoop.security.authentication"));
-    // yarnClient.start();
-    //
-    // List<ApplicationReport> applicationReports = yarnClient.getApplications();
-    // applicationReports.forEach(
-    //     appReport ->
-    //         System.out.printf(
-    //             "Job [%s]: id=%s, name=%s%n",
-    //             appReport.getApplicationType(), appReport.getApplicationId(),
-    // appReport.getName()));
-    // yarnClient.stop();
   }
 
   private String buildISODateTime(int deltaInDays) {
     ZonedDateTime dateTime =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
     return dateTime.format(isoDateTimeFormatter);
+  }
+
+  private List<String> fetchYARNApplicationTypes(ClouderaManagerHandle handle, String clusterName) {
+    List<String> yarnApplicationTypes = new ArrayList<>();
+    Collections.addAll(yarnApplicationTypes, predefinedAppTypes);
+
+    String yarnAppTypesUrl =
+        handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
+    CloseableHttpClient httpClient = handle.getHttpClient();
+    JsonNode yarnAppTypesJson;
+    ApiYARNApplicationTypeDTO yarnAppTypesFromClouderaAPI;
+    try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(yarnAppTypesUrl))) {
+      yarnAppTypesJson = readJsonTree(chart.getEntity().getContent());
+      yarnAppTypesFromClouderaAPI =
+          parseJsonStringToObject(yarnAppTypesJson.toString(), ApiYARNApplicationTypeDTO.class);
+      yarnApplicationTypes.addAll(yarnAppTypesFromClouderaAPI.getItems());
+    } catch (IOException ex) {
+      throw new RuntimeException(ex.getMessage(), ex);
+    }
+    return yarnApplicationTypes;
+  }
+
+  private List<ApiYARNApplicationDTO> fetchYARNApplicationsFromClusterByType(
+      ClouderaManagerHandle handle, String clusterName, String appType) {
+    String yarnApplicationsUrl =
+        handle.getApiURI().toString()
+            + "clusters/"
+            + clusterName
+            + "/services/yarn/yarnApplications";
+    String fromDate = buildISODateTime(includedLastDays);
+    URI yarnApplicationsURI;
+    try {
+      URIBuilder uriBuilder = new URIBuilder(yarnApplicationsUrl);
+      // TODO dump all paginated pages
+      uriBuilder.addParameter("limit", "100");
+      uriBuilder.addParameter("from", fromDate);
+      uriBuilder.addParameter("filter", String.format("applicationType=%s", appType));
+      yarnApplicationsURI = uriBuilder.build();
+    } catch (URISyntaxException ex) {
+      throw new RuntimeException(ex.getMessage(), ex);
+    }
+
+    CloseableHttpClient httpClient = handle.getHttpClient();
+    JsonNode yarnApplicationsRespJson;
+    try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnApplicationsURI))) {
+      yarnApplicationsRespJson = readJsonTree(resp.getEntity().getContent());
+      ApiYARNApplicationListDTO yarnAppListDto =
+          parseJsonStringToObject(
+              yarnApplicationsRespJson.toString(), ApiYARNApplicationListDTO.class);
+      List<ApiYARNApplicationDTO> yarnApps = yarnAppListDto.getApplications();
+      for (ApiYARNApplicationDTO app : yarnApps) {
+        app.setApplicationType(appType);
+        app.setClusterName(clusterName);
+      }
+      return yarnApps;
+    } catch (IOException ex) {
+      throw new RuntimeException(ex.getMessage(), ex);
+    }
   }
 }
