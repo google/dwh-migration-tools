@@ -16,11 +16,13 @@
  */
 package com.google.edwmigration.validation.application.validator;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import joptsimple.OptionSpec;
@@ -36,6 +38,7 @@ public class ValidationArguments extends DefaultArguments {
   public static final String OPT_OUTPUT = "output";
   public static final String OPT_CONFIDENCE_INTERVAL = "confidence-interval";
   public static final String OPT_TABLE = "table";
+  public static final String OPT_COLUMN_MAPPINGS = "column-mappings";
 
   private ValidationConnection sourceConnection;
   private ValidationConnection targetConnection;
@@ -55,31 +58,41 @@ public class ValidationArguments extends DefaultArguments {
           .describedAs("path/to/bigquery.json")
           .required();
 
+  private final OptionSpec<String> tableOption =
+          parser
+                  .accepts(OPT_TABLE, "Table to validate.")
+                  .withRequiredArg()
+                  .ofType(String.class)
+                  .describedAs("source=target")
+                  .required();
+
   private final OptionSpec<String> outputOption =
       parser
           .accepts(
               OPT_OUTPUT,
               "Output directory to export query result sets. Defaults to current directory.")
-          .withRequiredArg()
+          .withOptionalArg()
           .ofType(String.class)
           .describedAs("gs://bucket/dir");
-
-  private final OptionSpec<String> tableOption =
-      parser
-          .accepts(OPT_TABLE, "Table to validate.")
-          .withRequiredArg()
-          .ofType(String.class)
-          .describedAs("source=target")
-          .required();
 
   private final OptionSpec<Integer> confidenceIntervalOption =
       parser
           .accepts(
               OPT_CONFIDENCE_INTERVAL,
               "Confidence interval for validation. Determines number of rows sampled. Defaults to 90.")
-          .withRequiredArg()
+          .withOptionalArg()
           .ofType(Integer.class)
           .describedAs("90");
+
+  private final OptionSpec<String> columnMappingsOption =
+          parser
+                  .accepts(
+                          OPT_COLUMN_MAPPINGS,
+                          "Column name mappings.")
+                  .withOptionalArg()
+                  .ofType(String.class)
+                  .withValuesSeparatedBy(',')
+                  .describedAs("colA=COLA,colB=newColB");
 
   public static final String DEFAULT_ENV_DIRECTORY = "~/.config/dwh-validation/";
   public static final String ENV_DIRECTORY_VAR = "DV_CONN_HOME";
@@ -123,6 +136,22 @@ public class ValidationArguments extends DefaultArguments {
 
   public String getTable() {
     return getOptions().valueOf(tableOption);
+  }
+
+  public ImmutableMap<String, String> getColumnMappings() {
+    List<String> mappings =  getOptions().valuesOf(columnMappingsOption);
+    ImmutableMap.Builder<String,String> builder = ImmutableMap.builder();
+    for (String pair: mappings){
+      String[] parts = pair.split("=");
+      if (parts.length == 2){
+        builder.put(parts[0], parts[1]);
+      } else {
+        throw new IllegalArgumentException("Invalid column mapping format found: " + pair);
+      }
+    }
+
+    return builder.build();
+
   }
 
   public ValidationArguments(@Nonnull String... args) {

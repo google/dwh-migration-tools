@@ -16,9 +16,12 @@
  */
 package com.google.edwmigration.validation.application.validator;
 
+import com.google.common.io.Closer;
 import com.google.edwmigration.validation.application.validator.connector.Connector;
 import java.io.IOException;
 import javax.annotation.Nonnull;
+
+import com.google.edwmigration.validation.application.validator.handle.Handle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +34,7 @@ public class Validator {
     return run(validationArguments);
   }
 
-  public boolean run(@Nonnull ValidationArguments arguments) throws IOException {
+  public boolean run(@Nonnull ValidationArguments arguments) throws Exception {
     String sourceConnectionName = arguments.getSourceConnection().getConnectionType();
     String targetConnectionName = arguments.getTargetConnection().getConnectionType();
     if (sourceConnectionName == null) {
@@ -42,31 +45,32 @@ public class Validator {
       return false;
     }
 
-    Connector sourceConnector = ConnectorRepository.getInstance().getByName(sourceConnectionName);
-    if (sourceConnector == null) {
-      LOG.error(
-          "Source DB '{}' not supported; available are {}.",
-          sourceConnectionName,
-          ConnectorRepository.getInstance().getAllNames());
-      return false;
-    }
+//    Connector sourceConnector = ConnectorRepository.getInstance().getByName(sourceConnectionName);
+//    if (sourceConnector == null) {
+//      LOG.error(
+//          "Source DB '{}' not supported; available are {}.",
+//          sourceConnectionName,
+//          ConnectorRepository.getInstance().getAllNames());
+//      return false;
+//    }
+//
+//    Connector targetConnector = ConnectorRepository.getInstance().getByName(targetConnectionName);
+//    if (targetConnector == null) {
+//      LOG.error(
+//          "Target DB '{}' not supported; available are {}.",
+//          targetConnectionName,
+//          ConnectorRepository.getInstance().getAllNames());
+//      return false;
+//    }
 
-    Connector targetConnector = ConnectorRepository.getInstance().getByName(targetConnectionName);
-    if (targetConnector == null) {
-      LOG.error(
-          "Target DB '{}' not supported; available are {}.",
-          targetConnectionName,
-          ConnectorRepository.getInstance().getAllNames());
-      return false;
-    }
-
-    return run(arguments, sourceConnector, targetConnector);
+    return true;
   }
 
   protected boolean run(
       @Nonnull ValidationArguments arguments,
       Connector sourceConnector,
-      Connector targetConnector) {
+      Connector targetConnector) throws Exception {
+    LOG.info("Using source connector" + sourceConnector + " and target connector " + targetConnector);
     return true;
   }
 }

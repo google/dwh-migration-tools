@@ -23,10 +23,10 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BigQueryConnector extends AbstractConnector {
-  private static final Logger LOG = LoggerFactory.getLogger(BigQueryConnector.class);
+public abstract class BigQueryAbstractConnector extends AbstractConnector {
+  private static final Logger LOG = LoggerFactory.getLogger(BigQueryAbstractConnector.class);
 
-  public BigQueryConnector(@Nonnull String name) {
+  public BigQueryAbstractConnector(@Nonnull String name) {
     super(name);
   }
 

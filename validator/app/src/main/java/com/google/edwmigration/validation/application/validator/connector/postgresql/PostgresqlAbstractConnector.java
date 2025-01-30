@@ -21,8 +21,9 @@ import com.google.edwmigration.validation.application.validator.connector.Abstra
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import javax.annotation.Nonnull;
 
-public abstract class PostgresqlConnector extends AbstractJdbcConnector {
-  public PostgresqlConnector(@Nonnull String name) {
+public abstract class PostgresqlAbstractConnector extends AbstractJdbcConnector {
+
+  public PostgresqlAbstractConnector(@Nonnull String name) {
     super(name);
   }
 
