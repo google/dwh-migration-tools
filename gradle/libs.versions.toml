@@ -51,7 +51,7 @@ system-rules = "1.19.0"
 tez = "0.9.2"
 thrift = "0.20.0"
 version-catalog-update-plugin = "0.8.5"
-wiremock = "2.27.2"
+wiremock = "3.0.1"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
