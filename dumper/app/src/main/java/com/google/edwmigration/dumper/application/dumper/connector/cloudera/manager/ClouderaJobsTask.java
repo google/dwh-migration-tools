@@ -66,9 +66,12 @@ public class ClouderaJobsTask extends AbstractClouderaManagerTask {
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
     List<ClouderaClusterDTO> clusters = handle.getClusters();
-    Preconditions.checkNotNull(clusters, "Clusters must be initialized before fetching YARN applications.");
+    Preconditions.checkNotNull(
+        clusters, "Clusters must be initialized before fetching YARN applications.");
 
     List<ApiYARNApplicationDTO> totalYARNApplications = new LinkedList<>();
+    YarnApplicationsLoader appLoader =
+        new YarnApplicationsLoader(handle.getApiURI().toString(), handle.getHttpClient());
     for (ClouderaClusterDTO cluster : handle.getClusters()) {
       String clusterName = cluster.getName();
       List<String> yarnAppTypes = fetchYARNApplicationTypes(handle, clusterName);
@@ -76,9 +79,12 @@ public class ClouderaJobsTask extends AbstractClouderaManagerTask {
         LOG.info(
             String.format(
                 "Dump YARN applications with %s type from %s cluster", yarnAppType, clusterName));
-        List<ApiYARNApplicationDTO> yarnApplications =
-            fetchYARNApplicationsFromClusterByType(handle, clusterName, yarnAppType);
+        List<ApiYARNApplicationDTO> yarnApplications = appLoader.load(clusterName, yarnAppType);
         totalYARNApplications.addAll(yarnApplications);
+        LOG.info(
+            String.format(
+                "Dumped %d YARN applications with %s type from %s cluster",
+                yarnApplications.size(), yarnAppType, clusterName));
       }
     }
 
@@ -114,41 +120,62 @@ public class ClouderaJobsTask extends AbstractClouderaManagerTask {
     return yarnApplicationTypes;
   }
 
-  private List<ApiYARNApplicationDTO> fetchYARNApplicationsFromClusterByType(
-      ClouderaManagerHandle handle, String clusterName, String appType) {
-    String yarnApplicationsUrl =
-        handle.getApiURI().toString()
-            + "clusters/"
-            + clusterName
-            + "/services/yarn/yarnApplications";
-    String fromDate = buildISODateTime(includedLastDays);
-    URI yarnApplicationsURI;
-    try {
-      URIBuilder uriBuilder = new URIBuilder(yarnApplicationsUrl);
-      // TODO dump all paginated pages
-      uriBuilder.addParameter("limit", "100");
-      uriBuilder.addParameter("from", fromDate);
-      uriBuilder.addParameter("filter", String.format("applicationType=%s", appType));
-      yarnApplicationsURI = uriBuilder.build();
-    } catch (URISyntaxException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
+  private class YarnApplicationsLoader {
+    private final String host;
+    private final CloseableHttpClient httpClient;
+
+    public YarnApplicationsLoader(String host, CloseableHttpClient httpClient) {
+      this.host = host;
+      this.httpClient = httpClient;
     }
 
-    CloseableHttpClient httpClient = handle.getHttpClient();
-    JsonNode yarnApplicationsRespJson;
-    try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnApplicationsURI))) {
-      yarnApplicationsRespJson = readJsonTree(resp.getEntity().getContent());
-      ApiYARNApplicationListDTO yarnAppListDto =
-          parseJsonStringToObject(
-              yarnApplicationsRespJson.toString(), ApiYARNApplicationListDTO.class);
-      List<ApiYARNApplicationDTO> yarnApps = yarnAppListDto.getApplications();
-      for (ApiYARNApplicationDTO app : yarnApps) {
-        app.setApplicationType(appType);
-        app.setClusterName(clusterName);
+    public List<ApiYARNApplicationDTO> load(String clusterName, String appType) {
+      List<ApiYARNApplicationDTO> yarnApplications = new LinkedList<>();
+      final int limit = 100;
+      int offset = 0;
+      boolean nextLoad = true;
+
+      while (nextLoad) {
+        List<ApiYARNApplicationDTO> newLoad = load(clusterName, appType, limit, offset);
+        yarnApplications.addAll(newLoad);
+        nextLoad = (!newLoad.isEmpty());
+        offset += limit;
       }
-      return yarnApps;
-    } catch (IOException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
+
+      return yarnApplications;
+    }
+
+    private List<ApiYARNApplicationDTO> load(
+        String clusterName, String appType, int limit, int offset) {
+      String yarnApplicationsUrl =
+          host + "clusters/" + clusterName + "/services/yarn/yarnApplications";
+      String fromDate = buildISODateTime(includedLastDays);
+      URI yarnApplicationsURI;
+      try {
+        URIBuilder uriBuilder = new URIBuilder(yarnApplicationsUrl);
+        uriBuilder.addParameter("limit", String.valueOf(limit));
+        uriBuilder.addParameter("offset", String.valueOf(offset));
+        uriBuilder.addParameter("from", fromDate);
+        uriBuilder.addParameter("filter", String.format("applicationType=%s", appType));
+        yarnApplicationsURI = uriBuilder.build();
+      } catch (URISyntaxException ex) {
+        throw new RuntimeException(ex.getMessage(), ex);
+      }
+
+      try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnApplicationsURI))) {
+        JsonNode yarnApplicationsRespJson = readJsonTree(resp.getEntity().getContent());
+        ApiYARNApplicationListDTO yarnAppListDto =
+            parseJsonStringToObject(
+                yarnApplicationsRespJson.toString(), ApiYARNApplicationListDTO.class);
+        List<ApiYARNApplicationDTO> yarnApps = yarnAppListDto.getApplications();
+        for (ApiYARNApplicationDTO app : yarnApps) {
+          app.setApplicationType(appType);
+          app.setClusterName(clusterName);
+        }
+        return yarnApps;
+      } catch (IOException ex) {
+        throw new RuntimeException(ex.getMessage(), ex);
+      }
     }
   }
 }
