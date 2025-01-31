@@ -46,8 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** The task dumps YARN applications from Cloudera Manager API */
-public class ClouderaJobsTask extends AbstractClouderaManagerTask {
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaJobsTask.class);
+public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
+  private static final Logger LOG = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
@@ -56,7 +56,7 @@ public class ClouderaJobsTask extends AbstractClouderaManagerTask {
   };
   private final int includedLastDays;
 
-  public ClouderaJobsTask(int days) {
+  public ClouderaYarnApplicationsTask(int days) {
     super(String.format("yarn-applications-%d.jsonl", days));
     this.includedLastDays = days;
   }
