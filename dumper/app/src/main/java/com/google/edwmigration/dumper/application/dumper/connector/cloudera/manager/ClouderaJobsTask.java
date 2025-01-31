@@ -17,7 +17,9 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationListDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationTypeDTO;
@@ -55,7 +57,7 @@ public class ClouderaJobsTask extends AbstractClouderaManagerTask {
   private final int includedLastDays;
 
   public ClouderaJobsTask(int days) {
-    super("yarn-applications.jsonl");
+    super(String.format("yarn-applications-%d.jsonl", days));
     this.includedLastDays = days;
   }
 
@@ -63,17 +65,21 @@ public class ClouderaJobsTask extends AbstractClouderaManagerTask {
   protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
-    // TODO dump job information for all clusters
-    String clusterName = "cldr3-data-hub";
-    List<String> yarnAppTypes = fetchYARNApplicationTypes(handle, clusterName);
+    List<ClouderaClusterDTO> clusters = handle.getClusters();
+    Preconditions.checkNotNull(clusters, "Clusters must be initialized before fetching YARN applications.");
+
     List<ApiYARNApplicationDTO> totalYARNApplications = new LinkedList<>();
-    for (String yarnAppType : yarnAppTypes) {
-      LOG.info(
-          String.format(
-              "Dump YARN applications with %s type from %s cluster", yarnAppType, clusterName));
-      List<ApiYARNApplicationDTO> yarnApplications =
-          fetchYARNApplicationsFromClusterByType(handle, clusterName, yarnAppType);
-      totalYARNApplications.addAll(yarnApplications);
+    for (ClouderaClusterDTO cluster : handle.getClusters()) {
+      String clusterName = cluster.getName();
+      List<String> yarnAppTypes = fetchYARNApplicationTypes(handle, clusterName);
+      for (String yarnAppType : yarnAppTypes) {
+        LOG.info(
+            String.format(
+                "Dump YARN applications with %s type from %s cluster", yarnAppType, clusterName));
+        List<ApiYARNApplicationDTO> yarnApplications =
+            fetchYARNApplicationsFromClusterByType(handle, clusterName, yarnAppType);
+        totalYARNApplications.addAll(yarnApplications);
+      }
     }
 
     String yarnAppsJson = parseObjectToJsonString(totalYARNApplications);
