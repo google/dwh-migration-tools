@@ -80,10 +80,10 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   }
 
   private static Task<?> proceduresTask() {
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES";
     String query =
-        "SELECT procedure_language, procedure_owner, count(1)"
-            + " FROM SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES"
-            + " GROUP BY procedure_language, procedure_owner";
+        String.format(
+            "SELECT procedure_language, procedure_owner, count(1) FROM %s GROUP BY ALL", view);
     ImmutableList<String> header = ImmutableList.of("Language", "Owner", "Count");
     return new LiteTimeSeriesTask("procedures.csv", query, header);
   }
@@ -91,8 +91,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   private static Task<?> warehouseEventsTask() {
     String query =
         "SELECT event_name, cluster_number, warehouse_id, warehouse_name, count(1)"
-            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
-            + " GROUP BY event_name, cluster_number, warehouse_id, warehouse_name";
+            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY GROUP BY ALL";
     ImmutableList<String> header =
         ImmutableList.of("Name", "Cluster", "WarehouseId", "WarehouseName", "Count");
     return new LiteTimeSeriesTask("warehouse_events.csv", query, header);
@@ -100,10 +99,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   private static Task<?> warehouseMeteringTask() {
     String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY";
-    String sql =
-        String.format("SELECT warehouse_name, count(1) FROM %s GROUP BY warehouse_name", view);
+    String query = String.format("SELECT warehouse_name, count(1) FROM %s GROUP BY ALL", view);
     ImmutableList<String> header = ImmutableList.of("Name", "Count");
-    return new LiteTimeSeriesTask("warehouse_metering.csv", sql, header);
+    return new LiteTimeSeriesTask("warehouse_metering.csv", query, header);
   }
 
   private static final class LiteTimeSeriesTask extends JdbcSelectTask {
