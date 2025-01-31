@@ -23,16 +23,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
-import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
 import java.sql.ResultSet;
 import java.time.Clock;
 import java.util.List;
@@ -59,13 +54,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     return ArchiveNameUtil.getFileName(NAME);
   }
 
-  private AbstractJdbcTask<Summary> createTask(String format, String usageZip) {
-    String usageView = "SNOWFLAKE.ACCOUNT_USAGE";
-    String usageFilter = " WHERE DELETED IS NULL";
-    String sql = String.format(format, usageView, usageFilter);
-    return new JdbcSelectTask(usageZip, sql);
-  }
-
   @Override
   public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
@@ -75,25 +63,11 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   private ImmutableList<Task<?>> createTaskList() {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
-    builder.add(
-        createTask(
-                "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
-                DatabasesFormat.AU_ZIP_ENTRY_NAME)
-            .withHeaderClass(DatabasesFormat.Header.class));
 
-    builder.add(
-        createTask(
-                "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
-                SchemataFormat.AU_ZIP_ENTRY_NAME)
-            .withHeaderClass(SchemataFormat.Header.class));
-
-    builder.add(
-        createTask(
-                "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes,"
-                    + " clustering_key FROM %1$s.TABLES%2$s",
-                TablesFormat.AU_ZIP_ENTRY_NAME)
-            .withHeaderClass(TablesFormat.Header.class));
-    builder.add(createWarehouseEvents());
+    builder.addAll(planner.generateLiteSpecificQueries());
+    builder.add(proceduresTask());
+    builder.add(warehouseEventsTask());
+    builder.add(warehouseMeteringTask());
 
     for (AssessmentQuery item : planner.generateAssessmentQueries()) {
       String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
@@ -105,14 +79,29 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     return builder.build();
   }
 
-  private static Task<?> createWarehouseEvents() {
+  private static Task<?> proceduresTask() {
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES";
+    String query =
+        String.format(
+            "SELECT procedure_language, procedure_owner, count(1) FROM %s GROUP BY ALL", view);
+    ImmutableList<String> header = ImmutableList.of("Language", "Owner", "Count");
+    return new LiteTimeSeriesTask("procedures.csv", query, header);
+  }
+
+  private static Task<?> warehouseEventsTask() {
     String query =
         "SELECT event_name, cluster_number, warehouse_id, warehouse_name, count(1)"
-            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
-            + " GROUP BY event_name, cluster_number, warehouse_id, warehouse_name";
+            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY GROUP BY ALL";
     ImmutableList<String> header =
         ImmutableList.of("Name", "Cluster", "WarehouseId", "WarehouseName", "Count");
     return new LiteTimeSeriesTask("warehouse_events.csv", query, header);
+  }
+
+  private static Task<?> warehouseMeteringTask() {
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY";
+    String query = String.format("SELECT warehouse_name, count(1) FROM %s GROUP BY ALL", view);
+    ImmutableList<String> header = ImmutableList.of("Name", "Count");
+    return new LiteTimeSeriesTask("warehouse_metering.csv", query, header);
   }
 
   private static final class LiteTimeSeriesTask extends JdbcSelectTask {
