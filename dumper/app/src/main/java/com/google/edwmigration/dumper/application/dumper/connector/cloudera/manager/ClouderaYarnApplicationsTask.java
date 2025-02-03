@@ -51,9 +51,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-  private final String[] predefinedAppTypes = {
-    "MAPREDUCE",
-  };
+  private final String[] predefinedAppTypes = {"MAPREDUCE", "SPARK"};
   private final int includedLastDays;
 
   public ClouderaYarnApplicationsTask(int days) {
@@ -69,7 +67,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
     Preconditions.checkNotNull(
         clusters, "Clusters must be initialized before fetching YARN applications.");
 
-    List<ApiYARNApplicationDTO> totalYARNApplications = new LinkedList<>();
+    List<ApiYARNApplicationDTO> totalYARNApplications = new ArrayList<>();
     YarnApplicationsLoader appLoader =
         new YarnApplicationsLoader(handle.getApiURI().toString(), handle.getHttpClient());
     for (ClouderaClusterDTO cluster : handle.getClusters()) {
