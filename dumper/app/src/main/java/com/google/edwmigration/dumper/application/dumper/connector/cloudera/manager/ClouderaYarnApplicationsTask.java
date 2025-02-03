@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
@@ -34,7 +35,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -51,7 +51,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-  private final String[] predefinedAppTypes = {"MAPREDUCE", "SPARK"};
+  private final ImmutableList<String> predefinedAppTypes = ImmutableList.of("MAPREDUCE", "SPARK");
   private final int includedLastDays;
 
   public ClouderaYarnApplicationsTask(int days) {
@@ -99,9 +99,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
   }
 
   private List<String> fetchYARNApplicationTypes(ClouderaManagerHandle handle, String clusterName) {
-    List<String> yarnApplicationTypes = new ArrayList<>();
-    Collections.addAll(yarnApplicationTypes, predefinedAppTypes);
-
+    List<String> yarnApplicationTypes = new ArrayList<>(predefinedAppTypes);
     String yarnAppTypesUrl =
         handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
     CloseableHttpClient httpClient = handle.getHttpClient();
