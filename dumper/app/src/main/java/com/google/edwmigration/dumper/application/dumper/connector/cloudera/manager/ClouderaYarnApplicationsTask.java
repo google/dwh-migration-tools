@@ -18,12 +18,10 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationListDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationTypeDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -51,11 +49,10 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-  private final ImmutableList<String> predefinedAppTypes = ImmutableList.of("MAPREDUCE", "SPARK");
   private final int includedLastDays;
 
   public ClouderaYarnApplicationsTask(int days) {
-    super(String.format("yarn-applications-%d.jsonl", days));
+    super(String.format("yarn-applications-%dd.jsonl", days));
     this.includedLastDays = days;
   }
 
@@ -70,20 +67,13 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
     List<ApiYARNApplicationDTO> totalYARNApplications = new ArrayList<>();
     YarnApplicationsLoader appLoader =
         new YarnApplicationsLoader(handle.getApiURI().toString(), handle.getHttpClient());
+
     for (ClouderaClusterDTO cluster : handle.getClusters()) {
       String clusterName = cluster.getName();
-      List<String> yarnAppTypes = fetchYARNApplicationTypes(handle, clusterName);
-      for (String yarnAppType : yarnAppTypes) {
-        LOG.info(
-            String.format(
-                "Dump YARN applications with %s type from %s cluster", yarnAppType, clusterName));
-        List<ApiYARNApplicationDTO> yarnApplications = appLoader.load(clusterName, yarnAppType);
-        totalYARNApplications.addAll(yarnApplications);
-        LOG.info(
-            String.format(
-                "Dumped %d YARN applications with %s type from %s cluster",
-                yarnApplications.size(), yarnAppType, clusterName));
-      }
+      LOG.info("Dump YARN applications from {} cluster", clusterName);
+      List<ApiYARNApplicationDTO> yarnApplications = appLoader.load(clusterName);
+      totalYARNApplications.addAll(yarnApplications);
+      LOG.info("Dumped {} YARN applications from {} cluster", yarnApplications.size(), clusterName);
     }
 
     String yarnAppsJson = parseObjectToJsonString(totalYARNApplications);
@@ -98,24 +88,6 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
     return dateTime.format(isoDateTimeFormatter);
   }
 
-  private List<String> fetchYARNApplicationTypes(ClouderaManagerHandle handle, String clusterName) {
-    List<String> yarnApplicationTypes = new ArrayList<>(predefinedAppTypes);
-    String yarnAppTypesUrl =
-        handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
-    CloseableHttpClient httpClient = handle.getHttpClient();
-    JsonNode yarnAppTypesJson;
-    ApiYARNApplicationTypeDTO yarnAppTypesFromClouderaAPI;
-    try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(yarnAppTypesUrl))) {
-      yarnAppTypesJson = readJsonTree(chart.getEntity().getContent());
-      yarnAppTypesFromClouderaAPI =
-          parseJsonStringToObject(yarnAppTypesJson.toString(), ApiYARNApplicationTypeDTO.class);
-      yarnApplicationTypes.addAll(yarnAppTypesFromClouderaAPI.getItems());
-    } catch (IOException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
-    }
-    return yarnApplicationTypes;
-  }
-
   private class YarnApplicationsLoader {
     private final String host;
     private final CloseableHttpClient httpClient;
@@ -125,14 +97,14 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
       this.httpClient = httpClient;
     }
 
-    public List<ApiYARNApplicationDTO> load(String clusterName, String appType) {
+    public List<ApiYARNApplicationDTO> load(String clusterName) {
       List<ApiYARNApplicationDTO> yarnApplications = new LinkedList<>();
       final int limit = 100;
       int offset = 0;
       boolean nextLoad = true;
 
       while (nextLoad) {
-        List<ApiYARNApplicationDTO> newLoad = load(clusterName, appType, limit, offset);
+        List<ApiYARNApplicationDTO> newLoad = load(clusterName, limit, offset);
         yarnApplications.addAll(newLoad);
         nextLoad = (!newLoad.isEmpty());
         offset += limit;
@@ -141,8 +113,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
       return yarnApplications;
     }
 
-    private List<ApiYARNApplicationDTO> load(
-        String clusterName, String appType, int limit, int offset) {
+    private List<ApiYARNApplicationDTO> load(String clusterName, int limit, int offset) {
       String yarnApplicationsUrl =
           host + "clusters/" + clusterName + "/services/yarn/yarnApplications";
       String fromDate = buildISODateTime(includedLastDays);
@@ -152,7 +123,6 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
         uriBuilder.addParameter("limit", String.valueOf(limit));
         uriBuilder.addParameter("offset", String.valueOf(offset));
         uriBuilder.addParameter("from", fromDate);
-        uriBuilder.addParameter("filter", String.format("applicationType=%s", appType));
         yarnApplicationsURI = uriBuilder.build();
       } catch (URISyntaxException ex) {
         throw new RuntimeException(ex.getMessage(), ex);
@@ -165,7 +135,6 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaManagerTask {
                 yarnApplicationsRespJson.toString(), ApiYARNApplicationListDTO.class);
         List<ApiYARNApplicationDTO> yarnApps = yarnAppListDto.getApplications();
         for (ApiYARNApplicationDTO app : yarnApps) {
-          app.setApplicationType(appType);
           app.setClusterName(clusterName);
         }
         return yarnApps;

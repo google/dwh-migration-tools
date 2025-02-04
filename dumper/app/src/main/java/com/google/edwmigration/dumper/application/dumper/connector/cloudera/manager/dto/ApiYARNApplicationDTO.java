@@ -30,9 +30,6 @@ public class ApiYARNApplicationDTO {
   private String applicationId;
 
   @JsonProperty(required = true)
-  private String applicationType;
-
-  @JsonProperty(required = true)
   private String name;
 
   @JsonProperty(required = true)
@@ -68,10 +65,6 @@ public class ApiYARNApplicationDTO {
 
   public String getApplicationId() {
     return applicationId;
-  }
-
-  public String getApplicationType() {
-    return applicationType;
   }
 
   public String getName() {
@@ -120,10 +113,6 @@ public class ApiYARNApplicationDTO {
 
   public void setApplicationId(String applicationId) {
     this.applicationId = applicationId;
-  }
-
-  public void setApplicationType(String applicationType) {
-    this.applicationType = applicationType;
   }
 
   public void setName(String name) {
