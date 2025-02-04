@@ -59,12 +59,12 @@ public class ValidationArguments extends DefaultArguments {
           .required();
 
   private final OptionSpec<String> tableOption =
-          parser
-                  .accepts(OPT_TABLE, "Table to validate.")
-                  .withRequiredArg()
-                  .ofType(String.class)
-                  .describedAs("source=target")
-                  .required();
+      parser
+          .accepts(OPT_TABLE, "Table to validate.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .describedAs("source=target")
+          .required();
 
   private final OptionSpec<String> outputOption =
       parser
@@ -85,14 +85,12 @@ public class ValidationArguments extends DefaultArguments {
           .describedAs("90");
 
   private final OptionSpec<String> columnMappingsOption =
-          parser
-                  .accepts(
-                          OPT_COLUMN_MAPPINGS,
-                          "Column name mappings.")
-                  .withOptionalArg()
-                  .ofType(String.class)
-                  .withValuesSeparatedBy(',')
-                  .describedAs("colA=COLA,colB=newColB");
+      parser
+          .accepts(OPT_COLUMN_MAPPINGS, "Column name mappings.")
+          .withOptionalArg()
+          .ofType(String.class)
+          .withValuesSeparatedBy(',')
+          .describedAs("colA=COLA,colB=newColB");
 
   public static final String DEFAULT_ENV_DIRECTORY = "~/.config/dwh-validation/";
   public static final String ENV_DIRECTORY_VAR = "DV_CONN_HOME";
@@ -139,11 +137,11 @@ public class ValidationArguments extends DefaultArguments {
   }
 
   public ImmutableMap<String, String> getColumnMappings() {
-    List<String> mappings =  getOptions().valuesOf(columnMappingsOption);
-    ImmutableMap.Builder<String,String> builder = ImmutableMap.builder();
-    for (String pair: mappings){
+    List<String> mappings = getOptions().valuesOf(columnMappingsOption);
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    for (String pair : mappings) {
       String[] parts = pair.split("=");
-      if (parts.length == 2){
+      if (parts.length == 2) {
         builder.put(parts[0], parts[1]);
       } else {
         throw new IllegalArgumentException("Invalid column mapping format found: " + pair);
@@ -151,7 +149,6 @@ public class ValidationArguments extends DefaultArguments {
     }
 
     return builder.build();
-
   }
 
   public ValidationArguments(@Nonnull String... args) {

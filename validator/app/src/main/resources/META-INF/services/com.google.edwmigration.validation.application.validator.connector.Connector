@@ -1,0 +1,2 @@
+com.google.edwmigration.validation.application.validator.connector.bigquery.BigQueryValidationConnector
+com.google.edwmigration.validation.application.validator.connector.postgresql.PostgresqlValidationConnector

@@ -14,17 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.validation.application.validator.connector;
+package com.google.edwmigration.validation.application.validator.handle;
 
-import com.google.edwmigration.validation.application.validator.ValidationConnection;
-import com.google.edwmigration.validation.application.validator.handle.Handle;
-import javax.annotation.Nonnull;
+import java.io.IOException;
 
-public interface Connector {
+public abstract class AbstractHandle implements Handle {
 
-  @Nonnull
-  String getName();
-
-  @Nonnull
-  Handle open(@Nonnull ValidationConnection arguments) throws Exception;
+  @Override
+  public void close() throws IOException {}
 }

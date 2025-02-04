@@ -14,17 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.validation.application.validator.connector;
+package com.google.edwmigration.validation.application.validator.connector.bigquery;
 
-import com.google.edwmigration.validation.application.validator.ValidationConnection;
-import com.google.edwmigration.validation.application.validator.handle.Handle;
-import javax.annotation.Nonnull;
-
-public interface Connector {
-
-  @Nonnull
-  String getName();
-
-  @Nonnull
-  Handle open(@Nonnull ValidationConnection arguments) throws Exception;
+public class BigQueryValidationConnector extends BigQueryAbstractConnector {
+  public BigQueryValidationConnector() {
+    super("bigquery");
+  }
 }

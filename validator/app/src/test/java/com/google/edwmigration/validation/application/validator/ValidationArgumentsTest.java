@@ -20,9 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -48,7 +50,7 @@ public class ValidationArgumentsTest {
   public void getSourceConnectionTest() throws Exception {
     File connFile = temporaryFolder.newFile("teradata.json");
     String connFilePath = connFile.getAbsolutePath();
-    Files.writeString(connFile.toPath(), JSON_SAMPLE_CONN);
+    Files.write(connFile.toPath(), JSON_SAMPLE_CONN.getBytes(StandardCharsets.UTF_8));
 
     ValidationArguments arguments =
         new ValidationArguments(
@@ -63,7 +65,7 @@ public class ValidationArgumentsTest {
 
     assertEquals(Paths.get(connFilePath), sourceConnectionPath);
     assertEquals(sourceConn.getDatabase(), "db");
-    assertEquals(sourceConn.getDriver(), "teradata.jar");
+    assertEquals(sourceConn.getDriverPaths(), Arrays.asList("teradata.jar"));
     assertNull(sourceConn.getProjectId());
   }
 }

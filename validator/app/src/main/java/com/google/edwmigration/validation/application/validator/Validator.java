@@ -16,12 +16,9 @@
  */
 package com.google.edwmigration.validation.application.validator;
 
-import com.google.common.io.Closer;
 import com.google.edwmigration.validation.application.validator.connector.Connector;
-import java.io.IOException;
-import javax.annotation.Nonnull;
-
 import com.google.edwmigration.validation.application.validator.handle.Handle;
+import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,32 +42,35 @@ public class Validator {
       return false;
     }
 
-//    Connector sourceConnector = ConnectorRepository.getInstance().getByName(sourceConnectionName);
-//    if (sourceConnector == null) {
-//      LOG.error(
-//          "Source DB '{}' not supported; available are {}.",
-//          sourceConnectionName,
-//          ConnectorRepository.getInstance().getAllNames());
-//      return false;
-//    }
-//
-//    Connector targetConnector = ConnectorRepository.getInstance().getByName(targetConnectionName);
-//    if (targetConnector == null) {
-//      LOG.error(
-//          "Target DB '{}' not supported; available are {}.",
-//          targetConnectionName,
-//          ConnectorRepository.getInstance().getAllNames());
-//      return false;
-//    }
+    Connector sourceConnector = ConnectorRepository.getInstance().getByName(sourceConnectionName);
+    if (sourceConnector == null) {
+      LOG.error(
+          "Source DB '{}' not supported; available are {}.",
+          sourceConnectionName,
+          ConnectorRepository.getInstance().getAllNames());
+      return false;
+    }
+
+    Connector targetConnector = ConnectorRepository.getInstance().getByName(targetConnectionName);
+    if (targetConnector == null) {
+      LOG.error(
+          "Target DB '{}' not supported; available are {}.",
+          targetConnectionName,
+          ConnectorRepository.getInstance().getAllNames());
+      return false;
+    }
 
     return true;
   }
 
   protected boolean run(
-      @Nonnull ValidationArguments arguments,
-      Connector sourceConnector,
-      Connector targetConnector) throws Exception {
-    LOG.info("Using source connector" + sourceConnector + " and target connector " + targetConnector);
+      @Nonnull ValidationArguments arguments, Connector sourceConnector, Connector targetConnector)
+      throws Exception {
+    LOG.info(
+        "Using source connector" + sourceConnector + " and target connector " + targetConnector);
+    Handle sourceHandle = sourceConnector.open(arguments.getSourceConnection());
+    Handle targetHandle = targetConnector.open(arguments.getTargetConnection());
+
     return true;
   }
 }

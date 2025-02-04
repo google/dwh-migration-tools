@@ -16,15 +16,36 @@
  */
 package com.google.edwmigration.validation.application.validator.connector.bigquery;
 
-import com.google.edwmigration.validation.application.validator.ValidationArguments;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.ServiceOptions;
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.common.base.Preconditions;
+import com.google.edwmigration.validation.application.validator.ValidationConnection;
 import com.google.edwmigration.validation.application.validator.connector.AbstractConnector;
+import com.google.edwmigration.validation.application.validator.handle.AbstractHandle;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import javax.annotation.Nonnull;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class BigQueryAbstractConnector extends AbstractConnector {
   private static final Logger LOG = LoggerFactory.getLogger(BigQueryAbstractConnector.class);
+
+  public static class BigQueryHandle extends AbstractHandle {
+
+    private final BigQuery bigQuery;
+
+    public BigQueryHandle(@Nonnull BigQuery bigQuery) {
+      this.bigQuery = Preconditions.checkNotNull(bigQuery, "BigQuery was null.");
+    }
+
+    @Nonnull
+    public BigQuery getBigQuery() {
+      return bigQuery;
+    }
+  }
 
   public BigQueryAbstractConnector(@Nonnull String name) {
     super(name);
@@ -32,7 +53,20 @@ public abstract class BigQueryAbstractConnector extends AbstractConnector {
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ValidationArguments arguments) throws Exception {
-    return null;
+  public Handle open(@Nonnull ValidationConnection arguments) throws Exception {
+    String credentialsFile = System.getenv(ServiceOptions.CREDENTIAL_ENV_NAME);
+    BigQuery bigQuery;
+    if (credentialsFile != null) {
+      bigQuery =
+          BigQueryOptions.newBuilder()
+              .setCredentials(
+                  GoogleCredentials.fromStream(
+                      FileUtils.openInputStream(FileUtils.getFile(credentialsFile))))
+              .build()
+              .getService();
+    } else {
+      bigQuery = BigQueryOptions.getDefaultInstance().getService();
+    }
+    return new BigQueryHandle(bigQuery);
   }
 }

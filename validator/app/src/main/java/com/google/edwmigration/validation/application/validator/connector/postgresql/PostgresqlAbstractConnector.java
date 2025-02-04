@@ -16,12 +16,17 @@
  */
 package com.google.edwmigration.validation.application.validator.connector.postgresql;
 
-import com.google.edwmigration.validation.application.validator.ValidationArguments;
+import com.google.edwmigration.validation.application.validator.ValidationConnection;
 import com.google.edwmigration.validation.application.validator.connector.AbstractJdbcConnector;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
+import com.google.edwmigration.validation.application.validator.handle.JdbcHandle;
+import java.sql.Driver;
 import javax.annotation.Nonnull;
+import javax.sql.DataSource;
 
 public abstract class PostgresqlAbstractConnector extends AbstractJdbcConnector {
+
+  public static final int OPT_PORT_DEFAULT = 5432;
 
   public PostgresqlAbstractConnector(@Nonnull String name) {
     super(name);
@@ -29,7 +34,19 @@ public abstract class PostgresqlAbstractConnector extends AbstractJdbcConnector 
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ValidationArguments arguments) throws Exception {
-    return null;
+  public Handle open(@Nonnull ValidationConnection arguments) throws Exception {
+    String url = arguments.getUri();
+    if (url == null) {
+      String host = arguments.getHost("localhost");
+      int port = arguments.getPort(OPT_PORT_DEFAULT);
+      String database = arguments.getDatabase();
+      url = "jdbc:postgresql://" + host + ":" + port + "/";
+      if (database != null) url = url + database;
+    }
+
+    Driver driver =
+        newDriver(arguments.getDriverPaths(), arguments.getDriverClass("org.postgresql.Driver"));
+    DataSource dataSource = newSimpleDataSource(driver, url, arguments);
+    return new JdbcHandle(dataSource);
   }
 }
