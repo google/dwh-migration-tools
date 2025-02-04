@@ -53,7 +53,10 @@ dependencies {
     implementation libs.apache.avro
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
-    implementation libs.hadoop.common
+    implementation (libs.hadoop.common) {
+        exclude group: "ch.qos.reload4j", module: "reload4j"
+        exclude group: "org.slf4j", module: "slf4j-reload4j"
+    }
     implementation libs.hadoop.hdfs.client
     implementation libs.spring.core
     implementation libs.spring.jdbc
@@ -69,15 +72,15 @@ dependencies {
     implementation libs.aws.java.sdk.redshift
     implementation libs.aws.java.sdk.cloudwatch
 
-    runtimeOnly libs.logback.classic
+    implementation libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j
 
     runtimeOnly libs.postgresql
     runtimeOnly libs.snowflake.jdbc
     runtimeOnly libs.redshift.jdbc
 
-    runtimeOnly "ch.qos.reload4j:reload4j:1.2.26"
-    runtimeOnly "org.slf4j:slf4j-reload4j:1.7.36"
+//    runtimeOnly "ch.qos.reload4j:reload4j:1.2.26"
+//    runtimeOnly "org.slf4j:slf4j-reload4j:1.7.36"
 
     testFixturesApi testFixtures(project(':dumper:lib-common'))
 
