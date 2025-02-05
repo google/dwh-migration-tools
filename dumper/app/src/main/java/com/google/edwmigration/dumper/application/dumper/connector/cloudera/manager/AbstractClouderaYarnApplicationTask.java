@@ -95,6 +95,12 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
 
     private List<ApiYARNApplicationDTO> load(URI yarnAppURI) {
       try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnAppURI))) {
+        final int statusCode = resp.getStatusLine().getStatusCode();
+        if (!isStatusCodeOK(statusCode)) {
+          throw new RuntimeException(
+              String.format(
+                  "Cloudera Error: YARN application API returned HTTP status %d.", statusCode));
+        }
         ApiYARNApplicationListDTO yarnAppListDto =
             parseJsonStreamToObject(resp.getEntity().getContent(), ApiYARNApplicationListDTO.class);
         return yarnAppListDto.getApplications();

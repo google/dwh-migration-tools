@@ -21,7 +21,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +55,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ClouderaYarnApplicationTaskTest {
 
   private final ClouderaYarnApplicationsTask task = new ClouderaYarnApplicationsTask(30);
+
   private ClouderaManagerHandle handle;
   private static WireMockServer server;
   @Mock private TaskRunContext context;
@@ -81,52 +85,70 @@ public class ClouderaYarnApplicationTaskTest {
   }
 
   @Test
-  public void doRun_initiatedClusters_success() throws Exception {
+  public void doRun_twoPaginatedPage_success() throws Exception {
     initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
-
-    stubServiceTypesAPI("test-cluster", "{}");
     Map<String, StringValuePattern> queryParams = new HashMap<>();
-    queryParams.put("filter", matching("applicationType=MAPREDUCE"));
-    stubYARNApplicationsAPI("test-cluster", queryParams, "mapreduce");
-    queryParams.put("filter", matching("applicationType=SPARK"));
-    stubYARNApplicationsAPI("test-cluster", queryParams, "spark");
+    queryParams.put("limit", matching("500"));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI(
+        "test-cluster", queryParams, "{\"applications\": [{\"applicationId\":\"app1\"}]}");
+
+    queryParams.put("offset", matching("500"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\": []}");
 
     task.doRun(context, sink, handle);
 
-    verify(1, getRequestedFor(urlEqualTo("/api/vTest/clusters/test-cluster/serviceTypes")));
-    verify(
+    server.verify(0, getRequestedFor(urlEqualTo("/api/vTest/clusters/test-cluster/serviceTypes")));
+    server.verify(
         2,
         getRequestedFor(
-            urlEqualTo("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications")));
+            urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*")));
   }
 
   @Test
-  public void doRun_noInitiatedClusters_throwsException() throws Exception {}
+  public void doRun_noInitiatedClusters_throwsException() {
+    assertNull(handle.getClusters());
+
+    NullPointerException exception =
+        assertThrows(NullPointerException.class, () -> task.doRun(context, sink, handle));
+
+    assertEquals(
+        "Clusters must be initialized before fetching YARN applications.", exception.getMessage());
+  }
 
   @Test
-  public void doRun_serviceTypesInCluster_requestsPredefinedTypes() throws Exception {}
+  public void doRun_failedYARNApplicationsAPI_throwsException() {
+    initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
+    Map<String, StringValuePattern> queryParams = new HashMap<>();
+    stubYARNApplicationsAPI(
+        "test-cluster", queryParams, "Internal server error", HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
-  @Test
-  public void doRun_failedServiceTypesAPI_throwsException() throws Exception {}
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-  @Test
-  public void doRun_failedYARNApplicationsAPI_throwsException() throws Exception {}
+    assertEquals(
+        "Cloudera Error: YARN application API returned HTTP status 500.", exception.getMessage());
+  }
 
   private void initClusters(ClouderaClusterDTO... clusters) {
     handle.initClusters(Arrays.asList(clusters));
   }
 
-  private void stubServiceTypesAPI(String clusterName, String responseContent) {
-    server.stubFor(
-        get(String.format("/api/vTest/clusters/%s/serviceTypes", clusterName))
-            .willReturn(okJson(responseContent).withStatus(HttpStatus.SC_OK)));
+  private void stubYARNApplicationsAPI(
+      String clusterName, Map<String, StringValuePattern> queryParams, String responseContent) {
+    stubYARNApplicationsAPI(clusterName, queryParams, responseContent, HttpStatus.SC_OK);
   }
 
   private void stubYARNApplicationsAPI(
-      String clusterName, Map<String, StringValuePattern> queryParams, String responseContent) {
+      String clusterName,
+      Map<String, StringValuePattern> queryParams,
+      String responseContent,
+      int statusCode) {
     server.stubFor(
-        get(String.format("/api/vTest/clusters/%s/services/yarn/yarnApplications", clusterName))
+        get(urlPathMatching(
+                String.format(
+                    "/api/vTest/clusters/%s/services/yarn/yarnApplications.*", clusterName)))
             .withQueryParams(queryParams)
-            .willReturn(okJson(responseContent).withStatus(HttpStatus.SC_OK)));
+            .willReturn(okJson(responseContent).withStatus(statusCode)));
   }
 }
