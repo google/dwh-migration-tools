@@ -22,13 +22,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationTypeDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -55,31 +58,19 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
 
     PaginatedClouderaYarnApplicationsLoader appLoader =
         new PaginatedClouderaYarnApplicationsLoader(handle);
+
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
-        String clusterName = cluster.getName();
-        List<String> yarnAppTypes = fetchYARNApplicationTypes(handle, clusterName);
+        final String clusterName = cluster.getName();
+        Set<String> yarnAppTypes = new HashSet<>(fetchYARNApplicationTypes(handle, clusterName));
+        yarnAppTypes.addAll(predefinedAppTypes);
         for (String yarnAppType : yarnAppTypes) {
           LOG.info("Dump YARN applications with {} type from {} cluster", yarnAppType, clusterName);
           int loadedAppsCnt =
               appLoader.load(
                   clusterName,
                   yarnAppType,
-                  yarnAppsPage -> {
-                    List<ApplicationTypeToYarnApplication> yarnTypeMaps = new ArrayList<>();
-                    for (ApiYARNApplicationDTO yarnApp : yarnAppsPage) {
-                      yarnTypeMaps.add(
-                          new ApplicationTypeToYarnApplication(
-                              yarnApp.getApplicationId(), yarnAppType));
-                    }
-                    try {
-                      String yarnTypeMapsInJson = parseObjectToJsonString(yarnTypeMaps);
-                      writer.write(yarnTypeMapsInJson);
-                      writer.write('\n');
-                    } catch (IOException ex) {
-                      throw new RuntimeException("Error: Can't dump YARN application types", ex);
-                    }
-                  });
+                  yarnAppsPage -> writeYarnAppTypes(writer, yarnAppsPage, yarnAppType));
           LOG.info(
               "Dumped {} YARN applications with {} type from {} cluster",
               loadedAppsCnt,
@@ -90,22 +81,33 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     }
   }
 
+  private void writeYarnAppTypes(
+      Writer writer, List<ApiYARNApplicationDTO> yarnApps, String appType) {
+    List<ApplicationTypeToYarnApplication> yarnTypeMaps = new ArrayList<>();
+    for (ApiYARNApplicationDTO yarnApp : yarnApps) {
+      yarnTypeMaps.add(new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), appType));
+    }
+    try {
+      String yarnTypeMapsInJson = parseObjectToJsonString(yarnTypeMaps);
+      writer.write(yarnTypeMapsInJson);
+      writer.write('\n');
+    } catch (IOException ex) {
+      throw new RuntimeException("Error: Can't dump YARN application types", ex);
+    }
+  }
+
   private List<String> fetchYARNApplicationTypes(ClouderaManagerHandle handle, String clusterName) {
-    List<String> yarnApplicationTypes = new ArrayList<>(predefinedAppTypes);
     String yarnAppTypesUrl =
         handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
     CloseableHttpClient httpClient = handle.getHttpClient();
-    JsonNode yarnAppTypesJson;
-    ApiYARNApplicationTypeDTO yarnAppTypesFromClouderaAPI;
     try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(yarnAppTypesUrl))) {
-      yarnAppTypesJson = readJsonTree(chart.getEntity().getContent());
-      yarnAppTypesFromClouderaAPI =
-          parseJsonStringToObject(yarnAppTypesJson.toString(), ApiYARNApplicationTypeDTO.class);
-      yarnApplicationTypes.addAll(yarnAppTypesFromClouderaAPI.getItems());
+      JsonNode json = readJsonTree(chart.getEntity().getContent());
+      return StreamSupport.stream(json.get("items").spliterator(), false)
+          .map(JsonNode::asText)
+          .collect(Collectors.toList());
     } catch (IOException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }
-    return yarnApplicationTypes;
   }
 }
 

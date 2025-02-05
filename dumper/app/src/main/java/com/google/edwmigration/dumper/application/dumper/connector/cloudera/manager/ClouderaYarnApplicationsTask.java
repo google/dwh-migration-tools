@@ -57,20 +57,23 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
         int loadAppsCnt =
             appLoader.load(
                 clusterName,
-                yarnAppsPage -> {
-                  for (ApiYARNApplicationDTO yarnApp : yarnAppsPage) {
-                    yarnApp.setClusterName(clusterName);
-                  }
-                  try {
-                    String yarnAppsJson = parseObjectToJsonString(yarnAppsPage);
-                    writer.write(yarnAppsJson);
-                    writer.write('\n');
-                  } catch (IOException ex) {
-                    throw new RuntimeException("Error: Can't dump YARN applications. ", ex);
-                  }
-                });
+                yarnAppsPage -> writeYarnApplications(writer, yarnAppsPage, clusterName));
         LOG.info("Dumped {} YARN applications from {} cluster", loadAppsCnt, clusterName);
       }
+    }
+  }
+
+  private void writeYarnApplications(
+      Writer writer, List<ApiYARNApplicationDTO> yarnApps, String clusterName) {
+    for (ApiYARNApplicationDTO yarnApp : yarnApps) {
+      yarnApp.setClusterName(clusterName);
+    }
+    try {
+      String yarnAppsJson = parseObjectToJsonString(yarnApps);
+      writer.write(yarnAppsJson);
+      writer.write('\n');
+    } catch (IOException ex) {
+      throw new RuntimeException("Error: Can't dump YARN applications. ", ex);
     }
   }
 }

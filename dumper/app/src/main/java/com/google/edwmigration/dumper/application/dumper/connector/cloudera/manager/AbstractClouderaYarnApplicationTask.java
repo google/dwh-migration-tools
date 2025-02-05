@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationListDTO;
@@ -96,10 +95,8 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
 
     private List<ApiYARNApplicationDTO> load(URI yarnAppURI) {
       try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnAppURI))) {
-        JsonNode yarnApplicationsRespJson = readJsonTree(resp.getEntity().getContent());
         ApiYARNApplicationListDTO yarnAppListDto =
-            parseJsonStringToObject(
-                yarnApplicationsRespJson.toString(), ApiYARNApplicationListDTO.class);
+            parseJsonStreamToObject(resp.getEntity().getContent(), ApiYARNApplicationListDTO.class);
         return yarnAppListDto.getApplications();
       } catch (IOException ex) {
         throw new RuntimeException(ex.getMessage(), ex);
