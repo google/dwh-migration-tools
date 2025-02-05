@@ -1,0 +1,114 @@
+package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Preconditions;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationListDTO;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import javax.annotation.Nullable;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+
+public abstract class AbstractClouderaYarnApplicationTask extends AbstractClouderaManagerTask {
+  private static final DateTimeFormatter isoDateTimeFormatter =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+  private final int includedLastDays;
+
+  public AbstractClouderaYarnApplicationTask(String fileName, int includedLastDays) {
+    super(String.format("%s-%dd.jsonl", fileName, includedLastDays));
+    Preconditions.checkArgument(
+        includedLastDays > 1,
+        String.format("Amount of days must be a positive number. Get %d.", includedLastDays));
+    this.includedLastDays = includedLastDays;
+  }
+
+  private String buildISODateTime(int deltaInDays) {
+    ZonedDateTime dateTime =
+        ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
+    return dateTime.format(isoDateTimeFormatter);
+  }
+
+  class PaginatedClouderaYarnApplicationsLoader {
+    private final String host;
+    private final CloseableHttpClient httpClient;
+    private final int limit;
+    private int offset;
+
+    public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle) {
+      this.host = handle.getApiURI().toString();
+      this.httpClient = handle.getHttpClient();
+      this.limit = 500;
+      this.offset = 0;
+    }
+
+    public int load(String clusterName, Consumer<List<ApiYARNApplicationDTO>> callback) {
+      return load(clusterName, null, callback);
+    }
+
+    public int load(String clusterName, @Nullable String appType, Consumer<List<ApiYARNApplicationDTO>> callback) {
+      int amountOfLoadedApps = 0;
+      offset = 0;
+      boolean nextLoad = true;
+
+      while (nextLoad) {
+        URI yarnAppsURI = buildYARNApplicationURI(clusterName, appType);
+        List<ApiYARNApplicationDTO> newLoad = load(yarnAppsURI);
+        if (!newLoad.isEmpty()) {
+          callback.accept(newLoad);
+        } else {
+          nextLoad = false;
+        }
+        amountOfLoadedApps += newLoad.size();
+        offset += limit;
+      }
+      return amountOfLoadedApps;
+    }
+
+    private List<ApiYARNApplicationDTO> load(URI yarnAppURI) {
+      try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnAppURI))) {
+        JsonNode yarnApplicationsRespJson = readJsonTree(resp.getEntity().getContent());
+        ApiYARNApplicationListDTO yarnAppListDto =
+            parseJsonStringToObject(
+                yarnApplicationsRespJson.toString(), ApiYARNApplicationListDTO.class);
+        return yarnAppListDto.getApplications();
+      } catch (IOException ex) {
+        throw new RuntimeException(ex.getMessage(), ex);
+      }
+    }
+
+    private URI buildYARNApplicationURI(String clusterName, @Nullable String appType) {
+      String yarnApplicationsUrl =
+          host + "clusters/" + clusterName + "/services/yarn/yarnApplications";
+      String fromDate = buildISODateTime(includedLastDays);
+      URI yarnApplicationsURI;
+      try {
+        URIBuilder uriBuilder = new URIBuilder(yarnApplicationsUrl);
+        uriBuilder.addParameter("limit", String.valueOf(limit));
+        uriBuilder.addParameter("offset", String.valueOf(offset));
+        uriBuilder.addParameter("from", fromDate);
+        if (appType != null) {
+          uriBuilder.addParameter("filter", String.format("applicationType=%s", appType));
+        }
+        yarnApplicationsURI = uriBuilder.build();
+      } catch (URISyntaxException ex) {
+        throw new RuntimeException(ex.getMessage(), ex);
+      }
+      return yarnApplicationsURI;
+    }
+  }
+
+}
