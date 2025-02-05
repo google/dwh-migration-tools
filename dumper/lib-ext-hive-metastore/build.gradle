@@ -40,7 +40,6 @@ dependencies {
 
     implementation libs.guava
     implementation libs.jackson.databind
-//    implementation libs.logback.classic
 
     compileOnly libs.javax.annotation.api
 
@@ -66,12 +65,6 @@ dependencies {
             strictly '2.18.0'
         }
     }
-
-//    constraints {
-//        hive312RuntimeClasspath(libs.logback.classic) {
-//            force = true
-//        }
-//    }
 }
 
 dependencyLocking {

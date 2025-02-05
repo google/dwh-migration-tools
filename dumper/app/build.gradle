@@ -79,9 +79,6 @@ dependencies {
     runtimeOnly libs.snowflake.jdbc
     runtimeOnly libs.redshift.jdbc
 
-//    runtimeOnly "ch.qos.reload4j:reload4j:1.2.26"
-//    runtimeOnly "org.slf4j:slf4j-reload4j:1.7.36"
-
     testFixturesApi testFixtures(project(':dumper:lib-common'))
 
     testImplementation libs.sqlite.jdbc
