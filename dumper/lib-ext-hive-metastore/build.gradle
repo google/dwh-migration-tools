@@ -27,6 +27,7 @@ configurations {
         //We use logback, so log4j implementation must be excluded
         exclude group: 'log4j', module: 'log4j'
         exclude group: 'org.eclipse.jetty'
+        exclude group: 'co.cask.tephra' //We don't use Hbase
     }
 }
 
@@ -36,8 +37,10 @@ sourceSets {
 
 dependencies {
     api libs.libthrift
+
     implementation libs.guava
     implementation libs.jackson.databind
+
     compileOnly libs.javax.annotation.api
 
     hive312RuntimeOnly libs.apache.avro
