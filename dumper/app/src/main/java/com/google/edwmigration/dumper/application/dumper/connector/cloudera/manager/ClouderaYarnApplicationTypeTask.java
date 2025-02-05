@@ -61,23 +61,30 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
         List<String> yarnAppTypes = fetchYARNApplicationTypes(handle, clusterName);
         for (String yarnAppType : yarnAppTypes) {
           LOG.info("Dump YARN applications with {} type from {} cluster", yarnAppType, clusterName);
-          int loadedAppsCnt = appLoader.load(clusterName, yarnAppType, yarnAppsPage -> {
-            List<ApplicationTypeToYarnApplication> yarnTypeMaps = new ArrayList<>();
-            for (ApiYARNApplicationDTO yarnApp : yarnAppsPage) {
-              yarnTypeMaps.add(
-                  new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), yarnAppType));
-            }
-            try {
-              String yarnTypeMapsInJson = parseObjectToJsonString(yarnTypeMaps);
-              writer.write(yarnTypeMapsInJson);
-              writer.write('\n');
-            } catch (IOException ex) {
-              throw new RuntimeException("Error: Can't dump YARN application types", ex);
-            }
-          });
+          int loadedAppsCnt =
+              appLoader.load(
+                  clusterName,
+                  yarnAppType,
+                  yarnAppsPage -> {
+                    List<ApplicationTypeToYarnApplication> yarnTypeMaps = new ArrayList<>();
+                    for (ApiYARNApplicationDTO yarnApp : yarnAppsPage) {
+                      yarnTypeMaps.add(
+                          new ApplicationTypeToYarnApplication(
+                              yarnApp.getApplicationId(), yarnAppType));
+                    }
+                    try {
+                      String yarnTypeMapsInJson = parseObjectToJsonString(yarnTypeMaps);
+                      writer.write(yarnTypeMapsInJson);
+                      writer.write('\n');
+                    } catch (IOException ex) {
+                      throw new RuntimeException("Error: Can't dump YARN application types", ex);
+                    }
+                  });
           LOG.info(
               "Dumped {} YARN applications with {} type from {} cluster",
-              loadedAppsCnt, yarnAppType, clusterName);
+              loadedAppsCnt,
+              yarnAppType,
+              clusterName);
         }
       }
     }

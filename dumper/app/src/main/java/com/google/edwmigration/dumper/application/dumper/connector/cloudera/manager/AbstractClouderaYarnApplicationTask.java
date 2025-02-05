@@ -1,8 +1,23 @@
+/*
+ * Copyright 2022-2024 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationListDTO;
 import java.io.IOException;
@@ -12,9 +27,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -26,14 +39,14 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-  private final int includedLastDays;
+  private final String fromDate;
 
   public AbstractClouderaYarnApplicationTask(String fileName, int includedLastDays) {
     super(String.format("%s-%dd.jsonl", fileName, includedLastDays));
     Preconditions.checkArgument(
         includedLastDays > 1,
         String.format("Amount of days must be a positive number. Get %d.", includedLastDays));
-    this.includedLastDays = includedLastDays;
+    this.fromDate = buildISODateTime(includedLastDays);
   }
 
   private String buildISODateTime(int deltaInDays) {
@@ -59,7 +72,10 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
       return load(clusterName, null, callback);
     }
 
-    public int load(String clusterName, @Nullable String appType, Consumer<List<ApiYARNApplicationDTO>> callback) {
+    public int load(
+        String clusterName,
+        @Nullable String appType,
+        Consumer<List<ApiYARNApplicationDTO>> callback) {
       int amountOfLoadedApps = 0;
       offset = 0;
       boolean nextLoad = true;
@@ -93,7 +109,6 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     private URI buildYARNApplicationURI(String clusterName, @Nullable String appType) {
       String yarnApplicationsUrl =
           host + "clusters/" + clusterName + "/services/yarn/yarnApplications";
-      String fromDate = buildISODateTime(includedLastDays);
       URI yarnApplicationsURI;
       try {
         URIBuilder uriBuilder = new URIBuilder(yarnApplicationsUrl);
@@ -110,5 +125,4 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
       return yarnApplicationsURI;
     }
   }
-
 }

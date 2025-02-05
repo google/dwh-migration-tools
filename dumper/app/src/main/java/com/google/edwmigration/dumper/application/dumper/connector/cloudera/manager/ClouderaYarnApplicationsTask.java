@@ -36,8 +36,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
   public ClouderaYarnApplicationsTask(int days) {
     super("yarn-applications", days);
     Preconditions.checkArgument(
-        days > 1,
-        String.format("Amount of days must be a positive number. Get %d.", days));
+        days > 1, String.format("Amount of days must be a positive number. Get %d.", days));
   }
 
   @Override
@@ -55,18 +54,21 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
       for (ClouderaClusterDTO cluster : clusters) {
         String clusterName = cluster.getName();
         LOG.info("Dump YARN applications from {} cluster", clusterName);
-        int loadAppsCnt = appLoader.load(clusterName, yarnAppsPage -> {
-          for (ApiYARNApplicationDTO yarnApp : yarnAppsPage) {
-            yarnApp.setClusterName(clusterName);
-          }
-          try {
-            String yarnAppsJson = parseObjectToJsonString(yarnAppsPage);
-            writer.write(yarnAppsJson);
-            writer.write('\n');
-          } catch (IOException ex) {
-            throw new RuntimeException("Error: Can't dump YARN applications. ", ex);
-          }
-        });
+        int loadAppsCnt =
+            appLoader.load(
+                clusterName,
+                yarnAppsPage -> {
+                  for (ApiYARNApplicationDTO yarnApp : yarnAppsPage) {
+                    yarnApp.setClusterName(clusterName);
+                  }
+                  try {
+                    String yarnAppsJson = parseObjectToJsonString(yarnAppsPage);
+                    writer.write(yarnAppsJson);
+                    writer.write('\n');
+                  } catch (IOException ex) {
+                    throw new RuntimeException("Error: Can't dump YARN applications. ", ex);
+                  }
+                });
         LOG.info("Dumped {} YARN applications from {} cluster", loadAppsCnt, clusterName);
       }
     }
