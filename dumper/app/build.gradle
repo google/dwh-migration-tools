@@ -54,6 +54,7 @@ dependencies {
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
     implementation (libs.hadoop.common) {
+        // *-over-slf4j bridges used
         exclude group: "ch.qos.reload4j", module: "reload4j"
         exclude group: "org.slf4j", module: "slf4j-reload4j"
     }
@@ -72,7 +73,7 @@ dependencies {
     implementation libs.aws.java.sdk.redshift
     implementation libs.aws.java.sdk.cloudwatch
 
-    implementation libs.logback.classic
+    runtimeOnly libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j
 
     runtimeOnly libs.postgresql
