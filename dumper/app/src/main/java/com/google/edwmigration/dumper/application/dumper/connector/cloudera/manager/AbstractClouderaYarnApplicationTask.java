@@ -77,22 +77,19 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
         String clusterName,
         @Nullable String appType,
         Consumer<List<ApiYARNApplicationDTO>> onPageLoad) {
-      int amountOfLoadedApps = 0;
       offset = 0;
-      boolean shouldLoadNext = true;
-
-      while (shouldLoadNext) {
+      boolean fetchedNewApps;
+      do {
+        fetchedNewApps = false;
         URI yarnAppsURI = buildNextYARNApplicationPageURI(clusterName, appType);
         List<ApiYARNApplicationDTO> newLoad = load(yarnAppsURI);
         if (!newLoad.isEmpty()) {
           onPageLoad.accept(newLoad);
-          offset += limit;
-        } else {
-          shouldLoadNext = false;
+          offset += newLoad.size();
+          fetchedNewApps = true;
         }
-        amountOfLoadedApps += newLoad.size();
-      }
-      return amountOfLoadedApps;
+      } while(fetchedNewApps);
+      return offset;
     }
 
     private List<ApiYARNApplicationDTO> load(URI yarnAppURI) {
