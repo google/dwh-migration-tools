@@ -53,14 +53,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaYarnApplicationTaskTest {
+  private static WireMockServer server;
 
   private final ClouderaYarnApplicationsTask task = new ClouderaYarnApplicationsTask(30);
-
   private ClouderaManagerHandle handle;
-  private static WireMockServer server;
+
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
-
   @Mock private Writer writer;
   @Mock private CharSink charSink;
 

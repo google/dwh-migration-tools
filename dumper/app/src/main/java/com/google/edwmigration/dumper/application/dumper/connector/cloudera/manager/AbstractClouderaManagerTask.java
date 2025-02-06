@@ -69,7 +69,7 @@ abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
     return objectMapper.readValue(src, type);
   }
 
-  protected String parseObjectToJsonString(Object obj) throws JsonProcessingException {
+  protected String serializeObjectToJsonString(Object obj) throws JsonProcessingException {
     return objectMapper.writeValueAsString(obj);
   }
 }

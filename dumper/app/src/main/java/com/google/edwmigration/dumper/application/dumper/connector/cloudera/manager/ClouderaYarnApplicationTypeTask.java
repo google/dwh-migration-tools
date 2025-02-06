@@ -88,7 +88,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
       yarnTypeMaps.add(new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), appType));
     }
     try {
-      String yarnTypeMapsInJson = parseObjectToJsonString(yarnTypeMaps);
+      String yarnTypeMapsInJson = serializeObjectToJsonString(yarnTypeMaps);
       writer.write(yarnTypeMapsInJson);
       writer.write('\n');
     } catch (IOException ex) {

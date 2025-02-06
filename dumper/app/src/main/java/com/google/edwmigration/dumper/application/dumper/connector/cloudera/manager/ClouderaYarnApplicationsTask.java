@@ -35,8 +35,6 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
 
   public ClouderaYarnApplicationsTask(int days) {
     super("yarn-applications", days);
-    Preconditions.checkArgument(
-        days > 1, String.format("Amount of days must be a positive number. Get %d.", days));
   }
 
   @Override
@@ -69,7 +67,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
       yarnApp.setClusterName(clusterName);
     }
     try {
-      String yarnAppsJson = parseObjectToJsonString(yarnApps);
+      String yarnAppsJson = serializeObjectToJsonString(yarnApps);
       writer.write(yarnAppsJson);
       writer.write('\n');
     } catch (IOException ex) {

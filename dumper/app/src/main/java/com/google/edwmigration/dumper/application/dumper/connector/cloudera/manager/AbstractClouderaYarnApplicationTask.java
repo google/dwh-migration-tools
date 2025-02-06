@@ -67,23 +67,23 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
       this.offset = 0;
     }
 
-    public int load(String clusterName, Consumer<List<ApiYARNApplicationDTO>> callback) {
-      return load(clusterName, null, callback);
+    public int load(String clusterName, Consumer<List<ApiYARNApplicationDTO>> onPageLoad) {
+      return load(clusterName, null, onPageLoad);
     }
 
     public int load(
         String clusterName,
         @Nullable String appType,
-        Consumer<List<ApiYARNApplicationDTO>> callback) {
+        Consumer<List<ApiYARNApplicationDTO>> onPageLoad) {
       int amountOfLoadedApps = 0;
       offset = 0;
       boolean nextLoad = true;
 
       while (nextLoad) {
-        URI yarnAppsURI = buildYARNApplicationURI(clusterName, appType);
+        URI yarnAppsURI = buildNextYARNApplicationPageURI(clusterName, appType);
         List<ApiYARNApplicationDTO> newLoad = load(yarnAppsURI);
         if (!newLoad.isEmpty()) {
-          callback.accept(newLoad);
+          onPageLoad.accept(newLoad);
         } else {
           nextLoad = false;
         }
@@ -109,7 +109,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
       }
     }
 
-    private URI buildYARNApplicationURI(String clusterName, @Nullable String appType) {
+    private URI buildNextYARNApplicationPageURI(String clusterName, @Nullable String appType) {
       String yarnApplicationsUrl =
           host + "clusters/" + clusterName + "/services/yarn/yarnApplications";
       URI yarnApplicationsURI;

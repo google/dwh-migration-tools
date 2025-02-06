@@ -79,7 +79,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
     }
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      writer.write(parseObjectToJsonString(clusterList));
+      writer.write(serializeObjectToJsonString(clusterList));
     }
 
     List<ClouderaClusterDTO> clusters = new ArrayList<>();
