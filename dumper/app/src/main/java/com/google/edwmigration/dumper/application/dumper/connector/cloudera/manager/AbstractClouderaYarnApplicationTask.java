@@ -43,14 +43,13 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
         lastDaysToInclude >= 1,
         String.format("Amount of days must be a positive number. Got %d.", lastDaysToInclude));
 
-    fromDate =
-        ZonedDateTime.of(LocalDateTime.now().minusDays(lastDaysToInclude), ZoneId.of("UTC"));
+    fromDate = ZonedDateTime.of(LocalDateTime.now().minusDays(lastDaysToInclude), ZoneId.of("UTC"));
   }
 
   class PaginatedClouderaYarnApplicationsLoader {
     private static final String ISO_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
-    private final String host;
+    private final URI host;
     private final CloseableHttpClient httpClient;
     private final int limit;
     private int offset;
@@ -61,7 +60,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     }
 
     public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle, int limit) {
-      this.host = handle.getApiURI().toString();
+      this.host = handle.getApiURI();
       this.httpClient = handle.getHttpClient();
       this.limit = limit;
 
@@ -88,7 +87,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
           offset += newLoad.size();
           fetchedNewApps = true;
         }
-      } while(fetchedNewApps);
+      } while (fetchedNewApps);
       return offset;
     }
 
@@ -109,22 +108,20 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     }
 
     private URI buildNextYARNApplicationPageURI(String clusterName, @Nullable String appType) {
-      String yarnApplicationsUrl =
-          host + "clusters/" + clusterName + "/services/yarn/yarnApplications";
-      URI yarnApplicationsURI;
       try {
-        URIBuilder uriBuilder = new URIBuilder(yarnApplicationsUrl);
-        uriBuilder.addParameter("limit", String.valueOf(limit));
-        uriBuilder.addParameter("offset", String.valueOf(offset));
-        uriBuilder.addParameter("from", fromAppCreationDate);
+        URIBuilder uriBuilder =
+            new URIBuilder()
+                .setPathSegments("clusters", clusterName, "services", "yarn", "yarnApplications")
+                .addParameter("limit", String.valueOf(limit))
+                .addParameter("offset", String.valueOf(offset))
+                .addParameter("from", fromAppCreationDate);
         if (appType != null) {
           uriBuilder.addParameter("filter", String.format("applicationType=%s", appType));
         }
-        yarnApplicationsURI = uriBuilder.build();
+        return new URI(host + uriBuilder.build().toString());
       } catch (URISyntaxException ex) {
         throw new RuntimeException(ex.getMessage(), ex);
       }
-      return yarnApplicationsURI;
     }
   }
 }

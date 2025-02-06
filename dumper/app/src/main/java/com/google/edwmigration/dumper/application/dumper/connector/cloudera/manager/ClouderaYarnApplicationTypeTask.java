@@ -83,13 +83,14 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
 
   private void writeYarnAppTypes(
       Writer writer, List<ApiYARNApplicationDTO> yarnApps, String appType) {
-    List<ApplicationTypeToYarnApplication> yarnTypeMaps = new ArrayList<>();
+    List<ApplicationTypeToYarnApplication> yarnAppTypeMappings = new ArrayList<>();
     for (ApiYARNApplicationDTO yarnApp : yarnApps) {
-      yarnTypeMaps.add(new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), appType));
+      yarnAppTypeMappings.add(
+          new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), appType));
     }
     try {
-      String yarnTypeMapsInJson = serializeObjectToJsonString(yarnTypeMaps);
-      writer.write(yarnTypeMapsInJson);
+      String yarnAppTypeMappingsInJson = serializeObjectToJsonString(yarnAppTypeMappings);
+      writer.write(yarnAppTypeMappingsInJson);
       writer.write('\n');
     } catch (IOException ex) {
       throw new RuntimeException("Error: Can't dump YARN application types", ex);
@@ -109,22 +110,22 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
       throw new RuntimeException(ex.getMessage(), ex);
     }
   }
-}
 
-class ApplicationTypeToYarnApplication {
-  private final String applicationId;
-  private final String applicationType;
+  private static class ApplicationTypeToYarnApplication {
+    private final String applicationId;
+    private final String applicationType;
 
-  public ApplicationTypeToYarnApplication(String applicationId, String applicationType) {
-    this.applicationId = applicationId;
-    this.applicationType = applicationType;
-  }
+    public ApplicationTypeToYarnApplication(String applicationId, String applicationType) {
+      this.applicationId = applicationId;
+      this.applicationType = applicationType;
+    }
 
-  public String getApplicationId() {
-    return applicationId;
-  }
+    public String getApplicationId() {
+      return applicationId;
+    }
 
-  public String getApplicationType() {
-    return applicationType;
+    public String getApplicationType() {
+      return applicationType;
+    }
   }
 }
