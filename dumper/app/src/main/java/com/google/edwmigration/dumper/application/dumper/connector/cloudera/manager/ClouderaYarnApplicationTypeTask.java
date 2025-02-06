@@ -66,14 +66,14 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
         yarnAppTypes.addAll(predefinedAppTypes);
         for (String yarnAppType : yarnAppTypes) {
           LOG.info("Dump YARN applications with {} type from {} cluster", yarnAppType, clusterName);
-          int loadedAppsCnt =
+          int loadedAppsCount =
               appLoader.load(
                   clusterName,
                   yarnAppType,
                   yarnAppsPage -> writeYarnAppTypes(writer, yarnAppsPage, yarnAppType));
           LOG.info(
               "Dumped {} YARN applications with {} type from {} cluster",
-              loadedAppsCnt,
+              loadedAppsCount,
               yarnAppType,
               clusterName);
         }

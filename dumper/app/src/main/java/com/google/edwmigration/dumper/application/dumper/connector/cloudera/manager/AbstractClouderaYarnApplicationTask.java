@@ -79,25 +79,25 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
         Consumer<List<ApiYARNApplicationDTO>> onPageLoad) {
       int amountOfLoadedApps = 0;
       offset = 0;
-      boolean nextLoad = true;
+      boolean shouldLoadNext = true;
 
-      while (nextLoad) {
+      while (shouldLoadNext) {
         URI yarnAppsURI = buildNextYARNApplicationPageURI(clusterName, appType);
         List<ApiYARNApplicationDTO> newLoad = load(yarnAppsURI);
         if (!newLoad.isEmpty()) {
           onPageLoad.accept(newLoad);
+          offset += limit;
         } else {
-          nextLoad = false;
+          shouldLoadNext = false;
         }
         amountOfLoadedApps += newLoad.size();
-        offset += limit;
       }
       return amountOfLoadedApps;
     }
 
     private List<ApiYARNApplicationDTO> load(URI yarnAppURI) {
       try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnAppURI))) {
-        final int statusCode = resp.getStatusLine().getStatusCode();
+        int statusCode = resp.getStatusLine().getStatusCode();
         if (!isStatusCodeOK(statusCode)) {
           throw new RuntimeException(
               String.format(
