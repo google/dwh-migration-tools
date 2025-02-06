@@ -35,36 +35,38 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 public abstract class AbstractClouderaYarnApplicationTask extends AbstractClouderaManagerTask {
-  private static final DateTimeFormatter isoDateTimeFormatter =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+  private final ZonedDateTime fromDate;
 
-  private final String fromDate;
-
-  public AbstractClouderaYarnApplicationTask(String fileName, int includedLastDays) {
-    super(String.format("%s-%dd.jsonl", fileName, includedLastDays));
+  public AbstractClouderaYarnApplicationTask(String fileName, int lastDaysToInclude) {
+    super(String.format("%s-%dd.jsonl", fileName, lastDaysToInclude));
     Preconditions.checkArgument(
-        includedLastDays > 1,
-        String.format("Amount of days must be a positive number. Get %d.", includedLastDays));
-    this.fromDate = buildISODateTime(includedLastDays);
-  }
+        lastDaysToInclude >= 1,
+        String.format("Amount of days must be a positive number. Got %d.", lastDaysToInclude));
 
-  private String buildISODateTime(int deltaInDays) {
-    ZonedDateTime dateTime =
-        ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
-    return dateTime.format(isoDateTimeFormatter);
+    fromDate =
+        ZonedDateTime.of(LocalDateTime.now().minusDays(lastDaysToInclude), ZoneId.of("UTC"));
   }
 
   class PaginatedClouderaYarnApplicationsLoader {
+    private static final String ISO_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+
     private final String host;
     private final CloseableHttpClient httpClient;
     private final int limit;
     private int offset;
+    private final String fromAppCreationDate;
 
     public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle) {
+      this(handle, 1000);
+    }
+
+    public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle, int limit) {
       this.host = handle.getApiURI().toString();
       this.httpClient = handle.getHttpClient();
-      this.limit = 500;
-      this.offset = 0;
+      this.limit = limit;
+
+      final DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern(ISO_DATETIME_FORMAT);
+      fromAppCreationDate = fromDate.format(dtFormatter);
     }
 
     public int load(String clusterName, Consumer<List<ApiYARNApplicationDTO>> onPageLoad) {
@@ -117,7 +119,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
         URIBuilder uriBuilder = new URIBuilder(yarnApplicationsUrl);
         uriBuilder.addParameter("limit", String.valueOf(limit));
         uriBuilder.addParameter("offset", String.valueOf(offset));
-        uriBuilder.addParameter("from", fromDate);
+        uriBuilder.addParameter("from", fromAppCreationDate);
         if (appType != null) {
           uriBuilder.addParameter("filter", String.format("applicationType=%s", appType));
         }

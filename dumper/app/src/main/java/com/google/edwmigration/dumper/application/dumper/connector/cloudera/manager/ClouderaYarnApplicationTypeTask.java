@@ -100,9 +100,9 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     String yarnAppTypesUrl =
         handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
     CloseableHttpClient httpClient = handle.getHttpClient();
-    try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(yarnAppTypesUrl))) {
-      JsonNode json = readJsonTree(chart.getEntity().getContent());
-      return StreamSupport.stream(json.get("items").spliterator(), false)
+    try (CloseableHttpResponse appTypesResp = httpClient.execute(new HttpGet(yarnAppTypesUrl))) {
+      JsonNode appTypesJson = readJsonTree(appTypesResp.getEntity().getContent());
+      return StreamSupport.stream(appTypesJson.get("items").spliterator(), false)
           .map(JsonNode::asText)
           .collect(Collectors.toList());
     } catch (IOException ex) {
