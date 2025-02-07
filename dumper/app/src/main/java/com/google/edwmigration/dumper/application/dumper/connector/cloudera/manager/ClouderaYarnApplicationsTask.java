@@ -46,7 +46,8 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
         clusters, "Clusters must be initialized before fetching YARN applications.");
 
     PaginatedClouderaYarnApplicationsLoader appLoader =
-        new PaginatedClouderaYarnApplicationsLoader(handle);
+        new PaginatedClouderaYarnApplicationsLoader(
+            handle, context.getArguments().getPaginationPageSize());
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {

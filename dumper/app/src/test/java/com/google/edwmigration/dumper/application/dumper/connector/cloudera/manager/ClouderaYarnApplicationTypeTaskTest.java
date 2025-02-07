@@ -31,12 +31,14 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +64,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
   @Mock private Writer writer;
   @Mock private CharSink charSink;
   @Mock private TaskRunContext context;
+  @Mock private ConnectorArguments cliArgs;
 
   @BeforeClass
   public static void beforeClass() {
@@ -81,6 +84,10 @@ public class ClouderaYarnApplicationTypeTaskTest {
     handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);
+
+    when(context.getArguments()).thenReturn(cliArgs);
+    when(cliArgs.getPaginationPageSize()).thenReturn(1000);
+    when(cliArgs.getYarnApplicationTypes()).thenReturn(new ArrayList<>());
   }
 
   @Test
@@ -164,8 +171,36 @@ public class ClouderaYarnApplicationTypeTaskTest {
   }
 
   @Test
-  public void doRun_applicationTypesFromCLI_writesMappingsInJsonLines() {
-    assertEquals("", "");
+  public void doRun_applicationTypesFromCLI_writesMappingsInJsonLines() throws Exception {
+    initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
+    when(cliArgs.getYarnApplicationTypes()).thenReturn(Arrays.asList("CUSTOM-YARN-APP-TYPE"));
+    stubYARNApplicationTypesAPI("test-cluster", "{\"items\":[]}");
+
+    Map<String, StringValuePattern> queryParams = new HashMap<>();
+    queryParams.put("filter", matching("applicationType=SPARK"));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
+
+    queryParams.put("filter", matching("applicationType=MAPREDUCE"));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
+
+    queryParams.put("filter", matching("applicationType=CUSTOM-YARN-APP-TYPE"));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI(
+        "test-cluster", queryParams, "{\"applications\":[{\"applicationId\":\"custom-app\"}]}");
+    queryParams.put("offset", matching("1"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
+
+    task.doRun(context, sink, handle);
+
+    server.verify(
+        4,
+        getRequestedFor(
+            urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*")));
+    List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 1);
+    Assert.assertEquals(1, fileJsonLines.size());
+    Assert.assertTrue(fileJsonLines.get(0).contains("CUSTOM-YARN-APP-TYPE"));
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {

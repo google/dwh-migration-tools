@@ -64,13 +64,15 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     }
 
     PaginatedClouderaYarnApplicationsLoader appLoader =
-        new PaginatedClouderaYarnApplicationsLoader(handle);
+        new PaginatedClouderaYarnApplicationsLoader(
+            handle, context.getArguments().getPaginationPageSize());
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         final String clusterName = cluster.getName();
         Set<String> yarnAppTypes = new HashSet<>(fetchYARNApplicationTypes(handle, clusterName));
         yarnAppTypes.addAll(predefinedAppTypes);
+        yarnAppTypes.addAll(context.getArguments().getYarnApplicationTypes());
         for (String yarnAppType : yarnAppTypes) {
           LOG.info("Dump YARN applications with {} type from {} cluster", yarnAppType, clusterName);
           int loadedAppsCount =

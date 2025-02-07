@@ -114,6 +114,10 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
   public static final String OPT_QUERY_LOG_ALTERNATES = "query-log-alternates";
 
+  // Cloudera
+  public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
+  public static final String OPT_PAGINATION_PAGE_SIZE = "pagination-page-size";
+
   // redshift.
   public static final String OPT_IAM_ACCESSKEYID = "iam-accesskeyid";
   public static final String OPT_IAM_SECRETACCESSKEY = "iam-secretaccesskey";
@@ -502,6 +506,20 @@ public class ConnectorArguments extends DefaultArguments {
               optionKerberosPrincipal,
               optionHadoopRpcProtection,
               optionHdfsPrincipalPrefix);
+
+  // Cloudera connector
+  private final OptionSpec<String> optionYarnApplicationTypes =
+      parser
+          .accepts(OPT_YARN_APPLICATION_TYPES, "")
+          .withOptionalArg()
+          .ofType(String.class)
+          .defaultsTo("");
+  private final OptionSpec<Integer> optionPaginationPageSize =
+      parser
+          .accepts(OPT_PAGINATION_PAGE_SIZE, "")
+          .withOptionalArg()
+          .ofType(Integer.class)
+          .defaultsTo(1000);
 
   // generic connector
   private final OptionSpec<String> optionGenericQuery =
@@ -1054,6 +1072,15 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
     return getConnectorProperties().get(property);
+  }
+
+  public int getPaginationPageSize() {
+    return getOptions().valueOf(optionPaginationPageSize);
+  }
+
+  public List<String> getYarnApplicationTypes() {
+    String yarnAppTypesLine = getOptions().valueOf(optionYarnApplicationTypes);
+    return ImmutableList.copyOf(yarnAppTypesLine.split(","));
   }
 
   /** Checks if the property was specified on the command-line. */

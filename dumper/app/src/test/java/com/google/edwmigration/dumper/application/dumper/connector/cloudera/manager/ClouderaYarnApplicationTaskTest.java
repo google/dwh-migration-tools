@@ -32,6 +32,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
@@ -63,6 +64,7 @@ public class ClouderaYarnApplicationTaskTest {
   @Mock private ByteSink sink;
   @Mock private Writer writer;
   @Mock private CharSink charSink;
+  @Mock private ConnectorArguments cliArgs;
 
   @BeforeClass
   public static void beforeClass() {
@@ -82,6 +84,9 @@ public class ClouderaYarnApplicationTaskTest {
     handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);
+
+    when(context.getArguments()).thenReturn(cliArgs);
+    when(cliArgs.getPaginationPageSize()).thenReturn(1000);
   }
 
   @Test
