@@ -137,8 +137,7 @@ public class ClouderaYarnApplicationTaskTest {
     RuntimeException exception =
         assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    assertEquals(
-        "Cloudera Error: YARN application API returned HTTP status 500.", exception.getMessage());
+    assertTrue(exception.getMessage().contains("YARN application API returned HTTP status 500."));
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {

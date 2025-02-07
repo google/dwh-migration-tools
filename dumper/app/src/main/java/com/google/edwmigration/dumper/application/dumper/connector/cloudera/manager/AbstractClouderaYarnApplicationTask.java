@@ -95,15 +95,16 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
       try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnAppURI))) {
         int statusCode = resp.getStatusLine().getStatusCode();
         if (!isStatusCodeOK(statusCode)) {
-          throw new RuntimeException(
+          throw new ClouderaConnectorException(
               String.format(
-                  "Cloudera Error: YARN application API returned HTTP status %d.", statusCode));
+                  "YARN application API returned HTTP status %d. Message: %s",
+                  statusCode, resp.getEntity().getContent().toString()));
         }
         ApiYARNApplicationListDTO yarnAppListDto =
             parseJsonStreamToObject(resp.getEntity().getContent(), ApiYARNApplicationListDTO.class);
         return yarnAppListDto.getApplications();
       } catch (IOException ex) {
-        throw new RuntimeException(ex.getMessage(), ex);
+        throw new ClouderaConnectorException(ex.getMessage(), ex);
       }
     }
 
@@ -120,7 +121,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
         }
         return new URI(host + uriBuilder.build().toString());
       } catch (URISyntaxException ex) {
-        throw new RuntimeException(ex.getMessage(), ex);
+        throw new ClouderaConnectorException("Can't build Cloudera endpoint.", ex);
       }
     }
   }

@@ -72,7 +72,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
       writer.write(yarnAppsJson);
       writer.write('\n');
     } catch (IOException ex) {
-      throw new RuntimeException("Error: Can't dump YARN applications. ", ex);
+      throw new ClouderaConnectorException("Can't dump YARN applications.", ex);
     }
   }
 }
