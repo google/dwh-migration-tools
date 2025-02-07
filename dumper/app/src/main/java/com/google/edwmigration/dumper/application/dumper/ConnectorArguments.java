@@ -510,13 +510,16 @@ public class ConnectorArguments extends DefaultArguments {
   // Cloudera connector
   private final OptionSpec<String> optionYarnApplicationTypes =
       parser
-          .accepts(OPT_YARN_APPLICATION_TYPES, "")
+          .accepts(
+              OPT_YARN_APPLICATION_TYPES,
+              "Dump Hadoop jobs by specific YARN application types. "
+                  + "Has to be comma separated. For example: SPARK,MAPREDUCE,TEZ")
           .withOptionalArg()
           .ofType(String.class)
           .defaultsTo("");
   private final OptionSpec<Integer> optionPaginationPageSize =
       parser
-          .accepts(OPT_PAGINATION_PAGE_SIZE, "")
+          .accepts(OPT_PAGINATION_PAGE_SIZE, "Set page size for API requests.")
           .withOptionalArg()
           .ofType(Integer.class)
           .defaultsTo(1000);
