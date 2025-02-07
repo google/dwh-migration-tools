@@ -97,8 +97,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
         if (!isStatusCodeOK(statusCode)) {
           throw new RuntimeException(
               String.format(
-                  "Cloudera Error: YARN application API returned HTTP status %d: %s",
-                  statusCode, resp));
+                  "Cloudera Error: YARN application API returned HTTP status %d.", statusCode));
         }
         ApiYARNApplicationListDTO yarnAppListDto =
             parseJsonStreamToObject(resp.getEntity().getContent(), ApiYARNApplicationListDTO.class);

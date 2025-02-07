@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -1083,7 +1084,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   public List<String> getYarnApplicationTypes() {
     String yarnAppTypesLine = getOptions().valueOf(optionYarnApplicationTypes);
-    return ImmutableList.copyOf(yarnAppTypesLine.split(","));
+    return ImmutableList.copyOf(
+        stream(yarnAppTypesLine.split(","))
+            .filter(item -> item.trim().length() > 0)
+            .collect(Collectors.toList()));
   }
 
   /** Checks if the property was specified on the command-line. */
