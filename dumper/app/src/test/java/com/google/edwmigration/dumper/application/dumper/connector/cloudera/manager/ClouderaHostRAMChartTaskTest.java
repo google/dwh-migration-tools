@@ -20,7 +20,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -28,7 +27,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -105,7 +103,7 @@ public class ClouderaHostRAMChartTaskTest {
 
     task.doRun(context, sink, handle);
 
-    Set<String> fileLines = getWrittenJsonLines();
+    Set<String> fileLines = new HashSet<>(MockUtils.getWrittenJsonLines(writer, 2));
     verify(writer, times(2)).write('\n');
     assertEquals(ImmutableSet.of("{\"items\":[\"host1\"]}", "{\"items\":[\"host2\"]}"), fileLines);
     verify(writer).close();
@@ -172,23 +170,6 @@ public class ClouderaHostRAMChartTaskTest {
     server.stubFor(
         get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", hostId)))
             .willReturn(okJson(responseContent).withStatus(statusCode)));
-  }
-
-  private Set<String> getWrittenJsonLines() throws IOException {
-    // https://jsonlines.org/
-    Set<String> fileLines = new HashSet<>();
-    verify(writer, times(2))
-        .write(
-            (String)
-                argThat(
-                    content -> {
-                      String str = (String) content;
-                      assertFalse(str.contains("\n"));
-                      assertFalse(str.contains("\r"));
-                      fileLines.add(str);
-                      return true;
-                    }));
-    return fileLines;
   }
 
   private void verifyNoWrites() throws IOException {

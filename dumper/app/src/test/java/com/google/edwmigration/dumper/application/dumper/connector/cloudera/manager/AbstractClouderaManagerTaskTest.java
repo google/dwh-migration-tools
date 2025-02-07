@@ -100,7 +100,7 @@ public class AbstractClouderaManagerTaskTest {
   @Test
   public void parseObjectToJsonLine_createJsonLine() throws Exception {
     DummyPersonDTO albus = new DummyPersonDTO("Albus");
-    String jsonLine = clouderaManagerTask.parseObjectToJsonString(albus);
+    String jsonLine = clouderaManagerTask.serializeObjectToJsonString(albus);
     assertEquals(jsonLine, "{\"name\":\"Albus\"}");
   }
 }

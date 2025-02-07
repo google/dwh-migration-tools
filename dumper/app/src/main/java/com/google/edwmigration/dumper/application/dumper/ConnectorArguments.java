@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -113,6 +114,10 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_END = "query-log-end";
   public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
   public static final String OPT_QUERY_LOG_ALTERNATES = "query-log-alternates";
+
+  // Cloudera
+  public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
+  public static final String OPT_PAGINATION_PAGE_SIZE = "pagination-page-size";
 
   // redshift.
   public static final String OPT_IAM_ACCESSKEYID = "iam-accesskeyid";
@@ -502,6 +507,23 @@ public class ConnectorArguments extends DefaultArguments {
               optionKerberosPrincipal,
               optionHadoopRpcProtection,
               optionHdfsPrincipalPrefix);
+
+  // Cloudera connector
+  private final OptionSpec<String> optionYarnApplicationTypes =
+      parser
+          .accepts(
+              OPT_YARN_APPLICATION_TYPES,
+              "Dump Hadoop jobs by specific YARN application types. "
+                  + "Has to be comma separated. For example: SPARK,MAPREDUCE,TEZ")
+          .withOptionalArg()
+          .ofType(String.class)
+          .defaultsTo("");
+  private final OptionSpec<Integer> optionPaginationPageSize =
+      parser
+          .accepts(OPT_PAGINATION_PAGE_SIZE, "Set page size for API requests.")
+          .withOptionalArg()
+          .ofType(Integer.class)
+          .defaultsTo(1000);
 
   // generic connector
   private final OptionSpec<String> optionGenericQuery =
@@ -1054,6 +1076,18 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
     return getConnectorProperties().get(property);
+  }
+
+  public int getPaginationPageSize() {
+    return getOptions().valueOf(optionPaginationPageSize);
+  }
+
+  public List<String> getYarnApplicationTypes() {
+    String yarnAppTypesLine = getOptions().valueOf(optionYarnApplicationTypes);
+    return ImmutableList.copyOf(
+        stream(yarnAppTypesLine.split(","))
+            .filter(item -> item.trim().length() > 0)
+            .collect(Collectors.toList()));
   }
 
   /** Checks if the property was specified on the command-line. */

@@ -66,7 +66,7 @@ public class ClouderaHostComponentsTask extends AbstractClouderaManagerTask {
   }
 
   private String wrapResponseWithHostId(String hostId, JsonNode payload) throws Exception {
-    return parseObjectToJsonString(new PayloadEnrichedWithHostId(hostId, payload));
+    return serializeObjectToJsonString(new PayloadEnrichedWithHostId(hostId, payload));
   }
 
   private static class PayloadEnrichedWithHostId {

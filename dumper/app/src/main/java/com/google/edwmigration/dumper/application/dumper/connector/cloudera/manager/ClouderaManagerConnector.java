@@ -94,6 +94,9 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaHostRAMChartTask(7, TimeSeriesAggregation.DAILY));
     out.add(new ClouderaHostRAMChartTask(30, TimeSeriesAggregation.DAILY));
     out.add(new ClouderaHostRAMChartTask(90, TimeSeriesAggregation.DAILY));
+
+    out.add(new ClouderaYarnApplicationsTask(90));
+    out.add(new ClouderaYarnApplicationTypeTask(90));
   }
 
   @Nonnull
