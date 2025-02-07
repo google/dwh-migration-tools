@@ -102,7 +102,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
       writer.write(yarnAppTypeMappingsInJson);
       writer.write('\n');
     } catch (IOException ex) {
-      throw new RuntimeException("Error: Can't dump YARN application types", ex);
+      throw new ClouderaConnectorException("Can't write YARN application types", ex);
     }
   }
 
@@ -113,15 +113,17 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     try (CloseableHttpResponse appTypesResp = httpClient.execute(new HttpGet(yarnAppTypesUrl))) {
       int statusCode = appTypesResp.getStatusLine().getStatusCode();
       if (!isStatusCodeOK(statusCode)) {
-        throw new RuntimeException(
-            String.format("Cloudera API returned bad http status: %d", statusCode));
+        throw new ClouderaConnectorException(
+            String.format(
+                "Cloudera API returned bad http status: %d. Message: %s",
+                statusCode, readFromStream(appTypesResp.getEntity().getContent())));
       }
       JsonNode appTypesJson = readJsonTree(appTypesResp.getEntity().getContent());
       return StreamSupport.stream(appTypesJson.get("items").spliterator(), false)
           .map(JsonNode::asText)
           .collect(Collectors.toList());
     } catch (IOException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
+      throw new ClouderaConnectorException(ex.getMessage(), ex);
     }
   }
 

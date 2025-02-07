@@ -26,6 +26,7 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Scanner;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
@@ -71,5 +72,15 @@ abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
 
   protected String serializeObjectToJsonString(Object obj) throws JsonProcessingException {
     return objectMapper.writeValueAsString(obj);
+  }
+
+  protected String readFromStream(InputStream is) {
+    StringBuilder stringBuilder = new StringBuilder();
+    try (Scanner sc = new Scanner(is)) {
+      while (sc.hasNext()) {
+        stringBuilder.append(sc.next());
+      }
+    }
+    return stringBuilder.toString();
   }
 }

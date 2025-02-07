@@ -23,6 +23,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -135,9 +136,9 @@ public class ClouderaYarnApplicationTypeTaskTest {
     Assert.assertEquals(3, fileJsonLines.size());
 
     String combinedLine = fileJsonLines.get(0) + fileJsonLines.get(1) + fileJsonLines.get(2);
-    Assert.assertTrue(combinedLine.contains("SPARK"));
-    Assert.assertTrue(combinedLine.contains("MAPREDUCE"));
-    Assert.assertTrue(combinedLine.contains("CLOUDERA_TYPE"));
+    assertTrue(combinedLine.contains("SPARK"));
+    assertTrue(combinedLine.contains("MAPREDUCE"));
+    assertTrue(combinedLine.contains("CLOUDERA_TYPE"));
   }
 
   @Test
@@ -167,7 +168,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
     RuntimeException exception =
         assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    assertEquals("Cloudera API returned bad http status: 500", exception.getMessage());
+    assertTrue(exception.getMessage().contains("Cloudera API returned bad http status: 500"));
   }
 
   @Test
@@ -200,7 +201,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
             urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*")));
     List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 1);
     Assert.assertEquals(1, fileJsonLines.size());
-    Assert.assertTrue(fileJsonLines.get(0).contains("CUSTOM-YARN-APP-TYPE"));
+    assertTrue(fileJsonLines.get(0).contains("CUSTOM-YARN-APP-TYPE"));
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {

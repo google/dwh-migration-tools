@@ -98,7 +98,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
           throw new ClouderaConnectorException(
               String.format(
                   "YARN application API returned HTTP status %d. Message: %s",
-                  statusCode, resp.getEntity().getContent().toString()));
+                  statusCode, readFromStream(resp.getEntity().getContent())));
         }
         ApiYARNApplicationListDTO yarnAppListDto =
             parseJsonStreamToObject(resp.getEntity().getContent(), ApiYARNApplicationListDTO.class);
