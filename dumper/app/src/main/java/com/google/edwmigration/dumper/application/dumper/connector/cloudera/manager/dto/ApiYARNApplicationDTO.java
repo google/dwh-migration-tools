@@ -21,6 +21,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * DTO class for the official Cloudera API <a
+ * href="https://archive.cloudera.com/cm7/7.0.3/generic/jar/cm_api/apidocs/json_ApiYarnApplication.html">json</a>
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiYARNApplicationDTO {
   @JsonProperty(required = true)

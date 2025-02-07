@@ -52,9 +52,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractClouderaYarnApplicationTaskTest {
+  private static WireMockServer server;
   private MockedYarnApplicationTask task;
   private ClouderaManagerHandle handle;
-  private static WireMockServer server;
   private List<ApiYARNApplicationDTO> loadResponse;
 
   @Mock private ByteSink sink;

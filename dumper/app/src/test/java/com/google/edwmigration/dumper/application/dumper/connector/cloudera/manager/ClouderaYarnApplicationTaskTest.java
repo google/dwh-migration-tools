@@ -17,20 +17,14 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -40,17 +34,14 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.apache.http.HttpStatus;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.AfterClass;
@@ -100,21 +91,24 @@ public class ClouderaYarnApplicationTaskTest {
     queryParams.put("limit", matching("1000"));
     queryParams.put("offset", matching("0"));
     stubYARNApplicationsAPI(
-        "test-cluster", queryParams, "{\"applications\": [{\"applicationId\":\"app1\"}]}");
+        "test-cluster",
+        queryParams,
+        "{\"applications\": [{\"applicationId\":\"app1\"},{\"applicationId\":\"app2\"}]}");
 
-    queryParams.put("offset", matching("1"));
+    queryParams.put("offset", matching("2"));
+    stubYARNApplicationsAPI(
+        "test-cluster", queryParams, "{\"applications\": [{\"applicationId\":\"app3\"}]}");
+
+    queryParams.put("offset", matching("3"));
     stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\": []}");
 
     task.doRun(context, sink, handle);
 
-    List<String> lines = new ArrayList<>(getWrittenJsonLines());
-    assertEquals(lines.size(), 1);
+    List<String> lines = new ArrayList<>(MockUtils.getWrittenJsonLines(writer, 2));
+    assertEquals(lines.size(), 2);
     assertTrue(lines.get(0).contains("\"applicationId\":\"app1\""));
-    server.verify(0, getRequestedFor(urlEqualTo("/api/vTest/clusters/test-cluster/serviceTypes")));
-    server.verify(
-        2,
-        getRequestedFor(
-            urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*")));
+    assertTrue(lines.get(0).contains("\"applicationId\":\"app2\""));
+    assertTrue(lines.get(1).contains("\"applicationId\":\"app3\""));
   }
 
   @Test
@@ -162,22 +156,5 @@ public class ClouderaYarnApplicationTaskTest {
                     "/api/vTest/clusters/%s/services/yarn/yarnApplications.*", clusterName)))
             .withQueryParams(queryParams)
             .willReturn(okJson(responseContent).withStatus(statusCode)));
-  }
-
-  private Set<String> getWrittenJsonLines() throws IOException {
-    // https://jsonlines.org/
-    Set<String> fileLines = new HashSet<>();
-    verify(writer, times(1))
-        .write(
-            (String)
-                argThat(
-                    content -> {
-                      String str = (String) content;
-                      assertFalse(str.contains("\n"));
-                      assertFalse(str.contains("\r"));
-                      fileLines.add(str);
-                      return true;
-                    }));
-    return fileLines;
   }
 }
