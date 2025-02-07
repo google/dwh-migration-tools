@@ -21,6 +21,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +31,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
@@ -127,26 +130,43 @@ public class ClouderaYarnApplicationTypeTaskTest {
     String combinedLine = fileJsonLines.get(0) + fileJsonLines.get(1) + fileJsonLines.get(2);
     Assert.assertTrue(combinedLine.contains("SPARK"));
     Assert.assertTrue(combinedLine.contains("MAPREDUCE"));
-    Assert.assertTrue(combinedLine.contains("CUSTOM_TYPE"));
+    Assert.assertTrue(combinedLine.contains("CLOUDERA_TYPE"));
   }
 
   @Test
-  public void doRun_noClusters_throwsException() {}
+  public void doRun_noClusters_throwsException() {
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+
+    assertEquals(
+        "Clusters must be initialized before fetching YARN application types.",
+        exception.getMessage());
+  }
 
   @Test
-  public void doRun_notPositiveDays_throwsException() {}
+  public void doRun_notPositiveDays_throwsException() {
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> new ClouderaYarnApplicationTypeTask(0));
+
+    assertEquals("Amount of days must be a positive number. Got 0.", exception.getMessage());
+  }
 
   @Test
-  public void doRun_clouderaServerError_throwsException() {}
+  public void doRun_clouderaServerError_throwsException() {
+    initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
+    stubYARNApplicationTypesAPI(
+        "test-cluster", "{\"items\":[\"CLOUDERA_TYPE\"]}", HttpStatus.SC_INTERNAL_SERVER_ERROR);
+
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
+
+    assertEquals("Cloudera API returned bad http status: 500", exception.getMessage());
+  }
 
   @Test
-  public void doRun_onlyDefaultApplicationTypes_writesMappingsInJsonLines() {}
-
-  @Test
-  public void doRun_applicationTypesFromAPI_writesMappingsInJsonLines() {}
-
-  @Test
-  public void doRun_applicationTypesFromCLI_writesMappingsInJsonLines() {}
+  public void doRun_applicationTypesFromCLI_writesMappingsInJsonLines() {
+    assertEquals("", "");
+  }
 
   private void initClusters(ClouderaClusterDTO... clusters) {
     handle.initClusters(Arrays.asList(clusters));

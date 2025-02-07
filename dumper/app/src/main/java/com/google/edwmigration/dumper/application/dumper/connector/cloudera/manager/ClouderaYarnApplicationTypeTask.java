@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -53,8 +54,14 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
     List<ClouderaClusterDTO> clusters = handle.getClusters();
-    Preconditions.checkNotNull(
-        clusters, "Clusters must be initialized before fetching YARN applications.");
+    try {
+      Preconditions.checkNotNull(
+          clusters, "Clusters must be initialized before fetching YARN application types.");
+    } catch (NullPointerException ex) {
+      MetadataDumperUsageException newEx = new MetadataDumperUsageException(ex.getMessage());
+      newEx.initCause(ex);
+      throw newEx;
+    }
 
     PaginatedClouderaYarnApplicationsLoader appLoader =
         new PaginatedClouderaYarnApplicationsLoader(handle);
@@ -102,6 +109,11 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
         handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
     CloseableHttpClient httpClient = handle.getHttpClient();
     try (CloseableHttpResponse appTypesResp = httpClient.execute(new HttpGet(yarnAppTypesUrl))) {
+      int statusCode = appTypesResp.getStatusLine().getStatusCode();
+      if (!isStatusCodeOK(statusCode)) {
+        throw new RuntimeException(
+            String.format("Cloudera API returned bad http status: %d", statusCode));
+      }
       JsonNode appTypesJson = readJsonTree(appTypesResp.getEntity().getContent());
       return StreamSupport.stream(appTypesJson.get("items").spliterator(), false)
           .map(JsonNode::asText)

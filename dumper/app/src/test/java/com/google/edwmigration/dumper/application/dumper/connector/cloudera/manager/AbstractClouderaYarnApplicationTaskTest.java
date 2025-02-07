@@ -21,19 +21,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.google.common.io.ByteSink;
-import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.Writer;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +42,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -56,10 +50,6 @@ public class AbstractClouderaYarnApplicationTaskTest {
   private MockedYarnApplicationTask task;
   private ClouderaManagerHandle handle;
   private List<ApiYARNApplicationDTO> loadResponse;
-
-  @Mock private ByteSink sink;
-  @Mock private Writer writer;
-  @Mock private CharSink charSink;
 
   @BeforeClass
   public static void beforeClass() {
@@ -77,8 +67,6 @@ public class AbstractClouderaYarnApplicationTaskTest {
     server.resetAll();
     URI uri = URI.create(server.baseUrl() + "/api/vTest/");
     handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
-    when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
-    when(charSink.openBufferedStream()).thenReturn(writer);
 
     task = new MockedYarnApplicationTask();
     loadResponse = new ArrayList<>();
