@@ -69,8 +69,8 @@ class RangerPageIterator<T> extends AbstractIterator<T> {
       } catch (RangerException e) {
         throw new RuntimeException(
             String.format(
-                "Failed to fetch collection data from Ranger at offset %d with page size %d",
-                offset, pageSize),
+                "Failed to fetch collection data from Ranger at offset %d with page size %d, encountered error: %s",
+                offset, pageSize, e.getMessage()),
             e);
       }
       offset += pageSize;
