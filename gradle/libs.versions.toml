@@ -52,6 +52,18 @@ tez = "0.9.2"
 thrift = "0.20.0"
 version-catalog-update-plugin = "0.8.5"
 wiremock = "2.27.2"
+asm = "9.7"
+auto-value = "1.10.2"
+avro = "1.11.3"
+fastutil = "8.5.13"
+h2 = "2.2.224"
+logback = "1.5.6"
+parquet = "1.14.0"
+slf4j = "2.0.13"
+spring-main = "6.1.10"
+google = "2.41.0"
+amazon = "2.27.2"
+cloudrun = "0.57.0"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
@@ -117,8 +129,31 @@ system-rules = { module = "com.github.stefanbirkner:system-rules", version.ref =
 tez-common = { module = "org.apache.tez:tez-common", version.ref = "tez" }
 tez-dag = { module = "org.apache.tez:tez-dag", version.ref = "tez" }
 wiremock = { module = "com.github.tomakehurst:wiremock-standalone", version.ref = "wiremock" }
+aws-s3 = { group = "software.amazon.awssdk", name = "s3", version.ref = "amazon" }
+asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
+auto-value-annotations = { module = "com.google.auto.value:auto-value-annotations", version.ref = "auto-value" }
+auto-value = { module = "com.google.auto.value:auto-value", version.ref = "auto-value" }
+avro = { group = "org.apache.avro", name = "avro", version.ref = "avro" }
+commons-csv = { group = "org.apache.commons", name = "commons-csv", version = "1.11.0" }
+commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version = "3.15.0" }
+fastutil = { group = "it.unimi.dsi", name = "fastutil", version.ref = "fastutil" }
+google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version.ref = "google" }
+google-cloud-run = { group = "com.google.cloud", name = "google-cloud-run", version.ref = "cloudrun" }
+h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
+jopt-simple = { group = "net.sf.jopt-simple", name = "jopt-simple", version = "5.0.4" }
+jdiagnostics = { group = "org.anarres.jdiagnostics", name = "jdiagnostics", version = "1.0.7" }
+jsch = { group = "com.github.mwiede", name = "jsch", version = "0.2.18" }
+logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+parquet-generator = { group = "org.apache.parquet", name = "parquet-generator", version.ref = "parquet" }
+parquet = { group = "org.apache.parquet", name = "parquet", version.ref = "parquet" }
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+spring-jdbc = { group = "org.springframework", name = "spring-jdbc", version.ref = "spring-main" }
+
 
 [plugins]
 ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions-plugin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-plugin" }
 version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "version-catalog-update-plugin" }
+jmh = { id = "me.champeau.jmh", version = "0.7.2" }
+jmh-report = { id = "io.morethan.jmhreport", version = "0.9.6" }
+protobuf = { id = "com.google.protobuf", version = "0.9.4" }

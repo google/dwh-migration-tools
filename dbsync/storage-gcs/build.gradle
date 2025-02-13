@@ -1,0 +1,9 @@
+plugins {
+    id 'com.google.edwmigration.dbsync.java-library-conventions'
+}
+
+dependencies {
+    api project(':common')
+	api libs.google.cloud.storage
+	testImplementation testFixtures(project(':common'))
+}

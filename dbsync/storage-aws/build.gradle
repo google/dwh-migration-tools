@@ -1,0 +1,9 @@
+plugins {
+    id 'com.google.edwmigration.dbsync.java-library-conventions'
+}
+
+dependencies {
+    api project(':common')
+	api libs.aws.s3
+	testImplementation testFixtures(project(':common'))
+}
