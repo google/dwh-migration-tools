@@ -20,6 +20,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -97,26 +98,11 @@ public class ClouderaYarnApplicationTypeTaskTest {
 
     // Cloudera API which returns service types per cluster
     stubYARNApplicationTypesAPI("test-cluster", "{\"items\":[\"CLOUDERA_TYPE\"]}");
-
-    // Stub API for predefined SPARK application type
-    Map<String, StringValuePattern> queryParams = new HashMap<>();
-    queryParams.put("filter", matching("applicationType=SPARK"));
-    queryParams.put("offset", matching("0"));
-    stubYARNApplicationsAPI(
-        "test-cluster", queryParams, "{\"applications\":[{\"applicationId\":\"spark-app\"}]}");
-    queryParams.put("offset", matching("1"));
-    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
-
-    // Stub API for predefined MAPREDUCE application type
-    queryParams.put("filter", matching("applicationType=MAPREDUCE"));
-    queryParams.put("offset", matching("0"));
-    stubYARNApplicationsAPI(
-        "test-cluster", queryParams, "{\"applications\":[{\"applicationId\":\"mapreduce-app\"}]}");
-    queryParams.put("offset", matching("1"));
-    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
+    stubPredefinedApplicationTypes("test-cluster");
 
     // Stub API for application types from Cloudera
-    queryParams.put("filter", matching("applicationType=CLOUDERA_TYPE"));
+    Map<String, StringValuePattern> queryParams = new HashMap<>();
+    queryParams.put("filter", matching("applicationType=\"CLOUDERA_TYPE\""));
     queryParams.put("offset", matching("0"));
     stubYARNApplicationsAPI(
         "test-cluster", queryParams, "{\"applications\":[{\"applicationId\":\"custom-app\"}]}");
@@ -176,17 +162,10 @@ public class ClouderaYarnApplicationTypeTaskTest {
     initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
     when(cliArgs.getYarnApplicationTypes()).thenReturn(Arrays.asList("CUSTOM-YARN-APP-TYPE"));
     stubYARNApplicationTypesAPI("test-cluster", "{\"items\":[]}");
+    stubPredefinedApplicationTypes("test-cluster");
 
     Map<String, StringValuePattern> queryParams = new HashMap<>();
-    queryParams.put("filter", matching("applicationType=SPARK"));
-    queryParams.put("offset", matching("0"));
-    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
-
-    queryParams.put("filter", matching("applicationType=MAPREDUCE"));
-    queryParams.put("offset", matching("0"));
-    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
-
-    queryParams.put("filter", matching("applicationType=CUSTOM-YARN-APP-TYPE"));
+    queryParams.put("filter", matching("applicationType=\"CUSTOM-YARN-APP-TYPE\""));
     queryParams.put("offset", matching("0"));
     stubYARNApplicationsAPI(
         "test-cluster", queryParams, "{\"applications\":[{\"applicationId\":\"custom-app\"}]}");
@@ -196,16 +175,59 @@ public class ClouderaYarnApplicationTypeTaskTest {
     task.doRun(context, sink, handle);
 
     server.verify(
-        4,
+        6,
         getRequestedFor(
             urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*")));
-    List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 1);
-    Assert.assertEquals(1, fileJsonLines.size());
-    assertTrue(fileJsonLines.get(0).contains("CUSTOM-YARN-APP-TYPE"));
+    List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
+    assertTrue(containedInElements(fileJsonLines, "CUSTOM-YARN-APP-TYPE"));
+  }
+
+  @Test
+  public void doRun_applicationTypeContainsSpace_queryParameterIsEncoded() throws Exception {
+    initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
+    when(cliArgs.getYarnApplicationTypes()).thenReturn(Arrays.asList("Oozie Launcher"));
+    stubYARNApplicationTypesAPI("test-cluster", "{\"items\":[]}");
+    stubPredefinedApplicationTypes("test-cluster");
+
+    Map<String, StringValuePattern> queryParams = new HashMap<>();
+    queryParams.put("filter", matching("applicationType=\"Oozie Launcher\""));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI(
+        "test-cluster", queryParams, "{\"applications\":[{\"applicationId\":\"oozie\"}]}");
+    queryParams.put("offset", matching("1"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
+
+    task.doRun(context, sink, handle);
+
+    server.verify(
+        2,
+        getRequestedFor(
+            urlMatching(
+                "/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*%22Oozie\\+Launcher%22.*")));
+    List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
+    assertTrue(containedInElements(fileJsonLines, "oozie"));
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {
     handle.initClusters(Arrays.asList(clusters));
+  }
+
+  private void stubPredefinedApplicationTypes(String clusterName) {
+    Map<String, StringValuePattern> queryParams = new HashMap<>();
+    queryParams.put("filter", matching("applicationType=\"SPARK\""));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI(
+        clusterName, queryParams, "{\"applications\":[{\"applicationId\":\"spark-app\"}]}");
+    queryParams.put("offset", matching("1"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
+
+    // Stub API for predefined MAPREDUCE application type
+    queryParams.put("filter", matching("applicationType=\"MAPREDUCE\""));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI(
+        clusterName, queryParams, "{\"applications\":[{\"applicationId\":\"mapreduce-app\"}]}");
+    queryParams.put("offset", matching("1"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
   }
 
   private void stubYARNApplicationsAPI(
@@ -235,5 +257,14 @@ public class ClouderaYarnApplicationTypeTaskTest {
     server.stubFor(
         get(urlPathMatching(String.format("/api/vTest/clusters/%s/serviceTypes.*", clusterName)))
             .willReturn(okJson(responseContent).withStatus(statusCode)));
+  }
+
+  private boolean containedInElements(List<String> collection, String item) {
+    for (String element : collection) {
+      if (element.contains(item)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
