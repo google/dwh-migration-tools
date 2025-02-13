@@ -99,7 +99,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     }
     try {
       String yarnAppTypeMappingsInJson = serializeObjectToJsonString(yarnAppTypeMappings);
-      writer.write(yarnAppTypeMappingsInJson);
+      writer.write(String.format("{\"yarnAppTypes\":%s}", yarnAppTypeMappingsInJson));
       writer.write('\n');
     } catch (IOException ex) {
       throw new ClouderaConnectorException("Can't write YARN application types", ex);

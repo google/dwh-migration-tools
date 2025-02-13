@@ -69,7 +69,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
     }
     try {
       String yarnAppsJson = serializeObjectToJsonString(yarnApps);
-      writer.write(yarnAppsJson);
+      writer.write(String.format("{\"yarnApps\":%s}", yarnAppsJson));
       writer.write('\n');
     } catch (IOException ex) {
       throw new ClouderaConnectorException("Can't dump YARN applications.", ex);
