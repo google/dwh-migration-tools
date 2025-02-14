@@ -1,0 +1,22 @@
+<configuration>
+
+<!--
+ <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+-->
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} -%kvp- %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <root level="debug">
+    <appender-ref ref="STDOUT" />
+  </root>
+
+  <logger name="org.springframework.jdbc.core.JdbcTemplate" level="info"/>
+  <logger name="org.springframework.jdbc.datasource" level="info" />
+  <logger name="org.springframework.test.context" level="info" />
+  <logger name="org.springframework" level="info" />
+
+</configuration>

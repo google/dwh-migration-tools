@@ -1,0 +1,9 @@
+plugins {
+    id 'dbsync.java-library-conventions'
+}
+
+dependencies {
+    api project(':dbsync:common')
+	api libs.google.cloud.storage
+	testImplementation testFixtures(project(':dbsync:common'))
+}
