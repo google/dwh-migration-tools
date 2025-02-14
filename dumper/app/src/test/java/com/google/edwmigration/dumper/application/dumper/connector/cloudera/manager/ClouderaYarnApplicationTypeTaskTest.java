@@ -48,7 +48,6 @@ import java.util.Map;
 import org.apache.http.HttpStatus;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -115,16 +114,19 @@ public class ClouderaYarnApplicationTypeTaskTest {
     server.verify(
         6,
         getRequestedFor(
-            urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*")));
+            urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications")));
     server.verify(
-        1, getRequestedFor(urlPathMatching("/api/vTest/clusters/test-cluster/serviceTypes.*")));
+        1, getRequestedFor(urlPathMatching("/api/vTest/clusters/test-cluster/serviceTypes")));
     List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
-    Assert.assertEquals(3, fileJsonLines.size());
-
-    String combinedLine = fileJsonLines.get(0) + fileJsonLines.get(1) + fileJsonLines.get(2);
-    assertTrue(combinedLine.contains("SPARK"));
-    assertTrue(combinedLine.contains("MAPREDUCE"));
-    assertTrue(combinedLine.contains("CLOUDERA_TYPE"));
+    assertTrue(
+        fileJsonLines.contains(
+            "{\"yarnAppTypes\":[{\"applicationId\":\"spark-app\",\"applicationType\":\"SPARK\"}]}"));
+    assertTrue(
+        fileJsonLines.contains(
+            "{\"yarnAppTypes\":[{\"applicationId\":\"mapreduce-app\",\"applicationType\":\"MAPREDUCE\"}]}"));
+    assertTrue(
+        fileJsonLines.contains(
+            "{\"yarnAppTypes\":[{\"applicationId\":\"custom-app\",\"applicationType\":\"CLOUDERA_TYPE\"}]}"));
   }
 
   @Test
@@ -177,9 +179,11 @@ public class ClouderaYarnApplicationTypeTaskTest {
     server.verify(
         6,
         getRequestedFor(
-            urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*")));
+            urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications")));
     List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
-    assertTrue(containedInElements(fileJsonLines, "CUSTOM-YARN-APP-TYPE"));
+    assertTrue(
+        fileJsonLines.contains(
+            "{\"yarnAppTypes\":[{\"applicationId\":\"custom-app\",\"applicationType\":\"CUSTOM-YARN-APP-TYPE\"}]}"));
   }
 
   @Test
@@ -199,13 +203,13 @@ public class ClouderaYarnApplicationTypeTaskTest {
 
     task.doRun(context, sink, handle);
 
-    server.verify(
-        2,
-        getRequestedFor(
-            urlMatching(
-                "/api/vTest/clusters/test-cluster/services/yarn/yarnApplications.*%22Oozie\\+Launcher%22.*")));
+    String encodedPathRegex = "/api/vTest/clusters/test-cluster/services/yarn/yarnApplications\\?";
+    String encodedAppTypeParamRegex = ".*filter=applicationType%3D%22Oozie\\+Launcher%22.*";
+    server.verify(2, getRequestedFor(urlMatching(encodedPathRegex + encodedAppTypeParamRegex)));
     List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
-    assertTrue(containedInElements(fileJsonLines, "oozie"));
+    assertTrue(
+        fileJsonLines.contains(
+            "{\"yarnAppTypes\":[{\"applicationId\":\"oozie\",\"applicationType\":\"Oozie Launcher\"}]}"));
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {
@@ -255,16 +259,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
   private void stubYARNApplicationTypesAPI(
       String clusterName, String responseContent, int statusCode) {
     server.stubFor(
-        get(urlPathMatching(String.format("/api/vTest/clusters/%s/serviceTypes.*", clusterName)))
+        get(urlPathMatching(String.format("/api/vTest/clusters/%s/serviceTypes", clusterName)))
             .willReturn(okJson(responseContent).withStatus(statusCode)));
-  }
-
-  private boolean containedInElements(List<String> collection, String item) {
-    for (String element : collection) {
-      if (element.contains(item)) {
-        return true;
-      }
-    }
-    return false;
   }
 }

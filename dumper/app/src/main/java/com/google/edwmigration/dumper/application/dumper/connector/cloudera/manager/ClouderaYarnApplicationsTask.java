@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
@@ -68,8 +69,8 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
       yarnApp.setClusterName(clusterName);
     }
     try {
-      String yarnAppsJson = serializeObjectToJsonString(yarnApps);
-      writer.write(String.format("{\"yarnApps\":%s}", yarnAppsJson));
+      String yarnAppsJson = serializeObjectToJsonString(ImmutableMap.of("yarnApps", yarnApps));
+      writer.write(yarnAppsJson);
       writer.write('\n');
     } catch (IOException ex) {
       throw new ClouderaConnectorException("Can't dump YARN applications.", ex);
