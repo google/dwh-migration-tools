@@ -23,6 +23,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public interface RangerDumpFormat {
 
+  String FORMAT_NAME = "ranger.dump.zip";
+
   ObjectMapper MAPPER =
       new ObjectMapper()
           .registerModule(new JavaTimeModule())
