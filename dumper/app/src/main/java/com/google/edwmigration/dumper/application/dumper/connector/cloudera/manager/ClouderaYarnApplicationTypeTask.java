@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
@@ -98,7 +99,8 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
           new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), appType));
     }
     try {
-      String yarnAppTypeMappingsInJson = serializeObjectToJsonString(yarnAppTypeMappings);
+      String yarnAppTypeMappingsInJson =
+          serializeObjectToJsonString(ImmutableMap.of("yarnAppTypes", yarnAppTypeMappings));
       writer.write(yarnAppTypeMappingsInJson);
       writer.write('\n');
     } catch (IOException ex) {

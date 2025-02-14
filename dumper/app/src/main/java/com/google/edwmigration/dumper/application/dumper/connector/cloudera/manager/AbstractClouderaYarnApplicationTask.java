@@ -117,7 +117,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
                 .addParameter("offset", String.valueOf(offset))
                 .addParameter("from", fromAppCreationDate);
         if (appType != null) {
-          uriBuilder.addParameter("filter", String.format("applicationType=%s", appType));
+          uriBuilder.addParameter("filter", String.format("applicationType=\"%s\"", appType));
         }
         return new URI(host + uriBuilder.build().toString());
       } catch (URISyntaxException ex) {
