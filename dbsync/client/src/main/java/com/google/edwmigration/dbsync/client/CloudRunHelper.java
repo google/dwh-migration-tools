@@ -21,6 +21,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import com.google.cloud.run.v2.CreateJobRequest;
 import com.google.cloud.run.v2.JobsClient;
@@ -100,7 +101,7 @@ public class CloudRunHelper {
                   Container.newBuilder()
                       .setImage(BASE_IMAGE)
                       .addCommand("/bin/sh")
-                      .addAllArgs(List.of("-c", command))
+                      .addAllArgs(Arrays.asList("-c", command))
                       .build()
               ).build()).build()
           ).build();

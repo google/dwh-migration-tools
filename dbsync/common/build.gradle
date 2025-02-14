@@ -3,7 +3,7 @@
  */
 
 plugins {
-    id 'com.google.edwmigration.dbsync.java-library-conventions'
+    id 'dbsync.java-library-conventions'
 	alias libs.plugins.protobuf
 	alias libs.plugins.jmh
 	alias libs.plugins.jmh.report
@@ -29,7 +29,7 @@ protobuf {
 
 dependencies {
 	api libs.slf4j.api
-	runtimeOnly libs.logback
+	runtimeOnly libs.logback.classic
 
 	api libs.parquet.generator
 	implementation libs.fastutil

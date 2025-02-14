@@ -60,12 +60,14 @@ public class CloudRunMain {
   public static void main(String[] args) throws IOException, URISyntaxException {
     Arguments argument = new Arguments(args);
     switch (argument.getMode()) {
-      case GENERATE -> CloudRunHelper.generate(
+      case GENERATE:
+        CloudRunHelper.generate(
           argument.getProject(),
           URI.create(argument.getStagingBucket()),
           URI.create(argument.getTargetUri())
       );
-      case RECEIVE -> CloudRunHelper.reconstruct(
+      case RECEIVE:
+        CloudRunHelper.reconstruct(
           argument.getProject(),
           URI.create(argument.getStagingBucket()),
           URI.create(argument.getTargetUri())

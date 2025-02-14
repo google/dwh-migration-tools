@@ -55,16 +55,6 @@ public class RsyncClientMain {
   }
 
   public static void main(String[] args) {
-    args = new String[]{
-        "--project",
-        "gupsam-dev",
-        "--target_file",
-        "gs://gupsam-rsync-target/test_file",
-        "--source_file",
-        "file:///usr/local/google/home/gupsam/migrations/test.dat",
-        "--staging_bucket",
-        "gs://gupsam-rsync-stage"
-    };
     RsyncClient client = new RsyncClient();
     Arguments arguments = new Arguments(args);
     try {

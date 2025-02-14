@@ -1,8 +1,8 @@
 plugins {
-    id 'com.google.edwmigration.dbsync.java-library-conventions'
+    id 'dbsync.java-library-conventions'
 }
 
 dependencies {
-    api project(':common')
-	testImplementation testFixtures(project(':common'))
+    api project(':dbsync:common')
+	testImplementation testFixtures(project(':dbsync:common'))
 }

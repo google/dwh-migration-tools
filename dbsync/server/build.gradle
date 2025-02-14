@@ -8,13 +8,13 @@ buildscript {
 }
 
 plugins {
-    id 'com.google.edwmigration.dbsync.java-library-conventions'
-    id 'com.google.edwmigration.dbsync.java-application-conventions'
+    id 'dbsync.java-library-conventions'
+    id 'dbsync.java-application-conventions'
     alias libs.plugins.shadow
 }
 
 dependencies {
-    api project(':common')
+    api project(':dbsync:common')
 }
 
 application {

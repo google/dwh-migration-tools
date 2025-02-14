@@ -4,7 +4,7 @@
 
 plugins {
     alias libs.plugins.shadow
-    id 'com.google.edwmigration.dbsync.java-application-conventions'
+    id 'dbsync.java-application-conventions'
 }
 
 configurations {
@@ -14,16 +14,15 @@ configurations {
 }
 
 dependencies {
-    implementation project(':common')
-    implementation project(':server')
-    implementation project(':storage-aws')
-    implementation project(':storage-gcs')
-    implementation libs.jsch
+    implementation project(':dbsync:common')
+    implementation project(':dbsync:server')
+    implementation project(':dbsync:storage-aws')
+    implementation project(':dbsync:storage-gcs')
     implementation libs.jopt.simple
     implementation libs.jdiagnostics
     implementation libs.commons.lang3
     implementation libs.google.cloud.run
-    serverClasspath project(path: ':server', configuration: 'shadow')
+    serverClasspath project(path: ':dbsync:server', configuration: 'shadow')
 }
 
 application {
@@ -37,17 +36,5 @@ distributions {
                 into 'lib/server'
             }
         }
-    }
-}
-
-tasks.register('testJar', Jar) {
-    manifest {
-        attributes 'Description': 'This is an application JAR'
-    }
-}
-
-tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
-    manifest {
-        inheritFrom(project.tasks.testJar.manifest)
     }
 }

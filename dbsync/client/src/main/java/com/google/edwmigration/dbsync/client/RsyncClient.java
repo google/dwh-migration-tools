@@ -35,12 +35,15 @@ public class RsyncClient {
       throws IOException, URISyntaxException {
     ByteSource byteSource;
     switch (sourceUri.getScheme()) {
-      case "file" -> {
+      case "file":
         LocalStorage storage = new LocalStorage();
         byteSource = storage.newByteSource(sourceUri);
-      }
-      case "gcs", "s3" -> throw new NotImplementedException("URI Scheme not supported yet");
-      default -> throw new IllegalStateException("Unexpected URI Scheme: " + sourceUri.getScheme());
+        break;
+      case "gcs":
+      case "s3":
+        throw new NotImplementedException("URI Scheme not supported yet");
+      default:
+        throw new IllegalStateException("Unexpected URI Scheme: " + sourceUri.getScheme());
     }
 
     if (byteSource.size() < MIN_SIZE_TO_RSYNC) {
