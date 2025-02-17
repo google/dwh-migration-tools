@@ -32,5 +32,5 @@ org.slf4j:jul-to-slf4j:1.7.36=testRuntimeClasspath
 org.slf4j:log4j-over-slf4j:2.0.16=testRuntimeClasspath
 org.slf4j:slf4j-api:1.7.36=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesCompileClasspath,testFixturesRuntimeClasspath
 org.slf4j:slf4j-api:2.0.16=testRuntimeClasspath
-org.yaml:snakeyaml:2.3=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
+org.yaml:snakeyaml:2.4=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 empty=
