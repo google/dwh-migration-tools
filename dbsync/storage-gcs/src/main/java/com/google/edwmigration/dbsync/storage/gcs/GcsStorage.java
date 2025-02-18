@@ -28,20 +28,9 @@ public class GcsStorage {
 
     public static final String SCHEME = "gs";
 
-    private final String projectId;
     private final Storage storage;
 
     public GcsStorage(String projectId) {
-        // Get today's date at midnight
-        LocalDate todayLocal = LocalDate.now();
-        ZonedDateTime todayStartOfDay = todayLocal.atStartOfDay(ZoneId.systemDefault());
-        Date todayDate = Date.from(todayStartOfDay.toInstant());
-
-
-        // Calculate tomorrow's date (24 hours later)
-        long tomorrowMillis = todayDate.getTime() + (24 * 60 * 60 * 1000); // Milliseconds in a day
-        Date tomorrowDate = new Date(tomorrowMillis);
-        this.projectId = projectId;
         this.storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
     }
 

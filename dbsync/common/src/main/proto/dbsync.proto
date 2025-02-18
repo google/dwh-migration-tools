@@ -22,19 +22,3 @@ message Instruction  {
 		bytes data = 3;
 	}
 }
-
-message OpenRequest {
-}
-
-message OpenResponse {
-}
-
-message File {
-	int64 id = 1;
-	string path = 2;
-};
-
-service DbsyncTarget {
-	rpc doOpen(OpenRequest) returns (OpenResponse);
-	rpc doFile(File) returns (File);
-}

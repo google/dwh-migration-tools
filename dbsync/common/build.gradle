@@ -33,6 +33,8 @@ dependencies {
 
 	api libs.parquet.generator
 	implementation libs.fastutil
+	implementation libs.jopt.simple
+	implementation libs.jdiagnostics
 	api libs.avro
 	api "io.grpc:grpc-protobuf:$grpcVersion"
 	api "io.grpc:grpc-stub:$grpcVersion"

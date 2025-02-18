@@ -14,27 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dbsync.client;
-
-import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.HOURS;
+package com.google.edwmigration.dbsync.common;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import joptsimple.BuiltinHelpFormatter;
-import joptsimple.OptionDescriptor;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -48,41 +36,6 @@ public class DefaultArguments {
 
   @SuppressWarnings("UnusedVariable")
   private static final Logger LOG = LoggerFactory.getLogger(DefaultArguments.class);
-
-  public static class BooleanValueConverter implements ValueConverter<Boolean> {
-
-    private final String[] V_TRUE = {"true", "t", "yes", "y", "1"};
-    private final String[] V_FALSE = {"false", "f", "no", "n", "0"};
-
-    public static BooleanValueConverter INSTANCE = new BooleanValueConverter();
-
-    private BooleanValueConverter() {}
-
-    @Override
-    public Boolean convert(String value) {
-      for (String s : V_TRUE) if (value.equalsIgnoreCase(s)) return Boolean.TRUE;
-      for (String s : V_FALSE) if (value.equalsIgnoreCase(s)) return Boolean.FALSE;
-      throw new ValueConversionException("Not a valid boolean value: " + value);
-    }
-
-    @Override
-    public Class<? extends Boolean> valueType() {
-      return Boolean.class;
-    }
-
-    @Override
-    public String valuePattern() {
-      StringBuilder buf = new StringBuilder();
-      Joiner joiner = Joiner.on('/');
-      joiner.appendTo(buf, V_TRUE);
-      buf.append('/');
-      joiner.appendTo(buf, V_FALSE);
-      return buf.toString();
-    }
-  }
-
-  private static final String PRODUCT_GROUP = "com.google.edwmigration.dumper";
-  private static final String PRODUCT_CORE_MODULE = "app";
 
   protected final OptionParser parser = new OptionParser();
   private final OptionSpec<?> helpOption =

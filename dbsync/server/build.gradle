@@ -14,7 +14,15 @@ plugins {
 }
 
 dependencies {
-    api project(':dbsync:common')
+    dependencies {
+        implementation project(':dbsync:common')
+        implementation project(':dbsync:storage-aws')
+        implementation project(':dbsync:storage-gcs')
+        implementation libs.jopt.simple
+        implementation libs.jdiagnostics
+        implementation libs.commons.lang3
+        implementation libs.google.cloud.run
+    }
 }
 
 application {

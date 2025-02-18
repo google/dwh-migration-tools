@@ -1,20 +1,14 @@
 package com.google.edwmigration.dbsync.client;
 
-import com.google.edwmigration.dbsync.client.CloudRunHelper.Mode;
-import java.io.IOException;
+import com.google.edwmigration.dbsync.common.DefaultArguments;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import joptsimple.OptionSpec;
 
-public class CloudRunMain {
+public class GcsClientMain {
 
   private static class Arguments extends DefaultArguments {
-
-    private final OptionSpec<Mode> modeOptionSpec =
-        parser.accepts("mode", "Specifies the mode")
-            .withRequiredArg()
-            .ofType(Mode.class)
-            .required();
 
     private final OptionSpec<String> projectOptionSpec =
         parser.accepts("project", "Specifies the destination project")
@@ -24,6 +18,12 @@ public class CloudRunMain {
 
     private final OptionSpec<String> targetOptionSpec =
         parser.accepts("target_file", "Specifies the target file")
+            .withRequiredArg()
+            .ofType(String.class)
+            .required();
+
+    private final OptionSpec<String> sourceOptionSpec =
+        parser.accepts("source_file", "Specifies the source file")
             .withRequiredArg()
             .ofType(String.class)
             .required();
@@ -38,10 +38,6 @@ public class CloudRunMain {
       super(args);
     }
 
-    public Mode getMode() {
-      return getOptions().valueOf(modeOptionSpec);
-    }
-
     public String getProject() {
       return getOptions().valueOf(projectOptionSpec);
     }
@@ -50,29 +46,25 @@ public class CloudRunMain {
       return getOptions().valueOf(targetOptionSpec);
     }
 
+    public String getSourceUri() {return getOptions().valueOf(sourceOptionSpec);}
+
     public String getStagingBucket() {
       return getOptions().valueOf(stagingBucketOptionSpec);
     }
   }
 
-
-  // This is invoked in CloudRun, as ServerMain --mode GENERATE vs --mode RECONSTRUCT
-  public static void main(String[] args) throws IOException, URISyntaxException {
-    Arguments argument = new Arguments(args);
-    switch (argument.getMode()) {
-      case GENERATE:
-        CloudRunHelper.generate(
-          argument.getProject(),
-          URI.create(argument.getStagingBucket()),
-          URI.create(argument.getTargetUri())
+  public static void main(String[] args) {
+    RsyncClient client = new RsyncClient();
+    Arguments arguments = new Arguments(args);
+    try {
+      client.putRsync(
+          arguments.getProject(),
+          new URI(arguments.getSourceUri()),
+          new URI(arguments.getStagingBucket()),
+          new URI(arguments.getTargetUri())
       );
-      case RECEIVE:
-        CloudRunHelper.reconstruct(
-          argument.getProject(),
-          URI.create(argument.getStagingBucket()),
-          URI.create(argument.getTargetUri())
-      );
+    } catch (Exception e){
+      Logger.getLogger("rsync").log(Level.INFO, e.getMessage(), e);
     }
   }
-
 }
