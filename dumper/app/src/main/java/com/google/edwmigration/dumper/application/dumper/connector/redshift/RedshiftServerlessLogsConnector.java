@@ -31,11 +31,10 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftServerlessLogsDumpFormat;
 import java.util.List;
 import javax.annotation.Nonnull;
 
-@AutoService({Connector.class, LogsConnector.class})
+@AutoService({Connector.class})
 @Description("Dumps logs from Amazon Redshift Serverless.")
 @RespectsInput(
     order = ConnectorArguments.OPT_PORT_ORDER,
@@ -48,7 +47,10 @@ import javax.annotation.Nonnull;
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
 public class RedshiftServerlessLogsConnector extends AbstractRedshiftConnector
-    implements LogsConnector, RedshiftServerlessLogsDumpFormat {
+    implements LogsConnector {
+
+  private static final String ZIP_SERVERLESS_USAGE_ENTRY_NAME = "sys_serverless_usage.csv";
+  private static final String FORMAT_NAME = "redshift-serverless-logs.zip";
 
   public RedshiftServerlessLogsConnector() {
     super("redshift-serverless-logs");
@@ -63,8 +65,6 @@ public class RedshiftServerlessLogsConnector extends AbstractRedshiftConnector
     // Redshift retains serverless usage data for max 7 days. This results in relatively low
     // number of records so there is no need to split it into the smaller, interval based files.
     out.add(
-        new JdbcSelectTask(
-            RedshiftServerlessLogsDumpFormat.ServerlessUsageMetrics.ZIP_ENTRY_NAME,
-            "SELECT * FROM SYS_SERVERLESS_USAGE"));
+        new JdbcSelectTask(ZIP_SERVERLESS_USAGE_ENTRY_NAME, "SELECT * FROM SYS_SERVERLESS_USAGE"));
   }
 }
