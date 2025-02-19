@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package dbsync;
+option java_package = "com.google.edwmigration.dbsync.proto";
+option java_multiple_files = true;
+
+message BlockLocation {
+	uint64 blockOffset = 1;
+	uint32 blockLength = 2;
+}
+
+message Checksum {
+	uint64 blockOffset = 1;
+	uint32 blockLength = 2;
+	int32 weakChecksum = 3;
+	int64 strongChecksum = 4;
+}
+
+message Instruction  {
+	oneof Body {
+		BlockLocation blockLocation = 1;
+		bytes data = 3;
+	}
+}

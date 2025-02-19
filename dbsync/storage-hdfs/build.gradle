@@ -1,0 +1,8 @@
+plugins {
+    id 'dbsync.java-library-conventions'
+}
+
+dependencies {
+    api project(':dbsync:common')
+	testImplementation testFixtures(project(':dbsync:common'))
+}
