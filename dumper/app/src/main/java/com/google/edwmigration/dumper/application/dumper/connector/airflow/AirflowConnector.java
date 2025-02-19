@@ -68,7 +68,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
   private final String[] driverClasses =
       new String[] {
-        // the order is important! The first found class will be used as jdbc connection.
+        // the order is important! The first class found will be used as a jdbc connection.
         "org.mariadb.jdbc.Driver",
         "com.mysql.cj.jdbc.Drive",
         "com.mysql.jdbc.Driver",
@@ -98,14 +98,19 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
+    // Airflow v1.5.0
     addFullTable(out, "dag.csv", "select * from dag;");
-    addFullTable(out, "dag_run.csv", "select * from dag_run;");
     addFullTable(out, "task_instance.csv", "select * from task_instance;");
-    addFullTable(out, "task_instance_history.csv", "select * from task_instance_history;");
     addFullTable(out, "job.csv", "select * from job;");
+    // Airflow v1.6.0
+    addFullTable(out, "dag_run.csv", "select * from dag_run;");
 
+    // Airflow v1.10.7
     // analog of DAG's python definition in json
     addFullTable(out, "serialized_dag.csv", "select * from serialized_dag;");
+
+    // Airflow v2.10.0 //todo add if table exists
+    addFullTable(out, "task_instance_history.csv", "select * from task_instance_history;");
   }
 
   private static void addFullTable(List<? super Task<?>> out, String filename, String sql) {
