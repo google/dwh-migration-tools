@@ -788,6 +788,26 @@ class OverridesUtil {
             "javax.xml.stream:stax-api": [
                 projectUrl: "https://github.com/jakartaee/jaxb-api",
                 licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaxb-api/master/LICENSE.md",
+            ],
+            "org.eclipse.collections:eclipse-collections": [
+                projectUrl: "https://github.com/eclipse-collections/eclipse-collections",
+                licenseUrl: "https://raw.githubusercontent.com/eclipse-collections/eclipse-collections/refs/heads/master/LICENSE-EDL-1.0.txt",
+            ],
+            "org.eclipse.collections:eclipse-collections-api": [
+                projectUrl: "https://github.com/eclipse-collections/eclipse-collections",
+                licenseUrl: "https://raw.githubusercontent.com/eclipse-collections/eclipse-collections/refs/heads/master/LICENSE-EDL-1.0.txt",
+            ],
+            "jakarta.annotation:jakarta.annotation-api": [
+                projectUrl: "https://github.com/jakartaee/common-annotations-api",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/common-annotations-api/refs/heads/master/LICENSE.md"
+            ],
+            "jakarta.servlet:jakarta.servlet-api": [
+                projectUrl: "https://github.com/jakartaee/servlet",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/servlet/refs/heads/master/LICENSE.md"
+            ],
+            "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1alpha": [
+                projectUrl: "https://github.com/googleapis/googleapis",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
             ]
         ]
     }
