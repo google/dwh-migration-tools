@@ -133,6 +133,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
         arguments.getDriverPaths() != null && !arguments.getDriverPaths().isEmpty(),
         "Path to jdbc driver must be provided");
 
+    // todo fix warning logs, because no drivers is expected case
     Driver driver = loadFirstAvailableDriver(arguments.getDriverPaths());
     String host = arguments.getHost();
     int port = arguments.getPort();
