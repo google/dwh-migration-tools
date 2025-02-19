@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.airflow;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
@@ -65,16 +66,15 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
   private static final Logger LOG = LoggerFactory.getLogger(AirflowConnector.class);
 
-  public static final String FORMAT_NAME = "airflow.dump.zip";
+  private static final String FORMAT_NAME = "airflow.dump.zip";
 
-  private final String[] driverClasses =
-      new String[] {
-        // the order is important! The first class found will be used as a jdbc connection.
-        "org.mariadb.jdbc.Driver",
-        "com.mysql.cj.jdbc.Driver",
-        "com.mysql.jdbc.Driver",
-        "org.postgresql.Driver"
-      };
+  private final ImmutableList<String> driverClasses =
+      ImmutableList.of(
+          // the order is important! The first class found will be used as a jdbc connection.
+          "org.mariadb.jdbc.Driver",
+          "com.mysql.cj.jdbc.Driver",
+          "com.mysql.jdbc.Driver",
+          "org.postgresql.Driver");
 
   private final ImmutableMap<String, String> driverToJdbcPrefix =
       ImmutableMap.of(
@@ -133,7 +133,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
         arguments.getDriverPaths() != null && !arguments.getDriverPaths().isEmpty(),
         "Path to jdbc driver must be provided");
 
-    Driver driver = newDriver(arguments.getDriverPaths(), driverClasses);
+    Driver driver = loadFirstAvailableDriver(arguments.getDriverPaths());
     String host = arguments.getHost();
     int port = arguments.getPort();
     String schema = arguments.getSchema();
@@ -144,5 +144,9 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
     DataSource dataSource = newSimpleDataSource(driver, jdbcString, arguments);
     return JdbcHandle.newPooledJdbcHandle(dataSource, 1);
+  }
+
+  private Driver loadFirstAvailableDriver(List<String> driverPaths) throws Exception {
+    return newDriver(driverPaths, driverClasses.toArray(driverClasses.toArray(new String[0])));
   }
 }
