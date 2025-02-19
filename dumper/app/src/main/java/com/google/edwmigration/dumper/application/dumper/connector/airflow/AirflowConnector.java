@@ -43,7 +43,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@AutoService({Connector.class})
+@AutoService(Connector.class)
 @Description("Dumps DAGs metadata from Airflow.")
 @RespectsInput(
     order = 100,
@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
 @RespectsArgumentUser
 @RespectsArgumentPassword
 public class AirflowConnector extends AbstractJdbcConnector implements MetadataConnector {
+
   private static final Logger LOG = LoggerFactory.getLogger(AirflowConnector.class);
 
   public static final String FORMAT_NAME = "airflow.dump.zip";
@@ -70,7 +71,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       new String[] {
         // the order is important! The first class found will be used as a jdbc connection.
         "org.mariadb.jdbc.Driver",
-        "com.mysql.cj.jdbc.Drive",
+        "com.mysql.cj.jdbc.Driver",
         "com.mysql.jdbc.Driver",
         "org.postgresql.Driver"
       };
@@ -78,12 +79,17 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   private final ImmutableMap<String, String> driverToJdbcPrefix =
       ImmutableMap.of(
           "org.mariadb.jdbc.Driver", "jdbc:mariadb://",
-          "com.mysql.cj.jdbc.Drive", "jdbc:mysql://",
+          "com.mysql.cj.jdbc.Driver", "jdbc:mysql://",
           "com.mysql.jdbc.Driver", "jdbc:mysql://",
           "org.postgresql.Driver", "jdbc:postgresql://");
 
   public AirflowConnector() {
     super("airflow");
+    for (String driverClass : driverClasses) {
+      Preconditions.checkState(
+          driverToJdbcPrefix.containsKey(driverClass),
+          "Connector state is corrupted. No jdbc prefix for driver class: " + driverClass);
+    }
   }
 
   @Nonnull
