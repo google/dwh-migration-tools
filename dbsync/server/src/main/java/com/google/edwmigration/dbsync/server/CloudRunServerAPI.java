@@ -19,24 +19,24 @@ import java.util.concurrent.ExecutionException;
 
 
 public class CloudRunServerAPI {
-
-  // get this from some environment variable
-  private static final String BASE_IMAGE = "";
-  // get this from some environment variable
-  private static final String CLIENT_JAR = "";
+  private static final String BASE_IMAGE_ENV_VAR = "RSYNC_CLOUD_BASE_IMAGE";
+  private static final String CLIENT_JAR_ENV_VAR = "RSYNC_CLIENT_JAR";
   private static final String RSYNC_BINARY_NAME = "rsync-binary";
 
   private final String project;
   private final String location;
   private final URI stagingBucket;
-
   private final URI targetUri;
+  private final String baseImage;
+  private final String clientJar;
 
   public CloudRunServerAPI(String project, String location, URI stagingBucket, URI targetUri) {
     this.project = project;
     this.location = location;
     this.stagingBucket = stagingBucket;
     this.targetUri = targetUri;
+    this.baseImage = System.getenv(BASE_IMAGE_ENV_VAR);
+    this.clientJar = System.getenv(CLIENT_JAR_ENV_VAR);
   }
 
 
@@ -49,7 +49,7 @@ public class CloudRunServerAPI {
           .setTemplate(
               ExecutionTemplate.newBuilder().setTemplate(TaskTemplate.newBuilder().addContainers(
                   Container.newBuilder()
-                      .setImage(BASE_IMAGE)
+                      .setImage(this.baseImage)
                       .addCommand("/bin/sh")
                       .addAllArgs(Arrays.asList("-c", command))
                       .build()
@@ -67,7 +67,7 @@ public class CloudRunServerAPI {
 
   public void deployRsyncJobs()
       throws IOException, ExecutionException, InterruptedException {
-    Path jar_path = Paths.get(CLIENT_JAR);
+    Path jar_path = Paths.get(this.clientJar);
     GcsStorage stagingStorage = new GcsStorage(project);
     URI serverJarUri = stagingBucket.resolve(RSYNC_BINARY_NAME);
     stagingStorage.uploadFile(jar_path, serverJarUri);
