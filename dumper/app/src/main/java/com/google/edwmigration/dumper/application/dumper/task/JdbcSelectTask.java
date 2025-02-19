@@ -21,16 +21,10 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** @author shevek */
 public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
-
-  @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTask.class);
-
   @Nonnull private final String sql;
 
   @Nonnull private final TaskCategory taskCategory;
@@ -65,7 +59,7 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
       @Nonnull Connection connection)
       throws SQLException {
     ResultSetExtractor<Summary> rse = newCsvResultSetExtractor(sink);
-    return doSelect(connection, rse, sql);
+    return doSelect(connection, rse, getSql());
   }
 
   @Override

@@ -19,19 +19,8 @@ package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 /** @author shevek */
 public interface MysqlMetadataDumpFormat {
 
-  public static final String FORMAT_NAME = "mysql.dump.zip";
+  String FORMAT_NAME = "mysql.dump.zip";
 
-  /*
-  interface DatabasesFormat {
-
-      String ZIP_ENTRY_NAME = "databases.csv";
-
-      enum Header {
-          DatabaseName,
-          DatabaseOwner
-      }
-  }
-   */
   interface SchemataFormat {
 
     String ZIP_ENTRY_NAME = "schemata.csv";

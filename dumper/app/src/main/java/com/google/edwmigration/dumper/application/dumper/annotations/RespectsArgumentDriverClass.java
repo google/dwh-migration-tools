@@ -43,6 +43,5 @@ import java.lang.annotation.Target;
     description = RespectsArgumentDriverClass.DESCRIPTION)
 public @interface RespectsArgumentDriverClass {
 
-  public static final String DESCRIPTION =
-      "Optionally overrides the vendor-specified JDBC driver class name.";
+  String DESCRIPTION = "Optionally overrides the vendor-specified JDBC driver class name.";
 }
