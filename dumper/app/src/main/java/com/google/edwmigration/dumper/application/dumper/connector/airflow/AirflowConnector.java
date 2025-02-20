@@ -16,10 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.airflow;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.airflow.AirflowDatabaseDriverClasses.jdbcPrefixForClassName;
+
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
@@ -72,25 +73,13 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   private final ImmutableList<String> driverClasses =
       ImmutableList.of(
           // the order is important! The first class found will be used as a jdbc connection.
-          "org.mariadb.jdbc.Driver",
-          "com.mysql.cj.jdbc.Driver",
-          "com.mysql.jdbc.Driver",
-          "org.postgresql.Driver");
-
-  private final ImmutableMap<String, String> driverToJdbcPrefix =
-      ImmutableMap.of(
-          "org.mariadb.jdbc.Driver", "jdbc:mariadb://",
-          "com.mysql.cj.jdbc.Driver", "jdbc:mysql://",
-          "com.mysql.jdbc.Driver", "jdbc:mysql://",
-          "org.postgresql.Driver", "jdbc:postgresql://");
+          AirflowDatabaseDriverClasses.MARIADB.getDriverClassName(),
+          AirflowDatabaseDriverClasses.MYSQL.getDriverClassName(),
+          AirflowDatabaseDriverClasses.MYSQL_OLD.getDriverClassName(),
+          AirflowDatabaseDriverClasses.POSTGRESQL.getDriverClassName());
 
   public AirflowConnector() {
     super("airflow");
-    for (String driverClass : driverClasses) {
-      Preconditions.checkState(
-          driverToJdbcPrefix.containsKey(driverClass),
-          "Connector state is corrupted. No jdbc prefix for driver class: " + driverClass);
-    }
   }
 
   @Nonnull
@@ -150,7 +139,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     String schema = arguments.getSchema();
 
     String jdbcString =
-        driverToJdbcPrefix.get(driver.getClass().getName()) + host + ":" + port + "/" + schema;
+        jdbcPrefixForClassName(driver.getClass().getName()) + host + ":" + port + "/" + schema;
     LOG.info("Connecting to jdbc string [{}]...", jdbcString);
 
     DataSource dataSource = newSimpleDataSource(driver, jdbcString, arguments);
