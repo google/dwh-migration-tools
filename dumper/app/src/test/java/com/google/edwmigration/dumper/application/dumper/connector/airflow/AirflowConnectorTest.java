@@ -41,10 +41,7 @@ public class AirflowConnectorTest {
     Map<String, String> expectedFilesToTables =
         ImmutableMap.of(
             "dag.csv", "dag",
-            "dag_run.csv", "dag_run",
-            "job.csv", "job",
-            "serialized_dag.csv", "serialized_dag",
-            "task_instance.csv", "task_instance");
+            "dag_run.csv", "dag_run");
 
     testJdbcSelectTasks(expectedFilesToTables, TaskCategory.REQUIRED);
   }
@@ -52,7 +49,7 @@ public class AirflowConnectorTest {
   @Test
   public void addTasksTo_containsJdbcSelect_optional() throws Exception {
     Map<String, String> expectedFilesToTables =
-        ImmutableMap.of("task_instance_history.csv", "task_instance_history");
+        ImmutableMap.of("serialized_dag.csv", "serialized_dag", "dag_code.csv", "dag_code");
 
     testJdbcSelectTasks(expectedFilesToTables, TaskCategory.OPTIONAL);
   }

@@ -19,7 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.airflow;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
-public enum AirflowDatabaseDriverClasses {
+enum AirflowDatabaseDriverClasses {
   MYSQL_OLD("com.mysql.jdbc.Driver", "jdbc:mysql://"),
   MYSQL("com.mysql.cj.jdbc.Driver", "jdbc:mysql://"),
   MARIADB("org.mariadb.jdbc.Driver", "jdbc:mariadb://"),
