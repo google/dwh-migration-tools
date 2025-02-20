@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,16 +37,29 @@ public class AirflowConnectorTest {
   private final AirflowConnector connector = new AirflowConnector();
 
   @Test
-  public void addTasksTo_containsJdbcSelect() throws Exception {
-    List<Task<?>> tasks = new ArrayList<>();
+  public void addTasksTo_containsJdbcSelect_required() throws Exception {
     Map<String, String> expectedFilesToTables =
         ImmutableMap.of(
             "dag.csv", "dag",
             "dag_run.csv", "dag_run",
             "job.csv", "job",
             "serialized_dag.csv", "serialized_dag",
-            "task_instance.csv", "task_instance",
-            "task_instance_history.csv", "task_instance_history");
+            "task_instance.csv", "task_instance");
+
+    testJdbcSelectTasks(expectedFilesToTables, TaskCategory.REQUIRED);
+  }
+
+  @Test
+  public void addTasksTo_containsJdbcSelect_optional() throws Exception {
+    Map<String, String> expectedFilesToTables =
+        ImmutableMap.of("task_instance_history.csv", "task_instance_history");
+
+    testJdbcSelectTasks(expectedFilesToTables, TaskCategory.OPTIONAL);
+  }
+
+  private void testJdbcSelectTasks(
+      Map<String, String> expectedFilesToTables, TaskCategory taskCategory) throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
 
     // Act
     connector.addTasksTo(tasks, null);
@@ -55,6 +69,7 @@ public class AirflowConnectorTest {
         tasks.stream()
             .filter(t -> t instanceof JdbcSelectTask)
             .map(JdbcSelectTask.class::cast)
+            .filter(t -> t.getCategory().equals(taskCategory))
             .collect(Collectors.toMap(JdbcSelectTask::getTargetPath, JdbcSelectTask::getSql));
 
     assertEquals(expectedFilesToTables.size(), existingFilesToTables.size());

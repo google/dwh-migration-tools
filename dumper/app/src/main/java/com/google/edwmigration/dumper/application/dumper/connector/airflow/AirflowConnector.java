@@ -34,6 +34,7 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.sql.Driver;
@@ -115,12 +116,21 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     // analog of DAG's python definition in json
     addFullTable(out, "serialized_dag.csv", "select * from serialized_dag;");
 
-    // Airflow v2.10.0 //todo add if table exists
-    addFullTable(out, "task_instance_history.csv", "select * from task_instance_history;");
+    // Airflow v2.10.0
+    addFullTable(
+        out,
+        "task_instance_history.csv",
+        "select * from task_instance_history;",
+        TaskCategory.OPTIONAL);
   }
 
   private static void addFullTable(List<? super Task<?>> out, String filename, String sql) {
-    out.add(new JdbcSelectTask(filename, sql));
+    addFullTable(out, filename, sql, TaskCategory.REQUIRED);
+  }
+
+  private static void addFullTable(
+      List<? super Task<?>> out, String filename, String sql, TaskCategory taskCategory) {
+    out.add(new JdbcSelectTask(filename, sql, taskCategory));
   }
 
   @Nonnull
