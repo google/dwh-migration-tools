@@ -80,7 +80,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
               appLoader.load(
                   clusterName,
                   yarnAppType,
-                  yarnAppsPage -> writeYarnAppTypes(writer, yarnAppsPage, yarnAppType));
+                  yarnAppsPage -> writeYarnAppTypes(writer, yarnAppsPage, yarnAppType, clusterName));
           LOG.info(
               "Dumped {} YARN applications with {} type from {} cluster",
               loadedAppsCount,
@@ -92,11 +92,11 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   }
 
   private void writeYarnAppTypes(
-      Writer writer, List<ApiYARNApplicationDTO> yarnApps, String appType) {
+      Writer writer, List<ApiYARNApplicationDTO> yarnApps, String appType, String clusterName) {
     List<ApplicationTypeToYarnApplication> yarnAppTypeMappings = new ArrayList<>();
     for (ApiYARNApplicationDTO yarnApp : yarnApps) {
       yarnAppTypeMappings.add(
-          new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), appType));
+          new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), appType, clusterName));
     }
     try {
       String yarnAppTypeMappingsInJson =
@@ -132,10 +132,12 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   private static class ApplicationTypeToYarnApplication {
     private final String applicationId;
     private final String applicationType;
+    private final String clusterName;
 
-    public ApplicationTypeToYarnApplication(String applicationId, String applicationType) {
+    public ApplicationTypeToYarnApplication(String applicationId, String applicationType, String clusterName) {
       this.applicationId = applicationId;
       this.applicationType = applicationType;
+      this.clusterName = clusterName;
     }
 
     public String getApplicationId() {
@@ -145,5 +147,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     public String getApplicationType() {
       return applicationType;
     }
+
+    public String getClusterName() {return clusterName;}
   }
 }

@@ -120,13 +120,13 @@ public class ClouderaYarnApplicationTypeTaskTest {
     List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
     assertTrue(
         fileJsonLines.contains(
-            "{\"yarnAppTypes\":[{\"applicationId\":\"spark-app\",\"applicationType\":\"SPARK\"}]}"));
+            "{\"yarnAppTypes\":[{\"applicationId\":\"spark-app\",\"applicationType\":\"SPARK\",\"clusterName\":\"test-cluster\"}]}"));
     assertTrue(
         fileJsonLines.contains(
-            "{\"yarnAppTypes\":[{\"applicationId\":\"mapreduce-app\",\"applicationType\":\"MAPREDUCE\"}]}"));
+            "{\"yarnAppTypes\":[{\"applicationId\":\"mapreduce-app\",\"applicationType\":\"MAPREDUCE\",\"clusterName\":\"test-cluster\"}]}"));
     assertTrue(
         fileJsonLines.contains(
-            "{\"yarnAppTypes\":[{\"applicationId\":\"custom-app\",\"applicationType\":\"CLOUDERA_TYPE\"}]}"));
+            "{\"yarnAppTypes\":[{\"applicationId\":\"custom-app\",\"applicationType\":\"CLOUDERA_TYPE\",\"clusterName\":\"test-cluster\"}]}"));
   }
 
   @Test
@@ -183,7 +183,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
     List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
     assertTrue(
         fileJsonLines.contains(
-            "{\"yarnAppTypes\":[{\"applicationId\":\"custom-app\",\"applicationType\":\"CUSTOM-YARN-APP-TYPE\"}]}"));
+            "{\"yarnAppTypes\":[{\"applicationId\":\"custom-app\",\"applicationType\":\"CUSTOM-YARN-APP-TYPE\",\"clusterName\":\"test-cluster\"}]}"));
   }
 
   @Test
@@ -209,7 +209,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
     List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
     assertTrue(
         fileJsonLines.contains(
-            "{\"yarnAppTypes\":[{\"applicationId\":\"oozie\",\"applicationType\":\"Oozie Launcher\"}]}"));
+            "{\"yarnAppTypes\":[{\"applicationId\":\"oozie\",\"applicationType\":\"Oozie Launcher\",\"clusterName\":\"test-cluster\"}]}"));
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {
