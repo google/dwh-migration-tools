@@ -80,7 +80,8 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
               appLoader.load(
                   clusterName,
                   yarnAppType,
-                  yarnAppsPage -> writeYarnAppTypes(writer, yarnAppsPage, yarnAppType, clusterName));
+                  yarnAppsPage ->
+                      writeYarnAppTypes(writer, yarnAppsPage, yarnAppType, clusterName));
           LOG.info(
               "Dumped {} YARN applications with {} type from {} cluster",
               loadedAppsCount,
@@ -134,7 +135,8 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     private final String applicationType;
     private final String clusterName;
 
-    public ApplicationTypeToYarnApplication(String applicationId, String applicationType, String clusterName) {
+    public ApplicationTypeToYarnApplication(
+        String applicationId, String applicationType, String clusterName) {
       this.applicationId = applicationId;
       this.applicationType = applicationType;
       this.clusterName = clusterName;
@@ -148,6 +150,8 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
       return applicationType;
     }
 
-    public String getClusterName() {return clusterName;}
+    public String getClusterName() {
+      return clusterName;
+    }
   }
 }
