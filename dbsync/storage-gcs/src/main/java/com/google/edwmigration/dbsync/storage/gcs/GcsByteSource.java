@@ -1,6 +1,7 @@
 package com.google.edwmigration.dbsync.storage.gcs;
 
 import com.google.cloud.ReadChannel;
+import com.google.common.base.Optional;
 import com.google.edwmigration.dbsync.common.storage.AbstractRemoteByteSource;
 import com.google.edwmigration.dbsync.common.storage.Slice;
 import com.google.cloud.storage.BlobId;
@@ -48,5 +49,10 @@ public class GcsByteSource extends AbstractRemoteByteSource {
     protected MoreObjects.ToStringHelper toStringHelper(ToStringHelper helper) {
         return super.toStringHelper(helper)
             .add("blobId", blobId);
+    }
+
+    @Override
+    public Optional<Long> sizeIfKnown(){
+        return Optional.of(storage.get(blobId).asBlobInfo().getSize());
     }
 }
