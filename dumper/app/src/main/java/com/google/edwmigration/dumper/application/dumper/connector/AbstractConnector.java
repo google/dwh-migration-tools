@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import static java.util.Arrays.stream;
 
 import com.google.common.base.Preconditions;
+import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -28,6 +29,16 @@ public abstract class AbstractConnector implements Connector {
 
   public AbstractConnector(@Nonnull String name) {
     this.name = Preconditions.checkNotNull(name, "Name was null.");
+  }
+
+  @Nonnull
+  public String getDescription() {
+    Description description = getClass().getAnnotation(Description.class);
+    if (description != null) {
+      return description.value();
+    } else {
+      return "";
+    }
   }
 
   @Nonnull

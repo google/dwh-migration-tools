@@ -20,7 +20,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.snowfl
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import javax.annotation.Nonnull;
 
 /**
  * This is identical to snowflake-logs, because the SCHEMA_ONLY input setting is the default one.
@@ -28,10 +28,15 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
  * @author shevek
  */
 @AutoService(Connector.class)
-@Description("Dumps logs from Snowflake, using INFORMATION_SCHEMA only.")
 public class SnowflakeInformationSchemaLogsConnector extends SnowflakeLogsConnector {
 
   public SnowflakeInformationSchemaLogsConnector() {
     super("snowflake-information-schema-logs", SCHEMA_ONLY_SOURCE);
+  }
+
+  @Override
+  @Nonnull
+  public String getDescription() {
+    return "Dumps logs from Snowflake, using INFORMATION_SCHEMA only.";
   }
 }
