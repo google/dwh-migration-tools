@@ -247,7 +247,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         // Enables cursors in PostgreSQL.
         // Teradata says that this can reduce the fetch size below 1Mb, but not increase it.
         statement.setFetchSize(16384);
-        LOG.debug("Statement preparation took " + stopwatch + ". Executing...");
+        LOG.debug("Statement preparation took {}. Executing...", stopwatch);
       }
 
       EXECUTE:

@@ -51,7 +51,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.http.HttpStatus;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -73,7 +72,6 @@ public class ClouderaAPIHostsTaskTest {
 
   @Mock private Writer writer;
   @Mock private CharSink charSink;
-  @Mock private CloseableHttpClient httpClient;
 
   @BeforeClass
   public static void beforeClass() throws Exception {

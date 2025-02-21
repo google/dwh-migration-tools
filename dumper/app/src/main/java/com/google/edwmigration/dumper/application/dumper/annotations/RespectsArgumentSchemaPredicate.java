@@ -35,5 +35,5 @@ import java.lang.annotation.Target;
     description = RespectsArgumentSchemaPredicate.DESCRIPTION)
 public @interface RespectsArgumentSchemaPredicate {
 
-  public static final String DESCRIPTION = "The list of schemas to dump, separated by commas.";
+  String DESCRIPTION = "The list of schemas to dump, separated by commas.";
 }

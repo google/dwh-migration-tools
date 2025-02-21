@@ -764,6 +764,11 @@ public class ConnectorArguments extends DefaultArguments {
         .collect(toImmutableList());
   }
 
+  @CheckForNull
+  public String getSchema() {
+    return getOptions().valueOf(optionSchema);
+  }
+
   @Nonnull
   public Predicate<String> getDatabasePredicate() {
     return toPredicate(getDatabases());

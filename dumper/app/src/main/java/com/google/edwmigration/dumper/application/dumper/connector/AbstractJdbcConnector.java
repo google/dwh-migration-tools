@@ -64,7 +64,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
    * Creates a new ClassLoader for loading the JDBC Driver.
    *
    * @param parentClassLoader The parent ClassLoader.
-   * @param driverPath A comma-separated list of paths to JAR files for inclusion in the new
+   * @param driverPaths A comma-separated list of paths to JAR files for inclusion in the new
    *     ClassLoader.
    * @return The JDBC ClassLoader to use to load the Driver.
    * @throws PrivilegedActionException
