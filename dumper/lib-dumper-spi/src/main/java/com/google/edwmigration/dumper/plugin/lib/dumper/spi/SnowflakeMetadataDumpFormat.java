@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 
-/** @author dave */
+/**
+ * @author dave
+ */
 public interface SnowflakeMetadataDumpFormat {
 
   public static final String FORMAT_NAME = "snowflake.dump.zip";
@@ -138,6 +140,15 @@ public interface SnowflakeMetadataDumpFormat {
   }
 
   interface ExternalTablesFormat {
-    String AU_ZIP_ENTRY_NAME = "external_tables.csv";
+    String ZIP_ENTRY_NAME = "external_tables.csv";
+
+    enum Header {
+      TableCatalog,
+      TableSchema,
+      TableName,
+      Location,
+      FileFormatName,
+      FileFormatType
+    }
   }
 }

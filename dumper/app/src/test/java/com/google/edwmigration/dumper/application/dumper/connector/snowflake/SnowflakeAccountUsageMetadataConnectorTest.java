@@ -24,7 +24,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** @author shevek */
+/**
+ * @author shevek
+ */
 @RunWith(JUnit4.class)
 public class SnowflakeAccountUsageMetadataConnectorTest
     extends AbstractSnowflakeConnectorExecutionTest {
@@ -48,6 +50,9 @@ public class SnowflakeAccountUsageMetadataConnectorTest
         SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.TablesFormat.Header.class);
     validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.ExternalTablesFormat.ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.ExternalTablesFormat.Header.class);
+    validator.withEntryValidator(
         SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class);
     validator.withEntryValidator(
@@ -60,7 +65,6 @@ public class SnowflakeAccountUsageMetadataConnectorTest
     validator.withExpectedEntries(
         SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.FunctionInfoFormat.AU_ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.ExternalTablesFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.WarehousesFormat.AU_ZIP_ENTRY_NAME);
   }
 }
