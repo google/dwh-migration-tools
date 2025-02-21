@@ -15,12 +15,13 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import com.google.cloud.run.v2.CreateJobRequest;
 import com.google.cloud.run.v2.JobsClient;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 
 public class CloudRunServerAPI {
   private static final String BASE_IMAGE_ENV_VAR = "RSYNC_CLOUD_BASE_IMAGE";
-  private static final String CLIENT_JAR_ENV_VAR = "RSYNC_CLIENT_JAR";
+  private static final String SERVER_JAR_ENV_VAR = "RSYNC_SERVER_JAR";
   private static final String RSYNC_BINARY_NAME = "rsync-binary";
 
   private final String project;
@@ -29,6 +30,7 @@ public class CloudRunServerAPI {
   private final URI targetUri;
   private final String baseImage;
   private final String clientJar;
+  private final String jobIdSuffix;
 
   public CloudRunServerAPI(String project, String location, URI stagingBucket, URI targetUri) {
     this.project = project;
@@ -36,11 +38,16 @@ public class CloudRunServerAPI {
     this.stagingBucket = stagingBucket;
     this.targetUri = targetUri;
     this.baseImage = System.getenv(BASE_IMAGE_ENV_VAR);
-    this.clientJar = System.getenv(CLIENT_JAR_ENV_VAR);
+    this.clientJar = System.getenv(SERVER_JAR_ENV_VAR);
+    //TODO a better way to generate unique id for job.
+    this.jobIdSuffix = UUID.randomUUID().toString();
   }
 
+  private String getJobId(Mode mode){
+    return String.format("rsync-server-%s-%s", mode.toString().toLowerCase(), this.jobIdSuffix);
+  }
 
-  private void deployCloudRunJob(String projectId, String location, String jobId,
+  private void deployCloudRunJob(String projectId, String location, Mode mode,
       String command)
       throws IOException, ExecutionException, InterruptedException {
     try (JobsClient jobsClient = JobsClient.create()) {
@@ -57,7 +64,7 @@ public class CloudRunServerAPI {
           ).build();
       CreateJobRequest jobRequest = CreateJobRequest.newBuilder()
           .setParent(parent)
-          .setJobId(jobId)
+          .setJobId(getJobId(mode))
           .setJob(job)
           .build();
       OperationFuture<Job, Job> client = jobsClient.createJobAsync(jobRequest);
@@ -85,7 +92,7 @@ public class CloudRunServerAPI {
             RSYNC_BINARY_NAME, Mode.GENERATE, project, stagingBucket, targetUri
         );
     deployCloudRunJob(
-        project, location, Mode.GENERATE.name().toLowerCase(),
+        project, location, Mode.GENERATE,
         String.format("%s && %s", jarDownloadCommand, generateCommand)
     );
 
@@ -101,26 +108,20 @@ public class CloudRunServerAPI {
             RSYNC_BINARY_NAME, Mode.RECEIVE, project, stagingBucket, targetUri
         );
     deployCloudRunJob(
-        project, "us-west1", Mode.RECEIVE.name().toLowerCase(),
+        project, location, Mode.RECEIVE,
         String.format("%s && %s", jarDownloadCommand, receiveCommand)
     );
   }
 
   public void generate() throws IOException, ExecutionException, InterruptedException {
     try (JobsClient jobsClient = JobsClient.create()) {
-      jobsClient.runJobAsync(
-          JobName.of(project, location,
-              String.format("rsync-server-%s", Mode.GENERATE.toString().toLowerCase()))
-      ).get();
+      jobsClient.runJobAsync(JobName.of(project, location, getJobId(Mode.GENERATE))).get();
     }
   }
 
   public void reconstruct() throws IOException, ExecutionException, InterruptedException {
     try (JobsClient jobsClient = JobsClient.create()) {
-      jobsClient.runJobAsync(
-          JobName.of(project, location,
-              String.format("rsync-server-%s", Mode.RECEIVE.toString().toLowerCase()))
-      ).get();
+      jobsClient.runJobAsync(JobName.of(project, location,getJobId(Mode.RECEIVE))).get();
     }
   }
 }
