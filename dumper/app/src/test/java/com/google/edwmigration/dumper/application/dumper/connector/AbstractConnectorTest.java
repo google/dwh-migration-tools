@@ -64,10 +64,11 @@ public abstract class AbstractConnectorTest {
   }
 
   protected void testConnector(@Nonnull Connector connector, String... args) throws Exception {
-    List<String> a = new ArrayList<>();
-    a.addAll(Arrays.asList("--connector", connector.getName()));
-    Collections.addAll(a, args);
-    ConnectorArguments arguments = new ConnectorArguments(a.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+    List<String> argsBuilder = new ArrayList<>();
+    argsBuilder.addAll(Arrays.asList("--connector", connector.getName()));
+    Collections.addAll(argsBuilder, args);
+    ConnectorArguments arguments =
+        new ConnectorArguments(argsBuilder.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
     List<Task<?>> out = new ArrayList<>();
     connector.addTasksTo(out, arguments);
 
@@ -81,7 +82,7 @@ public abstract class AbstractConnectorTest {
       else if (task instanceof FormatTask) specialTasks.add(SpecialTaskType.Format);
     }
 
-    LOG.debug("Special tasks discovered are " + specialTasks);
+    LOG.debug("Special tasks discovered are {}", specialTasks);
     assertFalse(
         specialTasks.contains(
             SpecialTaskType.Version)); // Added by MetadataDumper, not the connector.

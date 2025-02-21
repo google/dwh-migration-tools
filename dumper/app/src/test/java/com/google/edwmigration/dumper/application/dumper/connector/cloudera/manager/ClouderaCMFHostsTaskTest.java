@@ -43,6 +43,7 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -160,6 +161,11 @@ public class ClouderaCMFHostsTaskTest {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     stubCMFHostResponse("id1", "first-cluster", "[}");
     verifyNoWrites();
+  }
+
+  @Test
+  public void shouldBeOptional() {
+    assertEquals(TaskCategory.OPTIONAL, task.getCategory());
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {

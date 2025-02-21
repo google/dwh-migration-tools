@@ -27,9 +27,9 @@ import org.checkerframework.common.value.qual.ArrayLen;
 /** @author shevek */
 public interface Task<T> {
 
-  public static interface Condition {
+  interface Condition {
 
-    static class AlwaysTrue implements Condition {
+    class AlwaysTrue implements Condition {
 
       private static final AlwaysTrue instance = new AlwaysTrue();
 
@@ -41,21 +41,21 @@ public interface Task<T> {
       private AlwaysTrue() {}
     }
 
-    public static final Condition @ArrayLen(0) [] EMPTY_ARRAY = new Condition[0];
+    Condition @ArrayLen(0) [] EMPTY_ARRAY = new Condition[0];
 
     static Condition alwaysTrue() {
       return AlwaysTrue.instance;
     }
 
-    public boolean evaluate(@Nonnull TaskSetState state);
+    boolean evaluate(@Nonnull TaskSetState state);
 
     @Nonnull
-    public default String toSkipReason() {
+    default String toSkipReason() {
       return "[" + this + "] was not true";
     }
   }
 
-  public static class StateCondition implements Condition {
+  class StateCondition implements Condition {
 
     private final Task<?> task;
     private final TaskState taskState;
@@ -87,7 +87,7 @@ public interface Task<T> {
     }
   }
 
-  public static class AndCondition implements Condition {
+  class AndCondition implements Condition {
 
     private final List<Condition> conditions;
 
@@ -113,29 +113,29 @@ public interface Task<T> {
   }
 
   @Nonnull
-  public default String getName() {
+  default String getName() {
     return getTargetPath();
   }
 
   @Nonnull
-  public default TaskCategory getCategory() {
+  default TaskCategory getCategory() {
     return TaskCategory.REQUIRED;
   }
 
   @Nonnull
-  public String getTargetPath();
+  String getTargetPath();
 
   @Nonnull
-  public default Condition[] getConditions() {
+  default Condition[] getConditions() {
     return Condition.EMPTY_ARRAY;
   }
 
   @CheckForNull
-  public T run(@Nonnull TaskRunContext context) throws Exception;
+  T run(@Nonnull TaskRunContext context) throws Exception;
 
   // returns true if tasks handles the exception.
   // so it's not sent to user's screen
-  public default boolean handleException(Exception Fe) {
+  default boolean handleException(Exception Fe) {
     return false;
   }
 }
