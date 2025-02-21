@@ -27,7 +27,7 @@ public class RsyncClient {
   // GcsClientMain calls this.
   // Validation calls this.
   // TODO support multiple files ?
-  public void putRsync(String projectId, URI sourceUri, URI stagingBucket, URI targetUri)
+  public void putRsync(String projectId, String location, URI sourceUri, URI stagingBucket, URI targetUri)
       throws IOException, ExecutionException, InterruptedException {
     ByteSource byteSource;
     switch (sourceUri.getScheme()) {
@@ -42,7 +42,7 @@ public class RsyncClient {
         throw new IllegalStateException("Unexpected URI Scheme: " + sourceUri.getScheme());
     }
 
-    CloudRunServerAPI server = new CloudRunServerAPI(projectId, "", stagingBucket, targetUri);
+    CloudRunServerAPI server = new CloudRunServerAPI(projectId, location, stagingBucket, targetUri);
 
     if (byteSource.size() < MIN_SIZE_TO_RSYNC) {
       throw new IllegalStateException("dont handle small files");
@@ -84,5 +84,7 @@ public class RsyncClient {
 
     // Reconstruct on GCS
     server.reconstruct();
+
+    //TODO delete the jobs from cloudrun
   }
 }
