@@ -28,13 +28,11 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import java.sql.ResultSet;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import org.apache.commons.csv.CSVFormat;
 
 @AutoService(Connector.class)
 @ParametersAreNonnullByDefault
@@ -65,9 +63,10 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
 
     builder.addAll(planner.generateLiteSpecificQueries());
-    builder.add(proceduresTask());
-    builder.add(warehouseEventsTask());
-    builder.add(warehouseMeteringTask());
+    builder.add(planner.proceduresTask());
+    builder.add(planner.timeRangeTask());
+    builder.add(planner.warehouseEventsTask());
+    builder.add(planner.warehouseMeteringTask());
 
     for (AssessmentQuery item : planner.generateAssessmentQueries()) {
       String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
@@ -77,46 +76,5 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
       builder.add(task);
     }
     return builder.build();
-  }
-
-  private static Task<?> proceduresTask() {
-    String view = "SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES";
-    String query =
-        String.format(
-            "SELECT procedure_language, procedure_owner, count(1) FROM %s GROUP BY ALL", view);
-    ImmutableList<String> header = ImmutableList.of("Language", "Owner", "Count");
-    return new LiteTimeSeriesTask("procedures.csv", query, header);
-  }
-
-  private static Task<?> warehouseEventsTask() {
-    String query =
-        "SELECT event_name, cluster_number, warehouse_id, warehouse_name, count(1)"
-            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY GROUP BY ALL";
-    ImmutableList<String> header =
-        ImmutableList.of("Name", "Cluster", "WarehouseId", "WarehouseName", "Count");
-    return new LiteTimeSeriesTask("warehouse_events.csv", query, header);
-  }
-
-  private static Task<?> warehouseMeteringTask() {
-    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY";
-    String query = String.format("SELECT warehouse_name, count(1) FROM %s GROUP BY ALL", view);
-    ImmutableList<String> header = ImmutableList.of("Name", "Count");
-    return new LiteTimeSeriesTask("warehouse_metering.csv", query, header);
-  }
-
-  private static final class LiteTimeSeriesTask extends JdbcSelectTask {
-
-    private final ImmutableList<String> header;
-
-    LiteTimeSeriesTask(String csvName, String sql, ImmutableList<String> header) {
-      super(csvName, sql);
-      this.header = header;
-    }
-
-    @Override
-    @Nonnull
-    protected CSVFormat newCsvFormat(ResultSet rs) {
-      return FORMAT.builder().setHeader(header.toArray(new String[0])).build();
-    }
   }
 }
