@@ -129,11 +129,11 @@ final class SnowflakePlanner {
     return new LiteTimeSeriesTask("procedures.csv", query, header);
   }
 
-  Task<?> timeRangeTask() {
+  Task<?> reportDateRangeTask() {
     String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY";
     String query = String.format("SELECT min(timestamp), max(timestamp) FROM %s", view);
     ImmutableList<String> header = ImmutableList.of("StartTime", "EndTime");
-    return new LiteTimeSeriesTask("time_range.csv", query, header);
+    return new LiteTimeSeriesTask("report_date_range.csv", query, header);
   }
 
   Task<?> warehouseEventsTask() {
