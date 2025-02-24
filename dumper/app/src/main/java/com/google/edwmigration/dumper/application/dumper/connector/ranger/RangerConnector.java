@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ranger.Ranger
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
@@ -88,6 +89,7 @@ public class RangerConnector extends AbstractConnector {
   @Override
   public void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    out.add(new DumpMetadataTask(arguments, RangerDumpFormat.FORMAT_NAME));
     out.add(new DumpGroupsTask());
     out.add(new DumpPoliciesTask());
     out.add(new DumpRolesTask());
