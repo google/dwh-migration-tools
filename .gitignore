@@ -21,3 +21,6 @@ node_modules
 /*.tmp
 .DS_Store
 /progress.log.*
+/dbsync/**/bin
+/dumper/**/bin
+/dumper/**/build
