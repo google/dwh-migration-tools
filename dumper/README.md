@@ -7,7 +7,7 @@ logs. This tool generates archives in a format suitable for consumption by the
 
 The Dumper is a Java tool. **[Download the latest cross-platform release zip `dwh-migration-tools-vX.X.X.zip`.](https://github.com/google/dwh-migration-tools/releases/latest)**
 
-The Dumper requires Java 8 or higher. To check Java version run the command
+Compiling the Dumper from source requires `Java 8`, running the Dumper requires `Java 8` or higher. To check Java version run the command
 `java -version` or refer to Java vendor documentation. Third party JDBC drivers
 might impose additional restrictions on Java versions. Refer to the JDBC
 driver's manual for details.
