@@ -16,36 +16,35 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mock;
 
-
 @RunWith(JUnit4.class)
 public class RangerConnectorTasksTest {
   @Mock protected CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
 
-    @Test
-    public void isDumpMetadataTaskinConnectorTasks() throws Exception {
-        RangerConnector connector = new RangerConnector();
+  @Test
+  public void isDumpMetadataTaskinConnectorTasks() throws Exception {
+    RangerConnector connector = new RangerConnector();
 
-        List<Task<?>> tasks = new ArrayList<>();
-        ConnectorArguments args =
-        new ConnectorArguments("--connector", "ranger");
+    List<Task<?>> tasks = new ArrayList<>();
+    ConnectorArguments args = new ConnectorArguments("--connector", "ranger");
 
-        connector.addTasksTo(tasks, args);
-        assertTrue(tasks.stream().filter(task -> 
-            task.toString().contains("compilerworks-metadata.yaml")).findAny().isPresent());
-    }
+    connector.addTasksTo(tasks, args);
+    assertTrue(
+        tasks.stream()
+            .filter(task -> task.toString().contains("compilerworks-metadata.yaml"))
+            .findAny()
+            .isPresent());
+  }
 }
