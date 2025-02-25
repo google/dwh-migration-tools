@@ -853,7 +853,7 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   public boolean isPasswordFlagProvided() {
-    return getOptions().has(optionPass);
+    return has(optionPass);
   }
 
   @CheckForNull

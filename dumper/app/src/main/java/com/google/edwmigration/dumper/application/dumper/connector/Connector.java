@@ -41,7 +41,7 @@ public interface Connector {
    * ConnectorArguments)}
    *
    * @param arguments cli params
-   * @throws IllegalArgumentException if incorrect set of arguments passed to the particular
+   * @throws Exception if incorrect set of arguments passed to the particular
    *     connector
    */
   default void validate(ConnectorArguments arguments) throws Exception {}
