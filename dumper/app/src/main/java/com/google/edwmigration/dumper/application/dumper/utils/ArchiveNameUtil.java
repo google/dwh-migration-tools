@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.utils;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import java.time.Clock;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class ArchiveNameUtil {
@@ -47,13 +48,19 @@ public class ArchiveNameUtil {
     return getEntryFileNameWithTimestamp(prefix, interval, ZIP_ENTRY_SUFFIX);
   }
 
-  public static String getEntryFileNameWithTimestamp(
+  public static String getEntryFileNameWithTimestamp(String prefix, ZonedDateTime dateTime) {
+    return getEntryFileNameWithTimestamp(prefix, dateTime, ZIP_ENTRY_SUFFIX);
+  }
+
+  private static String getEntryFileNameWithTimestamp(
       String prefix, ZonedInterval interval, String suffix) {
+    return getEntryFileNameWithTimestamp(prefix, interval.getStartUTC(), suffix);
+  }
+
+  private static String getEntryFileNameWithTimestamp(
+      String prefix, ZonedDateTime dateTime, String suffix) {
     return String.join(
-        "",
-        prefix,
-        ENTRY_FILE_DATE_FORMAT.withZone(ZoneOffset.UTC).format(interval.getStartUTC()),
-        suffix);
+        "", prefix, ENTRY_FILE_DATE_FORMAT.withZone(ZoneOffset.UTC).format(dateTime), suffix);
   }
 
   /**
