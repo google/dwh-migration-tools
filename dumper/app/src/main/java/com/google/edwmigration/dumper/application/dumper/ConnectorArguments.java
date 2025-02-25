@@ -704,6 +704,10 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionUri);
   }
 
+  public boolean hasUri() {
+    return has(optionUri);
+  }
+
   @Nonnull
   public String getHostOrDefault() {
     return getHost(OPT_HOST_DEFAULT);

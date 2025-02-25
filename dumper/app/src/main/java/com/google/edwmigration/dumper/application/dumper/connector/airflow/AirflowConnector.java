@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.airflow;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.connector.airflow.AirflowDatabaseDriverClasses.jdbcPrefixForClassName;
 
 import com.google.auto.service.AutoService;
@@ -70,13 +71,13 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
   private static final String FORMAT_NAME = "airflow.dump.zip";
 
-  private final ImmutableList<String> driverClasses =
+  private final ImmutableList<AirflowDatabaseDriverClasses> driverClasses =
       ImmutableList.of(
           // the order is important! The first class found will be used as a jdbc connection.
-          AirflowDatabaseDriverClasses.MARIADB.getDriverClassName(),
-          AirflowDatabaseDriverClasses.MYSQL.getDriverClassName(),
-          AirflowDatabaseDriverClasses.MYSQL_OLD.getDriverClassName(),
-          AirflowDatabaseDriverClasses.POSTGRESQL.getDriverClassName());
+          AirflowDatabaseDriverClasses.MARIADB,
+          AirflowDatabaseDriverClasses.MYSQL,
+          AirflowDatabaseDriverClasses.MYSQL_OLD,
+          AirflowDatabaseDriverClasses.POSTGRESQL);
 
   public AirflowConnector() {
     super("airflow");
@@ -118,28 +119,48 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    // todo support jdbc string in --url
-    Preconditions.checkNotNull(arguments.getHost(), "Database host must be provided.");
-    Preconditions.checkNotNull(arguments.getPort(), "Database port must be provided.");
     Preconditions.checkState(
         arguments.getDriverPaths() != null && !arguments.getDriverPaths().isEmpty(),
         "Path to jdbc driver must be provided");
 
-    // todo fix warning logs, because no drivers is expected case
-    Driver driver = loadFirstAvailableDriver(arguments.getDriverPaths());
-    String host = arguments.getHost();
-    int port = arguments.getPort();
-    String schema = arguments.getSchema();
+    String jdbcString;
+    Driver driver;
 
-    String jdbcString =
-        jdbcPrefixForClassName(driver.getClass().getName()) + host + ":" + port + "/" + schema;
+    if (!arguments.hasUri()) {
+      // todo fix warning logs, because no drivers is expected case
+      driver = loadFirstAvailableDriver(arguments.getDriverPaths(), driverClasses);
+      String host = arguments.getHost();
+      int port = arguments.getPort();
+      String schema = arguments.getSchema();
+      jdbcString =
+          jdbcPrefixForClassName(driver.getClass().getName()) + host + ":" + port + "/" + schema;
+    } else {
+      jdbcString = arguments.getUri();
+      Preconditions.checkNotNull(
+          jdbcString, "If a JDBC string parameter is specified, it must have a value.");
+      List<AirflowDatabaseDriverClasses> filteredDriverClass =
+          driverClassesForJdbcString(jdbcString);
+      driver = loadFirstAvailableDriver(arguments.getDriverPaths(), filteredDriverClass);
+    }
+
     LOG.info("Connecting to jdbc string [{}]...", jdbcString);
 
     DataSource dataSource = newSimpleDataSource(driver, jdbcString, arguments);
     return JdbcHandle.newPooledJdbcHandle(dataSource, 1);
   }
 
-  private Driver loadFirstAvailableDriver(List<String> driverPaths) throws Exception {
-    return newDriver(driverPaths, driverClasses.toArray(driverClasses.toArray(new String[0])));
+  private List<AirflowDatabaseDriverClasses> driverClassesForJdbcString(String jdbcString) {
+    return driverClasses.stream()
+        .filter(driver -> jdbcString.startsWith(driver.getJdbcStringPrefix()))
+        .collect(toImmutableList());
+  }
+
+  private Driver loadFirstAvailableDriver(
+      List<String> driverPaths, List<AirflowDatabaseDriverClasses> driverClasses) throws Exception {
+    String[] driverClassesNames =
+        driverClasses.stream()
+            .map(AirflowDatabaseDriverClasses::getDriverClassName)
+            .toArray(String[]::new);
+    return newDriver(driverPaths, driverClassesNames);
   }
 }
