@@ -137,7 +137,7 @@ final class SnowflakePlanner {
             + " AND upper(event_name) LIKE '%CLUSTER%'";
     ImmutableList<String> header =
         ImmutableList.of("WarehouseName", "ClusterNumber", "EventState", "Timestamp");
-    return new LiteTimeSeriesTask("cluster_spin_downs.csv", query, header);
+    return new LiteTimeSeriesTask("clusters_spin_downs.csv", query, header);
   }
 
   Task<?> operationStartsTask() {
@@ -148,7 +148,7 @@ final class SnowflakePlanner {
             + " AND upper(event_name) LIKE '%CLUSTER%'";
     ImmutableList<String> header =
         ImmutableList.of("WarehouseName", "ClusterNumber", "EventState", "Timestamp");
-    return new LiteTimeSeriesTask("cluster_spin_ups.csv", query, header);
+    return new LiteTimeSeriesTask("clusters_spin_ups.csv", query, header);
   }
 
   Task<?> proceduresTask() {
