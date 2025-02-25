@@ -81,7 +81,7 @@ public abstract class AbstractConnectorTest {
       else if (task instanceof FormatTask) specialTasks.add(SpecialTaskType.Format);
     }
 
-    LOG.debug("Special tasks discovered are " + specialTasks);
+    LOG.debug("Special tasks discovered are {}", specialTasks);
     assertFalse(
         specialTasks.contains(
             SpecialTaskType.Version)); // Added by MetadataDumper, not the connector.

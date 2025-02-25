@@ -116,12 +116,38 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     out.add(new JdbcSelectTask(filename, sql, taskCategory));
   }
 
+  @Override
+  public void validate(ConnectorArguments arguments) throws Exception {
+    Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
+    Preconditions.checkState(
+        arguments.getDriverPaths() != null && !arguments.getDriverPaths().isEmpty(),
+        "Path to jdbc driver is required in --driver param");
+    Preconditions.checkState(arguments.getUser() != null, "--user param is required");
+    Preconditions.checkState(arguments.isPasswordFlagProvided(), "--password param is required");
+
+    Preconditions.checkState(
+        !arguments.isDatabasesProvided(), "--database is not supported, use --schema or --url");
+
+    boolean isJdbcString = arguments.hasUri();
+    boolean isHost = arguments.getHost() != null;
+    Preconditions.checkState(
+        isJdbcString ^ isHost,
+        "--url either --host must be provided (both parameters at once are not acceptable)");
+
+    if (isJdbcString) {
+      Preconditions.checkState(
+          arguments.getPort() == null, "--port param should not be used with --url");
+      Preconditions.checkState(
+          arguments.getSchema() == null, "--schema param should not be used with --url");
+    } else {
+      Preconditions.checkState(arguments.getPort() != null, "--port is required with --host");
+      Preconditions.checkState(arguments.getSchema() != null, "--schema is required with --host");
+    }
+  }
+
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    Preconditions.checkState(
-        arguments.getDriverPaths() != null && !arguments.getDriverPaths().isEmpty(),
-        "Path to jdbc driver must be provided");
 
     String jdbcString;
     Driver driver;

@@ -87,6 +87,7 @@ public class MetadataDumper {
           ConnectorRepository.getInstance().getAllNames());
       return false;
     }
+    connector.validate(arguments);
     return run(connector, arguments);
   }
 

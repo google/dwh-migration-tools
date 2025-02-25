@@ -18,9 +18,11 @@ package com.google.edwmigration.dumper.application.dumper.connector.airflow;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
@@ -34,7 +36,134 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 
 public class AirflowConnectorTest {
+
   private final AirflowConnector connector = new AirflowConnector();
+
+  @Test
+  public void validate_databaseParam_isNotSupported() throws Exception {
+    String argsStr =
+        "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password"
+            + " --url localhost"
+            + " --database myDB";
+
+    // Act
+    Exception exception =
+        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+    assertEquals("--database is not supported, use --schema or --url", exception.getMessage());
+  }
+
+  @Test
+  public void validate_hostParam_success() throws Exception {
+    String argsStr =
+        "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password"
+            + " --host localhost --port 8080 --schema airflow_db";
+
+    // Act
+    connector.validate(args(argsStr));
+  }
+
+  @Test
+  public void validate_hostParam_brokenState() throws Exception {
+    String argsStr =
+        "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password";
+
+    // Act
+    {
+      String argsWithHost = argsStr + " --host localhost ";
+      Exception exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithHost)));
+      assertEquals("--port is required with --host", exception.getMessage());
+    }
+    {
+      String argsWithPort = argsStr + " --host localhost --port 8080";
+      Exception exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithPort)));
+      assertEquals("--schema is required with --host", exception.getMessage());
+    }
+    {
+      String argsWithPort = argsStr + " --host localhost --schema 8080";
+      Exception exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithPort)));
+      assertEquals("--port is required with --host", exception.getMessage());
+    }
+  }
+
+  @Test
+  public void validate_jdbcParam_success() throws Exception {
+    String argsStr =
+        "--connector airflow --driver /home/dir/ --user dbadmin --password --assessment";
+    argsStr += " --url somestring";
+
+    // Act
+    connector.validate(args(argsStr));
+  }
+
+  @Test
+  public void validate_jdbcParam_brokenState() throws Exception {
+    String argsStr =
+        "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password";
+    argsStr += " --url somestring";
+
+    {
+      String argsWithPort = argsStr + " --port 8080";
+      Exception exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithPort)));
+      assertEquals("--port param should not be used with --url", exception.getMessage());
+    }
+    {
+      String argsWithSchema = argsStr + " --schema 8080";
+      Exception exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithSchema)));
+      assertEquals("--schema param should not be used with --url", exception.getMessage());
+    }
+    {
+      String argsWithSchema = argsStr + " --host localhost";
+      Exception exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithSchema)));
+      assertEquals(
+          "--url either --host must be provided (both parameters at once are not acceptable)",
+          exception.getMessage());
+    }
+  }
+
+  @Test
+  public void validate_requiredArguments() throws Exception {
+    Exception exception;
+
+    {
+      String argsStr = "--connector airflow ";
+      exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      assertEquals("--assessment flag is required", exception.getMessage());
+    }
+    {
+      String argsStr = "--connector airflow  --assessment";
+      exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      assertEquals("Path to jdbc driver is required in --driver param", exception.getMessage());
+    }
+    {
+      String argsStr = "--connector airflow  --assessment --driver /home/dir/";
+      exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      assertEquals("--user param is required", exception.getMessage());
+    }
+    {
+      String argsStr = "--connector airflow --driver /home/dir/ --user dbusername --assessment";
+      exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      assertEquals("--password param is required", exception.getMessage());
+    }
+    {
+      String argsStr =
+          "--connector airflow " + "--driver /home/dir/ --user dbusername --assessment --password";
+      exception =
+          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      assertEquals(
+          "--url either --host must be provided (both parameters at once are not acceptable)",
+          exception.getMessage());
+    }
+  }
 
   @Test
   public void addTasksTo_containsJdbcSelect_required() throws Exception {
@@ -96,5 +225,9 @@ public class AirflowConnectorTest {
 
     assertEquals("One DumpMetadataTask is expected", dumpMetadataCount, 1);
     assertEquals("One FormatTask is expected", formatCount, 1);
+  }
+
+  private static ConnectorArguments args(String args) throws Exception {
+    return new ConnectorArguments(args.split(" "));
   }
 }

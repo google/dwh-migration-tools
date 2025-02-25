@@ -768,6 +768,10 @@ public class ConnectorArguments extends DefaultArguments {
         .collect(toImmutableList());
   }
 
+  public boolean isDatabasesProvided() {
+    return has(optionDatabase);
+  }
+
   @CheckForNull
   public String getSchema() {
     return getOptions().valueOf(optionSchema);
@@ -846,6 +850,10 @@ public class ConnectorArguments extends DefaultArguments {
     } else {
       return passwordReader.getOrPrompt();
     }
+  }
+
+  public boolean isPasswordFlagProvided() {
+    return getOptions().has(optionPass);
   }
 
   @CheckForNull

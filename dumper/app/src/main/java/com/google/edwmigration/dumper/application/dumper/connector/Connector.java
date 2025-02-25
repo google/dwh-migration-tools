@@ -35,6 +35,17 @@ public interface Connector {
   @Nonnull
   String getDefaultFileName(boolean isAssessment, Clock clock);
 
+  /**
+   * Validates if the cli parameters passed to the particular connector are expected. The method is
+   * called before {@link Connector#open(ConnectorArguments)} and {@link Connector#addTasksTo(List,
+   * ConnectorArguments)}
+   *
+   * @param arguments cli params
+   * @throws IllegalArgumentException if incorrect set of arguments passed to the particular
+   *     connector
+   */
+  default void validate(ConnectorArguments arguments) throws Exception {}
+
   void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception;
 
