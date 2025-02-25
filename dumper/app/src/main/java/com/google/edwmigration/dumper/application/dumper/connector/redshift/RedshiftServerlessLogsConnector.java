@@ -33,7 +33,6 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
-
 import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -68,8 +67,8 @@ public class RedshiftServerlessLogsConnector extends AbstractRedshiftConnector
 
     // Redshift retains serverless usage data for max 7 days. This results in relatively low
     // number of records so there is no need to split it into the smaller, interval based files.
-    String file_name = getEntryFileNameWithTimestamp(ZIP_SERVERLESS_USAGE_ENTRY_PREFIX, ZonedDateTime.now());
-    out.add(
-        new JdbcSelectTask(file_name, "SELECT * FROM SYS_SERVERLESS_USAGE"));
+    String file_name =
+        getEntryFileNameWithTimestamp(ZIP_SERVERLESS_USAGE_ENTRY_PREFIX, ZonedDateTime.now());
+    out.add(new JdbcSelectTask(file_name, "SELECT * FROM SYS_SERVERLESS_USAGE"));
   }
 }

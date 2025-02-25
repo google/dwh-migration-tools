@@ -18,8 +18,8 @@ package com.google.edwmigration.dumper.application.dumper.utils;
 
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import java.time.Clock;
-import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class ArchiveNameUtil {
@@ -58,12 +58,9 @@ public class ArchiveNameUtil {
   }
 
   private static String getEntryFileNameWithTimestamp(
-    String prefix, ZonedDateTime dateTime, String suffix) {
-      return String.join(
-        "",
-        prefix,
-        ENTRY_FILE_DATE_FORMAT.withZone(ZoneOffset.UTC).format(dateTime),
-        suffix);
+      String prefix, ZonedDateTime dateTime, String suffix) {
+    return String.join(
+        "", prefix, ENTRY_FILE_DATE_FORMAT.withZone(ZoneOffset.UTC).format(dateTime), suffix);
   }
 
   /**
