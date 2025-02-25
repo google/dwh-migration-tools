@@ -1,5 +1,3 @@
-build
-/buildSrc/build
 .svn
 .sw?
 .*.swp
@@ -21,3 +19,10 @@ node_modules
 /*.tmp
 .DS_Store
 /progress.log.*
+
+/dbsync/**/bin/
+/dumper/**/bin/
+
+# Gradle build folders
+/**/build/
+!/**/scr/**/build/
