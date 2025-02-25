@@ -16,6 +16,12 @@ public class GcsClientMain {
             .ofType(String.class)
             .required();
 
+    private final OptionSpec<String> locationOptionSpec =
+        parser.accepts("location", "Specifies the gcp location")
+            .withRequiredArg()
+            .ofType(String.class)
+            .required();
+
     private final OptionSpec<String> targetOptionSpec =
         parser.accepts("target_file", "Specifies the target file")
             .withRequiredArg()
@@ -42,11 +48,17 @@ public class GcsClientMain {
       return getOptions().valueOf(projectOptionSpec);
     }
 
+    public String getLocation() {
+      return getOptions().valueOf(locationOptionSpec);
+    }
+
     public String getTargetUri() {
       return getOptions().valueOf(targetOptionSpec);
     }
 
-    public String getSourceUri() {return getOptions().valueOf(sourceOptionSpec);}
+    public String getSourceUri() {
+      return getOptions().valueOf(sourceOptionSpec);
+    }
 
     public String getStagingBucket() {
       return getOptions().valueOf(stagingBucketOptionSpec);
@@ -59,11 +71,12 @@ public class GcsClientMain {
     try {
       client.putRsync(
           arguments.getProject(),
+          arguments.getLocation(),
           new URI(arguments.getSourceUri()),
-          new URI(arguments.getStagingBucket()),
+          new URI(arguments.getStagingBucket() + "/"),
           new URI(arguments.getTargetUri())
       );
-    } catch (Exception e){
+    } catch (Exception e) {
       Logger.getLogger("rsync").log(Level.INFO, e.getMessage(), e);
     }
   }
