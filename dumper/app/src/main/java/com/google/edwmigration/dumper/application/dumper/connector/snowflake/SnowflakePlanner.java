@@ -120,6 +120,39 @@ final class SnowflakePlanner {
     }
   }
 
+  Task<?> eventStateTask() {
+    String query =
+        "SELECT event_state, count(*)"
+            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
+            + " WHERE event_name LIKE '%CLUSTER%' GROUP BY ALL";
+    ImmutableList<String> header = ImmutableList.of("EventState", "Count");
+    return new LiteTimeSeriesTask("event_state.csv", query, header);
+  }
+
+  Task<?> operationEndsTask() {
+    String query =
+        "SELECT warehouse_name, cluster_number, event_state, timestamp"
+            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
+            + " WHERE upper(event_name) LIKE '%SUSPEND%'"
+            + " AND upper(event_name) LIKE '%CLUSTER%'"
+            + " GROUP BY ALL";
+    ImmutableList<String> header =
+        ImmutableList.of("WarehouseName", "ClusterNumber", "EventState", "Timestamp");
+    return new LiteTimeSeriesTask("cluster_spin_downs.csv", query, header);
+  }
+
+  Task<?> operationStartsTask() {
+    String query =
+        "SELECT warehouse_name, cluster_number, event_state, timestamp"
+            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
+            + " WHERE upper(event_name) LIKE '%RESUME%'"
+            + " AND upper(event_name) LIKE '%CLUSTER%'"
+            + " GROUP BY ALL";
+    ImmutableList<String> header =
+        ImmutableList.of("WarehouseName", "ClusterNumber", "EventState", "Timestamp");
+    return new LiteTimeSeriesTask("cluster_spin_ups.csv", query, header);
+  }
+
   Task<?> proceduresTask() {
     String view = "SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES";
     String query =
