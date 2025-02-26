@@ -41,10 +41,9 @@ public interface Connector {
    * ConnectorArguments)}
    *
    * @param arguments cli params
-   * @throws Exception if incorrect set of arguments passed to the particular
-   *     connector
+   * @throws IllegalStateException if incorrect set of arguments passed to the particular connector
    */
-  default void validate(ConnectorArguments arguments) throws Exception {}
+  default void validate(ConnectorArguments arguments) throws IllegalStateException {}
 
   void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception;
