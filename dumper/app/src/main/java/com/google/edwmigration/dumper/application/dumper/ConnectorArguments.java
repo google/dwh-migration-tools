@@ -64,16 +64,12 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
 /** @author shevek */
 public class ConnectorArguments extends DefaultArguments {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ConnectorArguments.class);
-
-  private final String HELP_INFO =
+  private static final String HELP_INFO =
       "The CompilerWorks Metadata Exporters address three goals:\n"
           + "\n"
           + "    1) Extract well-formatted metadata and logs for CompilerWorks suite\n"

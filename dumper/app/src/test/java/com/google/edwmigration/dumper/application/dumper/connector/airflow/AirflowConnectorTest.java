@@ -170,6 +170,7 @@ public class AirflowConnectorTest {
     Map<String, String> expectedFilesToTables =
         ImmutableMap.of(
             "dag.csv", "dag",
+            "task_instance.csv", "task_instance",
             "dag_run.csv", "dag_run");
 
     testJdbcSelectTasks(expectedFilesToTables, TaskCategory.REQUIRED);
