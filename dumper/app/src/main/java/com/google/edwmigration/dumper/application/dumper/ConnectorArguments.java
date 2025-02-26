@@ -166,7 +166,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
 
   private final OptionSpec<String> connectorNameOption =
-      parser.accepts(OPT_CONNECTOR, "Target DBMS connector name").withRequiredArg().required();
+      parser.accepts(OPT_CONNECTOR, "Target connector name").withRequiredArg().required();
   private final OptionSpec<String> optionDriver =
       parser
           .accepts(
@@ -704,6 +704,10 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionUri);
   }
 
+  public boolean hasUri() {
+    return has(optionUri);
+  }
+
   @Nonnull
   public String getHostOrDefault() {
     return getHost(OPT_HOST_DEFAULT);
@@ -762,6 +766,10 @@ public class ConnectorArguments extends DefaultArguments {
         .map(String::trim)
         .filter(StringUtils::isNotEmpty)
         .collect(toImmutableList());
+  }
+
+  public boolean isDatabasesProvided() {
+    return has(optionDatabase);
   }
 
   @CheckForNull
@@ -842,6 +850,10 @@ public class ConnectorArguments extends DefaultArguments {
     } else {
       return passwordReader.getOrPrompt();
     }
+  }
+
+  public boolean isPasswordFlagProvided() {
+    return has(optionPass);
   }
 
   @CheckForNull
