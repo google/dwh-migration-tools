@@ -97,6 +97,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
     // Airflow v1.5.0
     addFullTable(out, "dag.csv", "select * from dag;");
+    addFullTable(out, "task_instance.csv", "select * from task_instance;");
     // Airflow v1.6.0
     addFullTable(out, "dag_run.csv", "select * from dag_run;");
 
