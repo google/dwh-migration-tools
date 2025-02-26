@@ -166,7 +166,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
 
   private final OptionSpec<String> connectorNameOption =
-      parser.accepts(OPT_CONNECTOR, "Target DBMS connector name").withRequiredArg().required();
+      parser.accepts(OPT_CONNECTOR, "Target connector name").withRequiredArg().required();
   private final OptionSpec<String> optionDriver =
       parser
           .accepts(

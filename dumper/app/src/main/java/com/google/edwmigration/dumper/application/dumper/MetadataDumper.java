@@ -75,14 +75,14 @@ public class MetadataDumper {
   public boolean run(@Nonnull ConnectorArguments arguments) throws Exception {
     String connectorName = arguments.getConnectorName();
     if (connectorName == null) {
-      LOG.error("Target DBMS is required");
+      LOG.error("Target connector is required");
       return false;
     }
 
     Connector connector = ConnectorRepository.getInstance().getByName(connectorName);
     if (connector == null) {
       LOG.error(
-          "Target DBMS '{}' not supported; available are {}.",
+          "Target connector '{}' not supported; available are {}.",
           connectorName,
           ConnectorRepository.getInstance().getAllNames());
       return false;
