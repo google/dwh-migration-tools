@@ -154,7 +154,6 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     Driver driver;
 
     if (!arguments.hasUri()) {
-      // todo fix warning logs, because no drivers is expected case
       driver = loadFirstAvailableDriver(arguments.getDriverPaths(), driverClasses);
       String host = arguments.getHost();
       int port = arguments.getPort();
@@ -188,6 +187,14 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
         driverClasses.stream()
             .map(AirflowDatabaseDriverClasses::getDriverClassName)
             .toArray(String[]::new);
-    return newDriver(driverPaths, driverClassesNames);
+    return newDriver(
+        driverPaths,
+        (driverClassName, e) -> {
+          LOG.info(
+              "Checking drivers path [{}] for available drivers... Driver [{}] wasn't not available.",
+              driverPaths,
+              driverClassName);
+        },
+        driverClassesNames);
   }
 }
