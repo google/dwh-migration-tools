@@ -53,6 +53,7 @@ import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,28 +118,53 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     out.add(new FormatTask(FORMAT_NAME));
 
     ZonedIntervalIterable zonedIntervals = fromAirflowConnectorArguments(arguments);
+    Pair<ZonedDateTime, ZonedDateTime> dateRange = dateRange(arguments);
 
     // Airflow v1.5.0
-    addQueryTask(out, "dag.csv", "select * from dag ");
-    addTableTaskWithIntervals(
+    addQueryTask(out, "dag.csv", "select * from dag;");
+    // todo think about multiple files
+    // addTableTaskWithIntervals(
+    //     out,
+    //     "task_instance",
+    //     "select * from task_instance ",
+    //     zonedIntervals,
+    //     (startDate, endDate) ->
+    //         String.format(
+    //             " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as
+    // TIMESTAMP) ;",
+    //             dateToSqlFormat(startDate), dateToSqlFormat(endDate)));
+    // // Airflow v1.6.0
+    // addTableTaskWithIntervals(
+    //     out,
+    //     "dag_run",
+    //     "select * from dag_run ",
+    //     zonedIntervals,
+    //     (startDate, endDate) ->
+    //         String.format(
+    //             " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as
+    // TIMESTAMP) ;",
+    //             dateToSqlFormat(startDate), dateToSqlFormat(endDate)));
+
+    addQueryTask(
         out,
         "task_instance.csv",
-        "select * from task_instance ",
-        zonedIntervals,
-        (startDate, endDate) ->
-            String.format(
-                " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
-                dateToSqlFormat(startDate), dateToSqlFormat(endDate)));
+        dateRange == null
+            ? "select * from task_instance;"
+            : "select * from task_instance "
+                + String.format(
+                    " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
+                    dateToSqlFormat(dateRange.getLeft()), dateToSqlFormat(dateRange.getRight())));
+
     // Airflow v1.6.0
-    addTableTaskWithIntervals(
+    addQueryTask(
         out,
         "dag_run.csv",
-        "select * from dag_run ",
-        zonedIntervals,
-        (startDate, endDate) ->
-            String.format(
-                " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
-                dateToSqlFormat(startDate), dateToSqlFormat(endDate)));
+        dateRange == null
+            ? "select * from dag_run;"
+            : "select * from dag_run "
+                + String.format(
+                    " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
+                    dateToSqlFormat(dateRange.getLeft()), dateToSqlFormat(dateRange.getRight())));
 
     // Airflow v1.10.7
     // analog of DAG's python definition in json
@@ -149,10 +175,25 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
   @Nullable
   private ZonedIntervalIterable fromAirflowConnectorArguments(ConnectorArguments arguments) {
+    Pair<ZonedDateTime, ZonedDateTime> dateRange = dateRange(arguments);
+    if (dateRange == null) {
+      LOG.info("Date ranges was not specified. Generate full table queries.");
+      return null;
+    }
+
+    LOG.info(
+        "Date range for query generation from {} to {} exclusive and increments of one day.",
+        dateRange.getLeft(),
+        dateRange.getRight());
+    return ZonedIntervalIterableGenerator.forDateRangeWithIntervalDuration(
+        dateRange.getLeft(), dateRange.getRight(), Duration.ofDays(1));
+  }
+
+  @Nullable
+  private Pair<ZonedDateTime, ZonedDateTime> dateRange(ConnectorArguments arguments) {
     boolean isDateRangeSpecified =
         arguments.getStartDate() != null || arguments.getLookbackDays() != null;
     if (!isDateRangeSpecified) {
-      LOG.info("Date ranges was not specified. Generate full table queries.");
       return null;
     }
 
@@ -165,13 +206,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       startDate = arguments.getStartDate();
       endDate = arguments.getEndDate();
     }
-
-    LOG.info(
-        "Date range for query generation from {} to {} exclusive and increments of one day.",
-        startDate,
-        endDate);
-    return ZonedIntervalIterableGenerator.forDateRangeWithIntervalDuration(
-        startDate, endDate, Duration.ofDays(1));
+    return Pair.of(startDate, endDate);
   }
 
   private static void addTableTaskWithIntervals(
