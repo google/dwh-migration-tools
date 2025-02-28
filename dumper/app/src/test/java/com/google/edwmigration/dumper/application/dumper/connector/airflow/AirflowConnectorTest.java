@@ -39,6 +39,27 @@ public class AirflowConnectorTest {
 
   private final AirflowConnector connector = new AirflowConnector();
 
+  private final String validRequiredArgs =
+      "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password"
+          + " --host localhost --port 8080 --schema airflow_db";
+
+  @Test
+  public void validate_lookbackDay_nonPositiveThrows() throws Exception {
+    String argsStr = validRequiredArgs + " --lookback-days=0";
+
+    // Act
+    Exception exception =
+        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+    assertEquals("Number of days to export must be 1 or greater", exception.getMessage());
+  }
+
+  @Test
+  public void validate_lookbackDay_success() throws Exception {
+    String argsStr = validRequiredArgs + " --lookback-days=5";
+    // Act
+    connector.validate(args(argsStr));
+  }
+
   @Test
   public void validate_databaseParam_isNotSupported() throws Exception {
     String argsStr =

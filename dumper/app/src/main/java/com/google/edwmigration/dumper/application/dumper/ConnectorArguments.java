@@ -92,6 +92,9 @@ public class ConnectorArguments extends DefaultArguments {
   public static final int OPT_PORT_ORDER = 200;
   public static final String OPT_USER = "user";
   public static final String OPT_PASSWORD = "password";
+  public static final String OPT_START_DATE = "start-date";
+  public static final String OPT_END_DATE = "end-date";
+  public static final String OPT_LOOKBACK_DAYS = "lookback-days";
 
   public static final String OPT_CLUSTER = "cluster";
   public static final String OPT_ROLE = "role";
@@ -229,6 +232,37 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .describedAs("sekr1t");
 
+  private final OptionSpec<ZonedDateTime> optionStartDate =
+      parser
+          .accepts(
+              OPT_START_DATE,
+              "Inclusive start date for data to export, value will be truncated to hour")
+          .withOptionalArg()
+          .ofType(Date.class)
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
+
+  private final OptionSpec<ZonedDateTime> optionEndDate =
+      parser
+          .accepts(
+              OPT_END_DATE,
+              "Inclusive end date for data to export, value will be truncated to hour")
+          .withOptionalArg()
+          .ofType(Date.class)
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
+
+  private final OptionSpec<Integer> optionLookbackDays =
+      parser
+          .accepts(
+              OPT_LOOKBACK_DAYS,
+              "The N days back of data to export from current moment. "
+                  + "Can ne combined with --"
+                  + OPT_START_DATE)
+          .withOptionalArg()
+          .ofType(Integer.class)
+          .describedAs("N");
+
   private final OptionSpec<String> optionCluster =
       parser
           .accepts(OPT_CLUSTER, "Cluster name to dump metadata")
@@ -310,7 +344,7 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
-          .describedAs("2001-01-01[ 00:00:00.[000]]");
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
   private final OptionSpec<ZonedDateTime> optionQueryLogEnd =
       parser
           .accepts(
@@ -319,7 +353,7 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.END_OF_DAY))
-          .describedAs("2001-01-01[ 00:00:00.[000]]");
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
 
   // This is intentionally NOT provided as a default value to the optionQueryLogEnd OptionSpec,
   // because some callers
@@ -888,6 +922,21 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public Integer getQueryLogDays() {
     return getOptions().valueOf(optionQueryLogDays);
+  }
+
+  @CheckForNull
+  public Integer getLookbackDays() {
+    return getOptions().valueOf(optionLookbackDays);
+  }
+
+  @CheckForNull
+  public ZonedDateTime getStartDate() {
+    return getOptions().valueOf(optionStartDate);
+  }
+
+  @CheckForNull
+  public ZonedDateTime getEndDate() {
+    return getOptions().valueOf(optionEndDate);
   }
 
   public Duration getQueryLogRotationFrequency() {

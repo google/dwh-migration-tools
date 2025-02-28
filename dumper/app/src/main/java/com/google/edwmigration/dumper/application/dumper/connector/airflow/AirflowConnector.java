@@ -41,6 +41,7 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.sql.Driver;
 import java.time.Clock;
+import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
@@ -65,6 +66,18 @@ import org.slf4j.LoggerFactory;
 @RespectsArgumentDriverRequired
 @RespectsArgumentUser
 @RespectsArgumentPassword
+@RespectsInput(
+    order = 2000,
+    arg = ConnectorArguments.OPT_LOOKBACK_DAYS,
+    description = "The number of days back to collect DAGs data")
+@RespectsInput(
+    order = 2000,
+    arg = ConnectorArguments.OPT_START_DATE,
+    description = "Start date for query DAGs data")
+@RespectsInput(
+    order = 2000,
+    arg = ConnectorArguments.OPT_END_DATE,
+    description = "End date for query DAGs data")
 public class AirflowConnector extends AbstractJdbcConnector implements MetadataConnector {
 
   private static final Logger LOG = LoggerFactory.getLogger(AirflowConnector.class);
@@ -144,6 +157,37 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       Preconditions.checkState(arguments.getPort() != null, "--port is required with --host");
       Preconditions.checkState(arguments.getSchema() != null, "--schema is required with --host");
     }
+
+    validateDatesInterval(arguments);
+  }
+
+  private void validateDatesInterval(ConnectorArguments arguments) {
+    // valid inputs:
+    // 1. all null
+    // 2. loockback days
+    // 3. loocback with start
+    // 4. start, end
+
+    Integer lookbackDays = arguments.getLookbackDays();
+    ZonedDateTime startDate = arguments.getStartDate();
+    ZonedDateTime endDate = arguments.getEndDate();
+
+    Preconditions.checkState(
+        !(lookbackDays != null && endDate != null),
+        "Incompatible options, either specify a number of days to export or a end date.");
+    Preconditions.checkState(
+        lookbackDays == null || lookbackDays > 0, "Number of days to export must be 1 or greater");
+
+    if (startDate != null) {
+      Preconditions.checkState(
+          lookbackDays == null && endDate == null, "todo. start day must be with end or days");
+    } else {
+
+    }
+
+    System.out.println(lookbackDays);
+    System.out.println(startDate);
+    System.out.println(endDate);
   }
 
   @Nonnull
