@@ -23,9 +23,13 @@ import com.google.edwmigration.validation.application.validator.handle.JdbcHandl
 import java.sql.Driver;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/** @author nehanene */
 public abstract class PostgresqlAbstractConnector extends AbstractJdbcConnector {
 
+  private static final Logger LOG = LoggerFactory.getLogger(PostgresqlAbstractConnector.class);
   public static final int OPT_PORT_DEFAULT = 5432;
 
   public PostgresqlAbstractConnector(@Nonnull String name) {

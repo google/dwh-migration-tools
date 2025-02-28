@@ -7,3 +7,4 @@ build
 # Ignore test connection JSON files
 *.json
 
+validationOutputs

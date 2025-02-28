@@ -20,6 +20,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.edwmigration.validation.application.validator.io.PasswordReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ public class ValidationConnection {
   private final String host;
   private final String port;
   private final String user;
+  private final PasswordReader passwordReader = new PasswordReader();
   private final String password;
   private final String database;
   private final String projectId;
@@ -107,7 +109,11 @@ public class ValidationConnection {
 
   @CheckForNull
   public String getPassword() {
-    return password;
+    if (password != null) {
+      return password;
+    } else {
+      return passwordReader.getOrPrompt();
+    }
   }
 
   @CheckForNull

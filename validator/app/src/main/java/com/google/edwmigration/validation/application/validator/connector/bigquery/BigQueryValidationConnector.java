@@ -16,8 +16,22 @@
  */
 package com.google.edwmigration.validation.application.validator.connector.bigquery;
 
+import com.google.edwmigration.validation.application.validator.ValidationArguments;
+import com.google.edwmigration.validation.application.validator.handle.Handle;
+import com.google.edwmigration.validation.application.validator.task.AbstractTask;
+import java.net.URI;
+import javax.annotation.Nonnull;
+import org.apache.commons.lang3.NotImplementedException;
+
 public class BigQueryValidationConnector extends BigQueryAbstractConnector {
   public BigQueryValidationConnector() {
     super("bigquery");
+  }
+
+  @Nonnull
+  @Override
+  public AbstractTask getSourceQueryTask(
+      Handle handle, URI outputUri, ValidationArguments arguments) {
+    throw new NotImplementedException("BigQuery as a source is not implemented.");
   }
 }

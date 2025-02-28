@@ -16,8 +16,11 @@
  */
 package com.google.edwmigration.validation.application.validator.connector;
 
+import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.ValidationConnection;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
+import com.google.edwmigration.validation.application.validator.task.AbstractTask;
+import java.net.URI;
 import javax.annotation.Nonnull;
 
 public interface Connector {
@@ -27,4 +30,7 @@ public interface Connector {
 
   @Nonnull
   Handle open(@Nonnull ValidationConnection arguments) throws Exception;
+
+  @Nonnull
+  AbstractTask getSourceQueryTask(Handle handle, URI outputUri, ValidationArguments arguments);
 }

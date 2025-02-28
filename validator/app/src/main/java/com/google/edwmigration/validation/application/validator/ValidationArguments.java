@@ -36,9 +36,12 @@ public class ValidationArguments extends DefaultArguments {
   public static final String OPT_SOURCE_CONNECTION = "source-connection";
   public static final String OPT_TARGET_CONNECTION = "target-connection";
   public static final String OPT_OUTPUT = "output";
+  public static final String OPT_GCS_PATH = "gcs-path";
   public static final String OPT_CONFIDENCE_INTERVAL = "confidence-interval";
   public static final String OPT_TABLE = "table";
   public static final String OPT_COLUMN_MAPPINGS = "column-mappings";
+  public static final String OPT_PROJECT_ID = "project-id";
+  public static final String OPT_GCS_STAGING_BUCKET = "gcs-staging-bucket";
 
   private ValidationConnection sourceConnection;
   private ValidationConnection targetConnection;
@@ -70,19 +73,28 @@ public class ValidationArguments extends DefaultArguments {
       parser
           .accepts(
               OPT_OUTPUT,
-              "Output directory to export query result sets. Defaults to current directory.")
+              "Output directory to export query results. Defaults to current directory.")
           .withOptionalArg()
           .ofType(String.class)
-          .describedAs("gs://bucket/dir");
+          .describedAs("path/to/dir")
+          .defaultsTo("validationOutputs/");
 
-  private final OptionSpec<Integer> confidenceIntervalOption =
+  private final OptionSpec<String> gcsPathOption =
+      parser
+          .accepts(OPT_GCS_PATH, "GCS URI to upload query results to.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .describedAs("gs://path/to/dir");
+
+  private final OptionSpec<Double> confidenceIntervalOption =
       parser
           .accepts(
               OPT_CONFIDENCE_INTERVAL,
               "Confidence interval for validation. Determines number of rows sampled. Defaults to 90.")
           .withOptionalArg()
-          .ofType(Integer.class)
-          .describedAs("90");
+          .ofType(Double.class)
+          .describedAs("0.90")
+          .defaultsTo(0.90);
 
   private final OptionSpec<String> columnMappingsOption =
       parser
@@ -91,6 +103,23 @@ public class ValidationArguments extends DefaultArguments {
           .ofType(String.class)
           .withValuesSeparatedBy(',')
           .describedAs("colA=COLA,colB=newColB");
+
+  private final OptionSpec<String> projectIdOption =
+      parser
+          .accepts(OPT_PROJECT_ID, "Project ID for Rsync.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .describedAs("projectId");
+
+  private final OptionSpec<String> GcsStagingBucketOption =
+      parser
+          .accepts(
+              OPT_GCS_STAGING_BUCKET,
+              "Staging bucket for Rysnc. Defaults to the same bucket as GCS path.")
+          .withOptionalArg()
+          .ofType(String.class)
+          .describedAs("gs://mybucket")
+          .defaultsTo(getGcsPath());
 
   public static final String DEFAULT_ENV_DIRECTORY = "~/.config/dwh-validation/";
   public static final String ENV_DIRECTORY_VAR = "DV_CONN_HOME";
@@ -103,10 +132,15 @@ public class ValidationArguments extends DefaultArguments {
     return Paths.get(connectionsDir).resolve(sourceConnPath);
   }
 
-  public ValidationConnection getSourceConnection() throws IOException {
+  public ValidationConnection getSourceConnection() {
     if (sourceConnection == null) {
-      String sourceConnJson = new String(Files.readAllBytes(getSourceConnectionPath()));
-      sourceConnection = gson.fromJson(sourceConnJson, ValidationConnection.class);
+      try {
+        String sourceConnJson = new String(Files.readAllBytes(getSourceConnectionPath()));
+        sourceConnection = gson.fromJson(sourceConnJson, ValidationConnection.class);
+      } catch (IOException e) {
+        throw new IllegalArgumentException(
+            String.format("An invalid file was provided: '%s'.", getSourceConnectionPath()), e);
+      }
     }
     return sourceConnection;
   }
@@ -116,10 +150,15 @@ public class ValidationArguments extends DefaultArguments {
     return Paths.get(connectionsDir).resolve(targetConnPath);
   }
 
-  public ValidationConnection getTargetConnection() throws IOException {
+  public ValidationConnection getTargetConnection() {
     if (targetConnection == null) {
-      String targetConnJson = new String(Files.readAllBytes(getTargetConnectionPath()));
-      targetConnection = gson.fromJson(targetConnJson, ValidationConnection.class);
+      try {
+        String targetConnJson = new String(Files.readAllBytes(getTargetConnectionPath()));
+        targetConnection = gson.fromJson(targetConnJson, ValidationConnection.class);
+      } catch (IOException e) {
+        throw new IllegalArgumentException(
+            String.format("An invalid file was provided: '%s'.", getTargetConnectionPath()), e);
+      }
     }
     return targetConnection;
   }
@@ -128,12 +167,24 @@ public class ValidationArguments extends DefaultArguments {
     return getOptions().valueOf(outputOption);
   }
 
-  public Integer getOptConfidenceInterval() {
+  public String getGcsPath() {
+    return getOptions().valueOf(gcsPathOption);
+  }
+
+  public String getProjectId() {
+    return getOptions().valueOf(projectIdOption);
+  }
+
+  public Double getOptConfidenceInterval() {
     return getOptions().valueOf(confidenceIntervalOption);
   }
 
   public String getTable() {
     return getOptions().valueOf(tableOption);
+  }
+
+  public String getGcsStagingBucket() {
+    return getOptions().valueOf(GcsStagingBucketOption);
   }
 
   public ImmutableMap<String, String> getColumnMappings() {

@@ -4,11 +4,10 @@ The BigQuery Migration Service Validation utility ensures data accuracy and comp
 migration process via SQL. It requires access to the source DB on-prem and to Google Cloud Storage (GCS) and BigQuery.
 
 The validation utility has the following goals:
-1. Query source and target metadata tables for schema compatibility check.
-2. Query source DB for aggregate and row sample and export results to GCS.
-3. Query target DB for equivalent aggregate and row sample.
-4. Compare source and target results in Google BigQuery via SQL.
-5. Provide summary of comparison in a BQ table.
+1. Query source DB for aggregate and row sample and export results to GCS.
+2. Query target DB for equivalent aggregate and row sample.
+3. Compare source and target results in Google BigQuery via SQL.
+4. Provide summary of comparison in a BQ table.
 
 ## Connections
 Connection files should be placed in the default validation directory ~/.config/dwh-validation/ or a 
