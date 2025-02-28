@@ -43,6 +43,69 @@ public class AirflowConnectorTest {
       "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password"
           + " --host localhost --port 8080 --schema airflow_db";
 
+  // todo add interval tasks tests
+
+  @Test
+  public void validate_startDateAndLookbackDays_success() throws Exception {
+    String argsStr = validRequiredArgs + " --start-date=2001-02-20 --lookback-days=25";
+
+    // Act
+    connector.validate(args(argsStr));
+  }
+
+  @Test
+  public void validate_startDateAndEndDate_success() throws Exception {
+    String argsStr = validRequiredArgs + " --start-date=2001-02-20 --end-date=2001-02-25";
+
+    // Act
+    connector.validate(args(argsStr));
+  }
+
+  @Test
+  public void validate_startDateAfterEndDate_throws() {
+    String argsStr = validRequiredArgs + " --start-date=2001-02-20 --end-date=2001-02-20";
+
+    Exception exception =
+        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+    assertEquals(
+        "Start date [2001-02-20T00:00Z] must be before end date [2001-02-20T00:00Z].",
+        exception.getMessage());
+  }
+
+  @Test
+  public void validate_allDateOptions_throws() {
+    String argsStr =
+        validRequiredArgs + " --start-date=2001-02-20 --end-date=2001-02-25 --lookback-days=10";
+
+    Exception exception =
+        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+    assertEquals(
+        "Incompatible options, either specify a number of days to export or a end date.",
+        exception.getMessage());
+  }
+
+  @Test
+  public void validate_endDateAlone_throws() {
+    String argsStr = validRequiredArgs + " --end-date=2001-02-20";
+
+    Exception exception =
+        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+    assertEquals(
+        "End date can be specified only with start date, but start date was null.",
+        exception.getMessage());
+  }
+
+  @Test
+  public void validate_startDateAlone_throws() {
+    String argsStr = validRequiredArgs + " --start-date=2001-02-20";
+
+    Exception exception =
+        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+    assertEquals(
+        "Incompatible options, number of days or end date must be specified with start date.",
+        exception.getMessage());
+  }
+
   @Test
   public void validate_lookbackDay_nonPositiveThrows() throws Exception {
     String argsStr = validRequiredArgs + " --lookback-days=0";
@@ -50,7 +113,7 @@ public class AirflowConnectorTest {
     // Act
     Exception exception =
         assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
-    assertEquals("Number of days to export must be 1 or greater", exception.getMessage());
+    assertEquals("Number of days to export must be 1 or greater.", exception.getMessage());
   }
 
   @Test
@@ -210,7 +273,7 @@ public class AirflowConnectorTest {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
-    connector.addTasksTo(tasks, null);
+    connector.addTasksTo(tasks, args(validRequiredArgs));
 
     // Assert
     Map<String, String> existingFilesToTables =
@@ -239,7 +302,7 @@ public class AirflowConnectorTest {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
-    connector.addTasksTo(tasks, null);
+    connector.addTasksTo(tasks, args(validRequiredArgs));
 
     // Assert
     long dumpMetadataCount = tasks.stream().filter(t -> t instanceof DumpMetadataTask).count();

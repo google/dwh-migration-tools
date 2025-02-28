@@ -934,6 +934,10 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionStartDate);
   }
 
+  public ZonedDateTime getStartDate(ZonedDateTime defaultTime) {
+    return firstNonNull(getStartDate(), defaultTime);
+  }
+
   @CheckForNull
   public ZonedDateTime getEndDate() {
     return getOptions().valueOf(optionEndDate);

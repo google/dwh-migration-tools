@@ -55,6 +55,17 @@ public class ZonedIntervalIterableGenerator {
     return forTimeUnitsUntil(ZonedDateTime.now(ZoneOffset.UTC), unitCount, duration, expander);
   }
 
+  @Nonnull
+  public static ZonedIntervalIterable forDateRangeWithIntervalDuration(
+      ZonedDateTime startDate, ZonedDateTime endDate, Duration intervalDuration)
+      throws MetadataDumperUsageException {
+    return new ZonedIntervalIterable(
+        startDate,
+        endDate,
+        intervalDuration,
+        IntervalExpander.createBasedOnDuration(intervalDuration));
+  }
+
   /**
    * Builds a ZonedIntervalIterable from connector arguments, the intervals will all be one hour
    * long ({@link ChronoUnit#HOURS}) and have an inclusive starting datetime and exclusive ending

@@ -30,6 +30,9 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -41,9 +44,14 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.sql.Driver;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,24 +116,89 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
+    ZonedIntervalIterable zonedIntervals = fromAirflowConnectorArguments(arguments);
+
     // Airflow v1.5.0
-    addFullTable(out, "dag.csv", "select * from dag;");
-    addFullTable(out, "task_instance.csv", "select * from task_instance;");
+    addQueryTask(out, "dag.csv", "select * from dag ");
+    addTableTaskWithIntervals(
+        out,
+        "task_instance.csv",
+        "select * from task_instance ",
+        zonedIntervals,
+        (startDate, endDate) ->
+            String.format(
+                " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
+                dateToSqlFormat(startDate), dateToSqlFormat(endDate)));
     // Airflow v1.6.0
-    addFullTable(out, "dag_run.csv", "select * from dag_run;");
+    addTableTaskWithIntervals(
+        out,
+        "dag_run.csv",
+        "select * from dag_run ",
+        zonedIntervals,
+        (startDate, endDate) ->
+            String.format(
+                " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
+                dateToSqlFormat(startDate), dateToSqlFormat(endDate)));
 
     // Airflow v1.10.7
     // analog of DAG's python definition in json
-    addFullTable(out, "serialized_dag.csv", "select * from serialized_dag;", TaskCategory.OPTIONAL);
+    addQueryTask(out, "serialized_dag.csv", "select * from serialized_dag;", TaskCategory.OPTIONAL);
     // Airflow v1.10.10
-    addFullTable(out, "dag_code.csv", "select * from dag_code;", TaskCategory.OPTIONAL);
+    addQueryTask(out, "dag_code.csv", "select * from dag_code;", TaskCategory.OPTIONAL);
   }
 
-  private static void addFullTable(List<? super Task<?>> out, String filename, String sql) {
-    addFullTable(out, filename, sql, TaskCategory.REQUIRED);
+  @Nullable
+  private ZonedIntervalIterable fromAirflowConnectorArguments(ConnectorArguments arguments) {
+    boolean isDateRangeSpecified =
+        arguments.getStartDate() != null || arguments.getLookbackDays() != null;
+    if (!isDateRangeSpecified) {
+      LOG.info("Date ranges was not specified. Generate full table queries.");
+      return null;
+    }
+
+    ZonedDateTime startDate;
+    ZonedDateTime endDate;
+    if (arguments.getLookbackDays() != null) {
+      endDate = arguments.getStartDate(ZonedDateTime.now(ZoneOffset.UTC));
+      startDate = endDate.minusDays(arguments.getLookbackDays());
+    } else {
+      startDate = arguments.getStartDate();
+      endDate = arguments.getEndDate();
+    }
+
+    LOG.info(
+        "Date range for query generation from {} to {} exclusive and increments of one day.",
+        startDate,
+        endDate);
+    return ZonedIntervalIterableGenerator.forDateRangeWithIntervalDuration(
+        startDate, endDate, Duration.ofDays(1));
   }
 
-  private static void addFullTable(
+  private static void addTableTaskWithIntervals(
+      List<? super Task<?>> out,
+      String filename,
+      String sql,
+      @Nullable ZonedIntervalIterable zonedIntervals,
+      BiFunction<ZonedDateTime, ZonedDateTime, String> toIntervalWhereClause) {
+    if (zonedIntervals == null) {
+      addQueryTask(out, filename, sql, TaskCategory.REQUIRED);
+      return;
+    }
+
+    for (ZonedInterval interval : zonedIntervals) {
+      String calculatedFileName =
+          DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + filename;
+      String calculatedSql =
+          sql + toIntervalWhereClause.apply(interval.getStart(), interval.getEndExclusive());
+      addQueryTask(out, calculatedFileName, calculatedSql);
+    }
+  }
+
+  private static void addQueryTask(List<? super Task<?>> out, String filename, String sql) {
+    addQueryTask(out, filename, sql, TaskCategory.REQUIRED);
+  }
+
+  private static void addQueryTask(
       List<? super Task<?>> out, String filename, String sql, TaskCategory taskCategory) {
     out.add(new JdbcSelectTask(filename, sql, taskCategory));
   }
@@ -167,7 +240,6 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     // 2. loockback days
     // 3. loocback with start
     // 4. start, end
-
     Integer lookbackDays = arguments.getLookbackDays();
     ZonedDateTime startDate = arguments.getStartDate();
     ZonedDateTime endDate = arguments.getEndDate();
@@ -176,24 +248,27 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
         !(lookbackDays != null && endDate != null),
         "Incompatible options, either specify a number of days to export or a end date.");
     Preconditions.checkState(
-        lookbackDays == null || lookbackDays > 0, "Number of days to export must be 1 or greater");
+        lookbackDays == null || lookbackDays > 0, "Number of days to export must be 1 or greater.");
 
     if (startDate != null) {
       Preconditions.checkState(
-          lookbackDays == null && endDate == null, "todo. start day must be with end or days");
+          lookbackDays != null || endDate != null,
+          "Incompatible options, number of days or end date must be specified with start date.");
+      Preconditions.checkState(
+          endDate == null || startDate.isBefore(endDate),
+          "Start date [%s] must be before end date [%s].",
+          startDate,
+          endDate);
     } else {
-
+      Preconditions.checkState(
+          endDate == null,
+          "End date can be specified only with start date, but start date was null.");
     }
-
-    System.out.println(lookbackDays);
-    System.out.println(startDate);
-    System.out.println(endDate);
   }
 
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-
     String jdbcString;
     Driver driver;
 

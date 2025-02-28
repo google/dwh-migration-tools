@@ -23,30 +23,25 @@ import java.time.ZonedDateTime;
 import java.util.Iterator;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** @author shevek */
 public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
-
-  @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterable.class);
-
   private final ZonedDateTime start;
   private final ZonedDateTime end;
-  private final Duration duration;
+  private final Duration intervalDuration;
 
-  /* pp */ ZonedIntervalIterable(
+  ZonedIntervalIterable(
       @Nonnull ZonedDateTime start,
       @Nonnull ZonedDateTime end,
-      @Nonnull Duration duration,
+      @Nonnull Duration intervalDuration,
       IntervalExpander expander) {
-    this.duration = Preconditions.checkNotNull(duration, "Duration was null.");
+    this.intervalDuration =
+        Preconditions.checkNotNull(intervalDuration, "Interval duration was null.");
     Preconditions.checkNotNull(start, "Start was null.");
     Preconditions.checkNotNull(end, "End was null.");
 
     Preconditions.checkState(
-        start.isBefore(end), "Start date %s must precede end date %s", start, end);
+        start.isBefore(end), "Start date [%s] must precede end date [%s]", start, end);
 
     ZonedInterval expandedInterval = expander.apply(new ZonedInterval(start, end));
 
@@ -65,15 +60,15 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   }
 
   @Nonnull
-  public Duration getDuration() {
-    return duration;
+  public Duration getIntervalDuration() {
+    return intervalDuration;
   }
 
-  private class Itr extends AbstractIterator<ZonedInterval> {
+  private class DatesIterator extends AbstractIterator<ZonedInterval> {
 
     private ZonedDateTime current;
 
-    public Itr() {
+    public DatesIterator() {
       this.current = start;
     }
 
@@ -81,7 +76,7 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
     protected ZonedInterval computeNext() {
       if (current.isEqual(end) || current.isAfter(end)) return endOfData();
 
-      ZonedDateTime next = current.plus(duration);
+      ZonedDateTime next = current.plus(intervalDuration);
       if (next.isAfter(end)) return endOfData();
 
       ZonedInterval result = new ZonedInterval(current, next);
@@ -93,13 +88,15 @@ public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
   @Nonnull
   @Override
   public Iterator<ZonedInterval> iterator() {
-    return new Itr();
+    return new DatesIterator();
   }
 
   @Override
   public String toString() {
     return String.format(
-        "from %s to %s every %s",
-        start, end, DurationFormatUtils.formatDurationWords(duration.toMillis(), true, true));
+        "from [%s] to [%s] every [%s]ms",
+        start,
+        end,
+        DurationFormatUtils.formatDurationWords(intervalDuration.toMillis(), true, true));
   }
 }
