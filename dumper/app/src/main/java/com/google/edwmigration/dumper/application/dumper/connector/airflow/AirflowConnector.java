@@ -272,8 +272,8 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   private void validateDatesInterval(ConnectorArguments arguments) {
     // valid inputs:
     // 1. all null
-    // 2. loockback days
-    // 3. loocback with start
+    // 2. lookback days
+    // 3. lookback with start
     // 4. start, end
     Integer lookbackDays = arguments.getLookbackDays();
     ZonedDateTime startDate = arguments.getStartDate();
