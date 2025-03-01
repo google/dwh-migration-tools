@@ -31,7 +31,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiConsumer;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -109,37 +108,8 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
   }
 
   @Nonnull
-  private static Class<?> newDriverClass(
-      @Nonnull ClassLoader driverClassLoader, @Nonnull String driverClassName)
-      throws PrivilegedActionException {
-    return AccessController.doPrivileged(
-        (PrivilegedExceptionAction<Class<?>>)
-            () -> Class.forName(driverClassName, true, driverClassLoader));
-  }
-
-  @Nonnull
   protected Driver newDriver(
       @CheckForNull List<String> driverPaths, @Nonnull String... driverClassNames)
-      throws SQLException {
-    return newDriver(
-        driverPaths,
-        (driverClassName, e) -> {
-          if (e.getCause() instanceof ClassNotFoundException)
-            LOG.warn(
-                "Cannot load driver class [{}] from path {}: {}",
-                driverClassName,
-                driverPaths,
-                e.getCause());
-          else throw new RuntimeException(e);
-        },
-        driverClassNames);
-  }
-
-  @Nonnull
-  protected Driver newDriver(
-      @CheckForNull List<String> driverPaths,
-      BiConsumer<String, PrivilegedActionException> onClassLoadException,
-      @Nonnull String... driverClassNames)
       throws SQLException {
     Class<?> driverClass = null;
     try {
@@ -150,10 +120,10 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
       {
         for (String driverClassName : driverClassNames) {
           try {
-            driverClass = newDriverClass(driverClassLoader, driverClassName);
+            driverClass = Class.forName(driverClassName, true, driverClassLoader);
             if (driverClass != null) break CLASS;
-          } catch (PrivilegedActionException e) {
-            onClassLoadException.accept(driverClassName, e);
+          } catch (ClassNotFoundException ignore) {
+            LOG.info("Driver class [{}] not found at  {}.", driverClassName, driverPaths);
           }
         }
         throw new SQLException(

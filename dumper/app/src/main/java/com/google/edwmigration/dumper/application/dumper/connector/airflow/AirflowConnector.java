@@ -187,14 +187,6 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
         driverClasses.stream()
             .map(AirflowDatabaseDriverClasses::getDriverClassName)
             .toArray(String[]::new);
-    return newDriver(
-        driverPaths,
-        (driverClassName, e) -> {
-          LOG.info(
-              "Checking drivers path [{}] for available drivers... Driver [{}] wasn't not available.",
-              driverPaths,
-              driverClassName);
-        },
-        driverClassesNames);
+    return newDriver(driverPaths, driverClassesNames);
   }
 }
