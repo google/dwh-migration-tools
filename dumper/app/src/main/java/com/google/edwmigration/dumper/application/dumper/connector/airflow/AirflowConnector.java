@@ -117,7 +117,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
-    ZonedIntervalIterable zonedIntervals = fromAirflowConnectorArguments(arguments);
+    ZonedIntervalIterable zonedIntervals = queryRangeFromConnectorArguments(arguments);
     Pair<ZonedDateTime, ZonedDateTime> dateRange = dateRange(arguments);
 
     // Airflow v1.5.0
@@ -174,7 +174,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   }
 
   @Nullable
-  private ZonedIntervalIterable fromAirflowConnectorArguments(ConnectorArguments arguments) {
+  private ZonedIntervalIterable queryRangeFromConnectorArguments(ConnectorArguments arguments) {
     Pair<ZonedDateTime, ZonedDateTime> dateRange = dateRange(arguments);
     if (dateRange == null) {
       LOG.info("Date ranges was not specified. Generate full table queries.");
