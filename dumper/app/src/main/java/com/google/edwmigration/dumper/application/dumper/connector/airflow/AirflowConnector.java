@@ -122,29 +122,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
     // Airflow v1.5.0
     addQueryTask(out, "dag.csv", "select * from dag;");
-    // todo think about multiple files
-    // addTableTaskWithIntervals(
-    //     out,
-    //     "task_instance",
-    //     "select * from task_instance ",
-    //     zonedIntervals,
-    //     (startDate, endDate) ->
-    //         String.format(
-    //             " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as
-    // TIMESTAMP) ;",
-    //             dateToSqlFormat(startDate), dateToSqlFormat(endDate)));
-    // // Airflow v1.6.0
-    // addTableTaskWithIntervals(
-    //     out,
-    //     "dag_run",
-    //     "select * from dag_run ",
-    //     zonedIntervals,
-    //     (startDate, endDate) ->
-    //         String.format(
-    //             " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as
-    // TIMESTAMP) ;",
-    //             dateToSqlFormat(startDate), dateToSqlFormat(endDate)));
-
+    // todo think about multiple files with this.addTableTaskWithIntervals()
     addQueryTask(
         out,
         "task_instance.csv",
@@ -209,6 +187,12 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     return Pair.of(startDate, endDate);
   }
 
+  /**
+   * call example: addTableTaskWithIntervals( out, "task_instance", "select * from task_instance ",
+   * zonedIntervals, (startDate, endDate) -> String.format( " where end_date >= CAST( '%s' as
+   * TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;", dateToSqlFormat(startDate),
+   * dateToSqlFormat(endDate)));
+   */
   private static void addTableTaskWithIntervals(
       List<? super Task<?>> out,
       String filename,
