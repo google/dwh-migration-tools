@@ -16,8 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FORMAT_NAME;
-
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -38,6 +36,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
+  private static final String FORMAT_NAME = "snowflake-lite.zip";
   private static final String NAME = "snowflake-lite";
 
   private final SnowflakePlanner planner = new SnowflakePlanner();
