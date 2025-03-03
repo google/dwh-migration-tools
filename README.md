@@ -23,11 +23,13 @@ client](https://cloud.google.com/bigquery/docs/batch-sql-translator#submit_a_tra
 and view the [installation instructions](client/README.md).
 
 ## Compiling from source
-You need to have `JDK 8` installed.  To check Java version run the command
-    `java -version` or refer to Java vendor documentation.
+You need to have `JDK 8` installed.  
 ### Build all the modules ###
     
     ./gradlew build
+### Build the DWH Dumper ###
+    
+    ./gradlew :dumper:app:build
 
 ## Contributing
 
