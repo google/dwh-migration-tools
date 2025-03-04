@@ -48,6 +48,10 @@
 			"moduleName": ".*"
 		},
 		{
+			"moduleLicense": "MIT-0",
+			"moduleName": ".*"
+		},
+		{
 			"moduleLicense": "ISC",
 			"moduleName": ".*"
 		},
