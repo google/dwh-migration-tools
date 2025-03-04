@@ -108,19 +108,6 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
   }
 
   @Nonnull
-  private static Class<?> newDriverClass(
-      @Nonnull ClassLoader driverClassLoader, @Nonnull String driverClassName)
-      throws PrivilegedActionException {
-    return AccessController.doPrivileged(
-        new PrivilegedExceptionAction<Class<?>>() {
-          @Override
-          public Class<?> run() throws Exception {
-            return Class.forName(driverClassName, true, driverClassLoader);
-          }
-        });
-  }
-
-  @Nonnull
   protected Driver newDriver(
       @CheckForNull List<String> driverPaths, @Nonnull String... driverClassNames)
       throws SQLException {
@@ -133,16 +120,10 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
       {
         for (String driverClassName : driverClassNames) {
           try {
-            driverClass = newDriverClass(driverClassLoader, driverClassName);
+            driverClass = Class.forName(driverClassName, true, driverClassLoader);
             if (driverClass != null) break CLASS;
-          } catch (PrivilegedActionException e) {
-            if (e.getCause() instanceof ClassNotFoundException)
-              LOG.warn(
-                  "Cannot load driver class [{}] from path {}: {}",
-                  driverClassName,
-                  driverPaths,
-                  e.getCause());
-            else throw e;
+          } catch (ClassNotFoundException ignore) {
+            LOG.info("Driver class [{}] not found at  {}.", driverClassName, driverPaths);
           }
         }
         throw new SQLException(
