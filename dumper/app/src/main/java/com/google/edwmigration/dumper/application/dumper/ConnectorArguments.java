@@ -111,6 +111,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
   public static final String OPT_QUERY_LOG_ALTERNATES = "query-log-alternates";
 
+  public static final String OPT_ENCODE_PII = "encode-pii";
+
   // Cloudera
   public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
   public static final String OPT_PAGINATION_PAGE_SIZE = "pagination-page-size";
@@ -362,6 +364,9 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(File.class)
           .describedAs("script.sql");
+
+  private final OptionSpec<Void> optionEncodePii =
+      parser.accepts(OPT_ENCODE_PII, "Encode PII values before storing data into zip file");
 
   // redshift.
   private final OptionSpec<String> optionRedshiftIAMAccessKeyID =
@@ -974,6 +979,11 @@ public class ConnectorArguments extends DefaultArguments {
   @Nonnull
   public List<String> getQueryLogAlternates() {
     return getOptions().valuesOf(optionQueryLogAlternates);
+  }
+
+  @Nonnull
+  public Boolean isEncodedPii() {
+    return getOptions().has(optionEncodePii);
   }
 
   public boolean isTestFlag(char c) {
