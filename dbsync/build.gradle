@@ -20,7 +20,6 @@ buildscript {
 }
 
 plugins {
-    alias libs.plugins.shadow
     id 'dbsync.java-application-conventions'
 }
 
@@ -36,7 +35,6 @@ dependencies {
 }
 
 licenseReport {
-    // onlyIf { ! gradle.startParameter.offline }
     filters = [
         new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
     ]
