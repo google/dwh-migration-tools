@@ -50,23 +50,29 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
         new PaginatedClouderaYarnApplicationsLoader(
             handle, context.getArguments().getPaginationPageSize());
 
+    boolean isPIIEncodingEnabled = context.getArguments().isEncodedPII();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         String clusterName = cluster.getName();
         LOG.info("Dump YARN applications from {} cluster", clusterName);
-        int loadAppsCnt =
-            appLoader.load(
-                clusterName,
-                yarnAppsPage -> writeYarnApplications(writer, yarnAppsPage, clusterName));
-        LOG.info("Dumped {} YARN applications from {} cluster", loadAppsCnt, clusterName);
+        appLoader.load(
+            clusterName,
+            yarnAppsPage ->
+                writeYarnApplications(writer, yarnAppsPage, clusterName, isPIIEncodingEnabled));
       }
     }
   }
 
   private void writeYarnApplications(
-      Writer writer, List<ApiYARNApplicationDTO> yarnApps, String clusterName) {
+      Writer writer,
+      List<ApiYARNApplicationDTO> yarnApps,
+      String clusterName,
+      boolean isPIIEncodingEnabled) {
     for (ApiYARNApplicationDTO yarnApp : yarnApps) {
       yarnApp.setClusterName(clusterName);
+      if (isPIIEncodingEnabled) {
+        yarnApp.enablePIIEncoding();
+      }
     }
     try {
       String yarnAppsJson = serializeObjectToJsonString(ImmutableMap.of("yarnApps", yarnApps));

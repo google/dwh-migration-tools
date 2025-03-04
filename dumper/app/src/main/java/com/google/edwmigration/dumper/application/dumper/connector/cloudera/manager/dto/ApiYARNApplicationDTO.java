@@ -27,6 +27,12 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiYARNApplicationDTO {
+  private boolean isPIIEncodingEnabled = false;
+
+  public void enablePIIEncoding() {
+    isPIIEncodingEnabled = true;
+  }
+
   @JsonProperty(required = true)
   private String clusterName;
 
@@ -88,6 +94,9 @@ public class ApiYARNApplicationDTO {
   }
 
   public String getUser() {
+    if (isPIIEncodingEnabled) {
+      return String.valueOf(user.hashCode());
+    }
     return user;
   }
 

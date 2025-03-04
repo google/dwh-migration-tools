@@ -21,6 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -114,6 +115,44 @@ public class ClouderaYarnApplicationTaskTest {
     assertTrue(lines.get(0).contains("\"applicationId\":\"app1\""));
     assertTrue(lines.get(0).contains("\"applicationId\":\"app2\""));
     assertTrue(lines.get(1).contains("\"applicationId\":\"app3\""));
+  }
+
+  @Test
+  public void doRun_piiEncodingDisabled_writesOriginalUser() throws Exception {
+    initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
+    when(cliArgs.isEncodedPII()).thenReturn(false);
+    Map<String, StringValuePattern> queryParams = new HashMap<>();
+    queryParams.put("limit", matching("1000"));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI(
+        "test-cluster", queryParams, "{\"applications\": [{\"user\":\"PII user name\"}]}");
+
+    queryParams.put("offset", matching("1"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\": []}");
+
+    task.doRun(context, sink, handle);
+
+    List<String> lines = new ArrayList<>(MockUtils.getWrittenJsonLines(writer, 1));
+    assertTrue(lines.get(0).contains("\"user\":\"PII user name\""));
+  }
+
+  @Test
+  public void doRun_piiEncodingEnabled_writesUserHashCode() throws Exception {
+    initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
+    when(cliArgs.isEncodedPII()).thenReturn(true);
+    Map<String, StringValuePattern> queryParams = new HashMap<>();
+    queryParams.put("limit", matching("1000"));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI(
+        "test-cluster", queryParams, "{\"applications\": [{\"user\":\"PII user name\"}]}");
+
+    queryParams.put("offset", matching("1"));
+    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\": []}");
+
+    task.doRun(context, sink, handle);
+
+    List<String> lines = new ArrayList<>(MockUtils.getWrittenJsonLines(writer, 1));
+    assertFalse(lines.get(0).contains("\"user\":\"PII user name\""));
   }
 
   @Test
