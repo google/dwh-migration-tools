@@ -365,12 +365,8 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(File.class)
           .describedAs("script.sql");
 
-  private final OptionSpec<Boolean> optionEncodePII =
-      parser
-          .accepts(OPT_ENCODE_PII, "Encode PII values before storing data into zip file")
-          .withOptionalArg()
-          .ofType(Boolean.class)
-          .defaultsTo(false);
+  private final OptionSpec<Void> optionEncodePII =
+      parser.accepts(OPT_ENCODE_PII, "Encode PII values before storing data into zip file");
 
   // redshift.
   private final OptionSpec<String> optionRedshiftIAMAccessKeyID =
@@ -987,7 +983,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   @Nonnull
   public Boolean isEncodedPII() {
-    return getOptions().valueOf(optionEncodePII);
+    return getOptions().has(optionEncodePII);
   }
 
   public boolean isTestFlag(char c) {

@@ -120,13 +120,13 @@ public class ClouderaYarnApplicationTaskTest {
   @Test
   public void doRun_piiEncodingDisabled_writesOriginalUser() throws Exception {
     initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
-    when(cliArgs.isEncodedPII()).thenReturn(false);
     Map<String, StringValuePattern> queryParams = new HashMap<>();
     queryParams.put("limit", matching("1000"));
     queryParams.put("offset", matching("0"));
     stubYARNApplicationsAPI(
         "test-cluster", queryParams, "{\"applications\": [{\"user\":\"PII user name\"}]}");
 
+    when(cliArgs.isEncodedPII()).thenReturn(false);
     queryParams.put("offset", matching("1"));
     stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\": []}");
 
@@ -139,13 +139,13 @@ public class ClouderaYarnApplicationTaskTest {
   @Test
   public void doRun_piiEncodingEnabled_writesUserHashCode() throws Exception {
     initClusters(ClouderaClusterDTO.create("cluster-id", "test-cluster"));
-    when(cliArgs.isEncodedPII()).thenReturn(true);
     Map<String, StringValuePattern> queryParams = new HashMap<>();
     queryParams.put("limit", matching("1000"));
     queryParams.put("offset", matching("0"));
     stubYARNApplicationsAPI(
         "test-cluster", queryParams, "{\"applications\": [{\"user\":\"PII user name\"}]}");
 
+    when(cliArgs.isEncodedPII()).thenReturn(true);
     queryParams.put("offset", matching("1"));
     stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\": []}");
 
