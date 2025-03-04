@@ -50,7 +50,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
         new PaginatedClouderaYarnApplicationsLoader(
             handle, context.getArguments().getPaginationPageSize());
 
-    boolean isPIIEncodingEnabled = context.getArguments().isEncodedPII();
+    boolean isPiiEncodingEnabled = context.getArguments().isEncodedPii();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         String clusterName = cluster.getName();
@@ -58,7 +58,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
         appLoader.load(
             clusterName,
             yarnAppsPage ->
-                writeYarnApplications(writer, yarnAppsPage, clusterName, isPIIEncodingEnabled));
+                writeYarnApplications(writer, yarnAppsPage, clusterName, isPiiEncodingEnabled));
       }
     }
   }
@@ -67,10 +67,10 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
       Writer writer,
       List<ApiYARNApplicationDTO> yarnApps,
       String clusterName,
-      boolean isPIIEncodingEnabled) {
+      boolean isPiiEncodingEnabled) {
     for (ApiYARNApplicationDTO yarnApp : yarnApps) {
       yarnApp.setClusterName(clusterName);
-      if (isPIIEncodingEnabled) {
+      if (isPiiEncodingEnabled) {
         yarnApp.enablePIIEncoding();
       }
     }

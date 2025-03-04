@@ -365,7 +365,7 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(File.class)
           .describedAs("script.sql");
 
-  private final OptionSpec<Void> optionEncodePII =
+  private final OptionSpec<Void> optionEncodePii =
       parser.accepts(OPT_ENCODE_PII, "Encode PII values before storing data into zip file");
 
   // redshift.
@@ -982,8 +982,8 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @Nonnull
-  public Boolean isEncodedPII() {
-    return getOptions().has(optionEncodePII);
+  public Boolean isEncodedPii() {
+    return getOptions().has(optionEncodePii);
   }
 
   public boolean isTestFlag(char c) {
