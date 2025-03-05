@@ -112,12 +112,12 @@ public class ClouderaYarnApplicationTypeTaskTest {
 
     // Because of pagination application API will be called twice per application type
     server.verify(
-        6,
+        8,
         getRequestedFor(
             urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications")));
     server.verify(
         1, getRequestedFor(urlPathMatching("/api/vTest/clusters/test-cluster/serviceTypes")));
-    List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
+    List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 4);
     assertTrue(
         fileJsonLines.contains(
             "{\"yarnAppTypes\":[{\"applicationId\":\"spark-app\",\"applicationType\":\"SPARK\",\"clusterName\":\"test-cluster\"}]}"));
@@ -177,10 +177,10 @@ public class ClouderaYarnApplicationTypeTaskTest {
     task.doRun(context, sink, handle);
 
     server.verify(
-        6,
+        8,
         getRequestedFor(
             urlPathMatching("/api/vTest/clusters/test-cluster/services/yarn/yarnApplications")));
-    List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 3);
+    List<String> fileJsonLines = MockUtils.getWrittenJsonLines(writer, 4);
     assertTrue(
         fileJsonLines.contains(
             "{\"yarnAppTypes\":[{\"applicationId\":\"custom-app\",\"applicationType\":\"CUSTOM-YARN-APP-TYPE\",\"clusterName\":\"test-cluster\"}]}"));
@@ -223,7 +223,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
     stubYARNApplicationsAPI(
         clusterName, queryParams, "{\"applications\":[{\"applicationId\":\"spark-app\"}]}");
     queryParams.put("offset", matching("1"));
-    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
+    stubYARNApplicationsAPI(clusterName, queryParams, "{\"applications\":[]}");
 
     // Stub API for predefined MAPREDUCE application type
     queryParams.put("filter", matching("applicationType=\"MAPREDUCE\""));
@@ -231,7 +231,15 @@ public class ClouderaYarnApplicationTypeTaskTest {
     stubYARNApplicationsAPI(
         clusterName, queryParams, "{\"applications\":[{\"applicationId\":\"mapreduce-app\"}]}");
     queryParams.put("offset", matching("1"));
-    stubYARNApplicationsAPI("test-cluster", queryParams, "{\"applications\":[]}");
+    stubYARNApplicationsAPI(clusterName, queryParams, "{\"applications\":[]}");
+
+    // Stub API for predefined Oozie Launcher application type
+    queryParams.put("filter", matching("applicationType=\"Oozie Launcher\""));
+    queryParams.put("offset", matching("0"));
+    stubYARNApplicationsAPI(
+        clusterName, queryParams, "{\"applications\":[{\"applicationId\":\"oozie-app\"}]}");
+    queryParams.put("offset", matching("1"));
+    stubYARNApplicationsAPI(clusterName, queryParams, "{\"applications\":[]}");
   }
 
   private void stubYARNApplicationsAPI(
