@@ -49,7 +49,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
   class PaginatedClouderaYarnApplicationsLoader {
     private static final String ISO_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
-    private final URI host;
+    private final URI apiURI;
     private final CloseableHttpClient httpClient;
     private final int limit;
     private int offset;
@@ -60,7 +60,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     }
 
     public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle, int limit) {
-      this.host = handle.getApiURI();
+      this.apiURI = handle.getApiURI();
       this.httpClient = handle.getHttpClient();
       this.limit = limit;
 
@@ -119,7 +119,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
         if (appType != null) {
           uriBuilder.addParameter("filter", String.format("applicationType=\"%s\"", appType));
         }
-        return new URI(host + uriBuilder.build().toString());
+        return new URI(apiURI + uriBuilder.build().toString());
       } catch (URISyntaxException ex) {
         throw new ClouderaConnectorException("Can't build Cloudera endpoint.", ex);
       }

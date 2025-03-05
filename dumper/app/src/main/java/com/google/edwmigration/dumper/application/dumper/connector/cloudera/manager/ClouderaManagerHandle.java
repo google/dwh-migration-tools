@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
@@ -41,8 +42,26 @@ public class ClouderaManagerHandle implements Handle {
     Preconditions.checkNotNull(apiURI, "Cloudera's apiURI can't null.");
     Preconditions.checkNotNull(httpClient, "httpClient can't be null.");
 
-    this.apiURI = apiURI;
+    // Always add trailing slash for safety
+    this.apiURI = unify(apiURI);
     this.httpClient = httpClient;
+  }
+
+  /** 1. Remove query params and url fragments 2. Add trailing slash for safety */
+  private static URI unify(URI uri) {
+    try {
+      return new URI(
+              uri.getScheme(),
+              uri.getUserInfo(),
+              uri.getHost(),
+              uri.getPort(),
+              uri.getPath() + "/",
+              null,
+              null)
+          .normalize();
+    } catch (URISyntaxException e) {
+      throw new RuntimeException("URI must be valid at this stage", e);
+    }
   }
 
   public URI getApiURI() {
