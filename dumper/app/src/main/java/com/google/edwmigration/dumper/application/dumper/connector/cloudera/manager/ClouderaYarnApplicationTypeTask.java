@@ -44,7 +44,8 @@ import org.slf4j.LoggerFactory;
 public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplicationTask {
   private static final Logger LOG = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
 
-  private final ImmutableList<String> predefinedAppTypes = ImmutableList.of("MAPREDUCE", "SPARK");
+  private final ImmutableList<String> predefinedAppTypes =
+      ImmutableList.of("MAPREDUCE", "SPARK", "Oozie Launcher");
 
   public ClouderaYarnApplicationTypeTask(int days) {
     super("yarn-application-types", days);
