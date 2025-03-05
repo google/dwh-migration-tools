@@ -67,6 +67,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     builder.add(planner.eventStateTask());
     builder.add(planner.operationEndsTask());
     builder.add(planner.operationStartsTask());
+    builder.add(planner.warehouseEventsHistoryTask());
     builder.add(planner.warehouseEventsTask());
     builder.add(planner.warehouseMeteringTask());
 
