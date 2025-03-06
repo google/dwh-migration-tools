@@ -808,6 +808,46 @@ class OverridesUtil {
             "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1alpha": [
                 projectUrl: "https://github.com/googleapis/googleapis",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
+            ],
+            "com.google.api.grpc:proto-google-cloud-run-v2": [
+                projectUrl: "https://github.com/googleapis/google-cloud-java",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/refs/heads/main/LICENSE"
+            ],
+            "com.google.cloud:google-cloud-run": [
+                projectUrl: "https://github.com/googleapis/google-cloud-java",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/refs/heads/main/LICENSE"
+            ],
+            "commons-logging:commons-logging": [
+                projectUrl: "https://github.com/apache/commons-logging",
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-logging/refs/heads/master/LICENSE.txt"
+            ],
+            "io.netty:netty-codec-http": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/refs/heads/4.1/LICENSE.txt"
+            ],
+            "io.netty:netty-codec-http2": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/refs/heads/4.1/LICENSE.txt"
+            ],
+            "it.unimi.dsi:fastutil": [
+                projectUrl: "http://fastutil.di.unimi.it/",
+                licenseUrl: "https://raw.githubusercontent.com/vigna/fastutil/refs/heads/master/LICENSE-2.0"
+            ],
+            "org.apache.parquet:parquet-generator": [
+                projectUrl: "https://github.com/apache/parquet-java/",
+                licenseUrl: "https://raw.githubusercontent.com/apache/parquet-java/refs/heads/master/LICENSE"
+            ],
+            "org.reactivestreams:reactive-streams": [
+                projectUrl: "https://github.com/reactive-streams/reactive-streams-jvm",
+                licenseUrl: "https://raw.githubusercontent.com/reactive-streams/reactive-streams-jvm/refs/heads/master/LICENSE"
+            ],
+            "software.amazon.awssdk:*": [
+                projectUrl: "https://github.com/aws/aws-sdk-java-v2",
+                licenseUrl: "https://raw.githubusercontent.com/aws/aws-sdk-java-v2/refs/heads/master/LICENSE.txt"
+            ],
+            "software.amazon.eventstream:*": [
+                projectUrl: "https://github.com/awslabs/aws-eventstream-java",
+                licenseUrl: "https://raw.githubusercontent.com/awslabs/aws-eventstream-java/refs/heads/master/LICENSE"
             ]
         ]
     }
