@@ -167,6 +167,38 @@ final class SnowflakePlanner {
     return new LiteTimeSeriesTask("report_date_range.csv", query, header);
   }
 
+  Task<?> warehouseEventsHistoryTask() {
+    ImmutableList<String> selectList =
+        ImmutableList.of(
+            "timestamp",
+            "warehouse_id",
+            "warehouse_name",
+            "cluster_number",
+            "event_name",
+            "event_reason",
+            "event_state",
+            "user_name",
+            "role_name",
+            "query_id");
+    String query =
+        String.format(
+            "SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY",
+            String.join(", ", selectList));
+    ImmutableList<String> header =
+        ImmutableList.of(
+            "Timestamp",
+            "WarehouseId",
+            "WarehouseName",
+            "ClusterNumber",
+            "EventName",
+            "EventReason",
+            "EventState",
+            "UserName",
+            "RoleName",
+            "QueryId");
+    return new LiteTimeSeriesTask("warehouse_events_history.csv", query, header);
+  }
+
   Task<?> warehouseEventsTask() {
     String query =
         "SELECT event_name, cluster_number, warehouse_id, warehouse_name, count(1)"
