@@ -20,6 +20,7 @@ enum MetadataView {
   DATABASES("databases"),
   SCHEMATA("schemata"),
   TABLES("tables"),
+  EXTERNAL_TABLES("externaltables"),
   COLUMNS("columns"),
   VIEWS("views"),
   FUNCTIONS("functions"),
