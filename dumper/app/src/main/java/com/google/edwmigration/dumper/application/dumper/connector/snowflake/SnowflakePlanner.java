@@ -177,8 +177,8 @@ final class SnowflakePlanner {
             "event_name",
             "event_reason",
             "event_state",
-            "user_name",
-            "role_name",
+            "NULL",
+            "NULL",
             "query_id");
     String query =
         String.format(
