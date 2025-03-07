@@ -1,6 +1,7 @@
 package com.google.edwmigration.dbsync.server;
 
 import com.google.edwmigration.dbsync.common.DefaultArguments;
+import com.google.edwmigration.dbsync.common.UriUtil;
 import java.io.IOException;
 import java.net.URI;
 import joptsimple.OptionSpec;
@@ -8,34 +9,48 @@ import joptsimple.OptionSpec;
 public class GcsServerMain {
 
   public enum Mode {
-    GENERATE, RECEIVE
+    GENERATE,
+    RECEIVE
   }
 
   private static class Arguments extends DefaultArguments {
 
     private final OptionSpec<Mode> modeOptionSpec =
-        parser.accepts("mode", "Specifies the mode")
+        parser
+            .accepts("mode", "Specifies the mode")
             .withRequiredArg()
             .ofType(Mode.class)
             .required();
 
     private final OptionSpec<String> projectOptionSpec =
-        parser.accepts("project", "Specifies the destination project")
+        parser
+            .accepts("project", "Specifies the destination project")
             .withRequiredArg()
             .ofType(String.class)
             .required();
 
     private final OptionSpec<String> targetOptionSpec =
-        parser.accepts("target_file", "Specifies the target file")
+        parser
+            .accepts("target_file", "Specifies the target file")
             .withRequiredArg()
             .ofType(String.class)
             .required();
 
     private final OptionSpec<String> stagingBucketOptionSpec =
-        parser.accepts("staging_bucket", "Specifies the staging bucket")
+        parser
+            .accepts("staging_bucket", "Specifies the staging bucket")
             .withRequiredArg()
             .ofType(String.class)
             .required();
+
+    private final OptionSpec<Boolean> deleteStagingFilesOptionSpec =
+        parser
+            .accepts(
+                "delete_staging_files",
+                "Toggle to control whether to cleanup temp fiels in staging bucket at the end")
+            .withOptionalArg()
+            .ofType(Boolean.class)
+            .defaultsTo(true);
 
     public Arguments(String[] args) {
       super(args);
@@ -56,17 +71,21 @@ public class GcsServerMain {
     public String getStagingBucket() {
       return getOptions().valueOf(stagingBucketOptionSpec);
     }
-  }
 
+    public Boolean getDeleteStagingFilesOptionSpec() {
+      return getOptions().valueOf(deleteStagingFilesOptionSpec);
+    }
+  }
 
   // This is invoked in CloudRun, as ServerMain --mode GENERATE vs --mode RECONSTRUCT
   public static void main(String[] args) throws IOException {
     Arguments argument = new Arguments(args);
-    GCSTarget target = new GCSTarget(argument.getProject(),
-        URI.create(argument.getTargetUri()),
-        URI.create(argument.getStagingBucket())
-    );
-    RsyncServer server = new RsyncServer(target);
+    GCSTarget target =
+        new GCSTarget(
+            argument.getProject(),
+            URI.create(argument.getTargetUri()),
+            URI.create(UriUtil.ensureTrailingSlash(argument.getStagingBucket())));
+    RsyncServer server = new RsyncServer(target, argument.getDeleteStagingFilesOptionSpec());
 
     switch (argument.getMode()) {
       case GENERATE:
@@ -77,5 +96,4 @@ public class GcsServerMain {
         break;
     }
   }
-
 }

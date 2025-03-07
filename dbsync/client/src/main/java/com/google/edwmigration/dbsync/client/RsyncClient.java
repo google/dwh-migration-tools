@@ -1,6 +1,5 @@
 package com.google.edwmigration.dbsync.client;
 
-
 import com.google.edwmigration.dbsync.server.CloudRunServerAPI;
 import com.google.edwmigration.dbsync.common.InstructionGenerator;
 import com.google.edwmigration.dbsync.common.storage.LocalStorage;
@@ -27,7 +26,13 @@ public class RsyncClient {
   // GcsClientMain calls this.
   // Validation calls this.
   // TODO support multiple files ?
-  public void putRsync(String projectId, String location, URI sourceUri, URI stagingBucket, URI targetUri)
+  public void putRsync(
+      String projectId,
+      String location,
+      URI sourceUri,
+      URI stagingBucket,
+      URI targetUri,
+      boolean delete_staging_files)
       throws IOException, ExecutionException, InterruptedException {
     ByteSource byteSource;
     switch (sourceUri.getScheme()) {
@@ -42,12 +47,13 @@ public class RsyncClient {
         throw new IllegalStateException("Unexpected URI Scheme: " + sourceUri.getScheme());
     }
 
-    CloudRunServerAPI server = new CloudRunServerAPI(projectId, location, stagingBucket, targetUri);
+    CloudRunServerAPI server =
+        new CloudRunServerAPI(projectId, location, stagingBucket, targetUri, delete_staging_files);
 
     if (byteSource.size() < MIN_SIZE_TO_RSYNC) {
       throw new IllegalStateException("dont handle small files");
     } else {
-      //TODO move this out of the put rsync and into a initialization function to be called once
+      // TODO move this out of the put rsync and into a initialization function to be called once
       server.deployRsyncJobs();
       putRsync(byteSource, server, new GCSTarget(projectId, targetUri, stagingBucket));
     }
@@ -73,18 +79,21 @@ public class RsyncClient {
     InstructionGenerator generator = new InstructionGenerator(CHECKSUM_BLOCK_SIZE);
     ByteSink instructionSink = target.getInstructionsByteSink();
     try (OutputStream instructionStream = instructionSink.openBufferedStream()) {
-      generator.generate(instruction -> {
-        try {
-          instruction.writeDelimitedTo(instructionStream);
-        } catch (IOException e) {
-          throw new RuntimeException("Failed to write instructions", e);
-        }
-      }, source, targetChecksums);
+      generator.generate(
+          instruction -> {
+            try {
+              instruction.writeDelimitedTo(instructionStream);
+            } catch (IOException e) {
+              throw new RuntimeException("Failed to write instructions", e);
+            }
+          },
+          source,
+          targetChecksums);
     }
 
     // Reconstruct on GCS
     server.reconstruct();
 
-    //TODO delete the jobs from cloudrun
+    // TODO delete the jobs from cloudrun
   }
 }

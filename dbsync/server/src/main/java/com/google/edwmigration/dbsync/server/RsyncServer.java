@@ -10,41 +10,49 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 
 public class RsyncServer {
-  private static final int CHECKSUM_BLOCK_SIZE = 4096;
-  private RsyncTarget target;
+  private static final int CHECKSUM_BLOCK_SIZE = 8192;
+  private final RsyncTarget target;
+  private final boolean deleteStagingFiles;
 
-  public RsyncServer(RsyncTarget target) {
+  public RsyncServer(RsyncTarget target, boolean deleteStagingFiles) {
     this.target = target;
+    this.deleteStagingFiles = deleteStagingFiles;
   }
 
-  public void generate() throws IOException{
+  public void generate() throws IOException {
     ByteSource source = target.getTargetByteSource();
     ByteSink checksumSink = target.getChecksumByteSink();
     try (OutputStream checksumStream = checksumSink.openBufferedStream()) {
       ChecksumGenerator generator = new ChecksumGenerator(CHECKSUM_BLOCK_SIZE);
-      generator.generate(checksum -> {
-        try {
-          // TODO: Switch to simple write to save storage and read by byte size
-          checksum.writeDelimitedTo(checksumStream);
-        } catch (IOException e) {
-          throw new RuntimeException("Failed to generate checksum", e);
-        }
-      }, source);
+      generator.generate(
+          checksum -> {
+            try {
+              // TODO: Switch to simple write to save storage and read by byte size
+              checksum.writeDelimitedTo(checksumStream);
+            } catch (IOException e) {
+              throw new RuntimeException("Failed to generate checksum", e);
+            }
+          },
+          source);
     }
   }
 
   public void reconstruct() throws IOException {
     ByteSource instructionSource = target.getInstructionsByteSource();
-    ByteSource baseData = target.getTargetByteSource();
-    ByteSink stagingsink = target.getStagingByteSink();
+    ByteSource targetByteSource = target.getTargetByteSource();
+    ByteSink stagingByteSink = target.getStagingByteSink();
 
-    try (OutputStream targetStream = stagingsink.openBufferedStream();
-        InputStream instructionStream = instructionSource.openBufferedStream()) {
-      InstructionReceiver receiver = new InstructionReceiver(targetStream, baseData);
+    try (OutputStream stagingFileStream = stagingByteSink.openBufferedStream();
+        InputStream instructionFileStream = instructionSource.openBufferedStream()) {
+      InstructionReceiver receiver = new InstructionReceiver(stagingFileStream, targetByteSource);
       Instruction instruction;
-      while ((instruction = Instruction.parseDelimitedFrom(instructionStream)) != null) {
+      while ((instruction = Instruction.parseDelimitedFrom(instructionFileStream)) != null) {
         receiver.receive(instruction);
       }
     }
+    // Once instructions are applied staged file is created with latest data
+    // Target files needs to be replaces with this file
+    // And other temp files in staging area would be deleted
+    target.moveStagedFileToTarget(this.deleteStagingFiles);
   }
 }
