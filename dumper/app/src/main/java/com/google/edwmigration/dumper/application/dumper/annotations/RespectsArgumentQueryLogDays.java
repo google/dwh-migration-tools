@@ -35,5 +35,5 @@ import java.lang.annotation.Target;
     description = RespectsArgumentQueryLogDays.DESCRIPTION)
 public @interface RespectsArgumentQueryLogDays {
 
-  public static final String DESCRIPTION = "The number of days of query history to dump.";
+  String DESCRIPTION = "The number of days of query history to dump.";
 }
