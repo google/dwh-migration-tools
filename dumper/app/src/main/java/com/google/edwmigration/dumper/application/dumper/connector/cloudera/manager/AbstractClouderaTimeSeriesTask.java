@@ -17,8 +17,8 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import javax.annotation.Nonnull;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -34,19 +35,31 @@ import org.apache.http.impl.client.CloseableHttpClient;
 abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTask {
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-  private final ObjectMapper objectMapper = new ObjectMapper();
   private final int includedLastDays;
   private final TimeSeriesAggregation tsAggregation;
+  private final TaskCategory taskCategory;
 
   public AbstractClouderaTimeSeriesTask(
-      String targetPath, int includedLastDays, TimeSeriesAggregation tsAggregation) {
+      String targetPath,
+      int includedLastDays,
+      TimeSeriesAggregation tsAggregation,
+      TaskCategory taskCategory) {
     super(targetPath);
     Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
     Preconditions.checkArgument(
         includedLastDays >= 1,
         "The chart has to include at least one day. Received " + includedLastDays + " days.");
+    Preconditions.checkNotNull(taskCategory, "TaskCategory has not to be a null.");
+
     this.includedLastDays = includedLastDays;
     this.tsAggregation = tsAggregation;
+    this.taskCategory = taskCategory;
+  }
+
+  @Nonnull
+  @Override
+  public final TaskCategory getCategory() {
+    return taskCategory;
   }
 
   protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query) {
