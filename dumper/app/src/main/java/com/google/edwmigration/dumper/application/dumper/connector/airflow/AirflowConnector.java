@@ -122,16 +122,16 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
     // Airflow v1.5.0
     addQueryTask(out, "dag.csv", "select * from dag;");
-    // todo think about multiple files with this.addTableTaskWithIntervals()
+    // todo b/401470428 think about multiple files with this.addTableTaskWithIntervals()
     addQueryTask(
         out,
         "task_instance.csv",
-        dateRange == null
-            ? "select * from task_instance;"
-            : "select * from task_instance "
-                + String.format(
+        "select * from task_instance "
+            + (dateRange != null
+                ? String.format(
                     " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
-                    dateToSqlFormat(dateRange.getLeft()), dateToSqlFormat(dateRange.getRight())));
+                    dateToSqlFormat(dateRange.getLeft()), dateToSqlFormat(dateRange.getRight()))
+                : ""));
 
     // Airflow v1.6.0
     addQueryTask(
