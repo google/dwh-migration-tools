@@ -246,7 +246,7 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(
               OPT_END_DATE,
-              "Inclusive end date for data to export, value will be truncated to hour")
+              "Exclusive end date for data to export, value will be truncated to hour")
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
@@ -259,7 +259,7 @@ public class ConnectorArguments extends DefaultArguments {
               "The N days back of data to export from current moment or "
                   + "from --"
                   + OPT_START_DATE
-                  + " if specified.")
+                  + " if specified")
           .withOptionalArg()
           .ofType(Integer.class)
           .describedAs("N");
