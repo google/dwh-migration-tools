@@ -256,9 +256,10 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(
               OPT_LOOKBACK_DAYS,
-              "The N days back of data to export from current moment. "
-                  + "Can ne combined with --"
-                  + OPT_START_DATE)
+              "The N days back of data to export from current moment or "
+                  + "from --"
+                  + OPT_START_DATE
+                  + " if specified.")
           .withOptionalArg()
           .ofType(Integer.class)
           .describedAs("N");
