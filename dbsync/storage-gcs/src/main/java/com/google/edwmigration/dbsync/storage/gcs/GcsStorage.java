@@ -1,5 +1,6 @@
 package com.google.edwmigration.dbsync.storage.gcs;
 
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.CopyWriter;
@@ -54,7 +55,6 @@ public class GcsStorage {
   }
 
   public boolean deleteFile(URI fileUri) {
-    System.out.printf("Deleting path: %s", fileUri);
     // return if file got deleted or not and let caller decide how to handle this
     boolean isDeleted = storage.delete(BlobId.fromGsUtilUri(fileUri.toString()));
     if (!isDeleted) {
@@ -62,5 +62,10 @@ public class GcsStorage {
           .log(Level.WARNING, "File to delete was not found, fileUri: %s", fileUri);
     }
     return isDeleted;
+  }
+
+  public boolean checkFileExists(String fileGsUtilUri) {
+    Blob blob = storage.get(BlobId.fromGsUtilUri(fileGsUtilUri));
+    return blob != null && blob.exists();
   }
 }

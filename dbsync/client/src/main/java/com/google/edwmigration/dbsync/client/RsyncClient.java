@@ -8,10 +8,13 @@ import com.google.edwmigration.dbsync.server.GCSTarget;
 import com.google.edwmigration.dbsync.server.RsyncTarget;
 import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
+import com.google.edwmigration.dbsync.storage.gcs.GcsStorage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -49,14 +52,18 @@ public class RsyncClient {
 
     CloudRunServerAPI server =
         new CloudRunServerAPI(projectId, location, stagingBucket, targetUri, delete_staging_files);
-
-    if (byteSource.size() < MIN_SIZE_TO_RSYNC) {
-      throw new IllegalStateException("dont handle small files");
-    } else {
-      // TODO move this out of the put rsync and into a initialization function to be called once
-      server.deployRsyncJobs();
-      putRsync(byteSource, server, new GCSTarget(projectId, targetUri, stagingBucket));
+    GcsStorage gcsStorage = new GcsStorage(projectId);
+    Path sourceFilePath = Paths.get(sourceUri);
+    if (!gcsStorage.checkFileExists(targetUri.toString())
+        || byteSource.size() < MIN_SIZE_TO_RSYNC) {
+      // if file doesn't exist we can't run rsync since there is nothing in target
+      // if file is small its more efficient to just copy than run rsync
+      gcsStorage.uploadFile(sourceFilePath, targetUri);
+      return;
     }
+    // TODO move this out of the put rsync and into a initialization function to be called once
+    server.deployRsyncJobs();
+    putRsync(byteSource, server, new GCSTarget(projectId, targetUri, stagingBucket));
   }
 
   private void putRsync(ByteSource source, CloudRunServerAPI server, RsyncTarget target)

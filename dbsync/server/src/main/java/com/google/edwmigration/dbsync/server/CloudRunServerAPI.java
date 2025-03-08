@@ -84,10 +84,10 @@ public class CloudRunServerAPI {
   }
 
   public void deployRsyncJobs() throws IOException, ExecutionException, InterruptedException {
-    Path jar_path = Paths.get(this.clientJar);
+    Path jarPath = Paths.get(this.clientJar);
     GcsStorage stagingStorage = new GcsStorage(project);
     URI serverJarUri = stagingBucket.resolve(RSYNC_BINARY_NAME);
-    stagingStorage.uploadFile(jar_path, serverJarUri);
+    stagingStorage.uploadFile(jarPath, serverJarUri);
     String jarDownloadCommand = String.format("gcloud storage cp %s .", serverJarUri);
 
     // TODO: Handle special characters
