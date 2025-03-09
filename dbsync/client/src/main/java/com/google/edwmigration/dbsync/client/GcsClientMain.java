@@ -80,7 +80,7 @@ public class GcsClientMain {
       return getOptions().valueOf(stagingBucketOptionSpec);
     }
 
-    public Boolean getDeleteStagingFilesOptionSpec() {
+    public Boolean getDeleteStagingFilesOption() {
       return getOptions().valueOf(deleteStagingFilesOptionSpec);
     }
   }
@@ -95,7 +95,7 @@ public class GcsClientMain {
           new URI(arguments.getSourceUri()),
           new URI(UriUtil.ensureTrailingSlash(arguments.getStagingBucket())),
           new URI(arguments.getTargetUri()),
-          arguments.getDeleteStagingFilesOptionSpec());
+          arguments.getDeleteStagingFilesOption());
     } catch (Exception e) {
       Logger.getLogger("rsync").log(Level.INFO, e.getMessage(), e);
     }

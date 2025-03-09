@@ -115,7 +115,12 @@ public class CloudRunServerAPI {
                 + "--staging_bucket '%s' "
                 + "--target_file '%s' "
                 + "--delete_staging_files %s ",
-            RSYNC_BINARY_NAME, Mode.RECEIVE, project, stagingBucket, targetUri, this.deleteStagingFiles);
+            RSYNC_BINARY_NAME,
+            Mode.RECEIVE,
+            project,
+            stagingBucket,
+            targetUri,
+            this.deleteStagingFiles);
     deployCloudRunJob(
         project,
         location,
@@ -135,9 +140,8 @@ public class CloudRunServerAPI {
     }
   }
 
-  public void deleteJob(Mode mode)
-      throws IOException, ExecutionException, InterruptedException {
-    try(JobsClient jobsClient = JobsClient.create()) {
+  public void deleteJob(Mode mode) throws IOException, ExecutionException, InterruptedException {
+    try (JobsClient jobsClient = JobsClient.create()) {
       JobName jobName = JobName.of(project, location, getJobId(mode));
       jobsClient.deleteJobAsync(jobName).get();
     }

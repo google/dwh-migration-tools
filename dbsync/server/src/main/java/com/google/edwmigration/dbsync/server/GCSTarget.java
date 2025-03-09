@@ -20,8 +20,13 @@ public class GCSTarget implements RsyncTarget {
   public GCSTarget(String project, URI targetUri, URI stagingBucket) {
     this.storage = new GcsStorage(project);
     this.targetUri = targetUri;
+
     // Create a staging folder path for each target file using the target path and file name
     // Then the checksum, instruction and staged files are created in this folder
+    // Example of staging files storage:
+    //  If target files path is gs://target_bucket/dir/target/file.txt
+    //  Staging bucket is gs://target_bucket/
+    //  Then staging files will be stored as gs://target_bucket/dir/target/file.txt/staged
     String targetRelativePath = UriUtil.getRelativePath(targetUri);
     String stagingBasePath = UriUtil.ensureTrailingSlash(targetRelativePath);
     this.instructionUri = stagingBucket.resolve(stagingBasePath + INSTRUCTION_FILE_NAME);

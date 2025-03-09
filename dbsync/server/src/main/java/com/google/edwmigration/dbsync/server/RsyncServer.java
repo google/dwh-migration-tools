@@ -50,9 +50,9 @@ public class RsyncServer {
         receiver.receive(instruction);
       }
     }
-    // Once instructions are applied staged file is created with latest data
-    // Target files needs to be replaces with this file
-    // And other temp files in staging area would be deleted
+    // Once instructions are applied and staging file is created with latest data
+    // Target file needs to be replaces with the staged file
+    // And other temp files in staging folder would be deleted
     target.moveStagedFileToTarget(this.deleteStagingFiles);
   }
 }
