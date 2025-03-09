@@ -5,6 +5,7 @@ import com.google.edwmigration.dbsync.common.InstructionGenerator;
 import com.google.edwmigration.dbsync.common.storage.LocalStorage;
 import com.google.edwmigration.dbsync.proto.Checksum;
 import com.google.edwmigration.dbsync.server.GCSTarget;
+import com.google.edwmigration.dbsync.server.GcsServerMain.Mode;
 import com.google.edwmigration.dbsync.server.RsyncTarget;
 import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
@@ -101,6 +102,7 @@ public class RsyncClient {
     // Reconstruct on GCS
     server.reconstruct();
 
-    // TODO delete the jobs from cloudrun
+    server.deleteJob(Mode.GENERATE);
+    server.deleteJob(Mode.RECEIVE);
   }
 }

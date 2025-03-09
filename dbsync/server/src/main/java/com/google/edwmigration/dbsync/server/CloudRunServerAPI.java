@@ -22,7 +22,6 @@ public class CloudRunServerAPI {
   private static final String BASE_IMAGE_ENV_VAR = "RSYNC_CLOUD_BASE_IMAGE";
   private static final String SERVER_JAR_ENV_VAR = "RSYNC_SERVER_JAR";
   private static final String RSYNC_BINARY_NAME = "rsync-binary";
-
   private final String project;
   private final String location;
   private final URI stagingBucket;
@@ -133,6 +132,14 @@ public class CloudRunServerAPI {
   public void reconstruct() throws IOException, ExecutionException, InterruptedException {
     try (JobsClient jobsClient = JobsClient.create()) {
       jobsClient.runJobAsync(JobName.of(project, location, getJobId(Mode.RECEIVE))).get();
+    }
+  }
+
+  public void deleteJob(Mode mode)
+      throws IOException, ExecutionException, InterruptedException {
+    try(JobsClient jobsClient = JobsClient.create()) {
+      JobName jobName = JobName.of(project, location, getJobId(mode));
+      jobsClient.deleteJobAsync(jobName).get();
     }
   }
 }
