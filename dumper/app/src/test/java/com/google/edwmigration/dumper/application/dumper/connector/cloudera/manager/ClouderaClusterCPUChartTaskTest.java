@@ -22,7 +22,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -32,6 +31,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -40,8 +40,8 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -66,7 +66,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaClusterCPUChartTaskTest {
   private final ClouderaClusterCPUChartTask task =
-      new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY);
+      new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY, TaskCategory.REQUIRED);
   private ClouderaManagerHandle handle;
   private String servicesJson;
   private static WireMockServer server;
@@ -107,17 +107,6 @@ public class ClouderaClusterCPUChartTaskTest {
     task.doRun(context, sink, handle);
 
     // THEN: Task for such clusters should be skipped
-    verifyNoWrites();
-  }
-
-  @Test
-  public void doRun_missedAggregationParameter_throwsException() throws IOException {
-    // WHEN: CPU usage task is initiated with no aggregation parameter
-    NullPointerException exception =
-        assertThrows(NullPointerException.class, () -> new ClouderaClusterCPUChartTask(5, null));
-
-    // THEN: There is a relevant exception has been raised
-    assertEquals("TimeSeriesAggregation has not to be a null.", exception.getMessage());
     verifyNoWrites();
   }
 
@@ -166,7 +155,9 @@ public class ClouderaClusterCPUChartTaskTest {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new ClouderaClusterCPUChartTask(0, TimeSeriesAggregation.HOURLY));
+            () ->
+                new ClouderaClusterCPUChartTask(
+                    0, TimeSeriesAggregation.HOURLY, TaskCategory.REQUIRED));
 
     // THEN: A relevant exception has been raised
     assertEquals(
@@ -174,7 +165,7 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
-  public void doRun_clouderaReturns4xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturns4xx_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = servicesJson;
@@ -182,17 +173,13 @@ public class ClouderaClusterCPUChartTaskTest {
         "id1", firstClusterServicesJson, HttpStatus.SC_BAD_REQUEST);
 
     // WHEN: Cloudera returns 4xx http status code
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    // THEN: There is a relevant exception has been raised
-    assertTrue(exception.getMessage().contains("Cloudera Error: "));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
   @Test
-  public void doRun_clouderaReturns5xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturns5xx_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = servicesJson;
@@ -200,29 +187,22 @@ public class ClouderaClusterCPUChartTaskTest {
         "id1", firstClusterServicesJson, HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
     // WHEN: Cloudera returns 4xx http status code
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
     // THEN: There is a relevant exception has been raised
-    assertTrue(exception.getMessage().contains("Cloudera Error: "));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
   @Test
-  public void doRun_clouderaReturnsInvalidJson_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturnsInvalidJson_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = "{\"key\": []]";
     stubHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
 
     // WHEN: Cloudera returns 4xx http status code
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(JsonParseException.class, () -> task.doRun(context, sink, handle));
 
-    // THEN: There is a relevant exception has been raised
-    assertTrue(exception.getMessage().contains("Cloudera Error: "));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 

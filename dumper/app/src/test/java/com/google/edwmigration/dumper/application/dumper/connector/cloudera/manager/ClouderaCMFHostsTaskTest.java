@@ -41,7 +41,6 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -144,11 +143,11 @@ public class ClouderaCMFHostsTaskTest {
   }
 
   @Test
-  public void doRun_clustersWereNotInitialized_throwsCriticalException() throws Exception {
+  public void doRun_clustersWereNotInitialized_throwsException() throws Exception {
     assertNull(handle.getClusters());
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> task.doRun(context, sink, handle));
 
     assertEquals(
         "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());

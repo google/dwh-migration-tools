@@ -39,7 +39,7 @@ public class ClouderaManagerHandle implements Handle {
   private ImmutableList<ClouderaHostDTO> hosts;
 
   public ClouderaManagerHandle(URI apiURI, CloseableHttpClient httpClient) {
-    Preconditions.checkNotNull(apiURI, "Cloudera's apiURI can't null.");
+    Preconditions.checkNotNull(apiURI, "Cloudera's apiURI can't be null.");
     Preconditions.checkNotNull(httpClient, "httpClient can't be null.");
 
     // Always add trailing slash for safety

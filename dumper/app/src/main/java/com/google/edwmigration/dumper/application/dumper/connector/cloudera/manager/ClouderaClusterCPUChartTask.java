@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -43,8 +44,9 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
-  public ClouderaClusterCPUChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
-    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation);
+  public ClouderaClusterCPUChartTask(
+      int includedLastDays, TimeSeriesAggregation tsAggregation, TaskCategory taskCategory) {
+    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation, taskCategory);
   }
 
   @Override
@@ -61,15 +63,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
             cpuPerClusterQuery,
             cluster.getName());
 
-        JsonNode chartInJson;
-        try {
-          chartInJson = requestTimeSeriesChart(handle, cpuPerClusterQuery);
-        } catch (TimeSeriesException ex) {
-          MetadataDumperUsageException dumperException =
-              new MetadataDumperUsageException("Cloudera Error: " + ex.getMessage());
-          dumperException.initCause(ex);
-          throw dumperException;
-        }
+        JsonNode chartInJson = requestTimeSeriesChart(handle, cpuPerClusterQuery);
         writer.write(chartInJson.toString());
         writer.write('\n');
       }
