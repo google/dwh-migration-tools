@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -55,7 +54,7 @@ public class ClouderaHostComponentsTask extends AbstractClouderaManagerTask {
     CloseableHttpClient httpClient = handle.getHttpClient();
     List<ClouderaHostDTO> hosts = handle.getHosts();
     if (hosts == null) {
-      throw new MetadataDumperUsageException(
+      throw new IllegalStateException(
           "Cloudera hosts must be initialized before Host's components dumping.");
     }
 

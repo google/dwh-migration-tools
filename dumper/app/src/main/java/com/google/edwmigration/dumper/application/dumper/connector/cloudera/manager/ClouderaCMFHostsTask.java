@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostDTO;
@@ -63,7 +62,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
     CloseableHttpClient httpClient = handle.getHttpClient();
     List<ClouderaClusterDTO> clusters = handle.getClusters();
     if (clusters == null) {
-      throw new MetadataDumperUsageException(
+      throw new IllegalStateException(
           "Cloudera clusters must be initialized before hosts dumping.");
     }
 
@@ -88,7 +87,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
           try {
             hostsJson = readJsonTree(hostsResponse.getEntity().getContent());
           } catch (JsonParseException ex) {
-            LOG.warn("Cloudera Error: " + ex.getMessage());
+            LOG.warn("Could not parse json from cloudera hosts response: " + ex.getMessage(), ex);
             continue;
           }
         }

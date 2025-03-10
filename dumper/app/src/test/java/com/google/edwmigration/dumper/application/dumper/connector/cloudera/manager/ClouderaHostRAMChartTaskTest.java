@@ -22,7 +22,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -40,7 +39,6 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -124,41 +122,32 @@ public class ClouderaHostRAMChartTaskTest {
   }
 
   @Test
-  public void doRun_clouderaServerReturnsInvalidJson_throwsCriticalException() throws Exception {
+  public void doRun_clouderaServerReturnsInvalidJson_throwsException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
     stubHostAPIResponse("id1", HttpStatus.SC_OK, "\"items\":[\"host1\"]}");
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
   @Test
-  public void doRun_clouderaServerReturns4xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaServerReturns4xx_throwsException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
     stubHostAPIResponse("id1", HttpStatus.SC_BAD_REQUEST, "{\"items\":[\"host1\"]}");
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
   @Test
-  public void doRun_clouderaServerReturns5xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaServerReturns5xx_throwsException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
     stubHostAPIResponse("id1", HttpStatus.SC_INTERNAL_SERVER_ERROR, "{\"items\":[\"host1\"]}");
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 

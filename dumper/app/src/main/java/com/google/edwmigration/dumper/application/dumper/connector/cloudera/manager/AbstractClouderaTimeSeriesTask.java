@@ -74,7 +74,7 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
       uriBuilder.addParameter("from", fromDate);
       tsURI = uriBuilder.build();
     } catch (URISyntaxException ex) {
-      throw new TimeSeriesException(ex.getMessage(), ex);
+      throw new RuntimeException(ex.getMessage(), ex);
     }
 
     CloseableHttpClient httpClient = handle.getHttpClient();
@@ -82,13 +82,13 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(tsURI))) {
       int statusCode = chart.getStatusLine().getStatusCode();
       if (!isStatusCodeOK(statusCode)) {
-        throw new TimeSeriesException(
+        throw new RuntimeException(
             String.format(
                 "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
       }
       chartInJson = readJsonTree(chart.getEntity().getContent());
     } catch (IOException ex) {
-      throw new TimeSeriesException(ex.getMessage(), ex);
+      throw new RuntimeException(ex.getMessage(), ex);
     }
     return chartInJson;
   }
@@ -97,23 +97,6 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     ZonedDateTime dateTime =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
     return dateTime.format(isoDateTimeFormatter);
-  }
-
-  static class TimeSeriesException extends RuntimeException {
-    /* Exception which should be returned if something goes wrong with timeseries API.
-     *
-     * Includes:
-     * - unexpected HTTP status codes;
-     * - response with invalid JSON format.
-     */
-
-    public TimeSeriesException(String message) {
-      super(message);
-    }
-
-    public TimeSeriesException(String message, Throwable cause) {
-      super(message, cause);
-    }
   }
 
   enum TimeSeriesAggregation {

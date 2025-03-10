@@ -22,7 +22,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -40,7 +39,6 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -166,7 +164,7 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
-  public void doRun_clouderaReturns4xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturns4xx_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = servicesJson;
@@ -174,17 +172,13 @@ public class ClouderaClusterCPUChartTaskTest {
         "id1", firstClusterServicesJson, HttpStatus.SC_BAD_REQUEST);
 
     // WHEN: Cloudera returns 4xx http status code
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    // THEN: There is a relevant exception has been raised
-    assertTrue(exception.getMessage().contains("Cloudera Error: "));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
   @Test
-  public void doRun_clouderaReturns5xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturns5xx_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = servicesJson;
@@ -192,29 +186,22 @@ public class ClouderaClusterCPUChartTaskTest {
         "id1", firstClusterServicesJson, HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
     // WHEN: Cloudera returns 4xx http status code
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
     // THEN: There is a relevant exception has been raised
-    assertTrue(exception.getMessage().contains("Cloudera Error: "));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
   @Test
-  public void doRun_clouderaReturnsInvalidJson_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturnsInvalidJson_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     String firstClusterServicesJson = "{\"key\": []]";
     stubHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
 
     // WHEN: Cloudera returns 4xx http status code
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    // THEN: There is a relevant exception has been raised
-    assertTrue(exception.getMessage().contains("Cloudera Error: "));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
