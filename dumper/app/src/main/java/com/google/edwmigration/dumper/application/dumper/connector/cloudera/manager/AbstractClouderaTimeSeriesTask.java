@@ -45,11 +45,11 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
       TimeSeriesAggregation tsAggregation,
       TaskCategory taskCategory) {
     super(targetPath);
-    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
+    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation must not be null.");
     Preconditions.checkArgument(
         includedLastDays >= 1,
         "The chart has to include at least one day. Received " + includedLastDays + " days.");
-    Preconditions.checkNotNull(taskCategory, "TaskCategory has not to be a null.");
+    Preconditions.checkNotNull(taskCategory, "TaskCategory must not be null.");
 
     this.includedLastDays = includedLastDays;
     this.tsAggregation = tsAggregation;

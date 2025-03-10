@@ -45,7 +45,7 @@ public class AbstractClouderaTimeSeriesTaskTest {
                 });
 
     // THEN: There is a relevant exception has been raised
-    assertEquals("TimeSeriesAggregation has not to be a null.", exception.getMessage());
+    assertEquals("TimeSeriesAggregation must not be null.", exception.getMessage());
   }
 
   @Test
@@ -66,6 +66,6 @@ public class AbstractClouderaTimeSeriesTaskTest {
                 });
 
     // THEN: There is a relevant exception has been raised
-    assertEquals("TaskCategory has not to be a null.", exception.getMessage());
+    assertEquals("TaskCategory must not be null.", exception.getMessage());
   }
 }
