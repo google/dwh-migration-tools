@@ -19,9 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -62,20 +60,17 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     return taskCategory;
   }
 
-  protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query) {
+  protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query)
+      throws Exception {
     String timeSeriesUrl = handle.getApiURI().toString() + "/timeseries";
     String fromDate = buildISODateTime(includedLastDays);
-    URI tsURI;
-    try {
-      URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
-      uriBuilder.addParameter("query", query);
-      uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
-      uriBuilder.addParameter("mustUseDesiredRollup", "true");
-      uriBuilder.addParameter("from", fromDate);
-      tsURI = uriBuilder.build();
-    } catch (URISyntaxException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
-    }
+
+    URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
+    uriBuilder.addParameter("query", query);
+    uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
+    uriBuilder.addParameter("mustUseDesiredRollup", "true");
+    uriBuilder.addParameter("from", fromDate);
+    URI tsURI = uriBuilder.build();
 
     CloseableHttpClient httpClient = handle.getHttpClient();
     JsonNode chartInJson;
@@ -87,8 +82,6 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
                 "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
       }
       chartInJson = readJsonTree(chart.getEntity().getContent());
-    } catch (IOException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
     }
     return chartInJson;
   }

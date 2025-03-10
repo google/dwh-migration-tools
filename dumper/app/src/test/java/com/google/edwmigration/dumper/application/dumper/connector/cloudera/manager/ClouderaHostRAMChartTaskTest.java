@@ -32,6 +32,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
@@ -126,7 +127,7 @@ public class ClouderaHostRAMChartTaskTest {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
     stubHostAPIResponse("id1", HttpStatus.SC_OK, "\"items\":[\"host1\"]}");
 
-    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(JsonParseException.class, () -> task.doRun(context, sink, handle));
 
     verifyNoWrites();
   }

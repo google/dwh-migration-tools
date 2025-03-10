@@ -31,6 +31,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -200,7 +201,7 @@ public class ClouderaClusterCPUChartTaskTest {
     stubHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
 
     // WHEN: Cloudera returns 4xx http status code
-    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(JsonParseException.class, () -> task.doRun(context, sink, handle));
 
     verifyNoWrites();
   }
