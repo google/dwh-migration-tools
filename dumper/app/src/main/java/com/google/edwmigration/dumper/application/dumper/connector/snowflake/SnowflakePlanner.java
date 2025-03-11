@@ -205,9 +205,24 @@ final class SnowflakePlanner {
   }
 
   Task<?> warehouseMeteringTask() {
-    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY";
-    String query = String.format("SELECT warehouse_name, count(1) FROM %s GROUP BY ALL", view);
-    ImmutableList<String> header = ImmutableList.of("Name", "Count");
-    return new LiteTimeSeriesTask("warehouse_metering.csv", query, header);
+    ImmutableList<String> selectList =
+        ImmutableList.of(
+            "start_time",
+            "end_time",
+            "warehouse_name",
+            "credits_used_compute",
+            "credits_used_cloud_services");
+    String query =
+        String.format(
+            "SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY",
+            String.join(", ", selectList));
+    ImmutableList<String> header =
+        ImmutableList.of(
+            "StartTime",
+            "EndTime",
+            "WarehouseName",
+            "CreditsUsedCompute",
+            "CreditsUsedCloudServices");
+    return new LiteTimeSeriesTask("warehouse_metering_lite.csv", query, header);
   }
 }
