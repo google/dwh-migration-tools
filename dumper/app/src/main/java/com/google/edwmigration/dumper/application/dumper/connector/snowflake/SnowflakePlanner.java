@@ -209,9 +209,7 @@ final class SnowflakePlanner {
         ImmutableList.of(
             "start_time",
             "end_time",
-            "warehouse_id",
             "warehouse_name",
-            "credits_used",
             "credits_used_compute",
             "credits_used_cloud_services");
     String query =
@@ -222,9 +220,7 @@ final class SnowflakePlanner {
         ImmutableList.of(
             "StartTime",
             "EndTime",
-            "WarehouseId",
             "WarehouseName",
-            "CreditsUsed",
             "CreditsUsedCompute",
             "CreditsUsedCloudServices");
     return new LiteTimeSeriesTask("warehouse_metering_lite.csv", query, header);
