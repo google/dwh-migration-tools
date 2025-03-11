@@ -177,8 +177,6 @@ final class SnowflakePlanner {
             "event_name",
             "event_reason",
             "event_state",
-            "user_name",
-            "role_name",
             "query_id");
     String query =
         String.format(
@@ -193,10 +191,8 @@ final class SnowflakePlanner {
             "EventName",
             "EventReason",
             "EventState",
-            "UserName",
-            "RoleName",
             "QueryId");
-    return new LiteTimeSeriesTask("warehouse_events_history.csv", query, header);
+    return new LiteTimeSeriesTask("warehouse_events_lite.csv", query, header);
   }
 
   Task<?> warehouseEventsTask() {
