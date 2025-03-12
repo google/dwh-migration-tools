@@ -76,7 +76,7 @@ public class InstructionGenerator {
           if (cc != null) {
             HashCode strongHashCode = rollingChecksum.getStrongHashCode();
             for (Checksum c : cc) {
-              if (c.getStrongChecksum() == strongHashCode.asLong()) {
+              if (c.getStrongChecksum().equals(strongHashCode.toString())) {
                 if (literalBufferLength > 0) {
                   if (DEBUG) {
                     LOG.debug("Emitting pre-match literal");

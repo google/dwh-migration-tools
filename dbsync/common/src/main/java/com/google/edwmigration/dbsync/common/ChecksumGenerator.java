@@ -7,8 +7,6 @@ import com.google.common.io.ByteSource;
 import com.google.common.primitives.Ints;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.function.Consumer;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.slf4j.Logger;
@@ -37,7 +35,7 @@ public class ChecksumGenerator {
       throw new IllegalArgumentException("ServerData must have a known size.");
     }
     long dataSize = dataSizeOptional.get();
-    byte[] dataArray = DEBUG ? in.read() : null;
+    //byte[] dataArray = DEBUG ? in.read() : null;
     RollingChecksumImpl rollingChecksum = new RollingChecksumImpl(blockSize);
     try (InputStream i = in.openStream()) {
       for (long offset = 0; offset < dataSize; offset += blockSize) {
@@ -58,21 +56,21 @@ public class ChecksumGenerator {
         int weakHashCode = rollingChecksum.getWeakHashCode();
         HashCode strongHashCode = rollingChecksum.getStrongHashCode();
 
-        if (DEBUG) {
-          HashCode _strongHashCode = RollingChecksumImpl.STRONG_HASH_FUNCTION.hashBytes(dataArray,
-              Ints.checkedCast(offset), blockSize);
-          if (!strongHashCode.equals(_strongHashCode)) {
-            throw new IllegalStateException(
-                "Bad hash code at " + offset + "..+" + blockSize + ": " + strongHashCode + " != "
-                    + _strongHashCode);
-          }
-        }
+        // if (DEBUG) {
+        //   HashCode _strongHashCode = RollingChecksumImpl.STRONG_HASH_FUNCTION.hashBytes(dataArray,
+        //       Ints.checkedCast(offset), blockSize);
+        //   if (!strongHashCode.equals(_strongHashCode)) {
+        //     throw new IllegalStateException(
+        //         "Bad hash code at " + offset + "..+" + blockSize + ": " + strongHashCode + " != "
+        //             + _strongHashCode);
+        //   }
+        // }
 
         Checksum c = Checksum.newBuilder()
             .setBlockOffset(offset)
             .setBlockLength(blockSize)
             .setWeakChecksum(weakHashCode)
-            .setStrongChecksum(strongHashCode.asLong())
+            .setStrongChecksum(strongHashCode.toString())
             .build();
         out.accept(c);
       }
