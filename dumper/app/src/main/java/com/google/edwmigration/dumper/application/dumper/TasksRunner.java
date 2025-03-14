@@ -174,7 +174,7 @@ public class TasksRunner implements TaskRunContextOps {
 
   private int countTasks(List<Task<?>> tasks) {
     return tasks.stream()
-        .mapToInt(task -> task instanceof TaskGroup ? countTasks(((TaskGroup) task).getTasks()) : 1)
+        .mapToInt(task -> task instanceof TaskGroup ? ((TaskGroup) task).getTasks().size() : 1)
         .sum();
   }
 }
