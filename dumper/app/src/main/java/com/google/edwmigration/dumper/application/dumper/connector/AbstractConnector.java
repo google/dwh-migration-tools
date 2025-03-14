@@ -32,6 +32,7 @@ public abstract class AbstractConnector implements Connector {
   }
 
   @Nonnull
+  @Override
   public String getDescription() {
     Description description = getClass().getAnnotation(Description.class);
     if (description != null) {
