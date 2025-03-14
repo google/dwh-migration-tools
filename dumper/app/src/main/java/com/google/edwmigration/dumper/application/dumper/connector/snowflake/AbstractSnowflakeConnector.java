@@ -73,6 +73,10 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   @Nonnull
   @Override
+  public abstract String getDescription();
+
+  @Nonnull
+  @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     String url = arguments.getUri();
     if (url == null) {

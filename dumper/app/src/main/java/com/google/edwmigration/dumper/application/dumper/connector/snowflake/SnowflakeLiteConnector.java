@@ -52,6 +52,12 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   }
 
   @Override
+  @Nonnull
+  public String getDescription() {
+    return "Extracts data for the lite version of Snowflake assessment.";
+  }
+
+  @Override
   public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));

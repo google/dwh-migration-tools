@@ -20,14 +20,19 @@ import static com.google.edwmigration.dumper.application.dumper.connector.snowfl
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import javax.annotation.Nonnull;
 
 /** @author shevek */
 @AutoService(Connector.class)
-@Description("Dumps metadata from Snowflake, using INFORMATION_SCHEMA only.")
 public class SnowflakeInformationSchemaMetadataConnector extends SnowflakeMetadataConnector {
 
   public SnowflakeInformationSchemaMetadataConnector() {
     super("snowflake-information-schema-metadata", SCHEMA_ONLY_SOURCE);
+  }
+
+  @Override
+  @Nonnull
+  public String getDescription() {
+    return "Dumps metadata from Snowflake, using INFORMATION_SCHEMA only.";
   }
 }

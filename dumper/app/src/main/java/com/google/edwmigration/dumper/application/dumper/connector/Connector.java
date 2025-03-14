@@ -30,6 +30,11 @@ public interface Connector {
   enum DefaultProperties implements ConnectorProperty {}
 
   @Nonnull
+  default String getDescription() {
+    return "";
+  }
+
+  @Nonnull
   String getName();
 
   @Nonnull
