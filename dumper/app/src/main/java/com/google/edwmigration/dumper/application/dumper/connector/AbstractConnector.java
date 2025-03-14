@@ -36,9 +36,8 @@ public abstract class AbstractConnector implements Connector {
     Description description = getClass().getAnnotation(Description.class);
     if (description != null) {
       return description.value();
-    } else {
-      return "";
     }
+    return "";
   }
 
   @Nonnull
