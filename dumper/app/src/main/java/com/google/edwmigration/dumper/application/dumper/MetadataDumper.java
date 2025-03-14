@@ -91,11 +91,12 @@ public class MetadataDumper {
     return run(connector, arguments);
   }
 
-  private void print(@Nonnull Task<?> task, int indent) {
-    System.out.println(repeat(' ', indent * 2) + task);
+  private void print(@Nonnull Task<?> task) {
+    String indent = "  ";
+    System.out.println(indent + task);
     if (task instanceof TaskGroup) {
       for (Task<?> subtask : ((TaskGroup) task).getTasks()) {
-        print(subtask, indent + 1);
+        System.out.println(indent + indent + subtask);
       }
     }
   }
@@ -151,7 +152,7 @@ public class MetadataDumper {
       System.out.println(repeat('=', title.length()));
       System.out.println("Writing to " + outputFileLocation);
       for (Task<?> task : tasks) {
-        print(task, 1);
+        print(task);
       }
       return true;
     } else {
