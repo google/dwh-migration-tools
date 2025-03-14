@@ -17,13 +17,10 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
-import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import java.time.Clock;
@@ -61,29 +58,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
-    out.addAll(createTaskList());
-  }
-
-  private ImmutableList<Task<?>> createTaskList() {
-    ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
-
-    builder.addAll(planner.generateLiteSpecificQueries());
-    builder.add(planner.proceduresTask());
-    builder.add(planner.reportDateRangeTask());
-    builder.add(planner.eventStateTask());
-    builder.add(planner.operationEndsTask());
-    builder.add(planner.operationStartsTask());
-    builder.add(planner.warehouseEventsHistoryTask());
-    builder.add(planner.warehouseEventsTask());
-    builder.add(planner.warehouseMeteringTask());
-
-    for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-      String usageSchema = "SNOWFLAKE.ACCOUNT_USAGE";
-      String query = String.format(item.formatString, usageSchema, /* an empty WHERE clause */ "");
-      String zipName = item.zipEntryName;
-      Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
-      builder.add(task);
-    }
-    return builder.build();
+    out.addAll(planner.generateLiteSpecificQueries());
   }
 }
