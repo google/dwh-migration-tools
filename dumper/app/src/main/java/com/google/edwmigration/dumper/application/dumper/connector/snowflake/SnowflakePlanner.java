@@ -88,6 +88,21 @@ final class SnowflakePlanner {
     builder.add(
         new JdbcSelectTask(TablesFormat.AU_ZIP_ENTRY_NAME, tables)
             .withHeaderClass(TablesFormat.Header.class));
+    builder.add(proceduresTask());
+    builder.add(reportDateRangeTask());
+    builder.add(eventStateTask());
+    builder.add(operationEndsTask());
+    builder.add(operationStartsTask());
+    builder.add(warehouseEventsHistoryTask());
+    builder.add(warehouseEventsTask());
+    builder.add(warehouseMeteringTask());
+
+    for (AssessmentQuery item : generateAssessmentQueries()) {
+      String query = String.format(item.formatString, view, /* an empty WHERE clause */ "");
+      String zipName = item.zipEntryName;
+      Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
+      builder.add(task);
+    }
     return builder.build();
   }
 
