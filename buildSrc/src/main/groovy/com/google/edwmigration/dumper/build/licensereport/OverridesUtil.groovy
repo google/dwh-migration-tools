@@ -848,6 +848,10 @@ class OverridesUtil {
             "software.amazon.eventstream:*": [
                 projectUrl: "https://github.com/awslabs/aws-eventstream-java",
                 licenseUrl: "https://raw.githubusercontent.com/awslabs/aws-eventstream-java/refs/heads/master/LICENSE"
+            ],
+            "com.google.code.javaparser:javaparser": [
+                projectUrl: "http://code.google.com/p/javaparser/",
+                licenseUrl: "https://www.gnu.org/licenses/lgpl-3.0.txt"
             ]
         ]
     }
