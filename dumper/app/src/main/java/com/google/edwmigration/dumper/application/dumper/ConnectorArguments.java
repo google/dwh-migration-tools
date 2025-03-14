@@ -665,11 +665,11 @@ public class ConnectorArguments extends DefaultArguments {
     out.append("* " + connector.getName());
     String description = connector.getDescription();
     if (!description.isEmpty()) {
-      out.append(" - " + connector.getDescription());
+      out.append(" - " + description);
     }
     out.append("\n");
     for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
-      out.append("        ").append(descriptor.toString()).append("\n");
+      out.append(String.format("%8s%s\n", "", descriptor));
     }
     ConnectorProperties.printHelp(out, connector);
   }
