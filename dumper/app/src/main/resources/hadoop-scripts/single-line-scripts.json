@@ -14,5 +14,12 @@
   "dmidecode-processor": "sudo -n dmidecode --type processor",
   "blkid": "sudo -n blkid",
   "hdfs-crypto-zones": "hdfs crypto -listZones",
-  "hdfs-replication": "hdfs getconf -confKey dfs.replication"
+  "hdfs-replication": "hdfs getconf -confKey dfs.replication",
+  "hadoop-security-authorization": "hdfs getconf -confKey hadoop.security.authorization",
+  "hadoop-security-authentication": "hdfs getconf -confKey hadoop.security.authentication",
+  "hadoop-rpc-protection": "hdfs getconf -confKey hadoop.rpc.protection",
+  "hadoop-ssl-enabled": "hdfs getconf -confKey hadoop.ssl.enabled",
+  "hadoop-ssl-require-client-cert": "hdfs getconf -confKey hadoop.ssl.require.client.cert",
+  "hadoop-ssl-server": "hdfs getconf -confKey hadoop.ssl.server",
+  "hadoop-ssl-client": "hdfs getconf -confKey hadoop.ssl.client"
 }
