@@ -36,6 +36,7 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.sql.Driver;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -77,7 +78,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
+  public Handle open(@Nonnull ConnectorArguments arguments) throws MetadataDumperUsageException, SQLException {
     String url = arguments.getUri();
     if (url == null) {
       StringBuilder buf = new StringBuilder("jdbc:snowflake://");

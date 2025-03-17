@@ -18,11 +18,15 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
+
+import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -40,6 +44,19 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   public SnowflakeLiteConnector() {
     super(NAME);
+  }
+
+  @Override
+  @Nonnull
+  public Handle open(ConnectorArguments arguments) throws MetadataDumperUsageException, SQLException {
+    if (arguments.isAssessment()) {
+      String message =
+          String.format(
+              "The %s connector supports assessment without using extra flags. Try running again without the '--%s' flag",
+              NAME, ConnectorArguments.OPT_ASSESSMENT);
+      throw new MetadataDumperUsageException(message);
+    }
+    return super.open(arguments);
   }
 
   @Override
