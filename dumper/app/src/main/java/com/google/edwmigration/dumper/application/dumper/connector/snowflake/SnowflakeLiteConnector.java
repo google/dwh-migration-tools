@@ -52,7 +52,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     if (arguments.isAssessment()) {
       String message =
           String.format(
-              "The %s connector supports assessment without using extra flags. Try running again without the '--%s' flag",
+              "The %s connector supports assessment without need for extra flags."
+                  + " Try running again without the '--%s' flag",
               NAME, ConnectorArguments.OPT_ASSESSMENT);
       throw new MetadataDumperUsageException(message);
     }
