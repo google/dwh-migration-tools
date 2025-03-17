@@ -35,7 +35,7 @@ public class ChecksumGenerator {
       throw new IllegalArgumentException("ServerData must have a known size.");
     }
     long dataSize = dataSizeOptional.get();
-    //byte[] dataArray = DEBUG ? in.read() : null;
+    byte[] dataArray = DEBUG ? in.read() : null;
     RollingChecksumImpl rollingChecksum = new RollingChecksumImpl(blockSize);
     try (InputStream i = in.openStream()) {
       for (long offset = 0; offset < dataSize; offset += blockSize) {
@@ -56,15 +56,15 @@ public class ChecksumGenerator {
         int weakHashCode = rollingChecksum.getWeakHashCode();
         HashCode strongHashCode = rollingChecksum.getStrongHashCode();
 
-        // if (DEBUG) {
-        //   HashCode _strongHashCode = RollingChecksumImpl.STRONG_HASH_FUNCTION.hashBytes(dataArray,
-        //       Ints.checkedCast(offset), blockSize);
-        //   if (!strongHashCode.equals(_strongHashCode)) {
-        //     throw new IllegalStateException(
-        //         "Bad hash code at " + offset + "..+" + blockSize + ": " + strongHashCode + " != "
-        //             + _strongHashCode);
-        //   }
-        // }
+        if (DEBUG) {
+          HashCode _strongHashCode = RollingChecksumImpl.STRONG_HASH_FUNCTION.hashBytes(dataArray,
+              Ints.checkedCast(offset), blockSize);
+          if (!strongHashCode.equals(_strongHashCode)) {
+            throw new IllegalStateException(
+                "Bad hash code at " + offset + "..+" + blockSize + ": " + strongHashCode + " != "
+                    + _strongHashCode);
+          }
+        }
 
         Checksum c = Checksum.newBuilder()
             .setBlockOffset(offset)
