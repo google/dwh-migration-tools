@@ -78,7 +78,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ConnectorArguments arguments) throws MetadataDumperUsageException, SQLException {
+  public Handle open(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException, SQLException {
     String url = arguments.getUri();
     if (url == null) {
       StringBuilder buf = new StringBuilder("jdbc:snowflake://");

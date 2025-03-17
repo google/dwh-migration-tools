@@ -25,7 +25,6 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-
 import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
@@ -48,7 +47,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   @Override
   @Nonnull
-  public Handle open(ConnectorArguments arguments) throws MetadataDumperUsageException, SQLException {
+  public Handle open(ConnectorArguments arguments)
+      throws MetadataDumperUsageException, SQLException {
     if (arguments.isAssessment()) {
       String message =
           String.format(
