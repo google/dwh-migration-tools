@@ -58,7 +58,7 @@ public class GcsyncClient {
   private static final Logger logger = Logger.getLogger("rsync");
 
   public GcsyncClient(String project, String tmpBucket, String targetBucket,
-      String location, JobsClient jobsClient, String sourceDirectory, GcsStorage gcsStorage,
+      String location, String sourceDirectory, JobsClient jobsClient, GcsStorage gcsStorage,
       InstructionGenerator instructionGenerator) {
     this.project = project;
     this.tmpBucket = tmpBucket;

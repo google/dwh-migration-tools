@@ -20,9 +20,9 @@ public class GcsyncMain {
         project,
         arguments.getOptions().valueOf(arguments.tmpBucketOptionSpec),
         arguments.getOptions().valueOf(arguments.targetOptionSpec),
+        arguments.getOptions().valueOf(arguments.locationOptionSpec),
         arguments.getOptions().valueOf(arguments.sourceDirectoryOptionSpec),
         JobsClient.create(),
-        arguments.getOptions().valueOf(arguments.locationOptionSpec),
         new GcsStorage(project),
         new InstructionGenerator(Constants.BLOCK_SIZE));
     try {
