@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.oozie.client.XOozieClient;
 
 @AutoService(Connector.class)
 @Description("Dumps Jobs history from Oozie.")
@@ -59,6 +60,7 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    return () -> {};
+    XOozieClient xOozieClient = OozieClientFactory.createXOozieClient();
+    return new OozieHandle(xOozieClient);
   }
 }
