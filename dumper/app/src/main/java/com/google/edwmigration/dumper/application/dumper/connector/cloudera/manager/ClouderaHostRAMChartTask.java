@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -43,8 +44,9 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
   private static final String TS_RAM_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
 
-  public ClouderaHostRAMChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
-    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation);
+  public ClouderaHostRAMChartTask(
+      int includedLastDays, TimeSeriesAggregation tsAggregation, TaskCategory taskCategory) {
+    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation, taskCategory);
   }
 
   @Override
@@ -63,15 +65,8 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
         LOG.debug(
             "Execute RAM charts query: [{}] for the host: [{}].", ramPerHostQuery, host.getName());
 
-        JsonNode chartInJson;
-        try {
-          chartInJson = requestTimeSeriesChart(handle, ramPerHostQuery);
-        } catch (TimeSeriesException ex) {
-          MetadataDumperUsageException dumperException =
-              new MetadataDumperUsageException("Cloudera Error: " + ex.getMessage());
-          dumperException.initCause(ex);
-          throw dumperException;
-        }
+        JsonNode chartInJson = requestTimeSeriesChart(handle, ramPerHostQuery);
+
         writer.write(chartInJson.toString());
         writer.write('\n');
       }

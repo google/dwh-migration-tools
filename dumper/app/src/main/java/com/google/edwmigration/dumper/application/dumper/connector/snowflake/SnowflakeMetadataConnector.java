@@ -32,7 +32,6 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -45,7 +44,6 @@ import org.slf4j.LoggerFactory;
  * @author matt
  */
 @AutoService(Connector.class)
-@Description("Dumps metadata from Snowflake.")
 public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
 
@@ -99,6 +97,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
   public SnowflakeMetadataConnector() {
     this("snowflake", USAGE_THEN_SCHEMA_SOURCE);
+  }
+
+  @Override
+  @Nonnull
+  public String getDescription() {
+    return "Dumps metadata from Snowflake.";
   }
 
   @Override

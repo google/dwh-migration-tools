@@ -42,7 +42,7 @@ class CsvReportRenderer implements ReportRenderer {
         List<Map<String, ?>> records = projectData.allDependencies.sort().stream().map {
             String project = "${it.group}:${it.name}"
             String artifact = "${it.group}:${it.name}:${it.version}"
-            Map<String, String> projectInfoOverride = allOverrides.getOrDefault(project, [:])
+            Map<String, String> projectInfoOverride = getProjectOverride(allOverrides, it.group, project)
             License license = getLicense(it)
             String projectUrl = it.poms.find { it.projectUrl }?.projectUrl
             [
@@ -74,5 +74,12 @@ class CsvReportRenderer implements ReportRenderer {
             return new License(name: licenseName, url: licenseUrl)
         }
         return null
+    }
+
+    private static Map<String, String> getProjectOverride(
+        Map<String, Map<String, String>> allOverrides, String group, String project
+    ){
+        String projectGroup = "${group}:*"
+        return allOverrides.getOrDefault(project, allOverrides.getOrDefault(projectGroup, [:]))
     }
 }

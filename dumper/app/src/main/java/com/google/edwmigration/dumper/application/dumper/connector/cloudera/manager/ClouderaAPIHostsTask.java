@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -66,13 +65,11 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
           final int statusCode = hostsResponse.getStatusLine().getStatusCode();
           if (!isStatusCodeOK(statusCode)) {
-            throw new MetadataDumperUsageException(
+            throw new RuntimeException(
                 String.format(
                     "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
           }
           jsonHosts = readJsonTree(hostsResponse.getEntity().getContent());
-        } catch (JsonParseException ex) {
-          throw new MetadataDumperUsageException("Cloudera Error:" + ex.getMessage());
         }
         String stringifiedHosts = jsonHosts.toString();
         writer.write(stringifiedHosts);
