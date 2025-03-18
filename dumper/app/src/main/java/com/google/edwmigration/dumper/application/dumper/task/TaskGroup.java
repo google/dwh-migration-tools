@@ -124,12 +124,10 @@ public abstract class TaskGroup extends AbstractTask<Void> implements CoreMetada
           public boolean hasNext() {
             return index < size();
           }
-          ;
 
           public Callable<Object> next() {
             return new TaskRunner(context, tasks.get(index), printer)::call;
           }
-          ;
         };
   }
 
