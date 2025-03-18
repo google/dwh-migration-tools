@@ -45,7 +45,7 @@ public class OozieConnectorTest {
     // Assert
     List<Task<?>> jobs =
         tasks.stream()
-            .filter(t -> t.getTargetPath().equals("jobs.csv"))
+            .filter(t -> t.getTargetPath().equals("oozie_jobs.csv"))
             .collect(Collectors.toList());
 
     assertEquals(1, jobs.size());

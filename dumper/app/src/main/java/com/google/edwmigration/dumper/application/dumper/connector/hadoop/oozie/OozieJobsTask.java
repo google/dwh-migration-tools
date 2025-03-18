@@ -48,7 +48,7 @@ public class OozieJobsTask extends AbstractTask<Void> {
   private final int maxDaysToFetch;
 
   public OozieJobsTask(int maxDaysToFetch) {
-    super("jobs.csv");
+    super("oozie_jobs.csv");
     Preconditions.checkArgument(
         maxDaysToFetch >= 1,
         String.format("Amount of days must be a positive number. Got %d.", maxDaysToFetch));
