@@ -55,6 +55,9 @@ final class SnowflakePlanner {
     }
   }
 
+  private static final String TIME_PREDICATE =
+      "timestamp > CURRENT_TIMESTAMP(0) - INTERVAL '14 days'";
+
   ImmutableList<AssessmentQuery> generateAssessmentQueries() {
     return ImmutableList.of(
         AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
@@ -94,7 +97,6 @@ final class SnowflakePlanner {
     builder.add(operationEndsTask());
     builder.add(operationStartsTask());
     builder.add(warehouseEventsHistoryTask());
-    builder.add(warehouseEventsTask());
     builder.add(warehouseMeteringTask());
 
     for (AssessmentQuery item : generateAssessmentQueries()) {
@@ -145,22 +147,30 @@ final class SnowflakePlanner {
   }
 
   Task<?> operationEndsTask() {
-    String query =
-        "SELECT warehouse_name, cluster_number, event_state, timestamp"
-            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
-            + " WHERE upper(event_name) LIKE '%SUSPEND%'"
-            + " AND upper(event_name) LIKE '%CLUSTER%'";
+    String selectList = "warehouse_name, cluster_number, event_state, timestamp";
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY";
+    String predicate =
+        "upper(event_name) LIKE '%SUSPEND%'"
+            + " AND "
+            + "upper(event_name) LIKE '%CLUSTER%'"
+            + " AND "
+            + TIME_PREDICATE;
+    String query = buildQuery(selectList, view, predicate);
     ImmutableList<String> header =
         ImmutableList.of("WarehouseName", "ClusterNumber", "EventState", "Timestamp");
     return new LiteTimeSeriesTask("clusters_spin_downs.csv", query, header);
   }
 
   Task<?> operationStartsTask() {
-    String query =
-        "SELECT warehouse_name, cluster_number, event_state, timestamp"
-            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
-            + " WHERE upper(event_name) LIKE '%RESUME%'"
-            + " AND upper(event_name) LIKE '%CLUSTER%'";
+    String selectList = "warehouse_name, cluster_number, event_state, timestamp";
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY";
+    String predicate =
+        "upper(event_name) LIKE '%RESUME%'"
+            + " AND "
+            + "upper(event_name) LIKE '%CLUSTER%'"
+            + " AND "
+            + TIME_PREDICATE;
+    String query = buildQuery(selectList, view, predicate);
     ImmutableList<String> header =
         ImmutableList.of("WarehouseName", "ClusterNumber", "EventState", "Timestamp");
     return new LiteTimeSeriesTask("clusters_spin_ups.csv", query, header);
@@ -176,15 +186,21 @@ final class SnowflakePlanner {
   }
 
   Task<?> reportDateRangeTask() {
+    String selectList = "min(timestamp), max(timestamp)";
     String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY";
-    String query = String.format("SELECT min(timestamp), max(timestamp) FROM %s", view);
+    String query = buildQuery(selectList, view, TIME_PREDICATE);
     ImmutableList<String> header = ImmutableList.of("StartTime", "EndTime");
     return new LiteTimeSeriesTask("report_date_range.csv", query, header);
   }
 
+  private static String buildQuery(String selectList, String view, String predicate) {
+    return String.format("SELECT %s FROM %s WHERE %s", selectList, view, predicate);
+  }
+
   Task<?> warehouseEventsHistoryTask() {
-    ImmutableList<String> selectList =
-        ImmutableList.of(
+    String selectList =
+        String.join(
+            ", ",
             "timestamp",
             "warehouse_id",
             "warehouse_name",
@@ -193,10 +209,8 @@ final class SnowflakePlanner {
             "event_reason",
             "event_state",
             "query_id");
-    String query =
-        String.format(
-            "SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY",
-            String.join(", ", selectList));
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY";
+    String query = buildQuery(selectList, view, TIME_PREDICATE);
     ImmutableList<String> header =
         ImmutableList.of(
             "Timestamp",
@@ -210,27 +224,21 @@ final class SnowflakePlanner {
     return new LiteTimeSeriesTask("warehouse_events_lite.csv", query, header);
   }
 
-  Task<?> warehouseEventsTask() {
-    String query =
-        "SELECT event_name, cluster_number, warehouse_id, warehouse_name, count(1)"
-            + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY GROUP BY ALL";
-    ImmutableList<String> header =
-        ImmutableList.of("Name", "Cluster", "WarehouseId", "WarehouseName", "Count");
-    return new LiteTimeSeriesTask("warehouse_events.csv", query, header);
-  }
-
   Task<?> warehouseMeteringTask() {
-    ImmutableList<String> selectList =
-        ImmutableList.of(
+    String selectList =
+        String.join(
+            ", ",
             "start_time",
             "end_time",
             "warehouse_name",
             "credits_used_compute",
             "credits_used_cloud_services");
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY";
     String query =
-        String.format(
-            "SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY",
-            String.join(", ", selectList));
+        buildQuery(
+            selectList,
+            view,
+            "end_time IS NULL OR end_time > CURRENT_TIMESTAMP(0) - INTERVAL '14 days'");
     ImmutableList<String> header =
         ImmutableList.of(
             "StartTime",
