@@ -16,26 +16,39 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
+import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 /** @author shevek */
-public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFormat {
+public abstract class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFormat {
 
   private final List<Task<?>> tasks = new ArrayList<>();
 
   public TaskGroup(@Nonnull String targetPath, @Nonnull Task<?>... tasks) {
     super(targetPath);
     Collections.addAll(this.tasks, tasks);
+  }
+
+  public static int count(List<Task<?>> tasks) {
+    return tasks.stream().mapToInt(TaskGroup::doCount).sum();
+  }
+
+  public static void print(Task<?> task) {
+    doPrint(task, "");
   }
 
   public void addTask(Task<?> task) {
@@ -47,11 +60,6 @@ public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFor
     // FormatTask, "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to
     // add %s.", task.getClass().getSimpleName());
     tasks.add(task);
-  }
-
-  @Nonnull
-  public List<Task<?>> getTasks() {
-    return tasks;
   }
 
   protected void doRun(
@@ -77,6 +85,71 @@ public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFor
 
   @Override
   public String toString() {
-    return "TaskGroup(" + getTasks().size() + " children)";
+    return "TaskGroup(" + size() + " children)";
+  }
+
+  int size() {
+    return tasks.size();
+  }
+
+  private static class TaskRunner {
+
+    @Nonnull private final TaskRunContext context;
+    @Nonnull private final Task<?> task;
+    @Nonnull private final CSVPrinter printer;
+
+    public TaskRunner(
+        @Nonnull TaskRunContext context, @Nonnull Task<?> task, @Nonnull CSVPrinter printer) {
+      this.context = context;
+      this.task = task;
+      this.printer = printer;
+    }
+
+    public @Nullable Object call() throws IOException {
+      Object result = context.runChildTask(task);
+      TaskState state = context.getTaskState(task);
+      synchronized (printer) {
+        printer.printRecord(task, state);
+      }
+      return result;
+    }
+  }
+
+  protected final Iterable<Callable<Object>> toCallables(
+      @Nonnull TaskRunContext context, @Nonnull CSVPrinter printer) {
+    return () ->
+        new Iterator<Callable<Object>>() {
+          int index = 0;
+
+          public boolean hasNext() {
+            return index < size();
+          }
+          ;
+
+          public Callable<Object> next() {
+            return new TaskRunner(context, tasks.get(index), printer)::call;
+          }
+          ;
+        };
+  }
+
+  private static int doCount(@Nonnull Task<?> task) {
+    return 1 + children(task).stream().mapToInt(TaskGroup::doCount).sum();
+  }
+
+  private static void doPrint(@Nonnull Task<?> task, @Nonnull String indent) {
+    indent += "  ";
+    System.out.println(indent + task);
+    for (Task<?> subtask : children(task)) {
+      doPrint(subtask, indent);
+    }
+  }
+
+  private static List<Task<?>> children(@Nonnull Task<?> parent) {
+    if (parent instanceof TaskGroup) {
+      return ((TaskGroup) parent).tasks;
+    } else {
+      return ImmutableList.of();
+    }
   }
 }
