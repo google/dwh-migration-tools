@@ -234,7 +234,7 @@ final class SnowflakePlanner {
             "credits_used_compute",
             "credits_used_cloud_services");
     String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY";
-    String query = buildQuery(selectList, view, "end_time > CURRENT_TIMESTAMP(0) - INTERVAL '14 days'");
+    String query = buildQuery(selectList, view, "end_time IS NULL OR end_time > CURRENT_TIMESTAMP(0) - INTERVAL '14 days'");
     ImmutableList<String> header =
         ImmutableList.of(
             "StartTime",
