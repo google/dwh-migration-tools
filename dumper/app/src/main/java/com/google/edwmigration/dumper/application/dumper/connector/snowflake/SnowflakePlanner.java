@@ -43,7 +43,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 final class SnowflakePlanner {
 
   private enum Format {
-    EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
+    EXTERNAL_TABLES(ExternalTablesFormat.ZIP_ENTRY_NAME),
     FUNCTION_INFO(FunctionInfoFormat.AU_ZIP_ENTRY_NAME),
     TABLE_STORAGE_METRICS(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME),
     WAREHOUSES(WarehousesFormat.AU_ZIP_ENTRY_NAME);
