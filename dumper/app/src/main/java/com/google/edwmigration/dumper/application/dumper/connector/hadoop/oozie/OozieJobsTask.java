@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 public class OozieJobsTask extends AbstractTask<Void> {
   private static final Logger LOG = LoggerFactory.getLogger(OozieJobsTask.class);
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private final int maxDaysToFetch;
 
@@ -99,7 +99,8 @@ public class OozieJobsTask extends AbstractTask<Void> {
     return null;
   }
 
-  private Object[] toCSVRecord(WorkflowJob job, ImmutableList<String> header) throws Exception {
+  private static Object[] toCSVRecord(WorkflowJob job, ImmutableList<String> header)
+      throws Exception {
     Object[] record = new Object[header.size()];
     for (int i = 0; i < header.size(); i++) {
       record[i] = PropertyUtils.getProperty(job, header.get(i));
