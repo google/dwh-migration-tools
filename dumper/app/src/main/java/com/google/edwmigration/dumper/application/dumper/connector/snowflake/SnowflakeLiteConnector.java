@@ -25,8 +25,10 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Clock;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -74,8 +76,20 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   @Override
   public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    ConnectorArguments modifiedArguments = withAssessmentFlag(arguments);
+    out.add(new DumpMetadataTask(modifiedArguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.addAll(planner.generateLiteSpecificQueries());
+  }
+
+  private static ConnectorArguments withAssessmentFlag(ConnectorArguments base) {
+    try {
+      String[] baseArguments = base.getArgs();
+      String[] modifiedArguments = Arrays.copyOf(baseArguments, 1 + baseArguments.length);
+      modifiedArguments[baseArguments.length] = "--" + ConnectorArguments.OPT_ASSESSMENT;
+      return new ConnectorArguments(modifiedArguments);
+    } catch (IOException impossible) {
+      throw new AssertionError();
+    }
   }
 }
