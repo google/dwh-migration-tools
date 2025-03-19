@@ -13,6 +13,7 @@ import com.google.cloud.run.v2.TaskTemplate;
 import com.google.cloud.storage.Blob;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import com.google.edwmigration.dbsync.common.InstructionGenerator;
 import com.google.edwmigration.dbsync.proto.Checksum;
@@ -21,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.DirectoryStream;
@@ -148,18 +150,16 @@ public class GcsyncClient {
   }
 
   private void uploadFilesToRsyncList() throws URISyntaxException, IOException {
-    Path tempFile = Files.createTempFile("filesToRsyncTmp", ".txt");
-    try (BufferedWriter writer = Files.newBufferedWriter(tempFile)) {
+    ByteSink byteSink = gcsStorage.newByteSink(
+        new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME));
+
+    try (BufferedWriter writer = new BufferedWriter(
+        new OutputStreamWriter(byteSink.openBufferedStream()))) {
       for (Path file : filesToRsync) {
         writer.write(file.getFileName().toString());
         writer.newLine();
       }
     }
-
-    gcsStorage.uploadFile(tempFile,
-        new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME));
-
-    Files.deleteIfExists(tempFile);
   }
 
   private void executeMainOnCloudRun(String mainClassPath)
@@ -183,13 +183,13 @@ public class GcsyncClient {
       ByteSource byteSource = gcsStorage.newByteSource(
           new URI(tmpBucket).resolve(checksumFileName));
       byteSource.copyTo(
-          com.google.common.io.Files.asByteSink(getTemporaryCheckSumFileName(file).toFile()));
+          com.google.common.io.Files.asByteSink(Util.getTemporaryCheckSumFilePath(file).toFile()));
     }
   }
 
   private void sendRsyncInstructions() throws IOException, URISyntaxException {
     for (Path file : filesToRsync) {
-      Path tmpCheckSumFile = getTemporaryCheckSumFileName(file);
+      Path tmpCheckSumFile = Util.getTemporaryCheckSumFilePath(file);
       try (OutputStream instructionSink = gcsStorage.newByteSink(
               new URI(tmpBucket).resolve(Util.getInstructionFileName(file.getFileName().toString())))
           .openBufferedStream()) {
@@ -197,23 +197,14 @@ public class GcsyncClient {
           List<Checksum> checksums = getChecksumsFromFile(inputStream);
           ByteSource fileInput = com.google.common.io.Files.asByteSource(file.toFile());
 
-          instructionGenerator.generate(instruction -> {
-            try {
-              instruction.writeDelimitedTo(instructionSink);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }, fileInput, checksums);
+          instructionGenerator.generate(instruction ->
+                  instruction.writeDelimitedTo(instructionSink)
+              , fileInput, checksums);
         }
       }
 
       Files.deleteIfExists(tmpCheckSumFile);
     }
-  }
-
-  private static Path getTemporaryCheckSumFileName(Path file) {
-    return file.resolveSibling(
-        String.format("%s.%s", file.getFileName(), Constants.CHECK_SUM_FILE_SUFFIX));
   }
 
   private void reconStructFiles()

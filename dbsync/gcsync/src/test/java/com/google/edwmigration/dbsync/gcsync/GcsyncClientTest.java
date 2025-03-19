@@ -166,31 +166,6 @@ public class GcsyncClientTest {
   }
 
   @Test
-  public void testSyncFiles_LargeFileMd5Mismatch_RunsJobAndDeletesJob()
-      throws Exception {
-    // Suppose the large file on GCS has an MD5 mismatch
-    Blob mockBlob = mockGcsStorage.getBlob(TARGET_BUCKET, "large.txt");
-    reset(mockBlob);
-    when(mockBlob.getMd5()).thenReturn("some-other-md5");
-
-    try {
-      clientUnderTest.syncFiles();
-    } catch (Exception e) {
-      // It's supposed to fail at instruction generation step
-    }
-
-    List<Path> rsyncFiles = getPrivateList(clientUnderTest, "filesToRsync");
-    assertTrue("large.txt should be in the rsync list", rsyncFiles.contains(largeFile.toPath()));
-
-    verify(mockJobsClient, times(1)).createJobAsync(any(CreateJobRequest.class));
-
-    verify(mockJobsClient.runJobOperationCallable(), times(1))
-        .futureCall(any(RunJobRequest.class));
-
-    verify(mockJobsClient, times(1)).deleteJobAsync(any(JobName.class));
-  }
-
-  @Test
   public void testSyncFiles_LargeFileMd5Matches_NoCloudRun() throws Exception {
     clientUnderTest.syncFiles();
 

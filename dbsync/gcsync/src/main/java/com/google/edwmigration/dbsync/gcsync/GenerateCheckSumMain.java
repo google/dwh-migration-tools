@@ -41,13 +41,8 @@ public class GenerateCheckSumMain {
       ByteSink byteSink = gcsStorage.newByteSink(
           new URI(tmpBucket).resolve(Util.getCheckSumFileName(file)));
       try (OutputStream bufferedOutputStream = byteSink.openBufferedStream()) {
-        checksumGenerator.generate(checksum -> {
-          try {
-            checksum.writeDelimitedTo(bufferedOutputStream);
-          } catch (IOException e) {
-            throw new RuntimeException("Failed to generate checksum", e);
-          }
-        }, byteSource);
+        checksumGenerator.generate(checksum ->
+            checksum.writeDelimitedTo(bufferedOutputStream), byteSource);
         logger.log(Level.INFO,
             String.format("Finished generating check sum for: %s", file));
       }

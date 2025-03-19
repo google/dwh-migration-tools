@@ -4,6 +4,7 @@ import com.google.common.io.ByteSource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +21,10 @@ public class Util {
       }
     }
     return files;
+  }
+
+  public static Path getTemporaryCheckSumFilePath(Path file) {
+    return file.resolveSibling(getCheckSumFileName(file.getFileName().toString()));
   }
 
   public static String getCheckSumFileName(String fileName) {

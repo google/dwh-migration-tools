@@ -28,7 +28,7 @@ public class ChecksumGenerator {
     return blockSize;
   }
 
-  public void generate(Consumer<Checksum> out, ByteSource in) throws IOException {
+  public void generate(ChecksumConsumer<IOException> out, ByteSource in) throws IOException {
     // This deliberately throws if size is not Present.
     Optional<Long> dataSizeOptional = in.sizeIfKnown();
     if (!dataSizeOptional.isPresent()) {
@@ -75,5 +75,10 @@ public class ChecksumGenerator {
         out.accept(c);
       }
     }
+  }
+
+  public interface ChecksumConsumer<X extends Exception> {
+
+    void accept(Checksum checksum) throws X;
   }
 }
