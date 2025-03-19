@@ -56,7 +56,8 @@ import org.slf4j.LoggerFactory;
 public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger logger = LoggerFactory.getLogger(HiveMetastoreThriftClient_v2_3_6.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(HiveMetastoreThriftClient_v2_3_6.class);
 
   @Nonnull
   private final com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6

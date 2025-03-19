@@ -55,7 +55,8 @@ public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressM
   }
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger logger = LoggerFactory.getLogger(ConcurrentRecordProgressMonitor.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(ConcurrentRecordProgressMonitor.class);
 
   private static final long DELAY = 6;
   private final String name;
