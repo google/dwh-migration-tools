@@ -53,7 +53,7 @@ public class ZonedIntervalIterableTest {
     int actualCount = 0;
     for (ZonedInterval interval : iterable) {
       LOG.debug("Interval is {}", interval);
-      assertEquals(iterable.getDuration(), interval.getDuration());
+      assertEquals(iterable.getIntervalDuration(), interval.getDuration());
       actualCount++;
     }
     assertEquals(expectCount, actualCount);
