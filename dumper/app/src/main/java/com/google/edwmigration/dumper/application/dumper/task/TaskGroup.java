@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
@@ -25,7 +27,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import javax.annotation.Nonnull;
@@ -115,20 +116,11 @@ public abstract class TaskGroup extends AbstractTask<Void> implements CoreMetada
     }
   }
 
-  protected final Iterable<Callable<Object>> toCallables(
+  protected final ImmutableList<Callable<Object>> toCallables(
       @Nonnull TaskRunContext context, @Nonnull CSVPrinter printer) {
-    return () ->
-        new Iterator<Callable<Object>>() {
-          int index = 0;
-
-          public boolean hasNext() {
-            return index < size();
-          }
-
-          public Callable<Object> next() {
-            return new TaskRunner(context, tasks.get(index), printer)::call;
-          }
-        };
+    return tasks.stream()
+        .<Callable<Object>>map(item -> new TaskRunner(context, item, printer)::call)
+        .collect(toImmutableList());
   }
 
   private static int doCount(@Nonnull Task<?> task) {
