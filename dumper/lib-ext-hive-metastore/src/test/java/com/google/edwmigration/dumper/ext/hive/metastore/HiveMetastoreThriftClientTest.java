@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class HiveMetastoreThriftClientTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(HiveMetastoreThriftClientTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveMetastoreThriftClientTest.class);
 
   @Ignore("For local execution only; Jenkins doesn't have a live Hive metastore running.")
   @Test
@@ -38,7 +38,7 @@ public class HiveMetastoreThriftClientTest {
     HiveMetastoreThriftClient client =
         new HiveMetastoreThriftClient.Builder("2.3.6").withHost("localhost").withPort(9083).build();
     ImmutableList<String> databaseNames = client.getAllDatabaseNames();
-    LOG.info("Databases in metastore: {}", databaseNames);
+    logger.info("Databases in metastore: {}", databaseNames);
     assertTrue("Expected at least one database name.", databaseNames.size() > 0);
   }
 
@@ -55,7 +55,7 @@ public class HiveMetastoreThriftClientTest {
             .withPort(9083)
             .build();
     ImmutableList<String> databaseNames = client.getAllDatabaseNames();
-    LOG.info("Databases in metastore: {}", databaseNames);
+    logger.info("Databases in metastore: {}", databaseNames);
     assertTrue("Expected at least one database name.", databaseNames.size() > 0);
   }
 }

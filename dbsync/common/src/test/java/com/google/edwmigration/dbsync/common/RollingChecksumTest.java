@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 public class RollingChecksumTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RollingChecksumTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(RollingChecksumTest.class);
 
   private static final int SIZE = 16;
   private static final int LEN = 4;
@@ -33,12 +33,12 @@ public class RollingChecksumTest {
 
     RollingChecksumImpl c0 = new RollingChecksumImpl(LEN);
     RollingChecksumImpl c1 = new RollingChecksumImpl(LEN);
-    LOG.info("Init c0");
+    logger.info("Init c0");
     c0.reset(data, 0);
-    LOG.info("Init c1");
+    logger.info("Init c1");
     c1.reset(data, 0);
 
-    LOG.info("Rolling c1...");  // But not c0.
+    logger.info("Rolling c1...");  // But not c0.
 
     // The checksum should be the same at every offset of c1.
     for (int i = LEN; i < data.length; i++) {
@@ -54,12 +54,12 @@ public class RollingChecksumTest {
 
     RollingChecksumImpl c0 = new RollingChecksumImpl(LEN);
     RollingChecksumImpl c1 = new RollingChecksumImpl(LEN);
-    LOG.info("Init c0");
+    logger.info("Init c0");
     c0.reset(data, 1);
-    LOG.info("Init c1");
+    logger.info("Init c1");
     c1.reset(data, 0);
 
-    LOG.info("Rolling c1...");
+    logger.info("Rolling c1...");
     c1.roll(data[LEN]);
 
     assertChecksumsEqual(c0, c1, "mismatch at offset " + LEN);

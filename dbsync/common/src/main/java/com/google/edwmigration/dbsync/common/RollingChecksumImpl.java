@@ -23,7 +23,7 @@ public class RollingChecksumImpl {
 
   public static final HashFunction STRONG_HASH_FUNCTION = Hashing.sha256();
 
-  private static final Logger LOG = LoggerFactory.getLogger(RollingChecksumImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(RollingChecksumImpl.class);
   private static final boolean DEBUG = false;
 
   private int a, b;
@@ -51,23 +51,23 @@ public class RollingChecksumImpl {
   private void remove(byte x) {
     int v = F(x);
     if (DEBUG)
-      LOG.info("Remove " + Integer.toHexString(v) + " from " + this);
+      logger.info("Remove " + Integer.toHexString(v) + " from " + this);
     a -= v;
     b -= block.length * v;
     if (DEBUG)
-      LOG.info("Removed " + Integer.toHexString(v) + " from " + this);
+      logger.info("Removed " + Integer.toHexString(v) + " from " + this);
   }
 
   private void add(byte x) {
     int v = F(x);
     if (DEBUG)
-      LOG.info("Add " + Integer.toHexString(v) + " to " + this);
+      logger.info("Add " + Integer.toHexString(v) + " to " + this);
     a = (a + v);
     b = (b + a);
     block[offset] = x;
     offset = (offset + 1) % block.length;
     if (DEBUG)
-      LOG.info("Added " + Integer.toHexString(v) + " to " + this);
+      logger.info("Added " + Integer.toHexString(v) + " to " + this);
   }
 
   // This is the canonical implementation, based on add() and remove().
@@ -122,7 +122,7 @@ public class RollingChecksumImpl {
   /** Returns the most recent 'length' bytes of data. */
   public byte[] getBlock(int length) {
     if (DEBUG)
-      LOG.debug("Asking for {}..+{} out of {}", offset, length, Arrays.toString(block));
+      logger.debug("Asking for {}..+{} out of {}", offset, length, Arrays.toString(block));
     Preconditions.checkPositionIndex(length, block.length, "Invalid block length.");
     byte[] out = new byte[length];
     // The length before the pointer.
@@ -131,17 +131,17 @@ public class RollingChecksumImpl {
     if (len1 > 0) {
       // Copy [?..block.length)
       if (DEBUG)
-        LOG.debug("Copying [{}..{})", block.length - len1, block.length);
+        logger.debug("Copying [{}..{})", block.length - len1, block.length);
       System.arraycopy(block, block.length - len1, out, 0, len1);
     }
 
     // Copy [?..offset)
     if (DEBUG)
-      LOG.debug("Copying [{}..{})", offset - len0, offset);
+      logger.debug("Copying [{}..{})", offset - len0, offset);
     System.arraycopy(block, offset - len0, out, len1, len0);
 
     if (DEBUG)
-      LOG.debug("Extracted {}", Arrays.toString(out));
+      logger.debug("Extracted {}", Arrays.toString(out));
     return out;
   }
 

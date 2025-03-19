@@ -23,7 +23,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 public class JdbcByteSourceTest {
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcByteSourceTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcByteSourceTest.class);
 
   private static final String URI = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
   private static final String QUERY =  "select * from t order by t0";
@@ -46,29 +46,29 @@ public class JdbcByteSourceTest {
           throw new DataRetrievalFailureException("Failed to format ResultSet", e);
         }
       });
-      LOG.info("Table contains\n" + writer);
+      logger.info("Table contains\n" + writer);
     }
 
     DUMMY:
     if (false) {
       JdbcByteSource source = new JdbcByteSource(new DummyEncoder(), ds, QUERY);
       HashCode hc = source.hash(Hashing.sha256());
-      LOG.info("Dummy hash code is " + hc);
+      logger.info("Dummy hash code is " + hc);
     }
 
     AVRO:
     {
       JdbcByteSource source = new JdbcByteSource(new AvroEncoder(), ds, QUERY);
       byte[] data = source.read();
-      LOG.info("Avro data is " + Arrays.toString(data));
+      logger.info("Avro data is " + Arrays.toString(data));
       HashCode hc = Hashing.sha256().hashBytes(data);
-      LOG.info("Avro hash code is " + hc);
+      logger.info("Avro hash code is " + hc);
     }
   }
 
   @Test
   public void testJdbcRsync() throws Exception {
-    LOG.info("Starting up JDBC rsync.");
+    logger.info("Starting up JDBC rsync.");
     DataSource ds = new SimpleDriverDataSource(new org.h2.Driver(), URI);
     JdbcTemplate template = new JdbcTemplate(ds);
     SETUP_DATABASE:

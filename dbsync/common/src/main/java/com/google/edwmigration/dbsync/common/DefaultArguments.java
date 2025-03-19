@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class DefaultArguments {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultArguments.class);
+  private static final Logger logger = LoggerFactory.getLogger(DefaultArguments.class);
 
   protected final OptionParser parser = new OptionParser();
   private final OptionSpec<?> helpOption =

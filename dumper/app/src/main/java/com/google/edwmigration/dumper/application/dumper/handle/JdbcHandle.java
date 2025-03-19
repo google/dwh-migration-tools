@@ -33,7 +33,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 public class JdbcHandle implements Handle {
 
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcHandle.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcHandle.class);
 
   @Nonnull
   public static JdbcHandle newPooledJdbcHandle(@Nonnull DataSource dataSource, int threadPoolSize)

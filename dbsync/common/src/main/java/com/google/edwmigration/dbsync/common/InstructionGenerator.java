@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public class InstructionGenerator {
 
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(InstructionGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(InstructionGenerator.class);
   private static final boolean DEBUG = false;
 
   private final int blockSize;
@@ -45,7 +45,7 @@ public class InstructionGenerator {
       checksumMap.computeIfAbsent(c.getWeakChecksum(), k -> new ArrayList<>()).add(c);
     }
     if (DEBUG) {
-      LOG.debug("Checksum map contains {} keys", checksumMap.size());
+      logger.debug("Checksum map contains {} keys", checksumMap.size());
     }
 
     // TODO: We could use Literal.MAX_LENGTH here, but that would make testing a bit more fiddly.
@@ -64,7 +64,7 @@ public class InstructionGenerator {
         // This is the fast-path.
         rollingBlockLength = rollingChecksum.reset(i);
         if (DEBUG) {
-          LOG.debug("Fast-path reset read {} bytes", rollingBlockLength);
+          logger.debug("Fast-path reset read {} bytes", rollingBlockLength);
         }
         BYTE:
         for (; ; ) {
@@ -79,7 +79,7 @@ public class InstructionGenerator {
               if (c.getStrongChecksum() == strongHashCode.asLong()) {
                 if (literalBufferLength > 0) {
                   if (DEBUG) {
-                    LOG.debug("Emitting pre-match literal");
+                    logger.debug("Emitting pre-match literal");
                   }
                   out.accept(newLiteralInstruction(literalBuffer, literalBufferLength));
                   literalBufferLength = 0;
@@ -101,7 +101,7 @@ public class InstructionGenerator {
           if (literalBufferLength == literalBuffer.length) {
             // We're about to run out of RollingChecksum buffer.
             if (DEBUG) {
-              LOG.debug("Emitting overflow literal");
+              logger.debug("Emitting overflow literal");
             }
             out.accept(newLiteralInstruction(literalBuffer, literalBufferLength));
             literalBufferLength = 0;
@@ -114,13 +114,13 @@ public class InstructionGenerator {
       // because if it were more than one block, we would have emitted an overflow literal above.
       if (literalBufferLength > 0) {
         if (DEBUG) {
-          LOG.debug("Emitting trailing literal");
+          logger.debug("Emitting trailing literal");
         }
         out.accept(newLiteralInstruction(literalBuffer, literalBufferLength));
       }
       if (rollingBlockLength > 0) {
         if (DEBUG) {
-          LOG.debug("Emitting trailing rolling buffer");
+          logger.debug("Emitting trailing rolling buffer");
         }
         // TODO: Double copy with ByteString.copyFrom().
         byte[] rollingBuffer = rollingChecksum.getBlock(rollingBlockLength);

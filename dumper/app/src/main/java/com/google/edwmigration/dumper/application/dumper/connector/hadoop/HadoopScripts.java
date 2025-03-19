@@ -41,14 +41,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HadoopScripts {
-  private static final Logger LOG = LoggerFactory.getLogger(HadoopScripts.class);
+  private static final Logger logger = LoggerFactory.getLogger(HadoopScripts.class);
   private static final String TMP_DIR_PREFIX = "dwh-migration-tools-tmp-";
   private static final Supplier<Path> SCRIPT_DIR_SUPPLIER =
       memoize(
           () -> {
             Path tmpDir;
             Path workingDir = Paths.get("");
-            LOG.info(
+            logger.info(
                 "Creating temporary directory in the working directory '{}'...",
                 workingDir.toAbsolutePath());
             try {
@@ -56,7 +56,7 @@ public class HadoopScripts {
             } catch (IOException e) {
               throw new IllegalStateException("Error creating temporary directory.", e);
             }
-            LOG.info("Temporary directory created: '{}'.", tmpDir);
+            logger.info("Temporary directory created: '{}'.", tmpDir);
             return tmpDir;
           });
 
@@ -123,7 +123,7 @@ public class HadoopScripts {
         Files.exists(scriptDir) && Files.isDirectory(scriptDir),
         "Directory '%s' does not exist.",
         scriptDir);
-    LOG.info("Extracting '{}' to '{}'...", scriptFilename, scriptDir);
+    logger.info("Extracting '{}' to '{}'...", scriptFilename, scriptDir);
     Path scriptPath = scriptDir.resolve(scriptFilename);
     Files.write(scriptPath, scriptBody);
     scriptPath.toFile().setExecutable(true);

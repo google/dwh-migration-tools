@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HdfsStatusReportTask extends AbstractTask<Void> implements StatusReport {
-  private static final Logger LOG = LoggerFactory.getLogger(HdfsStatusReportTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(HdfsStatusReportTask.class);
 
   private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -151,14 +151,14 @@ public class HdfsStatusReportTask extends AbstractTask<Void> implements StatusRe
     try {
       regularNodes = ImmutableList.copyOf(dfs.getDataNodeStats());
     } catch (Exception ex) {
-      LOG.warn("Error retrieving data node stats.", ex);
+      logger.warn("Error retrieving data node stats.", ex);
       regularNodes = ImmutableList.of();
     }
 
     try {
       slowNodes = ImmutableList.copyOf(dfs.getSlowDatanodeStats());
     } catch (Exception ex) {
-      LOG.warn("Error retrieving slow data node stats.", ex);
+      logger.warn("Error retrieving slow data node stats.", ex);
       slowNodes = ImmutableList.of();
     }
     return HdfsDataNodesStatus.create(regularNodes, slowNodes);

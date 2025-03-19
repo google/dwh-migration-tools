@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * tasks flow
  */
 public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataTablesValidatorTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(TeradataTablesValidatorTask.class);
 
   private final ImmutableSet<String> tableNames;
 
@@ -61,7 +61,7 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
-    LOG.debug("Checking availability for the tables {}", tableNames);
+    logger.debug("Checking availability for the tables {}", tableNames);
 
     List<String> notAccessibleTables = new ArrayList<>();
 
@@ -73,9 +73,9 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
           statement.setMaxRows(1);
           statement.execute();
         }
-        LOG.trace("The table {} is accessible.", table);
+        logger.trace("The table {} is accessible.", table);
       } catch (SQLException e) {
-        LOG.error("The table {} is not accessible.", table, e);
+        logger.error("The table {} is not accessible.", table, e);
         notAccessibleTables.add(table);
       }
     }
@@ -84,7 +84,7 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
           "The tables " + notAccessibleTables + " do not exists or are not accessible.");
     }
 
-    LOG.debug("Success. The tables are accessible.");
+    logger.debug("Success. The tables are accessible.");
     return null;
   }
 

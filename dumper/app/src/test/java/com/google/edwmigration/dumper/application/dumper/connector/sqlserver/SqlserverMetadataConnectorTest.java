@@ -33,7 +33,8 @@ import org.slf4j.LoggerFactory;
 public class SqlserverMetadataConnectorTest extends AbstractConnectorExecutionTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SqlserverMetadataConnectorTest.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(SqlserverMetadataConnectorTest.class);
 
   private final MetadataConnector connector = new SqlServerMetadataConnector();
 
@@ -46,7 +47,7 @@ public class SqlserverMetadataConnectorTest extends AbstractConnectorExecutionTe
   @Test
   public void testExecution() throws Exception {
     File outputFile = TestUtils.newOutputFile("compilerworks-sqlserver-metadata.zip");
-    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+    logger.debug("Output file: {}", outputFile.getAbsolutePath());
 
     runDumper(
         "--connector",

@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class AvroEncoder implements JdbcEncoder {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AvroEncoder.class);
+  private static final Logger logger = LoggerFactory.getLogger(AvroEncoder.class);
   private static final boolean DEBUG = false;
 
   // Sync must be fixed, or we can't rsync.
@@ -179,7 +179,7 @@ public class AvroEncoder implements JdbcEncoder {
   private void open(BinaryEncoder fileEncoder, Schema schema) throws IOException {
     Map<String, byte[]> meta = new TreeMap<>();
     if (DEBUG) {
-      LOG.debug("Schema is {}", schema);
+      logger.debug("Schema is {}", schema);
     }
     meta.put(DataFileConstants.SCHEMA, schema.toString().getBytes(StandardCharsets.UTF_8));
 
@@ -213,7 +213,7 @@ public class AvroEncoder implements JdbcEncoder {
     ResultSetMetaData md = rs.getMetaData();
     Transfer[] transfers = newTransfers(md);
     if (DEBUG) {
-      LOG.debug("Transfers are " + Arrays.toString(transfers));
+      logger.debug("Transfers are " + Arrays.toString(transfers));
     }
 
     SchemaBuilder.FieldAssembler<Schema> builder = SchemaBuilder.record("MyRecordName")

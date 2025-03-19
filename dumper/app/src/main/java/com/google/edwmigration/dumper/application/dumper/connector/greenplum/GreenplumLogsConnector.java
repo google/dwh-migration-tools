@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 public class GreenplumLogsConnector extends AbstractGreenplumConnector
     implements LogsConnector, GreenplumLogsDumpFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GreenplumLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(GreenplumLogsConnector.class);
 
   public GreenplumLogsConnector() {
     super("greenplum-logs");

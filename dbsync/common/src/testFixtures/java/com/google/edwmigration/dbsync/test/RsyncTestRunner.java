@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class RsyncTestRunner {
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(RsyncTestRunner.class);
+  private static final Logger logger = LoggerFactory.getLogger(RsyncTestRunner.class);
 
   public static ByteSource newRandomData(int size) {
     byte[] data = new byte[size];
@@ -66,34 +66,34 @@ public class RsyncTestRunner {
 
   private List<Checksum> checksum() throws Exception{
     if (isFlag(Flag.PrintServerRaw))
-      LOG.debug("Server (initial) data is " + Arrays.toString(serverData.read()));
+      logger.debug("Server (initial) data is " + Arrays.toString(serverData.read()));
     ChecksumGenerator generator = new ChecksumGenerator(blockSize);
     List<Checksum> checksums = new ArrayList<>();
     generator.generate(checksums::add, serverData);
     if (isFlag(Flag.PrintChecksums))
-      LOG.debug("Server checksums are " + checksums);
+      logger.debug("Server checksums are " + checksums);
     return checksums;
   }
 
   private List<Instruction> instruct(List<Checksum> checksums) throws  Exception {
     if (isFlag(Flag.PrintClientRaw))
-      LOG.debug("Client data is " + Arrays.toString(clientData.read()));
+      logger.debug("Client data is " + Arrays.toString(clientData.read()));
     List<Instruction> instructions = new ArrayList<>();
     InstructionGenerator matcher = new InstructionGenerator(blockSize);
     matcher.generate(instructions::add, clientData, checksums);
     if (isFlag(Flag.PrintInstructions))
-      LOG.debug("Client instructions are\n" + Joiner.on('\n').join(instructions));
+      logger.debug("Client instructions are\n" + Joiner.on('\n').join(instructions));
     int instructionSize = 0;
     for (Instruction instruction : instructions)
       instructionSize += instruction.getSerializedSize();
-    LOG.debug("Client instructions size is " + instructionSize);
+    logger.debug("Client instructions size is " + instructionSize);
     return instructions;
   }
 
   private void reconstruct(OutputStream out, List<Instruction> instructions) throws Exception {
     try (InstructionReceiver receiver = new InstructionReceiver(out, serverData)) {
       for (Instruction instruction : instructions) {
-        // LOG.info("Instruction: " + instruction.toPrettyString());
+        // logger.info("Instruction: " + instruction.toPrettyString());
         receiver.receive(instruction);
       }
     }
@@ -104,14 +104,14 @@ public class RsyncTestRunner {
     reconstruct(out, instructions);
     byte[] serverDataNew = out.toByteArray();
     if (isFlag(Flag.PrintServerNewRaw))
-      LOG.debug("Server (result) data is " + Arrays.toString(serverDataNew));
-    LOG.debug("Server (result) data size is " + serverDataNew.length);
+      logger.debug("Server (result) data is " + Arrays.toString(serverDataNew));
+    logger.debug("Server (result) data size is " + serverDataNew.length);
     assertArrayEquals(clientData.read(), serverDataNew, name + " got mismatched data.");
     return serverDataNew;
   }
 
   public byte[] run() throws Exception {
-    LOG.debug("Starting rsync " + name);
+    logger.debug("Starting rsync " + name);
     List<Checksum> checksums = checksum();
     List<Instruction> instructions = instruct(checksums);
     return reconstruct(instructions);

@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
 
   public ClouderaCMFHostsTask() {
     super("cmf-hosts.jsonl");
@@ -71,7 +71,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
-          LOG.warn(
+          logger.warn(
               "Cloudera cluster id is null for cluster [{}]. "
                   + "Skip dumping hosts overview for the cluster.",
               cluster.getName());
@@ -87,7 +87,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
           try {
             hostsJson = readJsonTree(hostsResponse.getEntity().getContent());
           } catch (JsonParseException ex) {
-            LOG.warn("Could not parse json from cloudera hosts response: " + ex.getMessage(), ex);
+            logger.warn(
+                "Could not parse json from cloudera hosts response: " + ex.getMessage(), ex);
             continue;
           }
         }

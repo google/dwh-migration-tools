@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public class RedshiftLogsConnector extends AbstractRedshiftConnector
     implements LogsConnector, RedshiftLogsDumpFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RedshiftLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(RedshiftLogsConnector.class);
 
   public RedshiftLogsConnector() {
     super("redshift-logs");
@@ -179,7 +179,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
     ZonedIntervalIterable intervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
 
-    LOG.info("Exporting query log for " + intervals);
+    logger.info("Exporting query log for " + intervals);
     for (ZonedInterval interval : intervals) {
       String query =
           queryTemplate.replace(

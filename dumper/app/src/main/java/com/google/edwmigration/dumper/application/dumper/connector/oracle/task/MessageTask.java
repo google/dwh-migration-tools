@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /** Task to print error messages after all queries of a certain type failed. */
 public class MessageTask extends AbstractTask<Void> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MessageTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(MessageTask.class);
 
   private final GroupTask[] tasks;
   /** */
@@ -65,7 +65,7 @@ public class MessageTask extends AbstractTask<Void> {
 
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle) {
-    getMessages().forEach(LOG::error);
+    getMessages().forEach(logger::error);
     return null;
   }
 

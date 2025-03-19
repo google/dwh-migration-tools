@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
 public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
     implements LogsConnector, RedshiftRawLogsDumpFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RedshiftRawLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(RedshiftRawLogsConnector.class);
 
   public RedshiftRawLogsConnector() {
     super("redshift-raw-logs");
@@ -218,7 +218,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
               "%s >= CAST( '%s' as TIMESTAMP)",
               startField, arguments.getQueryLogEarliestTimestamp()));
 
-    // LOG.info("Exporting query log for " + intervals);
+    // logger.info("Exporting query log for " + intervals);
     for (ZonedInterval interval : intervals) {
       String query =
           queryTemplate.replace(

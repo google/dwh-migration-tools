@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class GreenplumLogsConnectorTest extends AbstractConnectorExecutionTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(GreenplumLogsConnectorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(GreenplumLogsConnectorTest.class);
 
   private final GreenplumLogsConnector connector = new GreenplumLogsConnector();
 

@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /** Retriever for JDBC drivers. */
 public class DriverRetriever {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DriverRetriever.class);
+  private static final Logger logger = LoggerFactory.getLogger(DriverRetriever.class);
 
   private static final BaseEncoding HEX_ENCODER = BaseEncoding.base16().lowerCase();
 
@@ -137,7 +137,7 @@ public class DriverRetriever {
    */
   public Optional<Path> getDriver(String name) throws IOException {
     if (!driverInformationMap.containsKey(name)) {
-      LOG.info("Got no driver for connector '{}'.", name);
+      logger.info("Got no driver for connector '{}'.", name);
       return Optional.empty();
     }
     return Optional.of(this.downloader.apply(driverInformationMap.get(name)));
