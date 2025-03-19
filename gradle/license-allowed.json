@@ -116,6 +116,10 @@
 		{
 			"moduleLicense": null,
 			"moduleName": "javax.servlet.jsp:jsp-api"
+		},
+		{
+			"moduleLicense": null,
+			"moduleName": "com.google.code.javaparser:javaparser"
 		}
 	]
 }
