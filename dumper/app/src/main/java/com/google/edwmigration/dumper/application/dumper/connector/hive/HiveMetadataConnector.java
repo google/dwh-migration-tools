@@ -75,7 +75,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     implements HiveMetadataDumpFormat, MetadataConnector {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(HiveMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveMetadataConnector.class);
 
   private abstract static class AbstractHiveMetadataTask extends AbstractHiveTask {
 
@@ -288,7 +288,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
-              LOG.warn(
+              logger.warn(
                   "Metadata cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
                   databaseName,
                   tableName,
@@ -375,7 +375,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
-              LOG.warn(
+              logger.warn(
                   "Metadata cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
                   databaseName,
                   tableName,
@@ -448,10 +448,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                       + ".jsonl";
               OutputHandle sink = context.newOutputFileHandle(targetPath);
               if (sink.exists()) {
-                LOG.info("Skipping " + getName() + ": " + sink + " already exists.");
+                logger.info("Skipping " + getName() + ": " + sink + " already exists.");
                 return;
               }
-              LOG.info("Writing to " + targetPath + " -> " + sink);
+              logger.info("Writing to " + targetPath + " -> " + sink);
 
               try (Writer writer =
                   sink.asTemporaryByteSink()
@@ -466,7 +466,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
-              LOG.warn(
+              logger.warn(
                   "Partitions cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
                   databaseName,
                   tableName,

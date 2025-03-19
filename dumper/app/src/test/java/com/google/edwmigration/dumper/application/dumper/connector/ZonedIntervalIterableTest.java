@@ -43,16 +43,16 @@ import org.slf4j.LoggerFactory;
 public class ZonedIntervalIterableTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterableTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(ZonedIntervalIterableTest.class);
 
   private static final ZonedParser zonedParserStart = ZonedParser.withDefaultPattern(START_OF_DAY);
   private static final ZonedParser zonedParserEnd = ZonedParser.withDefaultPattern(END_OF_DAY);
 
   private void testIterable(int expectCount, ZonedIntervalIterable iterable) {
-    LOG.debug("Testing {}", iterable);
+    logger.debug("Testing {}", iterable);
     int actualCount = 0;
     for (ZonedInterval interval : iterable) {
-      LOG.debug("Interval is {}", interval);
+      logger.debug("Interval is {}", interval);
       assertEquals(iterable.getDuration(), interval.getDuration());
       actualCount++;
     }

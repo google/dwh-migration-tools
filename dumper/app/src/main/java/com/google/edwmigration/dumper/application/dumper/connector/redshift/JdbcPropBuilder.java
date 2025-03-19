@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /* pp */ class JdbcPropBuilder {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcPropBuilder.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcPropBuilder.class);
 
   final String punctuations;
 
@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
       @Nonnull String prop, @CheckForNull String val, @Nonnull String msg)
       throws UnsupportedEncodingException {
     if (val == null) {
-      LOG.warn(msg);
+      logger.warn(msg);
     } else {
       addProp(prop, val);
     }
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
       @Nonnull String prop, @CheckForNull String val, @Nonnull String msg)
       throws MetadataDumperUsageException, UnsupportedEncodingException {
     if (val == null) {
-      LOG.error(msg);
+      logger.error(msg);
       throw new MetadataDumperUsageException(msg);
     } else {
       addProp(prop, val);

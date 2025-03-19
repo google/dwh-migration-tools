@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 public class InstructionReceiverTest {
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(InstructionReceiverTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(InstructionReceiverTest.class);
 
   private void testInstructionReceiver(String name, byte[] serverData, byte[] clientData, int blockSize) throws Exception {
     RsyncTestRunner runner = new RsyncTestRunner(name,

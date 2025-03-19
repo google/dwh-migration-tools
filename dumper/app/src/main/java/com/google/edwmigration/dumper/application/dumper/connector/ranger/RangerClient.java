@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerClient implements AutoCloseable {
-  private static final Logger LOG = LoggerFactory.getLogger(RangerConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(RangerConnector.class);
 
   private static final ObjectReader MAPPER =
       new ObjectMapper()
@@ -126,7 +126,7 @@ public class RangerClient implements AutoCloseable {
       throw new RangerException("Failed to initialize authentication header", e);
     }
     try (CloseableHttpResponse httpResponse = httpClient.execute(httpRequest)) {
-      LOG.debug("Response from Ranger({}): {}", path, httpResponse);
+      logger.debug("Response from Ranger({}): {}", path, httpResponse);
       if (httpResponse.getStatusLine().getStatusCode() != SC_OK) {
         throw new RangerException(
             String.format(

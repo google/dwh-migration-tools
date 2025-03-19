@@ -66,7 +66,7 @@ public class TeradataMetadataConnectorTest extends AbstractConnectorExecutionTes
     implements TeradataMetadataDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataMetadataConnectorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(TeradataMetadataConnectorTest.class);
 
   private final TeradataMetadataConnector connector = new TeradataMetadataConnector();
 
@@ -198,14 +198,14 @@ public class TeradataMetadataConnectorTest extends AbstractConnectorExecutionTes
       throws Exception {
     if (true) {
       DataSource dataSource = new DriverManagerDataSource("jdbc:postgresql:cw", "cw", "password");
-      LOG.debug("Resetting database...");
+      logger.debug("Resetting database...");
       try (Connection connection = dataSource.getConnection()) {
         URL url = Resources.getResource(ResourceLocation.class, schemaSql);
         ScriptUtils.executeSqlScript(connection, new UrlResource(url));
       }
       JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
-      LOG.debug("Rebuilding database....");
+      logger.debug("Rebuilding database....");
       try (ProgressMonitor monitor =
           new RecordProgressMonitor("Creating sample schema", nDb * nTbl * nCol)
               .withBlockSize(256)) {

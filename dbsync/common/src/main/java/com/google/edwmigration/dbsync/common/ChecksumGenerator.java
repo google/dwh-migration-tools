@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class ChecksumGenerator {
 
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(ChecksumGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(ChecksumGenerator.class);
   private static final boolean DEBUG = false;
 
   private final @NonNegative int blockSize;
@@ -50,7 +50,7 @@ public class ChecksumGenerator {
         // Yes, this masks the instance variable.
         int blockSize = rollingChecksum.getBlockSize();
         if (DEBUG) {
-          LOG.info("Generating checksums for [{} .. +{}] in {} bytes", offset, blockSize, dataSize);
+          logger.info("Generating checksums for [{} .. +{}] in {} bytes", offset, blockSize, dataSize);
         }
 
         // If someone changes the size of the ByteSource underneath us, this might throw EOFException.

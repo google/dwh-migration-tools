@@ -48,7 +48,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
 
   private enum PropertyAction {
     QUERY("query", "query"),

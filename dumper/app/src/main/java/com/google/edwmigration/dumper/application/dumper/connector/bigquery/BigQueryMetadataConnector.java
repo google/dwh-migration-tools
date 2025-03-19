@@ -81,10 +81,10 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
     implements BigQueryMetadataDumpFormat, MetadataConnector {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(BigQueryMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(BigQueryMetadataConnector.class);
 
   private static final Logger LOG_LIMITED =
-      RateLimitedLog.withRateLimit(LOG).maxRate(2).every(Duration.ofSeconds(10)).build();
+      RateLimitedLog.withRateLimit(logger).maxRate(2).every(Duration.ofSeconds(10)).build();
 
   @PolyNull
   private static String toEnumName(@PolyNull Enum<?> value) {
@@ -115,8 +115,8 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
               || schemaPredicate.test(
                   dataset.getFriendlyName()); // friendlyName is typically null because it's from a
       // list() not a reload().
-      if (LOG.isTraceEnabled())
-        LOG.trace(
+      if (logger.isTraceEnabled())
+        logger.trace(
             dataset.getDatasetId().getDataset()
                 + "("
                 + dataset.getFriendlyName()
@@ -140,7 +140,7 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
         @Nonnull BigQueryCallable<Page<Dataset>> callable)
         throws BigQueryException, IOException, InterruptedException {
       Page<Dataset> datasets = runWithBackOff(callable);
-      // LOG.debug("List is " + datasets.getValues());
+      // logger.debug("List is " + datasets.getValues());
       for (Dataset dataset : new PageIterable<>(datasets)) {
         if (!isIncludedDataset(dataset)) continue;
         consumer.accept(dataset);
@@ -158,7 +158,7 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
             () -> bigQuery.listDatasets(BigQuery.DatasetListOption.pageSize(100)));
       } else {
         for (String projectName : databaseList) {
-          // LOG.debug("Listing datasets in  " + projectName);
+          // logger.debug("Listing datasets in  " + projectName);
           forEachDataset(
               bigQuery,
               consumer,
@@ -357,7 +357,7 @@ public class BigQueryMetadataConnector extends AbstractBigQueryConnector
       } else if (tableDefinition instanceof MaterializedViewDefinition) {
         addMaterializedView(metadata, (MaterializedViewDefinition) tableDefinition);
       } else {
-        LOG.debug("Unknown table definition type: " + tableDefinition.getClass());
+        logger.debug("Unknown table definition type: " + tableDefinition.getClass());
       }
 
       String metadataText = BigQueryMetadataDumpFormat.MAPPER.writeValueAsString(metadata);

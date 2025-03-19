@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class GreenplumMetadataTest extends AbstractConnectorExecutionTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(GreenplumMetadataTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(GreenplumMetadataTest.class);
 
   private static final String SUBPROJECT = "compilerworks-application-dumper";
 

@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
     required = "yes")
 public abstract class AbstractBigQueryConnector extends AbstractConnector {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractBigQueryConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractBigQueryConnector.class);
 
   public static class BigQueryHandle extends AbstractHandle {
 
@@ -162,7 +162,7 @@ public abstract class AbstractBigQueryConnector extends AbstractConnector {
       BigQueryHandle bqHandle = (BigQueryHandle) handle;
       BigQuery bigQuery = bqHandle.getBigQuery();
 
-      LOG.info("Writing to " + getTargetPath() + " -> " + sink);
+      logger.info("Writing to " + getTargetPath() + " -> " + sink);
 
       try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
         run(writer, bigQuery);

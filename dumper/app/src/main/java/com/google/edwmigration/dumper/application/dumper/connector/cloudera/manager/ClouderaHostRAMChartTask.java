@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * language.
  */
 public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
 
   private static final String TS_RAM_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
@@ -62,7 +62,7 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaHostDTO host : handle.getHosts()) {
         String ramPerHostQuery = String.format(TS_RAM_QUERY_TEMPLATE, host.getId());
-        LOG.debug(
+        logger.debug(
             "Execute RAM charts query: [{}] for the host: [{}].", ramPerHostQuery, host.getName());
 
         JsonNode chartInJson = requestTimeSeriesChart(handle, ramPerHostQuery);

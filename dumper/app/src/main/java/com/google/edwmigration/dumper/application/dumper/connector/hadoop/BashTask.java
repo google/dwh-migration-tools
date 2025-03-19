@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BashTask implements Task<Void> {
-  private static final Logger LOG = LoggerFactory.getLogger(BashTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(BashTask.class);
 
   private static final Duration SCRIPT_TIMEOUT = Duration.ofMinutes(1);
 
@@ -60,7 +60,7 @@ public class BashTask implements Task<Void> {
 
   private void doRun(ByteSink outputSink, ByteSink errorSink, ByteSink exitStatusSink)
       throws IOException, ExecutionException {
-    LOG.info("Running bash task '{}'", scriptName);
+    logger.info("Running bash task '{}'", scriptName);
     Process process =
         new ProcessBuilder("/bin/bash", scriptFile.toAbsolutePath().toString()).start();
     Future<Void> outputStreamPump;
@@ -75,7 +75,7 @@ public class BashTask implements Task<Void> {
           executorService.submit(
               throwing(() -> IOUtils.copy(process.getErrorStream(), errorStream)));
       boolean processFinished = process.waitFor(SCRIPT_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
-      LOG.info("Process finished: '{}'", processFinished);
+      logger.info("Process finished: '{}'", processFinished);
     } catch (InterruptedException e) {
       writeExitStatus(exitStatusSink, "interrupted");
       throw new RuntimeException(e);

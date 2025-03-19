@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class ChecksumGeneratorTest {
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(ChecksumGeneratorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(ChecksumGeneratorTest.class);
 
   // Do not make these be "sensible" constants. That's not the point.
   private static final int DATA_SIZE = 65531;
@@ -29,12 +29,12 @@ public class ChecksumGeneratorTest {
     ByteSource data = RsyncTestRunner.newRandomData(dataSize);
 
     int blockSize = BLOCK_SIZE + ThreadLocalRandom.current().nextInt(42);
-    LOG.info("Checksumming {} bytes in blocks of {} bytes.", dataSize, blockSize);
+    logger.info("Checksumming {} bytes in blocks of {} bytes.", dataSize, blockSize);
 
     ChecksumGenerator generator = new ChecksumGenerator(blockSize);
     List<Checksum> checksums = new ArrayList<>();
     generator.generate(checksums::add, data);
-    LOG.info("Checksums are " + checksums);
+    logger.info("Checksums are " + checksums);
 
     int blockCount = IntMath.divide(dataSize, blockSize, RoundingMode.CEILING);
     assertEquals(blockCount, checksums.size());

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class ZonedIntervalIterable implements Iterable<ZonedInterval> {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterable.class);
+  private static final Logger logger = LoggerFactory.getLogger(ZonedIntervalIterable.class);
 
   private final ZonedDateTime start;
   private final ZonedDateTime end;

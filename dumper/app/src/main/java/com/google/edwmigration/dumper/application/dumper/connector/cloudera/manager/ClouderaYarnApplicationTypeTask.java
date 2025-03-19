@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplicationTask {
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
 
   private final ImmutableList<String> predefinedAppTypes =
       ImmutableList.of("MAPREDUCE", "SPARK", "Oozie Launcher");
@@ -76,14 +76,15 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
         yarnAppTypes.addAll(predefinedAppTypes);
         yarnAppTypes.addAll(context.getArguments().getYarnApplicationTypes());
         for (String yarnAppType : yarnAppTypes) {
-          LOG.info("Dump YARN applications with {} type from {} cluster", yarnAppType, clusterName);
+          logger.info(
+              "Dump YARN applications with {} type from {} cluster", yarnAppType, clusterName);
           int loadedAppsCount =
               appLoader.load(
                   clusterName,
                   yarnAppType,
                   yarnAppsPage ->
                       writeYarnAppTypes(writer, yarnAppsPage, yarnAppType, clusterName));
-          LOG.info(
+          logger.info(
               "Dumped {} YARN applications with {} type from {} cluster",
               loadedAppsCount,
               yarnAppType,

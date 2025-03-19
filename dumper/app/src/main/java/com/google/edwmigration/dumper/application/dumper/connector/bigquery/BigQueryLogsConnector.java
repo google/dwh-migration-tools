@@ -72,9 +72,9 @@ import org.slf4j.LoggerFactory;
 public class BigQueryLogsConnector extends AbstractBigQueryConnector
     implements LogsConnector, BigQueryLogsDumpFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(BigQueryLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(BigQueryLogsConnector.class);
   private static final Logger LOG_LIMITED =
-      RateLimitedLog.withRateLimit(LOG).maxRate(2).every(Duration.ofSeconds(10)).build();
+      RateLimitedLog.withRateLimit(logger).maxRate(2).every(Duration.ofSeconds(10)).build();
   private static final boolean DEBUG = false;
 
   public static class QueryLogsTask extends AbstractBigQueryTask
@@ -113,7 +113,7 @@ public class BigQueryLogsConnector extends AbstractBigQueryConnector
           ExecutorManager manager = new ExecutorManager(executor)) {
         for (String projectId : projectIds) {
           for (ZonedInterval interval : intervals) {
-            LOG.info(
+            logger.info(
                 "Retrieving query logs in range start={} to end={}",
                 interval.getStart(),
                 interval.getEndExclusive());
