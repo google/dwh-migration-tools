@@ -49,13 +49,8 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   @Nonnull
   public Handle open(ConnectorArguments arguments)
       throws MetadataDumperUsageException, SQLException {
-    if (arguments.isAssessment()) {
-      String message =
-          String.format(
-              "The %s connector supports assessment without need for extra flags."
-                  + " Try running again without the '--%s' flag",
-              NAME, ConnectorArguments.OPT_ASSESSMENT);
-      throw new MetadataDumperUsageException(message);
+    if (!arguments.isAssessment()) {
+      throw noAssessmentException();
     }
     return super.open(arguments);
   }
@@ -77,5 +72,14 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.addAll(planner.generateLiteSpecificQueries());
+  }
+
+  private static MetadataDumperUsageException noAssessmentException() {
+    String message =
+    String.format(
+        "The %s connector only supports extraction for Assessment."
+            + " Provide the '--%s' flag to use this connector.",
+        NAME, ConnectorArguments.OPT_ASSESSMENT);
+    return new MetadataDumperUsageException(message);
   }
 }
