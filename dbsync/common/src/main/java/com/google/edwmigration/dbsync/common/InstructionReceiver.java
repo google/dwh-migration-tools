@@ -5,8 +5,11 @@ import com.google.edwmigration.dbsync.proto.Instruction;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
 import com.google.protobuf.ByteString;
+import java.io.BufferedInputStream;
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import javax.annotation.CheckForSigned;
 import javax.annotation.WillCloseWhenClosed;
@@ -15,8 +18,9 @@ import org.slf4j.LoggerFactory;
 
 public class InstructionReceiver implements Closeable {
 
-  @SuppressWarnings("unused")
   private static final Logger logger = LoggerFactory.getLogger(InstructionReceiver.class);
+
+  private static final boolean DEBUG = false;
 
   private final OutputStream out;
   private final ByteSource in;
@@ -27,15 +31,6 @@ public class InstructionReceiver implements Closeable {
   public InstructionReceiver(@WillCloseWhenClosed OutputStream out, ByteSource in) {
     this.out = Preconditions.checkNotNull(out, "Output was null.");
     this.in = Preconditions.checkNotNull(in, "Input was null.");
-  }
-
-  private void flushCopy() throws IOException {
-    if (copyStart != -1) {
-      in.slice(copyStart, copyLength).copyTo(out);
-      // These two assignments aren't always required, but it's nicer to have them here than belowl
-      copyStart = -1;
-      copyLength = 0;
-    }
   }
 
   public void receive(Instruction instruction) throws IOException {
@@ -69,4 +64,19 @@ public class InstructionReceiver implements Closeable {
       out.close();
     }
   }
+
+  private void flushCopy() throws IOException {
+    if (copyStart == -1) {
+      return;
+    }
+    if (DEBUG) {
+      logger.info(String.format("Reuse bytes from %d for %d bytes", copyStart, copyLength));
+    }
+    in.slice(copyStart, copyLength).copyTo(out);
+
+    // Clear pending copy.
+    copyStart = -1;
+    copyLength = 0;
+  }
+
 }

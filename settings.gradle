@@ -14,5 +14,6 @@ include(
     ':dbsync:storage-aws',
     ':dbsync:storage-hdfs',
     ':dbsync:server',
-    ':dbsync:client'
+    ':dbsync:client',
+    ':dbsync:gcsync'
 )
