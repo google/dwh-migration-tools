@@ -59,4 +59,10 @@ public class OracleLogsConnector extends AbstractOracleConnector
     out.add(new FormatTask(format));
     out.add(new QueryHistoryTask());
   }
+
+  @Override
+  @Nonnull
+  public AssessmentSupport assessmentSupport() {
+    return AssessmentSupport.OPTIONAL;
+  }
 }

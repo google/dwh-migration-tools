@@ -330,4 +330,10 @@ public class OracleMetadataConnector extends AbstractOracleConnector
 
     // Todo: procedures, database links, triggers, packages
   }
+
+  @Override
+  @Nonnull
+  public AssessmentSupport assessmentSupport() {
+    return AssessmentSupport.OPTIONAL;
+  }
 }
