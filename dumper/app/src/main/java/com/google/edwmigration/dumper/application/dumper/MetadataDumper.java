@@ -91,15 +91,6 @@ public class MetadataDumper {
     return run(connector, arguments);
   }
 
-  private void print(@Nonnull Task<?> task, int indent) {
-    System.out.println(repeat(' ', indent * 2) + task);
-    if (task instanceof TaskGroup) {
-      for (Task<?> subtask : ((TaskGroup) task).getTasks()) {
-        print(subtask, indent + 1);
-      }
-    }
-  }
-
   private Path prepareOutputPath(
       @Nonnull String fileName, @Nonnull Closer closer, @Nonnull ConnectorArguments arguments)
       throws IOException {
@@ -151,7 +142,7 @@ public class MetadataDumper {
       System.out.println(repeat('=', title.length()));
       System.out.println("Writing to " + outputFileLocation);
       for (Task<?> task : tasks) {
-        print(task, 1);
+        TaskGroup.print(task);
       }
       return true;
     } else {

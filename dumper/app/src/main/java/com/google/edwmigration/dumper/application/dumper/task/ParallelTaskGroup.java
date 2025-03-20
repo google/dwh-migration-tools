@@ -19,10 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
-import java.io.IOException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.apache.commons.csv.CSVPrinter;
 
 public class ParallelTaskGroup extends TaskGroup {
@@ -44,29 +43,6 @@ public class ParallelTaskGroup extends TaskGroup {
     super.addTask(task);
   }
 
-  private static class TaskRunner {
-
-    @Nonnull private final TaskRunContext context;
-    @Nonnull private final Task<?> task;
-    @Nonnull private final CSVPrinter printer;
-
-    public TaskRunner(
-        @Nonnull TaskRunContext context, @Nonnull Task<?> task, @Nonnull CSVPrinter printer) {
-      this.context = context;
-      this.task = task;
-      this.printer = printer;
-    }
-
-    public @Nullable Object call() throws IOException {
-      Object result = context.runChildTask(task);
-      TaskState state = context.getTaskState(task);
-      synchronized (printer) {
-        printer.printRecord(task, state);
-      }
-      return result;
-    }
-  }
-
   @Override
   protected void doRun(
       @Nonnull TaskRunContext context, @Nonnull CSVPrinter printer, @Nonnull Handle handle)
@@ -75,9 +51,8 @@ public class ParallelTaskGroup extends TaskGroup {
     // never happens.
     // We safely publish the CSVPrinter to the ExecutorManager.
     try (ExecutorManager executorManager = new ExecutorManager(context.getExecutorService())) {
-      for (Task<?> task : getTasks()) {
-        TaskRunner runner = new TaskRunner(context, task, printer);
-        executorManager.execute(runner::call);
+      for (Callable<Object> callable : toCallables(context, printer)) {
+        executorManager.execute(callable);
       }
     }
     // We now, by the t-w-r, safely collect the CSVPrinter from the sub-threads.
@@ -85,6 +60,6 @@ public class ParallelTaskGroup extends TaskGroup {
 
   @Override
   public String toString() {
-    return "ParallelTaskGroup(" + getTasks().size() + " children)";
+    return "ParallelTaskGroup(" + size() + " children)";
   }
 }
