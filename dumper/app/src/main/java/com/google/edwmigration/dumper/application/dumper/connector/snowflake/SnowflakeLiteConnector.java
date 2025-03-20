@@ -76,10 +76,10 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   private static MetadataDumperUsageException noAssessmentException() {
     String message =
-    String.format(
-        "The %s connector only supports extraction for Assessment."
-            + " Provide the '--%s' flag to use this connector.",
-        NAME, ConnectorArguments.OPT_ASSESSMENT);
+        String.format(
+            "The %s connector only supports extraction for Assessment."
+                + " Provide the '--%s' flag to use this connector.",
+            NAME, ConnectorArguments.OPT_ASSESSMENT);
     return new MetadataDumperUsageException(message);
   }
 }
