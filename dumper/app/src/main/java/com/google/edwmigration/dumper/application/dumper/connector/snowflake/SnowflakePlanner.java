@@ -98,8 +98,15 @@ final class SnowflakePlanner {
     builder.add(operationStartsTask());
     builder.add(warehouseEventsHistoryTask());
     builder.add(warehouseMeteringTask());
+    builder.add(storageMetricsLiteTask());
 
-    for (AssessmentQuery item : generateAssessmentQueries()) {
+    ImmutableList<AssessmentQuery> liteAssessmentQueries =
+        ImmutableList.of(
+            AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
+            AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES, LOWER_UNDERSCORE),
+            AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+
+    for (AssessmentQuery item : liteAssessmentQueries) {
       String query = String.format(item.formatString, view, /* an empty WHERE clause */ "");
       String zipName = item.zipEntryName;
       Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
@@ -191,6 +198,59 @@ final class SnowflakePlanner {
     String query = buildQuery(selectList, view, TIME_PREDICATE);
     ImmutableList<String> header = ImmutableList.of("StartTime", "EndTime");
     return new LiteTimeSeriesTask("report_date_range.csv", query, header);
+  }
+
+  Task<?> storageMetricsLiteTask() {
+    String selectList =
+        String.join(
+            ", ",
+            "table_catalog",
+            "table_schema_id",
+            "table_schema",
+            "table_name",
+            "id",
+            "clone_group_id",
+            "is_transient",
+            "active_bytes",
+            "time_travel_bytes",
+            "failsafe_bytes",
+            "retained_for_clone_bytes",
+            "table_created",
+            "table_dropped",
+            "table_entered_failsafe",
+            "catalog_created",
+            "catalog_dropped",
+            "schema_created",
+            "schema_dropped",
+            "comment",
+            "deleted");
+    String view = "SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS";
+    String predicate =
+        "deleted IS NULL" + " AND " + "schema_dropped IS NULL" + " AND " + "table_dropped IS NULL";
+    String query = String.format("SELECT %s FROM %s WHERE %s", selectList, view, predicate);
+    ImmutableList<String> header =
+        ImmutableList.of(
+            "TableCatalog",
+            "TableSchemaId",
+            "TableSchema",
+            "TableName",
+            "Id",
+            "CloneGroupId",
+            "IsTransient",
+            "ActiveBytes",
+            "TimeTravelBytes",
+            "FailsafeBytes",
+            "RetainedForCloneBytes",
+            "TableCreated",
+            "TableDropped",
+            "TableEnteredFailsafe",
+            "CatalogCreated",
+            "CatalogDropped",
+            "SchemaCreated",
+            "SchemaDropped",
+            "Comment",
+            "Deleted");
+    return new LiteTimeSeriesTask("table_storage_metrics-au.csv", query, header);
   }
 
   private static String buildQuery(String selectList, String view, String predicate) {
