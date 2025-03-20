@@ -102,10 +102,10 @@ public class GcsyncClient {
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(currentDirectory)) {
       for (Path path : stream) {
-        if (path.getFileName().toString().equals(Constants.JAR_FILE_NAME)) {
-          // Don't sync the jar to target bucket
-          continue;
-        }
+        // if (path.getFileName().toString().equals(Constants.JAR_FILE_NAME)) {
+        //   // Don't sync the jar to target bucket
+        //   continue;
+        // }
         if (Files.isDirectory(path)) {
           // We don't support nested scanning for now
           continue;
