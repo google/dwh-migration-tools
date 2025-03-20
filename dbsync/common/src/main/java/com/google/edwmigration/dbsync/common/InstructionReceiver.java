@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 public class InstructionReceiver implements Closeable {
 
-  @SuppressWarnings("unused")
   private static final Logger logger = LoggerFactory.getLogger(InstructionReceiver.class);
 
   private static final boolean DEBUG = false;
@@ -71,7 +70,7 @@ public class InstructionReceiver implements Closeable {
       return;
     }
     if (DEBUG) {
-      LOG.info(String.format("Reuse bytes from %d for %d bytes", copyStart, copyLength));
+      logger.info(String.format("Reuse bytes from %d for %d bytes", copyStart, copyLength));
     }
     in.slice(copyStart, copyLength).copyTo(out);
 
