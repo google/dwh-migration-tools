@@ -7,18 +7,6 @@ plugins {
     id 'dbsync.java-application-conventions'
 }
 
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
-}
-
-
-configurations {
-    serverClasspath {
-        canBeConsumed = false
-    }
-}
-
 dependencies {
     implementation project(':dbsync:common')
     implementation project(':dbsync:storage-aws')
