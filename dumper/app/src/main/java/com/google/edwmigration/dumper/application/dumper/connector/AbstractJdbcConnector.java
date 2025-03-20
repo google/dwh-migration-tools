@@ -41,7 +41,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 public abstract class AbstractJdbcConnector extends AbstractConnector {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractJdbcConnector.class);
 
   public AbstractJdbcConnector(@Nonnull String name) {
     super(name);
@@ -123,7 +123,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
             driverClass = Class.forName(driverClassName, true, driverClassLoader);
             if (driverClass != null) break CLASS;
           } catch (ClassNotFoundException ignore) {
-            LOG.info("Driver class [{}] not found at  {}.", driverClassName, driverPaths);
+            logger.info("Driver class [{}] not found at  {}.", driverClassName, driverPaths);
           }
         }
         throw new SQLException(
@@ -133,7 +133,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
                 + driverPaths);
       }
 
-      LOG.info("Using JDBC Driver: {}", driverClass);
+      logger.info("Using JDBC Driver: {}", driverClass);
       return driverClass.asSubclass(Driver.class).getConstructor().newInstance();
     } catch (ReflectiveOperationException
         | PrivilegedActionException
@@ -158,7 +158,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
     /*
     @Override
     protected Connection getConnectionFromDriver(Properties props) throws SQLException {
-        LOG.debug("Connecting", new Exception());
+        logger.debug("Connecting", new Exception());
         return super.getConnectionFromDriver(props);
     }
      */

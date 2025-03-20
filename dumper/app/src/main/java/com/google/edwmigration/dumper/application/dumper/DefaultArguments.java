@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public class DefaultArguments {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultArguments.class);
+  private static final Logger logger = LoggerFactory.getLogger(DefaultArguments.class);
 
   public static class BooleanValueConverter implements ValueConverter<Boolean> {
 

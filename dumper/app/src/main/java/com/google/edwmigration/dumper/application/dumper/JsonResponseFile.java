@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JsonResponseFile {
 
-  private static final Logger LOG = LoggerFactory.getLogger(JsonResponseFile.class);
+  private static final Logger logger = LoggerFactory.getLogger(JsonResponseFile.class);
 
   /** Adds arguments from JSON response files to the argument string(s). */
   @Nonnull
@@ -152,7 +152,7 @@ public class JsonResponseFile {
   public static void save(ConnectorArguments arguments) throws IOException {
     File responseFile = FileUtils.getFile(arguments.getResponseFileName());
     newObjectMapper().writeValue(responseFile, from_arguments(arguments.getArgs()));
-    LOG.info("Saved response file to {}", responseFile.getAbsolutePath());
+    logger.info("Saved response file to {}", responseFile.getAbsolutePath());
   }
 
   public static ResponseFileEntity from_arguments(String[] args) {

@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /** @author miguel */
 public class Main {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+  private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
   private final MetadataDumper metadataDumper;
 
@@ -70,9 +70,9 @@ public class Main {
         System.exit(1);
       }
     } catch (MetadataDumperUsageException e) {
-      LOG.error(e.getMessage());
+      logger.error(e.getMessage());
       for (String msg : e.getMessages()) {
-        LOG.error(msg);
+        logger.error(msg);
       }
       System.exit(1);
     } catch (Exception e) {

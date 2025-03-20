@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * SingleDirScanJob wraps a HDFS dir and is submitted to the ScanContext.execManager
  */
 class SingleDirScanJob implements Callable<Void> {
-  private static final Logger LOG = LoggerFactory.getLogger(SingleDirScanJob.class);
+  private static final Logger logger = LoggerFactory.getLogger(SingleDirScanJob.class);
 
   private final ScanContext scanCtx;
   private final FileStatus dir;
@@ -58,9 +58,9 @@ class SingleDirScanJob implements Callable<Void> {
       }
       scanCtx.endWalkDir(dir, numFiles, numDirs, accumFileSize);
     } catch (org.apache.hadoop.security.AccessControlException exn) {
-      LOG.error("AccessControlException: {}", trimExceptionMessage(exn.getMessage()));
+      logger.error("AccessControlException: {}", trimExceptionMessage(exn.getMessage()));
     } catch (Exception e) {
-      LOG.error(
+      logger.error(
           "Unexpected exception while scanning directory '{}'", dir.getPath().toUri().getPath(), e);
     }
     return null;

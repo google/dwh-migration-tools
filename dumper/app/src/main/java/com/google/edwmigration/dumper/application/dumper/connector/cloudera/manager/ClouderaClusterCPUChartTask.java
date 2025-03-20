@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * language.
  */
 public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask {
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
@@ -58,7 +58,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         String cpuPerClusterQuery = String.format(TS_CPU_QUERY_TEMPLATE, cluster.getId());
-        LOG.debug(
+        logger.debug(
             "Execute charts query: [{}] for the cluster: [{}].",
             cpuPerClusterQuery,
             cluster.getName());
@@ -79,7 +79,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
     List<ClouderaClusterDTO> cpuClusters = new ArrayList<>();
     for (ClouderaClusterDTO cluster : clusters) {
       if (cluster.getId() == null) {
-        LOG.warn(
+        logger.warn(
             "Cloudera cluster id is null for cluster [{}]. Skip CPU metrics for the cluster.",
             cluster.getName());
       } else {

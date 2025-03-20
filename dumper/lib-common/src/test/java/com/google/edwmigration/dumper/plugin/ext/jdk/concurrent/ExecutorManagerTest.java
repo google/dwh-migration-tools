@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class ExecutorManagerTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ExecutorManagerTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExecutorManagerTest.class);
 
   @SuppressWarnings("FutureReturnValueIgnored")
   private void test(@Nonnull ExecutorManager manager, int niter) throws Exception {
@@ -58,9 +58,9 @@ public class ExecutorManagerTest {
             new Callable<Object>() {
               @Override
               public Void call() throws Exception {
-                // LOG.info("Start " + name);
+                // logger.info("Start " + name);
                 Thread.sleep(tm);
-                // LOG.info("End " + name);
+                // logger.info("End " + name);
                 completed.getAndIncrement();
                 return null;
               }
@@ -83,9 +83,9 @@ public class ExecutorManagerTest {
             new Callable<Object>() {
               @Override
               public Void call() throws Exception {
-                // LOG.info("Start " + name);
+                // logger.info("Start " + name);
                 Thread.sleep(tm);
-                // LOG.info("End " + name);
+                // logger.info("End " + name);
                 completed.getAndIncrement();
                 return null;
               }
@@ -109,7 +109,7 @@ public class ExecutorManagerTest {
     manager.await();
     assertEquals(niter * n * 4, completed.get());
 
-    LOG.debug("Done in " + stopwatch);
+    logger.debug("Done in " + stopwatch);
   }
 
   @Test
@@ -144,7 +144,7 @@ public class ExecutorManagerTest {
           new Callable<Object>() {
             @Override
             public Void call() throws Exception {
-              LOG.info("Throw " + name);
+              logger.info("Throw " + name);
               Thread.sleep(tm);
               throw new IllegalStateException("Throw " + name);
             }

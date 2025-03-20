@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
 
-  private static final Logger LOG =
+  private static final Logger logger =
       LoggerFactory.getLogger(com.google.edwmigration.dumper.application.dumper.Main.class);
 
   private static final Gson GSON = new Gson();
@@ -104,7 +104,7 @@ public class Main {
               DriverRetriever.create(httpClient, Files.createTempDirectory("clouddumper")))
           .run();
     } catch (MetadataDumperUsageException e) {
-      LOG.error(e.getMessage(), e);
+      logger.error(e.getMessage(), e);
     }
   }
 
@@ -122,10 +122,10 @@ public class Main {
 
   private static final String decrypt(Optional<CryptoKeyName> keyName, String input) {
     if (!keyName.isPresent()) {
-      LOG.info("Got no decryption key. Using input as is.");
+      logger.info("Got no decryption key. Using input as is.");
       return input;
     }
-    LOG.info("Using key {} to decrypt.", keyName);
+    logger.info("Using key {} to decrypt.", keyName);
     ByteString ciphertext = ByteString.copyFrom(Base64.decodeBase64(input));
     try (KeyManagementServiceClient client = KeyManagementServiceClient.create()) {
       DecryptResponse response = client.decrypt(keyName.get(), ciphertext);

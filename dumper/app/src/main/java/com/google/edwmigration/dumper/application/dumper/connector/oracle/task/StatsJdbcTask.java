@@ -46,7 +46,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 @ParametersAreNonnullByDefault
 public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(StatsJdbcTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(StatsJdbcTask.class);
   private final Condition condition;
   private final OracleStatsQuery query;
 
@@ -95,7 +95,7 @@ public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
       result = doSelect(connection, extractor, query.queryText(), days);
     }
     if (result == null) {
-      LOG.warn("Unexpected data extraction result: null");
+      logger.warn("Unexpected data extraction result: null");
       return Summary.EMPTY;
     }
     return result;

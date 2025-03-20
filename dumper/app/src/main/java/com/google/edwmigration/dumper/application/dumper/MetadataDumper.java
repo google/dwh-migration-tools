@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
 /** @author miguel */
 public class MetadataDumper {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MetadataDumper.class);
+  private static final Logger logger = LoggerFactory.getLogger(MetadataDumper.class);
 
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
@@ -75,13 +75,13 @@ public class MetadataDumper {
   public boolean run(@Nonnull ConnectorArguments arguments) throws Exception {
     String connectorName = arguments.getConnectorName();
     if (connectorName == null) {
-      LOG.error("Target connector is required");
+      logger.error("Target connector is required");
       return false;
     }
 
     Connector connector = ConnectorRepository.getInstance().getByName(connectorName);
     if (connector == null) {
-      LOG.error(
+      logger.error(
           "Target connector '{}' not supported; available are {}.",
           connectorName,
           ConnectorRepository.getInstance().getAllNames());
@@ -107,7 +107,7 @@ public class MetadataDumper {
     if (matcher.matches()) {
       String bucket = matcher.group("bucket");
       String path = matcher.group("path");
-      LOG.debug(
+      logger.debug(
           String.format(
               "Setting up CloudStorageFileSystem with bucket '%s' and path '%s'.", bucket, path));
       CloudStorageFileSystem cloudStorageFileSystem =
@@ -159,13 +159,13 @@ public class MetadataDumper {
       long outputFileLength = 0;
       TaskSetState.Impl state = new TaskSetState.Impl();
 
-      LOG.info("Using " + connector);
+      logger.info("Using " + connector);
       SummaryPrinter summaryPrinter = new SummaryPrinter();
       try (Closer closer = Closer.create()) {
         Path outputPath = prepareOutputPath(outputFileLocation, closer, arguments);
 
         URI outputUri = URI.create("jar:" + outputPath.toUri());
-        // LOG.debug("Is a zip file: " + outputUri);
+        // logger.debug("Is a zip file: " + outputUri);
         Map<String, Object> fileSystemProperties =
             ImmutableMap.<String, Object>builder()
                 .put("create", "true")
@@ -175,7 +175,7 @@ public class MetadataDumper {
             closer.register(FileSystems.newFileSystem(outputUri, fileSystemProperties));
         OutputHandleFactory sinkFactory =
             new FileSystemOutputHandleFactory(fileSystem, "/"); // It's required to be "/"
-        LOG.debug("Target filesystem is " + sinkFactory);
+        logger.debug("Target filesystem is " + sinkFactory);
 
         Handle handle = closer.register(connector.open(arguments));
 
@@ -219,7 +219,7 @@ public class MetadataDumper {
     Matcher gcsPathMatcher = GCS_PATH_PATTERN.matcher(fileName);
 
     if (gcsPathMatcher.matches()) {
-      LOG.debug("Got GCS target with bucket '{}'.", gcsPathMatcher.group("bucket"));
+      logger.debug("Got GCS target with bucket '{}'.", gcsPathMatcher.group("bucket"));
       if (StringUtils.endsWithIgnoreCase(fileName, ".zip")) {
         return fileName;
       }

@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory;
 
 public class LocalStorageTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(LocalStorageTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(LocalStorageTest.class);
 
   @Test
   public void testLocalStorage(@TempDir File tempDir) throws Exception {
     LocalStorage storage = new LocalStorage();
     File file = new File(tempDir, "test.dat");
-    LOG.info("File is {}", file);
+    logger.info("File is {}", file);
     StorageTestRunner runner = new StorageTestRunner(
         storage.newByteSource(file),
         storage.newByteSink(file));

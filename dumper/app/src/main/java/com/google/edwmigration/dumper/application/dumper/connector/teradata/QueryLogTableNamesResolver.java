@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * (separated by a comma).
  */
 class QueryLogTableNamesResolver {
-  private static final Logger LOG = LoggerFactory.getLogger(QueryLogTableNamesResolver.class);
+  private static final Logger logger = LoggerFactory.getLogger(QueryLogTableNamesResolver.class);
 
   private static final String TERADATA_LOGS_CONNECTOR_NAME = "teradata-logs";
 
@@ -85,7 +85,7 @@ class QueryLogTableNamesResolver {
             .orElse(arguments.isAssessment() ? ASSESSMENT_DEF_LOG_TABLE : DEF_LOG_TABLE);
     String sqlLogTable = arguments.getDefinitionOrDefault(SQL_LOGS_TABLE);
     if (alternateQueryLogTableSpecified && !alternateSqlLogTableSpecified) {
-      LOG.warn(
+      logger.warn(
           "The alternate query log table was provided using the '-D{}' flag, but no"
               + " alternate SQL table was provided using the '-D{}' flag. The following tables"
               + " will be joined to extract the query logs: '{}' and '{}'.",
@@ -94,7 +94,7 @@ class QueryLogTableNamesResolver {
           queryLogTable,
           sqlLogTable);
     } else if (!alternateQueryLogTableSpecified && alternateSqlLogTableSpecified) {
-      LOG.warn(
+      logger.warn(
           "The alternate SQL log table was provided using the '-D{}' flag, but no alternate"
               + " query table was provided using the '-D{}' flag. The following tables will be"
               + " joined to extract the query logs: '{}' and '{}'.",

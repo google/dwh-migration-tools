@@ -35,7 +35,8 @@ import org.slf4j.LoggerFactory;
 public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorExecutionTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnectorTest.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(SnowflakeMetadataConnectorTest.class);
 
   private final MetadataConnector connector = new SnowflakeMetadataConnector();
 
@@ -55,7 +56,7 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
       File outputFile =
           TestUtils.newOutputFile(
               "compilerworks-snowflake-metadata-auto-" + iffaulty(i, "is", "au") + ".zip");
-      LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+      logger.debug("Output file: {}", outputFile.getAbsolutePath());
 
       if (!run(ARGS(connector, outputFile, "--test-flags", iffaulty(i, "", "A")))) continue;
 

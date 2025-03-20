@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class PostgresqlMetadataTest extends AbstractConnectorExecutionTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(MysqlMetadataConnectorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(MysqlMetadataConnectorTest.class);
 
   private static final String SUBPROJECT = "compilerworks-application-dumper";
 
@@ -53,7 +53,7 @@ public class PostgresqlMetadataTest extends AbstractConnectorExecutionTest {
     Assume.assumeTrue(isDumperTest());
 
     File outputFile = TestUtils.newOutputFile("compilerworks-postgresql-metadata.zip");
-    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+    logger.debug("Output file: {}", outputFile.getAbsolutePath());
 
     runDumper(
         "--connector",

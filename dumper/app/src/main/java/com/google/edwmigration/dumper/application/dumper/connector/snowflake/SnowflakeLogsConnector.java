@@ -61,7 +61,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     implements LogsConnector, SnowflakeLogsDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(SnowflakeLogsConnector.class);
 
   private static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
@@ -376,7 +376,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     ZonedIntervalIterable queryLogIntervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(
             arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
-    LOG.info("Exporting query log for " + queryLogIntervals);
+    logger.info("Exporting query log for " + queryLogIntervals);
 
     if (!arguments.isAssessment()) {
       TaskDescription queryHistoryTask =

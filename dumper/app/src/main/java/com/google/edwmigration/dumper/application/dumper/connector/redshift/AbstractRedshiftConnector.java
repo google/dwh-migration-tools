@@ -67,7 +67,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @RespectsArgumentJDBCUri
 public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractRedshiftConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractRedshiftConnector.class);
 
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
@@ -163,7 +163,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     // Debugging:
     //   DSILogLevel=0..6;LogPath=C:\temp
     //   LogLevel 0/1
-    LOG.trace("URI is " + url);
+    logger.trace("URI is " + url);
     DataSource dataSource =
         new SimpleDriverDataSource(driver, url, arguments.getUser(), password.orElse(null));
 
@@ -171,9 +171,9 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
   }
 
   private static void logDriverInfo(@Nonnull Driver driver) throws SQLException {
-    LOG.debug("DRIVER IS " + driver.getClass().getCanonicalName());
-    LOG.debug("DRIVER CAN RS " + driver.acceptsURL("jdbc:redshift://host/db"));
-    LOG.debug("DRIVER CAN IAM " + driver.acceptsURL("jdbc:redshift:iam://host/db"));
-    LOG.debug("DRIVER CAN PG " + driver.acceptsURL("jdbc:postgresql://host/db"));
+    logger.debug("DRIVER IS " + driver.getClass().getCanonicalName());
+    logger.debug("DRIVER CAN RS " + driver.acceptsURL("jdbc:redshift://host/db"));
+    logger.debug("DRIVER CAN IAM " + driver.acceptsURL("jdbc:redshift:iam://host/db"));
+    logger.debug("DRIVER CAN PG " + driver.acceptsURL("jdbc:postgresql://host/db"));
   }
 }
