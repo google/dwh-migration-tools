@@ -2,6 +2,7 @@ package com.google.edwmigration.dbsync.storage.gcs;
 
 import com.google.cloud.ReadChannel;
 import com.google.common.base.Optional;
+import com.google.common.io.ByteSink;
 import com.google.edwmigration.dbsync.common.storage.AbstractRemoteByteSource;
 import com.google.edwmigration.dbsync.common.storage.Slice;
 import com.google.cloud.storage.BlobId;
@@ -26,23 +27,22 @@ public class GcsByteSource extends AbstractRemoteByteSource {
 
   private final Storage storage;
   private final BlobId blobId;
-  private InputStream sourceStream;
-
-  private long currentSourceOffset = 0;
+  private InputStreamCache inputStreamCache;
 
   private GcsByteSource(Storage storage, BlobId blobId, @Nullable Slice slice) {
     super(slice);
     this.storage = storage;
     this.blobId = blobId;
+    this.inputStreamCache = new InputStreamCache(
+        Channels.newInputStream(storage.reader(blobId)), 0);
   }
 
   private GcsByteSource(Storage storage, BlobId blobId, @Nullable Slice slice,
-      InputStream sourceStream, long currentSourceOffset) {
+      InputStreamCache inputStreamCache) {
     super(slice);
     this.storage = storage;
     this.blobId = blobId;
-    this.sourceStream = sourceStream;
-    this.currentSourceOffset = currentSourceOffset;
+    this.inputStreamCache = inputStreamCache;
   }
 
   public GcsByteSource(Storage storage, BlobId blobId) {
@@ -51,7 +51,7 @@ public class GcsByteSource extends AbstractRemoteByteSource {
 
   @Override
   protected ByteSource slice(Slice slice) {
-    return new GcsByteSource(storage, blobId, slice, sourceStream, currentSourceOffset);
+    return new GcsByteSource(storage, blobId, slice, inputStreamCache);
   }
 
   @Override
@@ -60,11 +60,9 @@ public class GcsByteSource extends AbstractRemoteByteSource {
     Slice slice = getSlice();
     if (slice != null) {
       channel.seek(slice.getOffset());
-      channel = channel.limit(slice.getLength());
+      channel = channel.limit(slice.getLength() + slice.getOffset());
     }
-    sourceStream = Channels.newInputStream(channel);
-    currentSourceOffset = slice.getOffset();
-    return sourceStream;
+    return Channels.newInputStream(channel);
   }
 
   @Override
@@ -74,20 +72,25 @@ public class GcsByteSource extends AbstractRemoteByteSource {
       return super.copyTo(outputStream);
     }
 
-    if (slice.getOffset() < currentSourceOffset) {
+    if (slice.getOffset() < inputStreamCache.getCurrentOffset()) {
       if (DEBUG) {
         LOG.info(String.format("Target offset %d smaller than current offset %d, reopen stream",
-            slice.getOffset(), currentSourceOffset));
+            slice.getOffset(), inputStreamCache.currentOffset));
       }
-      sourceStream.close();
-      sourceStream = Channels.newInputStream(storage.reader(blobId));
-      currentSourceOffset = 0;
+      inputStreamCache.getSourceStream().close();
+      inputStreamCache.setSourceStream(Channels.newInputStream(storage.reader(blobId)));
+      inputStreamCache.setCurrentOffset(0);
     }
 
     // Skip forward to the desired start.
-    long toSkip = slice.getOffset() - currentSourceOffset;
+    long toSkip = slice.getOffset() - inputStreamCache.getCurrentOffset();
     skip(toSkip);
     return copy(slice.getLength(), outputStream);
+  }
+
+  @Override
+  public long copyTo(ByteSink byteSink) throws IOException {
+    return copyTo(byteSink.openBufferedStream());
   }
 
   @Override
@@ -104,12 +107,12 @@ public class GcsByteSource extends AbstractRemoteByteSource {
   private void skip(long length) throws IOException {
     long remaining = length;
     while (remaining > 0) {
-      long skipped = sourceStream.skip(remaining);
-      if (skipped < remaining) {
+      long skipped = inputStreamCache.getSourceStream().skip(remaining);
+      if (skipped == 0) {
         throw new EOFException("Unexpected end of stream while skipping.");
       }
       remaining -= skipped;
-      currentSourceOffset += skipped;
+      inputStreamCache.setCurrentOffset(inputStreamCache.getCurrentOffset() + skipped);
     }
   }
 
@@ -119,17 +122,49 @@ public class GcsByteSource extends AbstractRemoteByteSource {
     long remaining = copyLength;
     while (remaining > 0) {
       int bytesToRead = (int) Math.min(buffer.length, remaining);
-      int read = sourceStream.read(buffer, 0, bytesToRead);
+      int read = inputStreamCache.getSourceStream().read(buffer, 0, bytesToRead);
       if (read == -1) {
         throw new EOFException("Unexpected end of stream while copying " + copyLength
             + " bytes starting at offset " + getSlice().getOffset());
       }
       out.write(buffer, 0, read);
       remaining -= read;
-      currentSourceOffset += read;
+      inputStreamCache.setCurrentOffset(inputStreamCache.getCurrentOffset() + read);
     }
 
     // As we always read until there's no remaining bytes or throw.
     return copyLength;
+  }
+
+  /**
+   * A cache with an {@link InputStream} and a mark of the current offset within the stream. This
+   * cache will be shared by this {@link ByteSource} and the copies created by
+   * {@link #slice(long, long)} to efficiently implement the {@link #copyTo(OutputStream)} method.
+   */
+  private static class InputStreamCache {
+
+    private InputStream sourceStream;
+    private long currentOffset;
+
+    private InputStreamCache(InputStream inputStream, long currentOffSet) {
+      this.sourceStream = inputStream;
+      this.currentOffset = currentOffSet;
+    }
+
+    private InputStream getSourceStream() {
+      return sourceStream;
+    }
+
+    public long getCurrentOffset() {
+      return currentOffset;
+    }
+
+    public void setSourceStream(InputStream inputStream) {
+      this.sourceStream = inputStream;
+    }
+
+    public void setCurrentOffset(long currentOffset) {
+      this.currentOffset = currentOffset;
+    }
   }
 }
