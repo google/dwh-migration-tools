@@ -211,7 +211,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         getOverrideableQuery(
             arguments,
             "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name,"
-                + " data_type FROM %1$s.COLUMNS%2$s",
+                + " data_type, is_nullable, column_default, character_maximum_length,"
+                + " numeric_precision, numeric_scale, datetime_precision, comment FROM %1$s.COLUMNS%2$s",
             MetadataView.COLUMNS),
         ColumnsFormat.IS_ZIP_ENTRY_NAME,
         IS,
