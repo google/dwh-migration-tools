@@ -225,7 +225,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             arguments,
             "SELECT table_catalog, table_schema, table_name, location, file_format_name,"
                 + " file_format_type FROM %1$s.EXTERNAL_TABLES%2$s",
-            MetadataView.TABLES),
+            MetadataView.EXTERNAL_TABLES),
         ExternalTablesFormat.ZIP_ENTRY_NAME,
         IS,
         " WHERE table_schema != 'INFORMATION_SCHEMA'");
