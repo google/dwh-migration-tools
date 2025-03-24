@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OozieJobsTask extends AbstractTask<Void> {
-  private static final Logger LOG = LoggerFactory.getLogger(OozieJobsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(OozieJobsTask.class);
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private final int maxDaysToFetch;
@@ -79,7 +79,7 @@ public class OozieJobsTask extends AbstractTask<Void> {
       int offset = 0;
       LocalDateTime lastJobEndDate = currentTime;
 
-      LOG.info("Start fetch Oozie jobs for last {}d starts from {}", maxDaysToFetch, currentTime);
+      logger.info("Start fetch Oozie jobs for last {}d starts from {}", maxDaysToFetch, currentTime);
 
       while (ChronoUnit.DAYS.between(lastJobEndDate, currentTime) < maxDaysToFetch) {
         List<WorkflowJob> jobsInfo = oozieClient.getJobsInfo(null, offset, batchSize);
