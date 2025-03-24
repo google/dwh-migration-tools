@@ -24,12 +24,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 final class SnowflakeTaskUtil {
 
+  private static final String EMPTY_WHERE_CLAUSE = "";
+
   static AbstractJdbcTask<Summary> withFilter(
       String format,
       String schemaName,
       String zipEntryName,
       String whereClause,
       Class<? extends Enum<?>> header) {
+    if (format.contains(" WHERE ")) {
+      whereClause = EMPTY_WHERE_CLAUSE;
+    }
     String sql = String.format(format, schemaName, whereClause);
     return new JdbcSelectTask(zipEntryName, sql).withHeaderClass(header);
   }
@@ -37,8 +42,7 @@ final class SnowflakeTaskUtil {
   static AbstractJdbcTask<Summary> withNoFilter(
       String format, String schemaName, String zipEntryName, Class<? extends Enum<?>> header) {
     // required, because the format string parameter takes two args
-    String whereClause = "";
-    String sql = String.format(format, schemaName, whereClause);
+    String sql = String.format(format, schemaName, EMPTY_WHERE_CLAUSE);
     return new JdbcSelectTask(zipEntryName, sql).withHeaderClass(header);
   }
 
