@@ -90,7 +90,9 @@ public class GcsByteSource extends AbstractRemoteByteSource {
 
   @Override
   public long copyTo(ByteSink byteSink) throws IOException {
-    return copyTo(byteSink.openBufferedStream());
+    try(OutputStream outputStream = byteSink.openStream()){
+      return copyTo(outputStream);
+    }
   }
 
   @Override
