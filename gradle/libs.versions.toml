@@ -59,7 +59,7 @@ h2 = "2.2.224"
 parquet = "1.14.0"
 spring-main = "6.1.10"
 google = "2.49.0"
-amazon = "2.27.2"
+amazon = "2.31.6"
 cloudrun = "0.57.0"
 
 [libraries]
