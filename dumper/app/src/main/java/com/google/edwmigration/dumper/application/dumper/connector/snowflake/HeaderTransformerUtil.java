@@ -28,7 +28,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 final class HeaderTransformerUtil {
 
-  static ResultSetTransformer<String[]> toCamelCaseFrom(CaseFormat format) {
+  public static ResultSetTransformer<String[]> toCamelCaseFrom(CaseFormat format) {
     return resultSet -> transformToCamelCase(resultSet, format);
   }
 
