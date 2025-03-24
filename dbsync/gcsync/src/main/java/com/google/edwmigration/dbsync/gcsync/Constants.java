@@ -1,5 +1,8 @@
 package com.google.edwmigration.dbsync.gcsync;
 
+import com.google.protobuf.Duration;
+import com.google.protobuf.util.Durations;
+
 public class Constants {
 
   public static final String FILES_TO_RSYNC_FILE_NAME = "filesToRsync.txt";
@@ -20,4 +23,6 @@ public class Constants {
   public static final String GENERATE_CHECK_SUM_MAIN = GenerateCheckSumMain.class.getName();
 
   public static final String RECONSTRUCT_FILE_MAIN = ReconstructFilesMain.class.getName();
+
+  public static final Duration CLOUD_RUN_TIMEOUT = Durations.fromMinutes(30);
 }

@@ -221,10 +221,16 @@ public class GcsyncClient {
   private void runCloudRunJob(String command, String project)
       throws ExecutionException, InterruptedException {
     Job job = Job.newBuilder().setTemplate(ExecutionTemplate.newBuilder().setTemplate(
-        TaskTemplate.newBuilder().addContainers(
-            Container.newBuilder().setImage("docker.io/getbamba/google-cloud-sdk-java:latest")
-                .addCommand("/bin/sh")
-                .addAllArgs(Arrays.asList("-c", command)).build()).build()).build()).build();
+                TaskTemplate.newBuilder().
+                    setTimeout(Constants.CLOUD_RUN_TIMEOUT).
+                    addContainers(Container.
+                        newBuilder().
+                        setImage("docker.io/getbamba/google-cloud-sdk-java:latest")
+                        .addCommand("/bin/sh")
+                        .addAllArgs(Arrays.asList("-c", command)).build())
+                    .build())
+            .build())
+        .build();
 
     String jobId = String.format("gcsync-cloudrun-%s", UUID.randomUUID());
     CreateJobRequest createJobRequest = CreateJobRequest.newBuilder()
