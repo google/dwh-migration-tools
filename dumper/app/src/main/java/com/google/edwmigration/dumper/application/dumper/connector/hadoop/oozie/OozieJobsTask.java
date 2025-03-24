@@ -46,14 +46,21 @@ public class OozieJobsTask extends AbstractTask<Void> {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private final int maxDaysToFetch;
+  private final LocalDateTime currentTime;
 
   public OozieJobsTask(int maxDaysToFetch) {
+    this(maxDaysToFetch, LocalDateTime.now());
+  }
+
+  OozieJobsTask(int maxDaysToFetch, LocalDateTime currentTime) {
     super("oozie_jobs.csv");
     Preconditions.checkArgument(
         maxDaysToFetch >= 1,
         String.format("Amount of days must be a positive number. Got %d.", maxDaysToFetch));
+    Preconditions.checkNotNull(currentTime, "Current time must not be null.");
 
     this.maxDaysToFetch = maxDaysToFetch;
+    this.currentTime = currentTime;
   }
 
   // todo jobs params in filter
@@ -63,19 +70,18 @@ public class OozieJobsTask extends AbstractTask<Void> {
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
-    final LocalDateTime now = LocalDateTime.now(); // todo fix for unit test
     final CSVFormat csvFormat = newCsvFormatForClass(WorkflowJob.class);
     final ImmutableList<String> csvHeader = ImmutableList.copyOf(csvFormat.getHeader());
 
     try (CSVPrinter printer = csvFormat.print(sink.asCharSink(UTF_8).openBufferedStream())) {
       XOozieClient oozieClient = ((OozieHandle) handle).getOozieClient();
-      final int batchSize = 1_000;
+      final int batchSize = context.getArguments().getPaginationPageSize();
       int offset = 0;
-      LocalDateTime lastJobEndDate = now;
+      LocalDateTime lastJobEndDate = currentTime;
 
-      LOG.info("Start fetch Oozie jobs for last {}d starts from {}", maxDaysToFetch, now);
+      LOG.info("Start fetch Oozie jobs for last {}d starts from {}", maxDaysToFetch, currentTime);
 
-      while (ChronoUnit.DAYS.between(now, lastJobEndDate) < maxDaysToFetch) {
+      while (ChronoUnit.DAYS.between(lastJobEndDate, currentTime) < maxDaysToFetch) {
         List<WorkflowJob> jobsInfo = oozieClient.getJobsInfo(null, offset, batchSize);
         for (WorkflowJob workflowJob : jobsInfo) {
           Object[] record = toCSVRecord(workflowJob, csvHeader);

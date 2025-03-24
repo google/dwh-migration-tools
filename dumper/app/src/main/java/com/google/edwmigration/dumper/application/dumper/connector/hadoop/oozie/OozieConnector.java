@@ -37,7 +37,9 @@ import org.apache.oozie.client.XOozieClient;
 @Description("Dumps Jobs history from Oozie.")
 @RespectsInput(order = 100, arg = ConnectorArguments.OPT_URI, description = "Oozie URL.")
 public class OozieConnector extends AbstractConnector implements MetadataConnector {
-  public static final String FORMAT_NAME = "oozie.dump.zip";
+  private static final String FORMAT_NAME = "oozie.dump.zip";
+
+  private static final int MAX_QUARTER_DAY = 93;
 
   public OozieConnector() {
     super("oozie");
@@ -54,7 +56,7 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
       throws Exception {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
-    out.add(new OozieJobsTask(93));
+    out.add(new OozieJobsTask(MAX_QUARTER_DAY));
   }
 
   @Nonnull

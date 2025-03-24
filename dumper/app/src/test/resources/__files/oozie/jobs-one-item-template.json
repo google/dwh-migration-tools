@@ -14,7 +14,7 @@
       "createdTime": "Mon, 17 Mar 2025 14:01:00 GMT",
       "startTime": "Mon, 17 Mar 2025 14:01:00 GMT",
       "status": "SUCCEEDED",
-      "endTime": "Mon, 17 Mar 2025 14:01:00 GMT",
+      "endTime": "{{parameters.endDateParam}}",
       "conf": null,
       "externalId": null,
       "acl": null,
