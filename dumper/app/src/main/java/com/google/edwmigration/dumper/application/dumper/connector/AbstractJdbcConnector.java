@@ -42,7 +42,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /** @author shevek */
 public abstract class AbstractJdbcConnector extends AbstractConnector {
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractJdbcConnector.class);
   private static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
 
@@ -115,19 +115,6 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
   }
 
   @Nonnull
-  private static Class<?> newDriverClass(
-      @Nonnull ClassLoader driverClassLoader, @Nonnull String driverClassName)
-      throws PrivilegedActionException {
-    return AccessController.doPrivileged(
-        new PrivilegedExceptionAction<Class<?>>() {
-          @Override
-          public Class<?> run() throws Exception {
-            return Class.forName(driverClassName, true, driverClassLoader);
-          }
-        });
-  }
-
-  @Nonnull
   protected Driver newDriver(
       @CheckForNull List<String> driverPaths, @Nonnull String... driverClassNames)
       throws SQLException {
@@ -140,16 +127,10 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
       {
         for (String driverClassName : driverClassNames) {
           try {
-            driverClass = newDriverClass(driverClassLoader, driverClassName);
+            driverClass = Class.forName(driverClassName, true, driverClassLoader);
             if (driverClass != null) break CLASS;
-          } catch (PrivilegedActionException e) {
-            if (e.getCause() instanceof ClassNotFoundException)
-              LOG.warn(
-                  "Cannot load driver class [{}] from path {}: {}",
-                  driverClassName,
-                  driverPaths,
-                  e.getCause());
-            else throw e;
+          } catch (ClassNotFoundException ignore) {
+            logger.info("Driver class [{}] not found at  {}.", driverClassName, driverPaths);
           }
         }
         throw new SQLException(
@@ -159,7 +140,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
                 + driverPaths);
       }
 
-      LOG.info("Using JDBC Driver: {}", driverClass);
+      logger.info("Using JDBC Driver: {}", driverClass);
       return driverClass.asSubclass(Driver.class).getConstructor().newInstance();
     } catch (ReflectiveOperationException
         | PrivilegedActionException
@@ -184,7 +165,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
     /*
     @Override
     protected Connection getConnectionFromDriver(Properties props) throws SQLException {
-        LOG.debug("Connecting", new Exception());
+        logger.debug("Connecting", new Exception());
         return super.getConnectionFromDriver(props);
     }
      */

@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /** @author ishmum */
 public class TasksRunner implements TaskRunContextOps {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TasksRunner.class);
+  private static final Logger logger = LoggerFactory.getLogger(TasksRunner.class);
   public static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
   private AtomicInteger numberOfCompletedTasks;
@@ -135,7 +135,7 @@ public class TasksRunner implements TaskRunContextOps {
       PRECONDITION:
       for (Task.Condition condition : task.getConditions()) {
         if (!condition.evaluate(state)) {
-          LOG.debug("Skipped " + task.getName() + " because " + condition.toSkipReason());
+          logger.debug("Skipped " + task.getName() + " because " + condition.toSkipReason());
           state.setTaskResult(task, TaskState.SKIPPED, null);
           return null;
         }
@@ -155,7 +155,7 @@ public class TasksRunner implements TaskRunContextOps {
       // TaskGroup is an attempt to get rid of this condition.
       // We might need an additional TaskRunner / TaskSupport with an overrideable handleException
       // method instead of this runTask() method.
-      if (!task.handleException(e)) LOG.warn("Task failed: " + task + ": " + e, e);
+      if (!task.handleException(e)) logger.warn("Task failed: " + task + ": " + e, e);
       state.setTaskException(task, TaskState.FAILED, e);
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
@@ -166,7 +166,7 @@ public class TasksRunner implements TaskRunContextOps {
                     "******************************",
                     String.valueOf(new DumperDiagnosticQuery(e).call())));
       } catch (Exception f) {
-        LOG.warn("Exception-recorder failed:  " + f, f);
+        logger.warn("Exception-recorder failed:  " + f, f);
       }
     }
     return null;

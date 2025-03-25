@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class CsvFormatTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(CsvFormatTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(CsvFormatTest.class);
 
   @Test
   public void testCsvRoundTrip() throws IOException {
@@ -44,11 +44,11 @@ public class CsvFormatTest {
     try (CSVPrinter printer = new CSVPrinter(buf, AbstractTask.FORMAT)) {
       printer.printRecord(data);
     }
-    LOG.debug("CSV = " + buf);
+    logger.debug("CSV = " + buf);
     try (StringReader reader = new StringReader(buf.toString());
         CSVParser parser = new CSVParser(reader, AbstractTask.FORMAT)) {
       CSVRecord record = Iterables.getOnlyElement(parser);
-      LOG.debug("Record = " + record);
+      logger.debug("Record = " + record);
       assertEquals("Bad length", data.length, record.size());
       for (int i = 0; i < data.length; i++) assertEquals("Bad field " + i, data[i], record.get(i));
     }

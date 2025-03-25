@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractBigQueryConnectorExecutionTest
     extends AbstractConnectorExecutionTest {
 
-  private static final Logger LOG =
+  private static final Logger logger =
       LoggerFactory.getLogger(AbstractBigQueryConnectorExecutionTest.class);
 
   @ClassRule
@@ -43,7 +43,7 @@ public abstract class AbstractBigQueryConnectorExecutionTest
         new File(
             TestUtils.getProjectRootDir(),
             "compilerworks-plugin-test-bigquery/build/resources/main/api-token.json");
-    LOG.info("Using BigQuery credentials: {}", credentialsFile.getAbsolutePath());
+    logger.info("Using BigQuery credentials: {}", credentialsFile.getAbsolutePath());
     environmentVariables.set("GOOGLE_APPLICATION_CREDENTIALS", credentialsFile.getAbsolutePath());
   }
 }

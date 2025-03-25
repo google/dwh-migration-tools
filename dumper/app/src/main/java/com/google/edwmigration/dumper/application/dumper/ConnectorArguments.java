@@ -36,7 +36,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.application.dumper.io.PasswordReader;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -685,14 +684,14 @@ public class ConnectorArguments extends DefaultArguments {
 
   private void printConnectorHelp(@Nonnull Appendable out, @Nonnull Connector connector)
       throws IOException {
-    Description description = connector.getClass().getAnnotation(Description.class);
     out.append("* " + connector.getName());
-    if (description != null) {
-      out.append(" - ").append(description.value());
+    String description = connector.getDescription();
+    if (!description.isEmpty()) {
+      out.append(" - " + description);
     }
     out.append("\n");
     for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
-      out.append("        ").append(descriptor.toString()).append("\n");
+      out.append(String.format("%8s%s\n", "", descriptor));
     }
     ConnectorProperties.printHelp(out, connector);
   }

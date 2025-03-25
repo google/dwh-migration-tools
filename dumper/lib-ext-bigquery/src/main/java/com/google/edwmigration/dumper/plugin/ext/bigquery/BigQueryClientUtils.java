@@ -34,10 +34,10 @@ import org.slf4j.LoggerFactory;
 public class BigQueryClientUtils {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(BigQueryClientUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(BigQueryClientUtils.class);
 
   private static final Logger LOG_LIMITED =
-      RateLimitedLog.withRateLimit(LOG).maxRate(2).every(Duration.ofSeconds(10)).build();
+      RateLimitedLog.withRateLimit(logger).maxRate(2).every(Duration.ofSeconds(10)).build();
 
   @CheckForNull
   public static String getErrorReason(@Nonnull BigQueryException e) {
@@ -91,16 +91,16 @@ public class BigQueryClientUtils {
       }
       // Now exception is non-null.
       if (!isRetryable(exception)) {
-        // LOG.error("BigQuery retryable exception: non-retryable error " + e.getError(), e);
+        // logger.error("BigQuery retryable exception: non-retryable error " + e.getError(), e);
         throw exception;
       }
       long backOffMillis =
           backoff.nextBackOffMillis(); // throws IOException for some unknown reason.
       if (backOffMillis == BackOff.STOP) {
-        LOG.error("Stopped retrying after {} retries: {}", retryCount, exception);
+        logger.error("Stopped retrying after {} retries: {}", retryCount, exception);
         throw exception;
       }
-      LOG.warn("BigQuery retryable exception: sleeping for {}ms: {}", backOffMillis, exception);
+      logger.warn("BigQuery retryable exception: sleeping for {}ms: {}", backOffMillis, exception);
       Thread.sleep(backOffMillis);
       retryCount++;
     }

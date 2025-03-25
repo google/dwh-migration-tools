@@ -37,27 +37,49 @@ public class ClouderaManagerHandleTest {
   private final URI localhost = URI.create("http://localhost");
 
   @Test
+  public void apiUrl_normalized_success() {
+    // trailing slash
+    URI apiURI = URI.create("https://localhost/some//api/path/with/trailing/slash////");
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, httpClient);
+
+    assertEquals("https://localhost/", handle.getBaseURI().toString());
+    assertEquals(
+        URI.create("https://localhost/some/api/path/with/trailing/slash/"), handle.getApiURI());
+  }
+
+  @Test
+  public void apiUrl_queryAndFragmentsRemoved_success() {
+    // with some path and query params
+    URI apiURI = URI.create("https://localhost:1234/x/y/z?q=42");
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, httpClient);
+
+    assertEquals("https://localhost:1234/", handle.getBaseURI().toString());
+    assertEquals("https://localhost:1234/x/y/z/", handle.getApiURI().toString());
+
+    // with some path and query params and fragments
+    apiURI = URI.create("https://localhost:1234/x/y/z?q=42#some-place");
+    handle = new ClouderaManagerHandle(apiURI, httpClient);
+
+    assertEquals("https://localhost:1234/", handle.getBaseURI().toString());
+    assertEquals("https://localhost:1234/x/y/z/", handle.getApiURI().toString());
+  }
+
+  @Test
   public void apiUrl_resolved_success() {
     // host with port
     URI apiURI = URI.create("https://localhost:1234");
     ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, httpClient);
 
     assertEquals("https://localhost:1234/", handle.getBaseURI().toString());
-    assertEquals(apiURI, handle.getApiURI());
-
-    // with some path and query params
-    apiURI = URI.create("https://localhost:1234/x/y/z?q=42");
-    handle = new ClouderaManagerHandle(apiURI, httpClient);
-
-    assertEquals("https://localhost:1234/", handle.getBaseURI().toString());
-    assertEquals(apiURI, handle.getApiURI());
+    // trailing slash added
+    assertEquals("https://localhost:1234/", handle.getApiURI().toString());
 
     // without port
     apiURI = URI.create("https://localhost/some/api/path");
     handle = new ClouderaManagerHandle(apiURI, httpClient);
 
     assertEquals("https://localhost/", handle.getBaseURI().toString());
-    assertEquals(apiURI, handle.getApiURI());
+    assertEquals("https://localhost/some/api/path/", handle.getApiURI().toString());
   }
 
   @Test

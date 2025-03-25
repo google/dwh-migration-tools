@@ -65,7 +65,7 @@ public class AbstractClouderaYarnApplicationTaskTest {
   @Before
   public void setUp() throws Exception {
     server.resetAll();
-    URI uri = URI.create(server.baseUrl() + "/api/vTest/");
+    URI uri = URI.create(server.baseUrl() + "/api/vTest");
     handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
 
     task = new MockedYarnApplicationTask();

@@ -32,7 +32,6 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -45,12 +44,11 @@ import org.slf4j.LoggerFactory;
  * @author matt
  */
 @AutoService(Connector.class)
-@Description("Dumps metadata from Snowflake.")
 public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
 
   private enum PropertyAction {
     QUERY("query", "query"),
@@ -103,6 +101,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
   @Override
   @Nonnull
+  public String getDescription() {
+    return "Dumps metadata from Snowflake.";
+  }
+
+  @Override
+  @Nonnull
   public Iterable<ConnectorProperty> getPropertyConstants() {
     ImmutableList.Builder<ConnectorProperty> builder = ImmutableList.builder();
     for (MetadataView view : MetadataView.values()) {
@@ -129,10 +133,22 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (isAssessment) {
       out.add(usageTask);
     } else {
-      ImmutableList<Task<?>> tasks =
-          getSqlTasks(inputSource, header, format, schemaTask, usageTask);
+      ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, schemaTask, usageTask);
       out.addAll(tasks);
     }
+  }
+
+  /* For queries to INFORMATION_SCHEMA where there is no ACCOUNT_USAGE equivalent */
+  private void addSqlTasksInfoSchemaOnly(
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
+      @Nonnull String schemaZip,
+      @Nonnull String alteredSchemaView,
+      @Nonnull String filter) {
+    AbstractJdbcTask<Summary> usageTask =
+        SnowflakeTaskUtil.withFilter(format, alteredSchemaView, schemaZip, filter, header);
+    out.add(usageTask);
   }
 
   @Override
@@ -142,7 +158,19 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     out.add(new FormatTask(FORMAT_NAME));
 
     boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
-    final String IS = INJECT_IS_FAULT ? "__NONEXISTENT__" : "INFORMATION_SCHEMA";
+
+    // INFORMATION_SCHEMA queries must be qualified with a database
+    // name or that a "USE DATABASE" command has previously been run
+    // in the same session. Qualify the name to avoid this dependency.
+    final String databaseName = arguments.getDatabaseSingleName();
+    final String IS;
+    if (INJECT_IS_FAULT) {
+      IS = "__NONEXISTENT__";
+    } else if (databaseName == null) {
+      IS = "INFORMATION_SCHEMA";
+    } else {
+      IS = sanitizeDatabaseName(databaseName) + ".INFORMATION_SCHEMA";
+    }
     final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
     final String AU_WHERE = " WHERE DELETED IS NULL";
 
@@ -189,6 +217,18 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         AU,
         AU_WHERE,
         isAssessment); // Painfully slow.
+
+    addSqlTasksInfoSchemaOnly(
+        out,
+        ExternalTablesFormat.Header.class,
+        getOverrideableQuery(
+            arguments,
+            "SELECT table_catalog, table_schema, table_name, location, file_format_name,"
+                + " file_format_type FROM %1$s.EXTERNAL_TABLES%2$s",
+            MetadataView.TABLES),
+        ExternalTablesFormat.ZIP_ENTRY_NAME,
+        IS,
+        " WHERE table_schema != 'INFORMATION_SCHEMA'");
 
     addSqlTasksWithInfoSchemaFallback(
         out,

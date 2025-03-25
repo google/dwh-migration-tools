@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public class JdbcSelectTaskTest extends AbstractTaskTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
 
   private static final String NAME = JdbcSelectTaskTest.class.getSimpleName();
   private static final File FILE = DumperTestUtils.newJdbcFile(NAME);
@@ -54,7 +54,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
   @BeforeClass
   public static void setUpClass() throws Exception {
     Class.forName("org.sqlite.JDBC");
-    LOG.info("Writing to sqlite database: {}", FILE.getAbsolutePath());
+    logger.info("Writing to sqlite database: {}", FILE.getAbsolutePath());
     FILE.delete();
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
       handle.getJdbcTemplate().execute("CREATE TABLE foo ( a INT, b INT, c INT )");
@@ -107,8 +107,8 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
 
     CSVFormat format = formatHolder.getValue();
     assertNotNull("CSVFormat was null.", format);
-    LOG.info("Format is " + format);
-    LOG.info("Format.nullString is " + format.getNullString());
+    logger.info("Format is " + format);
+    logger.info("Format.nullString is " + format.getNullString());
 
     // File file = TestUtils.newOutputFile("dumper-format-test.csv");
   }

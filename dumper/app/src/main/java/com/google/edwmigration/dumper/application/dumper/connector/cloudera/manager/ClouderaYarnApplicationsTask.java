@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /** The task dumps YARN applications from Cloudera Manager API */
 public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicationTask {
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
 
   public ClouderaYarnApplicationsTask(int days) {
     super("yarn-applications", days);
@@ -53,12 +53,12 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         String clusterName = cluster.getName();
-        LOG.info("Dump YARN applications from {} cluster", clusterName);
+        logger.info("Dump YARN applications from {} cluster", clusterName);
         int loadAppsCnt =
             appLoader.load(
                 clusterName,
                 yarnAppsPage -> writeYarnApplications(writer, yarnAppsPage, clusterName));
-        LOG.info("Dumped {} YARN applications from {} cluster", loadAppsCnt, clusterName);
+        logger.info("Dumped {} YARN applications from {} cluster", loadAppsCnt, clusterName);
       }
     }
   }

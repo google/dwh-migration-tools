@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 public class JdbcByteSource extends ByteSource {
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcByteSource.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcByteSource.class);
 
   private class JdbcThread extends Thread {
     private final OutputStream out;

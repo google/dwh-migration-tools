@@ -30,7 +30,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 public class JdbcSelectIntervalTask extends JdbcSelectTask {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectIntervalTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcSelectIntervalTask.class);
 
   @Nonnull private final ZonedInterval interval;
 

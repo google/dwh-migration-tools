@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
 public class RangerConnector extends AbstractConnector {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(RangerConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(RangerConnector.class);
 
   public RangerConnector() {
     super("ranger");
@@ -230,7 +230,7 @@ public class RangerConnector extends AbstractConnector {
     protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
         throws Exception {
       RangerClientHandle rangerClientHandler = (RangerClientHandle) handle;
-      LOG.info("Writing to '{}' -> '{}'", getTargetPath(), sink);
+      logger.info("Writing to '{}' -> '{}'", getTargetPath(), sink);
       try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
         for (Iterator<Object> iterator = dataIterator(rangerClientHandler); iterator.hasNext(); ) {
           String json = RangerDumpFormat.MAPPER.writeValueAsString(iterator.next());

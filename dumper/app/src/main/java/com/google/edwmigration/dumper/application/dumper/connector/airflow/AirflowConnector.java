@@ -84,7 +84,7 @@ import org.slf4j.LoggerFactory;
     description = "End date for query DAGs data")
 public class AirflowConnector extends AbstractJdbcConnector implements MetadataConnector {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AirflowConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AirflowConnector.class);
 
   private static final String FORMAT_NAME = "airflow.dump.zip";
 
@@ -263,7 +263,6 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     Driver driver;
 
     if (!arguments.hasUri()) {
-      // todo fix warning logs, because no drivers is expected case
       driver = loadFirstAvailableDriver(arguments.getDriverPaths(), driverClasses);
       String host = arguments.getHost();
       int port = arguments.getPort();
@@ -279,7 +278,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       driver = loadFirstAvailableDriver(arguments.getDriverPaths(), filteredDriverClass);
     }
 
-    LOG.info("Connecting to jdbc string [{}]...", jdbcString);
+    logger.info("Connecting to jdbc string [{}]...", jdbcString);
 
     DataSource dataSource = newSimpleDataSource(driver, jdbcString, arguments);
     return JdbcHandle.newPooledJdbcHandle(dataSource, 1);

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 public class InstructionReceiver implements Closeable {
 
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(InstructionReceiver.class);
+  private static final Logger logger = LoggerFactory.getLogger(InstructionReceiver.class);
 
   private final OutputStream out;
   private final ByteSource in;

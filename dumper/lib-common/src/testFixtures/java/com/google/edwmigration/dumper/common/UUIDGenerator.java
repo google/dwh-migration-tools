@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 public class UUIDGenerator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(UUIDGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(UUIDGenerator.class);
 
   private static class Inner {
 
@@ -97,7 +97,7 @@ public class UUIDGenerator {
       // Notionally, this is an IOException, but it might also be an (unexpected) SecurityException
       // or a NullPointerException if some security-aware component returned null instead of real
       // data.
-      LOG.warn("Failed to get MAC from NetworkInterface address: " + e, e);
+      logger.warn("Failed to get MAC from NetworkInterface address: " + e, e);
     }
 
     byte[] data = new byte[6];
@@ -122,7 +122,7 @@ public class UUIDGenerator {
   private long newTime() {
     long deltaNanos = ticker.read() - initNanos;
     long time = (initMillis * 1000 * 10) + (deltaNanos / 100);
-    // LOG.info("Time is           " + time);
+    // logger.info("Time is           " + time);
     return time;
   }
 
