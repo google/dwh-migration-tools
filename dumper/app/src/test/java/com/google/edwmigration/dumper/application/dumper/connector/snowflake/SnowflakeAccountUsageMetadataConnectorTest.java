@@ -48,9 +48,6 @@ public class SnowflakeAccountUsageMetadataConnectorTest
         SnowflakeMetadataDumpFormat.TablesFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.TablesFormat.Header.class);
     validator.withEntryValidator(
-        SnowflakeMetadataDumpFormat.ExternalTablesFormat.ZIP_ENTRY_NAME,
-        SnowflakeMetadataDumpFormat.ExternalTablesFormat.Header.class);
-    validator.withEntryValidator(
         SnowflakeMetadataDumpFormat.ColumnsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.ColumnsFormat.Header.class);
     validator.withEntryValidator(
@@ -63,6 +60,7 @@ public class SnowflakeAccountUsageMetadataConnectorTest
     validator.withExpectedEntries(
         SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.FunctionInfoFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.ExternalTablesFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.WarehousesFormat.AU_ZIP_ENTRY_NAME);
   }
 }
