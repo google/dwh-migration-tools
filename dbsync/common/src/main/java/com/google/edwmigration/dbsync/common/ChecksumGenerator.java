@@ -7,8 +7,6 @@ import com.google.common.io.ByteSource;
 import com.google.common.primitives.Ints;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.function.Consumer;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.slf4j.Logger;
@@ -30,7 +28,7 @@ public class ChecksumGenerator {
     return blockSize;
   }
 
-  public void generate(Consumer<Checksum> out, ByteSource in) throws IOException {
+  public void generate(ChecksumConsumer<IOException> out, ByteSource in) throws IOException {
     // This deliberately throws if size is not Present.
     Optional<Long> dataSizeOptional = in.sizeIfKnown();
     if (!dataSizeOptional.isPresent()) {
@@ -72,10 +70,15 @@ public class ChecksumGenerator {
             .setBlockOffset(offset)
             .setBlockLength(blockSize)
             .setWeakChecksum(weakHashCode)
-            .setStrongChecksum(strongHashCode.asLong())
+            .setStrongChecksum(strongHashCode.toString())
             .build();
         out.accept(c);
       }
     }
+  }
+
+  public interface ChecksumConsumer<X extends Exception> {
+
+    void accept(Checksum checksum) throws X;
   }
 }

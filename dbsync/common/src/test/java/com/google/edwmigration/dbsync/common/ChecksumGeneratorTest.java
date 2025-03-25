@@ -43,7 +43,7 @@ public class ChecksumGeneratorTest {
       assertEquals(i * blockSize, c.getBlockOffset(),"Bad offset in " + c);
       ByteSource block = data.slice(c.getBlockOffset(), c.getBlockLength());
       HashCode strongHashCode = block.hash(RollingChecksumImpl.STRONG_HASH_FUNCTION);
-      assertEquals(strongHashCode.asLong(), c.getStrongChecksum(), "Bad hash code in " + c);
+      assertEquals(strongHashCode.toString(), c.getStrongChecksum(), "Bad hash code in " + c);
     }
   }
 }

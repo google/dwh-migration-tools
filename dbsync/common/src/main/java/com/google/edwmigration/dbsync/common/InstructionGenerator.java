@@ -38,7 +38,7 @@ public class InstructionGenerator {
         .build();
   }
 
-  public void generate(Consumer<? super Instruction> out, ByteSource in,
+  public void generate(InstructionConsumer<? extends IOException> out, ByteSource in,
       List<? extends Checksum> checksums) throws IOException {
     Int2ObjectMap<Collection<Checksum>> checksumMap = new Int2ObjectOpenHashMap<>(checksums.size());
     for (Checksum c : checksums) {
@@ -74,9 +74,9 @@ public class InstructionGenerator {
           // And the wisdom to know the difference.
           MATCH:
           if (cc != null) {
-            HashCode strongHashCode = rollingChecksum.getStrongHashCode();
+            String strongHashCode = rollingChecksum.getStrongHashCode().toString();
             for (Checksum c : cc) {
-              if (c.getStrongChecksum() == strongHashCode.asLong()) {
+              if (c.getStrongChecksum().equals(strongHashCode)) {
                 if (literalBufferLength > 0) {
                   if (DEBUG) {
                     logger.debug("Emitting pre-match literal");
@@ -86,8 +86,8 @@ public class InstructionGenerator {
                 }
                 Instruction insn = Instruction.newBuilder()
                     .setBlockLocation(BlockLocation.newBuilder()
-                            .setBlockOffset(c.getBlockOffset())
-                            .setBlockLength(c.getBlockLength()))
+                        .setBlockOffset(c.getBlockOffset())
+                        .setBlockLength(c.getBlockLength()))
                     .build();
                 out.accept(insn);
                 continue STREAM;
@@ -128,4 +128,13 @@ public class InstructionGenerator {
       }
     }
   }
+
+  public interface InstructionConsumer<X extends Exception> {
+
+    /**
+     * Accepts an instruction from the generator
+     */
+    void accept(Instruction instruction) throws X;
+  }
+
 }
