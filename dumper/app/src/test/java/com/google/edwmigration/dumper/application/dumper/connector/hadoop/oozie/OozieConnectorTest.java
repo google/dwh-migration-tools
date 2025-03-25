@@ -73,7 +73,9 @@ public class OozieConnectorTest {
   public void open_delegateToFactoryNoArg_success() throws Exception {
     try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
       XOozieClient oozieClient = mock(XOozieClient.class);
-      factory.when(() -> OozieClientFactory.createXOozieClient(eq(null))).thenReturn(oozieClient);
+      factory
+          .when(() -> OozieClientFactory.createXOozieClient(null, null, null))
+          .thenReturn(oozieClient);
 
       // Act
       Handle handle = connector.open(new ConnectorArguments(toArgs("--connector oozie")));
@@ -88,11 +90,31 @@ public class OozieConnectorTest {
     try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
       XOozieClient oozieClient = mock(XOozieClient.class);
       factory
-          .when(() -> OozieClientFactory.createXOozieClient(eq("https://some/path")))
+          .when(
+              () ->
+                  OozieClientFactory.createXOozieClient(
+                      eq("https://some/path"), eq(null), eq(null)))
           .thenReturn(oozieClient);
 
       // Act
       String args = "--connector oozie --url https://some/path";
+      Handle handle = connector.open(new ConnectorArguments(toArgs(args)));
+
+      assertEquals(OozieHandle.class, handle.getClass());
+      assertEquals(oozieClient, ((OozieHandle) handle).getOozieClient());
+    }
+  }
+
+  @Test
+  public void open_delegateToFactoryUserPasswordArg_success() throws Exception {
+    try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
+      XOozieClient oozieClient = mock(XOozieClient.class);
+      factory
+          .when(() -> OozieClientFactory.createXOozieClient(eq(null), eq("admin"), eq("secret")))
+          .thenReturn(oozieClient);
+
+      // Act
+      String args = "--connector oozie --user admin --password secret ";
       Handle handle = connector.open(new ConnectorArguments(toArgs(args)));
 
       assertEquals(OozieHandle.class, handle.getClass());

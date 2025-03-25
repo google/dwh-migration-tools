@@ -36,6 +36,15 @@ import org.apache.oozie.client.XOozieClient;
 @AutoService(Connector.class)
 @Description("Dumps Jobs history from Oozie.")
 @RespectsInput(order = 100, arg = ConnectorArguments.OPT_URI, description = "Oozie URL.")
+@RespectsInput(
+    order = 200,
+    arg = ConnectorArguments.OPT_USER,
+    description = "The username for Oozie with BASIC authentication")
+@RespectsInput(
+    order = 300,
+    arg = ConnectorArguments.OPT_PASSWORD,
+    description = "The password for Oozie with BASIC authentication",
+    required = "If not specified as an argument, will use a secure prompt")
 public class OozieConnector extends AbstractConnector implements MetadataConnector {
   private static final String FORMAT_NAME = "oozie.dump.zip";
 
@@ -63,7 +72,12 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     String oozieUrl = arguments.getUri();
-    XOozieClient xOozieClient = OozieClientFactory.createXOozieClient(oozieUrl);
+    String user = arguments.getUser();
+    String password = null;
+    if (user != null) {
+      password = arguments.getPasswordOrPrompt();
+    }
+    XOozieClient xOozieClient = OozieClientFactory.createXOozieClient(oozieUrl, user, password);
     return new OozieHandle(xOozieClient);
   }
 }

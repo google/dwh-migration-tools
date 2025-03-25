@@ -16,30 +16,56 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
+import static org.apache.oozie.cli.OozieCLI.ENV_OOZIE_AUTH;
 import static org.apache.oozie.cli.OozieCLI.ENV_OOZIE_URL;
 import static org.apache.oozie.cli.OozieCLI.OOZIE_RETRY_COUNT;
 import static org.apache.oozie.cli.OozieCLI.WS_HEADER_PREFIX;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
 import org.apache.oozie.cli.OozieCLI;
 import org.apache.oozie.cli.OozieCLIException;
 import org.apache.oozie.client.AuthOozieClient;
+import org.apache.oozie.client.AuthOozieClient.AuthType;
 import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.XOozieClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Factory does initialization of Oozie client in a similar but simplified way compare to {@link
  * OozieCLI#main(String[])}.
  */
 public class OozieClientFactory {
-  public static XOozieClient createXOozieClient(String oozieUrl) throws OozieCLIException {
-    oozieUrl = oozieUrl != null ? oozieUrl : getOozieUrlFromEnv();
-    // String authOption = getAuthOption(commandLine);
-    XOozieClient wc = new AuthOozieClient(oozieUrl, null);
+  private static final Logger logger = LoggerFactory.getLogger(OozieClientFactory.class);
 
-    addHeaders(wc);
+  public static XOozieClient createXOozieClient(String oozieUrl, String user, String password)
+      throws OozieCLIException {
+    oozieUrl = oozieUrl != null ? oozieUrl : getOozieUrlFromEnv();
+    String authOption = getAuthOption(user, password);
+    XOozieClient wc = new AuthOozieClient(oozieUrl, authOption);
+
+    // mimic oozie CLI configuration
+    addHeaders(wc, user, password);
     setRetryCount(wc);
     return wc;
+  }
+
+  private static String getAuthOption(String user, String password) throws OozieCLIException {
+    if (user != null) {
+      if (password != null) {
+        return AuthType.BASIC.name();
+      } else {
+        throw new OozieCLIException("No password specified, it is required, if user is set!");
+      }
+    }
+    String authOpt = System.getenv(ENV_OOZIE_AUTH);
+    logger.debug("Auth type for Oozie client: {} base on " + ENV_OOZIE_AUTH, authOpt);
+    if (AuthType.BASIC.name().equalsIgnoreCase(authOpt)) {
+      throw new OozieCLIException("BASIC authentication requires -user and -password to set!");
+    }
+    return authOpt;
   }
 
   private static String getOozieUrlFromEnv() {
@@ -52,34 +78,32 @@ public class OozieClientFactory {
     return url;
   }
 
-  protected static void addHeaders(OozieClient wc) {
-    // String username = commandLine.getOptionValue(USERNAME);
-    // String password = commandLine.getOptionValue(PASSWORD);
-    // if (username != null && password != null) {
-    //   String encoded = Base64.getEncoder().encodeToString((username + ':' + password).getBytes(
-    //       StandardCharsets.UTF_8));
-    //   wc.setHeader("Authorization", "Basic " + encoded);
-    // }
+  private static void addHeaders(OozieClient wc, String user, String password) {
+    if (user != null && password != null) {
+      String encoded =
+          Base64.getEncoder()
+              .encodeToString((user + ':' + password).getBytes(StandardCharsets.UTF_8));
+      wc.setHeader("Authorization", "Basic " + encoded);
+    }
     for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
       String key = (String) entry.getKey();
       if (key.startsWith(WS_HEADER_PREFIX)) {
         String header = key.substring(WS_HEADER_PREFIX.length());
-        System.out.println("Header added to Oozie client: " + header);
+        logger.debug("Header added to Oozie client: {}", header);
         wc.setHeader(header, (String) entry.getValue());
       }
     }
   }
 
-  protected static void setRetryCount(OozieClient wc) {
+  private static void setRetryCount(OozieClient wc) {
     String retryCount = System.getProperty(OOZIE_RETRY_COUNT);
     if (retryCount != null && !retryCount.isEmpty()) {
       try {
         int retry = Integer.parseInt(retryCount.trim());
         wc.setRetryCount(retry);
       } catch (Exception ex) {
-        System.err.println(
-            "Unable to parse the retry settings. May be not an integer [" + retryCount + "]");
-        ex.printStackTrace();
+        logger.error(
+            "Unable to parse the retry settings. May be not an integer [{}}]", retryCount, ex);
       }
     }
   }
