@@ -12,7 +12,6 @@ import joptsimple.OptionSpec;
 
 public class GcsyncMain {
 
-  // --source_directory /usr/local/google/home/tonyxiaowei/tony-work
   public static void main(String[] args) throws IOException {
     Arguments arguments = new Arguments(args);
     String project = arguments.getOptions().valueOf(arguments.projectOptionSpec);

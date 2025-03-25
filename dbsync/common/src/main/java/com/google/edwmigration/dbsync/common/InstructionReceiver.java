@@ -33,6 +33,19 @@ public class InstructionReceiver implements Closeable {
     this.in = Preconditions.checkNotNull(in, "Input was null.");
   }
 
+  private void flushCopy() throws IOException {
+    if (copyStart == -1) {
+      return;
+    }
+    in.slice(copyStart, copyLength).copyTo(out);
+    // These two assignments aren't always required, but it's nicer to have them here than below
+    if (DEBUG) {
+      logger.info(String.format("Reuse bytes from %d for %d bytes", copyStart, copyLength));
+    }
+    copyStart = -1;
+    copyLength = 0;
+  }
+
   public void receive(Instruction instruction) throws IOException {
     switch (instruction.getBodyCase()) {
       case BLOCKLOCATION:
@@ -64,19 +77,4 @@ public class InstructionReceiver implements Closeable {
       out.close();
     }
   }
-
-  private void flushCopy() throws IOException {
-    if (copyStart == -1) {
-      return;
-    }
-    if (DEBUG) {
-      logger.info(String.format("Reuse bytes from %d for %d bytes", copyStart, copyLength));
-    }
-    in.slice(copyStart, copyLength).copyTo(out);
-
-    // Clear pending copy.
-    copyStart = -1;
-    copyLength = 0;
-  }
-
 }

@@ -17,7 +17,7 @@ public class Constants {
   // 10 MiB
   public static final long RSYNC_SIZE_THRESHOLD = 10 * 1024 * 1024;
 
-  public static final String GENERATE_CHECK_SUM_MAIN =  GenerateCheckSumMain.class.getName();
+  public static final String GENERATE_CHECK_SUM_MAIN = GenerateCheckSumMain.class.getName();
 
   public static final String RECONSTRUCT_FILE_MAIN = ReconstructFilesMain.class.getName();
 }
