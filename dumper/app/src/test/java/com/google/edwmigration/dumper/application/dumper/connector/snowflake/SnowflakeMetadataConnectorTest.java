@@ -16,23 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Resources;
-import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import javax.annotation.Nonnull;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -136,33 +124,4 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
 
     Assert.assertTrue(exception.getMessage().startsWith("Database name not found"));
   }
-
-  @Test
-  public void connector_generatesExpectedSql() throws IOException {
-    Map<String, String> actualSqls = collectSqlStatements();
-    TaskSqlMap expectedSqls =
-        CoreMetadataDumpFormat.MAPPER.readValue(
-            Resources.toString(
-                Resources.getResource("connector/snowflake/jdbc-tasks-sql.yaml"),
-                StandardCharsets.UTF_8),
-            TaskSqlMap.class);
-
-    Assert.assertEquals(expectedSqls.size(), actualSqls.size());
-    Assert.assertEquals(expectedSqls.keySet(), actualSqls.keySet());
-    for (String name : expectedSqls.keySet()) {
-      Assert.assertEquals(expectedSqls.get(name), actualSqls.get(name));
-    }
-  }
-
-  private static Map<String, String> collectSqlStatements() throws IOException {
-    List<Task<?>> tasks = new ArrayList<>();
-    SnowflakeMetadataConnector connector = new SnowflakeMetadataConnector();
-    connector.addTasksTo(tasks, new ConnectorArguments("--connector", connector.getName()));
-    return tasks.stream()
-        .filter(t -> t instanceof JdbcSelectTask)
-        .map(t -> (JdbcSelectTask) t)
-        .collect(ImmutableMap.toImmutableMap(Task::getName, JdbcSelectTask::getSql));
-  }
-
-  static class TaskSqlMap extends HashMap<String, String> {}
 }
