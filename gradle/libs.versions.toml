@@ -145,3 +145,4 @@ version-catalog-update = { id = "nl.littlerobots.version-catalog-update", versio
 jmh = { id = "me.champeau.jmh", version = "0.7.2" }
 jmh-report = { id = "io.morethan.jmhreport", version = "0.9.6" }
 protobuf = { id = "com.google.protobuf", version = "0.9.4" }
+test-logger = {id = "com.adarshr.test-logger", version="4.0.0"}

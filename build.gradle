@@ -2,9 +2,11 @@ plugins {
     id 'java-library-distribution'
     alias libs.plugins.ben.manes.versions
     alias libs.plugins.version.catalog.update
+    alias libs.plugins.test.logger
 }
 
 apply plugin: 'com.github.jk1.dependency-license-report'
+apply plugin: 'com.adarshr.test-logger'
 
 distributions {
     published {
