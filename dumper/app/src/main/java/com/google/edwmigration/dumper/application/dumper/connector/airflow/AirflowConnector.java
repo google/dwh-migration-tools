@@ -150,11 +150,11 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   private ZonedIntervalIterable queryRangeFromConnectorArguments(ConnectorArguments arguments) {
     Pair<ZonedDateTime, ZonedDateTime> dateRange = dateRange(arguments);
     if (dateRange == null) {
-      LOG.info("Date ranges was not specified. Generate full table queries.");
+      logger.info("Date ranges was not specified. Generate full table queries.");
       return null;
     }
 
-    LOG.info(
+    logger.info(
         "Date range for query generation from {} to {} exclusive and increments of one day.",
         dateRange.getLeft(),
         dateRange.getRight());
