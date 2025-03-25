@@ -32,8 +32,8 @@ import org.apache.oozie.client.XOozieClient;
  * OozieCLI#main(String[])}.
  */
 public class OozieClientFactory {
-  public static XOozieClient createXOozieClient() throws OozieCLIException {
-    String oozieUrl = getOozieUrl();
+  public static XOozieClient createXOozieClient(String oozieUrl) throws OozieCLIException {
+    oozieUrl = oozieUrl != null ? oozieUrl : getOozieUrlFromEnv();
     // String authOption = getAuthOption(commandLine);
     XOozieClient wc = new AuthOozieClient(oozieUrl, null);
 
@@ -42,14 +42,12 @@ public class OozieClientFactory {
     return wc;
   }
 
-  protected static String getOozieUrl() {
-    String url = null; // commandLine.getOptionValue(OOZIE_OPTION);
+  private static String getOozieUrlFromEnv() {
+    // oozie CLI expect this env variable, so we use it as a fallback
+    String url = System.getenv(ENV_OOZIE_URL);
     if (url == null) {
-      url = System.getenv(ENV_OOZIE_URL);
-      if (url == null) {
-        throw new IllegalArgumentException(
-            "Oozie URL is not available neither in command option or in the environment");
-      }
+      throw new IllegalArgumentException(
+          "Oozie URL is not available neither in command option or in the environment");
     }
     return url;
   }

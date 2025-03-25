@@ -17,8 +17,10 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -68,16 +70,37 @@ public class OozieConnectorTest {
   }
 
   @Test
-  public void open_delegateToFactory_Success() throws Exception {
+  public void open_delegateToFactoryNoArg_success() throws Exception {
     try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
       XOozieClient oozieClient = mock(XOozieClient.class);
-      factory.when(OozieClientFactory::createXOozieClient).thenReturn(oozieClient);
+      factory.when(() -> OozieClientFactory.createXOozieClient(eq(null))).thenReturn(oozieClient);
 
       // Act
-      Handle handle = connector.open(null);
+      Handle handle = connector.open(new ConnectorArguments(toArgs("--connector oozie")));
 
       assertEquals(OozieHandle.class, handle.getClass());
       assertEquals(oozieClient, ((OozieHandle) handle).getOozieClient());
     }
+  }
+
+  @Test
+  public void open_delegateToFactoryUrlArg_success() throws Exception {
+    try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
+      XOozieClient oozieClient = mock(XOozieClient.class);
+      factory
+          .when(() -> OozieClientFactory.createXOozieClient(eq("https://some/path")))
+          .thenReturn(oozieClient);
+
+      // Act
+      String args = "--connector oozie --url https://some/path";
+      Handle handle = connector.open(new ConnectorArguments(toArgs(args)));
+
+      assertEquals(OozieHandle.class, handle.getClass());
+      assertEquals(oozieClient, ((OozieHandle) handle).getOozieClient());
+    }
+  }
+
+  private static String[] toArgs(String s) {
+    return s.split(" ");
   }
 }

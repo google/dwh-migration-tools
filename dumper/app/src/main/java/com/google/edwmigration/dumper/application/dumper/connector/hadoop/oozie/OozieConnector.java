@@ -62,7 +62,8 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    XOozieClient xOozieClient = OozieClientFactory.createXOozieClient();
+    String oozieUrl = arguments.getUri();
+    XOozieClient xOozieClient = OozieClientFactory.createXOozieClient(oozieUrl);
     return new OozieHandle(xOozieClient);
   }
 }

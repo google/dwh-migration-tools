@@ -79,7 +79,8 @@ public class OozieJobsTask extends AbstractTask<Void> {
       int offset = 0;
       LocalDateTime lastJobEndDate = currentTime;
 
-      logger.info("Start fetch Oozie jobs for last {}d starts from {}", maxDaysToFetch, currentTime);
+      logger.info(
+          "Start fetch Oozie jobs for last {}d starts from {}", maxDaysToFetch, currentTime);
 
       while (ChronoUnit.DAYS.between(lastJobEndDate, currentTime) < maxDaysToFetch) {
         List<WorkflowJob> jobsInfo = oozieClient.getJobsInfo(null, offset, batchSize);
