@@ -46,14 +46,6 @@ public class AirflowConnectorTest {
   // todo add interval tasks tests
 
   @Test
-  public void validate_startDateAndLookbackDays_success() throws Exception {
-    String argsStr = validRequiredArgs + " --start-date=2001-02-20 --lookback-days=25";
-
-    // Act
-    connector.validate(args(argsStr));
-  }
-
-  @Test
   public void validate_startDateAndEndDate_success() throws Exception {
     String argsStr = validRequiredArgs + " --start-date=2001-02-20 --end-date=2001-02-25";
 
@@ -73,18 +65,6 @@ public class AirflowConnectorTest {
   }
 
   @Test
-  public void validate_allDateOptions_throws() {
-    String argsStr =
-        validRequiredArgs + " --start-date=2001-02-20 --end-date=2001-02-25 --lookback-days=10";
-
-    Exception exception =
-        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
-    assertEquals(
-        "Incompatible options, either specify a number of days to export or a end date.",
-        exception.getMessage());
-  }
-
-  @Test
   public void validate_endDateAlone_throws() {
     String argsStr = validRequiredArgs + " --end-date=2001-02-20";
 
@@ -100,27 +80,9 @@ public class AirflowConnectorTest {
     String argsStr = validRequiredArgs + " --start-date=2001-02-20";
 
     Exception exception =
-        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+        assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
     assertEquals(
-        "Incompatible options, number of days or end date must be specified with start date.",
-        exception.getMessage());
-  }
-
-  @Test
-  public void validate_lookbackDay_nonPositiveThrows() throws Exception {
-    String argsStr = validRequiredArgs + " --lookback-days=0";
-
-    // Act
-    Exception exception =
-        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
-    assertEquals("Number of days to export must be 1 or greater.", exception.getMessage());
-  }
-
-  @Test
-  public void validate_lookbackDay_success() throws Exception {
-    String argsStr = validRequiredArgs + " --lookback-days=5";
-    // Act
-    connector.validate(args(argsStr));
+        "End date must be specified with start date, but was null.", exception.getMessage());
   }
 
   @Test

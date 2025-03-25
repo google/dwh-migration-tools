@@ -45,7 +45,6 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.sql.Driver;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -75,10 +74,6 @@ import org.slf4j.LoggerFactory;
 @RespectsArgumentDriverRequired
 @RespectsArgumentUser
 @RespectsArgumentPassword
-@RespectsInput(
-    order = 2000,
-    arg = ConnectorArguments.OPT_LOOKBACK_DAYS,
-    description = "The number of days back to collect DAGs data")
 @RespectsInput(
     order = 2000,
     arg = ConnectorArguments.OPT_START_DATE,
@@ -169,22 +164,11 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
 
   @Nullable
   private Pair<ZonedDateTime, ZonedDateTime> dateRange(ConnectorArguments arguments) {
-    boolean isDateRangeSpecified =
-        arguments.getStartDate() != null || arguments.getLookbackDays() != null;
-    if (!isDateRangeSpecified) {
+    if (!(arguments.getStartDate() != null || arguments.getEndDate() != null)) {
       return null;
     }
 
-    ZonedDateTime startDate;
-    ZonedDateTime endDate;
-    if (arguments.getLookbackDays() != null) {
-      endDate = arguments.getStartDate(ZonedDateTime.now(ZoneOffset.UTC));
-      startDate = endDate.minusDays(arguments.getLookbackDays());
-    } else {
-      startDate = arguments.getStartDate();
-      endDate = arguments.getEndDate();
-    }
-    return Pair.of(startDate, endDate);
+    return Pair.of(arguments.getStartDate(), arguments.getEndDate());
   }
 
   /**
@@ -250,31 +234,18 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       Preconditions.checkState(arguments.getSchema() != null, "--schema is required with --host");
     }
 
-    validateDatesInterval(arguments);
+    validateDatesRange(arguments);
   }
 
-  private void validateDatesInterval(ConnectorArguments arguments) {
-    // valid inputs:
-    // 1. all null
-    // 2. lookback days
-    // 3. lookback with start
-    // 4. start, end
-    Integer lookbackDays = arguments.getLookbackDays();
+  private void validateDatesRange(ConnectorArguments arguments) {
     ZonedDateTime startDate = arguments.getStartDate();
     ZonedDateTime endDate = arguments.getEndDate();
 
-    Preconditions.checkState(
-        !(lookbackDays != null && endDate != null),
-        "Incompatible options, either specify a number of days to export or a end date.");
-    Preconditions.checkState(
-        lookbackDays == null || lookbackDays > 0, "Number of days to export must be 1 or greater.");
-
     if (startDate != null) {
+      Preconditions.checkNotNull(
+          endDate, "End date must be specified with start date, but was null.");
       Preconditions.checkState(
-          lookbackDays != null || endDate != null,
-          "Incompatible options, number of days or end date must be specified with start date.");
-      Preconditions.checkState(
-          endDate == null || startDate.isBefore(endDate),
+          startDate.isBefore(endDate),
           "Start date [%s] must be before end date [%s].",
           startDate,
           endDate);
