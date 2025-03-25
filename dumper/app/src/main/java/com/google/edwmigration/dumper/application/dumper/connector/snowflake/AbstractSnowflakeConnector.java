@@ -133,8 +133,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
     String currentDatabase =
-        jdbcTemplate.queryForObject(
-            String.format("USE DATABASE \"%s\";", databaseName), String.class);
+        jdbcTemplate.queryForObject(String.format("USE DATABASE %s;", databaseName), String.class);
     if (currentDatabase == null) {
       List<String> dbNames =
           jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
@@ -146,8 +145,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     }
   }
 
-  private String sanitizeDatabaseName(@Nonnull String databaseName)
-      throws MetadataDumperUsageException {
+  String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {
     CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
     String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
     int charLengthWithQuotes = databaseName.length() + 2;
