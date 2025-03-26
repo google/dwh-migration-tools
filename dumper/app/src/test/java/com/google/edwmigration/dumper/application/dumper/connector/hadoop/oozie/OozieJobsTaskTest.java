@@ -149,7 +149,7 @@ public class OozieJobsTaskTest {
   }
 
   @Test
-  public void create_negativeDays_throwsException() throws Exception {
+  public void create_nonpositiveDays_throwsException() throws Exception {
     IllegalArgumentException exception =
         assertThrows(IllegalArgumentException.class, () -> new OozieJobsTask(0));
 

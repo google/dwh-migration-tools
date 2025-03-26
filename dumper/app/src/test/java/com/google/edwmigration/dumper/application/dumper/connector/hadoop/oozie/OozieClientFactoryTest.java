@@ -182,7 +182,7 @@ public class OozieClientFactoryTest {
           assertThrows(IllegalArgumentException.class, OozieClientFactory::getOozieUrlFromEnv);
 
       assertEquals(
-          "Oozie URL is not available neither in command option or in the environment",
+          "Oozie URL is not available neither in command option nor in the environment",
           exception.getMessage());
     }
   }

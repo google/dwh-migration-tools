@@ -74,7 +74,7 @@ public class OozieClientFactory {
     String url = getEnvProperty(ENV_OOZIE_URL);
     if (url == null) {
       throw new IllegalArgumentException(
-          "Oozie URL is not available neither in command option or in the environment");
+          "Oozie URL is not available neither in command option nor in the environment");
     }
     return url;
   }

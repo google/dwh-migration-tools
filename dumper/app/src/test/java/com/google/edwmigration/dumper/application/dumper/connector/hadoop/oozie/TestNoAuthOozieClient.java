@@ -19,20 +19,15 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie
 import com.google.edwmigration.dumper.application.dumper.connector.hadoop.NoopAuthenticator;
 import org.apache.hadoop.security.authentication.client.Authenticator;
 import org.apache.oozie.client.AuthOozieClient;
-import org.apache.oozie.client.OozieClientException;
 
 public class TestNoAuthOozieClient extends AuthOozieClient {
-
-  public TestNoAuthOozieClient(String oozieUrl) {
-    super(oozieUrl);
-  }
 
   public TestNoAuthOozieClient(String oozieUrl, String authOption) {
     super(oozieUrl, authOption);
   }
 
   @Override
-  protected Authenticator getAuthenticator() throws OozieClientException {
+  protected Authenticator getAuthenticator() {
     return new NoopAuthenticator();
   }
 }
