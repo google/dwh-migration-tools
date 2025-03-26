@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.LocalDateTime.ofInstant;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -26,11 +25,9 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -46,21 +43,20 @@ public class OozieJobsTask extends AbstractTask<Void> {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private final int maxDaysToFetch;
-  private final LocalDateTime currentTime;
+  private final long initialTimestamp;
 
   public OozieJobsTask(int maxDaysToFetch) {
-    this(maxDaysToFetch, LocalDateTime.now());
+    this(maxDaysToFetch, System.currentTimeMillis());
   }
 
-  OozieJobsTask(int maxDaysToFetch, LocalDateTime currentTime) {
+  OozieJobsTask(int maxDaysToFetch, long initialTimestamp) {
     super("oozie_jobs.csv");
     Preconditions.checkArgument(
         maxDaysToFetch >= 1,
         String.format("Amount of days must be a positive number. Got %d.", maxDaysToFetch));
-    Preconditions.checkNotNull(currentTime, "Current time must not be null.");
 
     this.maxDaysToFetch = maxDaysToFetch;
-    this.currentTime = currentTime;
+    this.initialTimestamp = initialTimestamp;
   }
 
   // todo jobs params in filter
@@ -77,12 +73,12 @@ public class OozieJobsTask extends AbstractTask<Void> {
       XOozieClient oozieClient = ((OozieHandle) handle).getOozieClient();
       final int batchSize = context.getArguments().getPaginationPageSize();
       int offset = 0;
-      LocalDateTime lastJobEndDate = currentTime;
+      long lastJobEndTimestamp = initialTimestamp;
 
       logger.info(
-          "Start fetch Oozie jobs for last {}d starts from {}", maxDaysToFetch, currentTime);
+          "Start fetch Oozie jobs for last {}d starts from {}ms", maxDaysToFetch, initialTimestamp);
 
-      while (ChronoUnit.DAYS.between(lastJobEndDate, currentTime) < maxDaysToFetch) {
+      while (initialTimestamp - lastJobEndTimestamp < TimeUnit.DAYS.toMillis(maxDaysToFetch)) {
         List<WorkflowJob> jobsInfo = oozieClient.getJobsInfo(null, offset, batchSize);
         for (WorkflowJob workflowJob : jobsInfo) {
           Object[] record = toCSVRecord(workflowJob, csvHeader);
@@ -97,7 +93,7 @@ public class OozieJobsTask extends AbstractTask<Void> {
         if (lastJob.getEndTime() == null) {
           break;
         }
-        lastJobEndDate = ofInstant(lastJob.getEndTime().toInstant(), ZoneId.systemDefault());
+        lastJobEndTimestamp = lastJob.getEndTime().getTime();
         offset += jobsInfo.size();
       }
 

@@ -37,9 +37,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import org.apache.oozie.client.AuthOozieClient;
 import org.apache.oozie.client.rest.JsonUtils;
 import org.junit.AfterClass;
@@ -52,8 +51,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class OozieJobsTaskTest {
-
-  private static final LocalDateTime dateInMockResponses = LocalDateTime.of(2025, 3, 17, 14, 0);
+  private static final long timestampInMockResponses = 1742220060000L;
   private static WireMockServer server;
 
   @Mock private TaskRunContext context;
@@ -91,11 +89,7 @@ public class OozieJobsTaskTest {
 
     final int maxDaysToFetch = 4;
     Date lastCapturedDate =
-        Date.from(
-            dateInMockResponses
-                .minusDays(maxDaysToFetch)
-                .atZone(ZoneId.systemDefault())
-                .toInstant());
+        new Date(timestampInMockResponses - TimeUnit.DAYS.toMillis(maxDaysToFetch));
     server.stubFor(
         get(urlEqualTo("/v2/jobs?jobtype=wf&offset=3&len=1000"))
             .willReturn(
@@ -104,7 +98,7 @@ public class OozieJobsTaskTest {
                     .withTransformerParameter(
                         "endDateParam", JsonUtils.formatDateRfc822(lastCapturedDate))));
 
-    OozieJobsTask task = new OozieJobsTask(maxDaysToFetch, dateInMockResponses);
+    OozieJobsTask task = new OozieJobsTask(maxDaysToFetch, timestampInMockResponses);
 
     // Act
     task.doRun(context, sink, new OozieHandle(oozieClient));
@@ -119,7 +113,7 @@ public class OozieJobsTaskTest {
   public void doRun_requestBatchesUntilEmptyResponse_ok() throws Exception {
     when(context.getArguments()).thenReturn(new ConnectorArguments("--connector", "oozie"));
 
-    testWithBatchSyze(1000);
+    testWithBatchSize(1000);
   }
 
   @Test
@@ -128,10 +122,10 @@ public class OozieJobsTaskTest {
         new ConnectorArguments("--connector", "oozie", "--pagination-page-size", "42");
     when(context.getArguments()).thenReturn(arguments);
 
-    testWithBatchSyze(42);
+    testWithBatchSize(42);
   }
 
-  private void testWithBatchSyze(int batchSize) throws Exception {
+  private void testWithBatchSize(int batchSize) throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     stubOozieVersionsCall();
     server.stubFor(
@@ -143,7 +137,7 @@ public class OozieJobsTaskTest {
     server.stubFor(
         get(urlEqualTo("/v2/jobs?jobtype=wf&offset=4&len=" + batchSize)).willReturn(okJson("{}")));
 
-    OozieJobsTask task = new OozieJobsTask(10, dateInMockResponses);
+    OozieJobsTask task = new OozieJobsTask(10, timestampInMockResponses);
 
     // Act
     task.doRun(context, sink, new OozieHandle(oozieClient));
