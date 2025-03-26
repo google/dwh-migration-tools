@@ -24,5 +24,5 @@ public class Constants {
 
   public static final String RECONSTRUCT_FILE_MAIN = ReconstructFilesMain.class.getName();
 
-  public static final Duration CLOUD_RUN_TIMEOUT = Durations.fromMinutes(30);
+  public static final Duration CLOUD_RUN_TIMEOUT = Durations.fromMinutes(60);
 }
