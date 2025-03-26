@@ -16,25 +16,22 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-enum MetadataView {
-  DATABASES("databases"),
-  SCHEMATA("schemata"),
-  TABLES("tables"),
-  EXTERNAL_TABLES("externalTables"),
-  COLUMNS("columns"),
-  VIEWS("views"),
-  FUNCTIONS("functions"),
-  TABLE_STORAGE_METRICS("storagemetrics", "table storage metrics");
+import static org.junit.Assert.assertThrows;
 
-  final String description;
-  final String nameComponent;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-  MetadataView(String nameComponent) {
-    this(nameComponent, nameComponent);
-  }
+@RunWith(JUnit4.class)
+public class SnowflakeLiteConnectorTest {
 
-  MetadataView(String nameComponent, String descriptionComponent) {
-    this.description = descriptionComponent;
-    this.nameComponent = nameComponent;
+  @Test
+  public void open_noAssessmentFlag_throwsUsageException() throws Exception {
+    ConnectorArguments noFlagArguments = new ConnectorArguments("--connector", "snowflake-lite");
+    SnowflakeLiteConnector connector = new SnowflakeLiteConnector();
+
+    assertThrows(MetadataDumperUsageException.class, () -> connector.open(noFlagArguments));
   }
 }

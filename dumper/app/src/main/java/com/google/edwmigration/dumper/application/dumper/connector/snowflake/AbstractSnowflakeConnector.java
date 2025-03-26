@@ -115,6 +115,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   final ImmutableList<Task<?>> getSqlTasks(
       @Nonnull SnowflakeInput inputSource,
+      @Nonnull Class<? extends Enum<?>> header,
+      @Nonnull String format,
       @Nonnull AbstractJdbcTask<Summary> schemaTask,
       @Nonnull AbstractJdbcTask<Summary> usageTask) {
     switch (inputSource) {
@@ -150,8 +152,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     if (charLengthWithQuotes > 255) {
       throw new MetadataDumperUsageException(
           String.format(
-              "The provided database name has %d characters, which is longer than the maximum"
-                  + " allowed number %d for Snowflake identifiers.",
+              "The provided database name has %d characters, which is longer than the maximum allowed number %d for Snowflake identifiers.",
               charLengthWithQuotes, MAX_DATABASE_CHAR_LENGTH));
     }
     if (doubleQuoteMatcher.matchesAnyOf(trimmedName)) {

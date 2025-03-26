@@ -8,7 +8,6 @@ import com.google.common.primitives.Ints;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Consumer;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -133,22 +133,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (isAssessment) {
       out.add(usageTask);
     } else {
-      ImmutableList<Task<?>> tasks = getSqlTasks(inputSource, schemaTask, usageTask);
+      ImmutableList<Task<?>> tasks =
+          getSqlTasks(inputSource, header, format, schemaTask, usageTask);
       out.addAll(tasks);
     }
-  }
-
-  /* For queries to INFORMATION_SCHEMA where there is no ACCOUNT_USAGE equivalent */
-  private void addSqlTasksInfoSchemaOnly(
-      @Nonnull List<? super Task<?>> out,
-      @Nonnull Class<? extends Enum<?>> header,
-      @Nonnull String format,
-      @Nonnull String schemaZip,
-      @Nonnull String alteredSchemaView,
-      @Nonnull String filter) {
-    AbstractJdbcTask<Summary> usageTask =
-        SnowflakeTaskUtil.withFilter(format, alteredSchemaView, schemaZip, filter, header);
-    out.add(usageTask);
   }
 
   @Override
@@ -158,7 +146,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     out.add(new FormatTask(FORMAT_NAME));
 
     boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
-
     // INFORMATION_SCHEMA queries must be qualified with a database
     // name or that a "USE DATABASE" command has previously been run
     // in the same session. Qualify the name to avoid this dependency.
@@ -218,18 +205,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         AU_WHERE,
         isAssessment); // Painfully slow.
 
-    addSqlTasksInfoSchemaOnly(
-        out,
-        ExternalTablesFormat.Header.class,
-        getOverrideableQuery(
-            arguments,
-            "SELECT table_catalog, table_schema, table_name, location, file_format_name,"
-                + " file_format_type FROM %1$s.EXTERNAL_TABLES%2$s",
-            MetadataView.TABLES),
-        ExternalTablesFormat.ZIP_ENTRY_NAME,
-        IS,
-        " WHERE table_schema != 'INFORMATION_SCHEMA'");
-
     addSqlTasksWithInfoSchemaFallback(
         out,
         ColumnsFormat.Header.class,
@@ -276,13 +251,23 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        String formatString = overrideFormatString(item, arguments);
-        String query = String.format(formatString, AU, /* an empty WHERE clause */ "");
-        String zipName = item.zipEntryName;
-        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
-        out.add(task);
+        addAssessmentQuery(item, out, arguments, AU);
       }
+    } else {
+      addAssessmentQuery(SnowflakePlanner.SHOW_EXTERNAL_TABLES, out, arguments, AU);
     }
+  }
+
+  private void addAssessmentQuery(
+      @Nonnull AssessmentQuery item,
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull ConnectorArguments arguments,
+      @Nonnull String AU) {
+    String formatString = overrideFormatString(item, arguments);
+    String query = String.format(formatString, AU, /* an empty WHERE clause */ "");
+    String zipName = item.zipEntryName;
+    Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
+    out.add(task);
   }
 
   private String overrideFormatString(AssessmentQuery query, ConnectorArguments arguments) {

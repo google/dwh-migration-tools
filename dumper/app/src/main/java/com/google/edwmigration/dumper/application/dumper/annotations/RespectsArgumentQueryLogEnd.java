@@ -35,5 +35,5 @@ import java.lang.annotation.Target;
     description = RespectsArgumentQueryLogEnd.DESCRIPTION)
 public @interface RespectsArgumentQueryLogEnd {
 
-  public static final String DESCRIPTION = "End date for query history to dump";
+  String DESCRIPTION = "End date for query history to dump";
 }

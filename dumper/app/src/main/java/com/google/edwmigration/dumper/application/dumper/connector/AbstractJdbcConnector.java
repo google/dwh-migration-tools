@@ -28,6 +28,9 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,12 +42,16 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /** @author shevek */
 public abstract class AbstractJdbcConnector extends AbstractConnector {
-
-  @SuppressWarnings("UnusedVariable")
   private static final Logger logger = LoggerFactory.getLogger(AbstractJdbcConnector.class);
+  private static final DateTimeFormatter SQL_FORMAT =
+      DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
 
   public AbstractJdbcConnector(@Nonnull String name) {
     super(name);
+  }
+
+  protected static String dateToSqlFormat(ZonedDateTime dateTime) {
+    return SQL_FORMAT.format(dateTime);
   }
 
   @Nonnull
