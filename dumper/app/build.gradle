@@ -86,8 +86,10 @@ dependencies {
         exclude group: 'guru.nidi', module: 'graphviz-java'
     }
 
-    runtimeOnly libs.logback.classic
-    runtimeOnly libs.jcl.over.slf4j
+    // `implementation` scope is used because some of our dependencies
+    // have log libraries in this scope as transient dependencies
+    implementation libs.logback.classic
+    implementation libs.jcl.over.slf4j
 
     runtimeOnly libs.postgresql
     runtimeOnly libs.snowflake.jdbc
@@ -104,8 +106,6 @@ dependencies {
     testImplementation libs.mockito.junit.jupiter
     testImplementation libs.junit
     testImplementation libs.wiremock
-    testImplementation libs.logback.classic
-
 
     // Test Hive 3.1.2
     testImplementation project(path: ':dumper:lib-ext-hive-metastore', configuration: 'shadow')
