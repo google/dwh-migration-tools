@@ -7,7 +7,6 @@ import com.google.common.io.ByteSource;
 import com.google.edwmigration.dbsync.common.ChecksumGenerator;
 import com.google.edwmigration.dbsync.common.DefaultArguments;
 import com.google.edwmigration.dbsync.storage.gcs.GcsStorage;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
