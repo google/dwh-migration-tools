@@ -36,7 +36,6 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import org.junit.Assert;
 import org.junit.Assume;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -138,7 +137,6 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     Assert.assertTrue(exception.getMessage().startsWith("Database name not found"));
   }
 
-  @Ignore
   @Test
   public void connector_generatesExpectedSql() throws IOException {
     Map<String, String> actualSqls = collectSqlStatements();
