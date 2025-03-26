@@ -24,6 +24,7 @@ import static org.apache.oozie.cli.OozieCLI.WS_HEADER_PREFIX;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.oozie.cli.OozieCLI;
 import org.apache.oozie.cli.OozieCLIException;
 import org.apache.oozie.client.AuthOozieClient;
@@ -52,7 +53,7 @@ public class OozieClientFactory {
     return wc;
   }
 
-  private static String getAuthOption(String user, String password) throws OozieCLIException {
+  protected static String getAuthOption(String user, String password) throws OozieCLIException {
     if (user != null) {
       if (password != null) {
         return AuthType.BASIC.name();
@@ -60,7 +61,7 @@ public class OozieClientFactory {
         throw new OozieCLIException("No password specified, it is required, if user is set!");
       }
     }
-    String authOpt = System.getenv(ENV_OOZIE_AUTH);
+    String authOpt = getEnvProperty(ENV_OOZIE_AUTH);
     logger.debug("Auth type for Oozie client: {} base on " + ENV_OOZIE_AUTH, authOpt);
     if (AuthType.BASIC.name().equalsIgnoreCase(authOpt)) {
       throw new OozieCLIException("BASIC authentication requires -user and -password to set!");
@@ -68,9 +69,9 @@ public class OozieClientFactory {
     return authOpt;
   }
 
-  private static String getOozieUrlFromEnv() {
+  protected static String getOozieUrlFromEnv() {
     // oozie CLI expect this env variable, so we use it as a fallback
-    String url = System.getenv(ENV_OOZIE_URL);
+    String url = getEnvProperty(ENV_OOZIE_URL);
     if (url == null) {
       throw new IllegalArgumentException(
           "Oozie URL is not available neither in command option or in the environment");
@@ -78,14 +79,14 @@ public class OozieClientFactory {
     return url;
   }
 
-  private static void addHeaders(OozieClient wc, String user, String password) {
+  protected static void addHeaders(OozieClient wc, String user, String password) {
     if (user != null && password != null) {
       String encoded =
           Base64.getEncoder()
               .encodeToString((user + ':' + password).getBytes(StandardCharsets.UTF_8));
       wc.setHeader("Authorization", "Basic " + encoded);
     }
-    for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
+    for (Map.Entry<Object, Object> entry : getEnvProperties().entrySet()) {
       String key = (String) entry.getKey();
       if (key.startsWith(WS_HEADER_PREFIX)) {
         String header = key.substring(WS_HEADER_PREFIX.length());
@@ -95,16 +96,28 @@ public class OozieClientFactory {
     }
   }
 
-  private static void setRetryCount(OozieClient wc) {
-    String retryCount = System.getProperty(OOZIE_RETRY_COUNT);
+  protected static void setRetryCount(OozieClient wc) {
+    String retryCount = getEnvProperty(OOZIE_RETRY_COUNT);
     if (retryCount != null && !retryCount.isEmpty()) {
       try {
         int retry = Integer.parseInt(retryCount.trim());
         wc.setRetryCount(retry);
       } catch (Exception ex) {
         logger.error(
-            "Unable to parse the retry settings. May be not an integer [{}}]", retryCount, ex);
+            "Unable to parse the retry settings. May be not an integer [{}]", retryCount, ex);
       }
     }
+  }
+
+  /**
+   * It's just a wrapper for {@code System.getProperty(property)} Extracted to mock in unit-tests.
+   */
+  protected static String getEnvProperty(String property) {
+    return System.getProperty(property);
+  }
+
+  /** It's just a wrapper for {@code System.getProperties()} Extracted to mock in unit-tests. */
+  protected static Properties getEnvProperties() {
+    return System.getProperties();
   }
 }
