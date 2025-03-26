@@ -59,6 +59,7 @@ public class ReconstructFilesMain {
         gcsStorage.delete(tempFile);
         deleteStagingFiles(gcsStorage, tmpBucket, file);
       }
+      gcsStorage.delete(new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME));
 
       logger.log(Level.INFO, String.format("Finished reconstructing file: %s", file));
     }
