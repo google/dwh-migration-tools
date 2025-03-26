@@ -34,6 +34,12 @@ configurations {
     sources {
         transitive = true
     }
+
+    configureEach {
+        // *-over-slf4j bridges used
+        exclude group: "ch.qos.reload4j", module: "reload4j"
+        exclude group: "org.slf4j", module: "slf4j-reload4j"
+    }
 }
 
 dependencies {
@@ -98,6 +104,7 @@ dependencies {
     testImplementation libs.mockito.junit.jupiter
     testImplementation libs.junit
     testImplementation libs.wiremock
+    testImplementation libs.logback.classic
 
 
     // Test Hive 3.1.2
