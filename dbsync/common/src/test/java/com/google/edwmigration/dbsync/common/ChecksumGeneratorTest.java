@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ChecksumGeneratorTest {
+
   @SuppressWarnings("unused")
   private static final Logger logger = LoggerFactory.getLogger(ChecksumGeneratorTest.class);
 
@@ -40,10 +41,11 @@ public class ChecksumGeneratorTest {
     assertEquals(blockCount, checksums.size());
     for (int i = 0; i < blockCount; i++) {
       Checksum c = checksums.get(i);
-      assertEquals(i * blockSize, c.getBlockOffset(),"Bad offset in " + c);
+      assertEquals(i * blockSize, c.getBlockOffset(), "Bad offset in " + c);
       ByteSource block = data.slice(c.getBlockOffset(), c.getBlockLength());
       HashCode strongHashCode = block.hash(RollingChecksumImpl.STRONG_HASH_FUNCTION);
-      assertEquals(strongHashCode.toString(), c.getStrongChecksum(), "Bad hash code in " + c);
+      assertArrayEquals(strongHashCode.asBytes(), c.getStrongChecksum().toByteArray(),
+          "Bad hash code in " + c);
     }
   }
 }

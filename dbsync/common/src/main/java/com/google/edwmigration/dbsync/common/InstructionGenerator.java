@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -74,9 +75,9 @@ public class InstructionGenerator {
           // And the wisdom to know the difference.
           MATCH:
           if (cc != null) {
-            String strongHashCode = rollingChecksum.getStrongHashCode().toString();
+            byte[] strongHashCode = rollingChecksum.getStrongHashCode().asBytes();
             for (Checksum c : cc) {
-              if (c.getStrongChecksum().equals(strongHashCode)) {
+              if (Arrays.equals(c.getStrongChecksum().toByteArray(), strongHashCode)) {
                 if (literalBufferLength > 0) {
                   if (DEBUG) {
                     logger.debug("Emitting pre-match literal");

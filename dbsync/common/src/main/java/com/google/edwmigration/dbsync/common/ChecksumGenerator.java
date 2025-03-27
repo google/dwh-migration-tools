@@ -5,9 +5,9 @@ import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteSource;
 import com.google.common.primitives.Ints;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Consumer;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,8 @@ public class ChecksumGenerator {
         // Yes, this masks the instance variable.
         int blockSize = rollingChecksum.getBlockSize();
         if (DEBUG) {
-          logger.info("Generating checksums for [{} .. +{}] in {} bytes", offset, blockSize, dataSize);
+          logger.info("Generating checksums for [{} .. +{}] in {} bytes", offset, blockSize,
+              dataSize);
         }
 
         // If someone changes the size of the ByteSource underneath us, this might throw EOFException.
@@ -70,7 +71,7 @@ public class ChecksumGenerator {
             .setBlockOffset(offset)
             .setBlockLength(blockSize)
             .setWeakChecksum(weakHashCode)
-            .setStrongChecksum(strongHashCode.toString())
+            .setStrongChecksum(ByteString.copyFrom(strongHashCode.asBytes()))
             .build();
         out.accept(c);
       }
