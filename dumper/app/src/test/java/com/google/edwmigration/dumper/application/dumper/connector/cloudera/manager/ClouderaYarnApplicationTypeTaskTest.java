@@ -36,6 +36,7 @@ import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
@@ -58,7 +59,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaYarnApplicationTypeTaskTest {
   private static WireMockServer server;
-  private final ClouderaYarnApplicationTypeTask task = new ClouderaYarnApplicationTypeTask(30);
+  private final ClouderaYarnApplicationTypeTask task =
+      new ClouderaYarnApplicationTypeTask(30, TaskCategory.OPTIONAL);
   private ClouderaManagerHandle handle;
 
   @Mock private ByteSink sink;
@@ -142,7 +144,9 @@ public class ClouderaYarnApplicationTypeTaskTest {
   @Test
   public void doRun_notPositiveDays_throwsException() {
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> new ClouderaYarnApplicationTypeTask(0));
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new ClouderaYarnApplicationTypeTask(0, TaskCategory.OPTIONAL));
 
     assertEquals("Amount of days must be a positive number. Got 0.", exception.getMessage());
   }

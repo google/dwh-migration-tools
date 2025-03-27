@@ -27,6 +27,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.net.URI;
 import java.util.ArrayList;
@@ -161,7 +162,7 @@ public class AbstractClouderaYarnApplicationTaskTest {
     }
 
     public MockedYarnApplicationTask() {
-      super("", 30);
+      super("", 30, TaskCategory.OPTIONAL);
     }
 
     @Override
