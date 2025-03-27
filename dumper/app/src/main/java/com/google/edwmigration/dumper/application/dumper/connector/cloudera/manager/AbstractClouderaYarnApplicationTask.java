@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationListDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,6 +29,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -36,14 +38,23 @@ import org.apache.http.impl.client.CloseableHttpClient;
 
 public abstract class AbstractClouderaYarnApplicationTask extends AbstractClouderaManagerTask {
   private final ZonedDateTime fromDate;
+  private final TaskCategory taskCategory;
 
-  public AbstractClouderaYarnApplicationTask(String fileName, int lastDaysToInclude) {
+  public AbstractClouderaYarnApplicationTask(
+      String fileName, int lastDaysToInclude, TaskCategory taskCategory) {
     super(String.format("%s-%dd.jsonl", fileName, lastDaysToInclude));
     Preconditions.checkArgument(
         lastDaysToInclude >= 1,
         String.format("Amount of days must be a positive number. Got %d.", lastDaysToInclude));
 
     fromDate = ZonedDateTime.of(LocalDateTime.now().minusDays(lastDaysToInclude), ZoneId.of("UTC"));
+    this.taskCategory = taskCategory;
+  }
+
+  @Nonnull
+  @Override
+  public TaskCategory getCategory() {
+    return taskCategory;
   }
 
   class PaginatedClouderaYarnApplicationsLoader {

@@ -24,6 +24,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -47,8 +48,8 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   private final ImmutableList<String> predefinedAppTypes =
       ImmutableList.of("MAPREDUCE", "SPARK", "Oozie Launcher");
 
-  public ClouderaYarnApplicationTypeTask(int days) {
-    super("yarn-application-types", days);
+  public ClouderaYarnApplicationTypeTask(int days, TaskCategory taskCategory) {
+    super("yarn-application-types", days, taskCategory);
   }
 
   @Override

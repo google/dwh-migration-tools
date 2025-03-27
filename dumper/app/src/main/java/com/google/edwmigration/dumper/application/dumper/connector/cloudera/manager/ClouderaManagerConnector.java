@@ -64,7 +64,7 @@ import org.apache.http.ssl.SSLContextBuilder;
     required = "Only if you need to dump data for a single Cloudera cluster")
 public class ClouderaManagerConnector extends AbstractConnector {
 
-  public static final String FORMAT_NAME = "cloudera-manager.dump.zip";
+  private static final String FORMAT_NAME = "cloudera-manager.dump.zip";
 
   public ClouderaManagerConnector() {
     super("cloudera-manager");
@@ -97,8 +97,8 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaHostRAMChartTask(30, DAILY, OPTIONAL));
     out.add(new ClouderaHostRAMChartTask(90, DAILY, OPTIONAL));
 
-    out.add(new ClouderaYarnApplicationsTask(90));
-    out.add(new ClouderaYarnApplicationTypeTask(90));
+    out.add(new ClouderaYarnApplicationsTask(90, OPTIONAL));
+    out.add(new ClouderaYarnApplicationTypeTask(90, OPTIONAL));
   }
 
   @Nonnull

@@ -34,6 +34,7 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
@@ -57,7 +58,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ClouderaYarnApplicationTaskTest {
   private static WireMockServer server;
 
-  private final ClouderaYarnApplicationsTask task = new ClouderaYarnApplicationsTask(30);
+  private final ClouderaYarnApplicationsTask task =
+      new ClouderaYarnApplicationsTask(30, TaskCategory.OPTIONAL);
   private ClouderaManagerHandle handle;
 
   @Mock private TaskRunContext context;

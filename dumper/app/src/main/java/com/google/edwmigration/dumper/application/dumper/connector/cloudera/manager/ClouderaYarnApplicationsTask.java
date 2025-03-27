@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -34,8 +35,8 @@ import org.slf4j.LoggerFactory;
 public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicationTask {
   private static final Logger logger = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
 
-  public ClouderaYarnApplicationsTask(int days) {
-    super("yarn-applications", days);
+  public ClouderaYarnApplicationsTask(int days, TaskCategory taskCategory) {
+    super("yarn-applications", days, taskCategory);
   }
 
   @Override
