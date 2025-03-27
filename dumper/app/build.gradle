@@ -35,6 +35,15 @@ configurations {
     sources {
         transitive = true
     }
+
+    configureEach {
+        // *-over-slf4j bridges used
+        exclude group: "ch.qos.reload4j", module: "reload4j"
+        exclude group: "org.slf4j", module: "slf4j-reload4j"
+
+        // We use logback-classic instead of simple
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+    }
 }
 
 dependencies {
@@ -73,9 +82,16 @@ dependencies {
     implementation libs.httpclient5
     implementation libs.aws.java.sdk.redshift
     implementation libs.aws.java.sdk.cloudwatch
+    implementation(libs.oozie.client) {
+        exclude group: 'javax.jms', module: 'jms'
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'guru.nidi', module: 'graphviz-java'
+    }
 
-    runtimeOnly libs.logback.classic
-    runtimeOnly libs.jcl.over.slf4j
+    // `implementation` scope is used because some of our dependencies
+    // have log libraries in this scope as transient dependencies
+    implementation libs.logback.classic
+    implementation libs.jcl.over.slf4j
 
     runtimeOnly libs.postgresql
     runtimeOnly libs.snowflake.jdbc
@@ -90,8 +106,8 @@ dependencies {
     testImplementation libs.mockito.core
     testImplementation libs.mockito.inline
     testImplementation libs.mockito.junit.jupiter
+    testImplementation libs.junit
     testImplementation libs.wiremock
-
 
     // Test Hive 3.1.2
     testImplementation project(path: ':dumper:lib-ext-hive-metastore', configuration: 'shadow')

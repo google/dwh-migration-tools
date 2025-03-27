@@ -25,11 +25,14 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.errorprone.annotations.ForOverride;
+import java.beans.PropertyDescriptor;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.commons.lang3.ArrayUtils;
@@ -122,6 +125,15 @@ public abstract class AbstractTask<T> implements Task<T> {
     T result = doRun(context, sink.asTemporaryByteSink(), context.getHandle());
     sink.commit();
     return result;
+  }
+
+  protected CSVFormat newCsvFormatForClass(Class<?> clazz) {
+    CSVFormat format =
+        FORMAT.withHeader(
+            Arrays.stream(PropertyUtils.getPropertyDescriptors(clazz))
+                .map(PropertyDescriptor::getName)
+                .toArray(String[]::new));
+    return format;
   }
 
   protected String describeSourceData() {
