@@ -21,6 +21,7 @@ import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeMetadataConnector.PropertyAction;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
@@ -154,10 +156,93 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     }
   }
 
-  private static Map<String, String> collectSqlStatements() throws IOException {
+  @Test
+  public void connector_assessment_generatesExpectedSql() throws IOException {
+    Map<String, String> actualSqls = collectSqlStatements("--assessment");
+    TaskSqlMap expectedSqls =
+        CoreMetadataDumpFormat.MAPPER.readValue(
+            Resources.toString(
+                Resources.getResource("connector/snowflake/assessment-jdbc-tasks-sql.yaml"),
+                StandardCharsets.UTF_8),
+            TaskSqlMap.class);
+
+    Assert.assertEquals(expectedSqls.size(), actualSqls.size());
+    Assert.assertEquals(expectedSqls.keySet(), actualSqls.keySet());
+    for (String name : expectedSqls.keySet()) {
+      Assert.assertEquals(expectedSqls.get(name), actualSqls.get(name));
+    }
+  }
+
+  @Test
+  public void connector_generatesExpectedSql_withQueryOverrides() throws IOException {
+    for (PropertyAction propertyAction : PropertyAction.values()) {
+      TaskSqlMap expectedSqls =
+          CoreMetadataDumpFormat.MAPPER.readValue(
+              Resources.toString(
+                  Resources.getResource(
+                      String.format(
+                          "connector/snowflake/jdbc-tasks-sql-override-%s.yaml",
+                          propertyAction.value)),
+                  StandardCharsets.UTF_8),
+              TaskSqlMap.class);
+
+      List<String> overrideArguments = new ArrayList<>();
+      for (MetadataView metadataView : MetadataView.values()) {
+        overrideArguments.add(
+            String.format(
+                "-Dsnowflake.metadata.%1$s.%2$s=SQL_OVERRIDE(%1$s, %2$s)",
+                metadataView.nameComponent, propertyAction.value));
+      }
+
+      Map<String, String> actualSqls =
+          collectSqlStatements(overrideArguments.toArray(new String[] {}));
+
+      Assert.assertEquals(expectedSqls.size(), actualSqls.size());
+      Assert.assertEquals(expectedSqls.keySet(), actualSqls.keySet());
+      for (String name : expectedSqls.keySet()) {
+        Assert.assertEquals(expectedSqls.get(name), actualSqls.get(name));
+      }
+    }
+  }
+
+  @Test
+  public void connector_assessment_generatesExpectedSql_withQueryOverrides() throws IOException {
+    for (PropertyAction propertyAction : PropertyAction.values()) {
+      TaskSqlMap expectedSqls =
+          CoreMetadataDumpFormat.MAPPER.readValue(
+              Resources.toString(
+                  Resources.getResource(
+                      String.format(
+                          "connector/snowflake/assessment-jdbc-tasks-sql-override-%s.yaml",
+                          propertyAction.value)),
+                  StandardCharsets.UTF_8),
+              TaskSqlMap.class);
+
+      List<String> overrideArguments = new ArrayList<>();
+      for (MetadataView metadataView : MetadataView.values()) {
+        overrideArguments.add(
+            String.format(
+                "-Dsnowflake.metadata.%1$s.%2$s=SQL_OVERRIDE(%1$s, %2$s)",
+                metadataView.nameComponent, propertyAction.value));
+      }
+
+      overrideArguments.add("--assessment");
+      Map<String, String> actualSqls =
+          collectSqlStatements(overrideArguments.toArray(new String[] {}));
+
+      Assert.assertEquals(expectedSqls.size(), actualSqls.size());
+      Assert.assertEquals(expectedSqls.keySet(), actualSqls.keySet());
+      for (String name : expectedSqls.keySet()) {
+        Assert.assertEquals(expectedSqls.get(name), actualSqls.get(name));
+      }
+    }
+  }
+
+  private static Map<String, String> collectSqlStatements(String... extraArgs) throws IOException {
     List<Task<?>> tasks = new ArrayList<>();
     SnowflakeMetadataConnector connector = new SnowflakeMetadataConnector();
-    connector.addTasksTo(tasks, new ConnectorArguments("--connector", connector.getName()));
+    String[] args = ArrayUtils.addAll(new String[] {"--connector", connector.getName()}, extraArgs);
+    connector.addTasksTo(tasks, new ConnectorArguments(args));
     return tasks.stream()
         .filter(t -> t instanceof JdbcSelectTask)
         .map(t -> (JdbcSelectTask) t)

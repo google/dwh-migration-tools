@@ -50,7 +50,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @SuppressWarnings("UnusedVariable")
   private static final Logger logger = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
 
-  private enum PropertyAction {
+  enum PropertyAction {
     QUERY("query", "query"),
     WHERE("where", "where condition to append to query");
 
