@@ -60,6 +60,8 @@ parquet = "1.14.0"
 spring-main = "6.1.10"
 google = "2.49.0"
 oozie-client = "5.2.1"
+amazon = "2.31.6"
+cloudrun = "0.60.0"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
