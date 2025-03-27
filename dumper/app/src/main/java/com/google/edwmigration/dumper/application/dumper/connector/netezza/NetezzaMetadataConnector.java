@@ -89,7 +89,7 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
     implements MetadataConnector, NetezzaMetadataDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(NetezzaMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(NetezzaMetadataConnector.class);
 
   public static final int OPT_PORT_DEFAULT = 5480;
 

@@ -30,6 +30,9 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
+import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -41,9 +44,15 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.sql.Driver;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +74,17 @@ import org.slf4j.LoggerFactory;
 @RespectsArgumentDriverRequired
 @RespectsArgumentUser
 @RespectsArgumentPassword
+@RespectsInput(
+    order = 2000,
+    arg = ConnectorArguments.OPT_START_DATE,
+    description = "Start date for query DAGs data")
+@RespectsInput(
+    order = 2000,
+    arg = ConnectorArguments.OPT_END_DATE,
+    description = "End date for query DAGs data")
 public class AirflowConnector extends AbstractJdbcConnector implements MetadataConnector {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AirflowConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AirflowConnector.class);
 
   private static final String FORMAT_NAME = "airflow.dump.zip";
 
@@ -95,24 +112,96 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
+    ZonedIntervalIterable zonedIntervals = queryRangeFromConnectorArguments(arguments);
+    Pair<ZonedDateTime, ZonedDateTime> dateRange = dateRange(arguments);
+
     // Airflow v1.5.0
-    addFullTable(out, "dag.csv", "select * from dag;");
-    addFullTable(out, "task_instance.csv", "select * from task_instance;");
+    addQueryTask(out, "dag.csv", "select * from dag;");
+    // todo b/401470428 think about multiple files with this.addTableTaskWithIntervals()
+    addQueryTask(
+        out,
+        "task_instance.csv",
+        "select * from task_instance "
+            + (dateRange != null
+                ? String.format(
+                    " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
+                    dateToSqlFormat(dateRange.getLeft()), dateToSqlFormat(dateRange.getRight()))
+                : ""));
+
     // Airflow v1.6.0
-    addFullTable(out, "dag_run.csv", "select * from dag_run;");
+    addQueryTask(
+        out,
+        "dag_run.csv",
+        dateRange == null
+            ? "select * from dag_run;"
+            : "select * from dag_run "
+                + String.format(
+                    " where end_date >= CAST( '%s' as TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;",
+                    dateToSqlFormat(dateRange.getLeft()), dateToSqlFormat(dateRange.getRight())));
 
     // Airflow v1.10.7
     // analog of DAG's python definition in json
-    addFullTable(out, "serialized_dag.csv", "select * from serialized_dag;", TaskCategory.OPTIONAL);
+    addQueryTask(out, "serialized_dag.csv", "select * from serialized_dag;", TaskCategory.OPTIONAL);
     // Airflow v1.10.10
-    addFullTable(out, "dag_code.csv", "select * from dag_code;", TaskCategory.OPTIONAL);
+    addQueryTask(out, "dag_code.csv", "select * from dag_code;", TaskCategory.OPTIONAL);
   }
 
-  private static void addFullTable(List<? super Task<?>> out, String filename, String sql) {
-    addFullTable(out, filename, sql, TaskCategory.REQUIRED);
+  @Nullable
+  private ZonedIntervalIterable queryRangeFromConnectorArguments(ConnectorArguments arguments) {
+    Pair<ZonedDateTime, ZonedDateTime> dateRange = dateRange(arguments);
+    if (dateRange == null) {
+      logger.info("Date ranges was not specified. Generate full table queries.");
+      return null;
+    }
+
+    logger.info(
+        "Date range for query generation from {} to {} exclusive and increments of one day.",
+        dateRange.getLeft(),
+        dateRange.getRight());
+    return ZonedIntervalIterableGenerator.forDateRangeWithIntervalDuration(
+        dateRange.getLeft(), dateRange.getRight(), Duration.ofDays(1));
   }
 
-  private static void addFullTable(
+  @Nullable
+  private Pair<ZonedDateTime, ZonedDateTime> dateRange(ConnectorArguments arguments) {
+    if (!(arguments.getStartDate() != null || arguments.getEndDate() != null)) {
+      return null;
+    }
+
+    return Pair.of(arguments.getStartDate(), arguments.getEndDate());
+  }
+
+  /**
+   * call example: addTableTaskWithIntervals( out, "task_instance", "select * from task_instance ",
+   * zonedIntervals, (startDate, endDate) -> String.format( " where end_date >= CAST( '%s' as
+   * TIMESTAMP) and end_date < CAST( '%s' as TIMESTAMP) ;", dateToSqlFormat(startDate),
+   * dateToSqlFormat(endDate)));
+   */
+  private static void addTableTaskWithIntervals(
+      List<? super Task<?>> out,
+      String filename,
+      String sql,
+      @Nullable ZonedIntervalIterable zonedIntervals,
+      BiFunction<ZonedDateTime, ZonedDateTime, String> toIntervalWhereClause) {
+    if (zonedIntervals == null) {
+      addQueryTask(out, filename, sql, TaskCategory.REQUIRED);
+      return;
+    }
+
+    for (ZonedInterval interval : zonedIntervals) {
+      String calculatedFileName =
+          DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(interval.getStartUTC()) + filename;
+      String calculatedSql =
+          sql + toIntervalWhereClause.apply(interval.getStart(), interval.getEndExclusive());
+      addQueryTask(out, calculatedFileName, calculatedSql);
+    }
+  }
+
+  private static void addQueryTask(List<? super Task<?>> out, String filename, String sql) {
+    addQueryTask(out, filename, sql, TaskCategory.REQUIRED);
+  }
+
+  private static void addQueryTask(
       List<? super Task<?>> out, String filename, String sql, TaskCategory taskCategory) {
     out.add(new JdbcSelectTask(filename, sql, taskCategory));
   }
@@ -144,12 +233,32 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       Preconditions.checkState(arguments.getPort() != null, "--port is required with --host");
       Preconditions.checkState(arguments.getSchema() != null, "--schema is required with --host");
     }
+
+    validateDatesRange(arguments);
+  }
+
+  private void validateDatesRange(ConnectorArguments arguments) {
+    ZonedDateTime startDate = arguments.getStartDate();
+    ZonedDateTime endDate = arguments.getEndDate();
+
+    if (startDate != null) {
+      Preconditions.checkNotNull(
+          endDate, "End date must be specified with start date, but was null.");
+      Preconditions.checkState(
+          startDate.isBefore(endDate),
+          "Start date [%s] must be before end date [%s].",
+          startDate,
+          endDate);
+    } else {
+      Preconditions.checkState(
+          endDate == null,
+          "End date can be specified only with start date, but start date was null.");
+    }
   }
 
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-
     String jdbcString;
     Driver driver;
 
@@ -169,7 +278,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       driver = loadFirstAvailableDriver(arguments.getDriverPaths(), filteredDriverClass);
     }
 
-    LOG.info("Connecting to jdbc string [{}]...", jdbcString);
+    logger.info("Connecting to jdbc string [{}]...", jdbcString);
 
     DataSource dataSource = newSimpleDataSource(driver, jdbcString, arguments);
     return JdbcHandle.newPooledJdbcHandle(dataSource, 1);

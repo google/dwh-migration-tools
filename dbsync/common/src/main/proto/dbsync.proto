@@ -13,7 +13,7 @@ message Checksum {
 	uint64 blockOffset = 1;
 	uint32 blockLength = 2;
 	int32 weakChecksum = 3;
-	int64 strongChecksum = 4;
+	bytes strongChecksum = 4;
 }
 
 message Instruction  {

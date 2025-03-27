@@ -45,7 +45,7 @@ public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressM
                 new Thread.UncaughtExceptionHandler() {
                   @Override
                   public void uncaughtException(Thread t, Throwable e) {
-                    LOG.error("Uncaught exception in " + t.getName() + ": " + e, e);
+                    logger.error("Uncaught exception in " + t.getName() + ": " + e, e);
                   }
                 })
             .build();
@@ -55,7 +55,8 @@ public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressM
   }
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(ConcurrentRecordProgressMonitor.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(ConcurrentRecordProgressMonitor.class);
 
   private static final long DELAY = 6;
   private final String name;
@@ -67,7 +68,7 @@ public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressM
   public ConcurrentRecordProgressMonitor(@Nonnull String name, @Nonnegative long total) {
     this.name = name;
     this.total = total;
-    LOG.debug(name + ": Starting with " + total + " items. " + newMemorySummary());
+    logger.debug(name + ": Starting with " + total + " items. " + newMemorySummary());
     this.future =
         ExecutorHolder.EXECUTOR_SERVICE.scheduleWithFixedDelay(
             new Update(this, name), DELAY, DELAY, TimeUnit.SECONDS);
@@ -76,7 +77,7 @@ public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressM
   public ConcurrentRecordProgressMonitor(@Nonnull String name) {
     this.name = name;
     this.total = 0;
-    LOG.debug(name + ": Starting. " + newMemorySummary());
+    logger.debug(name + ": Starting. " + newMemorySummary());
     this.future =
         ExecutorHolder.EXECUTOR_SERVICE.scheduleWithFixedDelay(
             new Update(this, name), DELAY, DELAY, TimeUnit.SECONDS);
@@ -99,7 +100,7 @@ public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressM
     String rate =
         (elapsed == 0) ? "infinity" : Long.toString((long) (count * 1000L / (double) elapsed));
     if (total > 0) {
-      LOG.debug(
+      logger.debug(
           name
               + ": "
               + status
@@ -116,7 +117,7 @@ public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressM
               + "/sec) "
               + newMemorySummary());
     } else {
-      LOG.debug(
+      logger.debug(
           name
               + ": "
               + status
@@ -163,7 +164,7 @@ public class ConcurrentRecordProgressMonitor extends AbstractConcurrentProgressM
     if (!future.isDone()) {
       future.cancel(false);
       update("Completed");
-      // LOG.debug(name + ": Done in " + stopwatch + ".");
+      // logger.debug(name + ": Done in " + stopwatch + ".");
     }
   }
 }

@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class InstructionGeneratorTest {
-  private static final Logger LOG = LoggerFactory.getLogger(InstructionGeneratorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(InstructionGeneratorTest.class);
 
   @Test
   public void testChecksumMatcher() throws Exception {
@@ -21,7 +21,7 @@ public class InstructionGeneratorTest {
     ChecksumGenerator generator = new ChecksumGenerator(1025);
     List<Checksum> checksums = new ArrayList<>();
     generator.generate(checksums::add, srcData);
-    // LOG.info("Checksums are " + checksums);
+    // logger.info("Checksums are " + checksums);
 
     byte[] dstData = new byte[17612];
     ThreadLocalRandom.current().nextBytes(dstData);
@@ -29,7 +29,7 @@ public class InstructionGeneratorTest {
     dstData[12876]--;
 
     InstructionGenerator matcher = new InstructionGenerator(generator.getBlockSize());
-    matcher.generate(i -> LOG.info(String.valueOf(i)), ByteSource.wrap(dstData), checksums);
+    matcher.generate(i -> logger.info(String.valueOf(i)), ByteSource.wrap(dstData), checksums);
   }
 
 }

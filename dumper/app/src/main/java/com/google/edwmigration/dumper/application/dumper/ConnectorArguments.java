@@ -36,7 +36,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.application.dumper.io.PasswordReader;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -92,6 +91,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final int OPT_PORT_ORDER = 200;
   public static final String OPT_USER = "user";
   public static final String OPT_PASSWORD = "password";
+  public static final String OPT_START_DATE = "start-date";
+  public static final String OPT_END_DATE = "end-date";
 
   public static final String OPT_CLUSTER = "cluster";
   public static final String OPT_ROLE = "role";
@@ -229,6 +230,26 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .describedAs("sekr1t");
 
+  private final OptionSpec<ZonedDateTime> optionStartDate =
+      parser
+          .accepts(
+              OPT_START_DATE,
+              "Inclusive start date for data to export, value will be truncated to hour")
+          .withOptionalArg()
+          .ofType(Date.class)
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
+
+  private final OptionSpec<ZonedDateTime> optionEndDate =
+      parser
+          .accepts(
+              OPT_END_DATE,
+              "Exclusive end date for data to export, value will be truncated to hour")
+          .withOptionalArg()
+          .ofType(Date.class)
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
+
   private final OptionSpec<String> optionCluster =
       parser
           .accepts(OPT_CLUSTER, "Cluster name to dump metadata")
@@ -310,7 +331,7 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
-          .describedAs("2001-01-01[ 00:00:00.[000]]");
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
   private final OptionSpec<ZonedDateTime> optionQueryLogEnd =
       parser
           .accepts(
@@ -319,7 +340,7 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.END_OF_DAY))
-          .describedAs("2001-01-01[ 00:00:00.[000]]");
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
 
   // This is intentionally NOT provided as a default value to the optionQueryLogEnd OptionSpec,
   // because some callers
@@ -663,14 +684,14 @@ public class ConnectorArguments extends DefaultArguments {
 
   private void printConnectorHelp(@Nonnull Appendable out, @Nonnull Connector connector)
       throws IOException {
-    Description description = connector.getClass().getAnnotation(Description.class);
     out.append("* " + connector.getName());
-    if (description != null) {
-      out.append(" - ").append(description.value());
+    String description = connector.getDescription();
+    if (!description.isEmpty()) {
+      out.append(" - " + description);
     }
     out.append("\n");
     for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
-      out.append("        ").append(descriptor.toString()).append("\n");
+      out.append(String.format("%8s%s\n", "", descriptor));
     }
     ConnectorProperties.printHelp(out, connector);
   }
@@ -888,6 +909,20 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public Integer getQueryLogDays() {
     return getOptions().valueOf(optionQueryLogDays);
+  }
+
+  @CheckForNull
+  public ZonedDateTime getStartDate() {
+    return getOptions().valueOf(optionStartDate);
+  }
+
+  public ZonedDateTime getStartDate(ZonedDateTime defaultTime) {
+    return firstNonNull(getStartDate(), defaultTime);
+  }
+
+  @CheckForNull
+  public ZonedDateTime getEndDate() {
+    return getOptions().valueOf(optionEndDate);
   }
 
   public Duration getQueryLogRotationFrequency() {

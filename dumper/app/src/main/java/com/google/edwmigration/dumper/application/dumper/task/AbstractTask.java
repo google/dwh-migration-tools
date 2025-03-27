@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /** @author shevek */
 public abstract class AbstractTask<T> implements Task<T> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractTask.class);
 
   public static final CSVFormat FORMAT =
       CSVFormat.DEFAULT
@@ -119,7 +119,7 @@ public abstract class AbstractTask<T> implements Task<T> {
 
     OutputHandle sink = context.newOutputFileHandle(getTargetPath());
     if (sink.exists()) {
-      LOG.info("Skipping {}: {} already exists.", getName(), sink);
+      logger.info("Skipping {}: {} already exists.", getName(), sink);
       return null;
     }
     T result = doRun(context, sink.asTemporaryByteSink(), context.getHandle());

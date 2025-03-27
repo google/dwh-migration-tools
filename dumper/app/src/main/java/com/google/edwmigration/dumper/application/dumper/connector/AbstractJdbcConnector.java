@@ -28,6 +28,9 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,12 +42,16 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /** @author shevek */
 public abstract class AbstractJdbcConnector extends AbstractConnector {
-
-  @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractJdbcConnector.class);
+  private static final DateTimeFormatter SQL_FORMAT =
+      DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
 
   public AbstractJdbcConnector(@Nonnull String name) {
     super(name);
+  }
+
+  protected static String dateToSqlFormat(ZonedDateTime dateTime) {
+    return SQL_FORMAT.format(dateTime);
   }
 
   @Nonnull
@@ -123,7 +130,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
             driverClass = Class.forName(driverClassName, true, driverClassLoader);
             if (driverClass != null) break CLASS;
           } catch (ClassNotFoundException ignore) {
-            LOG.info("Driver class [{}] not found at  {}.", driverClassName, driverPaths);
+            logger.info("Driver class [{}] not found at  {}.", driverClassName, driverPaths);
           }
         }
         throw new SQLException(
@@ -133,7 +140,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
                 + driverPaths);
       }
 
-      LOG.info("Using JDBC Driver: {}", driverClass);
+      logger.info("Using JDBC Driver: {}", driverClass);
       return driverClass.asSubclass(Driver.class).getConstructor().newInstance();
     } catch (ReflectiveOperationException
         | PrivilegedActionException
@@ -158,7 +165,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
     /*
     @Override
     protected Connection getConnectionFromDriver(Properties props) throws SQLException {
-        LOG.debug("Connecting", new Exception());
+        logger.debug("Connecting", new Exception());
         return super.getConnectionFromDriver(props);
     }
      */

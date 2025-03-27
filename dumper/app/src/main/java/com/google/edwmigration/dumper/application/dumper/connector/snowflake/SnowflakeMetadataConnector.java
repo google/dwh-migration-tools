@@ -32,7 +32,6 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -45,12 +44,11 @@ import org.slf4j.LoggerFactory;
  * @author matt
  */
 @AutoService(Connector.class)
-@Description("Dumps metadata from Snowflake.")
 public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
 
   private enum PropertyAction {
     QUERY("query", "query"),
@@ -103,6 +101,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
   @Override
   @Nonnull
+  public String getDescription() {
+    return "Dumps metadata from Snowflake.";
+  }
+
+  @Override
+  @Nonnull
   public Iterable<ConnectorProperty> getPropertyConstants() {
     ImmutableList.Builder<ConnectorProperty> builder = ImmutableList.builder();
     for (MetadataView view : MetadataView.values()) {
@@ -142,7 +146,18 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     out.add(new FormatTask(FORMAT_NAME));
 
     boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
-    final String IS = INJECT_IS_FAULT ? "__NONEXISTENT__" : "INFORMATION_SCHEMA";
+    // INFORMATION_SCHEMA queries must be qualified with a database
+    // name or that a "USE DATABASE" command has previously been run
+    // in the same session. Qualify the name to avoid this dependency.
+    final String databaseName = arguments.getDatabaseSingleName();
+    final String IS;
+    if (INJECT_IS_FAULT) {
+      IS = "__NONEXISTENT__";
+    } else if (databaseName == null) {
+      IS = "INFORMATION_SCHEMA";
+    } else {
+      IS = sanitizeDatabaseName(databaseName) + ".INFORMATION_SCHEMA";
+    }
     final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
     final String AU_WHERE = " WHERE DELETED IS NULL";
 
@@ -196,7 +211,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         getOverrideableQuery(
             arguments,
             "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name,"
-                + " data_type FROM %1$s.COLUMNS%2$s",
+                + " data_type, is_nullable, column_default, character_maximum_length,"
+                + " numeric_precision, numeric_scale, datetime_precision, comment FROM %1$s.COLUMNS%2$s",
             MetadataView.COLUMNS),
         ColumnsFormat.IS_ZIP_ENTRY_NAME,
         IS,
@@ -236,13 +252,23 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        String formatString = overrideFormatString(item, arguments);
-        String query = String.format(formatString, AU, /* an empty WHERE clause */ "");
-        String zipName = item.zipEntryName;
-        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
-        out.add(task);
+        addAssessmentQuery(item, out, arguments, AU);
       }
+    } else {
+      addAssessmentQuery(SnowflakePlanner.SHOW_EXTERNAL_TABLES, out, arguments, AU);
     }
+  }
+
+  private void addAssessmentQuery(
+      @Nonnull AssessmentQuery item,
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull ConnectorArguments arguments,
+      @Nonnull String AU) {
+    String formatString = overrideFormatString(item, arguments);
+    String query = String.format(formatString, AU, /* an empty WHERE clause */ "");
+    String zipName = item.zipEntryName;
+    Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
+    out.add(task);
   }
 
   private String overrideFormatString(AssessmentQuery query, ConnectorArguments arguments) {

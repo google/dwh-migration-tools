@@ -36,6 +36,7 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.sql.Driver;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -73,7 +74,12 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
+  public abstract String getDescription();
+
+  @Nonnull
+  @Override
+  public Handle open(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException, SQLException {
     String url = arguments.getUri();
     if (url == null) {
       StringBuilder buf = new StringBuilder("jdbc:snowflake://");
@@ -127,8 +133,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
     String currentDatabase =
-        jdbcTemplate.queryForObject(
-            String.format("USE DATABASE \"%s\";", databaseName), String.class);
+        jdbcTemplate.queryForObject(String.format("USE DATABASE %s;", databaseName), String.class);
     if (currentDatabase == null) {
       List<String> dbNames =
           jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
@@ -140,8 +145,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     }
   }
 
-  private String sanitizeDatabaseName(@Nonnull String databaseName)
-      throws MetadataDumperUsageException {
+  String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {
     CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
     String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
     int charLengthWithQuotes = databaseName.length() + 2;

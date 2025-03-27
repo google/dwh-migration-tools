@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class ZipFileUtils {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(ZipFileUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(ZipFileUtils.class);
 
   @CheckForNull
   public static ZipArchiveEntry findZipEntry(@Nonnull ZipFile zip, @Nonnull String name) {
@@ -47,7 +47,7 @@ public class ZipFileUtils {
     String suffix = "/" + name;
     for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
       if (StringUtils.endsWithIgnoreCase(entry.getName(), suffix)) {
-        LOG.warn(
+        logger.warn(
             "SUSPICIOUS ZIP FILE: ALL BETS ARE OFF: Found zip entry "
                 + name
                 + " located at "

@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -23,7 +24,7 @@ import org.slf4j.LoggerFactory;
 public class InstructionGenerator {
 
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(InstructionGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(InstructionGenerator.class);
   private static final boolean DEBUG = false;
 
   private final int blockSize;
@@ -38,14 +39,14 @@ public class InstructionGenerator {
         .build();
   }
 
-  public void generate(Consumer<? super Instruction> out, ByteSource in,
+  public void generate(InstructionConsumer<? extends IOException> out, ByteSource in,
       List<? extends Checksum> checksums) throws IOException {
     Int2ObjectMap<Collection<Checksum>> checksumMap = new Int2ObjectOpenHashMap<>(checksums.size());
     for (Checksum c : checksums) {
       checksumMap.computeIfAbsent(c.getWeakChecksum(), k -> new ArrayList<>()).add(c);
     }
     if (DEBUG) {
-      LOG.debug("Checksum map contains {} keys", checksumMap.size());
+      logger.debug("Checksum map contains {} keys", checksumMap.size());
     }
 
     // TODO: We could use Literal.MAX_LENGTH here, but that would make testing a bit more fiddly.
@@ -64,7 +65,7 @@ public class InstructionGenerator {
         // This is the fast-path.
         rollingBlockLength = rollingChecksum.reset(i);
         if (DEBUG) {
-          LOG.debug("Fast-path reset read {} bytes", rollingBlockLength);
+          logger.debug("Fast-path reset read {} bytes", rollingBlockLength);
         }
         BYTE:
         for (; ; ) {
@@ -74,20 +75,20 @@ public class InstructionGenerator {
           // And the wisdom to know the difference.
           MATCH:
           if (cc != null) {
-            HashCode strongHashCode = rollingChecksum.getStrongHashCode();
+            byte[] strongHashCode = rollingChecksum.getStrongHashCode().asBytes();
             for (Checksum c : cc) {
-              if (c.getStrongChecksum() == strongHashCode.asLong()) {
+              if (Arrays.equals(c.getStrongChecksum().toByteArray(), strongHashCode)) {
                 if (literalBufferLength > 0) {
                   if (DEBUG) {
-                    LOG.debug("Emitting pre-match literal");
+                    logger.debug("Emitting pre-match literal");
                   }
                   out.accept(newLiteralInstruction(literalBuffer, literalBufferLength));
                   literalBufferLength = 0;
                 }
                 Instruction insn = Instruction.newBuilder()
                     .setBlockLocation(BlockLocation.newBuilder()
-                            .setBlockOffset(c.getBlockOffset())
-                            .setBlockLength(c.getBlockLength()))
+                        .setBlockOffset(c.getBlockOffset())
+                        .setBlockLength(c.getBlockLength()))
                     .build();
                 out.accept(insn);
                 continue STREAM;
@@ -101,7 +102,7 @@ public class InstructionGenerator {
           if (literalBufferLength == literalBuffer.length) {
             // We're about to run out of RollingChecksum buffer.
             if (DEBUG) {
-              LOG.debug("Emitting overflow literal");
+              logger.debug("Emitting overflow literal");
             }
             out.accept(newLiteralInstruction(literalBuffer, literalBufferLength));
             literalBufferLength = 0;
@@ -114,13 +115,13 @@ public class InstructionGenerator {
       // because if it were more than one block, we would have emitted an overflow literal above.
       if (literalBufferLength > 0) {
         if (DEBUG) {
-          LOG.debug("Emitting trailing literal");
+          logger.debug("Emitting trailing literal");
         }
         out.accept(newLiteralInstruction(literalBuffer, literalBufferLength));
       }
       if (rollingBlockLength > 0) {
         if (DEBUG) {
-          LOG.debug("Emitting trailing rolling buffer");
+          logger.debug("Emitting trailing rolling buffer");
         }
         // TODO: Double copy with ByteString.copyFrom().
         byte[] rollingBuffer = rollingChecksum.getBlock(rollingBlockLength);
@@ -128,4 +129,13 @@ public class InstructionGenerator {
       }
     }
   }
+
+  public interface InstructionConsumer<X extends Exception> {
+
+    /**
+     * Accepts an instruction from the generator
+     */
+    void accept(Instruction instruction) throws X;
+  }
+
 }

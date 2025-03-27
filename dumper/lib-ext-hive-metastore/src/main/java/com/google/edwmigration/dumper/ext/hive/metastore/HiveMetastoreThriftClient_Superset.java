@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
 public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClient {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG =
+  private static final Logger logger =
       LoggerFactory.getLogger(HiveMetastoreThriftClient_Superset.class);
 
   @Nonnull

@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConnectorProperties {
-  private static final Logger LOG = LoggerFactory.getLogger(ConnectorProperties.class);
+  private static final Logger logger = LoggerFactory.getLogger(ConnectorProperties.class);
 
   private final ImmutableMap<String, String> definitionMap;
 
@@ -88,7 +88,7 @@ public class ConnectorProperties {
         String value = definition.substring(idx + 1);
         resultMap.put(name, value);
         if (connector != null && propertyNamesByConnector.get(connector).contains(name)) {
-          LOG.info("Parsed property: name='{}', value='{}'", name, value);
+          logger.info("Parsed property: name='{}', value='{}'", name, value);
         } else if (allPropertyNames.contains(name)) {
           throw new MetadataDumperUsageException(
               String.format(

@@ -70,7 +70,14 @@ public interface SnowflakeMetadataDumpFormat {
       TableName,
       OrdinalPosition,
       ColumnName,
-      DataType
+      DataType,
+      IsNullable,
+      ColumnDefault,
+      CharacterMaximumLength,
+      NumericPrecision,
+      NumericScale,
+      DatetimePrecision,
+      Comment
     }
   }
 
@@ -139,5 +146,27 @@ public interface SnowflakeMetadataDumpFormat {
 
   interface ExternalTablesFormat {
     String AU_ZIP_ENTRY_NAME = "external_tables.csv";
+
+    enum Header {
+      CreatedOn,
+      Name,
+      DatabaseName,
+      SchemaName,
+      Invalid,
+      InvalidReason,
+      Owner,
+      Comment,
+      Stage,
+      Location,
+      FileFormatName,
+      FileFormatType,
+      Cloud,
+      Region,
+      NotificationChannel,
+      LastRefreshedOn,
+      TableFormat,
+      LastRefreshDetails,
+      OwnerRoleType
+    }
   }
 }

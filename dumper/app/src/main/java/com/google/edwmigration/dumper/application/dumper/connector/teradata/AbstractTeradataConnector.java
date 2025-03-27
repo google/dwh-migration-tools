@@ -85,7 +85,7 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
 public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractTeradataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractTeradataConnector.class);
 
   public static final int OPT_PORT_DEFAULT = 1025;
   protected static final DateTimeFormatter SQL_FORMAT =
@@ -157,7 +157,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
         statement.execute();
       } catch (SQLException e) {
         // We might still be in postgresql or sqlite.
-        LOG.warn("Failed to set QUERY_BAND: " + e);
+        logger.warn("Failed to set QUERY_BAND: " + e);
         // This puts the transaction in an aborted state unless we rollback here.
         connection.rollback();
       }

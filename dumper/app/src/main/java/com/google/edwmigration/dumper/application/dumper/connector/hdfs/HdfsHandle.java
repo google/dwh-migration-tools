@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class HdfsHandle implements Handle {
-  private static final Logger LOG = LoggerFactory.getLogger(HdfsHandle.class);
+  private static final Logger logger = LoggerFactory.getLogger(HdfsHandle.class);
 
   private final String clusterHost;
   private final int port;
@@ -47,8 +47,8 @@ class HdfsHandle implements Handle {
     clusterHost = args.getHostOrDefault();
     port = args.getPort(/* defaultPort= */ 8020);
 
-    LOG.info("clusterHost: '{}'", clusterHost);
-    LOG.info("port: '{}'", port);
+    logger.info("clusterHost: '{}'", clusterHost);
+    logger.info("port: '{}'", port);
 
     Configuration conf = new Configuration();
     if (args.useKerberosAuthForHadoop()) {
@@ -57,7 +57,7 @@ class HdfsHandle implements Handle {
       boolean coreSiteXmlSpecified = args.has(args.optionHadoopCoreSiteXml);
       if (coreSiteXmlSpecified) {
         String coreSiteXml = args.getHadoopCoreSiteXml();
-        LOG.info("core-site.xml path specified: {}", coreSiteXml);
+        logger.info("core-site.xml path specified: {}", coreSiteXml);
         Preconditions.checkArgument(
             Files.exists(Paths.get(coreSiteXml)),
             "Argument --" + OPT_HADOOP_CORE_SITE_XML + " specifies invalid path: " + coreSiteXml);
@@ -67,7 +67,7 @@ class HdfsHandle implements Handle {
       boolean hdfsSiteXmlSpecified = args.has(args.optionHadoopHdfsSiteXml);
       if (hdfsSiteXmlSpecified) {
         String hdfsSiteXml = args.getHadoopHdfsSiteXml();
-        LOG.info("hdfs-site.xml path specified: {}", hdfsSiteXml);
+        logger.info("hdfs-site.xml path specified: {}", hdfsSiteXml);
         Preconditions.checkArgument(
             Files.exists(Paths.get(hdfsSiteXml)),
             "Argument --" + OPT_HADOOP_HDFS_SITE_XML + " specifies invalid path: " + hdfsSiteXml);
@@ -77,11 +77,11 @@ class HdfsHandle implements Handle {
       String krbPrincipal = args.getKerberosPrincipal();
       String krbKeytab = args.getKerberosKeytabPath();
       if (krbKeytab != null) {
-        LOG.info("Kerberos keytab path : {}", krbKeytab);
+        logger.info("Kerberos keytab path : {}", krbKeytab);
         // keytab requires principal:
         Preconditions.checkArgument(
             krbPrincipal != null, "Missing argument --" + OPT_KERBEROS_PRINCIPAL);
-        LOG.info("Kerberos principal : {}", krbPrincipal);
+        logger.info("Kerberos principal : {}", krbPrincipal);
 
         if (!coreSiteXmlSpecified) {
           set(conf, "hadoop.security.authorization", "true");
@@ -101,15 +101,15 @@ class HdfsHandle implements Handle {
           Preconditions.checkArgument(
               krbRealm != null,
               "Argument --" + OPT_KERBEROS_PRINCIPAL + " missing @<REALM> suffix: " + krbPrincipal);
-          LOG.info("Kerberos realm (extracted from Kerberos principal): {}", krbRealm);
+          logger.info("Kerberos realm (extracted from Kerberos principal): {}", krbRealm);
           String hdfsPrincipal = args.getHdfsPrincipalPrefix() + krbRealm;
-          LOG.info("Hdfs principal (constructed from Kerberos realm): {}", hdfsPrincipal);
+          logger.info("Hdfs principal (constructed from Kerberos realm): {}", hdfsPrincipal);
           for (String prop : hdfsPrincipals) {
             conf.set(prop, hdfsPrincipal);
           }
         }
         for (String prop : hdfsPrincipals) {
-          LOG.info("{}: {}", prop, conf.get(prop));
+          logger.info("{}: {}", prop, conf.get(prop));
         }
 
         // Auth by provided principal and its keytab:
@@ -129,7 +129,7 @@ class HdfsHandle implements Handle {
   }
 
   private static void set(Configuration conf, String property, String value) {
-    LOG.info("{}: {}", property, value);
+    logger.info("{}: {}", property, value);
     conf.set(property, value);
   }
 

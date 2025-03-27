@@ -5,11 +5,9 @@ import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteSource;
 import com.google.common.primitives.Ints;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.function.Consumer;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public class ChecksumGenerator {
 
   @SuppressWarnings("unused")
-  private static final Logger LOG = LoggerFactory.getLogger(ChecksumGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(ChecksumGenerator.class);
   private static final boolean DEBUG = false;
 
   private final @NonNegative int blockSize;
@@ -30,7 +28,7 @@ public class ChecksumGenerator {
     return blockSize;
   }
 
-  public void generate(Consumer<Checksum> out, ByteSource in) throws IOException {
+  public void generate(ChecksumConsumer<IOException> out, ByteSource in) throws IOException {
     // This deliberately throws if size is not Present.
     Optional<Long> dataSizeOptional = in.sizeIfKnown();
     if (!dataSizeOptional.isPresent()) {
@@ -50,7 +48,8 @@ public class ChecksumGenerator {
         // Yes, this masks the instance variable.
         int blockSize = rollingChecksum.getBlockSize();
         if (DEBUG) {
-          LOG.info("Generating checksums for [{} .. +{}] in {} bytes", offset, blockSize, dataSize);
+          logger.info("Generating checksums for [{} .. +{}] in {} bytes", offset, blockSize,
+              dataSize);
         }
 
         // If someone changes the size of the ByteSource underneath us, this might throw EOFException.
@@ -72,10 +71,15 @@ public class ChecksumGenerator {
             .setBlockOffset(offset)
             .setBlockLength(blockSize)
             .setWeakChecksum(weakHashCode)
-            .setStrongChecksum(strongHashCode.asLong())
+            .setStrongChecksum(ByteString.copyFrom(strongHashCode.asBytes()))
             .build();
         out.accept(c);
       }
     }
+  }
+
+  public interface ChecksumConsumer<X extends Exception> {
+
+    void accept(Checksum checksum) throws X;
   }
 }

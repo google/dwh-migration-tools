@@ -29,6 +29,7 @@ plugins {
 
 apply plugin: 'com.github.jk1.dependency-license-report'
 apply plugin: "jacoco"
+apply plugin: 'com.adarshr.test-logger'
 
 configurations {
     sources {
