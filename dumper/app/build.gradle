@@ -39,6 +39,9 @@ configurations {
         // *-over-slf4j bridges used
         exclude group: "ch.qos.reload4j", module: "reload4j"
         exclude group: "org.slf4j", module: "slf4j-reload4j"
+
+        // We use logback-classic instead of simple
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
 }
 
@@ -80,8 +83,6 @@ dependencies {
     implementation libs.aws.java.sdk.cloudwatch
     implementation(libs.oozie.client) {
         exclude group: 'javax.jms', module: 'jms'
-//        exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
-//        exclude group: 'org.slf4j', module: 'slf4j-simple'
         exclude group: 'junit', module: 'junit'
         exclude group: 'guru.nidi', module: 'graphviz-java'
     }
