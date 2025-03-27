@@ -45,21 +45,20 @@ public class OozieClientFactory {
       throws OozieCLIException {
     oozieUrl = oozieUrl != null ? oozieUrl : getOozieUrlFromEnv();
     String authOption = getAuthOption(user, password);
-    XOozieClient wc = new AuthOozieClient(oozieUrl, authOption);
+    XOozieClient oozieClient = new AuthOozieClient(oozieUrl, authOption);
 
     // mimic oozie CLI configuration
-    addHeaders(wc, user, password);
-    setRetryCount(wc);
-    return wc;
+    addHeaders(oozieClient, user, password);
+    setRetryCount(oozieClient);
+    return oozieClient;
   }
 
   protected static String getAuthOption(String user, String password) throws OozieCLIException {
     if (user != null) {
-      if (password != null) {
-        return AuthType.BASIC.name();
-      } else {
+      if (password == null) {
         throw new OozieCLIException("No password specified, it is required, if user is set!");
       }
+      return AuthType.BASIC.name();
     }
     String authOpt = getEnvProperty(ENV_OOZIE_AUTH);
     logger.debug("Auth type for Oozie client: {} base on " + ENV_OOZIE_AUTH, authOpt);
@@ -96,13 +95,13 @@ public class OozieClientFactory {
     }
   }
 
-  protected static void setRetryCount(OozieClient wc) {
+  protected static void setRetryCount(OozieClient oozieClient) {
     String retryCount = getEnvProperty(OOZIE_RETRY_COUNT);
     if (retryCount != null && !retryCount.isEmpty()) {
       try {
         int retry = Integer.parseInt(retryCount.trim());
-        wc.setRetryCount(retry);
-      } catch (Exception ex) {
+        oozieClient.setRetryCount(retry);
+      } catch (NumberFormatException ex) {
         logger.error(
             "Unable to parse the retry settings. May be not an integer [{}]", retryCount, ex);
       }
