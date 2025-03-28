@@ -41,21 +41,11 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RangerDumpFormat.Use
 import com.google.errorprone.annotations.ForOverride;
 import java.io.IOException;
 import java.io.Writer;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.security.cert.X509Certificate;
 import java.time.Clock;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import javax.annotation.Nonnull;
-import javax.net.ssl.SSLContext;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,32 +90,9 @@ public class RangerConnector extends AbstractConnector {
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    URIBuilder uriBuilder =
-        new URIBuilder().setPort(arguments.getPort()).setHost(arguments.getHostOrDefault());
-    if (Objects.equals(arguments.getRangerScheme(), "https")) {
-      uriBuilder.setScheme("https");
-    } else {
-      uriBuilder.setScheme("http");
-    }
-    URI apiUrl = uriBuilder.build();
-    String password = arguments.getPasswordOrPrompt();
-    CloseableHttpClient httpClient;
-    if (arguments.hasRangerIgnoreTlsValidation()) {
-      // create a client with a trust strategy which accepts any certificate
-      TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
-      SSLContext sslContext =
-          SSLContextBuilder.create().loadTrustMaterial(null, acceptingTrustStrategy).build();
-      httpClient =
-          HttpClients.custom()
-              .setSSLContext(sslContext)
-              .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-              .build();
-    } else {
-      httpClient = HttpClients.createMinimal();
-    }
+
     return new RangerClientHandle(
-        new RangerClient(httpClient, apiUrl, arguments.getUser(), password),
-        arguments.getRangerPageSizeDefault());
+        RangerClient.instance(arguments), arguments.getRangerPageSizeDefault());
   }
 
   static class DumpUsersTask extends AbstractRangerTask {
