@@ -16,22 +16,14 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.ranger;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerClient.ConnectionWrapper;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
 import java.io.IOException;
-import java.net.URI;
-import org.apache.http.HttpStatus;
-import org.apache.http.HttpVersion;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.entity.BasicHttpEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mock;
@@ -40,32 +32,16 @@ import org.mockito.Mockito;
 @RunWith(JUnit4.class)
 public abstract class AbstractRangerTaskTest extends AbstractTaskTest {
 
-  @Mock protected CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+  @Mock protected ConnectionWrapper httpClient = mock(ConnectionWrapper.class);
 
-  protected RangerClient rangerClient =
-      new RangerClient(httpClient, URI.create("http://localhost/ranger"), "user", "password");
+  protected RangerClient rangerClient = new RangerClient(httpClient);
 
   protected RangerClientHandle handle = new RangerClientHandle(rangerClient, /* pageSize= */ 1000);
 
   protected MemoryByteSink sink = new MemoryByteSink();
 
-  private static class TestCloseableHttpResponse extends BasicHttpResponse
-      implements CloseableHttpResponse {
-
-    public TestCloseableHttpResponse(StatusLine statusline) {
-      super(statusline);
-    }
-
-    @Override
-    public void close() throws IOException {}
-  }
-
   protected void mockSuccessfulResponseFromResource(String resource) throws IOException {
-    StatusLine statusLine = new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_OK, "");
-    TestCloseableHttpResponse response = new TestCloseableHttpResponse(statusLine);
-    BasicHttpEntity entity = new BasicHttpEntity();
-    entity.setContent(RangerTestResources.getResourceAsInputStream(resource));
-    response.setEntity(entity);
-    when(httpClient.execute(Mockito.any(HttpGet.class))).thenReturn(response);
+    when(httpClient.doGet(anyString(), Mockito.anyMap()))
+        .thenReturn(RangerTestResources.getResourceAsString(resource));
   }
 }
