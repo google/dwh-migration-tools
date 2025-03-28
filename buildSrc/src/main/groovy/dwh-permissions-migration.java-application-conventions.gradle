@@ -1,0 +1,156 @@
+/*
+ * Copyright 2022 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+plugins {
+    id 'java'
+    id 'java-test-fixtures'
+    id 'com.diffplug.spotless'
+    id 'nebula.info'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    all {
+        exclude group: 'javax.activation'   // In JDK since mumble.
+        exclude group: 'findbugs', module: 'annotations'
+        exclude group: 'net.jcip', module: 'jcip-annotations'   // In google-findbugs-annotations.
+        exclude group: 'org.springframework', module: 'spring-jcl'  // In jcl-over-slf4j
+        exclude group: 'commons-logging'    // Replaced by jcl-over-slf4j
+    }
+}
+
+dependencies {
+
+    constraints {
+        // Define dependency versions as constraints
+        implementation libs.guava
+        testFixturesImplementation libs.guava
+        implementation libs.jackson.databind
+        implementation libs.jackson.dataformat.yaml
+
+        implementation libs.jopt.simple
+        implementation libs.jdiagnostics
+        implementation libs.commons.io
+        implementation libs.apache.commons.csv
+        implementation libs.apache.commons.lang3
+        testFixturesImplementation libs.apache.commons.lang3
+        implementation libs.spring.core
+        implementation libs.spring.jdbc
+        implementation libs.hikaricp
+        implementation libs.rate.limited.logger
+
+        implementation libs.google.cloud.bigquery
+
+        implementation libs.snakeyaml
+
+        runtimeOnly libs.logback.classic
+        runtimeOnly libs.jcl.over.slf4j
+
+        runtimeOnly libs.postgresql
+        runtimeOnly libs.snowflake.jdbc
+        runtimeOnly libs.redshift.jdbc
+        runtimeOnly libs.aws.java.sdk.redshift
+
+        testFixturesApi libs.apache.commons.compress
+        testFixturesApi libs.commons.io
+        testImplementation libs.sqlite.jdbc
+        testImplementation libs.system.rules
+        testImplementation libs.postgresql
+        testImplementation libs.joda.time
+    }
+
+    implementation libs.slf4j.api
+    testFixturesApi libs.slf4j.api
+    implementation libs.jsr305
+    testFixturesImplementation libs.jsr305
+    testImplementation libs.jsr305
+    implementation libs.jcip.annotations
+    testFixturesImplementation libs.jcip.annotations
+    testImplementation libs.jcip.annotations
+    // Ideally, implementation, but this annotation is preserved/exposed.
+    implementation libs.checker.qual
+    testFixturesImplementation libs.checker.qual
+    testImplementation libs.checker.qual
+
+    compileOnly libs.auto.value.annotations
+    annotationProcessor libs.auto.value
+    testFixturesCompileOnly libs.auto.value.annotations
+    testFixturesAnnotationProcessor libs.auto.value
+    testCompileOnly libs.auto.value.annotations
+    testAnnotationProcessor libs.auto.value
+
+    compileOnly libs.auto.service
+    annotationProcessor libs.auto.service
+    testFixturesCompileOnly libs.auto.service
+    testFixturesAnnotationProcessor libs.auto.service
+    testCompileOnly libs.auto.service
+    testAnnotationProcessor libs.auto.service
+
+    testRuntimeOnly libs.logback.classic
+    testRuntimeOnly libs.jul.to.slf4j
+    testRuntimeOnly libs.log4j.over.slf4j
+    testRuntimeOnly libs.jcl.over.slf4j
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.named('test') {
+    // Use junit platform for unit tests.
+     useJUnitPlatform()
+}
+
+spotless {
+    // In an ideal world we would use $YEAR in the HEADER templates, but that
+    // breaks some internal tooling. So we also can't use:
+    // ratchetFrom 'origin/main' // Enables lazy copyright year updates.
+
+    java {
+        googleJavaFormat()
+        licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java");
+        trimTrailingWhitespace();
+        FileCollection files = files();
+        for (SourceSet sourceSet : sourceSets)
+            files = files.plus(sourceSet.allJava)
+        files = files.filter { f ->
+            // println "Filtering " + f;
+            String path = f.path;
+            // Ignore generated sources.
+            if (path.contains('/build/'))
+                return false;
+            if (path.contains('hive/support/HiveServerSupport.java'))
+                return false; // Additional copyright credits
+            if (path.contains('/gen-java/'))
+                return false
+            return true;
+        }
+        target files;
+    }
+
+    format('gradle', com.diffplug.gradle.spotless.FormatExtension.class) {
+        licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java"), '(?i:[a-z])'
+        trimTrailingWhitespace();
+        indentWithSpaces(4);
+        target files('build.gradle');
+    }
+}
