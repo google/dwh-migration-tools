@@ -165,15 +165,14 @@ public class ClouderaCMFHostsTaskTest {
     handle.initClusters(Arrays.asList(clusters));
   }
 
-  private void stubCMFHostResponse(String clusterId, String clusterName, String jsonHosts)
-      throws IOException {
+  private void stubCMFHostResponse(String clusterId, String clusterName, String jsonHosts) {
     String cmfResponse =
         String.format("{\"clusterName\" :\"%s\", \"hosts\": %s}", clusterName, jsonHosts);
     server.stubFor(
         get(urlMatching(
                 String.format(
                     "/cmf/hardware/hosts/hostsOverview\\.json\\?clusterId=%s.*", clusterId)))
-            .willReturn(okJson(cmfResponse).withStatus(HttpStatus.SC_OK)));
+            .willReturn(okJson(cmfResponse)));
   }
 
   private Set<String> getWrittenJsonLines() throws IOException {

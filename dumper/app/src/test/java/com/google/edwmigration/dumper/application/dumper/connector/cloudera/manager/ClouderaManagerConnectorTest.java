@@ -60,8 +60,8 @@ public class ClouderaManagerConnectorTest {
                     "host-ram-90d.jsonl", TaskCategory.OPTIONAL))
             .putAll(
                 ImmutableMap.of(
-                    "yarn-applications-90d.jsonl", TaskCategory.REQUIRED,
-                    "yarn-application-types-90d.jsonl", TaskCategory.REQUIRED))
+                    "yarn-applications-90d.jsonl", TaskCategory.OPTIONAL,
+                    "yarn-application-types-90d.jsonl", TaskCategory.OPTIONAL))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
