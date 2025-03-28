@@ -33,7 +33,7 @@ public class RangerClientTest {
 
   @Test
   public void closeHttpClient() throws Exception {
-    RangerClient client = new RangerClient(httpClient, baseUri, "user", "secret");
+    RangerClient client = new RangerClient(httpClient, baseUri);
 
     // Act
     client.close();

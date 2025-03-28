@@ -43,7 +43,7 @@ public abstract class AbstractRangerTaskTest extends AbstractTaskTest {
   @Mock protected CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
 
   protected RangerClient rangerClient =
-      new RangerClient(httpClient, URI.create("http://localhost/ranger"), "user", "password");
+      new RangerClient(httpClient, URI.create("http://localhost/ranger"));
 
   protected RangerClientHandle handle = new RangerClientHandle(rangerClient, /* pageSize= */ 1000);
 

@@ -27,27 +27,47 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.net.ssl.SSLContext;
 import org.apache.http.HttpEntity;
-import org.apache.http.auth.AuthenticationException;
+import org.apache.http.auth.AuthSchemeProvider;
+import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.auth.SPNegoSchemeFactory;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RangerClient implements AutoCloseable {
-  private static final Logger logger = LoggerFactory.getLogger(RangerConnector.class);
+class RangerClient implements AutoCloseable {
+  private static final Logger logger = LoggerFactory.getLogger(RangerClient.class);
 
   private static final ObjectReader MAPPER =
       new ObjectMapper()
@@ -72,15 +92,25 @@ public class RangerClient implements AutoCloseable {
 
   private final CloseableHttpClient httpClient;
 
-  private final UsernamePasswordCredentials credentials;
-
-  public RangerClient(CloseableHttpClient httpClient, URI baseUri, String user, String password) {
+  RangerClient(CloseableHttpClient httpClient, URI baseUri) {
     Preconditions.checkNotNull(httpClient, "Http client must not be null.");
     Preconditions.checkNotNull(baseUri, "BaseUri must not be null.");
 
     this.httpClient = httpClient;
     this.baseUri = baseUri;
-    credentials = new UsernamePasswordCredentials(user, password);
+  }
+
+  static RangerClient instance(@Nonnull ConnectorArguments arguments) throws Exception {
+    URIBuilder uriBuilder =
+        new URIBuilder().setPort(arguments.getPort()).setHost(arguments.getHostOrDefault());
+    if (Objects.equals(arguments.getRangerScheme(), "https")) {
+      uriBuilder.setScheme("https");
+    } else {
+      uriBuilder.setScheme("http");
+    }
+    URI apiUrl = uriBuilder.build();
+    CloseableHttpClient httpClient = createHttpClient(arguments);
+    return new RangerClient(httpClient, apiUrl);
   }
 
   public ImmutableList<Object> findUsers(Map<String, String> args) throws RangerException {
@@ -120,11 +150,6 @@ public class RangerClient implements AutoCloseable {
     }
     HttpGet httpRequest = new HttpGet(uri);
     httpRequest.addHeader(ACCEPT, APPLICATION_JSON.toString());
-    try {
-      httpRequest.addHeader(new BasicScheme().authenticate(credentials, httpRequest));
-    } catch (AuthenticationException e) {
-      throw new RangerException("Failed to initialize authentication header", e);
-    }
     try (CloseableHttpResponse httpResponse = httpClient.execute(httpRequest)) {
       logger.debug("Response from Ranger({}): {}", path, httpResponse);
       if (httpResponse.getStatusLine().getStatusCode() != SC_OK) {
@@ -160,5 +185,44 @@ public class RangerClient implements AutoCloseable {
   @Override
   public void close() throws Exception {
     httpClient.close();
+  }
+
+  private static CloseableHttpClient createHttpClient(ConnectorArguments arguments)
+      throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException {
+    HttpClientBuilder clientBuilder = HttpClients.custom();
+    if (arguments.hasRangerIgnoreTlsValidation()) {
+      // create a client with a trust strategy which accepts any certificate
+      TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+      SSLContext sslContext =
+          SSLContextBuilder.create().loadTrustMaterial(null, acceptingTrustStrategy).build();
+      clientBuilder.setSSLContext(sslContext).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
+    }
+
+    if (arguments.useKerberosAuthForHadoop()) {
+      Registry<AuthSchemeProvider> authSchemeRegistry =
+          RegistryBuilder.<AuthSchemeProvider>create()
+              .register(
+                  "Negotiate",
+                  new SPNegoSchemeFactory(true)) // 'true' enables use of native GSS-API
+              .build();
+
+      RequestConfig defaultRequestConfig =
+          RequestConfig.custom()
+              .setTargetPreferredAuthSchemes(Collections.singletonList("Negotiate"))
+              .build();
+
+      clientBuilder
+          .setDefaultAuthSchemeRegistry(authSchemeRegistry)
+          .setDefaultRequestConfig(defaultRequestConfig);
+    } else if (!Strings.isNullOrEmpty(arguments.getUser())) {
+      String user = arguments.getUser();
+      String password = arguments.getPasswordOrPrompt();
+
+      BasicCredentialsProvider basicCredentialsProvider = new BasicCredentialsProvider();
+      basicCredentialsProvider.setCredentials(
+          AuthScope.ANY, new UsernamePasswordCredentials(user, password));
+      clientBuilder.setDefaultCredentialsProvider(basicCredentialsProvider);
+    }
+    return clientBuilder.build();
   }
 }
