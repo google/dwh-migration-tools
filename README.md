@@ -22,6 +22,9 @@ information, [read how to submit a translation job using the
 client](https://cloud.google.com/bigquery/docs/batch-sql-translator#submit_a_translation_job)
 and view the [installation instructions](client/README.md).
 
+- **Dbsync Tools (work in progress):** Command line utility to sync large
+  files into Google Cloud Storage. View the [documentation](dbsync/README.md).
+
 ## Compiling from source
 You need to have `JDK 8` installed. For multiple jdk versions we recommend to use https://sdkman.io/ 
 ### Build all the modules ###
