@@ -9,7 +9,7 @@ plugins {
 	alias libs.plugins.jmh.report
 }
 
-def grpcVersion = '1.63.0'
+def grpcVersion = '1.71.0'
 
 protobuf {
 	plugins {
