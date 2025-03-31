@@ -41,8 +41,6 @@ public class OozieInfoTask extends AbstractTask<Void> {
     final CSVFormat csvFormat = FORMAT.withHeader(CSVHeader.class);
     try (CSVPrinter printer = csvFormat.print(sink.asCharSink(UTF_8).openBufferedStream())) {
       XOozieClient oozieClient = ((OozieHandle) handle).getOozieClient();
-      oozieClient.getAvailableOozieServers();
-      oozieClient.getServerBuildVersion();
       printer.printRecord(
           oozieClient.getOozieUrl(),
           oozieClient.getProtocolUrl(),
