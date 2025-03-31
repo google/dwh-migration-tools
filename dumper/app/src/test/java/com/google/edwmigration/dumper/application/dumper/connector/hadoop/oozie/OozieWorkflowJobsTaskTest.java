@@ -24,6 +24,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -40,6 +43,8 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import org.apache.oozie.client.AuthOozieClient;
+import org.apache.oozie.client.WorkflowJob;
+import org.apache.oozie.client.XOozieClient;
 import org.apache.oozie.client.rest.JsonUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -50,7 +55,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class OozieJobsTaskTest {
+public class OozieWorkflowJobsTaskTest {
   private static final long timestampInMockResponses = 1742220060000L;
   private static WireMockServer server;
 
@@ -98,7 +103,8 @@ public class OozieJobsTaskTest {
                     .withTransformerParameter(
                         "endDateParam", JsonUtils.formatDateRfc822(lastCapturedDate))));
 
-    OozieJobsTask task = new OozieJobsTask(maxDaysToFetch, timestampInMockResponses);
+    OozieWorkflowJobsTask task =
+        new OozieWorkflowJobsTask(maxDaysToFetch, timestampInMockResponses);
 
     // Act
     task.doRun(context, sink, new OozieHandle(oozieClient));
@@ -137,7 +143,7 @@ public class OozieJobsTaskTest {
     server.stubFor(
         get(urlEqualTo("/v2/jobs?jobtype=wf&offset=4&len=" + batchSize)).willReturn(okJson("{}")));
 
-    OozieJobsTask task = new OozieJobsTask(10, timestampInMockResponses);
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10, timestampInMockResponses);
 
     // Act
     task.doRun(context, sink, new OozieHandle(oozieClient));
@@ -151,15 +157,48 @@ public class OozieJobsTaskTest {
   @Test
   public void create_nonpositiveDays_throwsException() throws Exception {
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> new OozieJobsTask(0));
+        assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(0));
 
     assertEquals("Amount of days must be a positive number. Got 0.", exception.getMessage());
 
-    exception = assertThrows(IllegalArgumentException.class, () -> new OozieJobsTask(-3));
+    exception = assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(-3));
 
     assertEquals("Amount of days must be a positive number. Got -3.", exception.getMessage());
 
-    new OozieJobsTask(1);
+    new OozieWorkflowJobsTask(1);
+  }
+
+  @Test
+  public void fileName() {
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+
+    assertEquals("oozie_workflow_jobs.csv", task.getTargetPath());
+  }
+
+  @Test
+  public void fetchJobs_success() throws Exception {
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    XOozieClient oozieClient = mock(XOozieClient.class);
+
+    // Act
+    task.fetchJobs(oozieClient, "some filter", 3, 17);
+
+    // Verify
+    verify(oozieClient).getJobsInfo("some filter", 3, 17);
+    verifyNoMoreInteractions(oozieClient);
+  }
+
+  @Test
+  public void getJobEndTime_success() throws Exception {
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    // Act
+    task.getJobEndTime(job);
+
+    // Verify
+    verify(job).getEndTime();
+    verifyNoMoreInteractions(job);
   }
 
   private static void stubOozieVersionsCall() {

@@ -1,0 +1,45 @@
+/*
+ * Copyright 2022-2025 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
+
+import java.util.Date;
+import java.util.List;
+import org.apache.oozie.client.CoordinatorJob;
+import org.apache.oozie.client.OozieClientException;
+import org.apache.oozie.client.XOozieClient;
+
+public class OozieCoordinatorJobsTask extends AbstractOozieJobsTask<CoordinatorJob> {
+
+  public OozieCoordinatorJobsTask(int maxDaysToFetch) {
+    this(maxDaysToFetch, System.currentTimeMillis());
+  }
+
+  OozieCoordinatorJobsTask(int maxDaysToFetch, long initialTimestamp) {
+    super("oozie_coord_jobs.csv", maxDaysToFetch, initialTimestamp);
+  }
+
+  @Override
+  List<CoordinatorJob> fetchJobs(XOozieClient oozieClient, String filter, int start, int len)
+      throws OozieClientException {
+    return oozieClient.getCoordJobsInfo(filter, start, len);
+  }
+
+  @Override
+  Date getJobEndTime(CoordinatorJob job) {
+    return job.getEndTime();
+  }
+}

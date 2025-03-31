@@ -25,6 +25,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.lang.reflect.ParameterizedType;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -33,30 +34,34 @@ import javax.annotation.Nonnull;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.oozie.client.WorkflowJob;
+import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OozieJobsTask extends AbstractTask<Void> {
-  private static final Logger logger = LoggerFactory.getLogger(OozieJobsTask.class);
+public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
+  private static final Logger logger = LoggerFactory.getLogger(AbstractOozieJobsTask.class);
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private final int maxDaysToFetch;
   private final long initialTimestamp;
+  private final Class<J> oozieJobClass;
 
-  public OozieJobsTask(int maxDaysToFetch) {
-    this(maxDaysToFetch, System.currentTimeMillis());
+  AbstractOozieJobsTask(int maxDaysToFetch) {
+    this("test-flow", maxDaysToFetch, System.currentTimeMillis());
   }
 
-  OozieJobsTask(int maxDaysToFetch, long initialTimestamp) {
-    super("oozie_jobs.csv");
+  AbstractOozieJobsTask(String fileName, int maxDaysToFetch, long initialTimestamp) {
+    super(fileName);
     Preconditions.checkArgument(
         maxDaysToFetch >= 1,
         String.format("Amount of days must be a positive number. Got %d.", maxDaysToFetch));
 
     this.maxDaysToFetch = maxDaysToFetch;
     this.initialTimestamp = initialTimestamp;
+    this.oozieJobClass =
+        (Class<J>)
+            ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
   }
 
   // todo jobs params in filter
@@ -66,7 +71,7 @@ public class OozieJobsTask extends AbstractTask<Void> {
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
-    final CSVFormat csvFormat = newCsvFormatForClass(WorkflowJob.class);
+    final CSVFormat csvFormat = newCsvFormatForClass(oozieJobClass);
     final ImmutableList<String> csvHeader = ImmutableList.copyOf(csvFormat.getHeader());
 
     try (CSVPrinter printer = csvFormat.print(sink.asCharSink(UTF_8).openBufferedStream())) {
@@ -76,25 +81,29 @@ public class OozieJobsTask extends AbstractTask<Void> {
       long lastJobEndTimestamp = initialTimestamp;
 
       logger.info(
-          "Start fetch Oozie jobs for last {}d starts from {}ms", maxDaysToFetch, initialTimestamp);
+          "Start fetch Oozie jobs of type {} for last {}d starts from {}ms",
+          oozieJobClass.getSimpleName(),
+          maxDaysToFetch,
+          initialTimestamp);
 
       while (initialTimestamp - lastJobEndTimestamp < TimeUnit.DAYS.toMillis(maxDaysToFetch)) {
-        List<WorkflowJob> jobsInfo = oozieClient.getJobsInfo(null, offset, batchSize);
-        for (WorkflowJob workflowJob : jobsInfo) {
-          Object[] record = toCSVRecord(workflowJob, csvHeader);
+        List<J> jobs = fetchJobs(oozieClient, null, offset, batchSize);
+        for (J job : jobs) {
+          Object[] record = toCSVRecord(job, csvHeader);
           printer.printRecord(record);
         }
 
-        if (jobsInfo.isEmpty()) {
+        if (jobs.isEmpty()) {
           break;
         }
 
-        WorkflowJob lastJob = jobsInfo.get(jobsInfo.size() - 1);
-        if (lastJob.getEndTime() == null) {
+        J lastJob = jobs.get(jobs.size() - 1);
+        Date endTime = getJobEndTime(lastJob);
+        if (endTime == null) {
           break;
         }
-        lastJobEndTimestamp = lastJob.getEndTime().getTime();
-        offset += jobsInfo.size();
+        lastJobEndTimestamp = endTime.getTime();
+        offset += jobs.size();
       }
 
       printer.println();
@@ -102,8 +111,12 @@ public class OozieJobsTask extends AbstractTask<Void> {
     return null;
   }
 
-  private static Object[] toCSVRecord(WorkflowJob job, ImmutableList<String> header)
-      throws Exception {
+  abstract List<J> fetchJobs(XOozieClient oozieClient, String filter, int start, int len)
+      throws OozieClientException;
+
+  abstract Date getJobEndTime(J job);
+
+  private static Object[] toCSVRecord(Object job, ImmutableList<String> header) throws Exception {
     Object[] record = new Object[header.size()];
     for (int i = 0; i < header.size(); i++) {
       record[i] = PropertyUtils.getProperty(job, header.get(i));
