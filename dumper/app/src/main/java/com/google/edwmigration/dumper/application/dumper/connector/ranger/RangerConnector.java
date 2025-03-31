@@ -83,7 +83,7 @@ public class RangerConnector extends AbstractConnector {
   @Nonnull
   @Override
   public String getDefaultFileName(boolean isAssessment, Clock clock) {
-    return ArchiveNameUtil.getFileName(getName());
+    return ArchiveNameUtil.getFileNameWithTimestamp(getName(), clock);
   }
 
   @Override

@@ -50,16 +50,14 @@ import javax.annotation.Nonnull;
 @Description("Dumps files and directories from the HDFS.")
 public class HdfsExtractionConnector extends AbstractConnector implements HdfsExtractionDumpFormat {
 
-  public static final String CONNECTOR_NAME = "hdfs";
-
   public HdfsExtractionConnector() {
-    super(CONNECTOR_NAME);
+    super("hdfs");
   }
 
   @Nonnull
   @Override
   public String getDefaultFileName(boolean isAssessment, Clock clock) {
-    return ArchiveNameUtil.getFileName(getName());
+    return ArchiveNameUtil.getFileNameWithTimestamp(getName(), clock);
   }
 
   @Override

@@ -42,6 +42,7 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.ext.hive.metastore.Database;
 import com.google.edwmigration.dumper.ext.hive.metastore.DelegationToken;
 import com.google.edwmigration.dumper.ext.hive.metastore.Field;
@@ -57,6 +58,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMoni
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HiveMetadataDumpFormat;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -678,10 +680,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
-  public static final String CONNECTOR_NAME = "hiveql";
-
   public HiveMetadataConnector() {
-    super(CONNECTOR_NAME);
+    super("hiveql");
+  }
+
+  @Nonnull
+  @Override
+  public String getDefaultFileName(boolean isAssessment, Clock clock) {
+    return ArchiveNameUtil.getFileNameWithTimestamp(getName() + "-metadata", clock);
   }
 
   @Override

@@ -31,8 +31,10 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.IOException;
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -94,6 +96,12 @@ public class HadoopMetadataConnector implements MetadataConnector {
   @Override
   public String getName() {
     return CONNECTOR_NAME;
+  }
+
+  @Nonnull
+  @Override
+  public String getDefaultFileName(boolean isAssessment, Clock clock) {
+    return ArchiveNameUtil.getFileNameWithTimestamp(getName() + "-metadata", clock);
   }
 
   @Override
