@@ -43,13 +43,17 @@ public class OozieInfoTask extends AbstractTask<Void> {
       XOozieClient oozieClient = ((OozieHandle) handle).getOozieClient();
       oozieClient.getAvailableOozieServers();
       oozieClient.getServerBuildVersion();
-      printer.printRecord(oozieClient.getOozieUrl(), oozieClient.getServerBuildVersion());
+      printer.printRecord(
+          oozieClient.getOozieUrl(),
+          oozieClient.getProtocolUrl(),
+          oozieClient.getServerBuildVersion());
     }
     return null;
   }
 
   enum CSVHeader {
     URL,
+    ProtocolUrl,
     ServerBuildVersion
   }
 }
