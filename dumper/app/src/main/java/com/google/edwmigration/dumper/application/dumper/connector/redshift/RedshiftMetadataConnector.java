@@ -56,6 +56,26 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
         new JdbcSelectTask(name.toLowerCase() + ".csv", "SELECT * FROM " + name.toLowerCase()));
   }
 
+  private static JdbcSelectTask createPgDatabaseSelect() {
+    String outputFile = "pg_database.csv";
+    String selectList =
+        String.join(
+            ", ",
+            "datname",
+            "datdba",
+            "encoding",
+            "datistemplate",
+            "datallowconn",
+            "datlastsysoid",
+            "datvacuumxid",
+            "datfrozenxid",
+            "dattablespace",
+            "datconfig",
+            "datacl");
+    String query = String.format("SELECT %s FROM pg_database", selectList);
+    return new JdbcSelectTask(outputFile, query);
+  }
+
   @Override
   @SuppressWarnings("deprecation")
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
@@ -86,7 +106,7 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
 
     selStar(parallelTask, "PG_LIBRARY");
 
-    selStar(parallelTask, "pg_database");
+    parallelTask.addTask(createPgDatabaseSelect());
     selStar(parallelTask, "pg_namespace");
     selStar(parallelTask, "pg_operator");
     selStar(parallelTask, "pg_tables");
