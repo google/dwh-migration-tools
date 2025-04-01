@@ -33,13 +33,14 @@ public class OozieWorkflowJobsTask extends AbstractOozieJobsTask<WorkflowJob> {
   }
 
   @Override
-  List<WorkflowJob> fetchJobs(XOozieClient oozieClient, String filter, int start, int len)
+  List<WorkflowJob> fetchJobs(
+      XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
       throws OozieClientException {
-    return oozieClient.getJobsInfo(filter, start, len);
+    return oozieClient.getJobsInfo("-sortby endTime", start, len);
   }
 
   @Override
-  Date getJobEndTime(WorkflowJob job) {
+  Date getJobEndDateTime(WorkflowJob job) {
     return job.getEndTime();
   }
 }

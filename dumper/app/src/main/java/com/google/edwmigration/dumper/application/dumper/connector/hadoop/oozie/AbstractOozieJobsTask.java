@@ -47,10 +47,6 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   private final long initialTimestamp;
   private final Class<J> oozieJobClass;
 
-  AbstractOozieJobsTask(int maxDaysToFetch) {
-    this("test-flow", maxDaysToFetch, System.currentTimeMillis());
-  }
-
   AbstractOozieJobsTask(String fileName, int maxDaysToFetch, long initialTimestamp) {
     super(fileName);
     Preconditions.checkArgument(
@@ -64,9 +60,6 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
             ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
   }
 
-  // todo jobs params in filter
-  //        FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_START);
-  //         FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_END);
   @CheckForNull
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
@@ -81,13 +74,13 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
       long lastJobEndTimestamp = initialTimestamp;
 
       logger.info(
-          "Start fetch Oozie jobs of type {} for last {}d starts from {}ms",
+          "Start fetching Oozie jobs for type {} for the last {}d starting from {}ms",
           oozieJobClass.getSimpleName(),
           maxDaysToFetch,
           initialTimestamp);
 
       while (initialTimestamp - lastJobEndTimestamp < TimeUnit.DAYS.toMillis(maxDaysToFetch)) {
-        List<J> jobs = fetchJobs(oozieClient, null, offset, batchSize);
+        List<J> jobs = fetchJobs(oozieClient, null, null, offset, batchSize);
         for (J job : jobs) {
           Object[] record = toCSVRecord(job, csvHeader);
           printer.printRecord(record);
@@ -98,7 +91,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
         }
 
         J lastJob = jobs.get(jobs.size() - 1);
-        Date endTime = getJobEndTime(lastJob);
+        Date endTime = getJobEndDateTime(lastJob);
         if (endTime == null) {
           break;
         }
@@ -111,10 +104,14 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     return null;
   }
 
-  abstract List<J> fetchJobs(XOozieClient oozieClient, String filter, int start, int len)
+  // todo jobs params in filter
+  //        FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_START);
+  //         FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_END);
+  abstract List<J> fetchJobs(
+      XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
       throws OozieClientException;
 
-  abstract Date getJobEndTime(J job);
+  abstract Date getJobEndDateTime(J job);
 
   private static Object[] toCSVRecord(Object job, ImmutableList<String> header) throws Exception {
     Object[] record = new Object[header.size()];

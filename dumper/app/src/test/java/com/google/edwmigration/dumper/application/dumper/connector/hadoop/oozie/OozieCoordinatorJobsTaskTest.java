@@ -38,10 +38,10 @@ public class OozieCoordinatorJobsTaskTest {
     XOozieClient oozieClient = mock(XOozieClient.class);
 
     // Act
-    task.fetchJobs(oozieClient, "some filter", 2, 14);
+    task.fetchJobs(oozieClient, null, null, 2, 14);
 
     // Verify
-    verify(oozieClient).getCoordJobsInfo("some filter", 2, 14);
+    verify(oozieClient).getCoordJobsInfo("-sortby endTime", 2, 14);
     verifyNoMoreInteractions(oozieClient);
   }
 
@@ -50,7 +50,7 @@ public class OozieCoordinatorJobsTaskTest {
     CoordinatorJob job = mock(CoordinatorJob.class);
 
     // Act
-    task.getJobEndTime(job);
+    task.getJobEndDateTime(job);
 
     // Verify
     verify(job).getEndTime();
