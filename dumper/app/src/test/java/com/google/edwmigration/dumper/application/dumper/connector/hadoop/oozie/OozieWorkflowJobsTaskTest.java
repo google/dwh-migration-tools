@@ -89,14 +89,14 @@ public class OozieWorkflowJobsTaskTest {
     MemoryByteSink sink = new MemoryByteSink();
     stubOozieVersionsCall();
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=0&len=1000"))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=1&len=1000"))
             .willReturn(okJsonWithBodyFile("oozie/jobs-batch1.json")));
 
     final int maxDaysToFetch = 4;
     Date lastCapturedDate =
         new Date(timestampInMockResponses - TimeUnit.DAYS.toMillis(maxDaysToFetch));
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=3&len=1000"))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=4&len=1000"))
             .willReturn(
                 okJsonWithBodyFile("oozie/jobs-one-item-template.json")
                     .withTransformers("response-template")
@@ -135,13 +135,13 @@ public class OozieWorkflowJobsTaskTest {
     MemoryByteSink sink = new MemoryByteSink();
     stubOozieVersionsCall();
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=0&len=" + batchSize))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=1&len=" + batchSize))
             .willReturn(okJsonWithBodyFile("oozie/jobs-batch1.json")));
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=3&len=" + batchSize))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=4&len=" + batchSize))
             .willReturn(okJsonWithBodyFile("oozie/jobs-batch2.json")));
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=4&len=" + batchSize))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=5&len=" + batchSize))
             .willReturn(okJson("{}")));
 
     OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10, timestampInMockResponses);

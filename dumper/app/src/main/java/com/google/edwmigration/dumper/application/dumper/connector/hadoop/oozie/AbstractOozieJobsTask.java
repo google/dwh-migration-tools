@@ -70,7 +70,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     try (CSVPrinter printer = csvFormat.print(sink.asCharSink(UTF_8).openBufferedStream())) {
       XOozieClient oozieClient = ((OozieHandle) handle).getOozieClient();
       final int batchSize = context.getArguments().getPaginationPageSize();
-      int offset = 0;
+      int offset = 1; // starts with 1, not 0.
       long lastJobEndTimestamp = initialTimestamp;
 
       logger.info(
