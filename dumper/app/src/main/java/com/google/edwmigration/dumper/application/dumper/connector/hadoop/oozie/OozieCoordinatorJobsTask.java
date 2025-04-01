@@ -36,7 +36,7 @@ public class OozieCoordinatorJobsTask extends AbstractOozieJobsTask<CoordinatorJ
   List<CoordinatorJob> fetchJobs(
       XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
       throws OozieClientException {
-    return oozieClient.getCoordJobsInfo("-sortby endTime", start, len);
+    return oozieClient.getCoordJobsInfo("sortby=endTime;", start, len);
   }
 
   @Override

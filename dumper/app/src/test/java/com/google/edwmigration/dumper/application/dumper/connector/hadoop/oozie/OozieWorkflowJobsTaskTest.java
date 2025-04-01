@@ -33,7 +33,6 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
-import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest.MemoryByteSink;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -90,14 +89,14 @@ public class OozieWorkflowJobsTaskTest {
     MemoryByteSink sink = new MemoryByteSink();
     stubOozieVersionsCall();
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=-sortby+endTime&jobtype=wf&offset=0&len=1000"))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=0&len=1000"))
             .willReturn(okJsonWithBodyFile("oozie/jobs-batch1.json")));
 
     final int maxDaysToFetch = 4;
     Date lastCapturedDate =
         new Date(timestampInMockResponses - TimeUnit.DAYS.toMillis(maxDaysToFetch));
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=-sortby+endTime&jobtype=wf&offset=3&len=1000"))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=3&len=1000"))
             .willReturn(
                 okJsonWithBodyFile("oozie/jobs-one-item-template.json")
                     .withTransformers("response-template")
@@ -108,12 +107,7 @@ public class OozieWorkflowJobsTaskTest {
         new OozieWorkflowJobsTask(maxDaysToFetch, timestampInMockResponses);
 
     // Act
-    try {
-      task.doRun(context, sink, new OozieHandle(oozieClient));
-    } finally {
-      FindRequestsResult unmatchedRequests = server.findUnmatchedRequests();
-      System.out.println(unmatchedRequests);
-    }
+    task.doRun(context, sink, new OozieHandle(oozieClient));
 
     // Assert
     String actual = sink.getContent();
@@ -141,13 +135,13 @@ public class OozieWorkflowJobsTaskTest {
     MemoryByteSink sink = new MemoryByteSink();
     stubOozieVersionsCall();
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=-sortby+endTime&jobtype=wf&offset=0&len=" + batchSize))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=0&len=" + batchSize))
             .willReturn(okJsonWithBodyFile("oozie/jobs-batch1.json")));
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=-sortby+endTime&jobtype=wf&offset=3&len=" + batchSize))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=3&len=" + batchSize))
             .willReturn(okJsonWithBodyFile("oozie/jobs-batch2.json")));
     server.stubFor(
-        get(urlEqualTo("/v2/jobs?filter=-sortby+endTime&jobtype=wf&offset=4&len=" + batchSize))
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=4&len=" + batchSize))
             .willReturn(okJson("{}")));
 
     OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10, timestampInMockResponses);
@@ -191,7 +185,7 @@ public class OozieWorkflowJobsTaskTest {
     task.fetchJobs(oozieClient, null, null, 3, 17);
 
     // Verify
-    verify(oozieClient).getJobsInfo("-sortby endTime", 3, 17);
+    verify(oozieClient).getJobsInfo("sortby=endTime;", 3, 17);
     verifyNoMoreInteractions(oozieClient);
   }
 

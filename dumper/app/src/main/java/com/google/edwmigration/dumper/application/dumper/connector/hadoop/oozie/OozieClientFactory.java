@@ -61,7 +61,7 @@ public class OozieClientFactory {
       return AuthType.BASIC.name();
     }
     String authOpt = getEnvVariable(ENV_OOZIE_AUTH);
-    logger.debug("Auth type for Oozie client: {} base on " + ENV_OOZIE_AUTH, authOpt);
+    logger.debug("Auth type for Oozie client: {} base on {} env var", authOpt, ENV_OOZIE_AUTH);
     if (AuthType.BASIC.name().equalsIgnoreCase(authOpt)) {
       throw new OozieCLIException("BASIC authentication requires -user and -password to set!");
     }
@@ -75,7 +75,7 @@ public class OozieClientFactory {
       throw new IllegalArgumentException(
           "Oozie URL is not available neither in command option nor in the environment");
     }
-    logger.debug("Oozie URL obtained from env {}", url);
+    logger.debug("Oozie URL: {} base on {} env var", url, ENV_OOZIE_URL);
     return url;
   }
 

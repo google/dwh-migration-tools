@@ -41,7 +41,7 @@ public class OozieCoordinatorJobsTaskTest {
     task.fetchJobs(oozieClient, null, null, 2, 14);
 
     // Verify
-    verify(oozieClient).getCoordJobsInfo("-sortby endTime", 2, 14);
+    verify(oozieClient).getCoordJobsInfo("sortby=endTime;", 2, 14);
     verifyNoMoreInteractions(oozieClient);
   }
 
