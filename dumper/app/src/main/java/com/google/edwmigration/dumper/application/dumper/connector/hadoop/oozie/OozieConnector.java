@@ -65,7 +65,10 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
       throws Exception {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
-    out.add(new OozieJobsTask(MAX_QUARTER_DAY));
+    out.add(new OozieInfoTask());
+    out.add(new OozieServersTask());
+    out.add(new OozieWorkflowJobsTask(MAX_QUARTER_DAY));
+    out.add(new OozieCoordinatorJobsTask(MAX_QUARTER_DAY));
   }
 
   @Nonnull

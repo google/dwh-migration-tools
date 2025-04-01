@@ -60,8 +60,8 @@ public class OozieClientFactory {
       }
       return AuthType.BASIC.name();
     }
-    String authOpt = getEnvProperty(ENV_OOZIE_AUTH);
-    logger.debug("Auth type for Oozie client: {} base on " + ENV_OOZIE_AUTH, authOpt);
+    String authOpt = getEnvVariable(ENV_OOZIE_AUTH);
+    logger.debug("Auth type for Oozie client: {} base on {} env var", authOpt, ENV_OOZIE_AUTH);
     if (AuthType.BASIC.name().equalsIgnoreCase(authOpt)) {
       throw new OozieCLIException("BASIC authentication requires -user and -password to set!");
     }
@@ -70,11 +70,12 @@ public class OozieClientFactory {
 
   protected static String getOozieUrlFromEnv() {
     // oozie CLI expect this env variable, so we use it as a fallback
-    String url = getEnvProperty(ENV_OOZIE_URL);
+    String url = getEnvVariable(ENV_OOZIE_URL);
     if (url == null) {
       throw new IllegalArgumentException(
           "Oozie URL is not available neither in command option nor in the environment");
     }
+    logger.debug("Oozie URL: {} base on {} env var", url, ENV_OOZIE_URL);
     return url;
   }
 
@@ -106,6 +107,11 @@ public class OozieClientFactory {
             "Unable to parse the retry settings. May be not an integer [{}]", retryCount, ex);
       }
     }
+  }
+
+  /** It's just a wrapper for {@code System.getenv(property)} Extracted to mock in unit-tests. */
+  protected static String getEnvVariable(String name) {
+    return System.getenv(name);
   }
 
   /**

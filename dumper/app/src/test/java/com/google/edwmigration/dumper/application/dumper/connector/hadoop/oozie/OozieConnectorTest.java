@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -28,6 +29,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.oozie.client.XOozieClient;
 import org.junit.Test;
@@ -38,20 +40,24 @@ public class OozieConnectorTest {
   private final OozieConnector connector = new OozieConnector();
 
   @Test
-  public void addTasksTo_jobs_required() throws Exception {
+  public void addTasksTo_checkFilesCategory() throws Exception {
+    Map<String, TaskCategory> expectedFilesToCategory =
+        ImmutableMap.of(
+            "compilerworks-metadata.yaml", TaskCategory.REQUIRED,
+            "compilerworks-format.txt", TaskCategory.REQUIRED,
+            "oozie_info.csv", TaskCategory.REQUIRED,
+            "oozie_coord_jobs.csv", TaskCategory.REQUIRED,
+            "oozie_servers.csv", TaskCategory.REQUIRED,
+            "oozie_workflow_jobs.csv", TaskCategory.REQUIRED);
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
     connector.addTasksTo(tasks, null);
 
     // Assert
-    List<Task<?>> jobs =
-        tasks.stream()
-            .filter(t -> t.getTargetPath().equals("oozie_jobs.csv"))
-            .collect(Collectors.toList());
-
-    assertEquals(1, jobs.size());
-    assertEquals(TaskCategory.REQUIRED, jobs.get(0).getCategory());
+    Map<String, TaskCategory> filesToCategory =
+        tasks.stream().collect(Collectors.toMap(Task::getTargetPath, Task::getCategory));
+    assertEquals(expectedFilesToCategory, filesToCategory);
   }
 
   @Test

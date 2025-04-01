@@ -98,7 +98,7 @@ public class OozieClientFactoryTest {
   public void getAuthOptionFromEnv() throws Exception {
     try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
       factory
-          .when(() -> OozieClientFactory.getEnvProperty(ENV_OOZIE_AUTH))
+          .when(() -> OozieClientFactory.getEnvVariable(ENV_OOZIE_AUTH))
           .thenReturn("auth-option");
 
       // Act
@@ -113,7 +113,7 @@ public class OozieClientFactoryTest {
   @Test
   public void getAuthOptionFromEnvNullCase() throws Exception {
     try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
-      factory.when(() -> OozieClientFactory.getEnvProperty(ENV_OOZIE_AUTH)).thenReturn(null);
+      factory.when(() -> OozieClientFactory.getEnvVariable(ENV_OOZIE_AUTH)).thenReturn(null);
 
       // Act
       factory.when(() -> OozieClientFactory.getAuthOption(any(), any())).thenCallRealMethod();
@@ -128,7 +128,7 @@ public class OozieClientFactoryTest {
   public void getAuthOptionFromEnvButBasic() throws Exception {
     try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
       factory
-          .when(() -> OozieClientFactory.getEnvProperty(ENV_OOZIE_AUTH))
+          .when(() -> OozieClientFactory.getEnvVariable(ENV_OOZIE_AUTH))
           .thenReturn(AuthType.BASIC.name());
 
       // Act
@@ -160,7 +160,7 @@ public class OozieClientFactoryTest {
   @Test
   public void oozieUrlFromEnvProvided() throws Exception {
     try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
-      factory.when(() -> OozieClientFactory.getEnvProperty(ENV_OOZIE_URL)).thenReturn("some path");
+      factory.when(() -> OozieClientFactory.getEnvVariable(ENV_OOZIE_URL)).thenReturn("some path");
 
       // Act
       factory.when(OozieClientFactory::getOozieUrlFromEnv).thenCallRealMethod();
@@ -174,7 +174,7 @@ public class OozieClientFactoryTest {
   @Test
   public void oozieUrlFromEnvNotProvided() throws Exception {
     try (MockedStatic<OozieClientFactory> factory = Mockito.mockStatic(OozieClientFactory.class)) {
-      factory.when(() -> OozieClientFactory.getEnvProperty(ENV_OOZIE_URL)).thenReturn(null);
+      factory.when(() -> OozieClientFactory.getEnvVariable(ENV_OOZIE_URL)).thenReturn(null);
 
       // Act
       factory.when(OozieClientFactory::getOozieUrlFromEnv).thenCallRealMethod();
