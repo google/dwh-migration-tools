@@ -109,9 +109,7 @@ public class OozieClientFactory {
     }
   }
 
-  /**
-   * It's just a wrapper for {@code System.getenv(property)} Extracted to mock in unit-tests.
-   */
+  /** It's just a wrapper for {@code System.getenv(property)} Extracted to mock in unit-tests. */
   protected static String getEnvVariable(String name) {
     return System.getenv(name);
   }
