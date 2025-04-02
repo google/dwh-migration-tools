@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContextOps;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -123,6 +124,9 @@ public class TasksRunner implements TaskRunContextOps {
     PROGRESS_LOG.info(progressMessage);
   }
 
+  private static final String ACCESS_CONTROL_EXCEPTION_MSG_SUFFIX =
+      ".AccessControlException: SIMPLE authentication is not enabled.  Available:[TOKEN, KERBEROS]";
+
   private <T> T runTask(Task<T> task) throws MetadataDumperUsageException {
     try {
       CHECK:
@@ -152,10 +156,16 @@ public class TasksRunner implements TaskRunContextOps {
       if (e instanceof MetadataDumperUsageException) throw (MetadataDumperUsageException) e;
       if (e instanceof SQLException && e.getCause() instanceof MetadataDumperUsageException)
         throw (MetadataDumperUsageException) e.getCause();
+      if (e instanceof IOException // is it a org.apache.hadoop.security.AccessControlException?
+          && e.getMessage().endsWith(ACCESS_CONTROL_EXCEPTION_MSG_SUFFIX)) {
+        if (!task.handleException(e))
+          logger.warn("Task failed due to access denied: {}: {}", task, e.getMessage());
+      }
       // TaskGroup is an attempt to get rid of this condition.
       // We might need an additional TaskRunner / TaskSupport with an overrideable handleException
       // method instead of this runTask() method.
-      if (!task.handleException(e)) logger.warn("Task failed: " + task + ": " + e, e);
+      else if (!task.handleException(e))
+        logger.warn("Task failed: {}: {}", task, e.getMessage(), e);
       state.setTaskException(task, TaskState.FAILED, e);
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
@@ -166,7 +176,7 @@ public class TasksRunner implements TaskRunContextOps {
                     "******************************",
                     String.valueOf(new DumperDiagnosticQuery(e).call())));
       } catch (Exception f) {
-        logger.warn("Exception-recorder failed:  " + f, f);
+        logger.warn("Exception-recorder failed:  {}", f.getMessage(), f);
       }
     }
     return null;
