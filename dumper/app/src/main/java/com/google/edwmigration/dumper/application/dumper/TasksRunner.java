@@ -159,12 +159,13 @@ public class TasksRunner implements TaskRunContextOps {
       if (e instanceof IOException // is it a org.apache.hadoop.security.AccessControlException?
           && e.getMessage().endsWith(ACCESS_CONTROL_EXCEPTION_MSG_SUFFIX)) {
         if (!task.handleException(e))
-          logger.warn("Task failed due to access denied: " + task + ": " + e.getMessage());
+          logger.warn("Task failed due to access denied: {}: {}", task, e.getMessage());
       }
       // TaskGroup is an attempt to get rid of this condition.
       // We might need an additional TaskRunner / TaskSupport with an overrideable handleException
       // method instead of this runTask() method.
-      else if (!task.handleException(e)) logger.warn("Task failed: " + task + ": " + e, e);
+      else if (!task.handleException(e))
+        logger.warn("Task failed: {}: {}", task, e.getMessage(), e);
       state.setTaskException(task, TaskState.FAILED, e);
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
@@ -175,7 +176,7 @@ public class TasksRunner implements TaskRunContextOps {
                     "******************************",
                     String.valueOf(new DumperDiagnosticQuery(e).call())));
       } catch (Exception f) {
-        logger.warn("Exception-recorder failed:  " + f, f);
+        logger.warn("Exception-recorder failed:  {}", f.getMessage(), f);
       }
     }
     return null;
