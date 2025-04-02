@@ -205,22 +205,25 @@ tasks.named('distZip') {
 }
 
 tasks.register('generateSourceMirror', Copy) {
-    from {
-        dependencies.createArtifactResolutionQuery()
-            .forComponents(
-                configurations.runtimeClasspath.incoming.resolutionResult
-                    .allDependencies.collect { it.selected.id }
-            )
-            .withArtifacts(JvmLibrary, SourcesArtifact)
-            .execute()
-            .resolvedComponents
-            .collectMany {
-                it.artifactResults
-                    .collect { it.file.path }
-            }
+    dependsOn 'compileJava'
+    doLast {
+        from {
+            dependencies.createArtifactResolutionQuery()
+                    .forComponents(
+                            configurations.runtimeClasspath.incoming.resolutionResult
+                                    .allDependencies.collect { it.selected.id }
+                    )
+                    .withArtifacts(JvmLibrary, SourcesArtifact)
+                    .execute()
+                    .resolvedComponents
+                    .collectMany {
+                        it.artifactResults
+                                .collect { it.file.path }
+                    }
+        }
+        into layout.buildDirectory.dir('mirror/sources')
+        outputs.dir "mirror/sources"
     }
-    into layout.buildDirectory.dir('mirror/sources')
-    outputs.dir "mirror/sources"
 }
 
 tasks.register('copyGceLauncher', Copy) {
