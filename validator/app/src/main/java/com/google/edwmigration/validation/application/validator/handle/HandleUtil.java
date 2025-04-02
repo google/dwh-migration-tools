@@ -39,7 +39,7 @@ public class HandleUtil {
   static void verifyJdbcConnection(DataSource dataSource) throws SQLException {
     LOG.debug("Testing connection to database using {}...", dataSource);
     try (Connection connection = dataSource.getConnection()) {
-      LOG.debug("Obtained connection is: {}");
+      LOG.debug("Obtained connection is:" + connection);
       if (connection == null) {
         LOG.error("DataSource failed to provide a connection (usually bad/mismatched JDBC URI).");
         // This used to be thrown by Preconditions and was kept for compatibility.

@@ -14,25 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.validation.application.validator.sql;
-
-import java.util.HashMap;
-import org.jooq.DSLContext;
-import org.jooq.DataType;
+package com.google.edwmigration.validation.application.validator;
 
 /** @author nehanene */
-public interface SqlGenerator {
+public class Table {
+  private final String source;
+  private final String target;
 
-  DSLContext getDSLContext();
+  public Table(String source, String target) {
+    this.source = source;
+    this.target = target;
+  }
 
-  String getTable();
+  public String getSource() {
+    return source;
+  }
 
-  String getPrimaryKey();
-
-  String getAggregateQuery(HashMap<String, DataType<? extends Number>> numericColumns);
-
-  String getRowSampleQuery();
-
-  DataType<? extends Number> getSqlDataType(
-      String dataType, Integer numericPrecision, Integer numericScale);
+  public String getTarget() {
+    return target;
+  }
 }

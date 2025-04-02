@@ -31,15 +31,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** @author nehanene */
-public abstract class AbstractTask {
+public abstract class AbstractSourceTask {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractTask.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractSourceTask.class);
+
+  public static final String CSV_AGGREGATE_SUFFIX = "_agg.csv";
+  public static final String CSV_ROW_SUFFIX = "_row.csv";
 
   private final Handle handle;
   private final URI outputUri;
   private final ValidationArguments arguments;
 
-  public AbstractTask(Handle handle, URI outputUri, ValidationArguments arguments) {
+  private ResultSetMetaData aggregateQueryMetadata;
+  private ResultSetMetaData rowQueryMetadata;
+
+  public AbstractSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
     Preconditions.checkNotNull(handle, "Handle is null.");
     this.handle = handle;
     this.outputUri = outputUri;
@@ -63,8 +69,20 @@ public abstract class AbstractTask {
     return outputUri;
   }
 
-  public String getTable() {
-    return arguments.getTable();
+  public void setAggregateQueryMetadata(ResultSetMetaData metadata) {
+    this.aggregateQueryMetadata = metadata;
+  }
+
+  public ResultSetMetaData getAggregateQueryMetadata() {
+    return this.aggregateQueryMetadata;
+  }
+
+  public void setRowQueryMetadata(ResultSetMetaData metadata) {
+    this.rowQueryMetadata = metadata;
+  }
+
+  public ResultSetMetaData getRowQueryMetadata() {
+    return this.rowQueryMetadata;
   }
 
   public abstract void run() throws Exception;

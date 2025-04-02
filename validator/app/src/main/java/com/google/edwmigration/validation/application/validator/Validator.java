@@ -16,16 +16,20 @@
  */
 package com.google.edwmigration.validation.application.validator;
 
+import com.google.cloud.storage.*;
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
 import com.google.common.io.Closer;
 import com.google.edwmigration.validation.application.validator.connector.Connector;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
-import com.google.edwmigration.validation.application.validator.task.AbstractTask;
+import com.google.edwmigration.validation.application.validator.task.AbstractSourceTask;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.ResultSetMetaData;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
@@ -37,7 +41,9 @@ public class Validator {
   private static final Logger LOG = LoggerFactory.getLogger(Validator.class);
 
   private static final Pattern GCS_PATH_PATTERN =
-      Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)/?");
+      Pattern.compile("gs://(?<bucket>[^/]+)(?:/(?<path>.*))?/?");
+
+  private static final String OUTPUT_DIR_PREFIX = "validationOutputs";
 
   public boolean run(String... args) throws Exception {
     ValidationArguments validationArguments = new ValidationArguments(args);
@@ -81,9 +87,10 @@ public class Validator {
     if (matcher.matches()) {
       String bucket = matcher.group("bucket");
       String path = matcher.group("path");
-      LOG.debug(
-          String.format(
-              "Setting up CloudStorageFileSystem with bucket '%s' and path '%s'.", bucket, path));
+      if (path == null) {
+        path = "";
+      }
+      LOG.debug(String.format("Setting up CloudStorageFileSystem with bucket '%s'.", bucket));
       CloudStorageFileSystem cloudStorageFileSystem =
           closer.register(CloudStorageFileSystem.forBucket(bucket));
       return cloudStorageFileSystem.getPath(path);
@@ -92,20 +99,91 @@ public class Validator {
     }
   }
 
+  private String getFileSystemPrefix(ValidationArguments args) {
+    StringBuilder sb = new StringBuilder(OUTPUT_DIR_PREFIX);
+    sb.append("/");
+
+    String database = args.getSourceConnection().getDatabase();
+    if (database != null) {
+      sb.append(database).append("/");
+    }
+    sb.append(args.getTable().getSource()).append("/");
+    return sb.toString();
+  }
+
+  private String getBqStagingPrefixSource(ValidationArguments args) {
+    StringBuilder sb = new StringBuilder();
+
+    String database = args.getSourceConnection().getDatabase();
+    if (database != null) {
+      sb.append(database).append("_");
+    }
+    sb.append(args.getTable().getSource()).append("_");
+    return sb.toString();
+  }
+
   @Nonnull
-  private Path prepareOutputPath(@Nonnull String outputDir, ValidationArguments args)
+  private URI prepareOutputPath(@Nonnull String outputDir, ValidationArguments args)
       throws IOException {
-    String db = args.getSourceConnection().getDatabase();
     Path path = Paths.get(outputDir);
 
-    if (db != null) {
-      path = path.resolve(db);
-    }
+    path = path.resolve(getFileSystemPrefix(args));
 
     if (!Files.exists(path)) {
       Files.createDirectories(path);
     }
-    return path;
+    LOG.debug("Configured local output URI: " + path.toUri());
+    return path.toUri();
+  }
+
+  private HashMap<String, String> uploadToGcs(
+      Storage storage, URI outputUri, URI targetGcsUri, ValidationArguments args)
+      throws IOException {
+    URI targetGcsUriDir = targetGcsUri.resolve(getFileSystemPrefix(args));
+
+    File directory = new File(outputUri);
+    File[] localFiles = directory.listFiles();
+    if (localFiles == null || localFiles.length == 0) {
+      throw new IOException(
+          String.format("No files found in path %s to upload to GCS.", outputUri));
+    } else if (localFiles.length != 2) {
+      throw new RuntimeException(
+          String.format(
+              "Expected two files per table, but found %s in directory %s",
+              localFiles.length, directory.getPath()));
+    }
+
+    HashMap<String, String> targetGcsUris = new HashMap<>();
+
+    for (File file : localFiles) {
+
+      String fileName = file.getName();
+      URI fullTargetGcsUri = targetGcsUriDir.resolve(file.getName());
+
+      if (fileName.endsWith(AbstractSourceTask.CSV_AGGREGATE_SUFFIX)) {
+        targetGcsUris.put("aggregate", fullTargetGcsUri.toString());
+      } else if (fileName.endsWith(AbstractSourceTask.CSV_ROW_SUFFIX)) {
+        targetGcsUris.put("row", fullTargetGcsUri.toString());
+      } else {
+        throw new RuntimeException(
+            String.format("Invalid file %s found in directory %s", fileName, directory.getPath()));
+      }
+
+      LOG.debug("Creating file in GCS: " + fullTargetGcsUri);
+
+      try {
+        BlobId blobId = BlobId.fromGsUtilUri(fullTargetGcsUri.toString());
+        storage.createFrom(BlobInfo.newBuilder(blobId).build(), file.toPath());
+
+        LOG.debug("Uploaded {} to {}", file.getPath(), fullTargetGcsUri);
+      } catch (StorageException e) {
+        LOG.error(
+            "Failed to upload {} to {}: {}", file.getPath(), fullTargetGcsUri, e.getMessage());
+        throw new IOException("Error uploading file", e);
+      }
+    }
+
+    return targetGcsUris;
   }
 
   protected boolean run(
@@ -119,31 +197,48 @@ public class Validator {
 
     try (Closer closer = Closer.create()) {
 
-      Path outputPath = prepareOutputPath(arguments.getOutputDir(), arguments);
-      URI outputURI = outputPath.toUri();
+      URI outputURI = prepareOutputPath(arguments.getOutputDir(), arguments);
 
       Handle sourceHandle = closer.register(sourceConnector.open(arguments.getSourceConnection()));
-      //      new ExportJob(sourceHandle, outputUri, arguments).run();
 
-      AbstractTask sourceQueryTask =
+      AbstractSourceTask sourceQueryTask =
           sourceConnector.getSourceQueryTask(sourceHandle, outputURI, arguments);
       sourceQueryTask.run();
+
+      ResultSetMetaData aggregateMetadata = sourceQueryTask.getAggregateQueryMetadata();
+      ResultSetMetaData rowMetadata = sourceQueryTask.getRowQueryMetadata();
 
       Path gcsPath = prepareGcsPath(arguments.getGcsPath(), closer);
       URI gcsUri = gcsPath.toUri();
 
-      Path gcsStagingBucketPath = prepareGcsPath(arguments.getGcsStagingBucket(), closer);
-      URI gcsStagingUri = gcsStagingBucketPath.toUri();
+      //      Path gcsStagingBucketPath = prepareGcsPath(arguments.getGcsStagingBucket(), closer);
+      //      URI gcsStagingUri = gcsStagingBucketPath.toUri();
 
       String projectId = arguments.getProjectId();
+      Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
+      HashMap<String, String> uploadedGcsUris = uploadToGcs(storage, outputURI, gcsUri, arguments);
 
       // RSyncClient rsyncClient = new RsyncClient()
       // rsyncClient.putRsync(String projectId, outputURI, gcsStagingUri, gcsUri)
 
-      // generate external table
+      // String aggExtTableName = getBqStagingPrefixSource(arguments) + "agg_source";
+      // String aggGcsUri = uploadedGcsUris.get("aggregate");
+      //
+      // BigQuerySetupTask bqAggSetup =
+      //     new BigQuerySetupTask(
+      //         aggregateMetadata, arguments.getBqStagingDataset(), aggGcsUri, aggExtTableName);
+      // bqAggSetup.createBqExternalTable();
+      //
+      // String rowExtTableName = getBqStagingPrefixSource(arguments) + "row_source";
+      // String rowGcsUri = uploadedGcsUris.get("row");
+      //
+      // BigQuerySetupTask bqRowSetup =
+      //     new BigQuerySetupTask(
+      //         rowMetadata, arguments.getBqStagingDataset(), rowGcsUri, rowExtTableName);
+      // bqRowSetup.createBqExternalTable();
 
       // TargetQueryTask targetQueryTask = targetConnector.getTargetQueryTask(targetHandle,
-      // externalTableId, arguments);
+      // arguments.getTable().getTarget(), arguments);
       // targetQuery.run()
 
       // run comparison query

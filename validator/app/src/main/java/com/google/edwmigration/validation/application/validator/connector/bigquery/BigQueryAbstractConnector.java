@@ -25,7 +25,7 @@ import com.google.edwmigration.validation.application.validator.ValidationConnec
 import com.google.edwmigration.validation.application.validator.connector.AbstractConnector;
 import com.google.edwmigration.validation.application.validator.handle.AbstractHandle;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
-import com.google.edwmigration.validation.application.validator.task.AbstractTask;
+import com.google.edwmigration.validation.application.validator.task.AbstractSourceTask;
 import java.net.URI;
 import javax.annotation.Nonnull;
 import org.apache.commons.io.FileUtils;
@@ -53,9 +53,9 @@ public abstract class BigQueryAbstractConnector extends AbstractConnector {
     super(name);
   }
 
-  public abstract class BigQueryAbstractTask extends AbstractTask {
+  public abstract class BigQueryAbstractSourceTask extends AbstractSourceTask {
 
-    public BigQueryAbstractTask(Handle handle, URI outputUri, ValidationArguments arguments) {
+    public BigQueryAbstractSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
       super(handle, outputUri, arguments);
     }
 

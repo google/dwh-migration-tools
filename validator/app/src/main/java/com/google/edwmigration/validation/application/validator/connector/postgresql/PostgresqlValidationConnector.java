@@ -16,18 +16,22 @@
  */
 package com.google.edwmigration.validation.application.validator.connector.postgresql;
 
+import static org.jooq.impl.DSL.*;
+
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import com.google.edwmigration.validation.application.validator.handle.JdbcHandle;
-import com.google.edwmigration.validation.application.validator.task.AbstractJdbcTask;
-import com.google.edwmigration.validation.application.validator.task.AbstractTask;
-import com.google.edwmigration.validation.application.validator.sql.AbstractSourceSqlGenerator;
+import com.google.edwmigration.validation.application.validator.task.AbstractJdbcSourceTask;
+import com.google.edwmigration.validation.application.validator.task.AbstractSourceTask;
+import com.google.edwmigration.validation.application.validator.task.AbstractTargetTask;
 import java.net.URI;
 import java.sql.Connection;
-import java.util.Arrays;
-import java.util.List;
+import java.sql.ResultSetMetaData;
+import java.util.HashMap;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
+import org.apache.commons.lang3.NotImplementedException;
+import org.jooq.DataType;
 import org.jooq.SQLDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,55 +45,53 @@ public class PostgresqlValidationConnector extends PostgresqlAbstractConnector {
     super("postgresql");
   }
 
-  public class PostgresqlTask extends AbstractJdbcTask {
-    public PostgresqlTask(Handle handle, URI outputUri, ValidationArguments arguments) {
+  public static class PostgresqlSourceTask extends AbstractJdbcSourceTask {
+    public PostgresqlSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
       super(handle, outputUri, arguments);
-    }
-
-    class PostgresqlSourceSqlGenerator extends AbstractSourceSqlGenerator {
-
-      public PostgresqlSourceSqlGenerator() {
-        super(
-            SQLDialect.POSTGRES,
-            getArguments().getTable(),
-            getArguments().getOptConfidenceInterval());
-      }
-
-      @Override
-      public List<String> getNumericColumns() {
-        return Arrays.asList("id", "salary");
-      }
-
-      public String getPrimaryKey() {
-        return "id";
-      }
-
-      public Long getRowCount() {
-        return 49L;
-      }
     }
 
     @Override
     public void run() throws Exception {
-      PostgresqlSourceSqlGenerator generator = new PostgresqlSourceSqlGenerator();
-      String aggregateQuery = generator.getAggregateQuery();
-      String rowSampleQuery = generator.getRowSampleQuery();
-
       JdbcHandle pg = (JdbcHandle) getHandle();
       DataSource ds = pg.getDataSource();
 
       try (Connection connection = ds.getConnection()) {
         LOG.debug("Connected to " + connection);
-        doInConnection(connection, aggregateQuery, QueryType.AGGREGATE);
-        doInConnection(connection, rowSampleQuery, QueryType.ROW);
+        PostgresqlSourceSqlGenerator generator =
+            new PostgresqlSourceSqlGenerator(
+                SQLDialect.POSTGRES,
+                getArguments().getTable().getSource(),
+                getArguments().getOptConfidenceInterval(),
+                getArguments().getColumnMappings());
+        String numericColsQuery = generator.getNumericColumnsQuery();
+        HashMap<String, DataType<? extends Number>> numericCols =
+            executeNumericColsQuery(connection, generator, numericColsQuery);
+        LOG.debug(String.valueOf(numericCols));
+
+        String aggregateQuery = generator.getAggregateQuery(numericCols);
+        LOG.debug(aggregateQuery);
+        String rowSampleQuery = generator.getRowSampleQuery();
+
+        ResultSetMetaData aggregateMetadata =
+            doInConnection(connection, aggregateQuery, QueryType.AGGREGATE);
+        setAggregateQueryMetadata(aggregateMetadata);
+        ResultSetMetaData rowMetadata = doInConnection(connection, rowSampleQuery, QueryType.ROW);
+        setRowQueryMetadata(rowMetadata);
       }
     }
   }
 
   @Nonnull
   @Override
-  public AbstractTask getSourceQueryTask(
+  public AbstractSourceTask getSourceQueryTask(
       Handle handle, URI outputUri, ValidationArguments arguments) {
-    return new PostgresqlTask(handle, outputUri, arguments);
+    return new PostgresqlSourceTask(handle, outputUri, arguments);
+  }
+
+  @Nonnull
+  @Override
+  public AbstractTargetTask getTargetQueryTask(
+      Handle handle, URI outputUri, ValidationArguments arguments) {
+    throw new NotImplementedException("PostgreSQL as a target is not implemented.");
   }
 }

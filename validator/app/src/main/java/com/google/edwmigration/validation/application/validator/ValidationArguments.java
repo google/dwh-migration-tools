@@ -22,8 +22,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import joptsimple.OptionSpec;
 import org.slf4j.Logger;
@@ -35,16 +39,20 @@ public class ValidationArguments extends DefaultArguments {
   private static final Logger LOG = LoggerFactory.getLogger(ValidationArguments.class);
   public static final String OPT_SOURCE_CONNECTION = "source-connection";
   public static final String OPT_TARGET_CONNECTION = "target-connection";
-  public static final String OPT_OUTPUT = "output";
+  public static final String OPT_OUTPUT = "local-path";
   public static final String OPT_GCS_PATH = "gcs-path";
   public static final String OPT_CONFIDENCE_INTERVAL = "confidence-interval";
+  private final Set<Double> ALLOWED_CI_VALUES = new HashSet<>(Arrays.asList(90.0, 95.0, 100.0));
   public static final String OPT_TABLE = "table";
   public static final String OPT_COLUMN_MAPPINGS = "column-mappings";
   public static final String OPT_PROJECT_ID = "project-id";
   public static final String OPT_GCS_STAGING_BUCKET = "gcs-staging-bucket";
+  public static final String OPT_BQ_STAGING = "bq-staging-dataset";
+  public static final String OPT_BQ_RESULTS = "bq-results-table";
 
   private ValidationConnection sourceConnection;
   private ValidationConnection targetConnection;
+  private Table table;
   private final OptionSpec<String> sourceConnectionOption =
       parser
           .accepts(OPT_SOURCE_CONNECTION, "Source connection file.")
@@ -66,7 +74,8 @@ public class ValidationArguments extends DefaultArguments {
           .accepts(OPT_TABLE, "Table to validate.")
           .withRequiredArg()
           .ofType(String.class)
-          .describedAs("source=target")
+          .describedAs("schema.source=dataset.target")
+          .withValuesSeparatedBy("=")
           .required();
 
   private final OptionSpec<String> outputOption =
@@ -77,24 +86,25 @@ public class ValidationArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(String.class)
           .describedAs("path/to/dir")
-          .defaultsTo("validationOutputs/");
+          .defaultsTo("");
 
   private final OptionSpec<String> gcsPathOption =
       parser
           .accepts(OPT_GCS_PATH, "GCS URI to upload query results to.")
           .withRequiredArg()
           .ofType(String.class)
-          .describedAs("gs://path/to/dir");
+          .describedAs("gs://path/to/dir")
+          .required();
 
   private final OptionSpec<Double> confidenceIntervalOption =
       parser
           .accepts(
               OPT_CONFIDENCE_INTERVAL,
-              "Confidence interval for validation. Determines number of rows sampled. Defaults to 90.")
+              "Confidence interval for validation. Determines number of rows sampled. Supported values [90, 95, 99]")
           .withOptionalArg()
           .ofType(Double.class)
-          .describedAs("0.90")
-          .defaultsTo(0.90);
+          .describedAs("90.0")
+          .defaultsTo(90.0);
 
   private final OptionSpec<String> columnMappingsOption =
       parser
@@ -104,9 +114,27 @@ public class ValidationArguments extends DefaultArguments {
           .withValuesSeparatedBy(',')
           .describedAs("colA=COLA,colB=newColB");
 
+  private final OptionSpec<String> bqStagingDataset =
+      parser
+          .accepts(
+              OPT_BQ_STAGING,
+              "BQ staging dataset. GCS external tables and intermediate query results will be stored here.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .describedAs("datasetName")
+          .required();
+
+  private final OptionSpec<String> bqResultsTable =
+      parser
+          .accepts(OPT_BQ_RESULTS, "BQ validation results table.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .describedAs("project.dataset.table")
+          .required();
+
   private final OptionSpec<String> projectIdOption =
       parser
-          .accepts(OPT_PROJECT_ID, "Project ID for Rsync.")
+          .accepts(OPT_PROJECT_ID, "Project ID. Used by GCS and BigQuery tasks.")
           .withRequiredArg()
           .ofType(String.class)
           .describedAs("projectId");
@@ -127,11 +155,13 @@ public class ValidationArguments extends DefaultArguments {
       Optional.ofNullable(System.getenv(ENV_DIRECTORY_VAR)).orElse(DEFAULT_ENV_DIRECTORY);
   Gson gson = new Gson();
 
+  @Nonnull
   public Path getSourceConnectionPath() {
     Path sourceConnPath = Paths.get(getOptions().valueOf(sourceConnectionOption));
     return Paths.get(connectionsDir).resolve(sourceConnPath);
   }
 
+  @Nonnull
   public ValidationConnection getSourceConnection() {
     if (sourceConnection == null) {
       try {
@@ -145,11 +175,13 @@ public class ValidationArguments extends DefaultArguments {
     return sourceConnection;
   }
 
+  @Nonnull
   public Path getTargetConnectionPath() {
     Path targetConnPath = Paths.get(getOptions().valueOf(targetConnectionOption));
     return Paths.get(connectionsDir).resolve(targetConnPath);
   }
 
+  @Nonnull
   public ValidationConnection getTargetConnection() {
     if (targetConnection == null) {
       try {
@@ -163,26 +195,63 @@ public class ValidationArguments extends DefaultArguments {
     return targetConnection;
   }
 
+  @Nonnull
   public String getOutputDir() {
     return getOptions().valueOf(outputOption);
   }
 
+  @Nonnull
   public String getGcsPath() {
     return getOptions().valueOf(gcsPathOption);
   }
 
+  @CheckForNull
   public String getProjectId() {
     return getOptions().valueOf(projectIdOption);
   }
 
+  @Nonnull
   public Double getOptConfidenceInterval() {
-    return getOptions().valueOf(confidenceIntervalOption);
+    Double confidenceInterval = getOptions().valueOf(confidenceIntervalOption);
+    if (!ALLOWED_CI_VALUES.contains(confidenceInterval)) {
+      throw new IllegalArgumentException(
+          "Invalid confidence interval provided. Value must be in [90, 95, 99]");
+    }
+    return confidenceInterval;
   }
 
-  public String getTable() {
-    return getOptions().valueOf(tableOption);
+  @Nonnull
+  public Table getTable() {
+    if (table == null) {
+      List<String> tableMapping = getOptions().valuesOf(tableOption);
+      String sourceTable = tableMapping.get(0);
+      String targetTable;
+
+      if (tableMapping.size() == 1) {
+        targetTable = tableMapping.get(0);
+      } else if (tableMapping.size() == 2) {
+        targetTable = tableMapping.get(1);
+      } else {
+        throw new IllegalArgumentException(
+            "Invalid table. Only one sourceTable=targetTable mapping is supported.");
+      }
+
+      return new Table(sourceTable, targetTable);
+    }
+    return table;
   }
 
+  @Nonnull
+  public String getBqStagingDataset() {
+    return getOptions().valueOf(bqStagingDataset);
+  }
+
+  @Nonnull
+  public String getBqResultsTable() {
+    return getOptions().valueOf(bqResultsTable);
+  }
+
+  @Nonnull
   public String getGcsStagingBucket() {
     return getOptions().valueOf(GcsStagingBucketOption);
   }

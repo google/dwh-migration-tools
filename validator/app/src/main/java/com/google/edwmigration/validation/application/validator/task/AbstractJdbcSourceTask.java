@@ -19,36 +19,39 @@ package com.google.edwmigration.validation.application.validator.task;
 import com.google.common.base.Stopwatch;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
+import com.google.edwmigration.validation.application.validator.sql.SqlGenerator;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
+import java.util.HashMap;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import org.jooq.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.support.JdbcUtils;
 
 /** @author nehanene */
-public abstract class AbstractJdbcTask extends AbstractTask {
+public abstract class AbstractJdbcSourceTask extends AbstractSourceTask {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcTask.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcSourceTask.class);
 
-  public AbstractJdbcTask(Handle handle, URI outputUri, ValidationArguments arguments) {
+  public AbstractJdbcSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
     super(handle, outputUri, arguments);
   }
 
   private String createCsvFilePath(QueryType queryType) {
-    String tableName = getArguments().getTable();
+    String tableName = getArguments().getTable().getSource();
     String filename = null;
 
     switch (queryType) {
       case AGGREGATE:
-        filename = tableName + "_aggregate.csv";
+        filename = tableName + CSV_AGGREGATE_SUFFIX;
         break;
       case ROW:
-        filename = tableName + "_row_sample.csv";
+        filename = tableName + CSV_ROW_SUFFIX;
         break;
     }
 
@@ -56,14 +59,61 @@ public abstract class AbstractJdbcTask extends AbstractTask {
     return filePath.toString();
   }
 
-  protected void doInConnection(Connection connection, String sql, QueryType type)
+  protected HashMap<String, DataType<? extends Number>> executeNumericColsQuery(
+      Connection connection, SqlGenerator generator, String sql) throws SQLException {
+    PreparedStatement statement = null;
+    try {
+      LOG.debug("Preparing statement...");
+
+      PREPARE:
+      {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        connection.setAutoCommit(false);
+        statement =
+            connection.prepareStatement(
+                sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        statement.setFetchSize(16384);
+        LOG.debug("Statement preparation took {}. Executing...", stopwatch);
+      }
+
+      EXECUTE:
+      {
+        statement.execute(); // Must return true to indicate a ResultSet object.
+      }
+
+      ResultSet rs = null;
+      try {
+        rs = statement.getResultSet();
+        HashMap<String, DataType<? extends Number>> results = new HashMap<>();
+
+        while (rs.next()) {
+          String columnName = rs.getString(1);
+          String dataType = rs.getString(2);
+          Integer numericPrecision = rs.getInt(3);
+          Integer numericScale = rs.getInt(4);
+          DataType<? extends Number> sqlDataType =
+              generator.getSqlDataType(dataType, numericPrecision, numericScale);
+          results.put(columnName, sqlDataType);
+        }
+
+        return results;
+      } finally {
+        JdbcUtils.closeResultSet(rs);
+      }
+
+    } finally {
+      JdbcUtils.closeStatement(statement);
+    }
+  }
+
+  protected ResultSetMetaData doInConnection(Connection connection, String sql, QueryType type)
       throws SQLException {
     CsvResultSetExtractor rse = new CsvResultSetExtractor(createCsvFilePath(type));
-    doSelect(connection, rse, sql);
+    return doSelect(connection, rse, sql);
   }
 
   @CheckForNull
-  protected static <T> T doSelect(
+  protected static <T> ResultSetMetaData doSelect(
       @Nonnull Connection connection,
       @Nonnull ResultSetExtractor<T> resultSetExtractor,
       @Nonnull String sql)
@@ -101,32 +151,19 @@ public abstract class AbstractJdbcTask extends AbstractTask {
         // debug(statement);
       }
 
-      T result = null;
       ResultSet rs = null;
       try {
         Stopwatch stopwatch = Stopwatch.createStarted();
         rs = statement.getResultSet();
-        result = resultSetExtractor.extractData(rs);
+        resultSetExtractor.extractData(rs);
         LOG.debug("Result set extraction took {}.", stopwatch);
+        return rs.getMetaData();
       } catch (IOException e) {
         throw new RuntimeException(e);
       } finally {
         JdbcUtils.closeResultSet(rs);
       }
 
-      SQLWarning warning = statement.getWarnings();
-      while (warning != null) {
-        LOG.warn(
-            "SQL warning: ["
-                + warning.getSQLState()
-                + "/"
-                + warning.getErrorCode()
-                + "] "
-                + warning.getMessage());
-        warning = warning.getNextWarning();
-      }
-
-      return result;
     } finally {
       JdbcUtils.closeStatement(statement);
     }

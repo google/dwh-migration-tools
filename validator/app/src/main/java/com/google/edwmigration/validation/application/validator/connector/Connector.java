@@ -19,7 +19,8 @@ package com.google.edwmigration.validation.application.validator.connector;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.ValidationConnection;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
-import com.google.edwmigration.validation.application.validator.task.AbstractTask;
+import com.google.edwmigration.validation.application.validator.task.AbstractSourceTask;
+import com.google.edwmigration.validation.application.validator.task.AbstractTargetTask;
 import java.net.URI;
 import javax.annotation.Nonnull;
 
@@ -32,5 +33,10 @@ public interface Connector {
   Handle open(@Nonnull ValidationConnection arguments) throws Exception;
 
   @Nonnull
-  AbstractTask getSourceQueryTask(Handle handle, URI outputUri, ValidationArguments arguments);
+  AbstractSourceTask getSourceQueryTask(
+      Handle handle, URI outputUri, ValidationArguments arguments);
+
+  @Nonnull
+  AbstractTargetTask getTargetQueryTask(
+      Handle handle, URI outputUri, ValidationArguments arguments);
 }

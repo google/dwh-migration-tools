@@ -19,7 +19,10 @@ package com.google.edwmigration.validation.application.validator.sql;
 import static org.jooq.impl.DSL.*;
 
 import autovalue.shaded.com.google.errorprone.annotations.ForOverride;
-import java.util.List;
+import com.google.common.collect.ImmutableMap;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.jooq.*;
 import org.jooq.conf.ParamType;
@@ -34,12 +37,17 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
   private final DSLContext create;
   private final String table;
   private final Double confidenceInterval;
+  private final ImmutableMap<String, String> columnMappings;
 
   public AbstractSourceSqlGenerator(
-      @Nonnull SQLDialect dialect, @Nonnull String table, @Nonnull Double confidenceInterval) {
+      @Nonnull SQLDialect dialect,
+      @Nonnull String table,
+      @Nonnull Double confidenceInterval,
+      @Nonnull ImmutableMap<String, String> columnMappings) {
     this.create = DSL.using(dialect);
     this.table = table;
     this.confidenceInterval = confidenceInterval;
+    this.columnMappings = columnMappings;
   }
 
   @Override
@@ -51,60 +59,101 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
     return table;
   }
 
+  public ImmutableMap<String, String> getColumnMappings() {
+    return columnMappings;
+  }
+
+  @ForOverride
   public abstract Long getRowCount();
 
   @ForOverride
-  public abstract List<String> getNumericColumns();
+  public abstract String getPrimaryKey();
 
   @Override
-  public String getAggregateQuery() {
-    Table<?> table = DSL.table(getTable());
-    SelectSelectStep<?> select = create.select();
+  public String getAggregateQuery(HashMap<String, DataType<? extends Number>> numericColumns) {
+    Table<?> table = table(getTable());
+    Select<Record4<String, String, String, BigDecimal>> finalSelect = null;
 
-    select = select.select(count());
+    for (Map.Entry<String, DataType<? extends Number>> entry : numericColumns.entrySet()) {
+      String sourceColumnName = entry.getKey();
+      String targetColumnName =
+          getColumnMappings().getOrDefault(sourceColumnName, sourceColumnName);
 
-    for (String columnName : getNumericColumns()) {
-      Field column = DSL.field(DSL.name(columnName));
-      select =
-          select
-              .select(DSL.sum(column).as("sum_" + columnName))
-              .select(DSL.min(column).as("min_" + columnName))
-              .select(DSL.max(column).as("max_" + columnName));
+      DataType<? extends Number> columnType = entry.getValue();
+
+      Field<BigDecimal> column = field(name(sourceColumnName), columnType).cast(BigDecimal.class);
+
+      SelectJoinStep<Record4<String, String, String, BigDecimal>> sumSelect =
+          getDSLContext()
+              .select(
+                  val(sourceColumnName).as("source_column_name"),
+                  val(targetColumnName).as("target_column_name"),
+                  val("sum").as("validation_type"),
+                  sum(column).as("value"))
+              .from(table);
+      SelectJoinStep<Record4<String, String, String, BigDecimal>> minSelect =
+          getDSLContext()
+              .select(
+                  val(sourceColumnName).as("source_column_name"),
+                  val(targetColumnName).as("target_column_name"),
+                  val("min").as("validation_type"),
+                  min(column).as("value"))
+              .from(table);
+      SelectJoinStep<Record4<String, String, String, BigDecimal>> maxSelect =
+          getDSLContext()
+              .select(
+                  val(sourceColumnName).as("source_column_name"),
+                  val(targetColumnName).as("target_column_name"),
+                  val("max").as("validation_type"),
+                  max(column).as("value"))
+              .from(table);
+      SelectJoinStep<Record4<String, String, String, BigDecimal>> avgSelect =
+          getDSLContext()
+              .select(
+                  val(sourceColumnName).as("source_column_name"),
+                  val(targetColumnName).as("target_column_name"),
+                  val("avg").as("validation_type"),
+                  avg(column).cast(BigDecimal.class).as("value"))
+              .from(table);
+      Select<Record4<String, String, String, BigDecimal>> subselect =
+          sumSelect.unionAll(minSelect).unionAll(maxSelect).unionAll(avgSelect);
+      if (finalSelect == null) {
+        finalSelect = subselect;
+      } else {
+        finalSelect = finalSelect.unionAll(subselect);
+      }
     }
 
-    SelectQuery<?> query = select.from(table).getQuery();
-
-    LOG.debug("Aggregate query generated: " + query.getSQL());
-    return query.getSQL();
+    if (finalSelect != null) {
+      return finalSelect.getSQL(ParamType.INLINED);
+    }
+    return null;
   }
 
-  private static int generateMask(
+  private static int getModCondition(
       Long totalRows, Double confidenceLevel, double marginOfError, double populationProportion) {
     // Calculate the Z-score for the given confidence level
     double zScore = calculateZScore(confidenceLevel);
 
     // Calculate the sample size using the formula
-    int sampleSize = calculateSampleSize(zScore, marginOfError, populationProportion, totalRows);
+    long sampleSize = calculateSampleSize(zScore, marginOfError, populationProportion, totalRows);
 
     // Calculate the desired sampling rate
     double samplingRate = (double) sampleSize / totalRows;
     LOG.debug("Target sampling rate: " + samplingRate);
 
-    // Calculate the number of bits to check in the mask, use floor to generate the largest sample
-    int bitsToCheck = (int) Math.floor(Math.log(1 / samplingRate) / Math.log(2));
-
-    // Generate the mask
-    return (1 << bitsToCheck) - 1;
+    // Return int for mod condition
+    return (int) Math.ceil(samplingRate * 100);
   }
 
   // Helper function to calculate the Z-score for a given confidence level
   private static double calculateZScore(Double confidenceLevel) {
     // This is a simplified Z-score calculation
-    if (confidenceLevel == 0.90) {
+    if (confidenceLevel == 90) {
       return 1.645;
-    } else if (confidenceLevel == 0.95) {
+    } else if (confidenceLevel == 95) {
       return 1.96;
-    } else if (confidenceLevel == 0.99) {
+    } else if (confidenceLevel == 99) {
       return 2.576;
     } else {
       throw new IllegalArgumentException(
@@ -114,7 +163,7 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
     }
   }
 
-  private static int calculateSampleSize(
+  private static long calculateSampleSize(
       double zScore, double marginOfError, double populationProportion, Long totalRows) {
     // Formula based on
     // https://www.evalacademy.com/articles/finding-the-right-sample-size-the-hard-way
@@ -126,7 +175,7 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
     double finiteSample = sampleSize / finiteDenominator;
     LOG.debug("Target sample size:" + finiteSample);
 
-    return (int) Math.ceil(finiteSample);
+    return (long) Math.ceil(finiteSample);
   }
 
   @Override
@@ -136,20 +185,17 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
     final double marginOfError = 0.05;
     final double populationProportion = 0.5;
 
-    int mask = generateMask(getRowCount(), confidenceInterval, marginOfError, populationProportion);
+    int modCondition =
+        getModCondition(getRowCount(), confidenceInterval, marginOfError, populationProportion);
 
     String sql =
         dsl.select()
             .from(getTable())
-            .where(bitAnd(field(name(getPrimaryKey()), Integer.class), val(mask)).eq(0))
+            .where(
+                (field(name(getPrimaryKey()), Integer.class).mod(val(100))).lessThan(modCondition))
             .getSQL(ParamType.INLINED);
 
     LOG.debug("Row sample query generated: " + sql);
     return sql;
-  }
-
-  public String generateRowCountQuery() {
-    DSLContext dsl = getDSLContext();
-    return dsl.select(count()).getSQL();
   }
 }
