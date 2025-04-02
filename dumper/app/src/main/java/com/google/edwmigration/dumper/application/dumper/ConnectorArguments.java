@@ -112,6 +112,10 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
   public static final String OPT_QUERY_LOG_ALTERNATES = "query-log-alternates";
 
+  // Snowflake
+  public static final String OPT_PRIVATE_KEY_FILE = "private-key-file";
+  public static final String OPT_PRIVATE_KEY_PASSWORD = "private-key-password";
+
   // Cloudera
   public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
   public static final String OPT_PAGINATION_PAGE_SIZE = "pagination-page-size";
@@ -159,7 +163,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_RANGER_SCHEME_DEFAULT = "http";
   public static final String OPT_RANGER_DISABLE_TLS_VALIDATION = "ranger-disable-tls-validation";
 
-  // These are blocking threads on the client side, so it doesn't really matter much.
+  // These are blocking threads on the client side, so it doesn't really matter
+  // much.
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
 
   private final OptionSpec<String> connectorNameOption =
@@ -228,6 +233,18 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(OPT_PASSWORD, "Database password, prompted if not provided")
           .withOptionalArg()
+          .describedAs("sekr1t");
+
+  private final OptionSpec<String> optionPrivateKeyFile =
+      parser
+          .accepts(OPT_PRIVATE_KEY_FILE, "Path to the Private Key file used for authentication.")
+          .withRequiredArg()
+          .describedAs("/path/to/ras_key.p8");
+  private final OptionSpec<String> optionPrivateKeyPassword =
+      parser
+          .accepts(
+              OPT_PRIVATE_KEY_PASSWORD, "Private Key file password. Required if file is encrypted.")
+          .withRequiredArg()
           .describedAs("sekr1t");
 
   private final OptionSpec<ZonedDateTime> optionStartDate =
@@ -342,9 +359,11 @@ public class ConnectorArguments extends DefaultArguments {
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.END_OF_DAY))
           .describedAs("2001-01-15[ 00:00:00.[000]]");
 
-  // This is intentionally NOT provided as a default value to the optionQueryLogEnd OptionSpec,
+  // This is intentionally NOT provided as a default value to the
+  // optionQueryLogEnd OptionSpec,
   // because some callers
-  // such as ZonedIntervalIterable want to be able to distinguish a user-specified value from this
+  // such as ZonedIntervalIterable want to be able to distinguish a user-specified
+  // value from this
   // dumper-specified default.
   private final ZonedDateTime OPT_QUERY_LOG_END_DEFAULT = ZonedDateTime.now(ZoneOffset.UTC);
 
@@ -800,7 +819,8 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   /** Returns the name of the single database specified, if exactly one database was specified. */
-  // This can be used to generate an output filename, but it makes 1 be a special case
+  // This can be used to generate an output filename, but it makes 1 be a special
+  // case
   // that I find a little uncomfortable from the Unix philosophy:
   // "Sometimes the output filename is different" is hard to automate around.
   @CheckForNull
@@ -871,6 +891,20 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isPasswordFlagProvided() {
     return has(optionPass);
+  }
+
+  public boolean isPrivateKeyFileProvided() {
+    return has(optionPrivateKeyFile);
+  }
+
+  @CheckForNull
+  public String getPrivateKeyFile() {
+    return getOptions().valueOf(optionPrivateKeyFile);
+  }
+
+  @CheckForNull
+  public String getPrivateKeyPassword() {
+    return getOptions().valueOf(optionPrivateKeyPassword);
   }
 
   @CheckForNull
