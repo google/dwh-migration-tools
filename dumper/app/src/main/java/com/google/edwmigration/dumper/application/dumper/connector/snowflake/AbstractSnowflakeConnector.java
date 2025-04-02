@@ -130,7 +130,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     prop.put("private_key_file", arguments.getPrivateKeyFile());
     prop.put("user", arguments.getUser());
     if (arguments.getPrivateKeyPassword() != null) {
-      prop.put("private_key_file_pwd", arguments.getPrivateKeyPassword());
+      prop.put("private_key_pwd", arguments.getPrivateKeyPassword());
     }
 
     return new SimpleDriverDataSource(driver, url, prop);
