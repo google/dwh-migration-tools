@@ -109,6 +109,14 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   // todo jobs params in filter
   //        FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_START);
   //         FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_END);
+  /**
+   * Method is expected to do a call to Oozie server to fetch jobs in a ranger [{@code startDate} -
+   * {@code endDate}].
+   *
+   * @param oozieClient - Oozie client initialised to particular Oozie server
+   * @param start jobs offset, base 1
+   * @param len number of jobs to return
+   */
   abstract List<J> fetchJobs(
       XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
       throws OozieClientException;
