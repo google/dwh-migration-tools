@@ -114,7 +114,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
    * {@code endDate}].
    *
    * @param oozieClient - Oozie client initialised to particular Oozie server
-   * @param start jobs offset, base 1
+   * @param start jobs offset pass to {@code oozieClient}
    * @param len number of jobs to return
    */
   abstract List<J> fetchJobs(
