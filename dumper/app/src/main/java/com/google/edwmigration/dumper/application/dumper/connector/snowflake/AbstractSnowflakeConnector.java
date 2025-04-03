@@ -26,6 +26,8 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPrivateKeyFile;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPrivateKeyPassword;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInputs;
@@ -39,6 +41,7 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +52,8 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @RespectsArgumentHostUnlessUrl
 @RespectsArgumentUser
 @RespectsArgumentPassword
+@RespectsArgumentPrivateKeyFile
+@RespectsArgumentPrivateKeyPassword
 @RespectsInputs({
   // Although RespectsInput is @Repeatable, errorprone fails on it.
   @RespectsInput(
@@ -80,37 +85,75 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException, SQLException {
-    String url = arguments.getUri();
-    if (url == null) {
-      StringBuilder buf = new StringBuilder("jdbc:snowflake://");
-      String host = arguments.getHost("host.snowflakecomputing.com");
-      buf.append(host).append("/");
-      // FWIW we can/should totally use a Properties object here and pass it to
-      // SimpleDriverDataSource rather than messing with the URL.
-      List<String> optionalArguments = new ArrayList<>();
-      if (arguments.getWarehouse() != null) {
-        optionalArguments.add("warehouse=" + arguments.getWarehouse());
-      }
-      if (arguments.getRole() != null) {
-        optionalArguments.add("role=" + arguments.getRole());
-      }
-      if (!optionalArguments.isEmpty()) {
-        buf.append("?").append(Joiner.on("&").join(optionalArguments));
-      }
-      url = buf.toString();
-    }
+    validateConnectionArguments(arguments);
+    String url = arguments.getUri() != null ? arguments.getUri() : getUrlFromArguments(arguments);
     String databaseName =
         arguments.getDatabases().isEmpty()
             ? DEFAULT_DATABASE
             : sanitizeDatabaseName(arguments.getDatabases().get(0));
 
-    Driver driver =
-        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-    String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+    DataSource dataSource =
+        arguments.isPrivateKeyFileProvided()
+            ? createPrivateKeyDataSource(arguments, url)
+            : createUserPasswordDataSource(arguments, url);
     JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
+
     setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
     return jdbcHandle;
+  }
+
+  private void validateConnectionArguments(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    if (arguments.isPasswordFlagProvided() && arguments.isPrivateKeyFileProvided()) {
+      throw new MetadataDumperUsageException(
+          "Private key authentication method can't be used together with user password. "
+              + "If the private key file is encrypted, please use --"
+              + ConnectorArguments.OPT_PRIVATE_KEY_PASSWORD
+              + " to specify the key password.");
+    }
+  }
+
+  private DataSource createUserPasswordDataSource(@Nonnull ConnectorArguments arguments, String url)
+      throws SQLException {
+    Driver driver =
+        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
+    String password = arguments.getPasswordOrPrompt();
+    return new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+  }
+
+  private DataSource createPrivateKeyDataSource(@Nonnull ConnectorArguments arguments, String url)
+      throws SQLException {
+    Driver driver =
+        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
+    Properties prop = new Properties();
+
+    prop.put("private_key_file", arguments.getPrivateKeyFile());
+    prop.put("user", arguments.getUser());
+    if (arguments.getPrivateKeyPassword() != null) {
+      prop.put("private_key_pwd", arguments.getPrivateKeyPassword());
+    }
+
+    return new SimpleDriverDataSource(driver, url, prop);
+  }
+
+  @Nonnull
+  private String getUrlFromArguments(@Nonnull ConnectorArguments arguments) {
+    StringBuilder buf = new StringBuilder("jdbc:snowflake://");
+    String host = arguments.getHost("host.snowflakecomputing.com");
+    buf.append(host).append("/");
+    // FWIW we can/should totally use a Properties object here and pass it to
+    // SimpleDriverDataSource rather than messing with the URL.
+    List<String> optionalArguments = new ArrayList<>();
+    if (arguments.getWarehouse() != null) {
+      optionalArguments.add("warehouse=" + arguments.getWarehouse());
+    }
+    if (arguments.getRole() != null) {
+      optionalArguments.add("role=" + arguments.getRole());
+    }
+    if (!optionalArguments.isEmpty()) {
+      buf.append("?").append(Joiner.on("&").join(optionalArguments));
+    }
+    return buf.toString();
   }
 
   final ImmutableList<Task<?>> getSqlTasks(
