@@ -23,6 +23,8 @@ import static com.google.edwmigration.dumper.application.dumper.ConnectorArgumen
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_PORT;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_QUERY_LOG_DAYS;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_URI;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.AssessmentSupport.REQUIRED;
+import static com.google.edwmigration.dumper.application.dumper.connector.oracle.AssessmentSupport.UNSUPPORTED;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -157,6 +159,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   @Nonnull
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
+    validateAssessmentFlag(arguments.isAssessment());
     Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
     String url = buildUrl(arguments);
     DataSource dataSource = new SimpleDriverDataSource(driver, url, buildProperties(arguments));
@@ -173,6 +176,17 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
           e);
     }
   }
+
+  private void validateAssessmentFlag(boolean isAssessment) {
+    if (assessmentSupport().equals(REQUIRED) && !isAssessment) {
+      throw noAssessmentException();
+    } else if (assessmentSupport().equals(UNSUPPORTED) && isAssessment) {
+      throw unsupportedAssessmentException();
+    }
+  }
+
+  @Nonnull
+  public abstract AssessmentSupport assessmentSupport();
 
   @Nonnull
   OracleConnectorScope getConnectorScope() {
@@ -244,5 +258,23 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
           String.format("If all connection parameters are provided, please omit the --%s", OPT_URI)
         };
     return new MetadataDumperUsageException(String.join(" ", sentences));
+  }
+
+  private MetadataDumperUsageException noAssessmentException() {
+    String message =
+        String.format(
+            "The %s connector only supports extraction for Assessment."
+                + " Provide the '--%s' flag to use this connector.",
+            getName(), ConnectorArguments.OPT_ASSESSMENT);
+    return new MetadataDumperUsageException(message);
+  }
+
+  private MetadataDumperUsageException unsupportedAssessmentException() {
+    String message =
+        String.format(
+            "The %s connector supports assessment without need for extra flags."
+                + " Try running again without the '--%s' flag",
+            getName(), ConnectorArguments.OPT_ASSESSMENT);
+    return new MetadataDumperUsageException(message);
   }
 }
