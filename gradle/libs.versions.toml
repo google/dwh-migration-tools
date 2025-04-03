@@ -62,6 +62,7 @@ google = "2.49.0"
 oozie-client = "5.2.1"
 amazon = "2.31.6"
 cloudrun = "0.60.0"
+jna = "5.17.0"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
@@ -139,6 +140,7 @@ h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
 parquet-generator = { group = "org.apache.parquet", name = "parquet-generator", version.ref = "parquet" }
 parquet = { group = "org.apache.parquet", name = "parquet", version.ref = "parquet" }
 oozie-client = { group = "org.apache.oozie", name = "oozie-client", version.ref = "oozie-client"}
+jna = { group = "net.java.dev.jna", "name" = "jna", version.ref = "jna"}
 
 [plugins]
 ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions-plugin" }

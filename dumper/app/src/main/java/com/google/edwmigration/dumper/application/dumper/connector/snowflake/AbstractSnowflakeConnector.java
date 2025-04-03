@@ -117,8 +117,12 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       throws SQLException {
     Driver driver =
         newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-    String password = arguments.getPasswordOrPrompt();
-    return new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+    Properties prop = new Properties();
+
+    prop.put("user", arguments.getUser());
+    prop.put("password", arguments.getPasswordOrPrompt());
+    prop.put("authenticator", "username_password_mfa");
+    return new SimpleDriverDataSource(driver, url, prop);
   }
 
   private DataSource createPrivateKeyDataSource(@Nonnull ConnectorArguments arguments, String url)
