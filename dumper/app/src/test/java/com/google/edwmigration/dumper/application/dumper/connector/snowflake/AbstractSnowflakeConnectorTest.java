@@ -109,9 +109,11 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   @Test
   public void checkJnaInClasspath_success() {
     try {
+      // JNA is required for the Snowflake MFA caching mechanism
       Class.forName("com.sun.jna.Library");
     } catch (ClassNotFoundException e) {
-      Assert.fail("net.java.dev.jna was not found in the classpath.");
+      Assert.fail(
+          "net.java.dev.jna was not found in the classpath it is required for the Snowflake MFA caching.");
     }
   }
 }
