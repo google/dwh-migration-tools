@@ -16,6 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -34,7 +38,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import org.junit.Assert;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -122,19 +127,19 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     Assume.assumeTrue(isDumperTest());
 
     MetadataDumperUsageException exception =
-        Assert.assertThrows(
+        assertThrows(
             MetadataDumperUsageException.class,
             () -> {
               File outputFile =
                   TestUtils.newOutputFile("compilerworks-snowflake-metadata-fail.zip");
               String[] args = ARGS(connector, outputFile);
 
-              Assert.assertEquals("--database", args[6]);
+              assertEquals("--database", args[6]);
               args[7] = args[7] + "_NOT_EXISTS";
               run(args);
             });
 
-    Assert.assertTrue(exception.getMessage().startsWith("Database name not found"));
+    assertTrue(exception.getMessage().startsWith("Database name not found"));
   }
 
   @Test
@@ -147,17 +152,42 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
                 StandardCharsets.UTF_8),
             TaskSqlMap.class);
 
-    Assert.assertEquals(expectedSqls.size(), actualSqls.size());
-    Assert.assertEquals(expectedSqls.keySet(), actualSqls.keySet());
+    assertEquals(expectedSqls.size(), actualSqls.size());
+    assertEquals(expectedSqls.keySet(), actualSqls.keySet());
     for (String name : expectedSqls.keySet()) {
-      Assert.assertEquals(expectedSqls.get(name), actualSqls.get(name));
+      assertEquals(expectedSqls.get(name), actualSqls.get(name));
     }
   }
 
-  private static Map<String, String> collectSqlStatements() throws IOException {
+  @Test
+  public void connector_generatesExpectedSql_withQueryOverrides() throws IOException {
+    Map<String, String> actualSqls =
+        collectSqlStatements("-Dsnowflake.metadata.columns.query=SQL_OVERRIDE");
+
+    assertEquals("SQL_OVERRIDE", actualSqls.get("columns-au.csv"));
+    assertEquals("SQL_OVERRIDE", actualSqls.get("columns.csv"));
+  }
+
+  @Test
+  public void connector_generatesExpectedSql_withWhereOverrides() throws IOException {
+    Map<String, String> actualSqls =
+        collectSqlStatements("-Dsnowflake.metadata.columns.where=SQL_OVERRIDE");
+
+    // TODO: should be endsWith("WHERE SQL_OVERRIDE")
+    assertTrue(
+        actualSqls.get("columns-au.csv").endsWith("WHERE DELETED IS NULL WHERE SQL_OVERRIDE"));
+    // TODO: should be 1
+    assertEquals(2, StringUtils.countMatches(actualSqls.get("columns-au.csv"), " WHERE "));
+
+    assertTrue(actualSqls.get("columns.csv").endsWith("WHERE SQL_OVERRIDE"));
+    assertEquals(1, StringUtils.countMatches(actualSqls.get("columns.csv"), " WHERE "));
+  }
+
+  private static Map<String, String> collectSqlStatements(String... extraArgs) throws IOException {
     List<Task<?>> tasks = new ArrayList<>();
     SnowflakeMetadataConnector connector = new SnowflakeMetadataConnector();
-    connector.addTasksTo(tasks, new ConnectorArguments("--connector", connector.getName()));
+    String[] args = ArrayUtils.addAll(new String[] {"--connector", connector.getName()}, extraArgs);
+    connector.addTasksTo(tasks, new ConnectorArguments(args));
     return tasks.stream()
         .filter(t -> t instanceof JdbcSelectTask)
         .map(t -> (JdbcSelectTask) t)
