@@ -42,7 +42,7 @@ public class StartUpMetainformationPrinter {
 
       System.out.println("App version: [" + version + "], change: [" + change + "]");
       System.out.println("Build date: " + buildDate);
-    } catch (IOException | URISyntaxException ignore) {
+    } catch (Exception ignore) {
     }
   }
 
