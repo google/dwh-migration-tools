@@ -69,6 +69,7 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
     out.add(new OozieServersTask());
     out.add(new OozieWorkflowJobsTask(MAX_QUARTER_DAY));
     out.add(new OozieCoordinatorJobsTask(MAX_QUARTER_DAY));
+    out.add(new OozieBundleJobsTask(MAX_QUARTER_DAY));
   }
 
   @Nonnull

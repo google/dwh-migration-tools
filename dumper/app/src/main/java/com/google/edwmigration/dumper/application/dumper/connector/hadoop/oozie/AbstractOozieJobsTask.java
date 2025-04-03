@@ -43,6 +43,8 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   private static final Logger logger = LoggerFactory.getLogger(AbstractOozieJobsTask.class);
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
+  private static final int INITIAL_OOZIE_JOBS_OFFSET = 1; // starts with 1, not 0.
+
   private final int maxDaysToFetch;
   private final long initialTimestamp;
   private final Class<J> oozieJobClass;
@@ -70,7 +72,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     try (CSVPrinter printer = csvFormat.print(sink.asCharSink(UTF_8).openBufferedStream())) {
       XOozieClient oozieClient = ((OozieHandle) handle).getOozieClient();
       final int batchSize = context.getArguments().getPaginationPageSize();
-      int offset = 1; // starts with 1, not 0.
+      int offset = INITIAL_OOZIE_JOBS_OFFSET;
       long lastJobEndTimestamp = initialTimestamp;
 
       logger.info(
@@ -107,6 +109,14 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   // todo jobs params in filter
   //        FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_START);
   //         FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_END);
+  /**
+   * Method is expected to do a call to Oozie server to fetch jobs in a ranger [{@code startDate} -
+   * {@code endDate}].
+   *
+   * @param oozieClient - Oozie client initialised to particular Oozie server
+   * @param start jobs offset pass to {@code oozieClient}
+   * @param len number of jobs to return
+   */
   abstract List<J> fetchJobs(
       XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
       throws OozieClientException;
