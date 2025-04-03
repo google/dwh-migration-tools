@@ -105,4 +105,13 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
             .contains(
                 "Private key authentication method can't be used together with user password"));
   }
+
+  @Test
+  public void checkJnaInClasspath_success() {
+    try {
+      Class.forName("com.sun.jna.Library");
+    } catch (ClassNotFoundException e) {
+      Assert.fail("net.java.dev.jna was not found in the classpath.");
+    }
+  }
 }
