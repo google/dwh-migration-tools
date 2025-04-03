@@ -61,9 +61,9 @@ public class Main {
   }
 
   public static void main(String... args) throws Exception {
-    StartUpMetainformationPrinter.printMetainfo();
-
     try {
+      StartUpMetainformationPrinter.printMetainfo();
+
       Main main = new Main(new MetadataDumper());
       if (args.length == 0) {
         args = new String[] {"--help"};
