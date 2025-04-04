@@ -38,4 +38,8 @@ public class Util {
   public static String getTempFileName(String fileName) {
     return String.format("%s.%s", fileName, Constants.TMP_FILE_SUFFIX);
   }
+
+  public static String ensureTrailingSlash(String uri) {
+    return uri.endsWith("/") ? uri : uri + "/";
+  }
 }
