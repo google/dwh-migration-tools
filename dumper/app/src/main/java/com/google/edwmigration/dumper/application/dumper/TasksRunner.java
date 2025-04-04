@@ -66,7 +66,7 @@ public class TasksRunner implements TaskRunContextOps {
     context = createContext(sinkFactory, handle, threadPoolSize, arguments);
     this.state = state;
     this.tasks = tasks;
-    totalNumberOfTasks = countTasks(tasks);
+    totalNumberOfTasks = TaskGroup.count(tasks);
     stopwatch = Stopwatch.createStarted();
     numberOfCompletedTasks = new AtomicInteger();
   }
@@ -180,11 +180,5 @@ public class TasksRunner implements TaskRunContextOps {
       }
     }
     return null;
-  }
-
-  private int countTasks(List<Task<?>> tasks) {
-    return tasks.stream()
-        .mapToInt(task -> task instanceof TaskGroup ? countTasks(((TaskGroup) task).getTasks()) : 1)
-        .sum();
   }
 }
