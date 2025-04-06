@@ -16,11 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import java.util.Arrays;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.XOozieClient;
 import org.junit.Test;
@@ -55,5 +57,40 @@ public class OozieCoordinatorJobsTaskTest {
     // Verify
     verify(job).getEndTime();
     verifyNoMoreInteractions(job);
+  }
+
+  @Test
+  public void csvFormat() {
+    String[] header = task.createJobSpecificCSVFormat().getHeader();
+    Arrays.sort(header);
+
+    String[] expected =
+        new String[] {
+          "acl",
+          "actions",
+          "appName",
+          "appPath",
+          "bundleId",
+          "concurrency",
+          "conf",
+          "consoleUrl",
+          "createdTime",
+          "endTime",
+          "executionOrder",
+          "externalId",
+          "frequency",
+          "group",
+          "id",
+          "lastActionTime",
+          "nextMaterializedTime",
+          "pauseTime",
+          "startTime",
+          "status",
+          "timeUnit",
+          "timeZone",
+          "timeout",
+          "user"
+        };
+    assertArrayEquals(expected, header);
   }
 }

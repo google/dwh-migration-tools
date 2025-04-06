@@ -32,12 +32,12 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 
 /** @author shevek */
 public abstract class AbstractTask<T> implements Task<T> {
@@ -127,10 +127,10 @@ public abstract class AbstractTask<T> implements Task<T> {
     return result;
   }
 
-  protected CSVFormat newCsvFormatForClass(Class<?> clazz) {
+  protected static CSVFormat newCsvFormatForClass(Class<?> clazz) {
     CSVFormat format =
         FORMAT.withHeader(
-            Arrays.stream(PropertyUtils.getPropertyDescriptors(clazz))
+            Arrays.stream(BeanUtils.getPropertyDescriptors(clazz))
                 .map(PropertyDescriptor::getName)
                 .toArray(String[]::new));
     return format;

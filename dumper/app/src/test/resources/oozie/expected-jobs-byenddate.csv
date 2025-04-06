@@ -1,6 +1,6 @@
-lastModifiedTime,appName,externalId,conf,run,acl,appPath,parentId,consoleUrl,createdTime,startTime,endTime,id,actions,user,group,status
-1742220060000,Empty workflow,,,0,,,0000002-250307121251646-oozie-oozi-C@476,https://oozie-host:11443/oozie?job=0000131-250317102116043-oozie-oozi-W,1742047260000,1742220060000,1742220060000,0000131-250317102116043-oozie-oozi-W,[],csso_dev,,SUCCEEDED
-1742220060000,Empty workflow,,,0,,,0000002-250307121251646-oozie-oozi-C@475,https://oozie-host:11443/oozie?job=0000130-250317102116043-oozie-oozi-W,1742220060000,1742220060000,1742220060000,0000130-250317102116043-oozie-oozi-W,[],csso_dev,,SUCCEEDED
-1742220060000,Empty workflow,,,0,,,0000002-250307121251646-oozie-oozi-C@474,https://oozie-host:11443/oozie?job=0000129-250317102116043-oozie-oozi-W,1742220060000,1742220060000,1742220060000,0000129-250317102116043-oozie-oozi-W,[],csso_dev,,SUCCEEDED
-1742220060000,Empty workflow,,,0,,,0000002-250307121251646-oozie-oozi-C@473,https://oozie-host:11443/oozie?job=0000128-250317102116043-oozie-oozi-W,1742220060000,1742220060000,1741874460000,0000128-250317102116043-oozie-oozi-W,[],csso_dev,,SUCCEEDED
+acl,actions,appName,appPath,conf,consoleUrl,createdTime,endTime,externalId,group,id,lastModifiedTime,parentId,run,startTime,status,user
+,[],Empty workflow,,,https://oozie-host:11443/oozie?job=0000131-250317102116043-oozie-oozi-W,1742047260000,1742220060000,,,0000131-250317102116043-oozie-oozi-W,1742220060000,0000002-250307121251646-oozie-oozi-C@476,0,1742220060000,SUCCEEDED,csso_dev
+,[],Empty workflow,,,https://oozie-host:11443/oozie?job=0000130-250317102116043-oozie-oozi-W,1742220060000,1742220060000,,,0000130-250317102116043-oozie-oozi-W,1742220060000,0000002-250307121251646-oozie-oozi-C@475,0,1742220060000,SUCCEEDED,csso_dev
+,[],Empty workflow,,,https://oozie-host:11443/oozie?job=0000129-250317102116043-oozie-oozi-W,1742220060000,1742220060000,,,0000129-250317102116043-oozie-oozi-W,1742220060000,0000002-250307121251646-oozie-oozi-C@474,0,1742220060000,SUCCEEDED,csso_dev
+,[],Empty workflow,,,https://oozie-host:11443/oozie?job=0000128-250317102116043-oozie-oozi-W,1742220060000,1741874460000,,,0000128-250317102116043-oozie-oozi-W,1742220060000,0000002-250307121251646-oozie-oozi-C@473,0,1742220060000,SUCCEEDED,csso_dev
 
