@@ -67,13 +67,14 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
             "datistemplate",
             "datallowconn",
             "datlastsysoid",
-            // 20 digits to accommodate values up to 2^64-1 (about 1.8e+19)
-            "to_char(datvacuumxid, '99999999999999999999')",
-            "to_char(datfrozenxid, '99999999999999999999')",
+            "cast(greatest(0, X.agenow - age(D.datvacuumxid)) AS VARCHAR) datvacuumxid",
+            "cast(greatest(0, X.agenow - age(D.datfrozenxid)) AS VARCHAR) datfrozenxid",
             "dattablespace",
             "datconfig",
             "datacl");
-    String query = String.format("SELECT %s FROM pg_database", selectList);
+    String query =
+        String.format(
+            "SELECT %s FROM pg_database D LEFT JOIN (SELECT txid_current() agenow) X ON 1 = 1", selectList);
     return new JdbcSelectTask(outputFile, query);
   }
 
