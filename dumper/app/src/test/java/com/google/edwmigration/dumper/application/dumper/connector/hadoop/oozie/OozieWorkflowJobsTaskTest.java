@@ -205,7 +205,7 @@ public class OozieWorkflowJobsTaskTest {
   }
 
   @Test
-  public void csvFormat() {
+  public void csvHeadersContainRequiredFields() {
     OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
     String[] header = task.createJobSpecificCSVFormat().getHeader();
     Arrays.sort(header);

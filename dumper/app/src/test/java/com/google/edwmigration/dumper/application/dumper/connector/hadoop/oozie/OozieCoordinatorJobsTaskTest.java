@@ -60,7 +60,7 @@ public class OozieCoordinatorJobsTaskTest {
   }
 
   @Test
-  public void csvFormat() {
+  public void csvHeadersContainRequiredFields() {
     String[] header = task.createJobSpecificCSVFormat().getHeader();
     Arrays.sort(header);
 
