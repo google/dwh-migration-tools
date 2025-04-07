@@ -67,8 +67,9 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
             "datistemplate",
             "datallowconn",
             "datlastsysoid",
-            "to_char(datvacuumxid)",
-            "to_char(datfrozenxid)",
+            // 20 digits to accommodate values up to 2^64-1 (about 1.8e+19)
+            "to_char(datvacuumxid, '99999999999999999999')",
+            "to_char(datfrozenxid, '99999999999999999999')",
             "dattablespace",
             "datconfig",
             "datacl");
