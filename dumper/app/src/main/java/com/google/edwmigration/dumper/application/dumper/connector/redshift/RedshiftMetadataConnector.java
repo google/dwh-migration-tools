@@ -67,8 +67,8 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
             "datistemplate",
             "datallowconn",
             "datlastsysoid",
-            "cast(datvacuumxid AS VARCHAR)",
-            "cast(datfrozenxid AS VARCHAR)",
+            "to_char(datvacuumxid)",
+            "to_char(datfrozenxid)",
             "dattablespace",
             "datconfig",
             "datacl");
