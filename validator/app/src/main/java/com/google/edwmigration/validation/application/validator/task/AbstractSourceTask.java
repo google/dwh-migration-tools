@@ -52,11 +52,6 @@ public abstract class AbstractSourceTask {
     this.arguments = arguments;
   }
 
-  public enum QueryType {
-    AGGREGATE,
-    ROW
-  }
-
   public Handle getHandle() {
     return handle;
   }

@@ -20,13 +20,10 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.*;
 import com.google.common.base.Preconditions;
-import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.ValidationConnection;
 import com.google.edwmigration.validation.application.validator.connector.AbstractConnector;
 import com.google.edwmigration.validation.application.validator.handle.AbstractHandle;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
-import com.google.edwmigration.validation.application.validator.task.AbstractSourceTask;
-import java.net.URI;
 import javax.annotation.Nonnull;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -51,45 +48,6 @@ public abstract class BigQueryAbstractConnector extends AbstractConnector {
 
   public BigQueryAbstractConnector(@Nonnull String name) {
     super(name);
-  }
-
-  public abstract class BigQueryAbstractSourceTask extends AbstractSourceTask {
-
-    public BigQueryAbstractSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
-      super(handle, outputUri, arguments);
-    }
-
-    public void executeQuery(String query) throws Exception {
-      BigQueryHandle bqHandle = (BigQueryHandle) getHandle();
-      BigQuery bigQuery = bqHandle.getBigQuery();
-
-      // Configure the query
-      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
-
-      // Create a job ID so that we can safely retry.
-      JobId jobId = JobId.of();
-      Job queryJob = bigQuery.create(Job.newBuilder(queryConfig).setJobId(jobId).build());
-
-      // Wait for the query to complete.
-      queryJob = queryJob.waitFor();
-
-      // Check for errors
-      if (queryJob == null) {
-        throw new RuntimeException("Job no longer exists");
-      } else if (queryJob.getStatus().getError() != null) {
-        throw new RuntimeException(queryJob.getStatus().getError().toString());
-      }
-
-      // Get the results
-      TableResult result = queryJob.getQueryResults();
-
-      // Print the results
-      for (FieldValueList row : result.iterateAll()) {
-        String word = row.get("word").getStringValue();
-        long wordCount = row.get("word_count").getLongValue();
-        System.out.printf("word: %s, word_count: %d%n", word, wordCount);
-      }
-    }
   }
 
   @Nonnull

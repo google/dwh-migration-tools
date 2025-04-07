@@ -20,6 +20,7 @@ import static org.jooq.impl.DSL.*;
 
 import autovalue.shaded.com.google.errorprone.annotations.ForOverride;
 import com.google.common.collect.ImmutableMap;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping.ValidationTable;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,21 +32,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** @author nehanene */
-public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
+public abstract class AbstractSqlGenerator implements SqlGenerator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractSourceSqlGenerator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractSqlGenerator.class);
   private final DSLContext create;
-  private final String table;
+  private final ValidationTable validationTable;
   private final Double confidenceInterval;
   private final ImmutableMap<String, String> columnMappings;
 
-  public AbstractSourceSqlGenerator(
+  public AbstractSqlGenerator(
       @Nonnull SQLDialect dialect,
-      @Nonnull String table,
+      @Nonnull ValidationTable validationTable,
       @Nonnull Double confidenceInterval,
       @Nonnull ImmutableMap<String, String> columnMappings) {
     this.create = DSL.using(dialect);
-    this.table = table;
+    this.validationTable = validationTable;
     this.confidenceInterval = confidenceInterval;
     this.columnMappings = columnMappings;
   }
@@ -55,8 +56,8 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
     return create;
   }
 
-  public String getTable() {
-    return table;
+  public ValidationTable getValidationTable() {
+    return validationTable;
   }
 
   public ImmutableMap<String, String> getColumnMappings() {
@@ -71,7 +72,7 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
 
   @Override
   public String getAggregateQuery(HashMap<String, DataType<? extends Number>> numericColumns) {
-    Table<?> table = table(getTable());
+    Table<?> table = table(getValidationTable().getFullyQualifiedTable());
     Select<Record4<String, String, String, BigDecimal>> finalSelect = null;
 
     for (Map.Entry<String, DataType<? extends Number>> entry : numericColumns.entrySet()) {
@@ -125,7 +126,9 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
     }
 
     if (finalSelect != null) {
-      return finalSelect.getSQL(ParamType.INLINED);
+      String result = finalSelect.getSQL(ParamType.INLINED);
+      LOG.debug("Aggregate query generated: " + result);
+      return result;
     }
     return null;
   }
@@ -190,7 +193,7 @@ public abstract class AbstractSourceSqlGenerator implements SqlGenerator {
 
     String sql =
         dsl.select()
-            .from(getTable())
+            .from(getValidationTable().getFullyQualifiedTable())
             .where(
                 (field(name(getPrimaryKey()), Integer.class).mod(val(100))).lessThan(modCondition))
             .getSQL(ParamType.INLINED);

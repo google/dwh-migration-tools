@@ -22,7 +22,8 @@ import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.val;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.edwmigration.validation.application.validator.sql.AbstractSourceSqlGenerator;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping.ValidationTable;
+import com.google.edwmigration.validation.application.validator.sql.AbstractSqlGenerator;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -36,18 +37,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** @author nehanene */
-public class PostgresqlSourceSqlGenerator extends AbstractSourceSqlGenerator {
+public class PostgresqlSqlGenerator extends AbstractSqlGenerator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PostgresqlSourceSqlGenerator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PostgresqlSqlGenerator.class);
 
   private static final String PG_DEFAULT_SCHEMA = "public";
 
-  public PostgresqlSourceSqlGenerator(
+  public PostgresqlSqlGenerator(
       @Nonnull SQLDialect dialect,
-      @Nonnull String table,
+      @Nonnull ValidationTable validationTable,
       @Nonnull Double confidenceInterval,
       @Nonnull ImmutableMap<String, String> columnMappings) {
-    super(dialect, table, confidenceInterval, columnMappings);
+    super(dialect, validationTable, confidenceInterval, columnMappings);
   }
 
   static Map<String, DataType<? extends Number>> typeMappings = new HashMap<>();
@@ -72,13 +73,8 @@ public class PostgresqlSourceSqlGenerator extends AbstractSourceSqlGenerator {
   }
 
   public String getNumericColumnsQuery() {
-    String table = getTable();
-    String schema = PG_DEFAULT_SCHEMA;
-    String[] tableName = getTable().split(".");
-    if (tableName.length == 2) {
-      schema = tableName[0];
-      table = tableName[1];
-    }
+    String table = getValidationTable().getTable();
+    String schema = getValidationTable().getDefaultSchema(PG_DEFAULT_SCHEMA);
 
     LOG.debug(
         String.format("Getting metadata for Postgresql schema %s and table %s", schema, table));

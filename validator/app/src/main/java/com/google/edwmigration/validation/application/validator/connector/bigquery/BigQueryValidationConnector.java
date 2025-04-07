@@ -17,13 +17,17 @@
 package com.google.edwmigration.validation.application.validator.connector.bigquery;
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.edwmigration.validation.application.validator.NameManager;
+import com.google.edwmigration.validation.application.validator.NameManager.ValidationType;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import com.google.edwmigration.validation.application.validator.task.AbstractSourceTask;
 import com.google.edwmigration.validation.application.validator.task.AbstractTargetTask;
 import java.net.URI;
+import java.util.HashMap;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.NotImplementedException;
+import org.jooq.DataType;
 import org.jooq.SQLDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +43,9 @@ public class BigQueryValidationConnector extends BigQueryAbstractConnector {
 
   public static class BigQueryTargetTask extends AbstractTargetTask {
 
-    public BigQueryTargetTask(Handle handle, URI outputUri, ValidationArguments arguments) {
-      super(handle, outputUri, arguments);
+    public BigQueryTargetTask(
+        Handle handle, NameManager nameManager, ValidationArguments arguments) {
+      super(handle, nameManager, arguments);
     }
 
     @Override
@@ -48,19 +53,24 @@ public class BigQueryValidationConnector extends BigQueryAbstractConnector {
       BigQueryHandle bqHandle = (BigQueryHandle) getHandle();
       BigQuery bigQuery = bqHandle.getBigQuery();
 
-      BigQueryTargetSqlGenerator generator =
-          new BigQueryTargetSqlGenerator(
+      BigQuerySqlGenerator generator =
+          new BigQuerySqlGenerator(
               SQLDialect.MYSQL,
-              getArguments().getTable().getSource(),
+              getArguments().getTableMapping().getTargetTable(),
               getArguments().getOptConfidenceInterval(),
               getArguments().getColumnMappings());
       String numericColsQuery = generator.getNumericColumnsQuery();
+      LOG.debug(numericColsQuery);
+      HashMap<String, DataType<? extends Number>> numericCols =
+          executeNumericColsQuery(generator, numericColsQuery);
 
-      // executeQuery
-      // LOG.debug(String.valueOf(numericCols));
-      // String aggregateQuery = generator.getAggregateQuery(numericCols);
-      // LOG.debug(aggregateQuery);
+      String aggregateQuery = generator.getAggregateQuery(numericCols);
+      String aggTargetTable = getNameManager().getBqTargetTableName(ValidationType.AGGREGATE);
+      extractQueryResults(aggregateQuery, aggTargetTable);
+
       String rowSampleQuery = generator.getRowSampleQuery();
+      String rowTargetTable = getNameManager().getBqTargetTableName(ValidationType.ROW);
+      extractQueryResults(rowSampleQuery, rowTargetTable);
     }
   }
 
@@ -74,7 +84,7 @@ public class BigQueryValidationConnector extends BigQueryAbstractConnector {
   @Nonnull
   @Override
   public AbstractTargetTask getTargetQueryTask(
-      Handle handle, URI outputUri, ValidationArguments arguments) {
-    return new BigQueryTargetTask(handle, outputUri, arguments);
+      Handle handle, NameManager nameManager, ValidationArguments arguments) {
+    return new BigQueryTargetTask(handle, nameManager, arguments);
   }
 }

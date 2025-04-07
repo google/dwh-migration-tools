@@ -52,7 +52,7 @@ public class ValidationArguments extends DefaultArguments {
 
   private ValidationConnection sourceConnection;
   private ValidationConnection targetConnection;
-  private Table table;
+  private ValidationTableMapping validationTableMapping;
   private final OptionSpec<String> sourceConnectionOption =
       parser
           .accepts(OPT_SOURCE_CONNECTION, "Source connection file.")
@@ -221,8 +221,8 @@ public class ValidationArguments extends DefaultArguments {
   }
 
   @Nonnull
-  public Table getTable() {
-    if (table == null) {
+  public ValidationTableMapping getTableMapping() {
+    if (validationTableMapping == null) {
       List<String> tableMapping = getOptions().valuesOf(tableOption);
       String sourceTable = tableMapping.get(0);
       String targetTable;
@@ -236,9 +236,9 @@ public class ValidationArguments extends DefaultArguments {
             "Invalid table. Only one sourceTable=targetTable mapping is supported.");
       }
 
-      return new Table(sourceTable, targetTable);
+      validationTableMapping = new ValidationTableMapping(sourceTable, targetTable);
     }
-    return table;
+    return validationTableMapping;
   }
 
   @Nonnull

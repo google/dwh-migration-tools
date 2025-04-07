@@ -22,7 +22,10 @@ import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.val;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.edwmigration.validation.application.validator.sql.AbstractSourceSqlGenerator;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping.ValidationTable;
+import com.google.edwmigration.validation.application.validator.sql.AbstractSqlGenerator;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.jooq.DataType;
 import org.jooq.Record2;
@@ -33,13 +36,13 @@ import org.jooq.impl.SQLDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BigQueryTargetSqlGenerator extends AbstractSourceSqlGenerator {
+public class BigQuerySqlGenerator extends AbstractSqlGenerator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(BigQueryTargetSqlGenerator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BigQuerySqlGenerator.class);
 
-  public BigQueryTargetSqlGenerator(
+  public BigQuerySqlGenerator(
       @Nonnull SQLDialect dialect,
-      @Nonnull String table,
+      @Nonnull ValidationTable table,
       @Nonnull Double confidenceInterval,
       @Nonnull ImmutableMap<String, String> columnMappings) {
     super(dialect, table, confidenceInterval, columnMappings);
@@ -55,31 +58,39 @@ public class BigQueryTargetSqlGenerator extends AbstractSourceSqlGenerator {
     return "id";
   }
 
-  // Only need this for Source SQL generation
+  static Map<String, DataType<? extends Number>> typeMappings = new HashMap<>();
+
+  static {
+    typeMappings.put("INT64", SQLDataType.BIGINT);
+    typeMappings.put("NUMERIC", SQLDataType.NUMERIC.precision((38)));
+    typeMappings.put("BIGNUMERIC", SQLDataType.DECIMAL.precision(76));
+    typeMappings.put("FLOAT64", SQLDataType.DOUBLE);
+  }
+
   @Override
   public DataType<? extends Number> getSqlDataType(
       String dataType, Integer numericPrecision, Integer numericScale) {
-    return null;
+    return typeMappings.get(dataType);
   }
 
   public String getNumericColumnsQuery() {
-    String table;
-    String schema;
-    String[] tableName = getTable().split(".");
-    if (tableName.length == 2) {
-      schema = tableName[0];
-      table = tableName[1];
-    } else {
-      throw new RuntimeException("Invalid BigQuery table. Provide dataset.table.");
+    String table = getValidationTable().getTable();
+    String schema = getValidationTable().getSchema();
+    if (schema == null) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Invalid BigQuery target table %s. Please provide `dataset.tableName`.", table));
     }
 
     SelectConditionStep<Record2<Object, Object>> query =
         getDSLContext()
             .select(field("column_name"), field("data_type"))
-            .from(table(name("information_schema", "columns")))
+            .from(table(name(schema, "INFORMATION_SCHEMA", "COLUMNS")))
             .where(field(name("table_schema"), SQLDataType.VARCHAR).eq(schema))
             .and(field(name("table_name"), SQLDataType.VARCHAR).eq(table))
-            .and(field(name("data_type"), SQLDataType.VARCHAR).in(val("INT64")));
+            .and(
+                field(name("data_type"), SQLDataType.VARCHAR)
+                    .in(val("INT64"), val("NUMERIC"), val("BIGNUMERIC"), val("FLOAT64")));
     String inlinedQuery = query.getSQL(ParamType.INLINED);
 
     LOG.debug("Metadata query generated: " + inlinedQuery);

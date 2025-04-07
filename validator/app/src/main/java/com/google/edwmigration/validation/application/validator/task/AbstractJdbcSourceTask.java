@@ -17,6 +17,7 @@
 package com.google.edwmigration.validation.application.validator.task;
 
 import com.google.common.base.Stopwatch;
+import com.google.edwmigration.validation.application.validator.NameManager.ValidationType;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import com.google.edwmigration.validation.application.validator.sql.SqlGenerator;
@@ -42,11 +43,11 @@ public abstract class AbstractJdbcSourceTask extends AbstractSourceTask {
     super(handle, outputUri, arguments);
   }
 
-  private String createCsvFilePath(QueryType queryType) {
-    String tableName = getArguments().getTable().getSource();
+  private String createCsvFilePath(ValidationType validationType) {
+    String tableName = getArguments().getTableMapping().getSourceTable().getTable();
     String filename = null;
 
-    switch (queryType) {
+    switch (validationType) {
       case AGGREGATE:
         filename = tableName + CSV_AGGREGATE_SUFFIX;
         break;
@@ -106,8 +107,8 @@ public abstract class AbstractJdbcSourceTask extends AbstractSourceTask {
     }
   }
 
-  protected ResultSetMetaData doInConnection(Connection connection, String sql, QueryType type)
-      throws SQLException {
+  protected ResultSetMetaData extractQueryResults(
+      Connection connection, String sql, ValidationType type) throws SQLException {
     CsvResultSetExtractor rse = new CsvResultSetExtractor(createCsvFilePath(type));
     return doSelect(connection, rse, sql);
   }

@@ -16,8 +16,8 @@
  */
 package com.google.edwmigration.validation.application.validator.connector.postgresql;
 
-import static org.jooq.impl.DSL.*;
-
+import com.google.edwmigration.validation.application.validator.NameManager;
+import com.google.edwmigration.validation.application.validator.NameManager.ValidationType;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import com.google.edwmigration.validation.application.validator.handle.JdbcHandle;
@@ -57,25 +57,24 @@ public class PostgresqlValidationConnector extends PostgresqlAbstractConnector {
 
       try (Connection connection = ds.getConnection()) {
         LOG.debug("Connected to " + connection);
-        PostgresqlSourceSqlGenerator generator =
-            new PostgresqlSourceSqlGenerator(
+        PostgresqlSqlGenerator generator =
+            new PostgresqlSqlGenerator(
                 SQLDialect.POSTGRES,
-                getArguments().getTable().getSource(),
+                getArguments().getTableMapping().getSourceTable(),
                 getArguments().getOptConfidenceInterval(),
                 getArguments().getColumnMappings());
         String numericColsQuery = generator.getNumericColumnsQuery();
         HashMap<String, DataType<? extends Number>> numericCols =
             executeNumericColsQuery(connection, generator, numericColsQuery);
-        LOG.debug(String.valueOf(numericCols));
 
         String aggregateQuery = generator.getAggregateQuery(numericCols);
-        LOG.debug(aggregateQuery);
         String rowSampleQuery = generator.getRowSampleQuery();
 
         ResultSetMetaData aggregateMetadata =
-            doInConnection(connection, aggregateQuery, QueryType.AGGREGATE);
+            extractQueryResults(connection, aggregateQuery, ValidationType.AGGREGATE);
         setAggregateQueryMetadata(aggregateMetadata);
-        ResultSetMetaData rowMetadata = doInConnection(connection, rowSampleQuery, QueryType.ROW);
+        ResultSetMetaData rowMetadata =
+            extractQueryResults(connection, rowSampleQuery, ValidationType.ROW);
         setRowQueryMetadata(rowMetadata);
       }
     }
@@ -91,7 +90,7 @@ public class PostgresqlValidationConnector extends PostgresqlAbstractConnector {
   @Nonnull
   @Override
   public AbstractTargetTask getTargetQueryTask(
-      Handle handle, URI outputUri, ValidationArguments arguments) {
+      Handle handle, NameManager nameManager, ValidationArguments arguments) {
     throw new NotImplementedException("PostgreSQL as a target is not implemented.");
   }
 }

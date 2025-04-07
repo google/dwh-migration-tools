@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.validation.application.validator.connector;
 
+import com.google.edwmigration.validation.application.validator.NameManager;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.ValidationConnection;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
@@ -38,5 +39,5 @@ public interface Connector {
 
   @Nonnull
   AbstractTargetTask getTargetQueryTask(
-      Handle handle, URI outputUri, ValidationArguments arguments);
+      Handle handle, NameManager nameManager, ValidationArguments arguments);
 }
