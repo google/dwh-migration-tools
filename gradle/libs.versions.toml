@@ -60,7 +60,7 @@ parquet = "1.15.1"
 spring-main = "6.1.10"
 google = "2.49.0"
 oozie-client = "5.2.1"
-amazon = "2.31.6"
+amazon = "2.31.16"
 cloudrun = "0.60.0"
 jna = "5.17.0"
 
