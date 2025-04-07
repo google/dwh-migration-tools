@@ -22,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.options;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import org.apache.oozie.client.AuthOozieClient;
@@ -200,6 +202,34 @@ public class OozieWorkflowJobsTaskTest {
     // Verify
     verify(job).getEndTime();
     verifyNoMoreInteractions(job);
+  }
+
+  @Test
+  public void csvHeadersContainRequiredFields() {
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    String[] header = task.createJobSpecificCSVFormat().getHeader();
+    Arrays.sort(header);
+
+    String[] expected = {
+      "acl",
+      "actions",
+      "appName",
+      "appPath",
+      "conf",
+      "consoleUrl",
+      "createdTime",
+      "endTime",
+      "externalId",
+      "group",
+      "id",
+      "lastModifiedTime",
+      "parentId",
+      "run",
+      "startTime",
+      "status",
+      "user"
+    };
+    assertArrayEquals(expected, header);
   }
 
   private static void stubOozieVersionsCall() {

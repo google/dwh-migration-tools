@@ -66,7 +66,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws Exception {
-    final CSVFormat csvFormat = newCsvFormatForClass(oozieJobClass);
+    final CSVFormat csvFormat = createJobSpecificCSVFormat();
     final ImmutableList<String> csvHeader = ImmutableList.copyOf(csvFormat.getHeader());
 
     try (CSVPrinter printer = csvFormat.print(sink.asCharSink(UTF_8).openBufferedStream())) {
@@ -104,6 +104,10 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
       printer.println();
     }
     return null;
+  }
+
+  CSVFormat createJobSpecificCSVFormat() {
+    return newCsvFormatForClass(oozieJobClass);
   }
 
   // todo jobs params in filter

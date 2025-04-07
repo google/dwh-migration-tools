@@ -16,11 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Arrays;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
@@ -44,7 +46,7 @@ public class CsvFormatTest {
     try (CSVPrinter printer = new CSVPrinter(buf, AbstractTask.FORMAT)) {
       printer.printRecord(data);
     }
-    logger.debug("CSV = " + buf);
+    logger.debug("CSV = {}", buf);
     try (StringReader reader = new StringReader(buf.toString());
         CSVParser parser = new CSVParser(reader, AbstractTask.FORMAT)) {
       CSVRecord record = Iterables.getOnlyElement(parser);
@@ -52,5 +54,47 @@ public class CsvFormatTest {
       assertEquals("Bad length", data.length, record.size());
       for (int i = 0; i < data.length; i++) assertEquals("Bad field " + i, data[i], record.get(i));
     }
+  }
+
+  @Test
+  public void testClassFormatGeneration() {
+    String[] header = AbstractTask.newCsvFormatForClass(PlainClass.class).getHeader();
+    Arrays.sort(header);
+
+    assertArrayEquals(new String[] {"propertyA", "propertyB"}, header);
+  }
+
+  @Test
+  public void testInheritanceClass() {
+    String[] parentHeaders = AbstractTask.newCsvFormatForClass(Parent.class).getHeader();
+    String[] childHeaders = AbstractTask.newCsvFormatForClass(Child.class).getHeader();
+
+    Arrays.sort(parentHeaders);
+    Arrays.sort(childHeaders);
+
+    assertArrayEquals(new String[] {"parentProp", "sharedProp"}, parentHeaders);
+    assertArrayEquals(new String[] {"childProp", "parentProp", "sharedProp"}, childHeaders);
+  }
+
+  private interface PlainClass {
+    String getPropertyA();
+
+    Object getPropertyB();
+
+    Object getPropertyC(Object someParam);
+
+    String someCalculationMethod();
+  }
+
+  private interface Parent {
+    Object getParentProp();
+
+    Object getSharedProp();
+  }
+
+  private interface Child extends Parent {
+    Object getChildProp();
+
+    Object getSharedProp();
   }
 }
