@@ -38,19 +38,6 @@ public class ParallelTaskGroup extends TaskGroup {
     super("parallel-task-" + name, tasks);
   }
 
-  @Override
-  public void addTask(Task<?> task) {
-    // Checking for conditions would need some ordering of tasks execution or waiting on {@link
-    // TaskSetState#getTaskResult}
-    Preconditions.checkState(
-        task.getConditions().length == 0, "Tasks in a parallel task should not have conditions");
-    Preconditions.checkState(
-        task instanceof AbstractJdbcTask || task instanceof FormatTask,
-        "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to add %s.",
-        task.getClass().getSimpleName());
-    super.addTask(task);
-  }
-
   private static class TaskRunner {
 
     @Nonnull private final TaskRunContext context;

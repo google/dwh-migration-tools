@@ -43,17 +43,6 @@ public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFor
     this.tasks.addAll(tasks);
   }
 
-  public void addTask(Task<?> task) {
-    // Checking for conditions would need some ordering of tasks execution or waiting on {@link
-    // TaskSetState#getTaskResult}
-    // Preconditions.checkState(task.getConditions().length == 0, "Tasks in a parallel task should
-    // not have conditions");
-    // Preconditions.checkState(task instanceof AbstractJdbcSelectTask || task instanceof
-    // FormatTask, "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to
-    // add %s.", task.getClass().getSimpleName());
-    tasks.add(task);
-  }
-
   @Nonnull
   public List<Task<?>> getTasks() {
     return tasks;
