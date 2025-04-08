@@ -16,38 +16,74 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
+import static java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
+import java.util.Enumeration;
+import java.util.Objects;
 import java.util.jar.Manifest;
+import org.springframework.core.io.ClassPathResource;
 
 public class StartUpMetainformationPrinter {
-  private static final String BANNER_PATH = "/banner/banner.txt";
 
   public static void printMetainfo() {
-    URLClassLoader cl = (URLClassLoader) StartUpMetainformationPrinter.class.getClassLoader();
     try {
-      List<String> bannerLines = readBannerLines();
-      bannerLines.forEach(System.out::println);
-
-      URL url = cl.findResource("META-INF/MANIFEST.MF");
-      Manifest manifest = new Manifest(url.openStream());
-      String buildDate = manifest.getMainAttributes().getValue("Build-Date-UTC");
-      String change = manifest.getMainAttributes().getValue("Change");
-      String version = manifest.getMainAttributes().getValue("Implementation-Version");
-
-      System.out.println("App version: [" + version + "], change: [" + change + "]");
-      System.out.println("Build date: " + buildDate);
+      printBanner();
+      printMetainfFile();
     } catch (Exception ignore) {
     }
   }
 
-  private static List<String> readBannerLines() throws IOException, URISyntaxException {
-    URL resource = StartUpMetainformationPrinter.class.getResource(BANNER_PATH);
-    return Files.readAllLines(Paths.get(resource.toURI()));
+  private static void printBanner() {
+    try {
+      ClassPathResource classPathResource =
+          new ClassPathResource("/banner/banner.txt", StartUpMetainformationPrinter.class);
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(classPathResource.getInputStream()))) {
+        reader.lines().forEach(System.out::println);
+      }
+    } catch (Exception ignore) {
+    }
+  }
+
+  private static void printMetainfFile() {
+    Manifest manifest = loadCurrentClassManifest();
+    if (manifest == null) {
+      return;
+    }
+
+    String buildDate = manifest.getMainAttributes().getValue("Build-Date-UTC");
+    String change = manifest.getMainAttributes().getValue("Change");
+    String version = manifest.getMainAttributes().getValue("Implementation-Version");
+
+    System.out.println("App version: [" + version + "], change: [" + change + "]");
+    System.out.println("Build date: " + buildDate);
+    System.out.println();
+  }
+
+  private static Manifest loadCurrentClassManifest() {
+    try {
+      final String implementationTitle =
+          StartUpMetainformationPrinter.class.getPackage().getImplementationTitle();
+      final ClassLoader classLoader = StartUpMetainformationPrinter.class.getClassLoader();
+
+      Enumeration<URL> manifestResources = classLoader.getResources("META-INF/MANIFEST.MF");
+      while (manifestResources.hasMoreElements()) {
+        try (InputStream inputStream = manifestResources.nextElement().openStream()) {
+          Manifest manifest = new Manifest(inputStream);
+          String currTitle = manifest.getMainAttributes().getValue(IMPLEMENTATION_TITLE);
+          if (Objects.equals(implementationTitle, currTitle)) {
+            return manifest;
+          }
+        } catch (Exception ignore) {
+        }
+      }
+    } catch (Exception ignore) {
+    }
+
+    return null;
   }
 }
