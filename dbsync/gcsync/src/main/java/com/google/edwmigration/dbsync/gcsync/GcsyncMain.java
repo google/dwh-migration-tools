@@ -12,6 +12,7 @@ import joptsimple.OptionSpec;
 
 public class GcsyncMain {
 
+  private static final String ALL_FILES_REGEX = ".*";
   public static void main(String[] args) throws IOException {
     Arguments arguments = new Arguments(args);
     String project = arguments.getOptions().valueOf(arguments.projectOptionSpec);
@@ -22,7 +23,7 @@ public class GcsyncMain {
         arguments.getOptions().valueOf(arguments.locationOptionSpec),
         arguments.getOptions().valueOf(arguments.sourceDirectoryOptionSpec),
         JobsClient.create(),
-        new GcsStorage(project),
+        ALL_FILES_REGEX, new GcsStorage(project),
         new InstructionGenerator(Constants.BLOCK_SIZE));
     try {
       gcsyncClient.syncFiles();

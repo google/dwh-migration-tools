@@ -7,7 +7,9 @@ public class Constants {
 
   public static final String FILES_TO_RSYNC_FILE_NAME = "filesToRsync.txt";
 
-  public static final String JAR_FILE_NAME = "gcsync-all.jar";
+  public static final String GCS_JAR_FILE_NAME = "gcsync-all.jar";
+
+  public static final String PUBLISHED_JAR_FILE_NAME = "gcsync-1.0.0-all.jar";
 
   public static final String CHECK_SUM_FILE_SUFFIX = "checksum";
 
