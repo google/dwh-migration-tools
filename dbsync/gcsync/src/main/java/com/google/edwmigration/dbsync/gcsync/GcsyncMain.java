@@ -17,6 +17,8 @@ import joptsimple.OptionSpec;
 
 public class GcsyncMain {
 
+  private static final String ALL_FILES_REGEX = ".*";
+
   public static void main(String[] args) throws IOException, ParseException {
     Arguments arguments = new Arguments(args);
     String project = arguments.getOptions().valueOf(arguments.projectOptionSpec);
@@ -31,6 +33,8 @@ public class GcsyncMain {
             arguments.getOptions().valueOf(arguments.locationOptionSpec),
             arguments.getOptions().valueOf(arguments.sourceDirectoryOptionSpec),
             cloudRunTaskTimeout,
+            ALL_FILES_REGEX,
+            "jars/" + Constants.JAR_FILE_NAME,
             JobsClient.create(jobsSettings(cloudRunTaskTimeout)),
             new GcsStorage(project),
             new InstructionGenerator(Constants.BLOCK_SIZE));

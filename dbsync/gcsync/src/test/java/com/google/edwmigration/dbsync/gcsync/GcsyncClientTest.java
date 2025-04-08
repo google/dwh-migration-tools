@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
 import org.junit.After;
@@ -45,9 +46,9 @@ public class GcsyncClientTest {
   private static final String TMP_BUCKET = "gs://dummy-tmp-bucket/";
   private static final String TARGET_BUCKET = "gs://dummy-target-bucket/";
   private static final String LOCATION = "us-central1";
+  private static final String ALL_FILES_REGEX = ".*";
 
   @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
-
   private File sourceDir;
   private File smallFile;
   private File largeFile;
@@ -91,6 +92,8 @@ public class GcsyncClientTest {
             LOCATION,
             sourceDir.getAbsolutePath(),
             Durations.fromSeconds(10),
+            ALL_FILES_REGEX,
+            "jars/" + Constants.JAR_FILE_NAME,
             mockJobsClient,
             mockGcsStorage,
             mockInstructionGenerator // The key new argument

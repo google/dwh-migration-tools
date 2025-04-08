@@ -18,7 +18,6 @@ import com.google.common.io.ByteSource;
 import com.google.edwmigration.dbsync.common.InstructionGenerator;
 import com.google.edwmigration.dbsync.proto.Checksum;
 import com.google.edwmigration.dbsync.storage.gcs.GcsStorage;
-import com.google.protobuf.Duration;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,8 +27,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -38,6 +39,8 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GcsyncClient {
 
@@ -51,16 +54,18 @@ public class GcsyncClient {
 
   private final String sourceDirectory;
 
-  private final Duration cloudRunTaskTimeout;
+  private final Pattern filePattern;
 
   private final GcsStorage gcsStorage;
+
+  private final Path gcsyncJarPath;
   private List<Path> filesToUpload;
 
   private List<Path> filesToRsync;
 
   private final InstructionGenerator instructionGenerator;
 
-  private static final Logger logger = Logger.getLogger("rsync");
+  private static final Logger logger = Logger.getLogger("Data Migration Agent");
 
   public GcsyncClient(
       String project,
@@ -68,21 +73,45 @@ public class GcsyncClient {
       String targetBucket,
       String location,
       String sourceDirectory,
-      Duration cloudRunTaskTimeout,
       JobsClient jobsClient,
+      String fileNameRegex,
       GcsStorage gcsStorage,
+      Path gcsyncJarPath,
       InstructionGenerator instructionGenerator) {
     this.project = project;
     this.tmpBucket = tmpBucket;
     this.targetBucket = targetBucket;
     this.location = location;
-    this.cloudRunTaskTimeout = cloudRunTaskTimeout;
     this.jobsClient = jobsClient;
+    this.filePattern = Pattern.compile(fileNameRegex);
     this.gcsStorage = gcsStorage;
     this.sourceDirectory = sourceDirectory;
+    this.gcsyncJarPath = gcsyncJarPath;
     this.instructionGenerator = instructionGenerator;
     filesToRsync = new ArrayList<>();
     filesToUpload = new ArrayList<>();
+  }
+
+  public void syncFilesDTS()
+      throws IOException, URISyntaxException, ExecutionException, InterruptedException {
+    // Scan the files in the path the program is running, get a list of files to rsync or upload,
+    // and upload that list to gcs.
+    scanFilesDTS();
+
+    logger.log(Level.INFO, "Files to rsync: " + filesToRsync);
+    logger.log(Level.INFO, "Files to upload: " + filesToUpload);
+    if (!filesToRsync.isEmpty()) {
+      // Compute checksums for files to rsync.
+      computeCheckSumDTS();
+      // Download checksum files to local storage.
+      downloadCheckSumFiles();
+      // Send instruction files to gcs.
+      sendRsyncInstructions();
+      // Reconstruct files on gcs using instructions.
+      reconStructFiles();
+    }
+    // Upload files that cannot be rsynced and small files.
+    uploadRemainingFiles();
   }
 
   public void syncFiles()
@@ -108,12 +137,12 @@ public class GcsyncClient {
   }
 
   private void scanFiles() throws IOException, URISyntaxException {
-    Path currentDirectory = Paths.get(sourceDirectory);
+    final Path currentDirectory = Paths.get(this.sourceDirectory);
     Preconditions.checkNotNull(currentDirectory);
-
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(currentDirectory)) {
       for (Path path : stream) {
-        if (path.getFileName().toString().equals(Constants.JAR_FILE_NAME)) {
+        String fileName = path.getFileName().toString();
+        if (fileName.equals(Constants.JAR_FILE_NAME)) {
           // Don't sync the jar to target bucket
           continue;
         }
@@ -121,20 +150,53 @@ public class GcsyncClient {
           // We don't support nested scanning for now
           continue;
         }
-        if (Files.size(path) < Constants.RSYNC_SIZE_THRESHOLD) {
-          // If file is small, we just upload it.
-          filesToUpload.add(path);
+        processFile(path, fileName);
+      }
+    }
+  }
+  private void scanFilesDTS() throws IOException, URISyntaxException {
+    final Path currentDirectory = Paths.get(this.sourceDirectory);
+    Preconditions.checkNotNull(currentDirectory);
+    scanDirectoryRecursive(currentDirectory);
+  }
+
+  public void scanDirectoryRecursive(final Path directory) throws IOException, URISyntaxException {
+    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory)) {
+      for (Path entry : directoryStream) {
+        String fileName = entry.getFileName().toString();
+        logger.log(Level.FINE, "Found entry: {0}", entry);
+
+        if (Files.isDirectory(entry, LinkOption.NOFOLLOW_LINKS)) {
+          scanDirectoryRecursive(entry); // Recursive call for subdirectory
         } else {
-          Blob blob = gcsStorage.getBlob(targetBucket, path.getFileName().toString());
-          if (blob == null) {
-            // File doesn't exist on gcs, we have to upload it.
-            filesToUpload.add(path);
-          } else {
-            String gcsMd5 = blob.getMd5();
-            if (!gcsMd5.equals(generateMd5(path))) {
-              filesToRsync.add(path);
-            }
+          Matcher matcher = filePattern.matcher(fileName.toLowerCase());
+          if (matcher.matches()) {
+            processFile(entry, fileName);
           }
+        }
+      }
+    } catch (IOException e) {
+      logger.log(
+          Level.SEVERE,
+          "Exception occurred while scanning directory: {0}. Exception: {1}",
+          new Object[] {directory.toString(), e.toString()});
+      throw e;
+    }
+  }
+
+  private void processFile(Path filePath, String fileName) throws IOException, URISyntaxException {
+    long fileSize = Files.size(filePath);
+    if (fileSize < Constants.RSYNC_SIZE_THRESHOLD) {
+      this.filesToUpload.add(filePath);
+    } else {
+      Blob existingBlob = this.gcsStorage.getBlob(this.targetBucket, fileName);
+      if (existingBlob == null) {
+        this.filesToUpload.add(filePath);
+      } else {
+        String gcsMd5 = existingBlob.getMd5();
+        String localMd5 = generateMd5(filePath);
+        if (!gcsMd5.equals(localMd5)) {
+          this.filesToRsync.add(filePath);
         }
       }
     }
@@ -144,7 +206,6 @@ public class GcsyncClient {
       throws URISyntaxException, IOException, ExecutionException, InterruptedException {
     uploadFilesToRsyncList();
     uploadJar();
-
     executeMainOnCloudRun(Constants.GENERATE_CHECK_SUM_MAIN);
   }
 
@@ -157,6 +218,36 @@ public class GcsyncClient {
     if (blob == null || !blob.getMd5().equals(generateMd5(sourceJar))) {
       gcsStorage.uploadFile(sourceJar, new URI(tmpBucket).resolve(Constants.JAR_FILE_NAME));
     }
+  }
+  private void computeCheckSumDTS()
+      throws URISyntaxException, IOException, ExecutionException, InterruptedException {
+    uploadFilesToRsyncList();
+    uploadJarDTS();
+    executeMainOnCloudRun(Constants.GENERATE_CHECK_SUM_MAIN);
+  }
+
+  private void uploadJarDTS() throws URISyntaxException, IOException {
+    String resourceName = "jars/" + Constants.JAR_FILE_NAME;
+    InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourceName);
+
+    if (inputStream == null) {
+      throw new IllegalArgumentException("The JAR resource not found: " + resourceName);
+    }
+
+    // Create a temporary file to work with the InputStream
+    Path tempFile = Files.createTempFile("gcsync-all", ".jar");
+    Files.copy(inputStream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+    inputStream.close();
+
+    String currentMd5 = generateMd5(tempFile);
+    Blob blob = gcsStorage.getBlob(tmpBucket, Constants.JAR_FILE_NAME);
+
+    if (blob == null || (blob.getMd5() != null && !blob.getMd5().equals(currentMd5))) {
+      gcsStorage.uploadFile(tempFile, new URI(tmpBucket).resolve(Constants.JAR_FILE_NAME));
+    }
+
+    // Clean up the temporary file
+    Files.deleteIfExists(tempFile);
   }
 
   private void uploadFilesToRsyncList() throws URISyntaxException, IOException {
@@ -244,7 +335,7 @@ public class GcsyncClient {
                 ExecutionTemplate.newBuilder()
                     .setTemplate(
                         TaskTemplate.newBuilder()
-                            .setTimeout(cloudRunTaskTimeout)
+                            .setTimeout(Constants.CLOUD_RUN_TIMEOUT)
                             .addContainers(
                                 Container.newBuilder()
                                     .setImage("docker.io/getbamba/google-cloud-sdk-java:latest")
