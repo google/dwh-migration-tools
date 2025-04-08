@@ -850,8 +850,8 @@ class OverridesUtil {
                 licenseUrl: "https://raw.githubusercontent.com/awslabs/aws-eventstream-java/refs/heads/master/LICENSE"
             ],
             "com.google.code.javaparser:javaparser": [
-                projectUrl: "http://code.google.com/p/javaparser/",
-                licenseUrl: "https://www.gnu.org/licenses/lgpl-3.0.txt"
+                projectUrl: "https://github.com/javaparser/javaparser/",
+                licenseUrl: "https://github.com/javaparser/javaparser/blob/javaparser-1.0.11/COPYING.LESSER"
             ],
             "com.github.dozermapper:dozer-core": [
                 projectUrl: "https://github.com/DozerMapper/dozer",
