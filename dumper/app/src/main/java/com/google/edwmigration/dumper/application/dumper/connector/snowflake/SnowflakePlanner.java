@@ -132,6 +132,10 @@ final class SnowflakePlanner {
       this.caseFormat = caseFormat;
     }
 
+    AssessmentQuery withFormatString(String formatString) {
+      return new AssessmentQuery(needsOverride, formatString, zipEntryName, caseFormat);
+    }
+
     static AssessmentQuery createMetricsSelect(Format zipFormat, CaseFormat caseFormat) {
       String formatString = "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s";
       return new AssessmentQuery(true, formatString, zipFormat.value, caseFormat);

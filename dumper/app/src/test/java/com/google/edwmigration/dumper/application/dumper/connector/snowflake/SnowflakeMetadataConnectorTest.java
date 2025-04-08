@@ -17,10 +17,13 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -37,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -173,25 +177,92 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     Map<String, String> actualSqls =
         collectSqlStatements("-Dsnowflake.metadata.columns.where=SQL_OVERRIDE");
 
-    // TODO: should be endsWith("WHERE SQL_OVERRIDE")
-    assertTrue(
-        actualSqls.get("columns-au.csv").endsWith("WHERE DELETED IS NULL WHERE SQL_OVERRIDE"));
-    // TODO: should be 1
-    assertEquals(2, StringUtils.countMatches(actualSqls.get("columns-au.csv"), " WHERE "));
+    assertTrue(actualSqls.get("columns-au.csv").endsWith("WHERE SQL_OVERRIDE"));
+    assertFalse(actualSqls.get("columns-au.csv").contains("WHERE DELETED IS NULL"));
+    assertEquals(1, StringUtils.countMatches(actualSqls.get("columns-au.csv"), " WHERE "));
 
     assertTrue(actualSqls.get("columns.csv").endsWith("WHERE SQL_OVERRIDE"));
     assertEquals(1, StringUtils.countMatches(actualSqls.get("columns.csv"), " WHERE "));
   }
 
-  private static Map<String, String> collectSqlStatements(String... extraArgs) throws IOException {
+  @Test
+  public void connector_generatesExpectedSql_withDatabaseFilter() throws IOException {
+    Map<String, String> actualSqls = collectSqlStatements("--database", "db1");
+
+    assertEquals(
+        "SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE DELETED IS NULL AND catalog_name IN ('DB1')",
+        actualSqls.get("schemata-au.csv"));
+    assertEquals(
+        "SELECT catalog_name, schema_name FROM db1.INFORMATION_SCHEMA.SCHEMATA WHERE catalog_name IN ('DB1')",
+        actualSqls.get("schemata.csv"));
+    assertEquals("SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", actualSqls.get("external_tables.csv"));
+  }
+
+  @Test
+  public void connector_generatesExpectedSql_withDatabaseFilterAndWhereOverride()
+      throws IOException {
+    ImmutableMultimap<String, String> actualSqls =
+        collectSqlStatementsAsMultimap(
+            "--database", "db1,db2", "-Dsnowflake.metadata.schemata.where=SQL_OVERRIDE");
+
+    assertEquals(
+        ImmutableList.of(
+            "SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE SQL_OVERRIDE"),
+        actualSqls.get("schemata-au.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT catalog_name, schema_name FROM INFORMATION_SCHEMA.SCHEMATA WHERE SQL_OVERRIDE"),
+        actualSqls.get("schemata.csv"));
+
+    // Two SHOW commands are executed and the result is appended to the same output file.
+    assertEquals(
+        ImmutableList.of(
+            "SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", "SHOW EXTERNAL TABLES IN DATABASE \"DB2\""),
+        actualSqls.get("external_tables.csv"));
+  }
+
+  @Test
+  public void databaseNameStringLiteral() {
+    assertEquals("'ABC'", SnowflakeMetadataConnector.databaseNameStringLiteral("abc"));
+    assertEquals("'abc'", SnowflakeMetadataConnector.databaseNameStringLiteral("\"abc\""));
+
+    assertEquals("''''", SnowflakeMetadataConnector.databaseNameStringLiteral("'"));
+    assertEquals("''''", SnowflakeMetadataConnector.databaseNameStringLiteral("\"'\""));
+
+    assertEquals("'A''C\"'", SnowflakeMetadataConnector.databaseNameStringLiteral("a'c\""));
+    assertEquals("'a''c\"'", SnowflakeMetadataConnector.databaseNameStringLiteral("\"a'c\"\""));
+  }
+
+  @Test
+  public void databaseNameQuoted() {
+    assertEquals("\"ABC\"", SnowflakeMetadataConnector.databaseNameQuoted("abc"));
+    assertEquals("\"abc\"", SnowflakeMetadataConnector.databaseNameQuoted("\"abc\""));
+
+    assertEquals("\"'\"", SnowflakeMetadataConnector.databaseNameQuoted("'"));
+    assertEquals("\"'\"", SnowflakeMetadataConnector.databaseNameQuoted("\"'\""));
+
+    assertEquals("\"A'C\"\"\"", SnowflakeMetadataConnector.databaseNameQuoted("a'c\""));
+    assertEquals("\"a'c\"\"\"", SnowflakeMetadataConnector.databaseNameQuoted("\"a'c\"\""));
+  }
+
+  private static ImmutableMultimap<String, String> collectSqlStatementsAsMultimap(
+      String... extraArgs) throws IOException {
     List<Task<?>> tasks = new ArrayList<>();
     SnowflakeMetadataConnector connector = new SnowflakeMetadataConnector();
     String[] args = ArrayUtils.addAll(new String[] {"--connector", connector.getName()}, extraArgs);
     connector.addTasksTo(tasks, new ConnectorArguments(args));
-    return tasks.stream()
+    ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap.builder();
+    tasks.stream()
         .filter(t -> t instanceof JdbcSelectTask)
         .map(t -> (JdbcSelectTask) t)
-        .collect(ImmutableMap.toImmutableMap(Task::getName, JdbcSelectTask::getSql));
+        .forEach(t -> builder.put(t.getName(), t.getSql()));
+    return builder.build();
+  }
+
+  private static ImmutableMap<String, String> collectSqlStatements(String... extraArgs)
+      throws IOException {
+    return collectSqlStatementsAsMultimap(extraArgs).entries().stream()
+        .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
   }
 
   static class TaskSqlMap extends HashMap<String, String> {}
