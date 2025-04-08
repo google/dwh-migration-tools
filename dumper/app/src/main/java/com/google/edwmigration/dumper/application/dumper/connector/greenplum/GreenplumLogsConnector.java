@@ -69,10 +69,7 @@ public class GreenplumLogsConnector extends AbstractGreenplumConnector
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
 
-    ParallelTaskGroup parallelTask = new ParallelTaskGroup(this.getName());
-    out.add(parallelTask);
-
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    ParallelTaskGroup.Builder parallelTask = new ParallelTaskGroup.Builder(this.getName());
 
     // pg_user table is also dumped in the greenplum(metadata) connector, but there is no harm
     // making this zip self-sufficient.
@@ -96,6 +93,10 @@ public class GreenplumLogsConnector extends AbstractGreenplumConnector
         queryQueueHistoryTemplateQuery,
         "tstart",
         parallelTask);
+
+    out.add(parallelTask.build());
+
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
   }
 
   // ## in the template to be replaced by the complete WHERE clause.
@@ -105,7 +106,7 @@ public class GreenplumLogsConnector extends AbstractGreenplumConnector
       String filePrefix,
       String queryTemplate,
       String startField,
-      ParallelTaskGroup out)
+      ParallelTaskGroup.Builder out)
       throws MetadataDumperUsageException {
 
     for (ZonedInterval interval : intervals) {
