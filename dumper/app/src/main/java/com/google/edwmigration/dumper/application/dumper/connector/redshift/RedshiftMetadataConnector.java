@@ -67,12 +67,32 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
             "datistemplate",
             "datallowconn",
             "datlastsysoid",
-            "cast(datvacuumxid AS VARCHAR)",
-            "cast(datfrozenxid AS VARCHAR)",
+            /*
+             * These aren't used directly, because their type is 'xid'
+             *
+             * <p>The 'xid' type doesn't fit in the 64-bit signed int receiver.
+             * This would cause cast errors in rare cases, so we need to do our own conversion.
+             *
+             * <p>First, we need to convert xid to bigint. This is not straightforward, because
+             * there is not explicit or implicit cast available. What we can do is get the "age"
+             * of the xid and then subtract it from the present (age of latest xid).
+             *
+             * <p>Secondly, we need to handle a special case where the xid has no age. Our final
+             * value in these cases should be 0, but xids with no age get a magic value of
+             * INT_MAX. This is done by simply replacing negative results with 0.
+             *
+             * <p>For the last step, just cast the result to VARCHAR. This works, because
+             * now we have a bigint instead of xid.
+             */
+            "cast(greatest(0, X.agenow - age(D.datvacuumxid)) AS VARCHAR) datvacuumxid",
+            "cast(greatest(0, X.agenow - age(D.datfrozenxid)) AS VARCHAR) datfrozenxid",
             "dattablespace",
             "datconfig",
             "datacl");
-    String query = String.format("SELECT %s FROM pg_database", selectList);
+    String query =
+        String.format(
+            "SELECT %s FROM pg_database D LEFT JOIN (SELECT txid_current() agenow) X ON 1 = 1",
+            selectList);
     return new JdbcSelectTask(outputFile, query);
   }
 
