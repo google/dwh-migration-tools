@@ -19,7 +19,10 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,6 +32,10 @@ public class ParallelTaskGroup extends TaskGroup {
 
   public ParallelTaskGroup(String name) {
     super("parallel-task-" + name);
+  }
+
+  ParallelTaskGroup(String name, List<Task<?>> tasks) {
+    super("parallel-task-" + name, tasks);
   }
 
   @Override
@@ -86,5 +93,31 @@ public class ParallelTaskGroup extends TaskGroup {
   @Override
   public String toString() {
     return "ParallelTaskGroup(" + getTasks().size() + " children)";
+  }
+
+  public static class Builder {
+
+    private final ArrayList<Task<?>> taskList = new ArrayList<>();
+    private final String name;
+
+    public Builder(String name) {
+      this.name = name;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder addTask(Task<?> task) {
+      Preconditions.checkState(
+          task.getConditions().length == 0, "Tasks in a parallel task should not have conditions");
+      Preconditions.checkState(
+          task instanceof AbstractJdbcTask || task instanceof FormatTask,
+          "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to add %s.",
+          task.getClass().getSimpleName());
+      taskList.add(task);
+      return this;
+    }
+
+    public ParallelTaskGroup build() {
+      return new ParallelTaskGroup(name, taskList);
+    }
   }
 }

@@ -72,11 +72,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
 
-    ParallelTaskGroup parallelTask = new ParallelTaskGroup(this.getName());
-    out.add(parallelTask);
-
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-    out.add(new FormatTask(FORMAT_NAME));
+    ParallelTaskGroup.Builder parallelTask = new ParallelTaskGroup.Builder(this.getName());
 
     //  is also be there in the metadata , no harm is making zip self-sufficient
     parallelTask.addTask(
@@ -157,6 +153,11 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
           queryTemplateScan,
           "Q.starttime",
           parallelTask);
+
+      out.add(parallelTask.build());
+
+      out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+      out.add(new FormatTask(FORMAT_NAME));
     }
   }
 
@@ -166,7 +167,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
       String filePrefix,
       String queryTemplate,
       String startField,
-      ParallelTaskGroup out)
+      ParallelTaskGroup.Builder out)
       throws MetadataDumperUsageException {
 
     List<String> whereClauses = new ArrayList<>();

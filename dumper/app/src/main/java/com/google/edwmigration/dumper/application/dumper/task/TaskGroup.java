@@ -38,6 +38,11 @@ public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFor
     Collections.addAll(this.tasks, tasks);
   }
 
+  public TaskGroup(@Nonnull String targetPath, @Nonnull List<Task<?>> tasks) {
+    super(targetPath);
+    this.tasks.addAll(tasks);
+  }
+
   public void addTask(Task<?> task) {
     // Checking for conditions would need some ordering of tasks execution or waiting on {@link
     // TaskSetState#getTaskResult}
