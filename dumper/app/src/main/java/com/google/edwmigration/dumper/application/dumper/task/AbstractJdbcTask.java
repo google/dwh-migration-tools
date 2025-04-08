@@ -110,6 +110,9 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     } else {
       format = format.withHeader(rs);
     }
+    if (append) {
+      format = format.withSkipHeaderRecord();
+    }
     return format;
   }
 

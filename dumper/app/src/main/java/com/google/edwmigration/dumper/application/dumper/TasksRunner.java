@@ -169,7 +169,7 @@ public class TasksRunner implements TaskRunContextOps {
       state.setTaskException(task, TaskState.FAILED, e);
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
-        sink.asCharSink(StandardCharsets.UTF_8)
+        sink.asCharSink(StandardCharsets.UTF_8, /* append= */ false)
             .writeLines(
                 Arrays.asList(
                     task.toString(),

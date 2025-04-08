@@ -51,7 +51,7 @@ public class FileSystemOutputHandleFactoryTest {
     {
       OutputHandle handle = factory.newOutputFileHandle("direct");
       assertFalse("direct exists before write", handle.exists());
-      handle.asByteSink().write(Ints.toByteArray(1234));
+      handle.asByteSink(/* append= */ false).write(Ints.toByteArray(1234));
       assertTrue("direct does not exist after commit", handle.exists());
     }
   }
