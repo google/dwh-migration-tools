@@ -853,10 +853,6 @@ class OverridesUtil {
                 projectUrl: "https://github.com/javaparser/javaparser/",
                 licenseUrl: "https://github.com/javaparser/javaparser/blob/javaparser-1.0.11/COPYING.LESSER"
             ],
-            "com.github.dozermapper:dozer-core": [
-                projectUrl: "https://github.com/DozerMapper/dozer",
-                licenseUrl: "https://github.com/DozerMapper/dozer/blob/master/LICENSE.md"
-            ],
             "com.googlecode.json-simple:json-simple": [
                 projectUrl: "https://github.com/fangyidong/json-simple",
                 licenseUrl: "https://github.com/fangyidong/json-simple/blob/master/LICENSE.txt"
@@ -864,22 +860,6 @@ class OverridesUtil {
             "org.apache.oozie:oozie-client": [
                 projectUrl: "https://github.com/apache/oozie",
                 licenseUrl: "https://github.com/apache/oozie/blob/master/LICENSE.txt"
-            ],
-            "org.apache.oozie:oozie-fluent-job-api": [
-                projectUrl: "https://github.com/apache/oozie",
-                licenseUrl: "https://github.com/apache/oozie/blob/master/LICENSE.txt"
-            ],
-            "org.jvnet.jaxb2_commons:jaxb2-basics": [
-                projectUrl: "https://github.com/highsource/jaxb2-basics/tree/master",
-                licenseUrl: "https://github.com/highsource/jaxb2-basics/blob/master/LICENSE"
-            ],
-            "org.jvnet.jaxb2_commons:jaxb2-basics-tools": [
-                projectUrl: "https://github.com/highsource/jaxb2-basics/tree/master",
-                licenseUrl: "https://github.com/highsource/jaxb2-basics/blob/master/LICENSE"
-            ],
-            "org.jvnet.jaxb2_commons:jaxb2-basics-runtime": [
-                projectUrl: "https://github.com/highsource/jaxb2-basics/tree/master",
-                licenseUrl: "https://github.com/highsource/jaxb2-basics/blob/master/LICENSE"
             ],
             "org.objenesis:objenesis": [
                 projectUrl: "https://github.com/easymock/objenesis",
@@ -893,6 +873,10 @@ class OverridesUtil {
                 projectUrl: "https://xerces.apache.org/xml-commons/components/external/",
                 // https://stackoverflow.com/questions/67599196/need-development-code-for-xml-apis-1-4-01
                 licenseUrl: "https://svn.apache.org/repos/asf/xerces/xml-commons/trunk/java/external/build.xml"
+            ],
+            "net.java.dev.jna:jna": [
+                projectUrl: "https://github.com/java-native-access/jna",
+                licenseUrl: "https://github.com/java-native-access/jna/blob/master/LICENSE"
             ]
         ]
     }
