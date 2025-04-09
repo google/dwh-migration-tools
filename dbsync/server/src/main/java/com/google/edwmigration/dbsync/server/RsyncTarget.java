@@ -5,9 +5,14 @@ import com.google.common.io.ByteSource;
 
 public interface RsyncTarget {
   ByteSource getChecksumByteSource();
+
   ByteSink getChecksumByteSink();
+
   ByteSource getInstructionsByteSource();
+
   ByteSink getInstructionsByteSink();
+
   ByteSource getTargetByteSource();
+
   ByteSink getStagingByteSink();
 }

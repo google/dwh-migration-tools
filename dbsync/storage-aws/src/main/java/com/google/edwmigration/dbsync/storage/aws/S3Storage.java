@@ -32,5 +32,4 @@ public class S3Storage {
     String path = uri.getPath();
     return new S3ByteSink(s3, bucket, path);
   }
-
 }

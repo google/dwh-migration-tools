@@ -1,10 +1,10 @@
 package com.google.edwmigration.dbsync.storage.aws;
 
-import com.google.edwmigration.dbsync.common.storage.AbstractRemoteByteSource;
-import com.google.edwmigration.dbsync.common.storage.Slice;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.io.ByteSource;
+import com.google.edwmigration.dbsync.common.storage.AbstractRemoteByteSource;
+import com.google.edwmigration.dbsync.common.storage.Slice;
 import java.io.IOException;
 import java.io.InputStream;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,19 +36,15 @@ public class S3ByteSource extends AbstractRemoteByteSource {
   }
 
   private static @Nullable String toRange(@Nullable Slice slice) {
-    if (slice == null)
-      return null;
+    if (slice == null) return null;
     return "bytes=" + slice.getOffset() + "-" + slice.getEndInclusive();
   }
 
   @Override
   public InputStream openStream() throws IOException {
     try {
-      GetObjectRequest objectRequest = GetObjectRequest.builder()
-          .bucket(bucket)
-          .key(key)
-          .range(toRange(getSlice()))
-          .build();
+      GetObjectRequest objectRequest =
+          GetObjectRequest.builder().bucket(bucket).key(key).range(toRange(getSlice())).build();
       return s3.getObject(objectRequest);
     } catch (NoSuchBucketException | NoSuchKeyException e) {
       throw S3Utils.newFileNotFoundException("No such S3 object s3://" + bucket + "/" + key, e);
@@ -59,8 +55,6 @@ public class S3ByteSource extends AbstractRemoteByteSource {
 
   @Override
   protected MoreObjects.ToStringHelper toStringHelper(ToStringHelper helper) {
-    return super.toStringHelper(helper)
-        .add("bucket", bucket)
-        .add("key", key);
+    return super.toStringHelper(helper).add("bucket", bucket).add("key", key);
   }
 }

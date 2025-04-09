@@ -6,8 +6,6 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.util.function.Function;
 
 public class StorageTestRunner {
 
@@ -44,6 +42,5 @@ public class StorageTestRunner {
       assertArrayEquals(slice.read(), source.read(), "Slice got mismatched data.");
       assertArrayEquals(slice.read(), sink.toByteArray(), "Slice/write got mismatched data.");
     }
-
   }
 }

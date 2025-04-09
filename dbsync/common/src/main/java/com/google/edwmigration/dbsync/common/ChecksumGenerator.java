@@ -1,10 +1,10 @@
 package com.google.edwmigration.dbsync.common;
 
-import com.google.edwmigration.dbsync.proto.Checksum;
 import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteSource;
 import com.google.common.primitives.Ints;
+import com.google.edwmigration.dbsync.proto.Checksum;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +16,7 @@ public class ChecksumGenerator {
 
   @SuppressWarnings("unused")
   private static final Logger logger = LoggerFactory.getLogger(ChecksumGenerator.class);
+
   private static final boolean DEBUG = false;
 
   private final @NonNegative int blockSize;
@@ -48,31 +49,40 @@ public class ChecksumGenerator {
         // Yes, this masks the instance variable.
         int blockSize = rollingChecksum.getBlockSize();
         if (DEBUG) {
-          logger.info("Generating checksums for [{} .. +{}] in {} bytes", offset, blockSize,
-              dataSize);
+          logger.info(
+              "Generating checksums for [{} .. +{}] in {} bytes", offset, blockSize, dataSize);
         }
 
-        // If someone changes the size of the ByteSource underneath us, this might throw EOFException.
+        // If someone changes the size of the ByteSource underneath us, this might throw
+        // EOFException.
         rollingChecksum.reset(i);
         int weakHashCode = rollingChecksum.getWeakHashCode();
         HashCode strongHashCode = rollingChecksum.getStrongHashCode();
 
         if (DEBUG) {
-          HashCode _strongHashCode = RollingChecksumImpl.STRONG_HASH_FUNCTION.hashBytes(dataArray,
-              Ints.checkedCast(offset), blockSize);
+          HashCode _strongHashCode =
+              RollingChecksumImpl.STRONG_HASH_FUNCTION.hashBytes(
+                  dataArray, Ints.checkedCast(offset), blockSize);
           if (!strongHashCode.equals(_strongHashCode)) {
             throw new IllegalStateException(
-                "Bad hash code at " + offset + "..+" + blockSize + ": " + strongHashCode + " != "
+                "Bad hash code at "
+                    + offset
+                    + "..+"
+                    + blockSize
+                    + ": "
+                    + strongHashCode
+                    + " != "
                     + _strongHashCode);
           }
         }
 
-        Checksum c = Checksum.newBuilder()
-            .setBlockOffset(offset)
-            .setBlockLength(blockSize)
-            .setWeakChecksum(weakHashCode)
-            .setStrongChecksum(ByteString.copyFrom(strongHashCode.asBytes()))
-            .build();
+        Checksum c =
+            Checksum.newBuilder()
+                .setBlockOffset(offset)
+                .setBlockLength(blockSize)
+                .setWeakChecksum(weakHashCode)
+                .setStrongChecksum(ByteString.copyFrom(strongHashCode.asBytes()))
+                .build();
         out.accept(c);
       }
     }

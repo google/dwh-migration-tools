@@ -1,15 +1,8 @@
 package com.google.edwmigration.dbsync.storage.gcs;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.auth.Credentials;
-import com.google.auth.oauth2.AccessToken;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.ReadChannel;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Bucket;
-import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.CopyWriter;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.CopyRequest;
@@ -18,14 +11,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Date;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 // https://www.baeldung.com/java-google-cloud-storage
@@ -54,8 +42,8 @@ public class GcsStorage {
   }
 
   public void uploadFile(Path sourceFile, URI target) throws IOException {
-    storage.createFrom(BlobInfo.newBuilder(BlobId.fromGsUtilUri(target.toString())).build(),
-        sourceFile);
+    storage.createFrom(
+        BlobInfo.newBuilder(BlobId.fromGsUtilUri(target.toString())).build(), sourceFile);
   }
 
   public boolean delete(URI file) {

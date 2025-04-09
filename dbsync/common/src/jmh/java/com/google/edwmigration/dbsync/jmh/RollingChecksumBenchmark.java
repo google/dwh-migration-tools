@@ -16,9 +16,9 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 @State(Scope.Benchmark)
-@Fork(value=2)
-@Warmup(iterations=2, time=RollingChecksumBenchmark.MS, timeUnit = TimeUnit.MILLISECONDS )
-@Measurement(iterations=4, time=RollingChecksumBenchmark.MS, timeUnit = TimeUnit.MILLISECONDS)
+@Fork(value = 2)
+@Warmup(iterations = 2, time = RollingChecksumBenchmark.MS, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 4, time = RollingChecksumBenchmark.MS, timeUnit = TimeUnit.MILLISECONDS)
 public class RollingChecksumBenchmark {
   public static final int MS = 1000;
   private static final int N = 1024;
@@ -35,14 +35,13 @@ public class RollingChecksumBenchmark {
   }
 
   @Benchmark
-  public void testResetBytes(Blackhole bh) throws Exception{
-    for (int i = 0; i < N; i++)
-      impl.reset(bytes, 0);
+  public void testResetBytes(Blackhole bh) throws Exception {
+    for (int i = 0; i < N; i++) impl.reset(bytes, 0);
     bh.consume(impl);
   }
 
   @Benchmark
-  public void testResetStream(Blackhole bh) throws Exception{
+  public void testResetStream(Blackhole bh) throws Exception {
     for (int i = 0; i < N; i++) {
       stream.reset();
       impl.reset(stream);

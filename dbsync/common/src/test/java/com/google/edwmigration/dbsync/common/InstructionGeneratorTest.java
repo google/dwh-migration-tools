@@ -1,8 +1,8 @@
 package com.google.edwmigration.dbsync.common;
 
+import com.google.common.io.ByteSource;
 import com.google.edwmigration.dbsync.proto.Checksum;
 import com.google.edwmigration.dbsync.test.RsyncTestRunner;
-import com.google.common.io.ByteSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -31,5 +31,4 @@ public class InstructionGeneratorTest {
     InstructionGenerator matcher = new InstructionGenerator(generator.getBlockSize());
     matcher.generate(i -> logger.info(String.valueOf(i)), ByteSource.wrap(dstData), checksums);
   }
-
 }

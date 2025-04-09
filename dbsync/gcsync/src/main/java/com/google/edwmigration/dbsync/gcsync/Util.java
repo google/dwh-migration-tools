@@ -13,8 +13,8 @@ public class Util {
   public static List<String> getListOfFiles(ByteSource byteSource) throws IOException {
     List<String> files = new ArrayList<>();
 
-    try (BufferedReader reader = new BufferedReader(
-        new InputStreamReader(byteSource.openStream()))) {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(byteSource.openStream()))) {
       String line;
       while ((line = reader.readLine()) != null) {
         files.add(line);

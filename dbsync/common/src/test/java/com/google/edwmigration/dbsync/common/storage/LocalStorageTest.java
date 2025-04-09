@@ -16,10 +16,8 @@ public class LocalStorageTest {
     LocalStorage storage = new LocalStorage();
     File file = new File(tempDir, "test.dat");
     logger.info("File is {}", file);
-    StorageTestRunner runner = new StorageTestRunner(
-        storage.newByteSource(file),
-        storage.newByteSink(file));
+    StorageTestRunner runner =
+        new StorageTestRunner(storage.newByteSource(file), storage.newByteSink(file));
     runner.run();
   }
-
 }

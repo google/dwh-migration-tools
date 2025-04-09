@@ -18,7 +18,8 @@ public class RollingChecksumTest {
   private static final int SIZE = 16;
   private static final int LEN = 4;
 
-  private static void assertChecksumsEqual(RollingChecksumImpl c0, RollingChecksumImpl c1, String message) {
+  private static void assertChecksumsEqual(
+      RollingChecksumImpl c0, RollingChecksumImpl c1, String message) {
     long v0 = c0.getWeakHashCode();
     long v1 = c1.getWeakHashCode();
 
@@ -38,12 +39,12 @@ public class RollingChecksumTest {
     logger.info("Init c1");
     c1.reset(data, 0);
 
-    logger.info("Rolling c1...");  // But not c0.
+    logger.info("Rolling c1..."); // But not c0.
 
     // The checksum should be the same at every offset of c1.
     for (int i = LEN; i < data.length; i++) {
       c1.roll(data[i]);
-      assertChecksumsEqual(c0, c1,"mismatch at offset " + i);
+      assertChecksumsEqual(c0, c1, "mismatch at offset " + i);
     }
   }
 

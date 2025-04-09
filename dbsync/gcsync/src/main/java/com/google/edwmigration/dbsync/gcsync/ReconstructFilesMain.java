@@ -26,25 +26,28 @@ public class ReconstructFilesMain {
 
   public static void main(String[] args) throws Exception {
     Arguments arguments = new Arguments(args);
-    GcsStorage gcsStorage = new GcsStorage(arguments.getOptions().valueOf(
-        arguments.projectOptionSpec));
+    GcsStorage gcsStorage =
+        new GcsStorage(arguments.getOptions().valueOf(arguments.projectOptionSpec));
     String tmpBucket = arguments.getOptions().valueOf(arguments.tmpBucketOptionSpec);
     String targetBucket = arguments.getOptions().valueOf(arguments.targetOptionSpec);
 
-    List<String> filesToReconstruct = getListOfFiles(
-        gcsStorage.newByteSource(new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME)));
+    List<String> filesToReconstruct =
+        getListOfFiles(
+            gcsStorage.newByteSource(
+                new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME)));
 
     for (String file : filesToReconstruct) {
 
-      try (InputStream instructionsSource = gcsStorage.newByteSource(
-          new URI(tmpBucket).resolve(getInstructionFileName(file))).openBufferedStream()) {
+      try (InputStream instructionsSource =
+          gcsStorage
+              .newByteSource(new URI(tmpBucket).resolve(getInstructionFileName(file)))
+              .openBufferedStream()) {
         URI sourceFile = new URI(targetBucket).resolve(file);
         ByteSource baseFileSource = gcsStorage.newByteSource(sourceFile);
 
         // Create a new file as a temp file and then swap it
         URI tempFile = new URI(targetBucket).resolve(getTempFileName(file));
-        ByteSink tmpFileSink = gcsStorage.newByteSink(
-            tempFile);
+        ByteSink tmpFileSink = gcsStorage.newByteSink(tempFile);
 
         OutputStream outputStream = tmpFileSink.openBufferedStream();
         try (InstructionReceiver instructionReceiver =
@@ -73,14 +76,26 @@ public class ReconstructFilesMain {
 
   private static class Arguments extends DefaultArguments {
 
-    private final OptionSpec<String> projectOptionSpec = parser.accepts("project",
-        "Specifies the destination project").withRequiredArg().ofType(String.class).required();
+    private final OptionSpec<String> projectOptionSpec =
+        parser
+            .accepts("project", "Specifies the destination project")
+            .withRequiredArg()
+            .ofType(String.class)
+            .required();
 
-    private final OptionSpec<String> targetOptionSpec = parser.accepts("target_bucket",
-        "Specifies the target bucket").withRequiredArg().ofType(String.class).required();
+    private final OptionSpec<String> targetOptionSpec =
+        parser
+            .accepts("target_bucket", "Specifies the target bucket")
+            .withRequiredArg()
+            .ofType(String.class)
+            .required();
 
-    private final OptionSpec<String> tmpBucketOptionSpec = parser.accepts("tmp_bucket",
-        "Specifies the temporary bucket").withRequiredArg().ofType(String.class).required();
+    private final OptionSpec<String> tmpBucketOptionSpec =
+        parser
+            .accepts("tmp_bucket", "Specifies the temporary bucket")
+            .withRequiredArg()
+            .ofType(String.class)
+            .required();
 
     public Arguments(String[] args) {
       super(args);

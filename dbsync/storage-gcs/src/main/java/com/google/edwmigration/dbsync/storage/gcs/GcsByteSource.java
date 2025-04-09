@@ -1,15 +1,15 @@
 package com.google.edwmigration.dbsync.storage.gcs;
 
 import com.google.cloud.ReadChannel;
-import com.google.common.base.Optional;
-import com.google.common.io.ByteSink;
-import com.google.edwmigration.dbsync.common.storage.AbstractRemoteByteSource;
-import com.google.edwmigration.dbsync.common.storage.Slice;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Optional;
+import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
+import com.google.edwmigration.dbsync.common.storage.AbstractRemoteByteSource;
+import com.google.edwmigration.dbsync.common.storage.Slice;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,12 +33,12 @@ public class GcsByteSource extends AbstractRemoteByteSource {
     super(slice);
     this.storage = storage;
     this.blobId = blobId;
-    this.inputStreamCache = new InputStreamCache(
-        Channels.newInputStream(storage.reader(blobId)), 0);
+    this.inputStreamCache =
+        new InputStreamCache(Channels.newInputStream(storage.reader(blobId)), 0);
   }
 
-  private GcsByteSource(Storage storage, BlobId blobId, @Nullable Slice slice,
-      InputStreamCache inputStreamCache) {
+  private GcsByteSource(
+      Storage storage, BlobId blobId, @Nullable Slice slice, InputStreamCache inputStreamCache) {
     super(slice);
     this.storage = storage;
     this.blobId = blobId;
@@ -74,8 +74,10 @@ public class GcsByteSource extends AbstractRemoteByteSource {
 
     if (slice.getOffset() < inputStreamCache.getCurrentOffset()) {
       if (DEBUG) {
-        LOG.info(String.format("Target offset %d smaller than current offset %d, reopen stream",
-            slice.getOffset(), inputStreamCache.currentOffset));
+        LOG.info(
+            String.format(
+                "Target offset %d smaller than current offset %d, reopen stream",
+                slice.getOffset(), inputStreamCache.currentOffset));
       }
       inputStreamCache.getSourceStream().close();
       inputStreamCache.setSourceStream(Channels.newInputStream(storage.reader(blobId)));
@@ -90,15 +92,14 @@ public class GcsByteSource extends AbstractRemoteByteSource {
 
   @Override
   public long copyTo(ByteSink byteSink) throws IOException {
-    try(OutputStream outputStream = byteSink.openBufferedStream()){
+    try (OutputStream outputStream = byteSink.openBufferedStream()) {
       return copyTo(outputStream);
     }
   }
 
   @Override
   protected MoreObjects.ToStringHelper toStringHelper(ToStringHelper helper) {
-    return super.toStringHelper(helper)
-        .add("blobId", blobId);
+    return super.toStringHelper(helper).add("blobId", blobId);
   }
 
   @Override
@@ -126,8 +127,11 @@ public class GcsByteSource extends AbstractRemoteByteSource {
       int bytesToRead = (int) Math.min(buffer.length, remaining);
       int read = inputStreamCache.getSourceStream().read(buffer, 0, bytesToRead);
       if (read == -1) {
-        throw new EOFException("Unexpected end of stream while copying " + copyLength
-            + " bytes starting at offset " + getSlice().getOffset());
+        throw new EOFException(
+            "Unexpected end of stream while copying "
+                + copyLength
+                + " bytes starting at offset "
+                + getSlice().getOffset());
       }
       out.write(buffer, 0, read);
       remaining -= read;
@@ -140,8 +144,8 @@ public class GcsByteSource extends AbstractRemoteByteSource {
 
   /**
    * A cache with an {@link InputStream} and a mark of the current offset within the stream. This
-   * cache will be shared by this {@link ByteSource} and the copies created by
-   * {@link #slice(long, long)} to efficiently implement the {@link #copyTo(OutputStream)} method.
+   * cache will be shared by this {@link ByteSource} and the copies created by {@link #slice(long,
+   * long)} to efficiently implement the {@link #copyTo(OutputStream)} method.
    */
   private static class InputStreamCache {
 

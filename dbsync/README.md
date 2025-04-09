@@ -8,6 +8,12 @@ Compiling the code from source requires `Java 8`, running the tools requires
 `Java 8` or higher. To check Java version run the command`java -version` or
 refer to Java vendor documentation.
 
+## Contributing
+
+Before submitting any code changes, please run the formatter
+
+    java -jar dbsync/google-java-format-1.7-all-deps.jar -i $(git ls-files|grep \.java$)
+
 ## Gcysnc
 
 This tool is in preview mode, it's being actively developed.

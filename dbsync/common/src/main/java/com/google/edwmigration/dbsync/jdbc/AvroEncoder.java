@@ -33,12 +33,13 @@ public class AvroEncoder implements JdbcEncoder {
   private static final boolean DEBUG = false;
 
   // Sync must be fixed, or we can't rsync.
-  private static final byte[] SYNC = new byte[]{
-      1, 2, 3, 4,
-      42, 43, 44, 45,
-      5, 6, 7, 8,
-      49, 48, 47, 46
-  };
+  private static final byte[] SYNC =
+      new byte[] {
+        1, 2, 3, 4,
+        42, 43, 44, 45,
+        5, 6, 7, 8,
+        49, 48, 47, 46
+      };
 
   private static final CharMatcher AVRO_ILLEGAL_CHARS =
       CharMatcher.inRange('a', 'z')
@@ -55,28 +56,23 @@ public class AvroEncoder implements JdbcEncoder {
   private static interface Transfer {
 
     public abstract void define(
-        FieldAssembler<Schema> builder,
-        ResultSetMetaData md,
-        int columnIndex) throws SQLException, IOException;
+        FieldAssembler<Schema> builder, ResultSetMetaData md, int columnIndex)
+        throws SQLException, IOException;
 
-    public abstract void transfer(
-        Encoder out,
-        ResultSet rs,
-        int columnIndex)
+    public abstract void transfer(Encoder out, ResultSet rs, int columnIndex)
         throws SQLException, IOException;
   }
 
-  private static abstract class AbstractTransfer implements Transfer {
+  private abstract static class AbstractTransfer implements Transfer {
 
     public FieldBuilder<Schema> defineBase(
-        FieldAssembler<Schema> builder,
-        ResultSetMetaData md,
-        int columnIndex
-    ) throws SQLException, IOException {
+        FieldAssembler<Schema> builder, ResultSetMetaData md, int columnIndex)
+        throws SQLException, IOException {
       String columnName = md.getColumnLabel(columnIndex + 1);
       int columnType = md.getColumnType(columnIndex + 1);
       JDBCType columnJdbcType = JDBCType.valueOf(columnType); // TODO: May throw.
-      return builder.name(legalize(columnName))
+      return builder
+          .name(legalize(columnName))
           .prop("jdbcName", columnName)
           .prop("jdbcType", columnType)
           .prop("jdbcSymbolicType", columnJdbcType)
@@ -84,10 +80,8 @@ public class AvroEncoder implements JdbcEncoder {
     }
 
     public BaseTypeBuilder<UnionAccumulator<NullDefault<Schema>>> defineNullable(
-        FieldBuilder<Schema> builder,
-        ResultSetMetaData md,
-        int columnIndex
-    ) throws SQLException, IOException {
+        FieldBuilder<Schema> builder, ResultSetMetaData md, int columnIndex)
+        throws SQLException, IOException {
       return builder.type().unionOf().nullBuilder().endNull().and();
     }
 
@@ -124,8 +118,8 @@ public class AvroEncoder implements JdbcEncoder {
     public void define(FieldAssembler<Schema> builder, ResultSetMetaData md, int columnIndex)
         throws SQLException, IOException {
       FieldBuilder<Schema> base = defineBase(builder, md, columnIndex);
-      BaseTypeBuilder<UnionAccumulator<NullDefault<Schema>>> union = defineNullable(base, md,
-          columnIndex);
+      BaseTypeBuilder<UnionAccumulator<NullDefault<Schema>>> union =
+          defineNullable(base, md, columnIndex);
       union.longType().endUnion().nullDefault();
     }
 
@@ -216,9 +210,8 @@ public class AvroEncoder implements JdbcEncoder {
       logger.debug("Transfers are " + Arrays.toString(transfers));
     }
 
-    SchemaBuilder.FieldAssembler<Schema> builder = SchemaBuilder.record("MyRecordName")
-        .namespace("MyNamespaceName")
-        .fields();
+    SchemaBuilder.FieldAssembler<Schema> builder =
+        SchemaBuilder.record("MyRecordName").namespace("MyNamespaceName").fields();
     for (int i = 0; i < transfers.length; i++) {
       transfers[i].define(builder, md, i);
     }

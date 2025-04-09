@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dbsync.common;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import java.io.IOException;
@@ -26,8 +25,6 @@ import javax.annotation.Nonnull;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import joptsimple.ValueConversionException;
-import joptsimple.ValueConverter;
 import org.anarres.jdiagnostics.ProductMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

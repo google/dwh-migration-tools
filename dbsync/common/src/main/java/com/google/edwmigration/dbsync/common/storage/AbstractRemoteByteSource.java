@@ -21,8 +21,7 @@ public abstract class AbstractRemoteByteSource extends ByteSource {
 
   @Override
   public Optional<Long> sizeIfKnown() {
-    if (slice != null)
-      return Optional.of(slice.getLength());
+    if (slice != null) return Optional.of(slice.getLength());
     return super.sizeIfKnown();
   }
 
@@ -44,8 +43,7 @@ public abstract class AbstractRemoteByteSource extends ByteSource {
   public String toString() {
     MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
     helper = toStringHelper(helper);
-    if (slice != null)
-      helper.add("slice", slice);
+    if (slice != null) helper.add("slice", slice);
     return helper.toString();
   }
 }
