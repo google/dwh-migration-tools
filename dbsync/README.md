@@ -16,6 +16,9 @@ This tool is in preview mode, it's being actively developed.
 
     ./gradlew :dbsync:gcsync:build
 
+You migh need to install `protobuf-compiler` if that's not there already. See
+this [page](https://protobuf.dev/installation/) on how to install it.
+
 ### Run the Gcsync Client ###
 
     java -jar gcsync-all.jar --target_bucket <target_bucket> --tmp_bucket <tmp_bucket> --project <project_id> --location <location> --source_directory <source_directory> --task_timeout <task_time_out>
