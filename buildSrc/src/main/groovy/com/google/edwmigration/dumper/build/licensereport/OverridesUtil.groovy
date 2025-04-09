@@ -873,6 +873,10 @@ class OverridesUtil {
                 projectUrl: "https://xerces.apache.org/xml-commons/components/external/",
                 // https://stackoverflow.com/questions/67599196/need-development-code-for-xml-apis-1-4-01
                 licenseUrl: "https://svn.apache.org/repos/asf/xerces/xml-commons/trunk/java/external/build.xml"
+            ],
+            "net.java.dev.jna:jna": [
+                projectUrl: "https://github.com/java-native-access/jna",
+                licenseUrl: "https://github.com/java-native-access/jna/blob/master/LICENSE"
             ]
         ]
     }
