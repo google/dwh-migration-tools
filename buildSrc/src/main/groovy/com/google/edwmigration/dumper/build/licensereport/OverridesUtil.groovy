@@ -853,10 +853,6 @@ class OverridesUtil {
                 projectUrl: "https://github.com/javaparser/javaparser/",
                 licenseUrl: "https://github.com/javaparser/javaparser/blob/javaparser-1.0.11/COPYING.LESSER"
             ],
-            "com.github.dozermapper:dozer-core": [
-                projectUrl: "https://github.com/DozerMapper/dozer",
-                licenseUrl: "https://github.com/DozerMapper/dozer/blob/master/LICENSE.md"
-            ],
             "com.googlecode.json-simple:json-simple": [
                 projectUrl: "https://github.com/fangyidong/json-simple",
                 licenseUrl: "https://github.com/fangyidong/json-simple/blob/master/LICENSE.txt"
