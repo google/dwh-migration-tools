@@ -11,17 +11,17 @@ import java.nio.channels.Channels;
 
 public class GcsByteSink extends ByteSink {
 
-    private final Storage storage;
-    private final BlobId blobId;
+  private final Storage storage;
+  private final BlobId blobId;
 
-    public GcsByteSink(Storage storage, BlobId blobId) {
-        this.storage = storage;
-        this.blobId = blobId;
-    }
+  public GcsByteSink(Storage storage, BlobId blobId) {
+    this.storage = storage;
+    this.blobId = blobId;
+  }
 
-    @Override
-    public OutputStream openStream() throws IOException {
-        WriteChannel channel = storage.writer(BlobInfo.newBuilder(blobId).build());
-        return Channels.newOutputStream(channel);
-    }
+  @Override
+  public OutputStream openStream() throws IOException {
+    WriteChannel channel = storage.writer(BlobInfo.newBuilder(blobId).build());
+    return Channels.newOutputStream(channel);
+  }
 }

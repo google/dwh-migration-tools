@@ -8,11 +8,9 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
-import com.google.common.primitives.Ints;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import javax.annotation.CheckReturnValue;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,24 +48,20 @@ public class RollingChecksumImpl {
   /** Does not update offset. */
   private void remove(byte x) {
     int v = F(x);
-    if (DEBUG)
-      logger.info("Remove " + Integer.toHexString(v) + " from " + this);
+    if (DEBUG) logger.info("Remove " + Integer.toHexString(v) + " from " + this);
     a -= v;
     b -= block.length * v;
-    if (DEBUG)
-      logger.info("Removed " + Integer.toHexString(v) + " from " + this);
+    if (DEBUG) logger.info("Removed " + Integer.toHexString(v) + " from " + this);
   }
 
   private void add(byte x) {
     int v = F(x);
-    if (DEBUG)
-      logger.info("Add " + Integer.toHexString(v) + " to " + this);
+    if (DEBUG) logger.info("Add " + Integer.toHexString(v) + " to " + this);
     a = (a + v);
     b = (b + a);
     block[offset] = x;
     offset = (offset + 1) % block.length;
-    if (DEBUG)
-      logger.info("Added " + Integer.toHexString(v) + " to " + this);
+    if (DEBUG) logger.info("Added " + Integer.toHexString(v) + " to " + this);
   }
 
   // This is the canonical implementation, based on add() and remove().
@@ -80,8 +74,7 @@ public class RollingChecksumImpl {
     offset = 0;
     // It's not clear if this min() is desirable, or if overflow should be fatal.
     int len = Math.min(data.length - start, block.length);
-    for (int i = 0; i < len; i++)
-      add(data[start + i]);
+    for (int i = 0; i < len; i++) add(data[start + i]);
     // System.arraycopy(data, start, block, 0, len);
   }
 
@@ -121,8 +114,7 @@ public class RollingChecksumImpl {
 
   /** Returns the most recent 'length' bytes of data. */
   public byte[] getBlock(int length) {
-    if (DEBUG)
-      logger.debug("Asking for {}..+{} out of {}", offset, length, Arrays.toString(block));
+    if (DEBUG) logger.debug("Asking for {}..+{} out of {}", offset, length, Arrays.toString(block));
     Preconditions.checkPositionIndex(length, block.length, "Invalid block length.");
     byte[] out = new byte[length];
     // The length before the pointer.
@@ -130,18 +122,15 @@ public class RollingChecksumImpl {
     @NonNegative int len1 = (length - len0);
     if (len1 > 0) {
       // Copy [?..block.length)
-      if (DEBUG)
-        logger.debug("Copying [{}..{})", block.length - len1, block.length);
+      if (DEBUG) logger.debug("Copying [{}..{})", block.length - len1, block.length);
       System.arraycopy(block, block.length - len1, out, 0, len1);
     }
 
     // Copy [?..offset)
-    if (DEBUG)
-      logger.debug("Copying [{}..{})", offset - len0, offset);
+    if (DEBUG) logger.debug("Copying [{}..{})", offset - len0, offset);
     System.arraycopy(block, offset - len0, out, len1, len0);
 
-    if (DEBUG)
-      logger.debug("Extracted {}", Arrays.toString(out));
+    if (DEBUG) logger.debug("Extracted {}", Arrays.toString(out));
     return out;
   }
 

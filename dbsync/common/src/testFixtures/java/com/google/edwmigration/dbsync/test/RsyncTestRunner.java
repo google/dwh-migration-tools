@@ -1,15 +1,14 @@
 package com.google.edwmigration.dbsync.test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.common.base.Joiner;
+import com.google.common.io.ByteSource;
 import com.google.edwmigration.dbsync.common.ChecksumGenerator;
 import com.google.edwmigration.dbsync.common.InstructionGenerator;
 import com.google.edwmigration.dbsync.common.InstructionReceiver;
 import com.google.edwmigration.dbsync.proto.Checksum;
 import com.google.edwmigration.dbsync.proto.Instruction;
-import com.google.common.base.Joiner;
-import com.google.common.io.ByteSource;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -64,18 +63,17 @@ public class RsyncTestRunner {
     return flags.contains(flag);
   }
 
-  private List<Checksum> checksum() throws Exception{
+  private List<Checksum> checksum() throws Exception {
     if (isFlag(Flag.PrintServerRaw))
       logger.debug("Server (initial) data is " + Arrays.toString(serverData.read()));
     ChecksumGenerator generator = new ChecksumGenerator(blockSize);
     List<Checksum> checksums = new ArrayList<>();
     generator.generate(checksums::add, serverData);
-    if (isFlag(Flag.PrintChecksums))
-      logger.debug("Server checksums are " + checksums);
+    if (isFlag(Flag.PrintChecksums)) logger.debug("Server checksums are " + checksums);
     return checksums;
   }
 
-  private List<Instruction> instruct(List<Checksum> checksums) throws  Exception {
+  private List<Instruction> instruct(List<Checksum> checksums) throws Exception {
     if (isFlag(Flag.PrintClientRaw))
       logger.debug("Client data is " + Arrays.toString(clientData.read()));
     List<Instruction> instructions = new ArrayList<>();
@@ -84,8 +82,7 @@ public class RsyncTestRunner {
     if (isFlag(Flag.PrintInstructions))
       logger.debug("Client instructions are\n" + Joiner.on('\n').join(instructions));
     int instructionSize = 0;
-    for (Instruction instruction : instructions)
-      instructionSize += instruction.getSerializedSize();
+    for (Instruction instruction : instructions) instructionSize += instruction.getSerializedSize();
     logger.debug("Client instructions size is " + instructionSize);
     return instructions;
   }
@@ -122,5 +119,4 @@ public class RsyncTestRunner {
     List<Instruction> instructions = instruct(checksums);
     reconstruct(serverDataNew, instructions);
   }
-
 }

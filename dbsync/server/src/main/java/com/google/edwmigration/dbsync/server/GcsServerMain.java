@@ -8,31 +8,36 @@ import joptsimple.OptionSpec;
 public class GcsServerMain {
 
   public enum Mode {
-    GENERATE, RECEIVE
+    GENERATE,
+    RECEIVE
   }
 
   private static class Arguments extends DefaultArguments {
 
     private final OptionSpec<Mode> modeOptionSpec =
-        parser.accepts("mode", "Specifies the mode")
+        parser
+            .accepts("mode", "Specifies the mode")
             .withRequiredArg()
             .ofType(Mode.class)
             .required();
 
     private final OptionSpec<String> projectOptionSpec =
-        parser.accepts("project", "Specifies the destination project")
+        parser
+            .accepts("project", "Specifies the destination project")
             .withRequiredArg()
             .ofType(String.class)
             .required();
 
     private final OptionSpec<String> targetOptionSpec =
-        parser.accepts("target_file", "Specifies the target file")
+        parser
+            .accepts("target_file", "Specifies the target file")
             .withRequiredArg()
             .ofType(String.class)
             .required();
 
     private final OptionSpec<String> stagingBucketOptionSpec =
-        parser.accepts("staging_bucket", "Specifies the staging bucket")
+        parser
+            .accepts("staging_bucket", "Specifies the staging bucket")
             .withRequiredArg()
             .ofType(String.class)
             .required();
@@ -58,14 +63,14 @@ public class GcsServerMain {
     }
   }
 
-
   // This is invoked in CloudRun, as ServerMain --mode GENERATE vs --mode RECONSTRUCT
   public static void main(String[] args) throws IOException {
     Arguments argument = new Arguments(args);
-    GCSTarget target = new GCSTarget(argument.getProject(),
-        URI.create(argument.getTargetUri()),
-        URI.create(argument.getStagingBucket())
-    );
+    GCSTarget target =
+        new GCSTarget(
+            argument.getProject(),
+            URI.create(argument.getTargetUri()),
+            URI.create(argument.getStagingBucket()));
     RsyncServer server = new RsyncServer(target);
 
     switch (argument.getMode()) {
@@ -77,5 +82,4 @@ public class GcsServerMain {
         break;
     }
   }
-
 }

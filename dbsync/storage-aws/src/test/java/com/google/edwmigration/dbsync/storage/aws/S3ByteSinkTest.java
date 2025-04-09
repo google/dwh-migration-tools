@@ -13,9 +13,8 @@ public class S3ByteSinkTest {
   public void testS3ByteSink() throws Exception {
     S3Storage storage = new S3Storage(Region.US_EAST_1);
     URI uri = URI.create("");
-    StorageTestRunner runner = new StorageTestRunner(
-        storage.newByteSource(uri),
-        storage.newByteSink(uri));
+    StorageTestRunner runner =
+        new StorageTestRunner(storage.newByteSource(uri), storage.newByteSink(uri));
     runner.run();
   }
 }

@@ -62,8 +62,14 @@ public class GcsyncClient {
 
   private static final Logger logger = Logger.getLogger("rsync");
 
-  public GcsyncClient(String project, String tmpBucket, String targetBucket,
-      String location, String sourceDirectory, Duration cloudRunTaskTimeout, JobsClient jobsClient,
+  public GcsyncClient(
+      String project,
+      String tmpBucket,
+      String targetBucket,
+      String location,
+      String sourceDirectory,
+      Duration cloudRunTaskTimeout,
+      JobsClient jobsClient,
       GcsStorage gcsStorage,
       InstructionGenerator instructionGenerator) {
     this.project = project;
@@ -149,17 +155,16 @@ public class GcsyncClient {
       throw new IllegalArgumentException("The jar file has been deleted");
     }
     if (blob == null || !blob.getMd5().equals(generateMd5(sourceJar))) {
-      gcsStorage.uploadFile(sourceJar,
-          new URI(tmpBucket).resolve(Constants.JAR_FILE_NAME));
+      gcsStorage.uploadFile(sourceJar, new URI(tmpBucket).resolve(Constants.JAR_FILE_NAME));
     }
   }
 
   private void uploadFilesToRsyncList() throws URISyntaxException, IOException {
-    ByteSink byteSink = gcsStorage.newByteSink(
-        new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME));
+    ByteSink byteSink =
+        gcsStorage.newByteSink(new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME));
 
-    try (BufferedWriter writer = new BufferedWriter(
-        new OutputStreamWriter(byteSink.openBufferedStream()))) {
+    try (BufferedWriter writer =
+        new BufferedWriter(new OutputStreamWriter(byteSink.openBufferedStream()))) {
       for (Path file : filesToRsync) {
         writer.write(file.getFileName().toString());
         writer.newLine();
@@ -169,15 +174,21 @@ public class GcsyncClient {
 
   private void executeMainOnCloudRun(String mainClassPath)
       throws URISyntaxException, IOException, ExecutionException, InterruptedException {
-    String downloadJarCommand = String.format("gcloud storage cp %s .",
-        new URI(tmpBucket).resolve(Constants.JAR_FILE_NAME));
+    String downloadJarCommand =
+        String.format(
+            "gcloud storage cp %s .", new URI(tmpBucket).resolve(Constants.JAR_FILE_NAME));
 
-    String command = String.format(
-        "java -cp %s "
-            + String.format("%s ", mainClassPath)
-            + "--project %s "
-            + "--tmp_bucket %s "
-            + "--target_bucket %s", Constants.JAR_FILE_NAME, project, tmpBucket, targetBucket);
+    String command =
+        String.format(
+            "java -cp %s "
+                + String.format("%s ", mainClassPath)
+                + "--project %s "
+                + "--tmp_bucket %s "
+                + "--target_bucket %s",
+            Constants.JAR_FILE_NAME,
+            project,
+            tmpBucket,
+            targetBucket);
 
     runCloudRunJob(String.format("%s && %s", downloadJarCommand, command), project);
   }
@@ -185,8 +196,8 @@ public class GcsyncClient {
   private void downloadCheckSumFiles() throws URISyntaxException, IOException {
     for (Path file : filesToRsync) {
       String checksumFileName = Util.getCheckSumFileName(file.getFileName().toString());
-      ByteSource byteSource = gcsStorage.newByteSource(
-          new URI(tmpBucket).resolve(checksumFileName));
+      ByteSource byteSource =
+          gcsStorage.newByteSource(new URI(tmpBucket).resolve(checksumFileName));
       byteSource.copyTo(
           com.google.common.io.Files.asByteSink(Util.getTemporaryCheckSumFilePath(file).toFile()));
     }
@@ -195,16 +206,18 @@ public class GcsyncClient {
   private void sendRsyncInstructions() throws IOException, URISyntaxException {
     for (Path file : filesToRsync) {
       Path tmpCheckSumFile = Util.getTemporaryCheckSumFilePath(file);
-      try (OutputStream instructionSink = gcsStorage.newByteSink(
-              new URI(tmpBucket).resolve(Util.getInstructionFileName(file.getFileName().toString())))
-          .openBufferedStream()) {
+      try (OutputStream instructionSink =
+          gcsStorage
+              .newByteSink(
+                  new URI(tmpBucket)
+                      .resolve(Util.getInstructionFileName(file.getFileName().toString())))
+              .openBufferedStream()) {
         try (InputStream inputStream = Files.newInputStream(tmpCheckSumFile)) {
           List<Checksum> checksums = getChecksumsFromFile(inputStream);
           ByteSource fileInput = com.google.common.io.Files.asByteSource(file.toFile());
 
-          instructionGenerator.generate(instruction ->
-                  instruction.writeDelimitedTo(instructionSink)
-              , fileInput, checksums);
+          instructionGenerator.generate(
+              instruction -> instruction.writeDelimitedTo(instructionSink), fileInput, checksums);
         }
       }
 
@@ -225,27 +238,37 @@ public class GcsyncClient {
 
   private void runCloudRunJob(String command, String project)
       throws ExecutionException, InterruptedException {
-    Job job = Job.newBuilder().setTemplate(ExecutionTemplate.newBuilder().setTemplate(
-                TaskTemplate.newBuilder().
-                    setTimeout(cloudRunTaskTimeout).
-                    addContainers(Container.
-                        newBuilder().
-                        setImage("docker.io/getbamba/google-cloud-sdk-java:latest")
-                        .addCommand("/bin/sh")
-                        .addAllArgs(Arrays.asList("-c", command)).build())
+    Job job =
+        Job.newBuilder()
+            .setTemplate(
+                ExecutionTemplate.newBuilder()
+                    .setTemplate(
+                        TaskTemplate.newBuilder()
+                            .setTimeout(cloudRunTaskTimeout)
+                            .addContainers(
+                                Container.newBuilder()
+                                    .setImage("docker.io/getbamba/google-cloud-sdk-java:latest")
+                                    .addCommand("/bin/sh")
+                                    .addAllArgs(Arrays.asList("-c", command))
+                                    .build())
+                            .build())
                     .build())
-            .build())
-        .build();
+            .build();
 
     String jobId = String.format("gcsync-cloudrun-%s", UUID.randomUUID());
-    CreateJobRequest createJobRequest = CreateJobRequest.newBuilder()
-        .setParent(String.format("projects/%s/locations/%s", project, location))
-        .setJobId(jobId).setJob(job).build();
+    CreateJobRequest createJobRequest =
+        CreateJobRequest.newBuilder()
+            .setParent(String.format("projects/%s/locations/%s", project, location))
+            .setJobId(jobId)
+            .setJob(job)
+            .build();
 
     jobsClient.createJobAsync(createJobRequest).get();
     JobName jobName = JobName.of(project, location, jobId);
-    OperationFuture<Execution, Execution> future = jobsClient.runJobOperationCallable()
-        .futureCall(RunJobRequest.newBuilder().setName(jobName.toString()).build());
+    OperationFuture<Execution, Execution> future =
+        jobsClient
+            .runJobOperationCallable()
+            .futureCall(RunJobRequest.newBuilder().setName(jobName.toString()).build());
 
     // Block until the execution of the job completes, this throws if the job fails.
     future.get();
@@ -266,7 +289,8 @@ public class GcsyncClient {
   }
 
   private static String generateMd5(Path file) throws IOException {
-    return Base64.getEncoder().encodeToString(
-        com.google.common.io.Files.asByteSource(file.toFile()).hash(Hashing.md5()).asBytes());
+    return Base64.getEncoder()
+        .encodeToString(
+            com.google.common.io.Files.asByteSource(file.toFile()).hash(Hashing.md5()).asBytes());
   }
 }

@@ -11,9 +11,7 @@ public class DefaultHashStrategies {
   public static final Int64 INSTANCE64 = new Int64();
   public static final ByteArray BYTE_ARRAY = new ByteArray();
 
-  /**
-   * Based on Thomas Wang's code from https://gist.github.com/badboy/6267743
-   */
+  /** Based on Thomas Wang's code from https://gist.github.com/badboy/6267743 */
   @SuppressWarnings("UnnecessaryParentheses")
   public static int hash_mix_64_to_32(long key) {
     key = (~key) + (key << 18); // key = (key << 18) - key - 1;
@@ -25,9 +23,7 @@ public class DefaultHashStrategies {
     return (int) key;
   }
 
-  /**
-   * Based on http://www.burtleburtle.net/bob/hash/integer.html .
-   */
+  /** Based on http://www.burtleburtle.net/bob/hash/integer.html . */
   public static int hash_mix_full(int a) {
     a = (a + 0x7ed55d16) + (a << 12);
     a = (a ^ 0xc761c23c) ^ (a >> 19);
@@ -42,9 +38,7 @@ public class DefaultHashStrategies {
     return hash_mix_full(Long.hashCode(a));
   }
 
-  /**
-   * Based on http://www.burtleburtle.net/bob/hash/integer.html .
-   */
+  /** Based on http://www.burtleburtle.net/bob/hash/integer.html . */
   public static int hash_mix_low(int a) {
     a += ~(a << 15);
     a ^= (a >> 10);

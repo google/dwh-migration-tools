@@ -30,5 +30,4 @@ public class SliceTest {
       assertEquals(300, reslice.getEndExclusive(), "End was wrong.");
     }
   }
-
 }

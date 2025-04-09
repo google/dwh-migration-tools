@@ -8,8 +8,6 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,8 +46,7 @@ public class GcsyncClientTest {
   private static final String TARGET_BUCKET = "gs://dummy-target-bucket/";
   private static final String LOCATION = "us-central1";
 
-  @Rule
-  public TemporaryFolder tempFolder = new TemporaryFolder();
+  @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
 
   private File sourceDir;
   private File smallFile;
@@ -62,7 +59,7 @@ public class GcsyncClientTest {
   private GcsyncClient clientUnderTest;
 
   // For test simplicity, define a smaller threshold for "rsync" logic
-  private static final long RSYNC_SIZE_THRESHOLD = 1024;  // e.g. 1KB
+  private static final long RSYNC_SIZE_THRESHOLD = 1024; // e.g. 1KB
 
   @Before
   public void setUp() throws Exception {
@@ -74,7 +71,7 @@ public class GcsyncClientTest {
 
     largeFile = new File(sourceDir, "large.txt");
     // Create a file bigger than the threshold
-    byte[] largeBytes = new byte[(int) (RSYNC_SIZE_THRESHOLD + 500)];  // e.g. 1.5KB
+    byte[] largeBytes = new byte[(int) (RSYNC_SIZE_THRESHOLD + 500)]; // e.g. 1.5KB
     for (int i = 0; i < largeBytes.length; i++) {
       largeBytes[i] = (byte) ('A' + (i % 26));
     }
@@ -86,17 +83,18 @@ public class GcsyncClientTest {
     mockJobsClient = mock(JobsClient.class);
 
     // Now construct the GcsyncClient with the mock dependencies
-    clientUnderTest = new GcsyncClient(
-        PROJECT,
-        TMP_BUCKET,
-        TARGET_BUCKET,
-        LOCATION,
-        sourceDir.getAbsolutePath(),
-        Durations.fromSeconds(10),
-        mockJobsClient,
-        mockGcsStorage,
-        mockInstructionGenerator// The key new argument
-    );
+    clientUnderTest =
+        new GcsyncClient(
+            PROJECT,
+            TMP_BUCKET,
+            TARGET_BUCKET,
+            LOCATION,
+            sourceDir.getAbsolutePath(),
+            Durations.fromSeconds(10),
+            mockJobsClient,
+            mockGcsStorage,
+            mockInstructionGenerator // The key new argument
+            );
 
     // Stub GcsStorage calls:
     //   - "small.txt" does not exist on GCS => returns null => triggers upload
@@ -126,8 +124,10 @@ public class GcsyncClientTest {
     OperationFuture<Job, Job> mockCreateFuture = mock(OperationFuture.class);
 
     // We'll stub .get() to return a dummy Job so we don't throw an exception
-    Job dummyJob = Job.newBuilder()
-        .setName("projects/dummy-project/locations/us-central1/jobs/dummyJob").build();
+    Job dummyJob =
+        Job.newBuilder()
+            .setName("projects/dummy-project/locations/us-central1/jobs/dummyJob")
+            .build();
     try {
       when(mockCreateFuture.get()).thenReturn(dummyJob);
     } catch (Exception e) {
@@ -151,14 +151,13 @@ public class GcsyncClientTest {
       // ignored
     }
 
-    OperationCallable<RunJobRequest, Execution, Execution> operationCallable = mock(
-        OperationCallable.class);
+    OperationCallable<RunJobRequest, Execution, Execution> operationCallable =
+        mock(OperationCallable.class);
 
     // Now wire them all up
     when(mockJobsClient.createJobAsync(any(CreateJobRequest.class))).thenReturn(mockCreateFuture);
     when(mockJobsClient.runJobOperationCallable()).thenReturn(operationCallable);
-    when(operationCallable.futureCall(any(RunJobRequest.class))).thenReturn(
-        mockRunFuture);
+    when(operationCallable.futureCall(any(RunJobRequest.class))).thenReturn(mockRunFuture);
     when(mockJobsClient.deleteJobAsync(any(JobName.class))).thenReturn(mockDeleteFuture);
   }
 
@@ -172,7 +171,8 @@ public class GcsyncClientTest {
     clientUnderTest.syncFiles();
 
     List<Path> rsyncFiles = getPrivateList(clientUnderTest, "filesToRsync");
-    assertFalse("large.txt should NOT be in the rsync list if MD5 matches",
+    assertFalse(
+        "large.txt should NOT be in the rsync list if MD5 matches",
         rsyncFiles.contains(largeFile.toPath()));
 
     // No job calls

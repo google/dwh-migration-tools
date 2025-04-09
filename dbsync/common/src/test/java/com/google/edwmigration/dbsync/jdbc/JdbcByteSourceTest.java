@@ -1,12 +1,11 @@
 package com.google.edwmigration.dbsync.jdbc;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-import com.google.edwmigration.dbsync.test.RsyncTestRunner;
-import com.google.edwmigration.dbsync.test.RsyncTestRunner.Flag;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
+import com.google.edwmigration.dbsync.test.RsyncTestRunner;
+import com.google.edwmigration.dbsync.test.RsyncTestRunner.Flag;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.sql.SQLException;
@@ -26,7 +25,7 @@ public class JdbcByteSourceTest {
   private static final Logger logger = LoggerFactory.getLogger(JdbcByteSourceTest.class);
 
   private static final String URI = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
-  private static final String QUERY =  "select * from t order by t0";
+  private static final String QUERY = "select * from t order by t0";
 
   @Test
   public void testJdbcByteSource() throws Exception {
@@ -38,14 +37,17 @@ public class JdbcByteSourceTest {
     DEBUG:
     if (false) {
       StringWriter writer = new StringWriter();
-      template.query("select * from t", (ResultSetExtractor<? extends Void>) rs -> {
-        try (CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
-          printer.printRecords(rs, true);
-          return null;
-        } catch (IOException | SQLException e) {
-          throw new DataRetrievalFailureException("Failed to format ResultSet", e);
-        }
-      });
+      template.query(
+          "select * from t",
+          (ResultSetExtractor<? extends Void>)
+              rs -> {
+                try (CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
+                  printer.printRecords(rs, true);
+                  return null;
+                } catch (IOException | SQLException e) {
+                  throw new DataRetrievalFailureException("Failed to format ResultSet", e);
+                }
+              });
       logger.info("Table contains\n" + writer);
     }
 
@@ -75,8 +77,7 @@ public class JdbcByteSourceTest {
     {
       template.execute("drop table if exists t");
       template.execute("create or replace table t (t0 int, t1 int)");
-      for (int i = 0; i < 64 * 1024; i++)
-        template.update("insert into t values (?, ?)", i, i);
+      for (int i = 0; i < 64 * 1024; i++) template.update("insert into t values (?, ?)", i, i);
     }
 
     ByteSource clientData = new JdbcByteSource(new AvroEncoder(), ds, QUERY);
@@ -84,13 +85,14 @@ public class JdbcByteSourceTest {
 
     RUN_FIRST:
     {
-      RsyncTestRunner runner = new RsyncTestRunner("JdbcRsync[1] (random state)", serverData, clientData);
+      RsyncTestRunner runner =
+          new RsyncTestRunner("JdbcRsync[1] (random state)", serverData, clientData);
       // runner.setFlags(Flag.values());
       // runner.setFlags(Flag.PrintInstructions);
       byte[] serverDataNew = runner.run();
       serverData = ByteSource.wrap(serverDataNew);
 
-      serverDataNew[123] = 42;  // corrupt the server data
+      serverDataNew[123] = 42; // corrupt the server data
     }
 
     MODIFY_CLIENT:
@@ -101,10 +103,10 @@ public class JdbcByteSourceTest {
 
     RUN_AGAIN:
     {
-      RsyncTestRunner runner = new RsyncTestRunner("JdbcRsync[2] (incremental update)", serverData, clientData);
+      RsyncTestRunner runner =
+          new RsyncTestRunner("JdbcRsync[2] (incremental update)", serverData, clientData);
       runner.setFlags(Flag.PrintInstructions);
       runner.run();
     }
   }
-
 }

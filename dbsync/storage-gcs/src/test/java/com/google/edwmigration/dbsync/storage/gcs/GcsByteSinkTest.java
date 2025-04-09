@@ -12,9 +12,8 @@ public class GcsByteSinkTest {
   public void testGcsByteSink() throws Exception {
     GcsStorage storage = new GcsStorage("");
     URI uri = URI.create("");
-    StorageTestRunner runner = new StorageTestRunner(
-        storage.newByteSource(uri),
-        storage.newByteSink(uri));
+    StorageTestRunner runner =
+        new StorageTestRunner(storage.newByteSource(uri), storage.newByteSink(uri));
     runner.run();
   }
 }

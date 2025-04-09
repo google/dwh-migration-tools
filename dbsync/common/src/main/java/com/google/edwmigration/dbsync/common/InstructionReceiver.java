@@ -1,15 +1,12 @@
 package com.google.edwmigration.dbsync.common;
 
-import com.google.edwmigration.dbsync.proto.BlockLocation;
-import com.google.edwmigration.dbsync.proto.Instruction;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
+import com.google.edwmigration.dbsync.proto.BlockLocation;
+import com.google.edwmigration.dbsync.proto.Instruction;
 import com.google.protobuf.ByteString;
-import java.io.BufferedInputStream;
 import java.io.Closeable;
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import javax.annotation.CheckForSigned;
 import javax.annotation.WillCloseWhenClosed;
@@ -24,8 +21,7 @@ public class InstructionReceiver implements Closeable {
 
   private final OutputStream out;
   private final ByteSource in;
-  @CheckForSigned
-  private long copyStart = -1;
+  @CheckForSigned private long copyStart = -1;
   private long copyLength = 0;
 
   public InstructionReceiver(@WillCloseWhenClosed OutputStream out, ByteSource in) {

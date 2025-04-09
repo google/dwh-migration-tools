@@ -2,7 +2,6 @@ package com.google.edwmigration.dbsync.storage.aws;
 
 import com.google.common.io.ByteSink;
 import java.io.IOException;
-import java.io.OutputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 
 public class S3ByteSink extends ByteSink {

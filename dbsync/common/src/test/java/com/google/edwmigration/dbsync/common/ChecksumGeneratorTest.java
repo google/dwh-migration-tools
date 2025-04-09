@@ -2,11 +2,11 @@ package com.google.edwmigration.dbsync.common;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.google.edwmigration.dbsync.proto.Checksum;
-import com.google.edwmigration.dbsync.test.RsyncTestRunner;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteSource;
 import com.google.common.math.IntMath;
+import com.google.edwmigration.dbsync.proto.Checksum;
+import com.google.edwmigration.dbsync.test.RsyncTestRunner;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,8 +44,8 @@ public class ChecksumGeneratorTest {
       assertEquals(i * blockSize, c.getBlockOffset(), "Bad offset in " + c);
       ByteSource block = data.slice(c.getBlockOffset(), c.getBlockLength());
       HashCode strongHashCode = block.hash(RollingChecksumImpl.STRONG_HASH_FUNCTION);
-      assertArrayEquals(strongHashCode.asBytes(), c.getStrongChecksum().toByteArray(),
-          "Bad hash code in " + c);
+      assertArrayEquals(
+          strongHashCode.asBytes(), c.getStrongChecksum().toByteArray(), "Bad hash code in " + c);
     }
   }
 }

@@ -24,8 +24,10 @@ import software.amazon.awssdk.services.s3.model.UploadPartResponse;
 
 // Based on https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-s3-objects.html
 // With bits loosely derived from https://gist.github.com/jcputney/b5daeb86a1c0696859da2a0c3b466327
-// Via https://stackoverflow.com/questions/60212728/how-to-create-a-java-outputstream-for-an-s3-object-and-write-value-to-it
-// With very limited help from https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-upload-object.html
+// Via
+// https://stackoverflow.com/questions/60212728/how-to-create-a-java-outputstream-for-an-s3-object-and-write-value-to-it
+// With very limited help from
+// https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-upload-object.html
 // Then mucked about and "optimized" by me, until it reached its current (probably broken) state.
 public class S3OutputStream extends OutputStream {
 
@@ -36,36 +38,22 @@ public class S3OutputStream extends OutputStream {
   private static final int BUFFER_SIZE = 10 * 1024 * 1024;
 
   private final S3Client s3Client;
-  /**
-   * The bucket-name on Amazon S3
-   */
+  /** The bucket-name on Amazon S3 */
   private final String bucket;
-  /**
-   * The key within the bucket
-   */
+  /** The key within the bucket */
   private final String key;
 
-  /**
-   * The temporary buffer used for storing the chunks
-   */
+  /** The temporary buffer used for storing the chunks */
   private final byte[] buf = new byte[BUFFER_SIZE];
-  /**
-   * The position in the buffer
-   */
+  /** The position in the buffer */
   private int position = 0;
 
-  /**
-   * The unique id for this upload
-   */
+  /** The unique id for this upload */
   private String uploadId;
-  /**
-   * Collection of the etags for the parts that have been uploaded
-   */
+  /** Collection of the etags for the parts that have been uploaded */
   private final List<String> etags = new ArrayList<>();
 
-  /**
-   * Indicates whether the stream is still open / valid
-   */
+  /** Indicates whether the stream is still open / valid */
   private boolean open = true;
 
   /**
@@ -91,11 +79,12 @@ public class S3OutputStream extends OutputStream {
     try {
       open = false;
       if (uploadId != null) {
-        s3Client.abortMultipartUpload(AbortMultipartUploadRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .uploadId(uploadId)
-            .build());
+        s3Client.abortMultipartUpload(
+            AbortMultipartUploadRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .uploadId(uploadId)
+                .build());
       }
     } catch (SdkException e) {
       throw new IOException(e);
@@ -148,14 +137,10 @@ public class S3OutputStream extends OutputStream {
     if (true) {
       // This is "faster".
       return RequestBody.fromContentProvider(
-          () -> new ByteArrayInputStream(buf, off, len),
-          len,
-          Mimetype.MIMETYPE_OCTET_STREAM);
+          () -> new ByteArrayInputStream(buf, off, len), len, Mimetype.MIMETYPE_OCTET_STREAM);
     } else {
       // This is "safer", but I don't think in any way that matters.
-      return RequestBody.fromInputStream(
-          new ByteArrayInputStream(buf, off, len),
-          len);
+      return RequestBody.fromInputStream(new ByteArrayInputStream(buf, off, len), len);
     }
   }
 
@@ -163,12 +148,10 @@ public class S3OutputStream extends OutputStream {
   private void flushHeader() throws IOException {
     try {
       if (uploadId == null) {
-        CreateMultipartUploadRequest uploadRequest = CreateMultipartUploadRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .build();
-        CreateMultipartUploadResponse multipartUpload = s3Client.createMultipartUpload(
-            uploadRequest);
+        CreateMultipartUploadRequest uploadRequest =
+            CreateMultipartUploadRequest.builder().bucket(bucket).key(key).build();
+        CreateMultipartUploadResponse multipartUpload =
+            s3Client.createMultipartUpload(uploadRequest);
         uploadId = multipartUpload.uploadId();
       }
     } catch (NoSuchBucketException e) {
@@ -181,13 +164,14 @@ public class S3OutputStream extends OutputStream {
   @RequiresNonNull("uploadId")
   private void flushPart(byte[] buf, int off, int len) throws IOException {
     try {
-      UploadPartRequest uploadRequest = UploadPartRequest.builder()
-          .bucket(bucket)
-          .key(key)
-          .uploadId(uploadId)
-          .partNumber(etags.size() + 1)
-          .contentLength((long) len)
-          .build();
+      UploadPartRequest uploadRequest =
+          UploadPartRequest.builder()
+              .bucket(bucket)
+              .key(key)
+              .uploadId(uploadId)
+              .partNumber(etags.size() + 1)
+              .contentLength((long) len)
+              .build();
       RequestBody requestBody = newRequestBody(buf, off, len);
       UploadPartResponse uploadPartResponse = s3Client.uploadPart(uploadRequest, requestBody);
       etags.add(uploadPartResponse.eTag());
@@ -218,28 +202,26 @@ public class S3OutputStream extends OutputStream {
 
         CompletedPart[] completedParts = new CompletedPart[etags.size()];
         for (int i = 0; i < etags.size(); i++) {
-          completedParts[i] = CompletedPart.builder()
-              .eTag(etags.get(i))
-              .partNumber(i + 1)
-              .build();
+          completedParts[i] = CompletedPart.builder().eTag(etags.get(i)).partNumber(i + 1).build();
         }
 
-        CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder()
-            .parts(completedParts)
-            .build();
-        CompleteMultipartUploadRequest completeMultipartUploadRequest = CompleteMultipartUploadRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .uploadId(uploadId)
-            .multipartUpload(completedMultipartUpload)
-            .build();
+        CompletedMultipartUpload completedMultipartUpload =
+            CompletedMultipartUpload.builder().parts(completedParts).build();
+        CompleteMultipartUploadRequest completeMultipartUploadRequest =
+            CompleteMultipartUploadRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .uploadId(uploadId)
+                .multipartUpload(completedMultipartUpload)
+                .build();
         s3Client.completeMultipartUpload(completeMultipartUploadRequest);
       } else {
-        PutObjectRequest putRequest = PutObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .contentLength((long) position)
-            .build();
+        PutObjectRequest putRequest =
+            PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentLength((long) position)
+                .build();
 
         RequestBody requestBody = newRequestBody(buf, 0, position);
         s3Client.putObject(putRequest, requestBody);
@@ -250,5 +232,4 @@ public class S3OutputStream extends OutputStream {
       throw new IOException(e);
     }
   }
-
 }

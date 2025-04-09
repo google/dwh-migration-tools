@@ -4,7 +4,6 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import com.google.edwmigration.dbsync.storage.gcs.GcsStorage;
 import java.net.URI;
-import org.checkerframework.checker.units.qual.C;
 
 public class GCSTarget implements RsyncTarget {
 

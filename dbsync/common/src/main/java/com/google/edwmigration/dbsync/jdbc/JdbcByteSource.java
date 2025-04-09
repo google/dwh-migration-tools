@@ -57,22 +57,23 @@ public class JdbcByteSource extends ByteSource {
   public InputStream openStream() throws IOException {
     PipedOutputStream out = new PipedOutputStream();
     JdbcThread thread = new JdbcThread(out);
-    PipedInputStream in = new PipedInputStream(out, 1024 * 1024) {
-      @Override
-      public void close() throws IOException {
-        super.close();
-        Throwable t = thread.throwable.get();
-        if (t != null) {
-          Throwables.throwIfInstanceOf(t, IOException.class);
-          throw new IOException(t);
-        }
-      }
+    PipedInputStream in =
+        new PipedInputStream(out, 1024 * 1024) {
+          @Override
+          public void close() throws IOException {
+            super.close();
+            Throwable t = thread.throwable.get();
+            if (t != null) {
+              Throwables.throwIfInstanceOf(t, IOException.class);
+              throw new IOException(t);
+            }
+          }
 
-      @Override
-      public String toString() {
-        return "PipedInputStream(" + query + ")";
-      }
-    };
+          @Override
+          public String toString() {
+            return "PipedInputStream(" + query + ")";
+          }
+        };
     thread.start();
     return in;
   }
