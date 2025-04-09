@@ -865,22 +865,6 @@ class OverridesUtil {
                 projectUrl: "https://github.com/apache/oozie",
                 licenseUrl: "https://github.com/apache/oozie/blob/master/LICENSE.txt"
             ],
-            "org.apache.oozie:oozie-fluent-job-api": [
-                projectUrl: "https://github.com/apache/oozie",
-                licenseUrl: "https://github.com/apache/oozie/blob/master/LICENSE.txt"
-            ],
-            "org.jvnet.jaxb2_commons:jaxb2-basics": [
-                projectUrl: "https://github.com/highsource/jaxb2-basics/tree/master",
-                licenseUrl: "https://github.com/highsource/jaxb2-basics/blob/master/LICENSE"
-            ],
-            "org.jvnet.jaxb2_commons:jaxb2-basics-tools": [
-                projectUrl: "https://github.com/highsource/jaxb2-basics/tree/master",
-                licenseUrl: "https://github.com/highsource/jaxb2-basics/blob/master/LICENSE"
-            ],
-            "org.jvnet.jaxb2_commons:jaxb2-basics-runtime": [
-                projectUrl: "https://github.com/highsource/jaxb2-basics/tree/master",
-                licenseUrl: "https://github.com/highsource/jaxb2-basics/blob/master/LICENSE"
-            ],
             "org.objenesis:objenesis": [
                 projectUrl: "https://github.com/easymock/objenesis",
                 licenseUrl: "https://github.com/easymock/objenesis/blob/master/LICENSE.txt"

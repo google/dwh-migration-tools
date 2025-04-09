@@ -86,6 +86,9 @@ dependencies {
         exclude group: 'javax.jms', module: 'jms'
         exclude group: 'junit', module: 'junit'
         exclude group: 'guru.nidi', module: 'graphviz-java'
+
+        //Not used and has LGPLv3 transient deps
+        exclude group: 'org.apache.oozie', module: 'oozie-fluent-job-api'
     }
 
     // `implementation` scope is used because some of our dependencies
