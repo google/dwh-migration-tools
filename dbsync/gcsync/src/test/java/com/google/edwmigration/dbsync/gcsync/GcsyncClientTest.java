@@ -8,8 +8,6 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +44,8 @@ public class GcsyncClientTest {
   private static final String TMP_BUCKET = "gs://dummy-tmp-bucket/";
   private static final String TARGET_BUCKET = "gs://dummy-target-bucket/";
   private static final String LOCATION = "us-central1";
+
+  private static final String ALL_FILES_REGEX = ".*";
 
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -92,7 +92,7 @@ public class GcsyncClientTest {
         LOCATION,
         sourceDir.getAbsolutePath(),
         mockJobsClient,
-        mockGcsStorage,
+        ALL_FILES_REGEX, mockGcsStorage,
         mockInstructionGenerator// The key new argument
     );
 
