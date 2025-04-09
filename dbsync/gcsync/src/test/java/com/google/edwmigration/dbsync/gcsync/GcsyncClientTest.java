@@ -27,6 +27,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.edwmigration.dbsync.common.InstructionGenerator;
 import com.google.edwmigration.dbsync.storage.gcs.GcsStorage;
+import com.google.protobuf.util.Durations;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -91,6 +92,7 @@ public class GcsyncClientTest {
         TARGET_BUCKET,
         LOCATION,
         sourceDir.getAbsolutePath(),
+        Durations.fromSeconds(10),
         mockJobsClient,
         mockGcsStorage,
         mockInstructionGenerator// The key new argument

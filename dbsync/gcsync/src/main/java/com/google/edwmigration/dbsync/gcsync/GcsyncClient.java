@@ -18,6 +18,7 @@ import com.google.common.io.ByteSource;
 import com.google.edwmigration.dbsync.common.InstructionGenerator;
 import com.google.edwmigration.dbsync.proto.Checksum;
 import com.google.edwmigration.dbsync.storage.gcs.GcsStorage;
+import com.google.protobuf.Duration;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +51,8 @@ public class GcsyncClient {
 
   private final String sourceDirectory;
 
+  private final Duration cloudRunTaskTimeout;
+
   private final GcsStorage gcsStorage;
   private List<Path> filesToUpload;
 
@@ -60,12 +63,14 @@ public class GcsyncClient {
   private static final Logger logger = Logger.getLogger("rsync");
 
   public GcsyncClient(String project, String tmpBucket, String targetBucket,
-      String location, String sourceDirectory, JobsClient jobsClient, GcsStorage gcsStorage,
+      String location, String sourceDirectory, Duration cloudRunTaskTimeout, JobsClient jobsClient,
+      GcsStorage gcsStorage,
       InstructionGenerator instructionGenerator) {
     this.project = project;
     this.tmpBucket = tmpBucket;
     this.targetBucket = targetBucket;
     this.location = location;
+    this.cloudRunTaskTimeout = cloudRunTaskTimeout;
     this.jobsClient = jobsClient;
     this.gcsStorage = gcsStorage;
     this.sourceDirectory = sourceDirectory;
@@ -222,7 +227,7 @@ public class GcsyncClient {
       throws ExecutionException, InterruptedException {
     Job job = Job.newBuilder().setTemplate(ExecutionTemplate.newBuilder().setTemplate(
                 TaskTemplate.newBuilder().
-                    setTimeout(Constants.CLOUD_RUN_TIMEOUT).
+                    setTimeout(cloudRunTaskTimeout).
                     addContainers(Container.
                         newBuilder().
                         setImage("docker.io/getbamba/google-cloud-sdk-java:latest")
