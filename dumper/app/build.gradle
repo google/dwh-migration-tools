@@ -198,7 +198,7 @@ licenseReport {
 }
 
 tasks.named('check') {
-    dependsOn 'checkLicense'
+    dependsOn 'checkLicense', 'printBanner'
 }
 
 tasks.named('distTar') {
@@ -234,6 +234,15 @@ tasks.register('copyGceLauncher', Copy) {
     into layout.buildDirectory.dir('cloud_extractor/launcher')
     filter(ReplaceTokens, tokens: [dumper_version: project.version])
     filteringCharset = 'UTF-8'
+}
+
+tasks.register("printBanner") {
+    File bannerFile = file('src/main/resources/banner/banner.txt')
+    if (bannerFile.exists()) {
+        bannerFile.readLines().forEach {println it}
+    } else {
+        println "Warning: Banner file not found at ${bannerFile.path}"
+    }
 }
 
 distributions {
