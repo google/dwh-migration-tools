@@ -34,17 +34,22 @@ public interface OutputHandle extends Closeable {
 
   /** Returns a ByteSink on the target file. */
   @Nonnull
-  public ByteSink asByteSink() throws IOException;
+  public ByteSink asByteSink(boolean append) throws IOException;
 
   /** Returns a CharSink on the target file. */
   @Nonnull
-  public default CharSink asCharSink(@Nonnull Charset charset) throws IOException {
-    return asByteSink().asCharSink(charset);
+  public default CharSink asCharSink(@Nonnull Charset charset, boolean append) throws IOException {
+    return asByteSink(append).asCharSink(charset);
   }
 
   /** Returns a ByteSink on the temporary file. */
   @Nonnull
-  public ByteSink asTemporaryByteSink() throws IOException;
+  public ByteSink asTemporaryByteSink(boolean append) throws IOException;
+
+  @Nonnull
+  default ByteSink asTemporaryByteSink() throws IOException {
+    return asTemporaryByteSink(/* append= */ false);
+  }
 
   /**
    * Renames the temporary file to the final file.

@@ -37,13 +37,13 @@ public class InMemoryOutputHandle implements OutputHandle {
 
   @Nonnull
   @Override
-  public ByteSink asByteSink() throws IOException {
+  public ByteSink asByteSink(boolean append) throws IOException {
     return memoryByteSink;
   }
 
   @Nonnull
   @Override
-  public ByteSink asTemporaryByteSink() throws IOException {
+  public ByteSink asTemporaryByteSink(boolean append) throws IOException {
     return memoryByteSink;
   }
 

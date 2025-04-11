@@ -48,17 +48,17 @@ public class FileSystemOutputHandle implements OutputHandle {
   }
 
   @Override
-  public ByteSink asByteSink() throws IOException {
+  public ByteSink asByteSink(boolean append) throws IOException {
     // logger.debug("As ByteSink: " + this + " = " + targetPath);
     prepare();
-    return new FileSystemByteSink(targetPath);
+    return new FileSystemByteSink(targetPath, append);
   }
 
   @Override
-  public ByteSink asTemporaryByteSink() throws IOException {
+  public ByteSink asTemporaryByteSink(boolean append) throws IOException {
     // logger.debug("As Temporary ByteSink: " + this + " = " + temporaryPath);
     prepare();
-    return new FileSystemByteSink(temporaryPath);
+    return new FileSystemByteSink(temporaryPath, append);
   }
 
   /**

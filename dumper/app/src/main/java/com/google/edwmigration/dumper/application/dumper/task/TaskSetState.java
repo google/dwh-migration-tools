@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.groupingBy;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.CheckForNull;
@@ -79,8 +79,10 @@ public interface TaskSetState {
   @ThreadSafe
   static class Impl implements TaskSetState {
 
+    // The map is used for user-visible reporting, using an insertion-ordered map will make
+    // reporting consistent.
     @GuardedBy("this")
-    private final Map<Task<?>, TaskResult<?>> resultMap = new HashMap<>();
+    private final Map<Task<?>, TaskResult<?>> resultMap = new LinkedHashMap<>();
 
     @Deprecated // Use TaskSetState instead of TaskSetState.Impl
     @Override

@@ -59,6 +59,7 @@ public abstract class AbstractTask<T> implements Task<T> {
   private final String targetPath;
   private final TargetInitialization targetInitialization;
   protected Condition[] conditions = Condition.EMPTY_ARRAY;
+  protected boolean append;
 
   public AbstractTask(String targetPath) {
     this(targetPath, TargetInitialization.CREATE);
@@ -84,6 +85,12 @@ public abstract class AbstractTask<T> implements Task<T> {
   @Nonnull
   public AbstractTask<T> withCondition(@Nonnull Condition condition) {
     this.conditions = ArrayUtils.add(conditions, condition);
+    return this;
+  }
+
+  @Nonnull
+  public AbstractTask<T> withAppend(boolean append) {
+    this.append = append;
     return this;
   }
 
@@ -122,7 +129,7 @@ public abstract class AbstractTask<T> implements Task<T> {
       logger.info("Skipping {}: {} already exists.", getName(), sink);
       return null;
     }
-    T result = doRun(context, sink.asTemporaryByteSink(), context.getHandle());
+    T result = doRun(context, sink.asTemporaryByteSink(append), context.getHandle());
     sink.commit();
     return result;
   }
@@ -153,8 +160,12 @@ public abstract class AbstractTask<T> implements Task<T> {
   @Override
   public String toString() {
     return targetInitialization == TargetInitialization.CREATE
-        ? format("Write %s %s", targetPath, describeSourceData())
+        ? format(getToStringTemplate(), targetPath, describeSourceData())
         : describeSourceData();
+  }
+
+  private String getToStringTemplate() {
+    return append ? "Append %s %s" : "Write %s %s";
   }
 
   public enum TargetInitialization {
@@ -163,6 +174,7 @@ public abstract class AbstractTask<T> implements Task<T> {
   }
 
   private static class DummyByteSink extends ByteSink {
+
     private static final DummyByteSink INSTANCE = new DummyByteSink();
 
     @Override

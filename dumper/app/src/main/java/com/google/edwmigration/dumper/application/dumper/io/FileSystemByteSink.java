@@ -21,7 +21,9 @@ import com.google.common.io.ByteSink;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import javax.annotation.Nonnull;
 import net.jcip.annotations.ThreadSafe;
 
@@ -30,14 +32,18 @@ import net.jcip.annotations.ThreadSafe;
 public class FileSystemByteSink extends ByteSink {
 
   private final Path path;
+  private final boolean append;
 
-  public FileSystemByteSink(@Nonnull Path path) {
+  public FileSystemByteSink(@Nonnull Path path, boolean append) {
     this.path = Preconditions.checkNotNull(path, "Path was null.");
+    this.append = append;
   }
 
   @Override
   public OutputStream openStream() throws IOException {
-    return Files.newOutputStream(path);
+    OpenOption[] openOptions =
+        append ? new StandardOpenOption[] {StandardOpenOption.APPEND} : new OpenOption[] {};
+    return Files.newOutputStream(path, openOptions);
   }
 
   @Override
