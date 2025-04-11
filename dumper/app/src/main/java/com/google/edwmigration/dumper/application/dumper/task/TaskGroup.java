@@ -16,13 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
@@ -31,20 +31,19 @@ import org.apache.commons.csv.CSVPrinter;
 /** @author shevek */
 public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFormat {
 
-  private final List<Task<?>> tasks = new ArrayList<>();
+  private final ImmutableList<Task<?>> tasks;
 
   public TaskGroup(@Nonnull String targetPath, @Nonnull Task<?>... tasks) {
-    super(targetPath);
-    Collections.addAll(this.tasks, tasks);
+    this(targetPath, Arrays.asList(tasks));
   }
 
   public TaskGroup(@Nonnull String targetPath, @Nonnull List<Task<?>> tasks) {
     super(targetPath);
-    this.tasks.addAll(tasks);
+    this.tasks = ImmutableList.copyOf(tasks);
   }
 
   @Nonnull
-  public List<Task<?>> getTasks() {
+  public ImmutableList<Task<?>> getTasks() {
     return tasks;
   }
 
