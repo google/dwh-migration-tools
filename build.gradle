@@ -23,6 +23,9 @@ distributions {
             project(":permissions-migration:app").afterEvaluate {
                 from it.tasks.installPublishedDist
             }
+            project(":dts-transfer-status:app").afterEvaluate {
+                from it.tasks.installPublishedDist
+            }
         }
     }
 }

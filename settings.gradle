@@ -17,5 +17,6 @@ include(
     ':dbsync:server',
     ':dbsync:client',
     ':dbsync:gcsync',
-    ':permissions-migration:app'
+    ':permissions-migration:app',
+    ':dts-transfer-status:app'
 )
