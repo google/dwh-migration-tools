@@ -1,6 +1,7 @@
 package com.google.edwmigration.dbsync.gcsync;
 
 import static com.google.edwmigration.dbsync.gcsync.Util.getListOfFiles;
+import static com.google.edwmigration.dbsync.gcsync.Util.skipMd5Header;
 import static com.google.edwmigration.dbsync.gcsync.Util.verifyMd5Header;
 
 import com.google.cloud.storage.Blob;
@@ -47,7 +48,7 @@ public class GenerateCheckSumMain {
       // file's md5. Meaning the file has been changes since we generated the checksum file.
       URI checkSumFile = new URI(tmpBucket).resolve(Util.getCheckSumFileName(file));
       Blob blob = gcsStorage.getBlob(checkSumFile);
-      if (blob.exists() && verifyMd5Header(gcsStorage.newByteSource(checkSumFile),
+      if (blob != null && verifyMd5Header(gcsStorage.newByteSource(checkSumFile),
           targetFileMd5)) {
         logger.log(Level.INFO,
             String.format("Skip generating checksum for file %s which already exists", file));

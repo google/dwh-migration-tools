@@ -62,20 +62,27 @@ public class ReconstructFilesMain {
           }
         }
 
-        if (sourceFileMd5.equals(gcsStorage.getBlob(tmpFile).getMd5())) {
-          gcsStorage.copyFile(tmpFile, fileToBeReconstructed);
-        } else {
-          logger.log(Level.SEVERE, String.format(
-              "The reconstructed file of %s doesn't match the file on the source file, the file might be corrupted.",
-              fileToBeReconstructed));
-          throw new RuntimeException("Reconstructed file doesn't match source, abort task");
-        }
+        verifyMd5(sourceFileMd5, gcsStorage, tmpFile, fileToBeReconstructed);
+
+        // Clean up
         gcsStorage.delete(tmpFile);
         deleteStagingFiles(gcsStorage, tmpBucket, file);
       }
       gcsStorage.delete(new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME));
 
       logger.log(Level.INFO, String.format("Finished reconstructing file: %s", file));
+    }
+  }
+
+  private static void verifyMd5(String sourceFileMd5, GcsStorage gcsStorage, URI tmpFile,
+      URI fileToBeReconstructed) {
+    if (sourceFileMd5.equals(gcsStorage.getBlob(tmpFile).getMd5())) {
+      gcsStorage.copyFile(tmpFile, fileToBeReconstructed);
+    } else {
+      logger.log(Level.SEVERE, String.format(
+          "The reconstructed file of %s doesn't match the file on the source file, the file might be corrupted.",
+          fileToBeReconstructed));
+      throw new RuntimeException("Reconstructed file doesn't match source, abort task");
     }
   }
 

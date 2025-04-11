@@ -104,9 +104,7 @@ public class GcsyncClient {
     if (!filesToRsync.isEmpty()) {
       // Compute checksums for files to rsync.
       computeCheckSum();
-      // Download checksum files to local storage.
-      downloadCheckSumFiles();
-      // Send instruction files to gcs.
+      // Download the checksum file from GCS. Compute & send instruction files to gcs.
       sendRsyncInstructions();
       // Reconstruct files on gcs using instructions.
       reconStructFiles();
@@ -204,33 +202,33 @@ public class GcsyncClient {
     runCloudRunJob(String.format("%s && %s", downloadJarCommand, command), project);
   }
 
-  private void downloadCheckSumFiles() throws URISyntaxException, IOException {
-    for (Path file : filesToRsync) {
-      String checksumFileName = Util.getCheckSumFileName(file.getFileName().toString());
-      ByteSource byteSource =
-          gcsStorage.newByteSource(new URI(tmpBucket).resolve(checksumFileName));
-      byteSource.copyTo(
-          com.google.common.io.Files.asByteSink(Util.getTemporaryCheckSumFilePath(file).toFile()));
-    }
+  private Path downloadChecksumFile(Path file) throws IOException, URISyntaxException {
+    Path tmpCheckSumFile = Util.getTemporaryCheckSumFilePath(file);
+    String checksumFileName = Util.getCheckSumFileName(file.getFileName().toString());
+    ByteSource byteSource =
+        gcsStorage.newByteSource(new URI(tmpBucket).resolve(checksumFileName));
+    byteSource.copyTo(
+        com.google.common.io.Files.asByteSink(tmpCheckSumFile.toFile()));
+
+    return tmpCheckSumFile;
   }
 
   private void sendRsyncInstructions() throws IOException, URISyntaxException {
     for (Path file : filesToRsync) {
-      Path tmpCheckSumFile = Util.getTemporaryCheckSumFilePath(file);
-
       // Check if we already have an instruction file with a header md5 that matches with the source
       // file's md5. Meaning the file has been changes since we last generated the instruction file.
       String sourceFileMd5 = checkNotNull(fileToMd5.get(file));
       URI instructionFile = new URI(tmpBucket)
           .resolve(Util.getInstructionFileName(file.getFileName().toString()));
       Blob blob = gcsStorage.getBlob(instructionFile);
-      if (blob.exists() && verifyMd5Header(gcsStorage.newByteSource(instructionFile),
+      if (blob != null && verifyMd5Header(gcsStorage.newByteSource(instructionFile),
           sourceFileMd5)) {
         logger.log(Level.INFO,
             String.format("Skip generating instructions for file %s which already exists", file));
         continue;
       }
 
+      Path tmpCheckSumFile = downloadChecksumFile(file);
       try (OutputStream instructionFileOutputStream =
           gcsStorage
               .newByteSink(instructionFile)
@@ -246,13 +244,14 @@ public class GcsyncClient {
           instructionGenerator.generate(
               instruction -> instruction.writeDelimitedTo(instructionFileOutputStream), fileInput,
               checksums);
-        } catch (IOException e) {
-          if (!gcsStorage.delete(instructionFile)) {
-            logger.log(Level.SEVERE, String.format(
-                "Failed to delete file: %s which is corrupted. Manually delete this file from GCS"));
-          }
-          throw e;
         }
+      } catch (Exception e) {
+        if (!gcsStorage.delete(instructionFile)) {
+          logger.log(Level.SEVERE, String.format(
+              "Failed to delete file: %s which is corrupted. Manually delete this file from GCS",
+              instructionFile));
+        }
+        throw e;
       }
 
       Files.deleteIfExists(tmpCheckSumFile);

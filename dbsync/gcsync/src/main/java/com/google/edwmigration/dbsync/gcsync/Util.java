@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 public class Util {
 
@@ -43,7 +44,7 @@ public class Util {
   }
 
   public static void writeMd5Header(OutputStream outputStream, String md5) throws IOException {
-    outputStream.write((md5 + "\n").getBytes());
+    outputStream.write((md5 + '\n').getBytes());
   }
 
   public static boolean verifyMd5Header(ByteSource byteSource, String md5) throws IOException {
@@ -52,7 +53,6 @@ public class Util {
     }
     try (BufferedReader reader = new BufferedReader(
         new InputStreamReader(byteSource.openStream()))) {
-      reader.read();
       String md5Stored = reader.readLine();
       return md5Stored.equals(md5);
     }
@@ -60,18 +60,18 @@ public class Util {
 
   public static String skipMd5Header(InputStream inputStream) throws IOException {
     String md5 = "";
-    try (InputStreamReader reader = new InputStreamReader(inputStream)) {
-      while (true) {
-        int c = reader.read();
-        if (c == -1) {
-          throw new IOException("Unexpected EOF");
-        }
-        if (c == '\n') {
-          break;
-        }
-        md5 += (char) c;
+
+    while (true) {
+      int c = inputStream.read();
+      if (c == -1) {
+        throw new IOException("Unexpected EOF");
       }
+      if (c == '\n') {
+        break;
+      }
+      md5 += (char) c;
     }
+
     return md5;
   }
 
