@@ -12,7 +12,7 @@ refer to Java vendor documentation.
 
 Before submitting any code changes, please run the formatter
 
-    java -jar dbsync/google-java-format-1.7-all-deps.jar -i $(git ls-files|grep \.java$)
+    java -jar dbsync/google-java-format-1.7-all-deps.jar -i $(git ls-files dbsync | grep '\.java$')
 
 ## Gcysnc
 

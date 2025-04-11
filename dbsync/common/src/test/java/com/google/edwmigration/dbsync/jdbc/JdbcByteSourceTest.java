@@ -1,6 +1,5 @@
 package com.google.edwmigration.dbsync.jdbc;
 
-
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
