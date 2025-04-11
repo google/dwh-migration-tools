@@ -1,6 +1,5 @@
 package com.google.edwmigration.dbsync.gcsync;
 
-import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,7 +9,6 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 public class Util {
 
@@ -51,8 +49,8 @@ public class Util {
     if (byteSource.isEmpty()) {
       return false;
     }
-    try (BufferedReader reader = new BufferedReader(
-        new InputStreamReader(byteSource.openStream()))) {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(byteSource.openStream()))) {
       String md5Stored = reader.readLine();
       return md5Stored.equals(md5);
     }

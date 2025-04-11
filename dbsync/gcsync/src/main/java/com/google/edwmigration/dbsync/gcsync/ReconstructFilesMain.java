@@ -74,15 +74,17 @@ public class ReconstructFilesMain {
     }
   }
 
-  private static void verifyMd5(String sourceFileMd5, GcsStorage gcsStorage, URI tmpFile,
-      URI fileToBeReconstructed) {
+  private static void verifyMd5(
+      String sourceFileMd5, GcsStorage gcsStorage, URI tmpFile, URI fileToBeReconstructed) {
     if (sourceFileMd5.equals(gcsStorage.getBlob(tmpFile).getMd5())) {
       gcsStorage.copyFile(tmpFile, fileToBeReconstructed);
     } else {
-      logger.log(Level.SEVERE, String.format(
-          "The reconstructed file of %s doesn't match the file on the source file, the file might be corrupted.",
-          fileToBeReconstructed));
-      throw new RuntimeException("Reconstructed file doesn't match source, abort task");
+      logger.log(
+          Level.SEVERE,
+          String.format(
+              "The reconstructed file of %s doesn't match the file on the source file, the file might be"
+                  + " corrupted or the source file might have been changed while the tool is running",
+              fileToBeReconstructed));
     }
   }
 
