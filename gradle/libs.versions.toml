@@ -5,6 +5,7 @@ apache-avro = "1.11.4"
 apache-commons-compress = "1.27.1"
 apache-commons-csv = "1.13.0"
 apache-commons-lang3 = "3.17.0"
+ascii-table = "1.8.0"
 auto-service = "1.1.1"
 auto-value = "1.11.0"
 aws-java-sdk = "1.12.778"
@@ -17,7 +18,9 @@ datanucleus-core = "4.1.17"
 datanucleus-javax-jdo = "3.2.1"
 datanucleus-rdbms = "4.1.20"
 google-cloud-bigquery = "2.48.0"
+google-cloud-bigquerydatatransfer = "2.59.0"
 google-cloud-kms = "2.50.0"
+google-cloud-logging = "3.21.4"
 google-cloud-nio = "0.127.30"
 gradle-info-plugin = "11.4.1"
 gradle-license-report = "2.8"
@@ -74,6 +77,7 @@ apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
 apache-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-commons-compress" }
 apache-commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "apache-commons-csv" }
 apache-commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "apache-commons-lang3" }
+ascii-table = { module = "com.github.freva:ascii-table", version.ref = "ascii-table"}
 auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 auto-value = { module = "com.google.auto.value:auto-value", version.ref = "auto-value" }
 auto-value-annotations = { module = "com.google.auto.value:auto-value-annotations", version.ref = "auto-value" }
@@ -87,7 +91,9 @@ datanucleus-core = { module = "org.datanucleus:datanucleus-core", version.ref = 
 datanucleus-javax-jdo = { module = "org.datanucleus:javax.jdo", version.ref = "datanucleus-javax-jdo" }
 datanucleus-rdbms = { module = "org.datanucleus:datanucleus-rdbms", version.ref = "datanucleus-rdbms" }
 google-cloud-bigquery = { module = "com.google.cloud:google-cloud-bigquery", version.ref = "google-cloud-bigquery" }
+google-cloud-bigquerydatatransfer = { module = "com.google.cloud:google-cloud-bigquerydatatransfer", version.ref = "google-cloud-bigquerydatatransfer" }
 google-cloud-kms = { module = "com.google.cloud:google-cloud-kms", version.ref = "google-cloud-kms" }
+google-cloud-logging = { module = "com.google.cloud:google-cloud-logging", version.ref = "google-cloud-logging"}
 google-cloud-nio = { module = "com.google.cloud:google-cloud-nio", version.ref = "google-cloud-nio" }
 google-cloud-storage-control = { module = "com.google.cloud:google-cloud-storage-control", version.ref = "google"}
 gradle-info-plugin = { module = "com.netflix.nebula:gradle-info-plugin", version.ref = "gradle-info-plugin" }

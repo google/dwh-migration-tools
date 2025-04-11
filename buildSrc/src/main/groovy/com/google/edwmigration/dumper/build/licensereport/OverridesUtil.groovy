@@ -57,6 +57,9 @@ class OverridesUtil {
                 projectUrl: "https://github.com/FasterXML/jackson-modules-java8",
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-modules-java8/2.16/LICENSE",
             ],
+            "com.github.freva:ascii-table":[
+                licenseUrl: "https://github.com/freva/ascii-table/blob/master/LICENSE"
+            ],
             "com.github.stephenc.jcip:jcip-annotations": [
                 projectUrl: "https://github.com/stephenc/jcip-annotations",
                 licenseUrl: "https://raw.githubusercontent.com/stephenc/jcip-annotations/master/LICENSE.txt,"
@@ -114,6 +117,9 @@ class OverridesUtil {
             "com.google.api.grpc:grpc-google-iam-v1": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/sdk-platform-java/main/LICENSE",
             ],
+            "com.google.api.grpc:proto-google-cloud-bigquerydatatransfer-v1": [
+                licenseUrl: "https://github.com/googleapis/java-bigquery-datatransfer/blob/main/LICENSE"
+            ],
             "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1": [
                 projectUrl: "https://github.com/googleapis/googleapis",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
@@ -133,11 +139,11 @@ class OverridesUtil {
             "com.google.api.grpc:proto-google-cloud-storage-control-v2": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
             ],
-            "com.google.cloud:google-cloud-storage-control": [
-                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
-            ],
             "com.google.api.grpc:proto-google-cloud-kms-v1": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
+            ],
+            "com.google.api.grpc:proto-google-cloud-logging-v2": [
+                licenseUrl: "https://github.com/googleapis/java-logging/blob/main/LICENSE"
             ],
             "com.google.api.grpc:proto-google-cloud-monitoring-v3": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
@@ -180,6 +186,9 @@ class OverridesUtil {
             "com.google.cloud:google-cloud-bigquerystorage": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-bigquerystorage/main/LICENSE",
             ],
+            "com.google.cloud:google-cloud-bigquerydatatransfer": [
+                    licenseUrl: "https://github.com/googleapis/python-bigquery-datatransfer/blob/main/LICENSE"
+            ],
             "com.google.cloud:google-cloud-core": [
                 projectUrl: "https://github.com/googleapis/java-core",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-core/main/LICENSE",
@@ -195,6 +204,9 @@ class OverridesUtil {
             "com.google.cloud:google-cloud-kms": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
             ],
+            "com.google.cloud:google-cloud-logging": [
+                licenseUrl: "https://github.com/googleapis/java-logging/blob/main/LICENSE"
+            ],
             "com.google.cloud:google-cloud-monitoring": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-core/main/LICENSE",
             ],
@@ -203,6 +215,9 @@ class OverridesUtil {
             ],
             "com.google.cloud:google-cloud-storage": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-storage/main/LICENSE",
+            ],
+            "com.google.cloud:google-cloud-storage-control": [
+                    licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
             ],
             "com.google.code.findbugs:jsr305": [
                 projectUrl: "http://code.google.com/p/jsr-305/",
