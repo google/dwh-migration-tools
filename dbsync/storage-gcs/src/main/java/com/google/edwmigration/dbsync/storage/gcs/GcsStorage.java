@@ -31,6 +31,10 @@ public class GcsStorage {
     return storage.get(BlobId.fromGsUtilUri(new URI(bucket).resolve(objectName).toString()));
   }
 
+  public Blob getBlob(URI uri) {
+    return storage.get(BlobId.fromGsUtilUri(uri.toString()));
+  }
+
   public @NonNull ByteSource newByteSource(URI uri) {
     Preconditions.checkArgument(SCHEME.equals(uri.getScheme()));
     return new GcsByteSource(storage, BlobId.fromGsUtilUri(uri.toString()));

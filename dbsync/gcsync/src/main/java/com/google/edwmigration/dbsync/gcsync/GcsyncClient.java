@@ -1,5 +1,8 @@
 package com.google.edwmigration.dbsync.gcsync;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.edwmigration.dbsync.gcsync.Util.verifyMd5Header;
+
 import com.google.api.gax.longrunning.OperationFuture;
 import com.google.cloud.run.v2.Container;
 import com.google.cloud.run.v2.CreateJobRequest;
@@ -11,7 +14,6 @@ import com.google.cloud.run.v2.JobsClient;
 import com.google.cloud.run.v2.RunJobRequest;
 import com.google.cloud.run.v2.TaskTemplate;
 import com.google.cloud.storage.Blob;
-import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
@@ -33,7 +35,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -54,9 +58,11 @@ public class GcsyncClient {
   private final Duration cloudRunTaskTimeout;
 
   private final GcsStorage gcsStorage;
-  private List<Path> filesToUpload;
+  private final List<Path> filesToUpload;
 
-  private List<Path> filesToRsync;
+  private final List<Path> filesToRsync;
+
+  private final Map<Path, String> fileToMd5;
 
   private final InstructionGenerator instructionGenerator;
 
@@ -83,6 +89,7 @@ public class GcsyncClient {
     this.instructionGenerator = instructionGenerator;
     filesToRsync = new ArrayList<>();
     filesToUpload = new ArrayList<>();
+    fileToMd5 = new HashMap<>();
   }
 
   public void syncFiles()
@@ -96,9 +103,7 @@ public class GcsyncClient {
     if (!filesToRsync.isEmpty()) {
       // Compute checksums for files to rsync.
       computeCheckSum();
-      // Download checksum files to local storage.
-      downloadCheckSumFiles();
-      // Send instruction files to gcs.
+      // Download the checksum file from GCS. Compute & send instruction files to gcs.
       sendRsyncInstructions();
       // Reconstruct files on gcs using instructions.
       reconStructFiles();
@@ -109,7 +114,7 @@ public class GcsyncClient {
 
   private void scanFiles() throws IOException, URISyntaxException {
     Path currentDirectory = Paths.get(sourceDirectory);
-    Preconditions.checkNotNull(currentDirectory);
+    checkNotNull(currentDirectory);
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(currentDirectory)) {
       for (Path path : stream) {
@@ -131,7 +136,10 @@ public class GcsyncClient {
             filesToUpload.add(path);
           } else {
             String gcsMd5 = blob.getMd5();
-            if (!gcsMd5.equals(generateMd5(path))) {
+            String localMd5 = generateMd5(path);
+            fileToMd5.put(path, localMd5);
+
+            if (!gcsMd5.equals(localMd5)) {
               filesToRsync.add(path);
             }
           }
@@ -193,32 +201,56 @@ public class GcsyncClient {
     runCloudRunJob(String.format("%s && %s", downloadJarCommand, command), project);
   }
 
-  private void downloadCheckSumFiles() throws URISyntaxException, IOException {
-    for (Path file : filesToRsync) {
-      String checksumFileName = Util.getCheckSumFileName(file.getFileName().toString());
-      ByteSource byteSource =
-          gcsStorage.newByteSource(new URI(tmpBucket).resolve(checksumFileName));
-      byteSource.copyTo(
-          com.google.common.io.Files.asByteSink(Util.getTemporaryCheckSumFilePath(file).toFile()));
-    }
+  private Path downloadChecksumFile(Path file) throws IOException, URISyntaxException {
+    Path tmpCheckSumFile = Util.getTemporaryCheckSumFilePath(file);
+    String checksumFileName = Util.getCheckSumFileName(file.getFileName().toString());
+    ByteSource byteSource = gcsStorage.newByteSource(new URI(tmpBucket).resolve(checksumFileName));
+    byteSource.copyTo(com.google.common.io.Files.asByteSink(tmpCheckSumFile.toFile()));
+
+    return tmpCheckSumFile;
   }
 
   private void sendRsyncInstructions() throws IOException, URISyntaxException {
     for (Path file : filesToRsync) {
-      Path tmpCheckSumFile = Util.getTemporaryCheckSumFilePath(file);
-      try (OutputStream instructionSink =
-          gcsStorage
-              .newByteSink(
-                  new URI(tmpBucket)
-                      .resolve(Util.getInstructionFileName(file.getFileName().toString())))
-              .openBufferedStream()) {
+      // Check if we already have an instruction file with a header md5 that matches with the source
+      // file's md5. Meaning the file has been changes since we last generated the instruction file.
+      String sourceFileMd5 = checkNotNull(fileToMd5.get(file));
+      URI instructionFile =
+          new URI(tmpBucket).resolve(Util.getInstructionFileName(file.getFileName().toString()));
+      Blob blob = gcsStorage.getBlob(instructionFile);
+      if (blob != null
+          && verifyMd5Header(gcsStorage.newByteSource(instructionFile), sourceFileMd5)) {
+        logger.log(
+            Level.INFO,
+            String.format("Skip generating instructions for file %s which already exists", file));
+        continue;
+      }
+
+      Path tmpCheckSumFile = downloadChecksumFile(file);
+      try (OutputStream instructionFileOutputStream =
+          gcsStorage.newByteSink(instructionFile).openBufferedStream()) {
         try (InputStream inputStream = Files.newInputStream(tmpCheckSumFile)) {
+          // The checksum file has an MD5 header that needs to be skipped
+          Util.skipMd5Header(inputStream);
+
           List<Checksum> checksums = getChecksumsFromFile(inputStream);
           ByteSource fileInput = com.google.common.io.Files.asByteSource(file.toFile());
 
+          Util.writeMd5Header(instructionFileOutputStream, sourceFileMd5);
           instructionGenerator.generate(
-              instruction -> instruction.writeDelimitedTo(instructionSink), fileInput, checksums);
+              instruction -> instruction.writeDelimitedTo(instructionFileOutputStream),
+              fileInput,
+              checksums);
         }
+      } catch (Exception e) {
+        if (!gcsStorage.delete(instructionFile)) {
+          logger.log(
+              Level.SEVERE,
+              String.format(
+                  "Failed to delete file: %s which is corrupted. Manually delete this file from GCS",
+                  instructionFile));
+        }
+        throw e;
       }
 
       Files.deleteIfExists(tmpCheckSumFile);
