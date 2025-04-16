@@ -1,15 +1,10 @@
 package com.google.edwmigration.dbsync.gcsync;
 
-import com.google.api.gax.longrunning.OperationTimedPollAlgorithm;
-import com.google.api.gax.retrying.RetrySettings;
-import com.google.cloud.run.v2.JobsClient;
-import com.google.cloud.run.v2.JobsSettings;
+import com.google.common.base.Preconditions;
 import com.google.edwmigration.dbsync.common.DefaultArguments;
-import com.google.edwmigration.dbsync.common.InstructionGenerator;
 import com.google.edwmigration.dbsync.storage.gcs.GcsStorage;
 import com.google.protobuf.Duration;
 import com.google.protobuf.util.Durations;
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,11 +12,14 @@ import joptsimple.OptionSpec;
 
 public class GcsyncMain {
 
-  public static void main(String[] args) throws IOException, ParseException {
+  public static void main(String[] args) throws ParseException {
     Arguments arguments = new Arguments(args);
     String project = arguments.getOptions().valueOf(arguments.projectOptionSpec);
     Duration cloudRunTaskTimeout =
         Durations.parse(arguments.getOptions().valueOf(arguments.cloudRunTaskTimeoutSpec));
+    int numConCurrentTask = arguments.getOptions().valueOf(arguments.numConcurrentTaskSpec);
+    Preconditions.checkArgument(numConCurrentTask > 0,
+        "--num_concurrent_tasks must be a positive integer");
 
     GcsyncClient gcsyncClient =
         new GcsyncClient(
@@ -30,10 +28,9 @@ public class GcsyncMain {
             Util.ensureTrailingSlash(arguments.getOptions().valueOf(arguments.targetOptionSpec)),
             arguments.getOptions().valueOf(arguments.locationOptionSpec),
             arguments.getOptions().valueOf(arguments.sourceDirectoryOptionSpec),
+            numConCurrentTask,
             cloudRunTaskTimeout,
-            JobsClient.create(jobsSettings(cloudRunTaskTimeout)),
-            new GcsStorage(project),
-            new InstructionGenerator(Constants.BLOCK_SIZE));
+            new GcsStorage(project));
     try {
       gcsyncClient.syncFiles();
     } catch (Exception e) {
@@ -41,22 +38,6 @@ public class GcsyncMain {
     }
   }
 
-  private static JobsSettings jobsSettings(Duration jobTimeout) throws IOException {
-    JobsSettings.Builder builder = JobsSettings.newBuilder();
-    builder
-        .runJobOperationSettings()
-        .setPollingAlgorithm(
-            OperationTimedPollAlgorithm.create(
-                RetrySettings.newBuilder()
-                    .setTotalTimeoutDuration(
-                        java.time.Duration.ofSeconds(
-                            jobTimeout.getSeconds() + Constants.EXTRA_POLLING_TIMEOUT.getSeconds()))
-                    .setInitialRetryDelayDuration(java.time.Duration.ofSeconds(1))
-                    .setRetryDelayMultiplier(1.5)
-                    .setMaxRetryDelayDuration(java.time.Duration.ofSeconds(45))
-                    .build()));
-    return builder.build();
-  }
 
   private static class Arguments extends DefaultArguments {
 
@@ -101,6 +82,13 @@ public class GcsyncMain {
             .withOptionalArg()
             .ofType(String.class)
             .defaultsTo(Constants.CLOUD_RUN_TIMEOUT);
+
+    private final OptionSpec<Integer> numConcurrentTaskSpec =
+        parser
+            .accepts("num_concurrent_tasks", "Specified the time out of the cloud run tasks")
+            .withOptionalArg()
+            .ofType(Integer.class)
+            .defaultsTo(1);
 
     public Arguments(String[] args) {
       super(args);

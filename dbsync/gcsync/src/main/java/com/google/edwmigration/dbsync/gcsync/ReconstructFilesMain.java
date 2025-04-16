@@ -17,13 +17,13 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import joptsimple.OptionSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReconstructFilesMain {
 
-  private static final Logger logger = Logger.getLogger("gcsync");
+  private static final Logger logger = LoggerFactory.getLogger(ReconstructFilesMain.class);
 
   public static void main(String[] args) throws Exception {
     Arguments arguments = new Arguments(args);
@@ -31,11 +31,12 @@ public class ReconstructFilesMain {
         new GcsStorage(arguments.getOptions().valueOf(arguments.projectOptionSpec));
     String tmpBucket = arguments.getOptions().valueOf(arguments.tmpBucketOptionSpec);
     String targetBucket = arguments.getOptions().valueOf(arguments.targetOptionSpec);
+    String filesToRsyncFileName = arguments.getOptions().valueOf(arguments.filesToRsyncFileName);
 
     List<String> filesToReconstruct =
         getListOfFiles(
             gcsStorage.newByteSource(
-                new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME)));
+                new URI(tmpBucket).resolve(filesToRsyncFileName)));
 
     for (String file : filesToReconstruct) {
 
@@ -68,9 +69,9 @@ public class ReconstructFilesMain {
         gcsStorage.delete(tmpFile);
         deleteStagingFiles(gcsStorage, tmpBucket, file);
       }
-      gcsStorage.delete(new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME));
+      gcsStorage.delete(new URI(tmpBucket).resolve(filesToRsyncFileName));
 
-      logger.log(Level.INFO, String.format("Finished reconstructing file: %s", file));
+      logger.info(String.format("Finished reconstructing file: %s", file));
     }
   }
 
@@ -78,9 +79,9 @@ public class ReconstructFilesMain {
       String sourceFileMd5, GcsStorage gcsStorage, URI tmpFile, URI fileToBeReconstructed) {
     if (sourceFileMd5.equals(gcsStorage.getBlob(tmpFile).getMd5())) {
       gcsStorage.copyFile(tmpFile, fileToBeReconstructed);
+
     } else {
-      logger.log(
-          Level.SEVERE,
+      logger.info(
           String.format(
               "The reconstructed file of %s doesn't match the file on the source file, the file might be"
                   + " corrupted or the source file might have been changed while the tool is running",
@@ -113,6 +114,13 @@ public class ReconstructFilesMain {
     private final OptionSpec<String> tmpBucketOptionSpec =
         parser
             .accepts("tmp_bucket", "Specifies the temporary bucket")
+            .withRequiredArg()
+            .ofType(String.class)
+            .required();
+
+    private final OptionSpec<String> filesToRsyncFileName =
+        parser
+            .accepts("file_name", "The name of the file containing the list of files to be rsynced")
             .withRequiredArg()
             .ofType(String.class)
             .required();
