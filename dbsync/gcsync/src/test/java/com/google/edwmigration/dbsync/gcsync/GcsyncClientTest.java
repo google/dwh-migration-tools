@@ -90,11 +90,9 @@ public class GcsyncClientTest {
             TARGET_BUCKET,
             LOCATION,
             sourceDir.getAbsolutePath(),
+            1,
             Durations.fromSeconds(10),
-            mockJobsClient,
-            mockGcsStorage,
-            mockInstructionGenerator // The key new argument
-            );
+            mockGcsStorage);
 
     // Stub GcsStorage calls:
     //   - "small.txt" does not exist on GCS => returns null => triggers upload

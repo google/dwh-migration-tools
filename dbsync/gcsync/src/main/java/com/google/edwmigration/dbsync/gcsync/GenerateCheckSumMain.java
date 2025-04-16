@@ -26,12 +26,13 @@ public class GenerateCheckSumMain {
         new GcsStorage(arguments.getOptions().valueOf(arguments.projectOptionSpec));
     String tmpBucket = arguments.getOptions().valueOf(arguments.tmpBucketOptionSpec);
     String targetBucket = arguments.getOptions().valueOf(arguments.targetOptionSpec);
+    String filesToRsyncFileName = arguments.getOptions().valueOf(arguments.filesToRsyncFileName);
 
     ChecksumGenerator checksumGenerator = new ChecksumGenerator(Constants.BLOCK_SIZE);
     List<String> filesToGenerateCheckSum =
         getListOfFiles(
             gcsStorage.newByteSource(
-                new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME)));
+                new URI(tmpBucket).resolve(filesToRsyncFileName)));
 
     for (String file : filesToGenerateCheckSum) {
       URI targetFile = new URI(targetBucket).resolve(file);
@@ -91,6 +92,13 @@ public class GenerateCheckSumMain {
     private final OptionSpec<String> tmpBucketOptionSpec =
         parser
             .accepts("tmp_bucket", "Specifies the temporary bucket")
+            .withRequiredArg()
+            .ofType(String.class)
+            .required();
+
+    private final OptionSpec<String> filesToRsyncFileName =
+        parser
+            .accepts("file_name", "The name of the file containing the list of files to be rsynced")
             .withRequiredArg()
             .ofType(String.class)
             .required();
