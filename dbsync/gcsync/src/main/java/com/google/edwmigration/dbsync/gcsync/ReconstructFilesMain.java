@@ -71,7 +71,7 @@ public class ReconstructFilesMain {
       }
       gcsStorage.delete(new URI(tmpBucket).resolve(filesToRsyncFileName));
 
-      logger.info(String.format("Finished reconstructing file: %s", file));
+      logger.info("Finished reconstructing file: %s", file);
     }
   }
 

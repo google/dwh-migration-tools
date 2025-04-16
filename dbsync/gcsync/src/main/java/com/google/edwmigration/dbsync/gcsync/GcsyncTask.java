@@ -255,7 +255,6 @@ public class GcsyncTask implements Callable<Void> {
     while ((checksum = Checksum.parseDelimitedFrom(inputStream)) != null) {
       checksums.add(checksum);
     }
-    inputStream.close();
 
     return checksums;
   }
