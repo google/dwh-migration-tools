@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
@@ -169,7 +170,7 @@ public class TasksRunner implements TaskRunContextOps {
       state.setTaskException(task, TaskState.FAILED, e);
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
-        sink.asCharSink(StandardCharsets.UTF_8)
+        sink.asCharSink(StandardCharsets.UTF_8, WriteMode.CREATE_TRUNCATE)
             .writeLines(
                 Arrays.asList(
                     task.toString(),

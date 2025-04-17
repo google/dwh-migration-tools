@@ -34,8 +34,18 @@ public class JdbcSelectTask extends AbstractJdbcTask<Summary> {
   }
 
   public JdbcSelectTask(
-      @Nonnull String targetPath, @Nonnull String sql, TaskCategory taskCategory) {
+      @Nonnull String targetPath, @Nonnull String sql, @Nonnull TaskCategory taskCategory) {
     super(targetPath);
+    this.sql = sql;
+    this.taskCategory = taskCategory;
+  }
+
+  public JdbcSelectTask(
+      @Nonnull String targetPath,
+      @Nonnull String sql,
+      @Nonnull TaskCategory taskCategory,
+      @Nonnull TaskOptions taskOptions) {
+    super(targetPath, taskOptions);
     this.sql = sql;
     this.taskCategory = taskCategory;
   }
