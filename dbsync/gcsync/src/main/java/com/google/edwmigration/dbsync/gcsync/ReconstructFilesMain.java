@@ -4,6 +4,7 @@ import static com.google.edwmigration.dbsync.gcsync.Util.getCheckSumFileName;
 import static com.google.edwmigration.dbsync.gcsync.Util.getInstructionFileName;
 import static com.google.edwmigration.dbsync.gcsync.Util.getListOfFiles;
 import static com.google.edwmigration.dbsync.gcsync.Util.getTempFileName;
+import static com.google.edwmigration.dbsync.gcsync.Util.skipMd5Header;
 
 import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
@@ -42,14 +43,17 @@ public class ReconstructFilesMain {
           gcsStorage
               .newByteSource(new URI(tmpBucket).resolve(getInstructionFileName(file)))
               .openBufferedStream()) {
-        URI sourceFile = new URI(targetBucket).resolve(file);
-        ByteSource baseFileSource = gcsStorage.newByteSource(sourceFile);
+        URI fileToBeReconstructed = new URI(targetBucket).resolve(file);
+        ByteSource baseFileSource = gcsStorage.newByteSource(fileToBeReconstructed);
 
         // Create a new file as a temp file and then swap it
-        URI tempFile = new URI(targetBucket).resolve(getTempFileName(file));
-        ByteSink tmpFileSink = gcsStorage.newByteSink(tempFile);
+        URI tmpFile = new URI(targetBucket).resolve(getTempFileName(file));
+        ByteSink tmpFileSink = gcsStorage.newByteSink(tmpFile);
 
         OutputStream outputStream = tmpFileSink.openBufferedStream();
+
+        // The instruction file has a md5 header of the source file being synced from.
+        String sourceFileMd5 = skipMd5Header(instructionsSource);
         try (InstructionReceiver instructionReceiver =
             new InstructionReceiver(outputStream, baseFileSource)) {
           Instruction instruction;
@@ -58,13 +62,29 @@ public class ReconstructFilesMain {
           }
         }
 
-        gcsStorage.copyFile(tempFile, sourceFile);
-        gcsStorage.delete(tempFile);
+        verifyMd5(sourceFileMd5, gcsStorage, tmpFile, fileToBeReconstructed);
+
+        // Clean up
+        gcsStorage.delete(tmpFile);
         deleteStagingFiles(gcsStorage, tmpBucket, file);
       }
       gcsStorage.delete(new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME));
 
       logger.log(Level.INFO, String.format("Finished reconstructing file: %s", file));
+    }
+  }
+
+  private static void verifyMd5(
+      String sourceFileMd5, GcsStorage gcsStorage, URI tmpFile, URI fileToBeReconstructed) {
+    if (sourceFileMd5.equals(gcsStorage.getBlob(tmpFile).getMd5())) {
+      gcsStorage.copyFile(tmpFile, fileToBeReconstructed);
+    } else {
+      logger.log(
+          Level.SEVERE,
+          String.format(
+              "The reconstructed file of %s doesn't match the file on the source file, the file might be"
+                  + " corrupted or the source file might have been changed while the tool is running",
+              fileToBeReconstructed));
     }
   }
 

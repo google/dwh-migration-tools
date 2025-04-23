@@ -1,7 +1,9 @@
 package com.google.edwmigration.dbsync.gcsync;
 
 import static com.google.edwmigration.dbsync.gcsync.Util.getListOfFiles;
+import static com.google.edwmigration.dbsync.gcsync.Util.verifyMd5Header;
 
+import com.google.cloud.storage.Blob;
 import com.google.common.io.ByteSink;
 import com.google.common.io.ByteSource;
 import com.google.edwmigration.dbsync.common.ChecksumGenerator;
@@ -32,18 +34,40 @@ public class GenerateCheckSumMain {
                 new URI(tmpBucket).resolve(Constants.FILES_TO_RSYNC_FILE_NAME)));
 
     for (String file : filesToGenerateCheckSum) {
-      ByteSource byteSource = gcsStorage.newByteSource(new URI(targetBucket).resolve(file));
+      URI targetFile = new URI(targetBucket).resolve(file);
+      ByteSource byteSource = gcsStorage.newByteSource(targetFile);
       if (byteSource.isEmpty()) {
         logger.log(Level.INFO, String.format("File %s has been deleted on target", file));
         continue;
       }
 
-      ByteSink byteSink =
-          gcsStorage.newByteSink(new URI(tmpBucket).resolve(Util.getCheckSumFileName(file)));
+      String targetFileMd5 = gcsStorage.getBlob(targetFile).getMd5();
+      // Check if we already have a checksum file with a header md5 that matches with the target
+      // file's md5. Meaning the file has been changes since we generated the checksum file.
+      URI checkSumFile = new URI(tmpBucket).resolve(Util.getCheckSumFileName(file));
+      Blob blob = gcsStorage.getBlob(checkSumFile);
+      if (blob != null && verifyMd5Header(gcsStorage.newByteSource(checkSumFile), targetFileMd5)) {
+        logger.log(
+            Level.INFO,
+            String.format("Skip generating checksum for file %s which already exists", file));
+        continue;
+      }
+
+      ByteSink byteSink = gcsStorage.newByteSink(checkSumFile);
       try (OutputStream bufferedOutputStream = byteSink.openBufferedStream()) {
+        // We write the md5 of the target file as a header of the checksum file
+        Util.writeMd5Header(bufferedOutputStream, targetFileMd5);
         checksumGenerator.generate(
             checksum -> checksum.writeDelimitedTo(bufferedOutputStream), byteSource);
         logger.log(Level.INFO, String.format("Finished generating check sum for: %s", file));
+      } catch (Exception e) {
+        if (!gcsStorage.delete(checkSumFile)) {
+          logger.log(
+              Level.SEVERE,
+              String.format(
+                  "Failed to delete file: %s which is corrupted. Manually delete this file from GCS"));
+        }
+        throw e;
       }
     }
   }

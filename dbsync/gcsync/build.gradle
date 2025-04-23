@@ -22,32 +22,12 @@ dependencies {
     testImplementation 'org.mockito:mockito-inline:4.11.0'
 }
 
-tasks.register('copyJarsToResources') {
-    def sourceLibsDir = file('build/libs')
-    def destinationDir = file('src/main/resources/jars')
-
-    dependsOn(':dbsync:gcsync:jar', ':dbsync:gcsync:testFixturesJar')
-
-    inputs.dir(sourceLibsDir)
-    outputs.dir(destinationDir)
-
-    doLast {
-        destinationDir.mkdirs()
-        copy {
-            from sourceLibsDir.listFiles({ File f -> f.isFile() && f.name.endsWith('.jar') } as java.io.FileFilter)
-            into destinationDir
-        }
-    }
-}
-
-
 application {
     mainClass = 'com.google.edwmigration.dbsync.gcsync.GcsyncMain'
 }
 
 shadowJar {
     mergeServiceFiles()
-    finalizedBy copyJarsToResources
 }
 
 test {

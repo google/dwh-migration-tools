@@ -39,7 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class GcsyncClientTest {
+public class DTSRsyncClientTest {
 
   private static final String PROJECT = "dummy-project";
   private static final String TMP_BUCKET = "gs://dummy-tmp-bucket/";
@@ -49,14 +49,15 @@ public class GcsyncClientTest {
   @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
 
   private File sourceDir;
-  private File smallFile;
-  private File largeFile;
+  private File smallCsvFile;
+  private File largeCsvFile;
+  private File otherFile;
 
   private GcsStorage mockGcsStorage;
   private InstructionGenerator mockInstructionGenerator;
   private JobsClient mockJobsClient;
 
-  private GcsyncClient clientUnderTest;
+  private DTSRsyncClient clientUnderTest;
 
   // For test simplicity, define a smaller threshold for "rsync" logic
   private static final long RSYNC_SIZE_THRESHOLD = 1024; // e.g. 1KB
@@ -66,25 +67,28 @@ public class GcsyncClientTest {
     // Create a local "source" directory with a small file + a large file
     sourceDir = tempFolder.newFolder("sourceDir");
 
-    smallFile = new File(sourceDir, "small.txt");
-    Files.asByteSink(smallFile).write("small content".getBytes());
+    smallCsvFile = new File(sourceDir, "small.csv");
+    Files.asByteSink(smallCsvFile).write("small content".getBytes());
 
-    largeFile = new File(sourceDir, "large.txt");
+    largeCsvFile = new File(sourceDir, "large.csv");
     // Create a file bigger than the threshold
     byte[] largeBytes = new byte[(int) (RSYNC_SIZE_THRESHOLD + 500)]; // e.g. 1.5KB
     for (int i = 0; i < largeBytes.length; i++) {
       largeBytes[i] = (byte) ('A' + (i % 26));
     }
-    Files.asByteSink(largeFile).write(largeBytes);
+    Files.asByteSink(largeCsvFile).write(largeBytes);
+
+    otherFile = new File(sourceDir, "other.txt");
+    Files.asByteSink(otherFile).write("other content".getBytes());
 
     // Create mocks
     mockGcsStorage = mock(GcsStorage.class);
     mockInstructionGenerator = mock(InstructionGenerator.class);
     mockJobsClient = mock(JobsClient.class);
 
-    // Now construct the GcsyncClient with the mock dependencies
+    // Now construct the DTSRsyncClient with the mock dependencies
     clientUnderTest =
-        new GcsyncClient(
+        new DTSRsyncClient(
             PROJECT,
             TMP_BUCKET,
             TARGET_BUCKET,
@@ -94,17 +98,17 @@ public class GcsyncClientTest {
             mockJobsClient,
             mockGcsStorage,
             mockInstructionGenerator // The key new argument
-            );
+        );
 
     // Stub GcsStorage calls:
-    //   - "small.txt" does not exist on GCS => returns null => triggers upload
-    when(mockGcsStorage.getBlob(eq(TARGET_BUCKET), eq("small.txt"))).thenReturn(null);
+    //    - "small.csv" does not exist on GCS => returns null => triggers upload
+    when(mockGcsStorage.getBlob(eq(TARGET_BUCKET), eq("small.csv"))).thenReturn(null);
 
-    //   - "large.txt" => return a mock Blob (we'll set its MD5 dynamically in each test)
-    Blob mockBlob = mock(Blob.class);
-    when(mockGcsStorage.getBlob(eq(TARGET_BUCKET), eq("large.txt"))).thenReturn(mockBlob);
-    String localMd5 = generateMd5(largeFile);
-    when(mockBlob.getMd5()).thenReturn(localMd5);
+    //    - "large.csv" => return a mock Blob (we'll set its MD5 dynamically in each test)
+    Blob mockBlobLarge = mock(Blob.class);
+    when(mockGcsStorage.getBlob(eq(TARGET_BUCKET), eq("large.csv"))).thenReturn(mockBlobLarge);
+    String localMd5Large = generateMd5(largeCsvFile);
+    when(mockBlobLarge.getMd5()).thenReturn(localMd5Large);
 
     when(mockGcsStorage.newByteSource(any())).thenReturn(mock(ByteSource.class));
     ByteSink mockByteSink = mock(ByteSink.class);
@@ -167,13 +171,13 @@ public class GcsyncClientTest {
   }
 
   @Test
-  public void testSyncFiles_LargeFileMd5Matches_NoCloudRun() throws Exception {
+  public void testSyncFiles_LargeCsvMd5Matches_NoCloudRun() throws Exception {
     clientUnderTest.syncFiles();
 
     List<Path> rsyncFiles = getPrivateList(clientUnderTest, "filesToRsync");
     assertFalse(
-        "large.txt should NOT be in the rsync list if MD5 matches",
-        rsyncFiles.contains(largeFile.toPath()));
+        "large.csv should NOT be in the rsync list if MD5 matches",
+        rsyncFiles.contains(largeCsvFile.toPath()));
 
     // No job calls
     verify(mockJobsClient, never()).createJobAsync(any(CreateJobRequest.class));
@@ -182,16 +186,16 @@ public class GcsyncClientTest {
   }
 
   @Test
-  public void testSyncFiles_SmallFileNotOnGcs_UploadsItButNoJob() throws Exception {
-    // small.txt not on GCS => we upload it
+  public void testSyncFiles_SmallCsvNotOnGcs_UploadsItButNoJob() throws Exception {
+    // small.csv not on GCS => we upload it
     // But no job because there's no large file mismatch
     clientUnderTest.syncFiles();
 
     // check that small file is in "filesToUpload"
     List<Path> uploadFiles = getPrivateList(clientUnderTest, "filesToUpload");
-    assertTrue("small.txt should be in upload list", uploadFiles.contains(smallFile.toPath()));
+    assertTrue("small.csv should be in upload list", uploadFiles.contains(smallCsvFile.toPath()));
 
-    verify(mockGcsStorage, atLeastOnce()).uploadFile(eq(smallFile.toPath()), any());
+    verify(mockGcsStorage, atLeastOnce()).uploadFile(eq(smallCsvFile.toPath()), any());
 
     // No Cloud Run job triggered
     verify(mockJobsClient, never()).createJobAsync(any(CreateJobRequest.class));
@@ -199,12 +203,26 @@ public class GcsyncClientTest {
     verify(mockJobsClient, never()).deleteJobAsync(any(JobName.class));
   }
 
+  @Test
+  public void testSyncFiles_OtherFileIgnored() throws Exception {
+    clientUnderTest.syncFiles();
+
+    List<Path> uploadFiles = getPrivateList(clientUnderTest, "filesToUpload");
+    assertFalse("other.txt should NOT be in upload list", uploadFiles.contains(otherFile.toPath()));
+
+    List<Path> rsyncFiles = getPrivateList(clientUnderTest, "filesToRsync");
+    assertFalse("other.txt should NOT be in rsync list", rsyncFiles.contains(otherFile.toPath()));
+
+    verify(mockGcsStorage, never()).uploadFile(eq(otherFile.toPath()), any());
+    verify(mockJobsClient, never()).createJobAsync(any(CreateJobRequest.class));
+  }
+
   // ----------------------------------------------------------------------------------
   // Helper to reflect into the private list fields (filesToRsync, filesToUpload)
   @SuppressWarnings("unchecked")
-  private static List<Path> getPrivateList(GcsyncClient client, String fieldName) {
+  private static List<Path> getPrivateList(DTSRsyncClient client, String fieldName) {
     try {
-      java.lang.reflect.Field field = GcsyncClient.class.getDeclaredField(fieldName);
+      java.lang.reflect.Field field = DTSRsyncClient.class.getDeclaredField(fieldName);
       field.setAccessible(true);
       return (List<Path>) field.get(client);
     } catch (Exception e) {
