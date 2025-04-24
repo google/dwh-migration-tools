@@ -129,12 +129,12 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     }
 
     private List<ApiYARNApplicationDTO> toDTOs(ArrayNode applicationsArray) {
-      List<ApiYARNApplicationDTO> yarnApplicationDTOS = new ArrayList<>();
+      List<ApiYARNApplicationDTO> yarnApplicationDTOs = new ArrayList<>();
       for (JsonNode application : applicationsArray) {
-        yarnApplicationDTOS.add(new ApiYARNApplicationDTO(application));
+        yarnApplicationDTOs.add(new ApiYARNApplicationDTO(application));
       }
 
-      return yarnApplicationDTOS;
+      return yarnApplicationDTOs;
     }
 
     private URI buildNextYARNApplicationPageURI(String clusterName, @Nullable String appType) {
