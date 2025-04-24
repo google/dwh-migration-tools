@@ -48,10 +48,21 @@ public class ApiYARNApplicationDTOTest {
   }
 
   @Test
-  public void nullJson() {
+  public void nullJsonFieldHandled() {
     ApiYARNApplicationDTO dto = new ApiYARNApplicationDTO(null);
 
     assertNull("ApplicationId must be null for null json", dto.getApplicationId());
+  }
+
+  @Test
+  public void jsonSerialization() throws Exception {
+    JsonNode yarnApp = objectMapper.readTree("{ \"prop\": \"val\"}");
+    ApiYARNApplicationDTO dto = new ApiYARNApplicationDTO(yarnApp);
+
+    JsonNode outputJsonl = objectMapper.convertValue(dto, JsonNode.class);
+
+    // json filed apiYarnApplication is expected on server side
+    assertEquals(yarnApp, outputJsonl.at("/apiYarnApplication"));
   }
 
   private String readString(String name) throws IOException, URISyntaxException {
