@@ -38,18 +38,18 @@ public class ApiYARNApplicationDTO {
    * href="https://archive.cloudera.com/cm7/7.0.3/generic/jar/cm_api/apidocs/json_ApiYarnApplication.html">json</a>.
    * JsonNode used to support schema evaluation.
    */
-  private final JsonNode apiYARNApplication;
+  private final JsonNode apiYarnApplication;
 
-  public ApiYARNApplicationDTO(JsonNode apiYARNApplication) {
-    this.apiYARNApplication = apiYARNApplication;
+  public ApiYARNApplicationDTO(JsonNode apiYarnApplication) {
+    this.apiYarnApplication = apiYarnApplication;
   }
 
   @JsonIgnore
   public String getApplicationId() {
-    if (apiYARNApplication == null) {
+    if (apiYarnApplication == null) {
       return null;
     }
-    String applicationId = apiYARNApplication.at("/applicationId").asText();
+    String applicationId = apiYarnApplication.at("/applicationId").asText();
     return StringUtils.hasText(applicationId) ? applicationId : null;
   }
 
@@ -61,7 +61,7 @@ public class ApiYARNApplicationDTO {
     this.clusterName = clusterName;
   }
 
-  public JsonNode getApiYARNApplication() {
-    return apiYARNApplication;
+  public JsonNode getApiYarnApplication() {
+    return apiYarnApplication;
   }
 }
