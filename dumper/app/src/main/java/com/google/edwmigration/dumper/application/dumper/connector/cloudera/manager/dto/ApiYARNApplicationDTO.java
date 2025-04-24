@@ -38,7 +38,7 @@ public class ApiYARNApplicationDTO {
    * href="https://archive.cloudera.com/cm7/7.0.3/generic/jar/cm_api/apidocs/json_ApiYarnApplication.html">json</a>.
    * JsonNode used to support schema evaluation.
    */
-  private JsonNode apiYARNApplication;
+  private final JsonNode apiYARNApplication;
 
   public ApiYARNApplicationDTO(JsonNode apiYARNApplication) {
     this.apiYARNApplication = apiYARNApplication;
@@ -63,9 +63,5 @@ public class ApiYARNApplicationDTO {
 
   public JsonNode getApiYARNApplication() {
     return apiYARNApplication;
-  }
-
-  public void setApiYARNApplication(JsonNode apiYARNApplication) {
-    this.apiYARNApplication = apiYARNApplication;
   }
 }
