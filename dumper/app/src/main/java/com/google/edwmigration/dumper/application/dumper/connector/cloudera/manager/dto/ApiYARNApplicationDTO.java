@@ -27,6 +27,7 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiYARNApplicationDTO {
+
   @JsonProperty(required = true)
   private String clusterName;
 
@@ -62,6 +63,89 @@ public class ApiYARNApplicationDTO {
 
   @JsonProperty(required = true)
   private Map<String, String> attributes;
+
+  private double containerUsedMemorySeconds;
+  private double containerUsedMemoryMax;
+  private double containerUsedCpuSeconds;
+  private double containerUsedVcoreSeconds;
+  private double containerAllocatedMemorySeconds;
+  private double containerAllocatedVcoreSeconds;
+
+  private long allocatedMB;
+  private long allocatedVCores;
+  private long runningContainers;
+
+  public long getAllocatedMB() {
+    return allocatedMB;
+  }
+
+  public void setAllocatedMB(long allocatedMB) {
+    this.allocatedMB = allocatedMB;
+  }
+
+  public long getAllocatedVCores() {
+    return allocatedVCores;
+  }
+
+  public void setAllocatedVCores(long allocatedVCores) {
+    this.allocatedVCores = allocatedVCores;
+  }
+
+  public long getRunningContainers() {
+    return runningContainers;
+  }
+
+  public void setRunningContainers(long runningContainers) {
+    this.runningContainers = runningContainers;
+  }
+
+  public double getContainerUsedMemorySeconds() {
+    return containerUsedMemorySeconds;
+  }
+
+  public void setContainerUsedMemorySeconds(double containerUsedMemorySeconds) {
+    this.containerUsedMemorySeconds = containerUsedMemorySeconds;
+  }
+
+  public double getContainerUsedMemoryMax() {
+    return containerUsedMemoryMax;
+  }
+
+  public void setContainerUsedMemoryMax(double containerUsedMemoryMax) {
+    this.containerUsedMemoryMax = containerUsedMemoryMax;
+  }
+
+  public double getContainerUsedCpuSeconds() {
+    return containerUsedCpuSeconds;
+  }
+
+  public void setContainerUsedCpuSeconds(double containerUsedCpuSeconds) {
+    this.containerUsedCpuSeconds = containerUsedCpuSeconds;
+  }
+
+  public double getContainerUsedVcoreSeconds() {
+    return containerUsedVcoreSeconds;
+  }
+
+  public void setContainerUsedVcoreSeconds(double containerUsedVcoreSeconds) {
+    this.containerUsedVcoreSeconds = containerUsedVcoreSeconds;
+  }
+
+  public double getContainerAllocatedMemorySeconds() {
+    return containerAllocatedMemorySeconds;
+  }
+
+  public void setContainerAllocatedMemorySeconds(double containerAllocatedMemorySeconds) {
+    this.containerAllocatedMemorySeconds = containerAllocatedMemorySeconds;
+  }
+
+  public double getContainerAllocatedVcoreSeconds() {
+    return containerAllocatedVcoreSeconds;
+  }
+
+  public void setContainerAllocatedVcoreSeconds(double containerAllocatedVcoreSeconds) {
+    this.containerAllocatedVcoreSeconds = containerAllocatedVcoreSeconds;
+  }
 
   public String getClusterName() {
     return clusterName;
