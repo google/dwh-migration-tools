@@ -16,9 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationListDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
 import java.net.URI;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
@@ -111,12 +113,28 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
                   "YARN application API returned HTTP status %d. Message: %s",
                   statusCode, readFromStream(resp.getEntity().getContent())));
         }
-        ApiYARNApplicationListDTO yarnAppListDto =
-            parseJsonStreamToObject(resp.getEntity().getContent(), ApiYARNApplicationListDTO.class);
-        return yarnAppListDto.getApplications();
+
+        JsonNode applicationsResponse = readJsonTree(resp.getEntity().getContent());
+        JsonNode applicationsArray = applicationsResponse.at("/applications");
+        if (!applicationsArray.isArray()) {
+          throw new IllegalArgumentException(
+              "Unexpected JSON response without `applications`. "
+                  + "Response: "
+                  + applicationsResponse);
+        }
+        return toDTOs((ArrayNode) applicationsArray);
       } catch (IOException ex) {
         throw new ClouderaConnectorException(ex.getMessage(), ex);
       }
+    }
+
+    private List<ApiYARNApplicationDTO> toDTOs(ArrayNode applicationsArray) {
+      List<ApiYARNApplicationDTO> yarnApplicationDTOs = new ArrayList<>();
+      for (JsonNode application : applicationsArray) {
+        yarnApplicationDTOs.add(new ApiYARNApplicationDTO(application));
+      }
+
+      return yarnApplicationDTOs;
     }
 
     private URI buildNextYARNApplicationPageURI(String clusterName, @Nullable String appType) {

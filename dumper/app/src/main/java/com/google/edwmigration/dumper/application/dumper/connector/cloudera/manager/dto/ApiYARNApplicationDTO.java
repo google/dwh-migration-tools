@@ -16,146 +16,52 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.util.StringUtils;
 
 /**
  * DTO class for the official Cloudera API <a
  * href="https://archive.cloudera.com/cm7/7.0.3/generic/jar/cm_api/apidocs/json_ApiYarnApplication.html">json</a>
+ * with additional information about cluster.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiYARNApplicationDTO {
+
   @JsonProperty(required = true)
   private String clusterName;
 
-  @JsonProperty(required = true)
-  private String applicationId;
+  /**
+   * DTO class for the official Cloudera API <a
+   * href="https://archive.cloudera.com/cm7/7.0.3/generic/jar/cm_api/apidocs/json_ApiYarnApplication.html">json</a>.
+   * JsonNode used to support schema evaluation.
+   */
+  private final JsonNode apiYarnApplication;
 
-  @JsonProperty(required = true)
-  private String name;
+  public ApiYARNApplicationDTO(JsonNode apiYarnApplication) {
+    this.apiYarnApplication = apiYarnApplication;
+  }
 
-  @JsonProperty(required = true)
-  private String state;
-
-  @JsonProperty(required = true)
-  private String startTime;
-
-  @JsonProperty(required = true)
-  private String endTime;
-
-  @JsonProperty(required = true)
-  private String user;
-
-  @JsonProperty(required = true)
-  private String pool;
-
-  @JsonProperty(required = true)
-  private List<String> applicationTags;
-
-  @JsonProperty(required = true)
-  private long allocatedMemorySeconds;
-
-  @JsonProperty(required = true)
-  private long allocatedVcoreSeconds;
-
-  @JsonProperty(required = true)
-  private Map<String, String> attributes;
+  @JsonIgnore
+  public String getApplicationId() {
+    if (apiYarnApplication == null) {
+      return null;
+    }
+    String applicationId = apiYarnApplication.at("/applicationId").asText();
+    return StringUtils.hasText(applicationId) ? applicationId : null;
+  }
 
   public String getClusterName() {
     return clusterName;
-  }
-
-  public String getApplicationId() {
-    return applicationId;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public String getState() {
-    return state;
-  }
-
-  public String getStartTime() {
-    return startTime;
-  }
-
-  public String getEndTime() {
-    return endTime;
-  }
-
-  public String getUser() {
-    return user;
-  }
-
-  public String getPool() {
-    return pool;
-  }
-
-  public List<String> getApplicationTags() {
-    return applicationTags;
-  }
-
-  public long getAllocatedMemorySeconds() {
-    return allocatedMemorySeconds;
-  }
-
-  public long getAllocatedVcoreSeconds() {
-    return allocatedVcoreSeconds;
-  }
-
-  public Map<String, String> getAttributes() {
-    return attributes;
   }
 
   public void setClusterName(String clusterName) {
     this.clusterName = clusterName;
   }
 
-  public void setApplicationId(String applicationId) {
-    this.applicationId = applicationId;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public void setState(String state) {
-    this.state = state;
-  }
-
-  public void setStartTime(String startTime) {
-    this.startTime = startTime;
-  }
-
-  public void setEndTime(String endTime) {
-    this.endTime = endTime;
-  }
-
-  public void setUser(String user) {
-    this.user = user;
-  }
-
-  public void setPool(String pool) {
-    this.pool = pool;
-  }
-
-  public void setApplicationTags(List<String> applicationTags) {
-    this.applicationTags = applicationTags;
-  }
-
-  public void setAllocatedMemorySeconds(long allocatedMemorySeconds) {
-    this.allocatedMemorySeconds = allocatedMemorySeconds;
-  }
-
-  public void setAllocatedVcoreSeconds(long allocatedVcoreSeconds) {
-    this.allocatedVcoreSeconds = allocatedVcoreSeconds;
-  }
-
-  public void setAttributes(Map<String, String> attributes) {
-    this.attributes = attributes;
+  public JsonNode getApiYarnApplication() {
+    return apiYarnApplication;
   }
 }

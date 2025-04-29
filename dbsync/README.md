@@ -27,7 +27,13 @@ this [page](https://protobuf.dev/installation/) on how to install it.
 
 ### Run the Gcsync Client ###
 
-    java -jar gcsync-all.jar --target_bucket <target_bucket> --tmp_bucket <tmp_bucket> --project <project_id> --location <location> --source_directory <source_directory> --task_timeout <task_time_out>
+After you successfully compile the source, you will find a fat jar named as gcsync-all.jar under
+
+    dbsync/gcsync/build/libs
+
+You can then run the tool with the following command:
+
+    java -jar gcsync-all.jar --target_bucket <target_bucket> --tmp_bucket <tmp_bucket> --project <project_id> --location <location> --source_directory <source_directory> --task_timeout <task_time_out> –num_concurrent_tasks <num_concurrent_tasks>
 
 - tmp_bucket: A GCS bucket used to store the jar and staging files such as the
   checksum file
@@ -35,6 +41,13 @@ this [page](https://protobuf.dev/installation/) on how to install it.
 - project: ID of the GCP project that the tool is run against
 - location: The location the GCP Cloud run jobs should run at. For
   instance `us-central1`
-- source_directory: Optional, the directory the tools scans for files to
-  upload/rsync
-- task_timeout: The maximum timeout 
+- source_directory: Optional. The directory the tools scans against for
+  files to upload/rsync. It will scan the directory the tool is running at
+  if not specified.
+- task_timeout: Optional. The maximum timeout for the cloud_run task. For
+  instance, `7200s`. The default timeout would be 1hr if not specified
+- num_concurrent_tasks: Optional. If specified, the tool will distribute files
+  into `n` buckets and start `n` cloud run tasks to rsync the files. This could
+  improve the total duration of the process when there are multiple files to rsync.
+  Uploading is still done in a single thread given that parallelism would likely not
+  help when network bandwidth is the bottleneck

@@ -120,8 +120,13 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     Properties prop = new Properties();
 
     prop.put("user", arguments.getUser());
-    prop.put("password", arguments.getPasswordOrPrompt());
-    prop.put("authenticator", "username_password_mfa");
+    if (arguments.isPasswordFlagProvided()) {
+      prop.put("password", arguments.getPasswordOrPrompt());
+    }
+    // Set default authenticator only if url is not provided to allow user overriding it
+    if (arguments.getUri() == null) {
+      prop.put("authenticator", "username_password_mfa");
+    }
     return new SimpleDriverDataSource(driver, url, prop);
   }
 
