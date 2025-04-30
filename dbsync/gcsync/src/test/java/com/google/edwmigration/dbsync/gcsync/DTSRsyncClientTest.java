@@ -98,7 +98,7 @@ public class DTSRsyncClientTest {
             mockJobsClient,
             mockGcsStorage,
             mockInstructionGenerator // The key new argument
-        );
+            );
 
     // Stub GcsStorage calls:
     //    - "small.csv" does not exist on GCS => returns null => triggers upload

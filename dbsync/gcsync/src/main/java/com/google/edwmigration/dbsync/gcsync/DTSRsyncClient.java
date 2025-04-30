@@ -131,7 +131,7 @@ public class DTSRsyncClient {
       logger.log(
           Level.SEVERE,
           "Exception occurred while scanning directory: {0}. Exception: {1}",
-          new Object[]{directory.toString(), e.toString()});
+          new Object[] {directory.toString(), e.toString()});
       throw e;
     }
   }
@@ -294,7 +294,8 @@ public class DTSRsyncClient {
           // The checksum file has an MD5 header that needs to be skipped
           Util.skipMd5Header(inputStream);
 
-          List<com.google.edwmigration.dbsync.proto.Checksum> checksums = getChecksumsFromFile(inputStream);
+          List<com.google.edwmigration.dbsync.proto.Checksum> checksums =
+              getChecksumsFromFile(inputStream);
           ByteSource fileInput = com.google.common.io.Files.asByteSource(file.toFile());
 
           Util.writeMd5Header(instructionFileOutputStream, sourceFileMd5);
@@ -329,10 +330,13 @@ public class DTSRsyncClient {
     }
   }
 
-  private static List<com.google.edwmigration.dbsync.proto.Checksum> getChecksumsFromFile(InputStream inputStream) throws IOException {
+  private static List<com.google.edwmigration.dbsync.proto.Checksum> getChecksumsFromFile(
+      InputStream inputStream) throws IOException {
     List<com.google.edwmigration.dbsync.proto.Checksum> checksums = new ArrayList<>();
     com.google.edwmigration.dbsync.proto.Checksum checksum;
-    while ((checksum = com.google.edwmigration.dbsync.proto.Checksum.parseDelimitedFrom(inputStream)) != null) {
+    while ((checksum =
+            com.google.edwmigration.dbsync.proto.Checksum.parseDelimitedFrom(inputStream))
+        != null) {
       checksums.add(checksum);
     }
     inputStream.close();
