@@ -65,14 +65,18 @@ public class GcsyncTask implements Callable<Void> {
 
   private final String filesToRsyncFileName;
 
-
-  /**
-   * A task that executes cloud run task to rsync the files and then upload the files that
-   */
-  public GcsyncTask(List<Path> filesToRsync, String targetBucket,
-      String tmpBucket, String project, String location, Duration cloudRunTaskTimeout,
-      GcsStorage gcsStorage, JobsClient jobsClient,
-      InstructionGenerator instructionGenerator, Map<Path, String> fileToMd5) {
+  /** A task that executes cloud run task to rsync the files and then upload the files that */
+  public GcsyncTask(
+      List<Path> filesToRsync,
+      String targetBucket,
+      String tmpBucket,
+      String project,
+      String location,
+      Duration cloudRunTaskTimeout,
+      GcsStorage gcsStorage,
+      JobsClient jobsClient,
+      InstructionGenerator instructionGenerator,
+      Map<Path, String> fileToMd5) {
     this.filesToRsync = filesToRsync;
     this.targetBucket = targetBucket;
     this.tmpBucket = tmpBucket;
@@ -110,8 +114,7 @@ public class GcsyncTask implements Callable<Void> {
   }
 
   private void uploadFilesToRsyncList() throws URISyntaxException, IOException {
-    ByteSink byteSink =
-        gcsStorage.newByteSink(new URI(tmpBucket).resolve(filesToRsyncFileName));
+    ByteSink byteSink = gcsStorage.newByteSink(new URI(tmpBucket).resolve(filesToRsyncFileName));
 
     try (BufferedWriter writer =
         new BufferedWriter(new OutputStreamWriter(byteSink.openBufferedStream()))) {
@@ -218,8 +221,10 @@ public class GcsyncTask implements Callable<Void> {
                                 Container.newBuilder()
                                     .setImage("docker.io/getbamba/google-cloud-sdk-java:latest")
                                     .setResources(
-                                        ResourceRequirements.newBuilder().putLimits("memory", "4Gi")
-                                            .putLimits("cpu", "2").build())
+                                        ResourceRequirements.newBuilder()
+                                            .putLimits("memory", "4Gi")
+                                            .putLimits("cpu", "2")
+                                            .build())
                                     .addCommand("/bin/sh")
                                     .addAllArgs(Arrays.asList("-c", command))
                                     .build())

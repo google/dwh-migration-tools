@@ -76,8 +76,7 @@ public class GcsyncClient {
     fileToMd5 = new HashMap<>();
   }
 
-  public void syncFiles()
-      throws IOException, URISyntaxException, InterruptedException {
+  public void syncFiles() throws IOException, URISyntaxException, InterruptedException {
     // Scan the files in the path the program is running, get a list of files to rsync or upload,
     // and upload that list to gcs.
     scanFiles();
@@ -95,14 +94,23 @@ public class GcsyncClient {
   }
 
   private List<GcsyncTask> createTasks() throws IOException {
-    List<List<Path>> filesToRsyncBuckets = distributeFileIntoBuckets(filesToRsync,
-        numOfConcurrentTasks);
+    List<List<Path>> filesToRsyncBuckets =
+        distributeFileIntoBuckets(filesToRsync, numOfConcurrentTasks);
     List<GcsyncTask> tasks = new ArrayList<>();
 
     for (List<Path> filesToRsync : filesToRsyncBuckets) {
-      tasks.add(new GcsyncTask(filesToRsync, targetBucket, tmpBucket, project, location,
-          cloudRunTaskTimeout, gcsStorage, JobsClient.create(jobsSettings(cloudRunTaskTimeout)),
-          new InstructionGenerator(Constants.BLOCK_SIZE), new HashMap<>(fileToMd5)));
+      tasks.add(
+          new GcsyncTask(
+              filesToRsync,
+              targetBucket,
+              tmpBucket,
+              project,
+              location,
+              cloudRunTaskTimeout,
+              gcsStorage,
+              JobsClient.create(jobsSettings(cloudRunTaskTimeout)),
+              new InstructionGenerator(Constants.BLOCK_SIZE),
+              new HashMap<>(fileToMd5)));
     }
 
     return tasks;
@@ -129,9 +137,7 @@ public class GcsyncClient {
     return new ArrayList<>(bucketsByTotalSize);
   }
 
-  /**
-   * A comparator that sorts a list of files by its total size.
-   */
+  /** A comparator that sorts a list of files by its total size. */
   private static class FileListComparator implements Comparator<List<Path>> {
 
     @Override
@@ -152,7 +158,6 @@ public class GcsyncClient {
       }
     }
   }
-
 
   private void scanFiles() throws IOException, URISyntaxException {
     Path currentDirectory = Paths.get(sourceDirectory);
@@ -200,7 +205,6 @@ public class GcsyncClient {
       gcsStorage.uploadFile(sourceJar, new URI(tmpBucket).resolve(Constants.JAR_FILE_NAME));
     }
   }
-
 
   private static String generateMd5(Path file) throws IOException {
     return Base64.getEncoder()
