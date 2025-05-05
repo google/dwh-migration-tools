@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTran
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,8 +68,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     super(targetPath);
   }
 
-  public AbstractJdbcTask(String targetPath, TargetInitialization targetInitialization) {
-    super(targetPath, targetInitialization);
+  public AbstractJdbcTask(@Nonnull String targetPath, @Nonnull TaskOptions options) {
+    super(targetPath, options);
   }
 
   @CheckForNull
@@ -110,7 +111,16 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     } else {
       format = format.withHeader(rs);
     }
-    return format;
+
+    WriteMode writeMode = options.writeMode();
+    switch (writeMode) {
+      case CREATE_TRUNCATE:
+        return format;
+      case APPEND_EXISTING:
+        return format.withSkipHeaderRecord(); // Header record already exists in case of append.
+      default:
+        throw new UnsupportedOperationException("Unsupported write mode: " + writeMode);
+    }
   }
 
   @Nonnull

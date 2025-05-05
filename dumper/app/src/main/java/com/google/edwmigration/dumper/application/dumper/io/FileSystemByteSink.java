@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import javax.annotation.Nonnull;
 import net.jcip.annotations.ThreadSafe;
 
@@ -30,14 +31,25 @@ import net.jcip.annotations.ThreadSafe;
 public class FileSystemByteSink extends ByteSink {
 
   private final Path path;
+  private final OutputHandle.WriteMode writeMode;
 
-  public FileSystemByteSink(@Nonnull Path path) {
+  public FileSystemByteSink(@Nonnull Path path, @Nonnull OutputHandle.WriteMode writeMode) {
     this.path = Preconditions.checkNotNull(path, "Path was null.");
+    this.writeMode = writeMode;
   }
 
   @Override
   public OutputStream openStream() throws IOException {
-    return Files.newOutputStream(path);
+    switch (writeMode) {
+      case CREATE_TRUNCATE:
+        // Default options are CREATE, TRUNCATE_EXISTING, WRITE
+        return Files.newOutputStream(path);
+      case APPEND_EXISTING:
+        // Implicitly includes WRITE
+        return Files.newOutputStream(path, StandardOpenOption.APPEND);
+      default:
+        throw new UnsupportedOperationException("Unsupported write mode: " + writeMode);
+    }
   }
 
   @Override

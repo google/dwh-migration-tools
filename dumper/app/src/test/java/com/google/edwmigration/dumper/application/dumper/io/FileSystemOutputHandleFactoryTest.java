@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class FileSystemOutputHandleFactoryTest {
     {
       OutputHandle handle = factory.newOutputFileHandle("direct");
       assertFalse("direct exists before write", handle.exists());
-      handle.asByteSink().write(Ints.toByteArray(1234));
+      handle.asByteSink(WriteMode.CREATE_TRUNCATE).write(Ints.toByteArray(1234));
       assertTrue("direct does not exist after commit", handle.exists());
     }
   }

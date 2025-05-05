@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import java.io.File;
@@ -120,5 +122,29 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
     String taskDescription = task.toString();
 
     assertEquals("Write /dir1/dir2/sample.txt from\n        SELECT 123;", taskDescription);
+  }
+
+  @Test
+  public void append_success() throws Exception {
+    String firstSql = "select null, 14, c FROM foo";
+    String secondSql = "select null, 15, b FROM foo";
+
+    MemoryByteSink sink = new MemoryByteSink();
+    final MutableObject<CSVFormat> formatHolder = new MutableObject<>();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      AbstractTask<Summary> first =
+          new JdbcSelectTask("(memory)", firstSql).withHeaderClass(Header.class);
+      AbstractTask<Summary> second =
+          new JdbcSelectTask(
+                  "(memory)",
+                  secondSql,
+                  TaskCategory.REQUIRED,
+                  TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING))
+              .withHeaderClass(Header.class);
+      first.doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+      second.doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+    }
+    String actualOutput = sink.openStream().toString();
+    assertEquals("Foo,Bar,Baz\n,14,3\n,15,2\n", actualOutput);
   }
 }
