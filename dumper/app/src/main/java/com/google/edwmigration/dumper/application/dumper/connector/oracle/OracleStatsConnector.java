@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.time.Duration;
 import java.util.List;
+import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @AutoService(Connector.class)
@@ -67,5 +68,11 @@ public class OracleStatsConnector extends AbstractOracleConnector {
       int queriedDays = arguments.getQueryLogDays();
       return ofDays(queriedDays);
     }
+  }
+
+  @Override
+  @Nonnull
+  public AssessmentSupport assessmentSupport() {
+    return AssessmentSupport.REQUIRED;
   }
 }
