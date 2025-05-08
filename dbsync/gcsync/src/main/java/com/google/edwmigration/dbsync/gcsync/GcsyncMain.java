@@ -18,8 +18,8 @@ public class GcsyncMain {
     Duration cloudRunTaskTimeout =
         Durations.parse(arguments.getOptions().valueOf(arguments.cloudRunTaskTimeoutSpec));
     int numConCurrentTask = arguments.getOptions().valueOf(arguments.numConcurrentTaskSpec);
-    Preconditions.checkArgument(numConCurrentTask > 0,
-        "--num_concurrent_tasks must be a positive integer");
+    Preconditions.checkArgument(
+        numConCurrentTask > 0, "--num_concurrent_tasks must be a positive integer");
 
     GcsyncClient gcsyncClient =
         new GcsyncClient(
@@ -37,7 +37,6 @@ public class GcsyncMain {
       Logger.getLogger("gcsync").log(Level.INFO, e.getMessage(), e);
     }
   }
-
 
   private static class Arguments extends DefaultArguments {
 

@@ -30,9 +30,7 @@ public class GenerateCheckSumMain {
 
     ChecksumGenerator checksumGenerator = new ChecksumGenerator(Constants.BLOCK_SIZE);
     List<String> filesToGenerateCheckSum =
-        getListOfFiles(
-            gcsStorage.newByteSource(
-                new URI(tmpBucket).resolve(filesToRsyncFileName)));
+        getListOfFiles(gcsStorage.newByteSource(new URI(tmpBucket).resolve(filesToRsyncFileName)));
 
     for (String file : filesToGenerateCheckSum) {
       URI targetFile = new URI(targetBucket).resolve(file);

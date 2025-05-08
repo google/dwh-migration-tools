@@ -34,9 +34,7 @@ public class ReconstructFilesMain {
     String filesToRsyncFileName = arguments.getOptions().valueOf(arguments.filesToRsyncFileName);
 
     List<String> filesToReconstruct =
-        getListOfFiles(
-            gcsStorage.newByteSource(
-                new URI(tmpBucket).resolve(filesToRsyncFileName)));
+        getListOfFiles(gcsStorage.newByteSource(new URI(tmpBucket).resolve(filesToRsyncFileName)));
 
     for (String file : filesToReconstruct) {
 
