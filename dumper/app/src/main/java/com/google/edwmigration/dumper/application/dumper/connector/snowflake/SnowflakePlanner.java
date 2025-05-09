@@ -233,7 +233,7 @@ final class SnowflakePlanner {
             "deleted");
     String view = "SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS";
     String predicate =
-        "deleted IS NULL" + " AND " + "schema_dropped IS NULL" + " AND " + "table_dropped IS NULL";
+        "deleted IS FALSE" + " AND " + "schema_dropped IS NULL" + " AND " + "table_dropped IS NULL";
     String query = String.format("SELECT %s FROM %s WHERE %s", selectList, view, predicate);
     ImmutableList<String> header =
         ImmutableList.of(
