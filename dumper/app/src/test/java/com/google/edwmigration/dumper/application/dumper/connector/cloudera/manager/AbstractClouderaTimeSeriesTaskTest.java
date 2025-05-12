@@ -38,7 +38,8 @@ public class AbstractClouderaTimeSeriesTaskTest {
         assertThrows(
             NullPointerException.class,
             () ->
-                new AbstractClouderaTimeSeriesTask("some path", dateFromPast(5), null, null, null) {
+                new AbstractClouderaTimeSeriesTask(
+                    "some path", dateFromPast(5), dateFromPast(0), null, null) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,
@@ -48,7 +49,7 @@ public class AbstractClouderaTimeSeriesTaskTest {
                 });
 
     // THEN: There is a relevant exception has been raised
-    assertEquals("TimeSeriesAggregation must not be null.", exception.getMessage());
+    assertEquals("TimeSeriesAggregation must be not null.", exception.getMessage());
   }
 
   @Test
@@ -59,7 +60,11 @@ public class AbstractClouderaTimeSeriesTaskTest {
             NullPointerException.class,
             () ->
                 new AbstractClouderaTimeSeriesTask(
-                    "some path", dateFromPast(5), null, TimeSeriesAggregation.DAILY, null) {
+                    "some path",
+                    dateFromPast(5),
+                    dateFromPast(0),
+                    TimeSeriesAggregation.DAILY,
+                    null) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,
@@ -69,7 +74,7 @@ public class AbstractClouderaTimeSeriesTaskTest {
                 });
 
     // THEN: There is a relevant exception has been raised
-    assertEquals("TaskCategory must not be null.", exception.getMessage());
+    assertEquals("TaskCategory must be not null.", exception.getMessage());
   }
 
   private ZonedDateTime dateFromPast(int days) {

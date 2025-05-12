@@ -72,7 +72,7 @@ public class ClouderaClusterCPUChartTaskTest {
       new ClouderaClusterCPUChartTask(
           "output-file.jsonl",
           dateFromPast(30),
-          null,
+          dateFromPast(0),
           TimeSeriesAggregation.HOURLY,
           TaskCategory.REQUIRED);
   private ClouderaManagerHandle handle;
