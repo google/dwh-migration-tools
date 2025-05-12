@@ -24,8 +24,6 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -43,13 +41,15 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
   private final TaskCategory taskCategory;
 
   public AbstractClouderaYarnApplicationTask(
-      String fileName, int lastDaysToInclude, TaskCategory taskCategory) {
-    super(String.format("%s-%dd.jsonl", fileName, lastDaysToInclude));
-    Preconditions.checkArgument(
-        lastDaysToInclude >= 1,
-        String.format("Amount of days must be a positive number. Got %d.", lastDaysToInclude));
-
-    fromDate = ZonedDateTime.of(LocalDateTime.now().minusDays(lastDaysToInclude), ZoneId.of("UTC"));
+      @Nonnull String targetPath,
+      @Nonnull ZonedDateTime startDate,
+      @Nonnull ZonedDateTime endDate,
+      @Nonnull TaskCategory taskCategory) {
+    super(targetPath);
+    Preconditions.checkNotNull(startDate, "Start date must be not null.");
+    Preconditions.checkNotNull(endDate, "End date must be not null.");
+    Preconditions.checkNotNull(taskCategory, "Task category must be not null.");
+    fromDate = startDate;
     this.taskCategory = taskCategory;
   }
 
@@ -67,10 +67,6 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     private final int limit;
     private int offset;
     private final String fromAppCreationDate;
-
-    public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle) {
-      this(handle, 1000);
-    }
 
     public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle, int limit) {
       this.apiURI = handle.getApiURI();

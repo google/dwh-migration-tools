@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.net.URI;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.annotation.Nonnull;
@@ -33,23 +31,27 @@ import org.apache.http.impl.client.CloseableHttpClient;
 abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTask {
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-  private final int includedLastDays;
+  private final ZonedDateTime startDate;
+  // private final ZonedDateTime endDate;
   private final TimeSeriesAggregation tsAggregation;
   private final TaskCategory taskCategory;
 
   public AbstractClouderaTimeSeriesTask(
-      String targetPath,
-      int includedLastDays,
-      TimeSeriesAggregation tsAggregation,
-      TaskCategory taskCategory) {
+      @Nonnull String targetPath,
+      @Nonnull ZonedDateTime startDate,
+      @Nonnull ZonedDateTime endDate,
+      @Nonnull TimeSeriesAggregation tsAggregation,
+      @Nonnull TaskCategory taskCategory) {
     super(targetPath);
-    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation must not be null.");
-    Preconditions.checkArgument(
-        includedLastDays >= 1,
-        "The chart has to include at least one day. Received " + includedLastDays + " days.");
-    Preconditions.checkNotNull(taskCategory, "TaskCategory must not be null.");
+    Preconditions.checkNotNull(targetPath, "Target path must be not null.");
+    Preconditions.checkState(!targetPath.isEmpty(), "Target file path must be not empty.");
+    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation must be not null.");
+    Preconditions.checkNotNull(taskCategory, "TaskCategory must be not null.");
+    Preconditions.checkNotNull(startDate, "Start date must be not null.");
+    Preconditions.checkNotNull(endDate, "End date must be not null.");
 
-    this.includedLastDays = includedLastDays;
+    this.startDate = startDate;
+    // this.endDate = endDate;
     this.tsAggregation = tsAggregation;
     this.taskCategory = taskCategory;
   }
@@ -63,13 +65,12 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
   protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query)
       throws Exception {
     String timeSeriesUrl = handle.getApiURI().toString() + "/timeseries";
-    String fromDate = buildISODateTime(includedLastDays);
 
     URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
     uriBuilder.addParameter("query", query);
     uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
     uriBuilder.addParameter("mustUseDesiredRollup", "true");
-    uriBuilder.addParameter("from", fromDate);
+    uriBuilder.addParameter("from", startDate.format(isoDateTimeFormatter));
     URI tsURI = uriBuilder.build();
 
     CloseableHttpClient httpClient = handle.getHttpClient();
@@ -86,10 +87,42 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     return chartInJson;
   }
 
-  private String buildISODateTime(int deltaInDays) {
-    ZonedDateTime dateTime =
-        ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
-    return dateTime.format(isoDateTimeFormatter);
+  static class Builder {
+    String outputFileName;
+    ZonedDateTime startDate;
+    ZonedDateTime endDate;
+    TimeSeriesAggregation tsAggregation;
+    TaskCategory taskCategory;
+
+    public AbstractClouderaTimeSeriesTask build() {
+      return new ClouderaClusterCPUChartTask(
+          outputFileName, startDate, endDate, tsAggregation, taskCategory);
+    }
+
+    public Builder setOutputFileName(String outputFileName) {
+      this.outputFileName = outputFileName;
+      return this;
+    }
+
+    public Builder setStartDate(ZonedDateTime startDate) {
+      this.startDate = startDate;
+      return this;
+    }
+
+    public Builder setEndDate(ZonedDateTime endDate) {
+      this.endDate = endDate;
+      return this;
+    }
+
+    public Builder setTsAggregation(TimeSeriesAggregation tsAggregation) {
+      this.tsAggregation = tsAggregation;
+      return this;
+    }
+
+    public Builder setTaskCategory(TaskCategory taskCategory) {
+      this.taskCategory = taskCategory;
+      return this;
+    }
   }
 
   enum TimeSeriesAggregation {

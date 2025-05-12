@@ -47,6 +47,9 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -63,7 +66,12 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaHostRAMChartTaskTest {
   private final ClouderaHostRAMChartTask task =
-      new ClouderaHostRAMChartTask(1, TimeSeriesAggregation.HOURLY, TaskCategory.REQUIRED);
+      new ClouderaHostRAMChartTask(
+          "output-file.jsonl",
+          dateFromPast(1),
+          dateFromPast(0),
+          TimeSeriesAggregation.HOURLY,
+          TaskCategory.REQUIRED);
   private ClouderaManagerHandle handle;
   private static WireMockServer server;
 
@@ -169,5 +177,10 @@ public class ClouderaHostRAMChartTaskTest {
     verify(writer, never()).write(anyString(), anyInt(), anyInt());
     verify(writer, never()).write(any(char[].class));
     verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
+  }
+
+  private ZonedDateTime dateFromPast(int days) {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return today.minusDays(days);
   }
 }

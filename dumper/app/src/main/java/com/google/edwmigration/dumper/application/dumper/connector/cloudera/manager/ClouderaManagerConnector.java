@@ -20,6 +20,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.cloude
 import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.*;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
@@ -32,9 +33,13 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.net.URI;
 import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -87,18 +92,115 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaServicesTask());
     out.add(new ClouderaHostComponentsTask());
 
-    out.add(new ClouderaClusterCPUChartTask(1, HOURLY, REQUIRED));
-    out.add(new ClouderaClusterCPUChartTask(7, DAILY, OPTIONAL));
-    out.add(new ClouderaClusterCPUChartTask(30, DAILY, OPTIONAL));
-    out.add(new ClouderaClusterCPUChartTask(90, DAILY, OPTIONAL));
+    if (arguments.getStartDate() == null) {
+      out.addAll(defaultCpuChartTasks());
+      out.addAll(defaultHostRamCharTasks());
+      out.addAll(defaultYarnTasks());
+    } else {
+      out.addAll(customDateRangeTasks(arguments.getStartDate(), arguments.getEndDate()));
+    }
+  }
 
-    out.add(new ClouderaHostRAMChartTask(1, HOURLY, REQUIRED));
-    out.add(new ClouderaHostRAMChartTask(7, DAILY, OPTIONAL));
-    out.add(new ClouderaHostRAMChartTask(30, DAILY, OPTIONAL));
-    out.add(new ClouderaHostRAMChartTask(90, DAILY, OPTIONAL));
+  private List<? extends AbstractClouderaTimeSeriesTask> defaultCpuChartTasks() {
+    ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return ImmutableList.of(
+        (new ClouderaClusterCPUChartTask.Builder())
+            .setOutputFileName("cluster-cpu-1d.jsonl")
+            .setStartDate(endDate.minusDays(1))
+            .setEndDate(endDate)
+            .setTsAggregation(HOURLY)
+            .setTaskCategory(REQUIRED)
+            .build(),
+        (new ClouderaClusterCPUChartTask.Builder())
+            .setOutputFileName("cluster-cpu-7d.jsonl")
+            .setStartDate(endDate.minusDays(7))
+            .setEndDate(endDate)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(OPTIONAL)
+            .build(),
+        (new ClouderaClusterCPUChartTask.Builder())
+            .setOutputFileName("cluster-cpu-30d.jsonl")
+            .setStartDate(endDate.minusDays(30))
+            .setEndDate(endDate)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(OPTIONAL)
+            .build(),
+        (new ClouderaClusterCPUChartTask.Builder())
+            .setOutputFileName("cluster-cpu-90d.jsonl")
+            .setStartDate(endDate.minusDays(90))
+            .setEndDate(endDate)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(OPTIONAL)
+            .build());
+  }
 
-    out.add(new ClouderaYarnApplicationsTask(90, OPTIONAL));
-    out.add(new ClouderaYarnApplicationTypeTask(90, OPTIONAL));
+  private List<? extends AbstractClouderaTimeSeriesTask> defaultHostRamCharTasks() {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return ImmutableList.of(
+        (new ClouderaHostRAMChartTask.Builder())
+            .setOutputFileName("host-ram-1d.jsonl")
+            .setStartDate(today.minusDays(1))
+            .setEndDate(today)
+            .setTsAggregation(HOURLY)
+            .setTaskCategory(REQUIRED)
+            .build(),
+        (new ClouderaHostRAMChartTask.Builder())
+            .setOutputFileName("host-ram-7d.jsonl")
+            .setStartDate(today.minusDays(7))
+            .setEndDate(today)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(OPTIONAL)
+            .build(),
+        (new ClouderaHostRAMChartTask.Builder())
+            .setOutputFileName("host-ram-30d.jsonl")
+            .setStartDate(today.minusDays(30))
+            .setEndDate(today)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(OPTIONAL)
+            .build(),
+        (new ClouderaHostRAMChartTask.Builder())
+            .setOutputFileName("host-ram-90d.jsonl")
+            .setStartDate(today.minusDays(90))
+            .setEndDate(today)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(OPTIONAL)
+            .build());
+  }
+
+  private List<? extends AbstractClouderaYarnApplicationTask> defaultYarnTasks() {
+    ZonedDateTime endDate = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    ZonedDateTime startDate = endDate.minusDays(90);
+    return ImmutableList.of(
+        new ClouderaYarnApplicationsTask(
+            "yarn-applications-90d.jsonl", startDate, endDate, OPTIONAL),
+        new ClouderaYarnApplicationTypeTask(
+            "yarn-application-types-90d.jsonl", startDate, endDate, OPTIONAL));
+  }
+
+  private List<? extends Task<?>> customDateRangeTasks(
+      ZonedDateTime startDate, @Nullable ZonedDateTime endDate) {
+    if (endDate == null) {
+      endDate = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    }
+    return ImmutableList.of(
+        (new ClouderaClusterCPUChartTask.Builder())
+            .setOutputFileName("cluster-cpu-custom.jsonl")
+            .setStartDate(startDate)
+            .setEndDate(endDate)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(REQUIRED)
+            .build(),
+        (new ClouderaHostRAMChartTask.Builder())
+            .setOutputFileName("host-ram-custom.jsonl")
+            .setStartDate(startDate)
+            .setEndDate(endDate)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(REQUIRED)
+            .build(),
+        new ClouderaYarnApplicationsTask(
+            "yarn-applications-custom.jsonl", startDate, endDate, OPTIONAL),
+        new ClouderaYarnApplicationTypeTask(
+            "yarn-application-types-custom.jsonl", startDate, endDate, OPTIONAL));
   }
 
   @Nonnull

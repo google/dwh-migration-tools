@@ -24,6 +24,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -45,8 +46,12 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
   public ClouderaClusterCPUChartTask(
-      int includedLastDays, TimeSeriesAggregation tsAggregation, TaskCategory taskCategory) {
-    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation, taskCategory);
+      String outputFileName,
+      ZonedDateTime startDate,
+      ZonedDateTime endDate,
+      TimeSeriesAggregation tsAggregation,
+      TaskCategory taskCategory) {
+    super(outputFileName, startDate, endDate, tsAggregation, taskCategory);
   }
 
   @Override
@@ -87,9 +92,5 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
       }
     }
     return cpuClusters;
-  }
-
-  private static String buildOutputFileName(int includedLastDays) {
-    return String.format("cluster-cpu-%sd.jsonl", includedLastDays);
   }
 }

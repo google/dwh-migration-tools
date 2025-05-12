@@ -39,6 +39,9 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,7 +62,8 @@ public class ClouderaYarnApplicationTaskTest {
   private static WireMockServer server;
 
   private final ClouderaYarnApplicationsTask task =
-      new ClouderaYarnApplicationsTask(30, TaskCategory.OPTIONAL);
+      new ClouderaYarnApplicationsTask(
+          "test-30.jsonl", dateFromPast(30), dateFromPast(0), TaskCategory.OPTIONAL);
   private ClouderaManagerHandle handle;
 
   @Mock private TaskRunContext context;
@@ -162,5 +166,10 @@ public class ClouderaYarnApplicationTaskTest {
                     "/api/vTest/clusters/%s/services/yarn/yarnApplications.*", clusterName)))
             .withQueryParams(queryParams)
             .willReturn(okJson(responseContent).withStatus(statusCode)));
+  }
+
+  private ZonedDateTime dateFromPast(int days) {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return today.minusDays(days);
   }
 }

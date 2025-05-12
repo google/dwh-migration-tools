@@ -23,6 +23,9 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import javax.annotation.Nonnull;
 import org.junit.Test;
 
@@ -35,7 +38,7 @@ public class AbstractClouderaTimeSeriesTaskTest {
         assertThrows(
             NullPointerException.class,
             () ->
-                new AbstractClouderaTimeSeriesTask("some path", 5, null, null) {
+                new AbstractClouderaTimeSeriesTask("some path", dateFromPast(5), null, null, null) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,
@@ -56,7 +59,7 @@ public class AbstractClouderaTimeSeriesTaskTest {
             NullPointerException.class,
             () ->
                 new AbstractClouderaTimeSeriesTask(
-                    "some path", 5, TimeSeriesAggregation.DAILY, null) {
+                    "some path", dateFromPast(5), null, TimeSeriesAggregation.DAILY, null) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,
@@ -67,5 +70,10 @@ public class AbstractClouderaTimeSeriesTaskTest {
 
     // THEN: There is a relevant exception has been raised
     assertEquals("TaskCategory must not be null.", exception.getMessage());
+  }
+
+  private ZonedDateTime dateFromPast(int days) {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return today.minusDays(days);
   }
 }

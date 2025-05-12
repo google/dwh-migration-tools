@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -66,7 +67,8 @@ public class ClouderaManagerConnectorTest {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
-    connector.addTasksTo(tasks, null);
+    connector.addTasksTo(
+        tasks, new ConnectorArguments("--connector", "simple", "--password", "secret"));
 
     // Assert
     Map<String, TaskCategory> filesToCategory =
@@ -79,7 +81,8 @@ public class ClouderaManagerConnectorTest {
     List<Task<?>> tasks = new ArrayList<>();
 
     // Act
-    connector.addTasksTo(tasks, null);
+    connector.addTasksTo(
+        tasks, new ConnectorArguments("--connector", "simple", "--password", "secret"));
 
     // Assert
     long dumpMetadataCount = tasks.stream().filter(t -> t instanceof DumpMetadataTask).count();
