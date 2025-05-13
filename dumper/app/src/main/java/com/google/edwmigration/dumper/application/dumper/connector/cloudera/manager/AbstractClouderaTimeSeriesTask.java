@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.net.URI;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.annotation.Nonnull;
@@ -49,6 +50,7 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     Preconditions.checkNotNull(taskCategory, "TaskCategory must be not null.");
     Preconditions.checkNotNull(startDate, "Start date must be not null.");
     Preconditions.checkNotNull(endDate, "End date must be not null.");
+    Preconditions.checkState(Duration.between(startDate, endDate).getSeconds() > 0, "Start Date has to be before End Date.");
 
     this.startDate = startDate;
     this.endDate = endDate;

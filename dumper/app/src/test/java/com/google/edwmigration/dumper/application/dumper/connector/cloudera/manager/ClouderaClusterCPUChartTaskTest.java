@@ -154,25 +154,6 @@ public class ClouderaClusterCPUChartTaskTest {
     verifyNoWrites();
   }
 
-  // Todo rewrite with using date time
-  // @Test
-  // public void initTask_requestChartWithEmptyDateRange_throwsException() throws Exception {
-  //   // GIVEN: There is a valid cluster
-  //   initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-  //
-  //   // WHEN: CPU usage task with empty date range is initiated
-  //   IllegalArgumentException exception =
-  //       assertThrows(
-  //           IllegalArgumentException.class,
-  //           () ->
-  //               new ClouderaClusterCPUChartTask(
-  //                   "ouput-file.jsonl"0, TimeSeriesAggregation.HOURLY, TaskCategory.REQUIRED));
-  //
-  //   // THEN: A relevant exception has been raised
-  //   assertEquals(
-  //       "The chart has to include at least one day. Received 0 days.", exception.getMessage());
-  // }
-
   @Test
   public void doRun_clouderaReturns4xx_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
