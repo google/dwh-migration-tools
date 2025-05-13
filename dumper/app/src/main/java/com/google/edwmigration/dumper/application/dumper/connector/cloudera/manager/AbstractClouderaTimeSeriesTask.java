@@ -32,7 +32,7 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
   private final ZonedDateTime startDate;
-  // private final ZonedDateTime endDate;
+  private final ZonedDateTime endDate;
   private final TimeSeriesAggregation tsAggregation;
   private final TaskCategory taskCategory;
 
@@ -51,7 +51,7 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     Preconditions.checkNotNull(endDate, "End date must be not null.");
 
     this.startDate = startDate;
-    // this.endDate = endDate;
+    this.endDate = endDate;
     this.tsAggregation = tsAggregation;
     this.taskCategory = taskCategory;
   }
@@ -71,6 +71,7 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
     uriBuilder.addParameter("mustUseDesiredRollup", "true");
     uriBuilder.addParameter("from", startDate.format(isoDateTimeFormatter));
+    uriBuilder.addParameter("to", endDate.format(isoDateTimeFormatter));
     URI tsURI = uriBuilder.build();
 
     CloseableHttpClient httpClient = handle.getHttpClient();

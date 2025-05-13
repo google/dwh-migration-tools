@@ -38,6 +38,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 
 public abstract class AbstractClouderaYarnApplicationTask extends AbstractClouderaManagerTask {
   private final ZonedDateTime fromDate;
+  private final ZonedDateTime toDate;
   private final TaskCategory taskCategory;
 
   public AbstractClouderaYarnApplicationTask(
@@ -50,6 +51,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     Preconditions.checkNotNull(endDate, "End date must be not null.");
     Preconditions.checkNotNull(taskCategory, "Task category must be not null.");
     fromDate = startDate;
+    toDate = endDate;
     this.taskCategory = taskCategory;
   }
 
@@ -67,6 +69,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     private final int limit;
     private int offset;
     private final String fromAppCreationDate;
+    private final String toAppCreationDate;
 
     public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle, int limit) {
       this.apiURI = handle.getApiURI();
@@ -75,6 +78,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
 
       final DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern(ISO_DATETIME_FORMAT);
       fromAppCreationDate = fromDate.format(dtFormatter);
+      toAppCreationDate = toDate.format(dtFormatter);
     }
 
     public int load(String clusterName, Consumer<List<ApiYARNApplicationDTO>> onPageLoad) {
@@ -140,7 +144,8 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
                 .setPathSegments("clusters", clusterName, "services", "yarn", "yarnApplications")
                 .addParameter("limit", String.valueOf(limit))
                 .addParameter("offset", String.valueOf(offset))
-                .addParameter("from", fromAppCreationDate);
+                .addParameter("from", fromAppCreationDate)
+                .addParameter("to", toAppCreationDate);
         if (appType != null) {
           uriBuilder.addParameter("filter", String.format("applicationType=\"%s\"", appType));
         }
