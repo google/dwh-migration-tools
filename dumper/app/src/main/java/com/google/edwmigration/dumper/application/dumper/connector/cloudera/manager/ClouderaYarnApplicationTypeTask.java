@@ -37,7 +37,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -58,7 +57,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   public ClouderaYarnApplicationTypeTask(
       String targetPath,
       ZonedDateTime startDate,
-      @Nullable ZonedDateTime endDate,
+      ZonedDateTime endDate,
       TaskCategory taskCategory) {
     super(targetPath, startDate, endDate, taskCategory);
   }

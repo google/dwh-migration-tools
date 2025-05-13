@@ -40,7 +40,7 @@ public class AbstractClouderaTimeSeriesTaskTest {
             NullPointerException.class,
             () ->
                 new AbstractClouderaTimeSeriesTask(
-                    "some path", dateFromPast(5), dateFromPast(0), null, null) {
+                    "some path", timeTravelDaysAgo(5), timeTravelDaysAgo(0), null, null) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,
@@ -62,8 +62,8 @@ public class AbstractClouderaTimeSeriesTaskTest {
             () ->
                 new AbstractClouderaTimeSeriesTask(
                     "some path",
-                    dateFromPast(5),
-                    dateFromPast(0),
+                    timeTravelDaysAgo(5),
+                    timeTravelDaysAgo(0),
                     TimeSeriesAggregation.DAILY,
                     null) {
                   @Override
@@ -87,8 +87,8 @@ public class AbstractClouderaTimeSeriesTaskTest {
             () ->
                 new AbstractClouderaTimeSeriesTask(
                     "some path",
-                    dateFromPast(5),
-                    dateFromPast(8),
+                    timeTravelDaysAgo(5),
+                    timeTravelDaysAgo(8),
                     TimeSeriesAggregation.DAILY,
                     TaskCategory.REQUIRED) {
                   @Override
@@ -103,7 +103,7 @@ public class AbstractClouderaTimeSeriesTaskTest {
     assertEquals("Start Date has to be before End Date.", exception.getMessage());
   }
 
-  private ZonedDateTime dateFromPast(int days) {
+  private ZonedDateTime timeTravelDaysAgo(int days) {
     ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
     return today.minusDays(days);
   }

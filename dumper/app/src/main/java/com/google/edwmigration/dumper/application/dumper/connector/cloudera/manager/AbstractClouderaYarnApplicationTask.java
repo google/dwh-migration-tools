@@ -51,7 +51,9 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     Preconditions.checkNotNull(startDate, "Start date must be not null.");
     Preconditions.checkNotNull(endDate, "End date must be not null.");
     Preconditions.checkNotNull(taskCategory, "Task category must be not null.");
-    Preconditions.checkState(Duration.between(startDate, endDate).getSeconds() > 0, "Start Date has to be before End Date.");
+    Preconditions.checkState(
+        Duration.between(startDate, endDate).getSeconds() > 0,
+        "Start Date has to be before End Date.");
 
     fromDate = startDate;
     toDate = endDate;

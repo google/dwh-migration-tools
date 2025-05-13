@@ -73,7 +73,7 @@ public class AbstractClouderaYarnApplicationTaskTest {
     URI uri = URI.create(server.baseUrl() + "/api/vTest");
     handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
 
-    task = new MockedYarnApplicationTask(dateFromPast(10), dateFromPast(0));
+    task = new MockedYarnApplicationTask(timeTravelDaysAgo(10), timeTravelDaysAgo(0));
     loadResponse = new ArrayList<>();
   }
 
@@ -176,7 +176,7 @@ public class AbstractClouderaYarnApplicationTaskTest {
     }
   }
 
-  private ZonedDateTime dateFromPast(int days) {
+  private ZonedDateTime timeTravelDaysAgo(int days) {
     ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
     return today.minusDays(days);
   }

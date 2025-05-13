@@ -77,6 +77,45 @@ public class ClouderaManagerConnectorTest {
   }
 
   @Test
+  public void addTasksTo_checkFilesCategoryWithCustomDateRange() throws Exception {
+    Map<String, TaskCategory> expectedFilesToCategory =
+        ImmutableMap.<String, TaskCategory>builder()
+            .putAll(
+                ImmutableMap.of(
+                    "compilerworks-metadata.yaml", TaskCategory.REQUIRED,
+                    "compilerworks-format.txt", TaskCategory.REQUIRED,
+                    "clusters.json", TaskCategory.REQUIRED,
+                    "cmf-hosts.jsonl", TaskCategory.OPTIONAL,
+                    "api-hosts.jsonl", TaskCategory.REQUIRED,
+                    "services.jsonl", TaskCategory.REQUIRED,
+                    "host-components.jsonl", TaskCategory.OPTIONAL))
+            .putAll(
+                ImmutableMap.of(
+                    "cluster-cpu-custom.jsonl", TaskCategory.REQUIRED,
+                    "host-ram-custom.jsonl", TaskCategory.REQUIRED,
+                    "yarn-applications-custom.jsonl", TaskCategory.OPTIONAL,
+                    "yarn-application-types-custom.jsonl", TaskCategory.OPTIONAL))
+            .build();
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(
+        tasks,
+        new ConnectorArguments(
+            "--connector",
+            "simple",
+            "--password",
+            "secret",
+            "--start-date",
+            "2025-04-01 00:00:00.000"));
+
+    // Assert
+    Map<String, TaskCategory> filesToCategory =
+        tasks.stream().collect(Collectors.toMap(Task::getTargetPath, Task::getCategory));
+    assertEquals(expectedFilesToCategory, filesToCategory);
+  }
+
+  @Test
   public void addTasksTo_containsDefaultTasks() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
 

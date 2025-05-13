@@ -63,7 +63,7 @@ public class ClouderaYarnApplicationTaskTest {
 
   private final ClouderaYarnApplicationsTask task =
       new ClouderaYarnApplicationsTask(
-          "test-30.jsonl", dateFromPast(30), dateFromPast(0), TaskCategory.OPTIONAL);
+          "test-30.jsonl", timeTravelDaysAgo(30), timeTravelDaysAgo(0), TaskCategory.OPTIONAL);
   private ClouderaManagerHandle handle;
 
   @Mock private TaskRunContext context;
@@ -168,7 +168,7 @@ public class ClouderaYarnApplicationTaskTest {
             .willReturn(okJson(responseContent).withStatus(statusCode)));
   }
 
-  private ZonedDateTime dateFromPast(int days) {
+  private ZonedDateTime timeTravelDaysAgo(int days) {
     ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
     return today.minusDays(days);
   }

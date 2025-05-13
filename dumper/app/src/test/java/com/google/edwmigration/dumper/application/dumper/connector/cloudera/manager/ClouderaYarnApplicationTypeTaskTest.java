@@ -64,7 +64,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
   private static WireMockServer server;
   private final ClouderaYarnApplicationTypeTask task =
       new ClouderaYarnApplicationTypeTask(
-          "output-file.jsonl", dateFromPast(30), dateFromPast(0), TaskCategory.OPTIONAL);
+          "output-file.jsonl", timeTravelDaysAgo(30), timeTravelDaysAgo(0), TaskCategory.OPTIONAL);
   private ClouderaManagerHandle handle;
 
   @Mock private ByteSink sink;
@@ -269,7 +269,7 @@ public class ClouderaYarnApplicationTypeTaskTest {
             .willReturn(okJson(responseContent).withStatus(statusCode)));
   }
 
-  private ZonedDateTime dateFromPast(int days) {
+  private ZonedDateTime timeTravelDaysAgo(int days) {
     ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
     return today.minusDays(days);
   }

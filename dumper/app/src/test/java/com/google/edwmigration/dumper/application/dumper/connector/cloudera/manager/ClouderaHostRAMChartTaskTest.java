@@ -68,8 +68,8 @@ public class ClouderaHostRAMChartTaskTest {
   private final ClouderaHostRAMChartTask task =
       new ClouderaHostRAMChartTask(
           "output-file.jsonl",
-          dateFromPast(1),
-          dateFromPast(0),
+          timeTravelDaysAgo(1),
+          timeTravelDaysAgo(0),
           TimeSeriesAggregation.HOURLY,
           TaskCategory.REQUIRED);
   private ClouderaManagerHandle handle;
@@ -179,7 +179,7 @@ public class ClouderaHostRAMChartTaskTest {
     verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
   }
 
-  private ZonedDateTime dateFromPast(int days) {
+  private ZonedDateTime timeTravelDaysAgo(int days) {
     ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
     return today.minusDays(days);
   }
