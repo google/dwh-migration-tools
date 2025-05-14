@@ -48,9 +48,9 @@ public interface Connector {
    * ConnectorArguments)}
    *
    * @param arguments cli params
-   * @throws IllegalStateException if incorrect set of arguments passed to the particular connector
+   * @throws RuntimeException if incorrect set of arguments passed to the particular connector
    */
-  default void validate(ConnectorArguments arguments) throws IllegalStateException {}
+  default void validate(ConnectorArguments arguments) {}
 
   default void validateDateRange(ConnectorArguments arguments) {
     ZonedDateTime startDate = arguments.getStartDate();

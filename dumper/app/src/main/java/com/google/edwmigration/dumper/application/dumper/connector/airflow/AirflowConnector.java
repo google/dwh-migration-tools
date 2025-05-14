@@ -209,7 +209,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   }
 
   @Override
-  public void validate(ConnectorArguments arguments) throws IllegalStateException {
+  public void validate(ConnectorArguments arguments) {
     Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
     Preconditions.checkState(
         arguments.getDriverPaths() != null && !arguments.getDriverPaths().isEmpty(),
