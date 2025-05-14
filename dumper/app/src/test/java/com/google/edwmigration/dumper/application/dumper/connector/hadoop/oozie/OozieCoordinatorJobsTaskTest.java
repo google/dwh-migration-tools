@@ -28,7 +28,8 @@ import org.apache.oozie.client.XOozieClient;
 import org.junit.Test;
 
 public class OozieCoordinatorJobsTaskTest {
-  private final OozieCoordinatorJobsTask task = new OozieCoordinatorJobsTask(5);
+  private final OozieCoordinatorJobsTask task =
+      new OozieCoordinatorJobsTask(5, System.currentTimeMillis());
 
   @Test
   public void fileName() {

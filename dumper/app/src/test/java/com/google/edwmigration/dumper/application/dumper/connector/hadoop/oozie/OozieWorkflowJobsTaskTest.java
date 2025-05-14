@@ -160,27 +160,28 @@ public class OozieWorkflowJobsTaskTest {
   @Test
   public void create_nonpositiveDays_throwsException() throws Exception {
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(0));
+        assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(0, 123));
 
     assertEquals("Amount of days must be a positive number. Got 0.", exception.getMessage());
 
-    exception = assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(-3));
+    exception =
+        assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(-3, 123));
 
     assertEquals("Amount of days must be a positive number. Got -3.", exception.getMessage());
 
-    new OozieWorkflowJobsTask(1);
+    new OozieWorkflowJobsTask(1, 123);
   }
 
   @Test
   public void fileName() {
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10, 0);
 
     assertEquals("oozie_workflow_jobs.csv", task.getTargetPath());
   }
 
   @Test
   public void fetchJobs_success() throws Exception {
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10, 0);
     XOozieClient oozieClient = mock(XOozieClient.class);
 
     // Act
@@ -193,7 +194,7 @@ public class OozieWorkflowJobsTaskTest {
 
   @Test
   public void getJobEndTime_success() throws Exception {
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10, 0);
     WorkflowJob job = mock(WorkflowJob.class);
 
     // Act
@@ -206,7 +207,7 @@ public class OozieWorkflowJobsTaskTest {
 
   @Test
   public void csvHeadersContainRequiredFields() {
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10, 0);
     String[] header = task.createJobSpecificCSVFormat().getHeader();
     Arrays.sort(header);
 

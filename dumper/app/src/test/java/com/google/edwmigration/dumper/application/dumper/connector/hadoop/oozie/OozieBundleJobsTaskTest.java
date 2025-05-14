@@ -28,7 +28,7 @@ import org.apache.oozie.client.XOozieClient;
 import org.junit.Test;
 
 public class OozieBundleJobsTaskTest {
-  private final OozieBundleJobsTask task = new OozieBundleJobsTask(5);
+  private final OozieBundleJobsTask task = new OozieBundleJobsTask(5, 0);
 
   @Test
   public void fileName() {

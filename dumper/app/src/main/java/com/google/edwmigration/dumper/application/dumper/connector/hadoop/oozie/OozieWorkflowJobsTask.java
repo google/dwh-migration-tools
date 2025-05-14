@@ -24,12 +24,8 @@ import org.apache.oozie.client.XOozieClient;
 
 public class OozieWorkflowJobsTask extends AbstractOozieJobsTask<WorkflowJob> {
 
-  public OozieWorkflowJobsTask(int maxDaysToFetch) {
-    this(maxDaysToFetch, System.currentTimeMillis());
-  }
-
-  OozieWorkflowJobsTask(int maxDaysToFetch, long initialTimestamp) {
-    super("oozie_workflow_jobs.csv", maxDaysToFetch, initialTimestamp);
+  public OozieWorkflowJobsTask(long maxHistoryDaysToFetch, long initialTimestamp) {
+    super("oozie_workflow_jobs.csv", maxHistoryDaysToFetch, initialTimestamp);
   }
 
   @Override

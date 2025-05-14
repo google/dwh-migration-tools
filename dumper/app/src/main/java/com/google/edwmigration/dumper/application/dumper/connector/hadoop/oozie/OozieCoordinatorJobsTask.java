@@ -24,11 +24,7 @@ import org.apache.oozie.client.XOozieClient;
 
 public class OozieCoordinatorJobsTask extends AbstractOozieJobsTask<CoordinatorJob> {
 
-  public OozieCoordinatorJobsTask(int maxDaysToFetch) {
-    this(maxDaysToFetch, System.currentTimeMillis());
-  }
-
-  OozieCoordinatorJobsTask(int maxDaysToFetch, long initialTimestamp) {
+  public OozieCoordinatorJobsTask(long maxDaysToFetch, long initialTimestamp) {
     super("oozie_coord_jobs.csv", maxDaysToFetch, initialTimestamp);
   }
 

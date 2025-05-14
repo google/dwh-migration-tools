@@ -23,8 +23,9 @@ import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
 
 public class OozieBundleJobsTask extends AbstractOozieJobsTask<BundleJob> {
-  public OozieBundleJobsTask(int maxDaysToFetch) {
-    super("oozie_bundle_jobs.csv", maxDaysToFetch, System.currentTimeMillis());
+
+  public OozieBundleJobsTask(long maxDaysToFetch, long initialTimestamp) {
+    super("oozie_bundle_jobs.csv", maxDaysToFetch, initialTimestamp);
   }
 
   @Override

@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
@@ -45,11 +46,11 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
 
   private static final int INITIAL_OOZIE_JOBS_OFFSET = 1; // starts with 1, not 0.
 
-  private final int maxDaysToFetch;
+  private final long maxDaysToFetch;
   private final long initialTimestamp;
   private final Class<J> oozieJobClass;
 
-  AbstractOozieJobsTask(String fileName, int maxDaysToFetch, long initialTimestamp) {
+  AbstractOozieJobsTask(String fileName, long maxDaysToFetch, long initialTimestamp) {
     super(fileName);
     Preconditions.checkArgument(
         maxDaysToFetch >= 1,
@@ -141,5 +142,15 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
       }
     }
     return record;
+  }
+
+  @VisibleForTesting
+  long getMaxDaysToFetch() {
+    return maxDaysToFetch;
+  }
+
+  @VisibleForTesting
+  long getInitialTimestamp() {
+    return initialTimestamp;
   }
 }

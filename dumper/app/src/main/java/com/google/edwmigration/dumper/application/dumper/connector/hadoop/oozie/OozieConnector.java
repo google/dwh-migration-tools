@@ -17,7 +17,10 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentsStartEndDate;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -29,6 +32,8 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.time.Clock;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.oozie.client.XOozieClient;
@@ -45,6 +50,8 @@ import org.apache.oozie.client.XOozieClient;
     arg = ConnectorArguments.OPT_PASSWORD,
     description = "The password for Oozie with BASIC authentication",
     required = "If not specified as an argument, will use a secure prompt")
+@RespectsArgumentsStartEndDate
+@RespectsArgumentAssessment
 public class OozieConnector extends AbstractConnector implements MetadataConnector {
   private static final String FORMAT_NAME = "oozie.dump.zip";
 
@@ -61,15 +68,33 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
   }
 
   @Override
+  public void validate(ConnectorArguments arguments) throws IllegalStateException {
+    Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
+
+    validateDatesRange(arguments);
+  }
+
+  @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.add(new OozieInfoTask());
     out.add(new OozieServersTask());
-    out.add(new OozieWorkflowJobsTask(MAX_QUARTER_DAY));
-    out.add(new OozieCoordinatorJobsTask(MAX_QUARTER_DAY));
-    out.add(new OozieBundleJobsTask(MAX_QUARTER_DAY));
+
+    long latestJobEndMillis;
+    long daysToFetch;
+    boolean useDefaultDateRangeToFetch = arguments.getStartDate() == null;
+    if (useDefaultDateRangeToFetch) {
+      latestJobEndMillis = Instant.now().toEpochMilli();
+      daysToFetch = MAX_QUARTER_DAY;
+    } else {
+      latestJobEndMillis = arguments.getEndDate().toInstant().toEpochMilli();
+      daysToFetch = ChronoUnit.DAYS.between(arguments.getStartDate(), arguments.getEndDate());
+    }
+    out.add(new OozieWorkflowJobsTask(daysToFetch, latestJobEndMillis));
+    out.add(new OozieCoordinatorJobsTask(daysToFetch, latestJobEndMillis));
+    out.add(new OozieBundleJobsTask(daysToFetch, latestJobEndMillis));
   }
 
   @Nonnull
