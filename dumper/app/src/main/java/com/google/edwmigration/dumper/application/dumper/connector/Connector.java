@@ -52,7 +52,7 @@ public interface Connector {
    */
   default void validate(ConnectorArguments arguments) throws IllegalStateException {}
 
-  default void validateDatesRange(ConnectorArguments arguments) {
+  default void validateDateRange(ConnectorArguments arguments) {
     ZonedDateTime startDate = arguments.getStartDate();
     ZonedDateTime endDate = arguments.getEndDate();
 

@@ -31,51 +31,51 @@ public class ConnectorTest {
   private final Connector connector = new EmptyConnector();
 
   @Test
-  public void validateDatesRange_startDateAndEndDate_success() throws Exception {
+  public void validateDateRange_startDateAndEndDate_success() throws Exception {
     String argsStr = "--connector test --start-date=2001-02-20 --end-date=2001-02-25";
 
     // Act
-    connector.validateDatesRange(toArgs(argsStr));
+    connector.validateDateRange(toArgs(argsStr));
   }
 
   @Test
-  public void validateDatesRange_startDateAfterEndDate_throws() {
+  public void validateDateRange_startDateAfterEndDate_throws() {
     String argsStr = "--connector test --start-date=2001-02-20 --end-date=2001-02-20";
 
     Exception exception =
         assertThrows(
-            IllegalStateException.class, () -> connector.validateDatesRange(toArgs(argsStr)));
+            IllegalStateException.class, () -> connector.validateDateRange(toArgs(argsStr)));
     assertEquals(
         "Start date [2001-02-20T00:00Z] must be before end date [2001-02-20T00:00Z].",
         exception.getMessage());
   }
 
   @Test
-  public void validateDatesRange_endDateAlone_throws() {
+  public void validateDateRange_endDateAlone_throws() {
     String argsStr = "--connector test --end-date=2001-02-20";
 
     Exception exception =
         assertThrows(
-            IllegalStateException.class, () -> connector.validateDatesRange(toArgs(argsStr)));
+            IllegalStateException.class, () -> connector.validateDateRange(toArgs(argsStr)));
     assertEquals(
         "End date can be specified only with start date, but start date was null.",
         exception.getMessage());
   }
 
   @Test
-  public void validateDatesRange_startDateAlone_throws() {
+  public void validateDateRange_startDateAlone_throws() {
     String argsStr = "--connector test --start-date=2001-02-20";
 
     Exception exception =
-        assertThrows(RuntimeException.class, () -> connector.validateDatesRange(toArgs(argsStr)));
+        assertThrows(RuntimeException.class, () -> connector.validateDateRange(toArgs(argsStr)));
     assertEquals(
         "End date must be specified with start date, but was null.", exception.getMessage());
   }
 
   @Test
-  public void validateDatesRange_requiredArgs_success() throws Exception {
+  public void validateDateRange_requiredArgs_success() throws Exception {
     // Act
-    connector.validateDatesRange(toArgs("--connector test"));
+    connector.validateDateRange(toArgs("--connector test"));
   }
 
   private static class EmptyConnector implements Connector {

@@ -71,7 +71,7 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
   public void validate(ConnectorArguments arguments) throws IllegalStateException {
     Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
 
-    validateDatesRange(arguments);
+    validateDateRange(arguments);
   }
 
   @Override
