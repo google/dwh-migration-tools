@@ -27,37 +27,45 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.lang.reflect.ParameterizedType;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.oozie.client.OozieClient;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
+
   private static final Logger logger = LoggerFactory.getLogger(AbstractOozieJobsTask.class);
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
+  private static final DateTimeFormatter ISO8601_UTC_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm'Z'").withZone(ZoneOffset.UTC);
   private static final int INITIAL_OOZIE_JOBS_OFFSET = 1; // starts with 1, not 0.
 
-  private final long maxDaysToFetch;
-  private final long initialTimestamp;
+  private final ZonedDateTime startDate;
+  private final ZonedDateTime endDate;
   private final Class<J> oozieJobClass;
 
-  AbstractOozieJobsTask(String fileName, long maxDaysToFetch, long initialTimestamp) {
+  AbstractOozieJobsTask(String fileName, ZonedDateTime startDate, ZonedDateTime endDate) {
     super(fileName);
     Preconditions.checkArgument(
-        maxDaysToFetch >= 1,
-        String.format("Amount of days must be a positive number. Got %d.", maxDaysToFetch));
+        startDate.isBefore(endDate),
+        "Start date [%s] must be before end date [%s].",
+        startDate,
+        endDate);
 
-    this.maxDaysToFetch = maxDaysToFetch;
-    this.initialTimestamp = initialTimestamp;
+    this.startDate = startDate;
+    this.endDate = endDate;
     this.oozieJobClass =
         (Class<J>)
             ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
@@ -73,17 +81,23 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     try (CSVPrinter printer = csvFormat.print(sink.asCharSink(UTF_8).openBufferedStream())) {
       XOozieClient oozieClient = ((OozieHandle) handle).getOozieClient();
       final int batchSize = context.getArguments().getPaginationPageSize();
+      final long maxJobCreatedTimestamp = endDate.toInstant().toEpochMilli();
       int offset = INITIAL_OOZIE_JOBS_OFFSET;
-      long lastJobEndTimestamp = initialTimestamp;
+      long latestFetchedJobCreatedTimestamp = startDate.toInstant().toEpochMilli();
 
       logger.info(
-          "Start fetching Oozie jobs for type {} for the last {}d starting from {}ms",
+          "Start fetching Oozie jobs for type {} from [{}] to [{}] by {}",
           oozieJobClass.getSimpleName(),
-          maxDaysToFetch,
-          initialTimestamp);
+          toISO(startDate),
+          toISO(endDate),
+          batchSize);
 
-      while (initialTimestamp - lastJobEndTimestamp < TimeUnit.DAYS.toMillis(maxDaysToFetch)) {
-        List<J> jobs = fetchJobs(oozieClient, null, null, offset, batchSize);
+      String oozieFilter = OozieClient.FILTER_SORT_BY + "=createdTime;";
+      oozieFilter += OozieClient.FILTER_CREATED_TIME_START + "=" + toISO(startDate) + ";";
+      oozieFilter += OozieClient.FILTER_CREATED_TIME_END + "=" + toISO(endDate) + ";";
+
+      while (latestFetchedJobCreatedTimestamp < maxJobCreatedTimestamp) {
+        List<J> jobs = fetchJobsWithFilter(oozieClient, oozieFilter, offset, batchSize);
         for (J job : jobs) {
           Object[] record = toCSVRecord(job, csvHeader);
           printer.printRecord(record);
@@ -94,11 +108,11 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
         }
 
         J lastJob = jobs.get(jobs.size() - 1);
-        Date endTime = getJobEndDateTime(lastJob);
-        if (endTime == null) {
+        Date createdTime = getJobCreatedTime(lastJob);
+        if (createdTime == null) {
           break;
         }
-        lastJobEndTimestamp = endTime.getTime();
+        latestFetchedJobCreatedTimestamp = createdTime.getTime();
         offset += jobs.size();
       }
 
@@ -111,9 +125,6 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     return newCsvFormatForClass(oozieJobClass);
   }
 
-  // todo jobs params in filter
-  //        FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_START);
-  //         FILTER_NAMES.add(OozieClient.FILTER_CREATED_TIME_END);
   /**
    * Method is expected to do a call to Oozie server to fetch jobs in a ranger [{@code startDate} -
    * {@code endDate}].
@@ -122,11 +133,14 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
    * @param start jobs offset pass to {@code oozieClient}
    * @param len number of jobs to return
    */
-  abstract List<J> fetchJobs(
-      XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
-      throws OozieClientException;
+  abstract List<J> fetchJobsWithFilter(
+      XOozieClient oozieClient, String oozieFilter, int start, int len) throws OozieClientException;
 
-  abstract Date getJobEndDateTime(J job);
+  abstract Date getJobCreatedTime(J job);
+
+  private static String toISO(ZonedDateTime dateTime) {
+    return ISO8601_UTC_FORMAT.format(dateTime.toInstant());
+  }
 
   private static Object[] toCSVRecord(Object job, ImmutableList<String> header) throws Exception {
     Object[] record = new Object[header.size()];
@@ -145,12 +159,12 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   }
 
   @VisibleForTesting
-  long getMaxDaysToFetch() {
-    return maxDaysToFetch;
+  ZonedDateTime getStartDate() {
+    return startDate;
   }
 
   @VisibleForTesting
-  long getInitialTimestamp() {
-    return initialTimestamp;
+  ZonedDateTime getEndDate() {
+    return endDate;
   }
 }

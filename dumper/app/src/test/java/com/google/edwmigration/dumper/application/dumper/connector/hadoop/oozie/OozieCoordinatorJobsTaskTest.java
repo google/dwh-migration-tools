@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.XOozieClient;
@@ -29,7 +30,7 @@ import org.junit.Test;
 
 public class OozieCoordinatorJobsTaskTest {
   private final OozieCoordinatorJobsTask task =
-      new OozieCoordinatorJobsTask(5, System.currentTimeMillis());
+      new OozieCoordinatorJobsTask(ZonedDateTime.now().minusDays(1), ZonedDateTime.now());
 
   @Test
   public void fileName() {
@@ -41,22 +42,22 @@ public class OozieCoordinatorJobsTaskTest {
     XOozieClient oozieClient = mock(XOozieClient.class);
 
     // Act
-    task.fetchJobs(oozieClient, null, null, 2, 14);
+    task.fetchJobsWithFilter(oozieClient, "some;filter", 2, 14);
 
     // Verify
-    verify(oozieClient).getCoordJobsInfo("sortby=endTime;", 2, 14);
+    verify(oozieClient).getCoordJobsInfo("some;filter", 2, 14);
     verifyNoMoreInteractions(oozieClient);
   }
 
   @Test
-  public void getJobEndTime_success() throws Exception {
+  public void getJobCreatedTime_success() throws Exception {
     CoordinatorJob job = mock(CoordinatorJob.class);
 
     // Act
-    task.getJobEndDateTime(job);
+    task.getJobCreatedTime(job);
 
     // Verify
-    verify(job).getEndTime();
+    verify(job).getCreatedTime();
     verifyNoMoreInteractions(job);
   }
 

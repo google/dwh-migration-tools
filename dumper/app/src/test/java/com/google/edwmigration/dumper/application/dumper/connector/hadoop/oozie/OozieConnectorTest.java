@@ -23,13 +23,13 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.ZonedParser;
+import com.google.edwmigration.dumper.application.dumper.ZonedParser.DayOffset;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +43,9 @@ import org.mockito.Mockito;
 public class OozieConnectorTest {
 
   private static final String validRequiredArgs = "--connector oozie --assessment";
-  private final OozieConnector connector = new OozieConnector();
+
+  private final ZonedDateTime nowInTest = ZonedDateTime.now();
+  private final OozieConnector connector = new OozieConnector(() -> nowInTest);
 
   @Test
   public void validate_startDateAndEndDate_success() throws Exception {
@@ -157,49 +159,46 @@ public class OozieConnectorTest {
         (OozieBundleJobsTask)
             tasks.stream().filter(t -> t instanceof OozieBundleJobsTask).findAny().get();
 
-    assertEquals(1, workflowJobsTask.getMaxDaysToFetch());
-    assertEquals(1, coordinatorJobsTask.getMaxDaysToFetch());
-    assertEquals(1, bundleJobsTask.getMaxDaysToFetch());
+    ZonedDateTime startDate =
+        ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY).convert("2001-02-20");
+    ZonedDateTime endDate =
+        ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY).convert("2001-02-21");
+    assertEquals(startDate, workflowJobsTask.getStartDate());
+    assertEquals(startDate, coordinatorJobsTask.getStartDate());
+    assertEquals(startDate, bundleJobsTask.getStartDate());
 
-    ZonedDateTime endDate = ZonedDateTime.of(2001, 2, 21, 0, 0, 0, 0, ZoneId.of("UTC"));
-    long epochMilli = endDate.toInstant().toEpochMilli();
-    assertEquals(epochMilli, workflowJobsTask.getInitialTimestamp());
-    assertEquals(epochMilli, coordinatorJobsTask.getInitialTimestamp());
-    assertEquals(epochMilli, bundleJobsTask.getInitialTimestamp());
+    assertEquals(endDate, workflowJobsTask.getEndDate());
+    assertEquals(endDate, coordinatorJobsTask.getEndDate());
+    assertEquals(endDate, bundleJobsTask.getEndDate());
   }
 
   @Test
   public void addTasksTo_dateRangeDefault() throws Exception {
-    final Instant nowInTest = Instant.ofEpochMilli(12345L);
-    final ConnectorArguments args = toArgs(validRequiredArgs);
-    try (MockedStatic<Instant> factory = Mockito.mockStatic(Instant.class)) {
-      factory.when(Instant::now).thenReturn(nowInTest);
+    List<Task<?>> tasks = new ArrayList<>();
 
-      List<Task<?>> tasks = new ArrayList<>();
+    // Act
+    connector.addTasksTo(tasks, toArgs(validRequiredArgs));
 
-      // Act
-      connector.addTasksTo(tasks, args);
+    // Assert
+    OozieWorkflowJobsTask workflowJobsTask =
+        (OozieWorkflowJobsTask)
+            tasks.stream().filter(t -> t instanceof OozieWorkflowJobsTask).findAny().get();
+    OozieCoordinatorJobsTask coordinatorJobsTask =
+        (OozieCoordinatorJobsTask)
+            tasks.stream().filter(t -> t instanceof OozieCoordinatorJobsTask).findAny().get();
+    OozieBundleJobsTask bundleJobsTask =
+        (OozieBundleJobsTask)
+            tasks.stream().filter(t -> t instanceof OozieBundleJobsTask).findAny().get();
 
-      // Assert
-      OozieWorkflowJobsTask workflowJobsTask =
-          (OozieWorkflowJobsTask)
-              tasks.stream().filter(t -> t instanceof OozieWorkflowJobsTask).findAny().get();
-      OozieCoordinatorJobsTask coordinatorJobsTask =
-          (OozieCoordinatorJobsTask)
-              tasks.stream().filter(t -> t instanceof OozieCoordinatorJobsTask).findAny().get();
-      OozieBundleJobsTask bundleJobsTask =
-          (OozieBundleJobsTask)
-              tasks.stream().filter(t -> t instanceof OozieBundleJobsTask).findAny().get();
+    ZonedDateTime endDate = nowInTest;
+    ZonedDateTime startDate = endDate.minusDays(93);
+    assertEquals(startDate, workflowJobsTask.getStartDate());
+    assertEquals(startDate, coordinatorJobsTask.getStartDate());
+    assertEquals(startDate, bundleJobsTask.getStartDate());
 
-      assertEquals(93, workflowJobsTask.getMaxDaysToFetch());
-      assertEquals(93, coordinatorJobsTask.getMaxDaysToFetch());
-      assertEquals(93, bundleJobsTask.getMaxDaysToFetch());
-
-      long epochMilli = nowInTest.toEpochMilli();
-      assertEquals(epochMilli, workflowJobsTask.getInitialTimestamp());
-      assertEquals(epochMilli, coordinatorJobsTask.getInitialTimestamp());
-      assertEquals(epochMilli, bundleJobsTask.getInitialTimestamp());
-    }
+    assertEquals(endDate, workflowJobsTask.getEndDate());
+    assertEquals(endDate, coordinatorJobsTask.getEndDate());
+    assertEquals(endDate, bundleJobsTask.getEndDate());
   }
 
   @Test

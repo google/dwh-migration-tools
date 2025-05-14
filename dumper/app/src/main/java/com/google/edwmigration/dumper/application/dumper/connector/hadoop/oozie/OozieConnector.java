@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
 import com.google.auto.service.AutoService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
@@ -32,9 +33,9 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.time.Clock;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.apache.oozie.client.XOozieClient;
 
@@ -53,12 +54,21 @@ import org.apache.oozie.client.XOozieClient;
 @RespectsArgumentsStartEndDate
 @RespectsArgumentAssessment
 public class OozieConnector extends AbstractConnector implements MetadataConnector {
+
   private static final String FORMAT_NAME = "oozie.dump.zip";
 
   private static final int MAX_QUARTER_DAY = 93;
 
+  private final Supplier<ZonedDateTime> currentTimeProvider;
+
   public OozieConnector() {
+    this(ZonedDateTime::now);
+  }
+
+  @VisibleForTesting
+  OozieConnector(Supplier<ZonedDateTime> currentTimeProvider) {
     super("oozie");
+    this.currentTimeProvider = currentTimeProvider;
   }
 
   @Nonnull
@@ -82,19 +92,19 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
     out.add(new OozieInfoTask());
     out.add(new OozieServersTask());
 
-    long latestJobEndMillis;
-    long daysToFetch;
+    ZonedDateTime startDate;
+    ZonedDateTime endDate;
     boolean useDefaultDateRangeToFetch = arguments.getStartDate() == null;
     if (useDefaultDateRangeToFetch) {
-      latestJobEndMillis = Instant.now().toEpochMilli();
-      daysToFetch = MAX_QUARTER_DAY;
+      endDate = currentTimeProvider.get();
+      startDate = endDate.minusDays(MAX_QUARTER_DAY);
     } else {
-      latestJobEndMillis = arguments.getEndDate().toInstant().toEpochMilli();
-      daysToFetch = ChronoUnit.DAYS.between(arguments.getStartDate(), arguments.getEndDate());
+      startDate = arguments.getStartDate();
+      endDate = arguments.getEndDate();
     }
-    out.add(new OozieWorkflowJobsTask(daysToFetch, latestJobEndMillis));
-    out.add(new OozieCoordinatorJobsTask(daysToFetch, latestJobEndMillis));
-    out.add(new OozieBundleJobsTask(daysToFetch, latestJobEndMillis));
+    out.add(new OozieWorkflowJobsTask(startDate, endDate));
+    out.add(new OozieCoordinatorJobsTask(startDate, endDate));
+    out.add(new OozieBundleJobsTask(startDate, endDate));
   }
 
   @Nonnull
