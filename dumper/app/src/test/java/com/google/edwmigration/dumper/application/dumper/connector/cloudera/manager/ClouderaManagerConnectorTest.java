@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -49,18 +50,8 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", TaskCategory.OPTIONAL))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-cpu-1d.jsonl", TaskCategory.REQUIRED,
-                    "cluster-cpu-7d.jsonl", TaskCategory.OPTIONAL,
-                    "cluster-cpu-30d.jsonl", TaskCategory.OPTIONAL,
-                    "cluster-cpu-90d.jsonl", TaskCategory.OPTIONAL))
-            .putAll(
-                ImmutableMap.of(
-                    "host-ram-1d.jsonl", TaskCategory.REQUIRED,
-                    "host-ram-7d.jsonl", TaskCategory.OPTIONAL,
-                    "host-ram-30d.jsonl", TaskCategory.OPTIONAL,
-                    "host-ram-90d.jsonl", TaskCategory.OPTIONAL))
-            .putAll(
-                ImmutableMap.of(
+                    "cluster-cpu-90d.jsonl", TaskCategory.OPTIONAL,
+                    "host-ram-90d.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications-90d.jsonl", TaskCategory.OPTIONAL,
                     "yarn-application-types-90d.jsonl", TaskCategory.OPTIONAL))
             .build();
@@ -91,10 +82,10 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", TaskCategory.OPTIONAL))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-cpu-custom.jsonl", TaskCategory.REQUIRED,
-                    "host-ram-custom.jsonl", TaskCategory.REQUIRED,
-                    "yarn-applications-custom.jsonl", TaskCategory.OPTIONAL,
-                    "yarn-application-types-custom.jsonl", TaskCategory.OPTIONAL))
+                    "cluster-cpu-custom-date-range.jsonl", TaskCategory.REQUIRED,
+                    "host-ram-custom-date-range.jsonl", TaskCategory.REQUIRED,
+                    "yarn-applications-custom-date-range.jsonl", TaskCategory.OPTIONAL,
+                    "yarn-application-types-custom-date-range.jsonl", TaskCategory.OPTIONAL))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -107,12 +98,60 @@ public class ClouderaManagerConnectorTest {
             "--password",
             "secret",
             "--start-date",
-            "2025-04-01 00:00:00.000"));
+            "2025-04-01 00:00:00.000",
+            "--end-date",
+            "2025-04-20 00:00:00.000"));
 
     // Assert
     Map<String, TaskCategory> filesToCategory =
         tasks.stream().collect(Collectors.toMap(Task::getTargetPath, Task::getCategory));
     assertEquals(expectedFilesToCategory, filesToCategory);
+  }
+
+  @Test
+  public void addTasksTo_useOnlyEndDate_throwsException() {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                connector.addTasksTo(
+                    tasks,
+                    new ConnectorArguments(
+                        "--connector",
+                        "simple",
+                        "--password",
+                        "secret",
+                        "--end-date",
+                        "2025-04-01 00:00:00.000")));
+
+    // Assert
+    assertEquals("Start date must be not null.", exception.getMessage());
+  }
+
+  @Test
+  public void addTasksTo_useOnlyStartDate_throwsException() {
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    RuntimeException exception =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                connector.addTasksTo(
+                    tasks,
+                    new ConnectorArguments(
+                        "--connector",
+                        "simple",
+                        "--password",
+                        "secret",
+                        "--start-date",
+                        "2025-04-01 00:00:00.000")));
+
+    // Assert
+    assertEquals("End date must be not null.", exception.getMessage());
   }
 
   @Test

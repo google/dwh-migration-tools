@@ -24,7 +24,6 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -51,9 +50,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
     Preconditions.checkNotNull(startDate, "Start date must be not null.");
     Preconditions.checkNotNull(endDate, "End date must be not null.");
     Preconditions.checkNotNull(taskCategory, "Task category must be not null.");
-    Preconditions.checkState(
-        Duration.between(startDate, endDate).getSeconds() > 0,
-        "Start Date has to be before End Date.");
+    Preconditions.checkState(startDate.isBefore(endDate), "Start Date has to be before End Date.");
 
     fromDate = startDate;
     toDate = endDate;
