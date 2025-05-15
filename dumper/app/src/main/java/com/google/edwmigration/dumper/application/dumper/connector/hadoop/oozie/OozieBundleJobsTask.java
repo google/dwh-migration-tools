@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import org.apache.oozie.client.BundleJob;
@@ -23,19 +24,20 @@ import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
 
 public class OozieBundleJobsTask extends AbstractOozieJobsTask<BundleJob> {
-  public OozieBundleJobsTask(int maxDaysToFetch) {
-    super("oozie_bundle_jobs.csv", maxDaysToFetch, System.currentTimeMillis());
+
+  public OozieBundleJobsTask(ZonedDateTime startDate, ZonedDateTime endDate) {
+    super("oozie_bundle_jobs.csv", startDate, endDate);
   }
 
   @Override
-  List<BundleJob> fetchJobs(
-      XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
+  List<BundleJob> fetchJobsWithFilter(
+      XOozieClient oozieClient, String oozieFilter, int start, int len)
       throws OozieClientException {
-    return oozieClient.getBundleJobsInfo("sortby=endTime;", start, len);
+    return oozieClient.getBundleJobsInfo(oozieFilter, start, len);
   }
 
   @Override
-  Date getJobEndDateTime(BundleJob job) {
+  Date getJobEndTime(BundleJob job) {
     return job.getEndTime();
   }
 }

@@ -23,6 +23,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
@@ -82,6 +83,7 @@ import org.slf4j.LoggerFactory;
     order = 2000,
     arg = ConnectorArguments.OPT_END_DATE,
     description = "End date for query DAGs data")
+@RespectsArgumentAssessment
 public class AirflowConnector extends AbstractJdbcConnector implements MetadataConnector {
 
   private static final Logger logger = LoggerFactory.getLogger(AirflowConnector.class);
@@ -207,7 +209,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   }
 
   @Override
-  public void validate(ConnectorArguments arguments) throws IllegalStateException {
+  public void validate(ConnectorArguments arguments) {
     Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
     Preconditions.checkState(
         arguments.getDriverPaths() != null && !arguments.getDriverPaths().isEmpty(),
@@ -234,26 +236,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       Preconditions.checkState(arguments.getSchema() != null, "--schema is required with --host");
     }
 
-    validateDatesRange(arguments);
-  }
-
-  private void validateDatesRange(ConnectorArguments arguments) {
-    ZonedDateTime startDate = arguments.getStartDate();
-    ZonedDateTime endDate = arguments.getEndDate();
-
-    if (startDate != null) {
-      Preconditions.checkNotNull(
-          endDate, "End date must be specified with start date, but was null.");
-      Preconditions.checkState(
-          startDate.isBefore(endDate),
-          "Start date [%s] must be before end date [%s].",
-          startDate,
-          endDate);
-    } else {
-      Preconditions.checkState(
-          endDate == null,
-          "End date can be specified only with start date, but start date was null.");
-    }
+    validateDateRange(arguments);
   }
 
   @Nonnull

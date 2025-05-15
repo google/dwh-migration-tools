@@ -16,10 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.time.Clock;
+import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -46,9 +48,28 @@ public interface Connector {
    * ConnectorArguments)}
    *
    * @param arguments cli params
-   * @throws IllegalStateException if incorrect set of arguments passed to the particular connector
+   * @throws RuntimeException if incorrect set of arguments passed to the particular connector
    */
-  default void validate(ConnectorArguments arguments) throws IllegalStateException {}
+  default void validate(ConnectorArguments arguments) {}
+
+  default void validateDateRange(ConnectorArguments arguments) {
+    ZonedDateTime startDate = arguments.getStartDate();
+    ZonedDateTime endDate = arguments.getEndDate();
+
+    if (startDate != null) {
+      Preconditions.checkNotNull(
+          endDate, "End date must be specified with start date, but was null.");
+      Preconditions.checkState(
+          startDate.isBefore(endDate),
+          "Start date [%s] must be before end date [%s].",
+          startDate,
+          endDate);
+    } else {
+      Preconditions.checkState(
+          endDate == null,
+          "End date can be specified only with start date, but start date was null.");
+    }
+  }
 
   void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception;
