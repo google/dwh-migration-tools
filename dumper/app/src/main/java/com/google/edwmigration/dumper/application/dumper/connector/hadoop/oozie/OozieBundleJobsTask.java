@@ -37,7 +37,7 @@ public class OozieBundleJobsTask extends AbstractOozieJobsTask<BundleJob> {
   }
 
   @Override
-  Date getJobCreatedTime(BundleJob job) {
-    return job.getCreatedTime();
+  Date getJobEndTime(BundleJob job) {
+    return job.getEndTime();
   }
 }

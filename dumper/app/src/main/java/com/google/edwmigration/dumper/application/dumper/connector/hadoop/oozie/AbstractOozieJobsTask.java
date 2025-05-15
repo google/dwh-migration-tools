@@ -51,6 +51,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   private static final DateTimeFormatter ISO8601_UTC_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm'Z'").withZone(ZoneOffset.UTC);
   private static final int INITIAL_OOZIE_JOBS_OFFSET = 1; // starts with 1, not 0.
+  private static final String SORT_BY_END_TIME = OozieClient.FILTER_SORT_BY + "=endTime;";
 
   private final ZonedDateTime startDate;
   private final ZonedDateTime endDate;
@@ -81,24 +82,34 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     try (CSVPrinter printer = csvFormat.print(sink.asCharSink(UTF_8).openBufferedStream())) {
       XOozieClient oozieClient = ((OozieHandle) handle).getOozieClient();
       final int batchSize = context.getArguments().getPaginationPageSize();
-      final long maxJobCreatedTimestamp = endDate.toInstant().toEpochMilli();
+      final long minJobEndTimeTimestamp = startDate.toInstant().toEpochMilli();
+      final long maxJobEndTimeTimestamp = endDate.toInstant().toEpochMilli();
+
       int offset = INITIAL_OOZIE_JOBS_OFFSET;
-      long latestFetchedJobCreatedTimestamp = startDate.toInstant().toEpochMilli();
+      long latestFetchedJobEndTimestamp = maxJobEndTimeTimestamp; // start iteration from end time
 
       logger.info(
-          "Start fetching Oozie jobs for type {} from [{}] to [{}] by {}",
+          "Start fetching Oozie jobs for type {} from [{}] to [{}] by {} with client side filtering",
           oozieJobClass.getSimpleName(),
           toISO(startDate),
           toISO(endDate),
           batchSize);
 
-      String oozieFilter = OozieClient.FILTER_SORT_BY + "=createdTime;";
-      oozieFilter += OozieClient.FILTER_CREATED_TIME_START + "=" + toISO(startDate) + ";";
-      oozieFilter += OozieClient.FILTER_CREATED_TIME_END + "=" + toISO(endDate) + ";";
-
-      while (latestFetchedJobCreatedTimestamp < maxJobCreatedTimestamp) {
-        List<J> jobs = fetchJobsWithFilter(oozieClient, oozieFilter, offset, batchSize);
+      while (latestFetchedJobEndTimestamp >= minJobEndTimeTimestamp) {
+        List<J> jobs = fetchJobsWithFilter(oozieClient, SORT_BY_END_TIME, offset, batchSize);
         for (J job : jobs) {
+          Date currentJobEndTime = getJobEndTime(job);
+          boolean inDateRange =
+              minJobEndTimeTimestamp <= currentJobEndTime.getTime()
+                  && currentJobEndTime.getTime() < maxJobEndTimeTimestamp;
+          if (!inDateRange) {
+            // It's client side filtering. It's inefficient.
+            // Unfortunately  Oozie doesn't provide an API to filter by start/end date.
+            // It's possible to filter by OozieClient.FILTER_CREATED_TIME_START
+            // but a job can be created 25 years and still be executed each day or minute.
+            // So, job creation time is not what is really needed.
+            continue;
+          }
           Object[] record = toCSVRecord(job, csvHeader);
           printer.printRecord(record);
         }
@@ -108,11 +119,11 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
         }
 
         J lastJob = jobs.get(jobs.size() - 1);
-        Date createdTime = getJobCreatedTime(lastJob);
-        if (createdTime == null) {
+        Date endTime = getJobEndTime(lastJob);
+        if (endTime == null) {
           break;
         }
-        latestFetchedJobCreatedTimestamp = createdTime.getTime();
+        latestFetchedJobEndTimestamp = endTime.getTime();
         offset += jobs.size();
       }
 
@@ -136,7 +147,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   abstract List<J> fetchJobsWithFilter(
       XOozieClient oozieClient, String oozieFilter, int start, int len) throws OozieClientException;
 
-  abstract Date getJobCreatedTime(J job);
+  abstract Date getJobEndTime(J job);
 
   private static String toISO(ZonedDateTime dateTime) {
     return ISO8601_UTC_FORMAT.format(dateTime.toInstant());

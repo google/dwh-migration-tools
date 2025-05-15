@@ -61,6 +61,7 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
 
   private final Supplier<ZonedDateTime> currentTimeProvider;
 
+  @SuppressWarnings("unused") // reflection call is expected
   public OozieConnector() {
     this(ZonedDateTime::now);
   }

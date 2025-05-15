@@ -37,7 +37,7 @@ public class OozieWorkflowJobsTask extends AbstractOozieJobsTask<WorkflowJob> {
   }
 
   @Override
-  Date getJobCreatedTime(WorkflowJob job) {
-    return job.getCreatedTime();
+  Date getJobEndTime(WorkflowJob job) {
+    return job.getEndTime();
   }
 }

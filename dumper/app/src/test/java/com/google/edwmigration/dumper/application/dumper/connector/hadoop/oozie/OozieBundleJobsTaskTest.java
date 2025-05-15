@@ -50,14 +50,14 @@ public class OozieBundleJobsTaskTest {
   }
 
   @Test
-  public void getJobCreatedTime_success() throws Exception {
+  public void getJobEndTime_success() throws Exception {
     BundleJob job = mock(BundleJob.class);
 
     // Act
-    task.getJobCreatedTime(job);
+    task.getJobEndTime(job);
 
     // Verify
-    verify(job).getCreatedTime();
+    verify(job).getEndTime();
     verifyNoMoreInteractions(job);
   }
 

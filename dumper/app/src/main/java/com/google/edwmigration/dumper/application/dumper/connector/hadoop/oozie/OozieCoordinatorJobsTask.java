@@ -37,7 +37,7 @@ public class OozieCoordinatorJobsTask extends AbstractOozieJobsTask<CoordinatorJ
   }
 
   @Override
-  Date getJobCreatedTime(CoordinatorJob job) {
-    return job.getCreatedTime();
+  Date getJobEndTime(CoordinatorJob job) {
+    return job.getEndTime();
   }
 }
