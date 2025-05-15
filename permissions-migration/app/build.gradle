@@ -1,0 +1,171 @@
+/*
+ * Copyright 2022-2025 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import com.github.jk1.license.filter.LicenseBundleNormalizer
+import com.github.jk1.license.render.InventoryHtmlReportRenderer
+import com.github.jk1.license.render.JsonReportRenderer
+import com.google.edwmigration.dumper.build.licensereport.CsvReportRenderer
+
+buildscript {
+    dependencies {
+        classpath libs.gradle.license.report
+    }
+}
+
+plugins {
+    id 'dwh-permissions-migration.java-application-conventions'
+    id "com.google.protobuf" version "0.9.4"
+}
+
+tasks.named("jar"){
+    archiveBaseName = "dwh-hadoop-permissions-migration"
+}
+
+apply plugin: 'com.github.jk1.dependency-license-report'
+
+configurations {
+    sources {
+        transitive = true
+    }
+}
+
+dependencies {
+    implementation libs.guava
+    implementation libs.jackson.databind
+    implementation libs.jackson.datatype.jsr310
+    implementation libs.jackson.dataformat.csv
+    implementation libs.jackson.dataformat.yaml
+    implementation libs.jackson.datatype.guava
+    implementation libs.jopt.simple
+    implementation libs.google.cloud.bigquery
+    implementation libs.google.cloud.storage
+    implementation libs.google.cloud.storage.control
+    implementation libs.google.cloud.nio
+    implementation libs.protobuf.java
+    implementation libs.re2j
+    implementation libs.snakeyaml
+    implementation(libs.cel) {
+        exclude(group: 'com.google.code.findbugs', module: 'annotations')
+    }
+
+
+    implementation libs.apache.commons.csv
+
+    sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}@sources"
+    sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
+
+    runtimeOnly libs.logback.classic
+    runtimeOnly libs.jcl.over.slf4j
+
+    testImplementation libs.truth
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.junit.jupiter
+    testImplementation libs.mockito.inline
+    testImplementation libs.junit.jupiter.params
+
+}
+
+protobuf {
+  // Configure the protoc executable
+  protoc {
+    // Download from repositories
+    artifact = 'com.google.protobuf:protoc:3.25.3'
+  }
+}
+
+startScripts {
+    classpath = files('$APP_HOME/lib/*')
+}
+
+application {
+    // Define the main class for the application.
+    mainClass = 'com.google.edwmigration.permissions.Main'
+    applicationName = 'dwh-permissions-migration'
+}
+
+licenseReport {
+    // onlyIf { ! gradle.startParameter.offline }
+    filters = [
+        new LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
+    ]
+    renderers = [
+        new CsvReportRenderer(),
+        new JsonReportRenderer('index.json', false),
+        new InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
+    ]
+    allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
+}
+
+tasks.named('check') {
+    dependsOn 'checkLicense'
+}
+
+tasks.register('generateSourceMirror', Copy) {
+    from {
+        dependencies.createArtifactResolutionQuery()
+            .forComponents(
+                configurations.runtimeClasspath.incoming.resolutionResult
+                    .allDependencies.collect { it.selected.id }
+            )
+            .withArtifacts(JvmLibrary, SourcesArtifact)
+            .execute()
+            .resolvedComponents
+            .collectMany {
+                it.artifactResults
+                    .collect { it.file.path }
+            }
+    }
+    into layout.buildDirectory.dir('mirror/sources')
+    outputs.dir "mirror/sources"
+}
+
+tasks.register('packageTerraform', Zip){
+    archiveFileName = 'terraform.zip'
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from('../terraform'){
+        exclude 'test/**'
+    }
+    outputs.file(destinationDirectory.file(archiveFileName))
+}
+
+distributions {
+    published {
+        distributionBaseName = "dwh-hadoop-permissions-migration"
+        contents {
+            duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+            from installDist
+            from tasks.named("packageTerraform"){
+                into ''
+            }
+            from(generateLicenseReport) {
+                into "docs/licenses"
+            }
+            from(generateSourceMirror) {
+                into "docs/sources"
+            }
+        }
+    }
+}
+
+['publishedDistZip', 'publishedDistTar', 'installPublishedDist'].collect(tasks::named).each {
+    it.configure { dependsOn('checkLicense', 'packageTerraform') }
+}
+
+test {
+    useJUnitPlatform()
+}

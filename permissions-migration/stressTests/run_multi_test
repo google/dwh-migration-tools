@@ -1,0 +1,13 @@
+#!/bin/bash
+
+./run_single_test 10 10 10 10 tables_10
+./run_single_test 10 10 10 100 tables_1k
+./run_single_test 10 10 10 1000 tables_1k
+./run_single_test 30 30 30 1000 tables_1k
+./run_single_test 100 100 100 1000 tables_1k
+./run_single_test 10 10 10 100 tables_10k
+./run_single_test 10 10 10 1000 tables_10k
+./run_single_test 10 10 10 10000 tables_10k
+./run_single_test 100 100 100 10000 tables_10k
+./run_single_test 1000 1000 1000 10000 tables_10k
+./run_single_test 100 100 100 30000 tables_30k
