@@ -20,8 +20,9 @@ import static com.google.edwmigration.dumper.application.dumper.connector.cloude
 import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.*;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -32,9 +33,12 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.net.URI;
 import java.time.Clock;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -87,45 +91,82 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaServicesTask());
     out.add(new ClouderaHostComponentsTask());
 
-    out.add(new ClouderaClusterCPUChartTask(1, HOURLY, REQUIRED));
-    out.add(new ClouderaClusterCPUChartTask(7, DAILY, OPTIONAL));
-    out.add(new ClouderaClusterCPUChartTask(30, DAILY, OPTIONAL));
-    out.add(new ClouderaClusterCPUChartTask(90, DAILY, OPTIONAL));
+    if (arguments.getStartDate() == null && arguments.getEndDate() == null) {
+      out.addAll(defaultTasks());
+    } else {
+      out.addAll(customDateRangeTasks(arguments.getStartDate(), arguments.getEndDate()));
+    }
+  }
 
-    out.add(new ClouderaHostRAMChartTask(1, HOURLY, REQUIRED));
-    out.add(new ClouderaHostRAMChartTask(7, DAILY, OPTIONAL));
-    out.add(new ClouderaHostRAMChartTask(30, DAILY, OPTIONAL));
-    out.add(new ClouderaHostRAMChartTask(90, DAILY, OPTIONAL));
+  private List<? extends Task<?>> defaultTasks() {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    ZonedDateTime startDate = today.minusDays(90);
+    return ImmutableList.of(
+        (new ClouderaClusterCPUChartTask.Builder())
+            .setOutputFileName("cluster-cpu-90d.jsonl")
+            .setStartDate(startDate)
+            .setEndDate(today)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(REQUIRED)
+            .build(),
+        (new ClouderaHostRAMChartTask.Builder())
+            .setOutputFileName("host-ram-90d.jsonl")
+            .setStartDate(startDate)
+            .setEndDate(today)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(REQUIRED)
+            .build(),
+        new ClouderaYarnApplicationsTask("yarn-applications-90d.jsonl", startDate, today, OPTIONAL),
+        new ClouderaYarnApplicationTypeTask(
+            "yarn-application-types-90d.jsonl", startDate, today, OPTIONAL));
+  }
 
-    out.add(new ClouderaYarnApplicationsTask(90, OPTIONAL));
-    out.add(new ClouderaYarnApplicationTypeTask(90, OPTIONAL));
+  private List<? extends Task<?>> customDateRangeTasks(
+      ZonedDateTime startDate, @Nullable ZonedDateTime endDate) {
+    return ImmutableList.of(
+        (new ClouderaClusterCPUChartTask.Builder())
+            .setOutputFileName("cluster-cpu-custom-date-range.jsonl")
+            .setStartDate(startDate)
+            .setEndDate(endDate)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(REQUIRED)
+            .build(),
+        (new ClouderaHostRAMChartTask.Builder())
+            .setOutputFileName("host-ram-custom-date-range.jsonl")
+            .setStartDate(startDate)
+            .setEndDate(endDate)
+            .setTsAggregation(DAILY)
+            .setTaskCategory(REQUIRED)
+            .build(),
+        new ClouderaYarnApplicationsTask(
+            "yarn-applications-custom-date-range.jsonl", startDate, endDate, OPTIONAL),
+        new ClouderaYarnApplicationTypeTask(
+            "yarn-application-types-custom-date-range.jsonl", startDate, endDate, OPTIONAL));
   }
 
   @Nonnull
   @Override
   public ClouderaManagerHandle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    List<String> errors = new ArrayList<>();
-    if (arguments.getUri() == null) {
-      errors.add("--url for Cloudera Manager API is required");
-    }
-    if (arguments.getUser() == null) {
-      errors.add("--user is required for Cloudera Manager API connector");
-    }
-
-    if (!errors.isEmpty()) {
-      throw new MetadataDumperUsageException(
-          "Missing arguments for connector generic-args : ", errors);
-    }
     URI uri = new URI(arguments.getUri());
-
     CloseableHttpClient httpClient = disableSSLVerification(HttpClients.custom()).build();
     ClouderaManagerHandle handle = new ClouderaManagerHandle(uri, httpClient);
 
     String user = arguments.getUser();
     String password = arguments.getPasswordOrPrompt();
     doClouderaManagerLogin(handle.getBaseURI(), httpClient, user, password);
-
     return handle;
+  }
+
+  @Override
+  public void validate(ConnectorArguments arguments) {
+    String clouderaUri = arguments.getUri();
+    Preconditions.checkNotNull(clouderaUri, "--url for Cloudera Manager API is required");
+
+    String clouderaUser = arguments.getUser();
+    Preconditions.checkNotNull(
+        clouderaUser, "--user is required for Cloudera Manager API connector");
+
+    validateDateRange(arguments);
   }
 
   private void doClouderaManagerLogin(
