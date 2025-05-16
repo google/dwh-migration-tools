@@ -107,14 +107,14 @@ public class ClouderaManagerConnector extends AbstractConnector {
             .setStartDate(startDate)
             .setEndDate(today)
             .setTsAggregation(DAILY)
-            .setTaskCategory(OPTIONAL)
+            .setTaskCategory(REQUIRED)
             .build(),
         (new ClouderaHostRAMChartTask.Builder())
             .setOutputFileName("host-ram-90d.jsonl")
             .setStartDate(startDate)
             .setEndDate(today)
             .setTsAggregation(DAILY)
-            .setTaskCategory(OPTIONAL)
+            .setTaskCategory(REQUIRED)
             .build(),
         new ClouderaYarnApplicationsTask("yarn-applications-90d.jsonl", startDate, today, OPTIONAL),
         new ClouderaYarnApplicationTypeTask(
