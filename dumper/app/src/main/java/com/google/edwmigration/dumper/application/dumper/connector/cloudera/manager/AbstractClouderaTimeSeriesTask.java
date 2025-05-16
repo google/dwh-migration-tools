@@ -89,39 +89,36 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     return chartInJson;
   }
 
-  static class Builder {
+  abstract static class Builder<T extends AbstractClouderaTimeSeriesTask> {
     String outputFileName;
     ZonedDateTime startDate;
     ZonedDateTime endDate;
     TimeSeriesAggregation tsAggregation;
     TaskCategory taskCategory;
 
-    public AbstractClouderaTimeSeriesTask build() {
-      return new ClouderaClusterCPUChartTask(
-          outputFileName, startDate, endDate, tsAggregation, taskCategory);
-    }
+    abstract T build();
 
-    public Builder setOutputFileName(String outputFileName) {
+    public Builder<T> setOutputFileName(String outputFileName) {
       this.outputFileName = outputFileName;
       return this;
     }
 
-    public Builder setStartDate(ZonedDateTime startDate) {
+    public Builder<T> setStartDate(ZonedDateTime startDate) {
       this.startDate = startDate;
       return this;
     }
 
-    public Builder setEndDate(ZonedDateTime endDate) {
+    public Builder<T> setEndDate(ZonedDateTime endDate) {
       this.endDate = endDate;
       return this;
     }
 
-    public Builder setTsAggregation(TimeSeriesAggregation tsAggregation) {
+    public Builder<T> setTsAggregation(TimeSeriesAggregation tsAggregation) {
       this.tsAggregation = tsAggregation;
       return this;
     }
 
-    public Builder setTaskCategory(TaskCategory taskCategory) {
+    public Builder<T> setTaskCategory(TaskCategory taskCategory) {
       this.taskCategory = taskCategory;
       return this;
     }

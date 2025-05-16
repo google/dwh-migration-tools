@@ -77,4 +77,12 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
       }
     }
   }
+
+  static class Builder extends AbstractClouderaTimeSeriesTask.Builder<ClouderaHostRAMChartTask> {
+    @Override
+    public ClouderaHostRAMChartTask build() {
+      return new ClouderaHostRAMChartTask(
+          outputFileName, startDate, endDate, tsAggregation, taskCategory);
+    }
+  }
 }

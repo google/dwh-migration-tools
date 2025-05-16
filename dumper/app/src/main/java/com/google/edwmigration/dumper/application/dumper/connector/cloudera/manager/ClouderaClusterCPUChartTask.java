@@ -93,4 +93,12 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
     }
     return cpuClusters;
   }
+
+  static class Builder extends AbstractClouderaTimeSeriesTask.Builder<ClouderaClusterCPUChartTask> {
+    @Override
+    public ClouderaClusterCPUChartTask build() {
+      return new ClouderaClusterCPUChartTask(
+          outputFileName, startDate, endDate, tsAggregation, taskCategory);
+    }
+  }
 }

@@ -98,7 +98,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
     }
   }
 
-  private List<? extends AbstractClouderaManagerTask> defaultTasks() {
+  private List<? extends Task<?>> defaultTasks() {
     ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
     ZonedDateTime startDate = today.minusDays(90);
     return ImmutableList.of(
