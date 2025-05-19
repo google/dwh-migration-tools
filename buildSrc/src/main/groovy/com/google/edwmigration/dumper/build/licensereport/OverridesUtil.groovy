@@ -47,6 +47,9 @@ class OverridesUtil {
             "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": [
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-dataformats-binary/2.16/LICENSE",
             ],
+            "com.fasterxml.jackson.dataformat:jackson-dataformat-csv": [
+                licenseUrl: "https://github.com/FasterXML/jackson-dataformats-text/blob/2.19/LICENSE",
+            ],
             "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": [
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-dataformats-text/2.16/LICENSE",
             ],
@@ -98,6 +101,9 @@ class OverridesUtil {
             "com.google.api.grpc:grpc-google-cloud-bigquerystorage-v1beta2": [
                 licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
             ],
+            "com.google.api.grpc:grpc-google-cloud-storage-control-v2": [
+                licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
+            ],
             "com.google.api.grpc:grpc-google-cloud-storage-v2": [
                 projectUrl: "https://github.com/googleapis/java-storage",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-storage/main/LICENSE",
@@ -119,6 +125,16 @@ class OverridesUtil {
             "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1beta2": [
                 projectUrl: "https://github.com/googleapis/googleapis",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
+            ],
+            "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1alpha": [
+                projectUrl: "https://github.com/googleapis/googleapis",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
+            ],
+            "com.google.api.grpc:proto-google-cloud-storage-control-v2": [
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
+            ],
+            "com.google.cloud:google-cloud-storage-control": [
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
             ],
             "com.google.api.grpc:proto-google-cloud-kms-v1": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
@@ -205,7 +221,7 @@ class OverridesUtil {
                 licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
             ],
             "com.google.guava:guava": [
-                    licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
+                licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
             ],
             "com.google.guava:failureaccess": [
                 projectUrl: "https://github.com/google/guava",
@@ -281,6 +297,9 @@ class OverridesUtil {
             ],
             "commons-io:commons-io": [
                 licenseUrl: "https://raw.githubusercontent.com/apache/commons-io/master/LICENSE.txt",
+            ],
+            "dev.cel:cel": [
+                    licenseUrl: "https://github.com/google/cel-java/blob/main/LICENSE"
             ],
             "org.apache.hadoop:hadoop-common": [
                 projectUrl: "https://github.com/apache/hadoop",
@@ -412,6 +431,9 @@ class OverridesUtil {
             "org.anarres.jdiagnostics:jdiagnostics": [
                 licenseUrl: "https://raw.githubusercontent.com/shevek/jdiagnostics/master/LICENSE",
             ],
+            "org.antlr:antlr4-runtime": [
+                licenseUrl: "https://github.com/antlr/antlr4/blob/dev/LICENSE.txt"
+            ],
             "org.apache.arrow:arrow-format": [
                 projectUrl: "https://github.com/apache/arrow",
                 licenseUrl: "https://raw.githubusercontent.com/apache/arrow/main/LICENSE.txt",
@@ -468,6 +490,9 @@ class OverridesUtil {
             ],
             "org.conscrypt:conscrypt-openjdk-uber": [
                 licenseUrl: "https://raw.githubusercontent.com/google/conscrypt/master/LICENSE",
+            ],
+            "org.jspecify:jspecify": [
+                licenseUrl: "https://github.com/jspecify/jspecify/blob/main/LICENSE"
             ],
             "org.postgresql:postgresql": [
                 licenseUrl: "https://raw.githubusercontent.com/pgjdbc/pgjdbc/master/LICENSE",
