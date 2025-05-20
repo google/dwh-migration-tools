@@ -26,6 +26,31 @@ Sample PostgreSQL connection file:
 }
 ```
 
+Sample BigQuery connection file:
+```json
+{
+  "connectionType": "bigquery",
+  "project": "projectId"
+}
+```
+
+## Run a Validation
+```commandline
+./gradlew :validator:app:run --args="
+--table employees=validation.employees 
+--source-connection source.json --target-connection target.json 
+--gcs-path gs://myBucket 
+--bq-results-table project.dataset.results 
+--bq-staging-dataset datasetName 
+--project-id myproject 
+--primary-keys pkCol"
+```
+
+## Requirements
+Running a validation requires:
+- A numeric primary key column that will be used to generate a random subset of your table.
+- A GCS location where your source query results will be uploaded
+
 ## License
 
 Copyright 2025 Google LLC

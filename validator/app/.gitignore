@@ -5,6 +5,7 @@
 build
 
 # Ignore test connection JSON files
-*.json
+source.json
+target.json
 
 validationOutputs

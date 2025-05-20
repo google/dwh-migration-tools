@@ -20,21 +20,29 @@ import javax.annotation.Nullable;
 
 /** @author nehanene */
 public class ValidationTableMapping {
+  public enum TableType {
+    SOURCE,
+    TARGET
+  }
 
   public static class ValidationTable {
     private String schema = null;
     private final String table;
     private final String fullyQualifiedTable;
+    private final TableType tableType;
 
-    public ValidationTable(String fullyQualifiedTable, String schema, String table) {
+    public ValidationTable(
+        String fullyQualifiedTable, String schema, String table, TableType tableType) {
       this.schema = schema;
       this.table = table;
       this.fullyQualifiedTable = fullyQualifiedTable;
+      this.tableType = tableType;
     }
 
-    public ValidationTable(String fullyQualifiedTable, String table) {
+    public ValidationTable(String fullyQualifiedTable, String table, TableType tableType) {
       this.table = table;
       this.fullyQualifiedTable = fullyQualifiedTable;
+      this.tableType = tableType;
     }
 
     @Nullable
@@ -44,6 +52,10 @@ public class ValidationTableMapping {
 
     public String getTable() {
       return table;
+    }
+
+    public TableType getTableType() {
+      return tableType;
     }
 
     public String getFullyQualifiedTable() {
@@ -66,17 +78,19 @@ public class ValidationTableMapping {
     String[] sourceTableName = source.split("\\.");
     String[] targetTableName = target.split("\\.");
     if (sourceTableName.length == 2) {
-      sourceTable = new ValidationTable(source, sourceTableName[0], sourceTableName[1]);
+      sourceTable =
+          new ValidationTable(source, sourceTableName[0], sourceTableName[1], TableType.SOURCE);
     } else if (sourceTableName.length == 1) {
-      sourceTable = new ValidationTable(source, sourceTableName[0]);
+      sourceTable = new ValidationTable(source, sourceTableName[0], TableType.SOURCE);
     } else {
       throw new IllegalArgumentException("Invalid source table name provided: " + source);
     }
 
     if (targetTableName.length == 2) {
-      targetTable = new ValidationTable(target, targetTableName[0], targetTableName[1]);
+      targetTable =
+          new ValidationTable(target, targetTableName[0], targetTableName[1], TableType.TARGET);
     } else if (targetTableName.length == 1) {
-      targetTable = new ValidationTable(target, targetTableName[0]);
+      targetTable = new ValidationTable(target, targetTableName[0], TableType.TARGET);
     } else {
       throw new IllegalArgumentException("Invalid target table name provided: " + target);
     }

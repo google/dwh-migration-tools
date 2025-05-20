@@ -22,7 +22,8 @@ import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.val;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.edwmigration.validation.application.validator.ValidationTableMapping.ValidationTable;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping.TableType;
 import com.google.edwmigration.validation.application.validator.sql.AbstractSqlGenerator;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,10 +46,12 @@ public class PostgresqlSqlGenerator extends AbstractSqlGenerator {
 
   public PostgresqlSqlGenerator(
       @Nonnull SQLDialect dialect,
-      @Nonnull ValidationTable validationTable,
+      @Nonnull ValidationTableMapping tableMapping,
       @Nonnull Double confidenceInterval,
-      @Nonnull ImmutableMap<String, String> columnMappings) {
-    super(dialect, validationTable, confidenceInterval, columnMappings);
+      @Nonnull ImmutableMap<String, String> columnMappings,
+      @Nonnull TableType tableType,
+      @Nonnull ImmutableMap<String, String> primaryKeys) {
+    super(dialect, tableMapping, confidenceInterval, columnMappings, tableType, primaryKeys);
   }
 
   static Map<String, DataType<? extends Number>> typeMappings = new HashMap<>();
@@ -107,12 +110,8 @@ public class PostgresqlSqlGenerator extends AbstractSqlGenerator {
     return inlinedQuery;
   }
 
-  public String getPrimaryKey() {
-
-    return "id";
-  }
-
   public Long getRowCount() {
+    // TODO: Update with metadata query that returns row count
     return 49L;
   }
 }

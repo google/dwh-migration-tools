@@ -16,10 +16,10 @@
  */
 package com.google.edwmigration.validation.application.validator.connector.bigquery;
 
-import com.google.cloud.bigquery.BigQuery;
 import com.google.edwmigration.validation.application.validator.NameManager;
 import com.google.edwmigration.validation.application.validator.NameManager.ValidationType;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping.TableType;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import com.google.edwmigration.validation.application.validator.task.AbstractSourceTask;
 import com.google.edwmigration.validation.application.validator.task.AbstractTargetTask;
@@ -50,15 +50,14 @@ public class BigQueryValidationConnector extends BigQueryAbstractConnector {
 
     @Override
     public void run() throws Exception {
-      BigQueryHandle bqHandle = (BigQueryHandle) getHandle();
-      BigQuery bigQuery = bqHandle.getBigQuery();
-
       BigQuerySqlGenerator generator =
           new BigQuerySqlGenerator(
               SQLDialect.MYSQL,
-              getArguments().getTableMapping().getTargetTable(),
+              getArguments().getTableMapping(),
               getArguments().getOptConfidenceInterval(),
-              getArguments().getColumnMappings());
+              getArguments().getColumnMappings(),
+              TableType.TARGET,
+              getArguments().getPrimaryKeys());
       String numericColsQuery = generator.getNumericColumnsQuery();
       LOG.debug(numericColsQuery);
       HashMap<String, DataType<? extends Number>> numericCols =
@@ -66,11 +65,11 @@ public class BigQueryValidationConnector extends BigQueryAbstractConnector {
 
       String aggregateQuery = generator.getAggregateQuery(numericCols);
       String aggTargetTable = getNameManager().getBqTargetTableName(ValidationType.AGGREGATE);
-      extractQueryResults(aggregateQuery, aggTargetTable);
+      extractQueryResultsToTable(aggregateQuery, aggTargetTable);
 
       String rowSampleQuery = generator.getRowSampleQuery();
       String rowTargetTable = getNameManager().getBqTargetTableName(ValidationType.ROW);
-      extractQueryResults(rowSampleQuery, rowTargetTable);
+      extractQueryResultsToTable(rowSampleQuery, rowTargetTable);
     }
   }
 

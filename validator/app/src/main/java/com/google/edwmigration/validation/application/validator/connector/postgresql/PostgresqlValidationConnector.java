@@ -19,6 +19,7 @@ package com.google.edwmigration.validation.application.validator.connector.postg
 import com.google.edwmigration.validation.application.validator.NameManager;
 import com.google.edwmigration.validation.application.validator.NameManager.ValidationType;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping.TableType;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import com.google.edwmigration.validation.application.validator.handle.JdbcHandle;
 import com.google.edwmigration.validation.application.validator.task.AbstractJdbcSourceTask;
@@ -60,9 +61,11 @@ public class PostgresqlValidationConnector extends PostgresqlAbstractConnector {
         PostgresqlSqlGenerator generator =
             new PostgresqlSqlGenerator(
                 SQLDialect.POSTGRES,
-                getArguments().getTableMapping().getSourceTable(),
+                getArguments().getTableMapping(),
                 getArguments().getOptConfidenceInterval(),
-                getArguments().getColumnMappings());
+                getArguments().getColumnMappings(),
+                TableType.SOURCE,
+                getArguments().getPrimaryKeys());
         String numericColsQuery = generator.getNumericColumnsQuery();
         HashMap<String, DataType<? extends Number>> numericCols =
             executeNumericColsQuery(connection, generator, numericColsQuery);

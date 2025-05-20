@@ -49,7 +49,7 @@ public class ValidationArguments extends DefaultArguments {
   public static final String OPT_GCS_STAGING_BUCKET = "gcs-staging-bucket";
   public static final String OPT_BQ_STAGING = "bq-staging-dataset";
   public static final String OPT_BQ_RESULTS = "bq-results-table";
-
+  public static final String OPT_PRIMARY_KEYS = "primary-keys";
   private ValidationConnection sourceConnection;
   private ValidationConnection targetConnection;
   private ValidationTableMapping validationTableMapping;
@@ -114,7 +114,7 @@ public class ValidationArguments extends DefaultArguments {
           .withValuesSeparatedBy(',')
           .describedAs("colA=COLA,colB=newColB");
 
-  private final OptionSpec<String> bqStagingDataset =
+  private final OptionSpec<String> bqStagingDatasetOption =
       parser
           .accepts(
               OPT_BQ_STAGING,
@@ -124,7 +124,7 @@ public class ValidationArguments extends DefaultArguments {
           .describedAs("datasetName")
           .required();
 
-  private final OptionSpec<String> bqResultsTable =
+  private final OptionSpec<String> bqResultsTableOption =
       parser
           .accepts(OPT_BQ_RESULTS, "BQ validation results table.")
           .withRequiredArg()
@@ -135,11 +135,20 @@ public class ValidationArguments extends DefaultArguments {
   private final OptionSpec<String> projectIdOption =
       parser
           .accepts(OPT_PROJECT_ID, "Project ID. Used by GCS and BigQuery tasks.")
-          .withRequiredArg()
+          .withOptionalArg()
           .ofType(String.class)
           .describedAs("projectId");
 
-  private final OptionSpec<String> GcsStagingBucketOption =
+  private final OptionSpec<String> primaryKeysOption =
+      parser
+          .accepts(OPT_PRIMARY_KEYS, "Primary key(s) for table.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .describedAs("pkSource=pkTarget")
+          .withValuesSeparatedBy(',')
+          .required();
+
+  private final OptionSpec<String> gcsStagingBucketOption =
       parser
           .accepts(
               OPT_GCS_STAGING_BUCKET,
@@ -243,17 +252,35 @@ public class ValidationArguments extends DefaultArguments {
 
   @Nonnull
   public String getBqStagingDataset() {
-    return getOptions().valueOf(bqStagingDataset);
+    return getOptions().valueOf(bqStagingDatasetOption);
   }
 
   @Nonnull
   public String getBqResultsTable() {
-    return getOptions().valueOf(bqResultsTable);
+    return getOptions().valueOf(bqResultsTableOption);
+  }
+
+  @Nonnull
+  public ImmutableMap<String, String> getPrimaryKeys() {
+    List<String> mappings = getOptions().valuesOf(primaryKeysOption);
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    for (String pair : mappings) {
+      String[] parts = pair.split("=");
+      if (parts.length == 2) {
+        builder.put(parts[0], parts[1]);
+      } else if (parts.length == 1) {
+        builder.put(parts[0], parts[0]);
+      } else {
+        throw new IllegalArgumentException("Invalid primary key mapping format found: " + pair);
+      }
+    }
+
+    return builder.build();
   }
 
   @Nonnull
   public String getGcsStagingBucket() {
-    return getOptions().valueOf(GcsStagingBucketOption);
+    return getOptions().valueOf(gcsStagingBucketOption);
   }
 
   public ImmutableMap<String, String> getColumnMappings() {

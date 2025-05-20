@@ -20,11 +20,14 @@ import static org.jooq.impl.DSL.*;
 
 import autovalue.shaded.com.google.errorprone.annotations.ForOverride;
 import com.google.common.collect.ImmutableMap;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping.TableType;
 import com.google.edwmigration.validation.application.validator.ValidationTableMapping.ValidationTable;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.jooq.*;
 import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
@@ -36,19 +39,26 @@ public abstract class AbstractSqlGenerator implements SqlGenerator {
 
   private static final Logger LOG = LoggerFactory.getLogger(AbstractSqlGenerator.class);
   private final DSLContext create;
-  private final ValidationTable validationTable;
+  private final ValidationTableMapping validationTableMapping;
+  private ValidationTable validationTable = null;
   private final Double confidenceInterval;
+  private final TableType tableType;
   private final ImmutableMap<String, String> columnMappings;
+  private final ImmutableMap<String, String> primaryKeys;
 
   public AbstractSqlGenerator(
       @Nonnull SQLDialect dialect,
-      @Nonnull ValidationTable validationTable,
+      @Nonnull ValidationTableMapping validationTableMapping,
       @Nonnull Double confidenceInterval,
-      @Nonnull ImmutableMap<String, String> columnMappings) {
+      @Nonnull ImmutableMap<String, String> columnMappings,
+      @Nonnull TableType tableType,
+      @Nonnull ImmutableMap<String, String> primaryKeys) {
     this.create = DSL.using(dialect);
-    this.validationTable = validationTable;
+    this.validationTableMapping = validationTableMapping;
     this.confidenceInterval = confidenceInterval;
     this.columnMappings = columnMappings;
+    this.tableType = tableType;
+    this.primaryKeys = primaryKeys;
   }
 
   @Override
@@ -57,6 +67,13 @@ public abstract class AbstractSqlGenerator implements SqlGenerator {
   }
 
   public ValidationTable getValidationTable() {
+    if (validationTable == null) {
+      if (tableType == TableType.SOURCE) {
+        validationTable = validationTableMapping.getSourceTable();
+      } else {
+        validationTable = validationTableMapping.getTargetTable();
+      }
+    }
     return validationTable;
   }
 
@@ -64,16 +81,38 @@ public abstract class AbstractSqlGenerator implements SqlGenerator {
     return columnMappings;
   }
 
+  public ValidationTableMapping getValidationTableMapping() {
+    return validationTableMapping;
+  }
+
   @ForOverride
   public abstract Long getRowCount();
 
-  @ForOverride
-  public abstract String getPrimaryKey();
+  public ImmutableMap<String, String> getPrimaryKeys() {
+    return primaryKeys;
+  }
 
-  @Override
+  @ForOverride
+  public abstract DataType<? extends Number> getSqlDataType(
+      String dataType, @Nullable Integer numericPrecision, @Nullable Integer numericScale);
+
   public String getAggregateQuery(HashMap<String, DataType<? extends Number>> numericColumns) {
     Table<?> table = table(getValidationTable().getFullyQualifiedTable());
-    Select<Record4<String, String, String, BigDecimal>> finalSelect = null;
+    Select<Record6<String, String, String, String, String, BigDecimal>> finalSelect = null;
+
+    String sourceTableName = getValidationTableMapping().getSourceTable().getFullyQualifiedTable();
+    String targetTableName = getValidationTableMapping().getTargetTable().getFullyQualifiedTable();
+
+    Select<Record6<String, String, String, String, String, BigDecimal>> countStar =
+        getDSLContext()
+            .select(
+                val("_ALL_COLUMNS").as("source_column_name"),
+                val("_ALL_COLUMNS").as("target_column_name"),
+                val(sourceTableName).as("source_table_name"),
+                val(targetTableName).as("target_table_name"),
+                val("count_star").as("validation_type"),
+                count().cast(BigDecimal.class).as("value"))
+            .from(table);
 
     for (Map.Entry<String, DataType<? extends Number>> entry : numericColumns.entrySet()) {
       String sourceColumnName = entry.getKey();
@@ -82,44 +121,56 @@ public abstract class AbstractSqlGenerator implements SqlGenerator {
 
       DataType<? extends Number> columnType = entry.getValue();
 
-      Field<BigDecimal> column = field(name(sourceColumnName), columnType).cast(BigDecimal.class);
+      Name columnName =
+          (getValidationTable().getTableType() == TableType.SOURCE)
+              ? name(sourceColumnName)
+              : name(targetColumnName);
+      Field<BigDecimal> column = field(columnName, columnType).cast(BigDecimal.class);
 
-      SelectJoinStep<Record4<String, String, String, BigDecimal>> sumSelect =
+      SelectJoinStep<Record6<String, String, String, String, String, BigDecimal>> sumSelect =
           getDSLContext()
               .select(
                   val(sourceColumnName).as("source_column_name"),
                   val(targetColumnName).as("target_column_name"),
+                  val(sourceTableName).as("source_table_name"),
+                  val(targetTableName).as("target_table_name"),
                   val("sum").as("validation_type"),
                   sum(column).as("value"))
               .from(table);
-      SelectJoinStep<Record4<String, String, String, BigDecimal>> minSelect =
+      SelectJoinStep<Record6<String, String, String, String, String, BigDecimal>> minSelect =
           getDSLContext()
               .select(
                   val(sourceColumnName).as("source_column_name"),
                   val(targetColumnName).as("target_column_name"),
+                  val(sourceTableName).as("source_table_name"),
+                  val(targetTableName).as("target_table_name"),
                   val("min").as("validation_type"),
                   min(column).as("value"))
               .from(table);
-      SelectJoinStep<Record4<String, String, String, BigDecimal>> maxSelect =
+      SelectJoinStep<Record6<String, String, String, String, String, BigDecimal>> maxSelect =
           getDSLContext()
               .select(
                   val(sourceColumnName).as("source_column_name"),
                   val(targetColumnName).as("target_column_name"),
+                  val(sourceTableName).as("source_table_name"),
+                  val(targetTableName).as("target_table_name"),
                   val("max").as("validation_type"),
                   max(column).as("value"))
               .from(table);
-      SelectJoinStep<Record4<String, String, String, BigDecimal>> avgSelect =
+      SelectJoinStep<Record6<String, String, String, String, String, BigDecimal>> avgSelect =
           getDSLContext()
               .select(
                   val(sourceColumnName).as("source_column_name"),
                   val(targetColumnName).as("target_column_name"),
+                  val(sourceTableName).as("source_table_name"),
+                  val(targetTableName).as("target_table_name"),
                   val("avg").as("validation_type"),
                   avg(column).cast(BigDecimal.class).as("value"))
               .from(table);
-      Select<Record4<String, String, String, BigDecimal>> subselect =
+      SelectOrderByStep<Record6<String, String, String, String, String, BigDecimal>> subselect =
           sumSelect.unionAll(minSelect).unionAll(maxSelect).unionAll(avgSelect);
       if (finalSelect == null) {
-        finalSelect = subselect;
+        finalSelect = countStar.unionAll(subselect);
       } else {
         finalSelect = finalSelect.unionAll(subselect);
       }
@@ -181,7 +232,6 @@ public abstract class AbstractSqlGenerator implements SqlGenerator {
     return (long) Math.ceil(finiteSample);
   }
 
-  @Override
   public String getRowSampleQuery() {
     DSLContext dsl = getDSLContext();
 
@@ -191,11 +241,18 @@ public abstract class AbstractSqlGenerator implements SqlGenerator {
     int modCondition =
         getModCondition(getRowCount(), confidenceInterval, marginOfError, populationProportion);
 
+    // First PK will be used for the mod operation.
+    Map.Entry<String, String> pkEntry = getPrimaryKeys().entrySet().iterator().next();
+
+    Name pkColumn =
+        (getValidationTable().getTableType() == TableType.SOURCE)
+            ? name(pkEntry.getKey())
+            : name(pkEntry.getValue());
+
     String sql =
         dsl.select()
             .from(getValidationTable().getFullyQualifiedTable())
-            .where(
-                (field(name(getPrimaryKey()), Integer.class).mod(val(100))).lessThan(modCondition))
+            .where((field(pkColumn).mod(val(100))).lessThan(modCondition))
             .getSQL(ParamType.INLINED);
 
     LOG.debug("Row sample query generated: " + sql);

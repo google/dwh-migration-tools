@@ -22,7 +22,8 @@ import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.val;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.edwmigration.validation.application.validator.ValidationTableMapping.ValidationTable;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping.TableType;
 import com.google.edwmigration.validation.application.validator.sql.AbstractSqlGenerator;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,26 +37,25 @@ import org.jooq.impl.SQLDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** @author nehanene */
 public class BigQuerySqlGenerator extends AbstractSqlGenerator {
 
   private static final Logger LOG = LoggerFactory.getLogger(BigQuerySqlGenerator.class);
 
   public BigQuerySqlGenerator(
       @Nonnull SQLDialect dialect,
-      @Nonnull ValidationTable table,
+      @Nonnull ValidationTableMapping tableMapping,
       @Nonnull Double confidenceInterval,
-      @Nonnull ImmutableMap<String, String> columnMappings) {
-    super(dialect, table, confidenceInterval, columnMappings);
+      @Nonnull ImmutableMap<String, String> columnMappings,
+      @Nonnull TableType tableType,
+      @Nonnull ImmutableMap<String, String> primaryKeys) {
+    super(dialect, tableMapping, confidenceInterval, columnMappings, tableType, primaryKeys);
   }
 
   @Override
   public Long getRowCount() {
+    // TODO: Update with metadata query which returns row count
     return 49L;
-  }
-
-  @Override
-  public String getPrimaryKey() {
-    return "id";
   }
 
   static Map<String, DataType<? extends Number>> typeMappings = new HashMap<>();

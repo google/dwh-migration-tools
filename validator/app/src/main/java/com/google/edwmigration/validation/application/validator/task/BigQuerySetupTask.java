@@ -59,39 +59,45 @@ public class BigQuerySetupTask {
 
   public void createBqExternalTable() throws SQLException {
     Schema schema = createBigQuerySchema(metadata);
+
+    BigQuery bigquery = getBigQuery();
+
+    CsvOptions csvOptions = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
+
+    TableId tableId = TableId.of(bqStagingDataset, externalTableName);
+    LOG.debug(
+        String.format("Creating external table from %s to BQ table ID %s", sourceGcsUri, tableId));
+    ExternalTableDefinition externalTable =
+        ExternalTableDefinition.newBuilder(sourceGcsUri, csvOptions).setSchema(schema).build();
+
     try {
-      BigQuery bigquery = getBigQuery();
-
-      CsvOptions csvOptions = CsvOptions.newBuilder().setSkipLeadingRows(1).build();
-
-      TableId tableId = TableId.of(bqStagingDataset, externalTableName);
-      LOG.debug(
-          String.format(
-              "Creating external table from %s to BQ table ID %s", sourceGcsUri, tableId));
-      ExternalTableDefinition externalTable =
-          ExternalTableDefinition.newBuilder(sourceGcsUri, csvOptions).setSchema(schema).build();
+      boolean deleted = bigquery.delete(tableId);
+      if (deleted) {
+        LOG.debug("Deleted existing external table with ID: " + tableId);
+      }
       bigquery.create(TableInfo.of(tableId, externalTable));
-
     } catch (BigQueryException e) {
       throw new RuntimeException("Error creating BigQuery external table from GCS file", e);
-    } catch (IOException e) {
-      throw new RuntimeException("Error creating BigQuery client", e);
     }
   }
 
-  private static BigQuery getBigQuery() throws IOException {
+  public static BigQuery getBigQuery() {
     String credentialsFile = System.getenv(ServiceOptions.CREDENTIAL_ENV_NAME);
     BigQuery bigQuery;
-    if (credentialsFile != null) {
-      bigQuery =
-          BigQueryOptions.newBuilder()
-              .setCredentials(
-                  GoogleCredentials.fromStream(
-                      FileUtils.openInputStream(FileUtils.getFile(credentialsFile))))
-              .build()
-              .getService();
-    } else {
-      bigQuery = BigQueryOptions.getDefaultInstance().getService();
+    try {
+      if (credentialsFile != null) {
+        bigQuery =
+            BigQueryOptions.newBuilder()
+                .setCredentials(
+                    GoogleCredentials.fromStream(
+                        FileUtils.openInputStream(FileUtils.getFile(credentialsFile))))
+                .build()
+                .getService();
+      } else {
+        bigQuery = BigQueryOptions.getDefaultInstance().getService();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Error creating BigQuery client", e);
     }
     return bigQuery;
   }

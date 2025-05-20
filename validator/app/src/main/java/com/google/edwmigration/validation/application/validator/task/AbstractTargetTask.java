@@ -32,7 +32,7 @@ import com.google.edwmigration.validation.application.validator.NameManager;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.connector.bigquery.BigQueryAbstractConnector.BigQueryHandle;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
-import com.google.edwmigration.validation.application.validator.sql.SqlGenerator;
+import com.google.edwmigration.validation.application.validator.sql.AbstractSqlGenerator;
 import java.util.HashMap;
 import org.jooq.DataType;
 import org.slf4j.Logger;
@@ -68,7 +68,7 @@ public abstract class AbstractTargetTask {
   }
 
   public HashMap<String, DataType<? extends Number>> executeNumericColsQuery(
-      SqlGenerator generator, String query) throws Exception {
+      AbstractSqlGenerator generator, String query) throws Exception {
     BigQueryHandle bqHandle = (BigQueryHandle) getHandle();
     BigQuery bigQuery = bqHandle.getBigQuery();
 
@@ -104,7 +104,7 @@ public abstract class AbstractTargetTask {
     return results;
   }
 
-  public void extractQueryResults(String query, String targetTableId) throws Exception {
+  public void extractQueryResultsToTable(String query, String targetTableId) throws Exception {
     BigQueryHandle bqHandle = (BigQueryHandle) getHandle();
     BigQuery bigQuery = bqHandle.getBigQuery();
     String dataset = getArguments().getBqStagingDataset();
@@ -121,10 +121,8 @@ public abstract class AbstractTargetTask {
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query)
             .setDestinationTable(destinationTable)
-            .setAllowLargeResults(true)
             .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE)
             .setCreateDisposition(JobInfo.CreateDisposition.CREATE_IF_NEEDED)
-            .setUseLegacySql(false)
             .build();
 
     JobId jobId = JobId.of();
@@ -139,7 +137,10 @@ public abstract class AbstractTargetTask {
       throw new RuntimeException(
           "Error executing BQ query." + queryJob.getStatus().getError().toString());
     } else {
-      LOG.debug("Query results successfully written to BQ table ID: " + destinationTable);
+      LOG.debug(
+          String.format(
+              "Query results successfully written to BQ table ID: %s with Job id: %s ",
+              targetTableId, jobId.toString()));
     }
   }
 

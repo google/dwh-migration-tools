@@ -20,7 +20,7 @@ import com.google.common.base.Stopwatch;
 import com.google.edwmigration.validation.application.validator.NameManager.ValidationType;
 import com.google.edwmigration.validation.application.validator.ValidationArguments;
 import com.google.edwmigration.validation.application.validator.handle.Handle;
-import com.google.edwmigration.validation.application.validator.sql.SqlGenerator;
+import com.google.edwmigration.validation.application.validator.sql.AbstractSqlGenerator;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -61,7 +61,7 @@ public abstract class AbstractJdbcSourceTask extends AbstractSourceTask {
   }
 
   protected HashMap<String, DataType<? extends Number>> executeNumericColsQuery(
-      Connection connection, SqlGenerator generator, String sql) throws SQLException {
+      Connection connection, AbstractSqlGenerator generator, String sql) throws SQLException {
     PreparedStatement statement = null;
     try {
       LOG.debug("Preparing statement...");

@@ -43,7 +43,6 @@ public class HandleUtil {
       if (connection == null) {
         LOG.error("DataSource failed to provide a connection (usually bad/mismatched JDBC URI).");
         // This used to be thrown by Preconditions and was kept for compatibility.
-        // TODO: Replace with a better error.
         throw new NullPointerException();
       } else {
         LOG.debug("Connection test succeeded");

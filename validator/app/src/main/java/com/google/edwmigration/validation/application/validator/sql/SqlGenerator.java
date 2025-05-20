@@ -16,25 +16,13 @@
  */
 package com.google.edwmigration.validation.application.validator.sql;
 
-import com.google.edwmigration.validation.application.validator.ValidationTableMapping.ValidationTable;
-import java.util.HashMap;
-import javax.annotation.Nullable;
+import com.google.edwmigration.validation.application.validator.ValidationTableMapping;
 import org.jooq.DSLContext;
-import org.jooq.DataType;
 
 /** @author nehanene */
 public interface SqlGenerator {
 
   DSLContext getDSLContext();
 
-  ValidationTable getValidationTable();
-
-  String getPrimaryKey();
-
-  String getAggregateQuery(HashMap<String, DataType<? extends Number>> numericColumns);
-
-  String getRowSampleQuery();
-
-  DataType<? extends Number> getSqlDataType(
-      String dataType, @Nullable Integer numericPrecision, @Nullable Integer numericScale);
+  ValidationTableMapping getValidationTableMapping();
 }

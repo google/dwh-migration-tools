@@ -24,6 +24,8 @@ import com.google.edwmigration.validation.application.validator.connector.Connec
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import com.google.edwmigration.validation.application.validator.task.AbstractSourceTask;
 import com.google.edwmigration.validation.application.validator.task.AbstractTargetTask;
+import com.google.edwmigration.validation.application.validator.task.BigQuerySetupTask;
+import com.google.edwmigration.validation.application.validator.task.ComparisonTask;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -109,7 +111,7 @@ public class Validator {
     if (database != null) {
       sb.append(database).append("/");
     }
-    sb.append(args.getTableMapping().getSourceTable()).append("/");
+    sb.append(args.getTableMapping().getSourceTable().getTable()).append("/");
     return sb.toString();
   }
 
@@ -210,35 +212,36 @@ public class Validator {
       // rsyncClient.putRsync(String projectId, outputURI, gcsStagingUri, gcsUri)
 
       // BELOW BLOCK FOR GCS UPLOAD
-      // Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
-      // HashMap<ValidationType, String> uploadedGcsUris = uploadToGcs(storage, outputURI, gcsUri,
-      // arguments);
+      Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
+      HashMap<ValidationType, String> uploadedGcsUris =
+          uploadToGcs(storage, outputURI, gcsUri, arguments);
 
       NameManager nameManager = new NameManager(arguments);
 
-      // BigQuerySetupTask bqAggSetup =
-      //     new BigQuerySetupTask(
-      //         aggregateMetadata,
-      //         arguments.getBqStagingDataset(),
-      //         uploadedGcsUris.get(ValidationType.AGGREGATE),
-      //         nameManager.getBqSourceTableName(ValidationType.AGGREGATE));
-      // bqAggSetup.createBqExternalTable();
-      //
-      // BigQuerySetupTask bqRowSetup =
-      //     new BigQuerySetupTask(
-      //         rowMetadata,
-      //         arguments.getBqStagingDataset(),
-      //         uploadedGcsUris.get(ValidationType.ROW),
-      //         nameManager.getBqTargetTableName(ValidationType.ROW));
-      // bqRowSetup.createBqExternalTable();
+      BigQuerySetupTask bqAggSetup =
+          new BigQuerySetupTask(
+              aggregateMetadata,
+              arguments.getBqStagingDataset(),
+              uploadedGcsUris.get(ValidationType.AGGREGATE),
+              nameManager.getBqSourceTableName(ValidationType.AGGREGATE));
+      bqAggSetup.createBqExternalTable();
 
-      Handle targetHandle = closer.register(targetConnector.open(arguments.getTargetConnection()));
+      BigQuerySetupTask bqRowSetup =
+          new BigQuerySetupTask(
+              rowMetadata,
+              arguments.getBqStagingDataset(),
+              uploadedGcsUris.get(ValidationType.ROW),
+              nameManager.getBqSourceTableName(ValidationType.ROW));
+      bqRowSetup.createBqExternalTable();
+
+      Handle targetHandle =
+      closer.register(targetConnector.open(arguments.getTargetConnection()));
       AbstractTargetTask targetQueryTask =
           targetConnector.getTargetQueryTask(targetHandle, nameManager, arguments);
       targetQueryTask.run();
 
-      // run comparison query
-
+      ComparisonTask comparisonTask = new ComparisonTask(arguments, nameManager);
+      comparisonTask.run();
     }
 
     return true;

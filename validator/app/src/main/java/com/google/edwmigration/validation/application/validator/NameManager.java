@@ -16,9 +16,10 @@
  */
 package com.google.edwmigration.validation.application.validator;
 
+/** @author nehanene */
 public class NameManager {
 
-  ValidationArguments args;
+  private ValidationArguments args;
 
   public NameManager(ValidationArguments args) {
     this.args = args;
@@ -29,14 +30,30 @@ public class NameManager {
     ROW
   }
 
+  public ValidationArguments getArgs() {
+    return args;
+  }
+
+  public String getDataset() {
+    return getArgs().getBqStagingDataset();
+  }
+
+  public String getFullyQualifiedBqSourceTableName(ValidationType type) {
+    return getArgs().getBqStagingDataset() + "." + getBqSourceTableName(type);
+  }
+
+  public String getFullyQualifiedBqTargetTableName(ValidationType type) {
+    return getArgs().getBqStagingDataset() + "." + getBqTargetTableName(type);
+  }
+
   public String getBqSourceTableName(ValidationType type) {
     StringBuilder sb = new StringBuilder();
 
-    String database = args.getSourceConnection().getDatabase();
+    String database = getArgs().getSourceConnection().getDatabase();
     if (database != null) {
       sb.append(database).append("_");
     }
-    sb.append(args.getTableMapping().getSourceTable().getTable()).append("_");
+    sb.append(getArgs().getTableMapping().getSourceTable().getTable()).append("_");
 
     if (type == ValidationType.AGGREGATE) {
       sb.append("agg_source");
@@ -49,11 +66,11 @@ public class NameManager {
   public String getBqTargetTableName(ValidationType type) {
     StringBuilder sb = new StringBuilder();
 
-    String database = args.getTargetConnection().getDatabase();
+    String database = getArgs().getTargetConnection().getDatabase();
     if (database != null) {
       sb.append(database).append("_");
     }
-    sb.append(args.getTableMapping().getTargetTable().getTable()).append("_");
+    sb.append(getArgs().getTableMapping().getTargetTable().getTable()).append("_");
     if (type == ValidationType.AGGREGATE) {
       sb.append("agg_target");
     } else if (type == ValidationType.ROW) {

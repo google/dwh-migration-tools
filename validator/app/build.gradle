@@ -38,6 +38,7 @@ dependencies {
     implementation 'com.google.auth:google-auth-library-credentials:1.29.0'
     implementation 'com.google.auth:google-auth-library-oauth2-http:1.29.0'
     implementation 'org.jooq:jooq:3.16.23'
+    implementation 'org.json:json:20231013'
     implementation libs.google.cloud.nio
     implementation libs.google.cloud.kms
 
