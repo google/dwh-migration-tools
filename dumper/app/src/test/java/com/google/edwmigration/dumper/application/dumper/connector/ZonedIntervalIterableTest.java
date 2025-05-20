@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,17 +43,18 @@ import org.slf4j.LoggerFactory;
 public class ZonedIntervalIterableTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterableTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(ZonedIntervalIterableTest.class);
 
   private static final ZonedParser zonedParserStart = ZonedParser.withDefaultPattern(START_OF_DAY);
   private static final ZonedParser zonedParserEnd = ZonedParser.withDefaultPattern(END_OF_DAY);
 
   private void testIterable(int expectCount, ZonedIntervalIterable iterable) {
-    LOG.debug("Testing {}", iterable);
+    logger.debug("Testing {}", iterable);
     int actualCount = 0;
     for (ZonedInterval interval : iterable) {
-      LOG.debug("Interval is {}", interval);
-      assertEquals(iterable.getDuration(), interval.getDuration());
+      logger.debug("Interval is {}", interval);
+      assertEquals(iterable.getIntervalDuration(), interval.getDuration());
+
       actualCount++;
     }
     assertEquals(expectCount, actualCount);

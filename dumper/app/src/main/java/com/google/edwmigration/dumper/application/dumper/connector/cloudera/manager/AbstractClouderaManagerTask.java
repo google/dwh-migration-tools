@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,7 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Scanner;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
@@ -65,7 +66,21 @@ abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
     return objectMapper.readValue(jsonString, type);
   }
 
-  protected String parseObjectToJsonString(Object obj) throws JsonProcessingException {
+  protected <T> T parseJsonStreamToObject(InputStream src, Class<T> type) throws IOException {
+    return objectMapper.readValue(src, type);
+  }
+
+  protected String serializeObjectToJsonString(Object obj) throws JsonProcessingException {
     return objectMapper.writeValueAsString(obj);
+  }
+
+  protected String readFromStream(InputStream is) {
+    StringBuilder stringBuilder = new StringBuilder();
+    try (Scanner sc = new Scanner(is)) {
+      while (sc.hasNext()) {
+        stringBuilder.append(sc.next());
+      }
+    }
+    return stringBuilder.toString();
   }
 }

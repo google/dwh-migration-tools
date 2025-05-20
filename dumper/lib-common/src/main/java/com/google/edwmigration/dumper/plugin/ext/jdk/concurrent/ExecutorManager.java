@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 /** @author shevek */
 public class ExecutorManager implements AutoCloseable, Executor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ExecutorManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExecutorManager.class);
   private static final boolean DEBUG = false;
 
   @Nonnull
@@ -123,7 +123,7 @@ public class ExecutorManager implements AutoCloseable, Executor {
         try {
           get();
         } catch (ExecutionException | InterruptedException e) {
-          LOG.warn("Finished with exception: " + this);
+          logger.warn("Finished with exception: " + this);
         }
       }
     }
@@ -144,9 +144,9 @@ public class ExecutorManager implements AutoCloseable, Executor {
   private void get(@Nonnull Future<?> f) {
     try {
       Object v = f.get();
-      if (DEBUG) LOG.debug(f + " -> " + v);
+      if (DEBUG) logger.debug(f + " -> " + v);
     } catch (InterruptedException | ExecutionException e) {
-      if (DEBUG) LOG.debug(f + " -> " + e, e);
+      if (DEBUG) logger.debug(f + " -> " + e, e);
       synchronized (exceptions) {
         if (exceptions.size() < EXCEPTIONS_MAX) exceptions.add(e);
       }
@@ -158,7 +158,7 @@ public class ExecutorManager implements AutoCloseable, Executor {
       Future<?> f = completionQueue.poll();
       if (f == null) break;
       int n = outstanding.getAndDecrement();
-      if (DEBUG) if (n < 0) LOG.debug("reap at " + n);
+      if (DEBUG) if (n < 0) logger.debug("reap at " + n);
       get(f);
     }
   }
@@ -167,7 +167,7 @@ public class ExecutorManager implements AutoCloseable, Executor {
   private <V, T extends QueueingFuture<V>> T submit(@Nonnull T future) {
     reap();
     int n = outstanding.getAndIncrement();
-    if (DEBUG) if (n < 0) LOG.debug("submit at " + n);
+    if (DEBUG) if (n < 0) logger.debug("submit at " + n);
     executor.execute(future);
     return future;
   }
@@ -203,12 +203,12 @@ public class ExecutorManager implements AutoCloseable, Executor {
       };
 
   public void await() throws InterruptedException, ExecutionException {
-    if (DEBUG) LOG.debug("Awaiting " + outstanding + " executions.");
+    if (DEBUG) logger.debug("Awaiting " + outstanding + " executions.");
     while (outstanding.getAndUpdate(DECREMENT_IF_AVAILABLE) > 0) {
       Future<?> f = completionQueue.take();
       get(f);
     }
-    if (DEBUG) LOG.debug("Await done.");
+    if (DEBUG) logger.debug("Await done.");
     synchronized (exceptions) {
       if (exceptions.isEmpty()) return;
       Exception e = exceptions.get(0);
@@ -222,9 +222,9 @@ public class ExecutorManager implements AutoCloseable, Executor {
 
   @Override
   public void close() throws InterruptedException, ExecutionException {
-    // LOG.debug("Closing ExecutorManager", new Exception());
+    // logger.debug("Closing ExecutorManager", new Exception());
     await();
-    // LOG.debug("Closed ExecutorManager", new Exception());
+    // logger.debug("Closed ExecutorManager", new Exception());
   }
 
   @Override

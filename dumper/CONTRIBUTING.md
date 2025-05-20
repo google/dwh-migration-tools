@@ -2,10 +2,9 @@
 
 ## Dependencies
 
-To checkout and compile the dumper the following tools and dependencies are needed (for non debian-based linux distributions the command may be different):
-```
-sudo apt-get install openjdk-11-jdk git thrift-compiler
-```
+To checkout and compile the dumper the following tools and dependencies are needed: 
+1. https://openjdk.org/projects/jdk8/
+2. https://thrift.apache.org/ 
 
 ## Checkout and compile
 

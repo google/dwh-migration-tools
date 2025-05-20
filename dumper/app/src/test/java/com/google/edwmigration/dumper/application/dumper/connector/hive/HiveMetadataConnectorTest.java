@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 @RunWith(Theories.class)
 public class HiveMetadataConnectorTest extends AbstractConnectorTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HiveMetadataConnectorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveMetadataConnectorTest.class);
   private static final boolean debug = false;
 
   private final HiveMetadataConnector connector = new HiveMetadataConnector();
@@ -216,7 +216,7 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
             Assert.assertEquals(
                 "All tables should be present.", NUM_SCHEMAS * NUM_TABLES, tables.size());
 
-            LOG.info("Dump verified.");
+            logger.info("Dump verified.");
           }
 
         } catch (Exception e) {

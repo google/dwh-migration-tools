@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,14 +39,14 @@ import org.slf4j.LoggerFactory;
  * tasks flow
  */
 public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataTablesValidatorTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(TeradataTablesValidatorTask.class);
 
   private final ImmutableSet<String> tableNames;
 
   public TeradataTablesValidatorTask(@Nonnull String... tableNames) {
     super(
         TeradataTablesValidatorTask.class.getSimpleName() + ".txt",
-        TargetInitialization.DO_NOT_CREATE);
+        TaskOptions.DEFAULT.withTargetInitialization(TargetInitialization.DO_NOT_CREATE));
     Preconditions.checkNotNull(tableNames, "Validated table names are null");
     Preconditions.checkArgument(tableNames.length > 0, "Validated table names are empty");
 
@@ -61,7 +61,7 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
       @Nonnull ByteSink sink,
       @Nonnull Connection connection)
       throws SQLException {
-    LOG.debug("Checking availability for the tables {}", tableNames);
+    logger.debug("Checking availability for the tables {}", tableNames);
 
     List<String> notAccessibleTables = new ArrayList<>();
 
@@ -73,9 +73,9 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
           statement.setMaxRows(1);
           statement.execute();
         }
-        LOG.trace("The table {} is accessible.", table);
+        logger.trace("The table {} is accessible.", table);
       } catch (SQLException e) {
-        LOG.error("The table {} is not accessible.", table, e);
+        logger.error("The table {} is not accessible.", table, e);
         notAccessibleTables.add(table);
       }
     }
@@ -84,7 +84,7 @@ public class TeradataTablesValidatorTask extends AbstractJdbcTask<Void> {
           "The tables " + notAccessibleTables + " do not exists or are not accessible.");
     }
 
-    LOG.debug("Success. The tables are accessible.");
+    logger.debug("Success. The tables are accessible.");
     return null;
   }
 

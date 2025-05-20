@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,8 @@ import org.slf4j.LoggerFactory;
 public class ZonedIntervalIterableGenerator {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(ZonedIntervalIterableGenerator.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(ZonedIntervalIterableGenerator.class);
 
   @Nonnull
   @VisibleForTesting
@@ -53,6 +54,17 @@ public class ZonedIntervalIterableGenerator {
   /* pp */ static ZonedIntervalIterable forTimeUnitsUntilNow(
       @Nonnegative long unitCount, @Nonnull Duration duration, @Nonnull IntervalExpander expander) {
     return forTimeUnitsUntil(ZonedDateTime.now(ZoneOffset.UTC), unitCount, duration, expander);
+  }
+
+  @Nonnull
+  public static ZonedIntervalIterable forDateRangeWithIntervalDuration(
+      ZonedDateTime startDate, ZonedDateTime endDate, Duration intervalDuration)
+      throws MetadataDumperUsageException {
+    return new ZonedIntervalIterable(
+        startDate,
+        endDate,
+        intervalDuration,
+        IntervalExpander.createBasedOnDuration(intervalDuration));
   }
 
   /**
@@ -107,12 +119,12 @@ public class ZonedIntervalIterableGenerator {
             "Missing option --query-log-start must be specified.");
       }
       if (arguments.getQueryLogEnd() == null) {
-        LOG.info(
+        logger.info(
             "Missing option --query-log-end will be defaulted to: "
                 + arguments.getQueryLogEndOrDefault());
       }
 
-      LOG.info(
+      logger.info(
           "Log entries from {} to {} will be exported in increments of {}.",
           arguments.getQueryLogStart(),
           arguments.getQueryLogEndOrDefault(),
@@ -126,7 +138,7 @@ public class ZonedIntervalIterableGenerator {
       throw new MetadataDumperUsageException(
           "At least one day of query logs should be exported; you specified: " + daysToExport);
 
-    LOG.info(
+    logger.info(
         "Log entries within the last {} days will be exported in increments of {}.",
         daysToExport,
         DurationFormatUtils.formatDurationWords(duration.toMillis(), true, true));

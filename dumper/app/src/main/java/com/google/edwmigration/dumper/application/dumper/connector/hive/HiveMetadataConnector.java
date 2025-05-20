@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,6 +42,7 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.ext.hive.metastore.Database;
 import com.google.edwmigration.dumper.ext.hive.metastore.DelegationToken;
 import com.google.edwmigration.dumper.ext.hive.metastore.Field;
@@ -57,6 +58,7 @@ import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMoni
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.HiveMetadataDumpFormat;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +77,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     implements HiveMetadataDumpFormat, MetadataConnector {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(HiveMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveMetadataConnector.class);
 
   private abstract static class AbstractHiveMetadataTask extends AbstractHiveTask {
 
@@ -288,7 +290,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
-              LOG.warn(
+              logger.warn(
                   "Metadata cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
                   databaseName,
                   tableName,
@@ -375,7 +377,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
-              LOG.warn(
+              logger.warn(
                   "Metadata cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
                   databaseName,
                   tableName,
@@ -396,7 +398,9 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         new PercentEscaper("._,@=", /* plusForSpace= */ false);
 
     private PartitionsJsonlTask() {
-      super("partitions.jsonl", TargetInitialization.DO_NOT_CREATE);
+      super(
+          "partitions.jsonl",
+          TaskOptions.DEFAULT.withTargetInitialization(TargetInitialization.DO_NOT_CREATE));
     }
 
     @Override
@@ -448,10 +452,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                       + ".jsonl";
               OutputHandle sink = context.newOutputFileHandle(targetPath);
               if (sink.exists()) {
-                LOG.info("Skipping " + getName() + ": " + sink + " already exists.");
+                logger.info("Skipping " + getName() + ": " + sink + " already exists.");
                 return;
               }
-              LOG.info("Writing to " + targetPath + " -> " + sink);
+              logger.info("Writing to " + targetPath + " -> " + sink);
 
               try (Writer writer =
                   sink.asTemporaryByteSink()
@@ -466,7 +470,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
-              LOG.warn(
+              logger.warn(
                   "Partitions cannot be extracted from the table '{}.{}' due to an exception, skipping it.",
                   databaseName,
                   tableName,
@@ -678,10 +682,14 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
-  public static final String CONNECTOR_NAME = "hiveql";
-
   public HiveMetadataConnector() {
-    super(CONNECTOR_NAME);
+    super("hiveql");
+  }
+
+  @Nonnull
+  @Override
+  public String getDefaultFileName(boolean isAssessment, Clock clock) {
+    return ArchiveNameUtil.getFileNameWithTimestamp(getName() + "-metadata", clock);
   }
 
   @Override

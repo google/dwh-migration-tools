@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 public class ClouderaClustersTask extends AbstractClouderaManagerTask {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaClustersTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaClustersTask.class);
 
   public ClouderaClustersTask() {
     super("clusters.json");
@@ -67,7 +67,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
         clusterList.setClusters(ImmutableList.of(cluster));
       }
     } else {
-      LOG.info("'--cluster' argument wasn't provided. Collect all available clusters.");
+      logger.info("'--cluster' argument wasn't provided. Collect all available clusters.");
 
       // Cluster type doc:
       // https://docs.cloudera.com/cdp-private-cloud-base/7.1.8/managing-clusters/topics/cm-cluster-basics-managed-hosts.html
@@ -79,7 +79,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
     }
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
-      writer.write(parseObjectToJsonString(clusterList));
+      writer.write(serializeObjectToJsonString(clusterList));
     }
 
     List<ClouderaClusterDTO> clusters = new ArrayList<>();
@@ -87,7 +87,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
       String clusterId = requestClusterIdByName(httpClient, handle.getBaseURI(), item.getName());
       clusters.add(ClouderaClusterDTO.create(clusterId, item.getName()));
     }
-    LOG.info(
+    logger.info(
         "Dump metadata for clusters: {}",
         clusters.stream().map(ClouderaClusterDTO::getName).collect(Collectors.toList()));
 
@@ -101,7 +101,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
     try (CloseableHttpResponse clusterStatus = httpClient.execute(new HttpGet(requestUrl))) {
       if (HttpStatus.SC_OK != clusterStatus.getStatusLine().getStatusCode()) {
         String responseBody = EntityUtils.toString(clusterStatus.getEntity());
-        LOG.warn(
+        logger.warn(
             "Can't receive cluster [{}] status by url [{}]. Response status is [{}] and body: {}",
             clusterName,
             requestUrl,

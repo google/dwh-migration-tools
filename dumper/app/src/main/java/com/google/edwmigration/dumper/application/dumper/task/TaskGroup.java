@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.commons.csv.CSVFormat;
@@ -31,26 +31,19 @@ import org.apache.commons.csv.CSVPrinter;
 /** @author shevek */
 public class TaskGroup extends AbstractTask<Void> implements CoreMetadataDumpFormat {
 
-  private final List<Task<?>> tasks = new ArrayList<>();
+  private final ImmutableList<Task<?>> tasks;
 
   public TaskGroup(@Nonnull String targetPath, @Nonnull Task<?>... tasks) {
-    super(targetPath);
-    Collections.addAll(this.tasks, tasks);
+    this(targetPath, Arrays.asList(tasks));
   }
 
-  public void addTask(Task<?> task) {
-    // Checking for conditions would need some ordering of tasks execution or waiting on {@link
-    // TaskSetState#getTaskResult}
-    // Preconditions.checkState(task.getConditions().length == 0, "Tasks in a parallel task should
-    // not have conditions");
-    // Preconditions.checkState(task instanceof AbstractJdbcSelectTask || task instanceof
-    // FormatTask, "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to
-    // add %s.", task.getClass().getSimpleName());
-    tasks.add(task);
+  public TaskGroup(@Nonnull String targetPath, @Nonnull List<Task<?>> tasks) {
+    super(targetPath);
+    this.tasks = ImmutableList.copyOf(tasks);
   }
 
   @Nonnull
-  public List<Task<?>> getTasks() {
+  public ImmutableList<Task<?>> getTasks() {
     return tasks;
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,7 +70,14 @@ public interface SnowflakeMetadataDumpFormat {
       TableName,
       OrdinalPosition,
       ColumnName,
-      DataType
+      DataType,
+      IsNullable,
+      ColumnDefault,
+      CharacterMaximumLength,
+      NumericPrecision,
+      NumericScale,
+      DatetimePrecision,
+      Comment
     }
   }
 
@@ -139,5 +146,27 @@ public interface SnowflakeMetadataDumpFormat {
 
   interface ExternalTablesFormat {
     String AU_ZIP_ENTRY_NAME = "external_tables.csv";
+
+    enum Header {
+      CreatedOn,
+      Name,
+      DatabaseName,
+      SchemaName,
+      Invalid,
+      InvalidReason,
+      Owner,
+      Comment,
+      Stage,
+      Location,
+      FileFormatName,
+      FileFormatType,
+      Cloud,
+      Region,
+      NotificationChannel,
+      LastRefreshedOn,
+      TableFormat,
+      LastRefreshDetails,
+      OwnerRoleType
+    }
   }
 }

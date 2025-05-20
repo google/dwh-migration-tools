@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 @NotThreadSafe
 public class RecordProgressMonitor extends AbstractProgressMonitor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RecordProgressMonitor.class);
+  private static final Logger logger = LoggerFactory.getLogger(RecordProgressMonitor.class);
 
   private final String name;
   private final long total;
@@ -55,7 +55,7 @@ public class RecordProgressMonitor extends AbstractProgressMonitor {
     this.nextSeconds = stepSeconds;
     this.nextMinSeconds = stepMinSeconds;
 
-    LOG.debug(name + ": Starting with " + total + " items. " + newMemorySummary());
+    logger.debug(name + ": Starting with " + total + " items. " + newMemorySummary());
   }
 
   public RecordProgressMonitor(@Nonnull String name) {
@@ -67,7 +67,7 @@ public class RecordProgressMonitor extends AbstractProgressMonitor {
     this.nextSeconds = stepSeconds;
     this.nextMinSeconds = stepMinSeconds;
 
-    LOG.debug(name + ": Starting. " + newMemorySummary());
+    logger.debug(name + ": Starting. " + newMemorySummary());
   }
 
   @Override
@@ -95,7 +95,7 @@ public class RecordProgressMonitor extends AbstractProgressMonitor {
         (elapsed == 0) ? "infinity" : Long.toString((long) (count * 1000L / (double) elapsed));
     if (total > 0) {
       nextCount = count + stepPercent;
-      LOG.debug(
+      logger.debug(
           name
               + ": "
               + status
@@ -112,7 +112,7 @@ public class RecordProgressMonitor extends AbstractProgressMonitor {
               + "/sec) "
               + newMemorySummary());
     } else {
-      LOG.debug(
+      logger.debug(
           name
               + ": "
               + status
@@ -145,6 +145,6 @@ public class RecordProgressMonitor extends AbstractProgressMonitor {
   @Override
   public void close() {
     update("Completed");
-    // LOG.debug(name + ": Done in " + stopwatch + ".");
+    // logger.debug(name + ": Done in " + stopwatch + ".");
   }
 }

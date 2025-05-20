@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public class HiveServerSupport implements AutoCloseable {
 
   public static final int CONCURRENCY = 32; // Default is min:5 max:500
-  private final static Logger LOG = LoggerFactory.getLogger(HiveServerSupport.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveServerSupport.class);
 
   // "user" conflicts with USER db and the metastore_db can't be created.
   private static final String METASTORE_DB_USER = "db_user";
@@ -153,7 +153,7 @@ public class HiveServerSupport implements AutoCloseable {
         HiveMetaStore.startMetaStore(thriftPortMetastore, bridge, hiveConf, startLock,
             startCondition, startedServing);
       } catch (Throwable t) {
-        LOG.error("Unable to start Hive Metastore", t);
+        logger.error("Unable to start Hive Metastore", t);
       }
     });
 
@@ -170,12 +170,12 @@ public class HiveServerSupport implements AutoCloseable {
   }
 
   public HiveServerSupport start() throws InterruptedException {
-    LOG.info("Starting Hive Metastore on port {}, HiveServer2 on port {} ...",
+    logger.info("Starting Hive Metastore on port {}, HiveServer2 on port {} ...",
         thriftPortMetastore, thriftPortServer);
     conf.setBoolVar(METASTORE_FASTPATH, true);
     startMetastore();
     startServer();
-    LOG.info("Started.");
+    logger.info("Started.");
     return this;
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 /** A ScanContext is used to walk & scan (possibly in parallel) a HDFS or parts of it. */
 final class ScanContext implements Closeable {
-  private static final Logger LOG = LoggerFactory.getLogger(ScanContext.class);
+  private static final Logger logger = LoggerFactory.getLogger(ScanContext.class);
   private static final DateTimeFormatter DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
   private static final boolean PROGRESS_DEBUG_STATS = false;
@@ -173,7 +173,7 @@ final class ScanContext implements Closeable {
     String absolutePath = file.getPath().toUri().getPath();
     HdfsFileStatus hdfsFileStatus = dfsClient.getFileInfo(absolutePath);
     if (hdfsFileStatus == null) {
-      LOG.error("Unable to scan file {}", absolutePath);
+      logger.error("Unable to scan file {}", absolutePath);
       return;
     }
     String strModificationTime =
@@ -214,7 +214,7 @@ final class ScanContext implements Closeable {
       lastTimeStatsLogged = currentTime;
       if (PROGRESS_DEBUG_STATS) {
         // Don't log the path in production as it may be considered 'sensitive information'!
-        LOG.info("path scanned: {}\n{}", file.getPath().toUri().getPath(), getDetailedStats());
+        logger.info("path scanned: {}\n{}", file.getPath().toUri().getPath(), getDetailedStats());
       } else {
         PROGRESS_LOG.info("{}", getProgressMessage());
       }

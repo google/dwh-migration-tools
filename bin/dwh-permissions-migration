@@ -1,0 +1,11 @@
+#!/bin/sh -ex
+
+BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>&1 > /dev/null && cd .. && pwd)
+BASE_BIN_DIR="${BASE_DIR}/permissions-migration/app/build/install/app/bin"
+BIN="${BASE_BIN_DIR}/dwh-permissions-migration"
+
+if [ ! -x "$BIN" ] ; then
+  (cd "${BASE_DIR}" && ./gradlew --parallel :permissions-migration:app:installDist)
+fi
+
+exec "$BIN" "$@"

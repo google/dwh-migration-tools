@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,10 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -31,17 +34,8 @@ public class ParallelTaskGroup extends TaskGroup {
     super("parallel-task-" + name);
   }
 
-  @Override
-  public void addTask(Task<?> task) {
-    // Checking for conditions would need some ordering of tasks execution or waiting on {@link
-    // TaskSetState#getTaskResult}
-    Preconditions.checkState(
-        task.getConditions().length == 0, "Tasks in a parallel task should not have conditions");
-    Preconditions.checkState(
-        task instanceof AbstractJdbcTask || task instanceof FormatTask,
-        "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to add %s.",
-        task.getClass().getSimpleName());
-    super.addTask(task);
+  ParallelTaskGroup(String name, List<Task<?>> tasks) {
+    super("parallel-task-" + name, tasks);
   }
 
   private static class TaskRunner {
@@ -86,5 +80,31 @@ public class ParallelTaskGroup extends TaskGroup {
   @Override
   public String toString() {
     return "ParallelTaskGroup(" + getTasks().size() + " children)";
+  }
+
+  public static class Builder {
+
+    private final ArrayList<Task<?>> taskList = new ArrayList<>();
+    private final String name;
+
+    public Builder(String name) {
+      this.name = name;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder addTask(Task<?> task) {
+      Preconditions.checkState(
+          task.getConditions().length == 0, "Tasks in a parallel task should not have conditions");
+      Preconditions.checkState(
+          task instanceof AbstractJdbcTask || task instanceof FormatTask,
+          "Parallel task only supports JdbcSelectTask and FormatTask sub tasks. Trying to add %s.",
+          task.getClass().getSimpleName());
+      taskList.add(task);
+      return this;
+    }
+
+    public ParallelTaskGroup build() {
+      return new ParallelTaskGroup(name, taskList);
+    }
   }
 }

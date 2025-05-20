@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -85,7 +85,14 @@ public class HadoopScriptsTest {
             "dmidecode-processor",
             "blkid",
             "hdfs-crypto-zones",
-            "hdfs-replication"),
+            "hdfs-replication",
+            "hadoop-security-authorization",
+            "hadoop-security-authentication",
+            "hadoop-rpc-protection",
+            "hadoop-ssl-enabled",
+            "hadoop-ssl-require-client-cert",
+            "hadoop-ssl-server",
+            "hadoop-ssl-client"),
         singleLineScripts.keySet());
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +16,15 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.*;
+import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.*;
+
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -62,7 +64,7 @@ import org.apache.http.ssl.SSLContextBuilder;
     required = "Only if you need to dump data for a single Cloudera cluster")
 public class ClouderaManagerConnector extends AbstractConnector {
 
-  public static final String FORMAT_NAME = "cloudera-manager.dump.zip";
+  private static final String FORMAT_NAME = "cloudera-manager.dump.zip";
 
   public ClouderaManagerConnector() {
     super("cloudera-manager");
@@ -85,15 +87,18 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaServicesTask());
     out.add(new ClouderaHostComponentsTask());
 
-    out.add(new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY));
-    out.add(new ClouderaClusterCPUChartTask(7, TimeSeriesAggregation.DAILY));
-    out.add(new ClouderaClusterCPUChartTask(30, TimeSeriesAggregation.DAILY));
-    out.add(new ClouderaClusterCPUChartTask(90, TimeSeriesAggregation.DAILY));
+    out.add(new ClouderaClusterCPUChartTask(1, HOURLY, REQUIRED));
+    out.add(new ClouderaClusterCPUChartTask(7, DAILY, OPTIONAL));
+    out.add(new ClouderaClusterCPUChartTask(30, DAILY, OPTIONAL));
+    out.add(new ClouderaClusterCPUChartTask(90, DAILY, OPTIONAL));
 
-    out.add(new ClouderaHostRAMChartTask(1, TimeSeriesAggregation.HOURLY));
-    out.add(new ClouderaHostRAMChartTask(7, TimeSeriesAggregation.DAILY));
-    out.add(new ClouderaHostRAMChartTask(30, TimeSeriesAggregation.DAILY));
-    out.add(new ClouderaHostRAMChartTask(90, TimeSeriesAggregation.DAILY));
+    out.add(new ClouderaHostRAMChartTask(1, HOURLY, REQUIRED));
+    out.add(new ClouderaHostRAMChartTask(7, DAILY, OPTIONAL));
+    out.add(new ClouderaHostRAMChartTask(30, DAILY, OPTIONAL));
+    out.add(new ClouderaHostRAMChartTask(90, DAILY, OPTIONAL));
+
+    out.add(new ClouderaYarnApplicationsTask(90, OPTIONAL));
+    out.add(new ClouderaYarnApplicationTypeTask(90, OPTIONAL));
   }
 
   @Nonnull

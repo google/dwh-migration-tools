@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 public class TeradataLogsConnector extends AbstractTeradataConnector
     implements LogsConnector, TeradataLogsDumpFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(TeradataLogsConnector.class);
   static final String ASSESSMENT_DEF_LOG_TABLE = "dbc.QryLogV";
 
   /** The length of the VARCHAR column {@code DBQLSqlTbl.SQLTextInfo}. */
@@ -200,7 +200,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
 
     boolean isAssessment = arguments.isAssessment();
     QueryLogTableNames tableNames = QueryLogTableNamesResolver.resolve(arguments);
-    LOG.info(
+    logger.info(
         "Extracting query logs from tables: '{}' and '{}'",
         tableNames.queryLogsTableName(),
         tableNames.sqlLogsTableName());
@@ -222,13 +222,13 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     ZonedIntervalIterable intervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(
             arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
-    LOG.info("Exporting query logs for '{}'", intervals);
+    logger.info("Exporting query logs for '{}'", intervals);
 
     String logDateColumn = arguments.getDefinition(TeradataLogsConnectorProperty.LOG_DATE_COLUMN);
     if (isAssessment
         && tableNames.usingAtLeastOneAlternate()
         && !arguments.isDefinitionSpecified(TeradataLogsConnectorProperty.LOG_DATE_COLUMN)) {
-      LOG.info(
+      logger.info(
           "Extracting query logs from alternate tables without using the DATE column in the"
               + " JOIN condition. If both query logs tables ('{}' and '{}') contain a column of type"
               + " DATE in the Partitioned Primary Index, the extraction performance can be improved"

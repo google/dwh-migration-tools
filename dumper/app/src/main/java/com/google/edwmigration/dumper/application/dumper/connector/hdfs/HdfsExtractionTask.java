@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtractionDumpFormat {
-  private static final Logger LOG = LoggerFactory.getLogger(HdfsExtractionTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(HdfsExtractionTask.class);
 
   private final int threadPoolSize;
   private final String hdfsScanRootPath;
@@ -88,7 +88,7 @@ public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtrac
         ExecutorManager execManager = new ExecutorManager(execService);
         ScanContext scanCtx = new ScanContext(execManager, fs, output)) {
 
-      LOG.info(
+      logger.info(
           "Running HDFS extraction\n\t{}: {}\n\t{}: {}",
           OPT_HDFS_SCAN_ROOT_PATH,
           hdfsScanRootPath,
@@ -97,7 +97,7 @@ public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtrac
       FileStatus rootDir = fs.getFileStatus(new Path(hdfsScanRootPath));
       scanCtx.submitRootDirScanJob(rootDir, getContentSummaryFor(fs, rootDir));
       execManager.await(); // Wait until all (recursive) tasks are done executing
-      LOG.info("Final stats:\n{}", scanCtx.getDetailedStats());
+      logger.info("Final stats:\n{}", scanCtx.getDetailedStats());
     } finally {
       // Shutdown the dedicated ExecutorService:
       MoreExecutors.shutdownAndAwaitTermination(execService, 100, TimeUnit.MILLISECONDS);
@@ -109,11 +109,11 @@ public class HdfsExtractionTask extends AbstractTask<Void> implements HdfsExtrac
     try {
       return dfs.getContentSummary(file.getPath());
     } catch (org.apache.hadoop.security.AccessControlException exn) {
-      LOG.info(
+      logger.info(
           "Progress for HDFS extraction won't be displayed due to AccessControlException: {}",
           trimExceptionMessage(exn.getMessage()));
     } catch (IOException exn) {
-      LOG.error("Progress for HDFS extraction won't be displayed due to IOException: ", exn);
+      logger.error("Progress for HDFS extraction won't be displayed due to IOException: ", exn);
     }
     return null;
   }

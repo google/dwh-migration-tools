@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,5 +35,5 @@ import java.lang.annotation.Target;
     description = RespectsArgumentQueryLogDays.DESCRIPTION)
 public @interface RespectsArgumentQueryLogDays {
 
-  public static final String DESCRIPTION = "The number of days of query history to dump.";
+  String DESCRIPTION = "The number of days of query history to dump.";
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,27 +51,60 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     super("redshift");
   }
 
-  private static void selStar(@Nonnull ParallelTaskGroup out, @Nonnull String name) {
+  private static void selStar(@Nonnull ParallelTaskGroup.Builder out, @Nonnull String name) {
     out.addTask(
         new JdbcSelectTask(name.toLowerCase() + ".csv", "SELECT * FROM " + name.toLowerCase()));
+  }
+
+  private static JdbcSelectTask createPgDatabaseSelect() {
+    String outputFile = "pg_database.csv";
+    String selectList =
+        String.join(
+            ", ",
+            "datname",
+            "datdba",
+            "encoding",
+            "datistemplate",
+            "datallowconn",
+            "datlastsysoid",
+            /*
+             * These aren't used directly, because their type is 'xid'
+             *
+             * <p>The 'xid' type doesn't fit in the 64-bit signed int receiver.
+             * This would cause cast errors in rare cases, so we need to do our own conversion.
+             *
+             * <p>First, we need to convert xid to bigint. This is not straightforward, because
+             * there is not explicit or implicit cast available. What we can do is get the "age"
+             * of the xid and then subtract it from the present (age of latest xid).
+             *
+             * <p>Secondly, we need to handle a special case where the xid has no age. Our final
+             * value in these cases should be 0, but xids with no age get a magic value of
+             * INT_MAX. This is done by simply replacing negative results with 0.
+             *
+             * <p>For the last step, just cast the result to VARCHAR. This works, because
+             * now we have a bigint instead of xid.
+             */
+            "cast(greatest(0, X.agenow - age(D.datvacuumxid)) AS VARCHAR) datvacuumxid",
+            "cast(greatest(0, X.agenow - age(D.datfrozenxid)) AS VARCHAR) datfrozenxid",
+            "dattablespace",
+            "datconfig",
+            "datacl");
+    String query =
+        String.format(
+            "SELECT %s FROM pg_database D LEFT JOIN (SELECT txid_current() agenow) X ON 1 = 1",
+            selectList);
+    return new JdbcSelectTask(outputFile, query);
   }
 
   @Override
   @SuppressWarnings("deprecation")
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
 
-    ParallelTaskGroup parallelTask = new ParallelTaskGroup(this.getName());
-    out.add(parallelTask);
-
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-    out.add(new FormatTask(FORMAT_NAME));
-    out.add(new RedshiftEnvironmentYamlTask());
+    ParallelTaskGroup.Builder parallelTask = new ParallelTaskGroup.Builder(this.getName());
 
     // AWS API tasks, enabled by default if IAM credentials are provided
     Optional<AWSCredentialsProvider> awsCredentials =
         AbstractAwsApiTask.createCredentialsProvider(arguments);
-
-    awsCredentials.ifPresent(awsCreds -> out.add(new RedshiftClusterNodesTask(awsCreds)));
 
     parallelTask.addTask(
         new JdbcSelectTask(SvvColumnsFormat.ZIP_ENTRY_NAME, "SELECT * FROM SVV_COLUMNS"));
@@ -86,7 +119,7 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
 
     selStar(parallelTask, "PG_LIBRARY");
 
-    selStar(parallelTask, "pg_database");
+    parallelTask.addTask(createPgDatabaseSelect());
     selStar(parallelTask, "pg_namespace");
     selStar(parallelTask, "pg_operator");
     selStar(parallelTask, "pg_tables");
@@ -158,5 +191,13 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
       selStar(parallelTask, "STV_WLM_SERVICE_CLASS_CONFIG");
       selStar(parallelTask, "STV_WLM_SERVICE_CLASS_STATE");
     }
+
+    out.add(parallelTask.build());
+
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
+    out.add(new RedshiftEnvironmentYamlTask());
+
+    awsCredentials.ifPresent(awsCreds -> out.add(new RedshiftClusterNodesTask(awsCreds)));
   }
 }

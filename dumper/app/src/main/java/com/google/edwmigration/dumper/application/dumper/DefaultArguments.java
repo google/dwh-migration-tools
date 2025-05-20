@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public class DefaultArguments {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultArguments.class);
+  private static final Logger logger = LoggerFactory.getLogger(DefaultArguments.class);
 
   public static class BooleanValueConverter implements ValueConverter<Boolean> {
 

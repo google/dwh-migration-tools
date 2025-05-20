@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /** The helper does login into Cloudera Manager UI for {@code CloseableHttpClient} */
 public final class ClouderaManagerLoginHelper {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaManagerLoginHelper.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaManagerLoginHelper.class);
 
   /**
    * The helper does login into Cloudera Manager UI. The session is stored in a cookie in {@code
@@ -60,7 +60,7 @@ public final class ClouderaManagerLoginHelper {
       // verify success login by home page access
       try (CloseableHttpResponse home = httpClient.execute(new HttpGet(baseURI + "/cmf/home"))) {
         if (HttpStatus.SC_OK != home.getStatusLine().getStatusCode()) {
-          LOG.error(
+          logger.error(
               "Login to Cloudera Manager wasn't successful. "
                   + "The response code for /cmf/home page is [{}] and response: {}",
               home.getStatusLine().getStatusCode(),
@@ -70,6 +70,6 @@ public final class ClouderaManagerLoginHelper {
         }
       }
     }
-    LOG.info("Success login into Cloudera Manager.");
+    logger.info("Success login into Cloudera Manager.");
   }
 }

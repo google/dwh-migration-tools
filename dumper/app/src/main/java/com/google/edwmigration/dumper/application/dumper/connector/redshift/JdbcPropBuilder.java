@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /* pp */ class JdbcPropBuilder {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcPropBuilder.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcPropBuilder.class);
 
   final String punctuations;
 
@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
       @Nonnull String prop, @CheckForNull String val, @Nonnull String msg)
       throws UnsupportedEncodingException {
     if (val == null) {
-      LOG.warn(msg);
+      logger.warn(msg);
     } else {
       addProp(prop, val);
     }
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
       @Nonnull String prop, @CheckForNull String val, @Nonnull String msg)
       throws MetadataDumperUsageException, UnsupportedEncodingException {
     if (val == null) {
-      LOG.error(msg);
+      logger.error(msg);
       throw new MetadataDumperUsageException(msg);
     } else {
       addProp(prop, val);

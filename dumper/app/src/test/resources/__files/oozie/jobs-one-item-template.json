@@ -1,0 +1,24 @@
+{
+  "some": "field",
+  "workflows": [
+    {
+      "actions": [],
+      "id": "0000128-250317102116043-oozie-oozi-W",
+      "lastModTime": "Mon, 17 Mar 2025 14:01:00 GMT",
+      "appName": "Empty workflow",
+      "appPath": null,
+      "consoleUrl": "https://oozie-host:11443/oozie?job=0000128-250317102116043-oozie-oozi-W",
+      "user": "csso_dev",
+      "group": null,
+      "run": 0,
+      "createdTime": "Mon, 11 Mar 2025 14:00:00 GMT",
+      "startTime": "Mon, 17 Mar 2025 14:01:00 GMT",
+      "status": "SUCCEEDED",
+      "endTime": "{{parameters.endTime}}",
+      "conf": null,
+      "externalId": null,
+      "acl": null,
+      "parentId": "0000002-250307121251646-oozie-oozi-C@473"
+    }
+  ]
+}

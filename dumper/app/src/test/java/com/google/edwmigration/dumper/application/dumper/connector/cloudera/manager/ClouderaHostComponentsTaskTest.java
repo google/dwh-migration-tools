@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -130,8 +129,8 @@ public class ClouderaHostComponentsTaskTest {
   public void hostsWereNotInitialized_throwsException() throws Exception {
     assertNull(handle.getHosts());
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> task.doRun(context, sink, handle));
 
     assertEquals(
         "Cloudera hosts must be initialized before Host's components dumping.",

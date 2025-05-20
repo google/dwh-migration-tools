@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 public class GreenplumLogsConnector extends AbstractGreenplumConnector
     implements LogsConnector, GreenplumLogsDumpFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GreenplumLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(GreenplumLogsConnector.class);
 
   public GreenplumLogsConnector() {
     super("greenplum-logs");
@@ -69,10 +69,7 @@ public class GreenplumLogsConnector extends AbstractGreenplumConnector
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
 
-    ParallelTaskGroup parallelTask = new ParallelTaskGroup(this.getName());
-    out.add(parallelTask);
-
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    ParallelTaskGroup.Builder parallelTask = new ParallelTaskGroup.Builder(this.getName());
 
     // pg_user table is also dumped in the greenplum(metadata) connector, but there is no harm
     // making this zip self-sufficient.
@@ -96,6 +93,10 @@ public class GreenplumLogsConnector extends AbstractGreenplumConnector
         queryQueueHistoryTemplateQuery,
         "tstart",
         parallelTask);
+
+    out.add(parallelTask.build());
+
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
   }
 
   // ## in the template to be replaced by the complete WHERE clause.
@@ -105,7 +106,7 @@ public class GreenplumLogsConnector extends AbstractGreenplumConnector
       String filePrefix,
       String queryTemplate,
       String startField,
-      ParallelTaskGroup out)
+      ParallelTaskGroup.Builder out)
       throws MetadataDumperUsageException {
 
     for (ZonedInterval interval : intervals) {

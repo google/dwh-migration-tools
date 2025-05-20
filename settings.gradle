@@ -1,9 +1,23 @@
-rootProject.name = 'dwh-migration-dumper'
+plugins {
+	// Apply the foojay-resolver plugin to allow automatic download of JDKs
+	id 'org.gradle.toolchains.foojay-resolver-convention' version '0.4.0'
+	id "com.google.cloud.artifactregistry.gradle-plugin" version "2.2.4"
+}
+rootProject.name = 'dwh-migration-tools'
 include(
 	':dumper:lib-common',
 	':dumper:lib-dumper-spi',
 	':dumper:lib-ext-bigquery',
 	':dumper:lib-ext-hive-metastore',
 	':dumper:app',
-	':validator:app'
+	':validator:app',
+    ':dbsync:common',
+    ':dbsync:storage-gcs',
+    ':dbsync:storage-aws',
+    ':dbsync:storage-hdfs',
+    ':dbsync:server',
+    ':dbsync:client',
+    ':dbsync:gcsync',
+    ':permissions-migration:app'
+
 )

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,5 +81,39 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
             });
     Assert.assertTrue(
         e.getMessage().contains("Database name has incorrectly placed double quote(s)."));
+  }
+
+  @Test
+  public void openConnection_failsForMixedPrivateKeyAndPassword() throws IOException {
+    List<String> args = new ArrayList<>(ARGS);
+    args.add("--connector");
+    args.add(metadataConnector.getName());
+
+    args.add("--private-key-file");
+    args.add("/path/to/file.r8");
+
+    ConnectorArguments arguments =
+        new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+    MetadataDumperUsageException e =
+        Assert.assertThrows(
+            MetadataDumperUsageException.class,
+            () -> {
+              metadataConnector.open(arguments);
+            });
+    Assert.assertTrue(
+        e.getMessage()
+            .contains(
+                "Private key authentication method can't be used together with user password"));
+  }
+
+  @Test
+  public void checkJnaInClasspath_success() {
+    try {
+      // JNA is required for the Snowflake MFA caching mechanism
+      Class.forName("com.sun.jna.Library");
+    } catch (ClassNotFoundException e) {
+      Assert.fail(
+          "net.java.dev.jna was not found in the classpath it is required for the Snowflake MFA caching.");
+    }
   }
 }

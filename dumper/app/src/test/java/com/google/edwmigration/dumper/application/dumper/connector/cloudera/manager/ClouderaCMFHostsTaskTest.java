@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,6 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -144,11 +143,11 @@ public class ClouderaCMFHostsTaskTest {
   }
 
   @Test
-  public void doRun_clustersWereNotInitialized_throwsCriticalException() throws Exception {
+  public void doRun_clustersWereNotInitialized_throwsException() throws Exception {
     assertNull(handle.getClusters());
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> task.doRun(context, sink, handle));
 
     assertEquals(
         "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());
@@ -166,15 +165,14 @@ public class ClouderaCMFHostsTaskTest {
     handle.initClusters(Arrays.asList(clusters));
   }
 
-  private void stubCMFHostResponse(String clusterId, String clusterName, String jsonHosts)
-      throws IOException {
+  private void stubCMFHostResponse(String clusterId, String clusterName, String jsonHosts) {
     String cmfResponse =
         String.format("{\"clusterName\" :\"%s\", \"hosts\": %s}", clusterName, jsonHosts);
     server.stubFor(
         get(urlMatching(
                 String.format(
                     "/cmf/hardware/hosts/hostsOverview\\.json\\?clusterId=%s.*", clusterId)))
-            .willReturn(okJson(cmfResponse).withStatus(HttpStatus.SC_OK)));
+            .willReturn(okJson(cmfResponse)));
   }
 
   private Set<String> getWrittenJsonLines() throws IOException {

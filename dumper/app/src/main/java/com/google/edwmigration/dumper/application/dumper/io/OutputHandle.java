@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,21 +30,32 @@ import javax.annotation.Nonnull;
  */
 public interface OutputHandle extends Closeable {
 
+  enum WriteMode {
+    CREATE_TRUNCATE, // Create a new output or truncate an existing output. Default.
+    APPEND_EXISTING // Append to an existing output.
+  }
+
   public boolean exists() throws IOException;
 
   /** Returns a ByteSink on the target file. */
   @Nonnull
-  public ByteSink asByteSink() throws IOException;
+  public ByteSink asByteSink(@Nonnull WriteMode writeMode) throws IOException;
 
   /** Returns a CharSink on the target file. */
   @Nonnull
-  public default CharSink asCharSink(@Nonnull Charset charset) throws IOException {
-    return asByteSink().asCharSink(charset);
+  public default CharSink asCharSink(@Nonnull Charset charset, @Nonnull WriteMode writeMode)
+      throws IOException {
+    return asByteSink(writeMode).asCharSink(charset);
   }
 
   /** Returns a ByteSink on the temporary file. */
   @Nonnull
-  public ByteSink asTemporaryByteSink() throws IOException;
+  public ByteSink asTemporaryByteSink(@Nonnull WriteMode writeMode) throws IOException;
+
+  @Nonnull
+  default ByteSink asTemporaryByteSink() throws IOException {
+    return asTemporaryByteSink(WriteMode.CREATE_TRUNCATE);
+  }
 
   /**
    * Renames the temporary file to the final file.

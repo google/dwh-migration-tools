@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,7 +65,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 public class Teradata14LogsConnector extends AbstractTeradataConnector
     implements LogsConnector, TeradataLogsDumpFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Teradata14LogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(Teradata14LogsConnector.class);
 
   @VisibleForTesting
   static final List<String> EXPRESSIONS_LSQL_TBL =
@@ -156,12 +156,13 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     private Boolean isValid(@Nonnull JdbcTemplate template, @Nonnull String expression) {
       String table = isQueryTable(expression) ? queryTable + " ST" : logTable + " L";
       String sql = String.format(EXPRESSION_VALIDITY_QUERY, expression, table);
-      LOG.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
+      logger.info(
+          "Checking legality of projection expression '{}' using query: {}", expression, sql);
       try {
         template.query(sql, rs -> {});
         return Boolean.TRUE;
       } catch (DataAccessException e) {
-        LOG.info(
+        logger.info(
             "Attribute '{}' is absent, will use NULL in projection: {}",
             expression,
             e.getMessage());
@@ -298,7 +299,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     // for a varchar.
     ZonedIntervalIterable intervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
-    LOG.info("Exporting query log for " + intervals);
+    logger.info("Exporting query log for " + intervals);
     SharedState state = new SharedState();
     for (ZonedInterval interval : intervals) {
       String LSqlfile =

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
 import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import java.io.File;
@@ -39,7 +41,7 @@ import org.slf4j.LoggerFactory;
 public class JdbcSelectTaskTest extends AbstractTaskTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
 
   private static final String NAME = JdbcSelectTaskTest.class.getSimpleName();
   private static final File FILE = DumperTestUtils.newJdbcFile(NAME);
@@ -54,7 +56,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
   @BeforeClass
   public static void setUpClass() throws Exception {
     Class.forName("org.sqlite.JDBC");
-    LOG.info("Writing to sqlite database: {}", FILE.getAbsolutePath());
+    logger.info("Writing to sqlite database: {}", FILE.getAbsolutePath());
     FILE.delete();
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
       handle.getJdbcTemplate().execute("CREATE TABLE foo ( a INT, b INT, c INT )");
@@ -107,8 +109,8 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
 
     CSVFormat format = formatHolder.getValue();
     assertNotNull("CSVFormat was null.", format);
-    LOG.info("Format is " + format);
-    LOG.info("Format.nullString is " + format.getNullString());
+    logger.info("Format is " + format);
+    logger.info("Format.nullString is " + format.getNullString());
 
     // File file = TestUtils.newOutputFile("dumper-format-test.csv");
   }
@@ -120,5 +122,29 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
     String taskDescription = task.toString();
 
     assertEquals("Write /dir1/dir2/sample.txt from\n        SELECT 123;", taskDescription);
+  }
+
+  @Test
+  public void append_success() throws Exception {
+    String firstSql = "select null, 14, c FROM foo";
+    String secondSql = "select null, 15, b FROM foo";
+
+    MemoryByteSink sink = new MemoryByteSink();
+    final MutableObject<CSVFormat> formatHolder = new MutableObject<>();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      AbstractTask<Summary> first =
+          new JdbcSelectTask("(memory)", firstSql).withHeaderClass(Header.class);
+      AbstractTask<Summary> second =
+          new JdbcSelectTask(
+                  "(memory)",
+                  secondSql,
+                  TaskCategory.REQUIRED,
+                  TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING))
+              .withHeaderClass(Header.class);
+      first.doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+      second.doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+    }
+    String actualOutput = sink.openStream().toString();
+    assertEquals("Foo,Bar,Baz\n,14,3\n,15,2\n", actualOutput);
   }
 }

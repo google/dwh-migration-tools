@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,11 @@ configurations {
         //We use logback, so log4j implementation must be excluded
         exclude group: 'log4j', module: 'log4j'
         exclude group: 'org.eclipse.jetty'
+        exclude group: 'co.cask.tephra'   //We don't use HBase
+
+        // *-over-slf4j bridges used
+        exclude group: "ch.qos.reload4j", module: "reload4j"
+        exclude group: "org.slf4j", module: "slf4j-reload4j"
     }
 }
 
@@ -36,8 +41,10 @@ sourceSets {
 
 dependencies {
     api libs.libthrift
+
     implementation libs.guava
     implementation libs.jackson.databind
+
     compileOnly libs.javax.annotation.api
 
     hive312RuntimeOnly libs.apache.avro
@@ -46,6 +53,10 @@ dependencies {
     hive312RuntimeOnly libs.hive.service
     hive312RuntimeOnly libs.hive.metastore
     hive312RuntimeOnly libs.hive.jdbc
+    hive312RuntimeOnly libs.hadoop.common
+    hive312RuntimeOnly libs.logback.classic
+    hive312RuntimeOnly libs.jcl.over.slf4j
+
     // For HiveServer2
     hive312RuntimeOnly libs.tez.common
     hive312RuntimeOnly libs.tez.dag

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -89,7 +89,7 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
     implements MetadataConnector, NetezzaMetadataDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(NetezzaMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(NetezzaMetadataConnector.class);
 
   public static final int OPT_PORT_DEFAULT = 5480;
 

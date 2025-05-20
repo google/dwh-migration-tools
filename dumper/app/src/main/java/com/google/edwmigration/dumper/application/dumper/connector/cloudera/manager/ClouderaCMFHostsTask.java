@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,11 +19,11 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostListDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
@@ -43,10 +43,16 @@ import org.slf4j.LoggerFactory;
  */
 public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
 
   public ClouderaCMFHostsTask() {
     super("cmf-hosts.jsonl");
+  }
+
+  @Nonnull
+  @Override
+  public TaskCategory getCategory() {
+    return TaskCategory.OPTIONAL;
   }
 
   @Override
@@ -56,7 +62,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
     CloseableHttpClient httpClient = handle.getHttpClient();
     List<ClouderaClusterDTO> clusters = handle.getClusters();
     if (clusters == null) {
-      throw new MetadataDumperUsageException(
+      throw new IllegalStateException(
           "Cloudera clusters must be initialized before hosts dumping.");
     }
 
@@ -65,7 +71,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
-          LOG.warn(
+          logger.warn(
               "Cloudera cluster id is null for cluster [{}]. "
                   + "Skip dumping hosts overview for the cluster.",
               cluster.getName());
@@ -81,7 +87,8 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
           try {
             hostsJson = readJsonTree(hostsResponse.getEntity().getContent());
           } catch (JsonParseException ex) {
-            LOG.warn("Cloudera Error: " + ex.getMessage());
+            logger.warn(
+                "Could not parse json from cloudera hosts response: " + ex.getMessage(), ex);
             continue;
           }
         }

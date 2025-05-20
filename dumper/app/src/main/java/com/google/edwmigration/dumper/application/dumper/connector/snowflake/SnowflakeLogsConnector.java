@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
@@ -38,7 +39,6 @@ import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
 import java.time.Duration;
 import java.time.ZoneOffset;
@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
 
 /** @author shevek */
 @AutoService(Connector.class)
-@Description("Dumps logs from Snowflake.")
+@RespectsArgumentDatabaseForConnection
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
@@ -63,7 +63,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     implements LogsConnector, SnowflakeLogsDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(SnowflakeLogsConnector.class);
 
   private static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
@@ -164,6 +164,12 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   @Override
   public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
     return SnowflakeLogConnectorProperties.class;
+  }
+
+  @Override
+  @Nonnull
+  public String getDescription() {
+    return "Dumps logs from Snowflake.";
   }
 
   private String newQueryFormat(@Nonnull ConnectorArguments arguments)
@@ -372,7 +378,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     ZonedIntervalIterable queryLogIntervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(
             arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
-    LOG.info("Exporting query log for " + queryLogIntervals);
+    logger.info("Exporting query log for " + queryLogIntervals);
 
     if (!arguments.isAssessment()) {
       TaskDescription queryHistoryTask =

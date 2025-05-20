@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public class TestUtils {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TestUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestUtils.class);
 
   @Nonnull private static final String TEST_OUTPUTS_DIR = "build" + File.separator + "test-outputs";
 
@@ -44,7 +44,7 @@ public class TestUtils {
   @Nonnull
   public static File newOutputFile(@Nonnull String name) throws IOException {
     File file = newOutputFileSilent(name);
-    LOG.info("Creating test output file " + file.getAbsolutePath());
+    logger.info("Creating test output file " + file.getAbsolutePath());
     return file;
   }
 
@@ -87,7 +87,7 @@ public class TestUtils {
     while (dir != null) {
       File file = new File(dir, "settings.gradle");
       if (file.exists()) {
-        LOG.debug("Project root dir is " + dir);
+        logger.debug("Project root dir is " + dir);
         return dir;
       }
       dir = dir.getParentFile();

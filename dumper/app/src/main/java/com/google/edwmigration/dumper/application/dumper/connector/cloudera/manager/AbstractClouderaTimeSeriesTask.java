@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +17,14 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import java.io.IOException;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import javax.annotation.Nonnull;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -34,48 +33,55 @@ import org.apache.http.impl.client.CloseableHttpClient;
 abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTask {
   private static final DateTimeFormatter isoDateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-  private final ObjectMapper objectMapper = new ObjectMapper();
   private final int includedLastDays;
   private final TimeSeriesAggregation tsAggregation;
+  private final TaskCategory taskCategory;
 
   public AbstractClouderaTimeSeriesTask(
-      String targetPath, int includedLastDays, TimeSeriesAggregation tsAggregation) {
+      String targetPath,
+      int includedLastDays,
+      TimeSeriesAggregation tsAggregation,
+      TaskCategory taskCategory) {
     super(targetPath);
-    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation has not to be a null.");
+    Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation must not be null.");
     Preconditions.checkArgument(
         includedLastDays >= 1,
         "The chart has to include at least one day. Received " + includedLastDays + " days.");
+    Preconditions.checkNotNull(taskCategory, "TaskCategory must not be null.");
+
     this.includedLastDays = includedLastDays;
     this.tsAggregation = tsAggregation;
+    this.taskCategory = taskCategory;
   }
 
-  protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query) {
+  @Nonnull
+  @Override
+  public final TaskCategory getCategory() {
+    return taskCategory;
+  }
+
+  protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query)
+      throws Exception {
     String timeSeriesUrl = handle.getApiURI().toString() + "/timeseries";
     String fromDate = buildISODateTime(includedLastDays);
-    URI tsURI;
-    try {
-      URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
-      uriBuilder.addParameter("query", query);
-      uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
-      uriBuilder.addParameter("mustUseDesiredRollup", "true");
-      uriBuilder.addParameter("from", fromDate);
-      tsURI = uriBuilder.build();
-    } catch (URISyntaxException ex) {
-      throw new TimeSeriesException(ex.getMessage(), ex);
-    }
+
+    URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
+    uriBuilder.addParameter("query", query);
+    uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
+    uriBuilder.addParameter("mustUseDesiredRollup", "true");
+    uriBuilder.addParameter("from", fromDate);
+    URI tsURI = uriBuilder.build();
 
     CloseableHttpClient httpClient = handle.getHttpClient();
     JsonNode chartInJson;
     try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(tsURI))) {
       int statusCode = chart.getStatusLine().getStatusCode();
       if (!isStatusCodeOK(statusCode)) {
-        throw new TimeSeriesException(
+        throw new RuntimeException(
             String.format(
                 "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
       }
       chartInJson = readJsonTree(chart.getEntity().getContent());
-    } catch (IOException ex) {
-      throw new TimeSeriesException(ex.getMessage(), ex);
     }
     return chartInJson;
   }
@@ -84,23 +90,6 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     ZonedDateTime dateTime =
         ZonedDateTime.of(LocalDateTime.now().minusDays(deltaInDays), ZoneId.of("UTC"));
     return dateTime.format(isoDateTimeFormatter);
-  }
-
-  static class TimeSeriesException extends RuntimeException {
-    /* Exception which should be returned if something goes wrong with timeseries API.
-     *
-     * Includes:
-     * - unexpected HTTP status codes;
-     * - response with invalid JSON format.
-     */
-
-    public TimeSeriesException(String message) {
-      super(message);
-    }
-
-    public TimeSeriesException(String message, Throwable cause) {
-      super(message, cause);
-    }
   }
 
   enum TimeSeriesAggregation {

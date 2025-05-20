@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,8 @@ import org.slf4j.LoggerFactory;
 /** @author matt */
 public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractConnectorExecutionTest.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(AbstractConnectorExecutionTest.class);
 
   protected static final String SUBPROJECT = "compilerworks-application-dumper";
 
@@ -74,11 +75,11 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
 
   public static boolean isDumperTest() {
     if (IsDumperTest.VALUE)
-      LOG.debug(
+      logger.debug(
           "Running dumpers against database, -Dtest-sys-prop.{}=false to disable",
           IsDumperTest.NAME);
     else
-      LOG.debug(
+      logger.debug(
           "NOT running dumpers against database, -Dtest-sys-prop.{}=true to enable",
           IsDumperTest.NAME);
     return IsDumperTest.VALUE;
@@ -100,7 +101,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
   // TODO: take multiple baseName to load multiple jar
   @CheckForNull
   protected static List<String> findJdbcDrivers(@Nonnull String baseName) throws IOException {
-    // LOG.debug(baseName + " IN " + JDBC_DRIVERS.toString());
+    // logger.debug(baseName + " IN " + JDBC_DRIVERS.toString());
     return Files.find(
             JDBC_DRIVERS,
             1,
@@ -131,7 +132,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
           public void accept(CSVRecord t) {
             if (seen) return;
             seen = true;
-            LOG.debug(entryName + ": Sample record: " + t);
+            logger.debug(entryName + ": Sample record: " + t);
           }
         };
     private int recordCountMin = 1;
@@ -175,7 +176,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
         CSVParser parser = new CSVParser(reader, AbstractTask.FORMAT.withFirstRecordAsHeader());
 
         Map<String, Integer> headerMap = parser.getHeaderMap();
-        LOG.debug(zipEntryByteSource + ": CSV header map: {}", headerMap);
+        logger.debug(zipEntryByteSource + ": CSV header map: {}", headerMap);
 
         if (headerStrict) {
           // Assert that all fields in CSV are valid header fields.
@@ -206,7 +207,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
           numRecords++;
           if (recordConsumer != null) recordConsumer.accept(record);
         }
-        LOG.debug(zipEntryByteSource + ": Number of records: {}", numRecords);
+        logger.debug(zipEntryByteSource + ": Number of records: {}", numRecords);
         if (numRecords < recordCountMin || numRecords > recordCountMax)
           fail(
               "Record count out of range: "
@@ -288,7 +289,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
       // Assert that all entries in zip are valid entries.
       for (ZipArchiveEntry entry : Collections.list(zipFile.getEntries())) {
         // if (!expectedEntries.contains(entry.getName()))
-        // LOG.warn("Unexpected entry " + entry.getName());
+        // logger.warn("Unexpected entry " + entry.getName());
         assertTrue(
             "Unexpected entry " + entry.getName(),
             expectedEntries.contains(entry.getName())
@@ -317,7 +318,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
                 CoreMetadataDumpFormat.MAPPER.readValue(
                     reader, CoreMetadataDumpFormat.CompilerWorksDumpMetadataTaskFormat.Root.class);
             String format = root.format;
-            LOG.debug("Format is " + format);
+            logger.debug("Format is " + format);
             if (this.format != null) assertEquals("Format was wrong.", this.format, format);
           }
           break FORMAT;
@@ -329,7 +330,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
                   zipName, zipFile, MetadataDumperConstants.FORMAT_ZIP_ENTRY_NAME);
           if (source == null) break TEXT;
           String format = source.asCharSource(StandardCharsets.UTF_8).readFirstLine();
-          LOG.debug("Format is " + format);
+          logger.debug("Format is " + format);
           if (this.format != null) assertEquals("Format was wrong.", this.format, format);
           break FORMAT;
         }

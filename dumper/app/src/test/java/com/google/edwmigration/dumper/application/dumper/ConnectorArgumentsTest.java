@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper;
 
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST_DEFAULT;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +32,25 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class ConnectorArgumentsTest {
+
+  @Test
+  public void isPasswordProvided_success() throws Exception {
+    {
+      ConnectorArguments arguments = new ConnectorArguments("--connector", "simple", "--password");
+      assertTrue(arguments.isPasswordFlagProvided());
+    }
+    {
+      ConnectorArguments arguments =
+          new ConnectorArguments("--connector", "simple", "--password", "secret");
+      assertTrue(arguments.isPasswordFlagProvided());
+    }
+  }
+
+  @Test
+  public void isPasswordProvided_false() throws Exception {
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "simple");
+    assertFalse(arguments.isPasswordFlagProvided());
+  }
 
   @Test
   public void getDatabases_success() throws IOException {

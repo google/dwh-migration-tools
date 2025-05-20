@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public abstract class HiveMetastoreThriftClient implements AutoCloseable {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(HiveMetastoreThriftClient.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveMetastoreThriftClient.class);
 
   public static class Builder {
 
@@ -187,7 +187,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       final HiveMetastoreThriftClient client;
       if (supportedVersionMappings.containsKey(requestedVersionString)) {
         if (debug)
-          LOG.debug(
+          logger.debug(
               "The request for Hive metastore Thrift client version '{}' is satisfiable; building"
                   + " it now.",
               requestedVersionString);
@@ -201,7 +201,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
                 + Joiner.on(",").join(supportedVersionMappings.keySet())
                 + "].";
         if (unavailableClientBehavior == UnavailableClientVersionBehavior.FALLBACK) {
-          LOG.warn(
+          logger.warn(
               messagePrefix
                   + " The caller requested fallback behavior, so a client compiled against a"
                   + " superset Thrift specification will be used instead. If you encounter an error"

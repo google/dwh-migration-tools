@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTran
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +59,7 @@ import org.springframework.jdbc.support.JdbcUtils;
 /** @author shevek */
 public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractJdbcTask.class);
 
   @CheckForNull private Class<? extends Enum<?>> headerClass;
   @CheckForNull private ResultSetTransformer<String[]> headerTransformer;
@@ -67,8 +68,8 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     super(targetPath);
   }
 
-  public AbstractJdbcTask(String targetPath, TargetInitialization targetInitialization) {
-    super(targetPath, targetInitialization);
+  public AbstractJdbcTask(@Nonnull String targetPath, @Nonnull TaskOptions options) {
+    super(targetPath, options);
   }
 
   @CheckForNull
@@ -110,7 +111,16 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
     } else {
       format = format.withHeader(rs);
     }
-    return format;
+
+    WriteMode writeMode = options.writeMode();
+    switch (writeMode) {
+      case CREATE_TRUNCATE:
+        return format;
+      case APPEND_EXISTING:
+        return format.withSkipHeaderRecord(); // Header record already exists in case of append.
+      default:
+        throw new UnsupportedOperationException("Unsupported write mode: " + writeMode);
+    }
   }
 
   @Nonnull
@@ -156,7 +166,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
           } else if ((itemString = resultItem.toString()) == null) {
             // Item violated usual toStringRules
             Class<?> itemClass = resultItem.getClass();
-            LOG.warn("Unexpected toString result for class {} - null", itemClass);
+            logger.warn("Unexpected toString result for class {} - null", itemClass);
             printer.print(null);
           } else {
             printer.print(itemString);
@@ -195,26 +205,26 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @SuppressWarnings("UnusedMethod")
   private static void debug(@Nonnull Statement statement) throws SQLException {
-    LOG.debug(
+    logger.debug(
         "Concurrency = "
             + statement.getResultSetConcurrency()
             + " (want "
             + ResultSet.CONCUR_READ_ONLY
             + ")");
-    LOG.debug(
+    logger.debug(
         "Holdability = "
             + statement.getResultSetHoldability()
             + " (want "
             + ResultSet.CLOSE_CURSORS_AT_COMMIT
             + ")");
-    LOG.debug("FetchSize = " + statement.getFetchSize());
-    LOG.debug(
+    logger.debug("FetchSize = " + statement.getFetchSize());
+    logger.debug(
         "ResultSetType = "
             + statement.getResultSetType()
             + " (want "
             + ResultSet.TYPE_FORWARD_ONLY
             + ")");
-    LOG.debug("AutoCommit = " + statement.getConnection().getAutoCommit() + " (want false)");
+    logger.debug("AutoCommit = " + statement.getConnection().getAutoCommit() + " (want false)");
   }
 
   // Very similar to JdbcTemplate, except works for bulk selects without blowing RAM.
@@ -227,7 +237,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       throws SQLException {
     PreparedStatement statement = null;
     try {
-      LOG.debug("Preparing statement...");
+      logger.debug("Preparing statement...");
 
       PREPARE:
       {
@@ -247,7 +257,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         // Enables cursors in PostgreSQL.
         // Teradata says that this can reduce the fetch size below 1Mb, but not increase it.
         statement.setFetchSize(16384);
-        LOG.debug("Statement preparation took " + stopwatch + ". Executing...");
+        logger.debug("Statement preparation took {}. Executing...", stopwatch);
       }
 
       EXECUTE:
@@ -255,7 +265,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         // debug(statement);
         Stopwatch stopwatch = Stopwatch.createStarted();
         statement.execute(); // Must return true to indicate a ResultSet object.
-        LOG.debug("Statement execution took {}. Extracting results...", stopwatch);
+        logger.debug("Statement execution took {}. Extracting results...", stopwatch);
         // debug(statement);
       }
 
@@ -265,14 +275,14 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         Stopwatch stopwatch = Stopwatch.createStarted();
         rs = statement.getResultSet();
         result = resultSetExtractor.extractData(rs);
-        LOG.debug("Result set extraction took {}.", stopwatch);
+        logger.debug("Result set extraction took {}.", stopwatch);
       } finally {
         JdbcUtils.closeResultSet(rs);
       }
 
       SQLWarning warning = statement.getWarnings();
       while (warning != null) {
-        LOG.warn(
+        logger.warn(
             "SQL warning: ["
                 + warning.getSQLState()
                 + "/"
@@ -299,12 +309,13 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   @Override
   protected T doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
     JdbcHandle jdbcHandle = (JdbcHandle) handle;
-    LOG.info("Writing to {} -> {}", getTargetPath(), sink);
+    logger.info("Writing to {} -> {}", getTargetPath(), sink);
 
     DataSource dataSource = jdbcHandle.getDataSource();
     // We could use JdbcUtils, but that would prevent us from getting a .exception.txt.
     try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
-      // LOG.debug("Connected to " + connection); // Hikari is using the same connection each time.
+      // logger.debug("Connected to " + connection); // Hikari is using the same connection each
+      // time.
       return doInConnection(context, jdbcHandle, sink, connection);
     }
   }

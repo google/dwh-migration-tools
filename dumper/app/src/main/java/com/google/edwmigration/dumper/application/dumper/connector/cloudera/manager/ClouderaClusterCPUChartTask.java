@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -39,12 +40,13 @@ import org.slf4j.LoggerFactory;
  * language.
  */
 public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask {
-  private static final Logger LOG = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
-  public ClouderaClusterCPUChartTask(int includedLastDays, TimeSeriesAggregation tsAggregation) {
-    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation);
+  public ClouderaClusterCPUChartTask(
+      int includedLastDays, TimeSeriesAggregation tsAggregation, TaskCategory taskCategory) {
+    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation, taskCategory);
   }
 
   @Override
@@ -56,20 +58,12 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         String cpuPerClusterQuery = String.format(TS_CPU_QUERY_TEMPLATE, cluster.getId());
-        LOG.debug(
+        logger.debug(
             "Execute charts query: [{}] for the cluster: [{}].",
             cpuPerClusterQuery,
             cluster.getName());
 
-        JsonNode chartInJson;
-        try {
-          chartInJson = requestTimeSeriesChart(handle, cpuPerClusterQuery);
-        } catch (TimeSeriesException ex) {
-          MetadataDumperUsageException dumperException =
-              new MetadataDumperUsageException("Cloudera Error: " + ex.getMessage());
-          dumperException.initCause(ex);
-          throw dumperException;
-        }
+        JsonNode chartInJson = requestTimeSeriesChart(handle, cpuPerClusterQuery);
         writer.write(chartInJson.toString());
         writer.write('\n');
       }
@@ -85,7 +79,7 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
     List<ClouderaClusterDTO> cpuClusters = new ArrayList<>();
     for (ClouderaClusterDTO cluster : clusters) {
       if (cluster.getId() == null) {
-        LOG.warn(
+        logger.warn(
             "Cloudera cluster id is null for cluster [{}]. Skip CPU metrics for the cluster.",
             cluster.getName());
       } else {

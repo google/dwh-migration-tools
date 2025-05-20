@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @ParametersAreNonnullByDefault
 public class HandleUtil {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HandleUtil.class);
+  private static final Logger logger = LoggerFactory.getLogger(HandleUtil.class);
 
   public static JdbcTemplate createJdbcTemplate(DataSource dataSource) {
     JdbcTemplate template = new JdbcTemplate(dataSource);
@@ -37,16 +37,17 @@ public class HandleUtil {
   }
 
   static void verifyJdbcConnection(DataSource dataSource) throws SQLException {
-    LOG.debug("Testing connection to database using {}...", dataSource);
+    logger.debug("Testing connection to database using {}...", dataSource);
     try (Connection connection = dataSource.getConnection()) {
-      LOG.debug("Obtained connection is: {}");
+      logger.debug("Obtained connection is: {}");
       if (connection == null) {
-        LOG.error("DataSource failed to provide a connection (usually bad/mismatched JDBC URI).");
+        logger.error(
+            "DataSource failed to provide a connection (usually bad/mismatched JDBC URI).");
         // This used to be thrown by Preconditions and was kept for compatibility.
         // TODO: Replace with a better error.
         throw new NullPointerException();
       } else {
-        LOG.debug("Connection test succeeded");
+        logger.debug("Connection test succeeded");
       }
     }
   }

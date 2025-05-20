@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 public class JdbcHandle implements Handle {
 
-  private static final Logger LOG = LoggerFactory.getLogger(JdbcHandle.class);
+  private static final Logger logger = LoggerFactory.getLogger(JdbcHandle.class);
 
   @Nonnull
   public static JdbcHandle newPooledJdbcHandle(@Nonnull DataSource dataSource, int threadPoolSize)

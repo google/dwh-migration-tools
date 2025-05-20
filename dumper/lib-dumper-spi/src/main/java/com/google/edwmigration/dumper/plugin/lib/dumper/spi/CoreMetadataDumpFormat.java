@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,13 +27,13 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 /** @author shevek */
 public interface CoreMetadataDumpFormat {
 
-  public static final YAMLFactory FACTORY =
+  YAMLFactory FACTORY =
       new YAMLFactory()
           .enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
           // .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
           .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
           .disable(YAMLGenerator.Feature.SPLIT_LINES);
-  public static final ObjectMapper MAPPER =
+  ObjectMapper MAPPER =
       new ObjectMapper(FACTORY)
           // .registerModule(new GuavaModule())
           // .registerModule(new JavaTimeModule())
@@ -41,13 +41,13 @@ public interface CoreMetadataDumpFormat {
           .enable(SerializationFeature.INDENT_OUTPUT)
           .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
-  public static interface CompilerWorksDumpMetadataTaskFormat {
+  interface CompilerWorksDumpMetadataTaskFormat {
 
-    public static final String ZIP_ENTRY_NAME = "compilerworks-metadata.yaml";
+    String ZIP_ENTRY_NAME = "compilerworks-metadata.yaml";
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonInclude(JsonInclude.Include.NON_ABSENT)
-    public static class Product {
+    class Product {
 
       public String version;
       public String arguments;
@@ -55,7 +55,7 @@ public interface CoreMetadataDumpFormat {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonInclude(JsonInclude.Include.NON_ABSENT)
-    public static class Root {
+    class Root {
 
       public String format;
       /** In milliseconds since the epoch. */

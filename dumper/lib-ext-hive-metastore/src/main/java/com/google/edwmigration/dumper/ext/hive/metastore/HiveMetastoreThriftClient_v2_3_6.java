@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,7 +56,8 @@ import org.slf4j.LoggerFactory;
 public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(HiveMetastoreThriftClient_v2_3_6.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(HiveMetastoreThriftClient_v2_3_6.class);
 
   @Nonnull
   private final com.google.edwmigration.dumper.ext.hive.metastore.thrift.api.v2_3_6
@@ -597,7 +598,7 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
 
   @Override
   public ImmutableList<? extends TBase<?, ?>> getRawResourcePlans() throws Exception {
-    LOG.info("Resource plans are not supported in Hive 2.3.6");
+    logger.info("Resource plans are not supported in Hive 2.3.6");
     return ImmutableList.of();
   }
 
@@ -612,7 +613,7 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
 
   @Override
   public ImmutableList<? extends TBase<?, ?>> getRawCatalogs() {
-    LOG.info("Catalogs are not supported in Hive 2.3.6");
+    logger.info("Catalogs are not supported in Hive 2.3.6");
     return ImmutableList.of();
   }
 }

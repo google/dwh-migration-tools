@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public class RedshiftLogsConnector extends AbstractRedshiftConnector
     implements LogsConnector, RedshiftLogsDumpFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RedshiftLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(RedshiftLogsConnector.class);
 
   public RedshiftLogsConnector() {
     super("redshift-logs");
@@ -72,11 +72,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
   public void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments)
       throws MetadataDumperUsageException {
 
-    ParallelTaskGroup parallelTask = new ParallelTaskGroup(this.getName());
-    out.add(parallelTask);
-
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-    out.add(new FormatTask(FORMAT_NAME));
+    ParallelTaskGroup.Builder parallelTask = new ParallelTaskGroup.Builder(this.getName());
 
     //  is also be there in the metadata , no harm is making zip self-sufficient
     parallelTask.addTask(
@@ -157,6 +153,11 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
           queryTemplateScan,
           "Q.starttime",
           parallelTask);
+
+      out.add(parallelTask.build());
+
+      out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+      out.add(new FormatTask(FORMAT_NAME));
     }
   }
 
@@ -166,7 +167,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
       String filePrefix,
       String queryTemplate,
       String startField,
-      ParallelTaskGroup out)
+      ParallelTaskGroup.Builder out)
       throws MetadataDumperUsageException {
 
     List<String> whereClauses = new ArrayList<>();
@@ -179,7 +180,7 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
     ZonedIntervalIterable intervals =
         ZonedIntervalIterableGenerator.forConnectorArguments(arguments);
 
-    LOG.info("Exporting query log for " + intervals);
+    logger.info("Exporting query log for " + intervals);
     for (ZonedInterval interval : intervals) {
       String query =
           queryTemplate.replace(

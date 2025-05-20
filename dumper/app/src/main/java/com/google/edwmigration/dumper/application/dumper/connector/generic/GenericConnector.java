@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 @AutoService({Connector.class, LogsConnector.class})
 public class GenericConnector extends AbstractJdbcConnector implements LogsConnector {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GenericConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(GenericConnector.class);
 
   public static final String NAME = "generic";
   public static final String PERIOD_START = "{period-start}";
@@ -142,7 +142,7 @@ public class GenericConnector extends AbstractJdbcConnector implements LogsConne
       }
 
     } else {
-      LOG.debug("Task: {} , {}", this.entryName, this.query);
+      logger.debug("Task: {} , {}", this.entryName, this.query);
       out.add(new JdbcSelectTask(this.entryName, this.query));
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,27 +19,33 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 import static java.lang.String.format;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.errorprone.annotations.ForOverride;
+import java.beans.PropertyDescriptor;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 
 /** @author shevek */
 public abstract class AbstractTask<T> implements Task<T> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractTask.class);
 
   public static final CSVFormat FORMAT =
       CSVFormat.DEFAULT
@@ -54,18 +60,17 @@ public abstract class AbstractTask<T> implements Task<T> {
           .withQuoteMode(QuoteMode.MINIMAL);
 
   private final String targetPath;
-  private final TargetInitialization targetInitialization;
+  protected final TaskOptions options;
   protected Condition[] conditions = Condition.EMPTY_ARRAY;
 
-  public AbstractTask(String targetPath) {
-    this(targetPath, TargetInitialization.CREATE);
+  public AbstractTask(@Nonnull String targetPath) {
+    this(targetPath, TaskOptions.DEFAULT);
   }
 
-  public AbstractTask(String targetPath, TargetInitialization targetInitialization) {
-    Preconditions.checkNotNull(
-        targetInitialization, "Target initialization behavior must be defined.");
+  public AbstractTask(@Nonnull String targetPath, @Nonnull TaskOptions options) {
+    Preconditions.checkNotNull(options, "Task options was null.");
     this.targetPath = targetPath;
-    this.targetInitialization = targetInitialization;
+    this.options = options;
   }
 
   @Override
@@ -110,18 +115,27 @@ public abstract class AbstractTask<T> implements Task<T> {
 
   @Override
   public T run(TaskRunContext context) throws Exception {
-    if (targetInitialization == TargetInitialization.DO_NOT_CREATE) {
+    if (options.targetInitialization() == TargetInitialization.DO_NOT_CREATE) {
       return doRun(context, DummyByteSink.INSTANCE, context.getHandle());
     }
 
     OutputHandle sink = context.newOutputFileHandle(getTargetPath());
     if (sink.exists()) {
-      LOG.info("Skipping {}: {} already exists.", getName(), sink);
+      logger.info("Skipping {}: {} already exists.", getName(), sink);
       return null;
     }
-    T result = doRun(context, sink.asTemporaryByteSink(), context.getHandle());
+    T result = doRun(context, sink.asTemporaryByteSink(options.writeMode()), context.getHandle());
     sink.commit();
     return result;
+  }
+
+  protected static CSVFormat newCsvFormatForClass(Class<?> clazz) {
+    CSVFormat format =
+        FORMAT.withHeader(
+            Arrays.stream(BeanUtils.getPropertyDescriptors(clazz))
+                .map(PropertyDescriptor::getName)
+                .toArray(String[]::new));
+    return format;
   }
 
   protected String describeSourceData() {
@@ -140,9 +154,21 @@ public abstract class AbstractTask<T> implements Task<T> {
 
   @Override
   public String toString() {
-    return targetInitialization == TargetInitialization.CREATE
-        ? format("Write %s %s", targetPath, describeSourceData())
+    return options.targetInitialization() == TargetInitialization.CREATE
+        ? format(getToStringTemplate(), targetPath, describeSourceData())
         : describeSourceData();
+  }
+
+  private String getToStringTemplate() {
+    WriteMode writeMode = options.writeMode();
+    switch (writeMode) {
+      case CREATE_TRUNCATE:
+        return "Write %s %s";
+      case APPEND_EXISTING:
+        return "Append %s %s";
+      default:
+        throw new UnsupportedOperationException("Unsupported write mode: " + writeMode);
+    }
   }
 
   public enum TargetInitialization {
@@ -151,11 +177,47 @@ public abstract class AbstractTask<T> implements Task<T> {
   }
 
   private static class DummyByteSink extends ByteSink {
+
     private static final DummyByteSink INSTANCE = new DummyByteSink();
 
     @Override
     public OutputStream openStream() {
       throw new UnsupportedOperationException("Opening stream for DummyByteSink is not supported.");
+    }
+  }
+
+  @AutoValue
+  @ParametersAreNonnullByDefault
+  public abstract static class TaskOptions {
+    public static final TaskOptions DEFAULT = builder().build();
+
+    abstract TargetInitialization targetInitialization();
+
+    abstract OutputHandle.WriteMode writeMode();
+
+    abstract Builder toBuilder();
+
+    public final TaskOptions withWriteMode(WriteMode writeMode) {
+      return toBuilder().setWriteMode(writeMode).build();
+    }
+
+    public final TaskOptions withTargetInitialization(TargetInitialization targetInitialization) {
+      return toBuilder().setTargetInitialization(targetInitialization).build();
+    }
+
+    public static Builder builder() {
+      return new AutoValue_AbstractTask_TaskOptions.Builder()
+          .setTargetInitialization(TargetInitialization.CREATE)
+          .setWriteMode(WriteMode.CREATE_TRUNCATE);
+    }
+
+    @AutoValue.Builder
+    public abstract static class Builder {
+      public abstract Builder setTargetInitialization(TargetInitialization value);
+
+      public abstract Builder setWriteMode(WriteMode value);
+
+      public abstract TaskOptions build();
     }
   }
 }

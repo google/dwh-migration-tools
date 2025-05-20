@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class BigQueryMetadataConnectorTest extends AbstractBigQueryConnectorExecutionTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(BigQueryMetadataConnectorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(BigQueryMetadataConnectorTest.class);
 
   private final BigQueryMetadataConnector connector = new BigQueryMetadataConnector();
 
@@ -49,7 +49,7 @@ public class BigQueryMetadataConnectorTest extends AbstractBigQueryConnectorExec
   @Test
   public void testExecution() throws Exception {
     File outputFile = TestUtils.newOutputFile("test-compilerworks-bigquery.zip");
-    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+    logger.debug("Output file: {}", outputFile.getAbsolutePath());
 
     runDumper("--connector", connector.getName(), "--output", outputFile.getAbsolutePath());
 

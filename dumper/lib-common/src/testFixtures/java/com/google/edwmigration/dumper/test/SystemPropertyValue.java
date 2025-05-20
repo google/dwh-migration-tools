@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class SystemPropertyValue implements BooleanSupplier {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SystemPropertyValue.class);
+  private static final Logger logger = LoggerFactory.getLogger(SystemPropertyValue.class);
 
   public static boolean get(@Nonnull String name) {
     return AccessController.doPrivileged(
@@ -35,7 +35,7 @@ public class SystemPropertyValue implements BooleanSupplier {
           @Override
           public Boolean run() {
             boolean out = Boolean.getBoolean(name);
-            // LOG.debug("SystemPropertyValue {} -> {}", name, out);
+            // logger.debug("SystemPropertyValue {} -> {}", name, out);
             return out;
           }
         });

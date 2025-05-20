@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,7 +100,7 @@ public class AbstractClouderaManagerTaskTest {
   @Test
   public void parseObjectToJsonLine_createJsonLine() throws Exception {
     DummyPersonDTO albus = new DummyPersonDTO("Albus");
-    String jsonLine = clouderaManagerTask.parseObjectToJsonString(albus);
+    String jsonLine = clouderaManagerTask.serializeObjectToJsonString(albus);
     assertEquals(jsonLine, "{\"name\":\"Albus\"}");
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,10 +29,20 @@ plugins {
 
 apply plugin: 'com.github.jk1.dependency-license-report'
 apply plugin: "jacoco"
+apply plugin: 'com.adarshr.test-logger'
 
 configurations {
     sources {
         transitive = true
+    }
+
+    configureEach {
+        // *-over-slf4j bridges used
+        exclude group: "ch.qos.reload4j", module: "reload4j"
+        exclude group: "org.slf4j", module: "slf4j-reload4j"
+
+        // We use logback-classic instead of simple
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
     }
 }
 
@@ -53,7 +63,11 @@ dependencies {
     implementation libs.apache.avro
     implementation libs.apache.commons.csv
     implementation libs.apache.commons.lang3
-    implementation libs.hadoop.common
+    implementation (libs.hadoop.common) {
+        // *-over-slf4j bridges used
+        exclude group: "ch.qos.reload4j", module: "reload4j"
+        exclude group: "org.slf4j", module: "slf4j-reload4j"
+    }
     implementation libs.hadoop.hdfs.client
     implementation libs.spring.core
     implementation libs.spring.jdbc
@@ -68,16 +82,26 @@ dependencies {
     implementation libs.httpclient5
     implementation libs.aws.java.sdk.redshift
     implementation libs.aws.java.sdk.cloudwatch
+    implementation(libs.oozie.client) {
+        exclude group: 'javax.jms', module: 'jms'
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'guru.nidi', module: 'graphviz-java'
 
-    runtimeOnly libs.logback.classic
-    runtimeOnly libs.jcl.over.slf4j
+        //Not used and has LGPLv3 transient deps
+        exclude group: 'org.apache.oozie', module: 'oozie-fluent-job-api'
+    }
+    implementation libs.hadoop.auth
+
+    // `implementation` scope is used because some of our dependencies
+    // have log libraries in this scope as transient dependencies
+    implementation libs.logback.classic
+    implementation libs.jcl.over.slf4j
 
     runtimeOnly libs.postgresql
     runtimeOnly libs.snowflake.jdbc
     runtimeOnly libs.redshift.jdbc
-
-    runtimeOnly "ch.qos.reload4j:reload4j:1.2.25"
-    runtimeOnly "org.slf4j:slf4j-reload4j:1.7.36"
+    // JNA is required for the Snowflake MFA caching mechanism
+    runtimeOnly libs.jna
 
     testFixturesApi testFixtures(project(':dumper:lib-common'))
 
@@ -88,8 +112,8 @@ dependencies {
     testImplementation libs.mockito.core
     testImplementation libs.mockito.inline
     testImplementation libs.mockito.junit.jupiter
+    testImplementation libs.junit
     testImplementation libs.wiremock
-
 
     // Test Hive 3.1.2
     testImplementation project(path: ':dumper:lib-ext-hive-metastore', configuration: 'shadow')
@@ -109,6 +133,10 @@ dependencyLocking {
 
 jacoco {
     toolVersion = "0.8.11"
+}
+
+test {
+    finalizedBy jacocoTestReport // report is always generated after tests run
 }
 
 jacocoTestReport {
@@ -171,7 +199,7 @@ licenseReport {
 }
 
 tasks.named('check') {
-    dependsOn 'checkLicense'
+    dependsOn 'checkLicense', 'printBanner'
 }
 
 tasks.named('distTar') {
@@ -183,19 +211,20 @@ tasks.named('distZip') {
 }
 
 tasks.register('generateSourceMirror', Copy) {
+    dependsOn 'compileJava'
     from {
         dependencies.createArtifactResolutionQuery()
-            .forComponents(
-                configurations.runtimeClasspath.incoming.resolutionResult
-                    .allDependencies.collect { it.selected.id }
-            )
-            .withArtifacts(JvmLibrary, SourcesArtifact)
-            .execute()
-            .resolvedComponents
-            .collectMany {
-                it.artifactResults
-                    .collect { it.file.path }
-            }
+                .forComponents(
+                        configurations.runtimeClasspath.incoming.resolutionResult
+                                .allDependencies.collect { it.selected.id }
+                )
+                .withArtifacts(JvmLibrary, SourcesArtifact)
+                .execute()
+                .resolvedComponents
+                .collectMany {
+                    it.artifactResults
+                            .collect { it.file.path }
+                }
     }
     into layout.buildDirectory.dir('mirror/sources')
     outputs.dir "mirror/sources"
@@ -206,6 +235,15 @@ tasks.register('copyGceLauncher', Copy) {
     into layout.buildDirectory.dir('cloud_extractor/launcher')
     filter(ReplaceTokens, tokens: [dumper_version: project.version])
     filteringCharset = 'UTF-8'
+}
+
+tasks.register("printBanner") {
+    File bannerFile = file('src/main/resources/banner/banner.txt')
+    if (bannerFile.exists()) {
+        bannerFile.readLines().forEach {println it}
+    } else {
+        println "Warning: Banner file not found at ${bannerFile.path}"
+    }
 }
 
 distributions {

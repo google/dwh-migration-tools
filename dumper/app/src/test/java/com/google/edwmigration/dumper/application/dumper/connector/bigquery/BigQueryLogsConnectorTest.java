@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class BigQueryLogsConnectorTest extends AbstractBigQueryConnectorExecutionTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(BigQueryLogsConnectorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(BigQueryLogsConnectorTest.class);
 
   private static final String CANARY_TEMPLATE = "SELECT '%s'";
 
@@ -59,7 +59,7 @@ public class BigQueryLogsConnectorTest extends AbstractBigQueryConnectorExecutio
     BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
     final String canaryQuery =
         String.format(CANARY_TEMPLATE, UUIDGenerator.getInstance().nextUUID());
-    LOG.debug("Submitting canary query: {}", canaryQuery);
+    logger.debug("Submitting canary query: {}", canaryQuery);
     TableResult tableResult = bigQuery.query(QueryJobConfiguration.of(canaryQuery));
     assertEquals(1, tableResult.getTotalRows());
     return canaryQuery;
@@ -72,13 +72,13 @@ public class BigQueryLogsConnectorTest extends AbstractBigQueryConnectorExecutio
     final String canaryQuery = submitCanaryQuery();
 
     File outputFile = TestUtils.newOutputFile("test-compilerworks-bigquery-logs.zip");
-    LOG.debug("Output file: {}", outputFile.getAbsolutePath());
+    logger.debug("Output file: {}", outputFile.getAbsolutePath());
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     String earliestDate =
         dateFormat.format(
             new DateTime().minusDays(1).toDate()); // we could run at midnight, so we want -1 days
     String latestDate = dateFormat.format(new DateTime().toDate());
-    LOG.debug("Earliest date: {}; latest date: {}", earliestDate, latestDate);
+    logger.debug("Earliest date: {}; latest date: {}", earliestDate, latestDate);
 
     runDumper(
         "--connector",

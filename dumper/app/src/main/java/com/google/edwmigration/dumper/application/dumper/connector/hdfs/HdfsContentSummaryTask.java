@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 public class HdfsContentSummaryTask extends AbstractTask<Void> implements ContentSummaryFormat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HdfsContentSummaryTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(HdfsContentSummaryTask.class);
 
   HdfsContentSummaryTask() {
     super(ZIP_ENTRY_NAME);
@@ -79,7 +79,7 @@ public class HdfsContentSummaryTask extends AbstractTask<Void> implements Conten
                 totalFileSize,
                 totalNumberOfDirectories + totalNumberOfFiles);
           } catch (org.apache.hadoop.security.AccessControlException exn) {
-            LOG.error("AccessControlException: {}", trimExceptionMessage(exn.getMessage()));
+            logger.error("AccessControlException: {}", trimExceptionMessage(exn.getMessage()));
           }
         }
       }

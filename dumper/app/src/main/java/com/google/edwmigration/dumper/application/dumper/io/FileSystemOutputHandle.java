@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public class FileSystemOutputHandle implements OutputHandle {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(FileSystemOutputHandle.class);
+  private static final Logger logger = LoggerFactory.getLogger(FileSystemOutputHandle.class);
 
   private final Path temporaryPath;
   private final Path targetPath;
@@ -38,27 +38,28 @@ public class FileSystemOutputHandle implements OutputHandle {
     // Due to the semantics of prepare(), both of these must be within the same subdirectory.
     this.targetPath = rootPath.resolve(targetPath);
     this.temporaryPath = rootPath.resolve(targetPath + ".tmp");
-    // LOG.debug("Created " + this);
+    // logger.debug("Created " + this);
   }
 
   @Override
   public boolean exists() throws IOException {
-    // LOG.debug("Looking for existence of " + targetPath);
+    // logger.debug("Looking for existence of " + targetPath);
     return Files.exists(targetPath);
   }
 
   @Override
-  public ByteSink asByteSink() throws IOException {
-    // LOG.debug("As ByteSink: " + this + " = " + targetPath);
+  public ByteSink asByteSink(@Nonnull OutputHandle.WriteMode writeMode) throws IOException {
+    // logger.debug("As ByteSink: " + this + " = " + targetPath);
     prepare();
-    return new FileSystemByteSink(targetPath);
+    return new FileSystemByteSink(targetPath, writeMode);
   }
 
   @Override
-  public ByteSink asTemporaryByteSink() throws IOException {
-    // LOG.debug("As Temporary ByteSink: " + this + " = " + temporaryPath);
+  public ByteSink asTemporaryByteSink(@Nonnull OutputHandle.WriteMode writeMode)
+      throws IOException {
+    // logger.debug("As Temporary ByteSink: " + this + " = " + temporaryPath);
     prepare();
-    return new FileSystemByteSink(temporaryPath);
+    return new FileSystemByteSink(temporaryPath, writeMode);
   }
 
   /**

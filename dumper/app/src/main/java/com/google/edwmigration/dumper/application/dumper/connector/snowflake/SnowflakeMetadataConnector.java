@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,21 +20,27 @@ import static com.google.edwmigration.dumper.application.dumper.connector.snowfl
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 
 import com.google.auto.service.AutoService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +51,17 @@ import org.slf4j.LoggerFactory;
  * @author matt
  */
 @AutoService(Connector.class)
-@Description("Dumps metadata from Snowflake.")
+@RespectsArgumentDatabaseForConnection
+@RespectsArgumentDatabasePredicate
 public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
+
+  private static final String ACCOUNT_USAGE_SCHEMA_NAME = "SNOWFLAKE.ACCOUNT_USAGE";
+  private static final String ACCOUNT_USAGE_WHERE_CONDITION = "DELETED IS NULL";
+  private static final String EMPTY_WHERE_CONDITION = "";
 
   private enum PropertyAction {
     QUERY("query", "query"),
@@ -103,6 +114,12 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
   @Override
   @Nonnull
+  public String getDescription() {
+    return "Dumps metadata from Snowflake.";
+  }
+
+  @Override
+  @Nonnull
   public Iterable<ConnectorProperty> getPropertyConstants() {
     ImmutableList.Builder<ConnectorProperty> builder = ImmutableList.builder();
     for (MetadataView view : MetadataView.values()) {
@@ -116,16 +133,27 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
-      @Nonnull String schemaZip,
-      @Nonnull String alteredSchemaView,
-      @Nonnull String usageZip,
-      @Nonnull String usageView,
-      @Nonnull String usageFilter,
-      boolean isAssessment) {
+      @Nonnull String informationSchemaFileName,
+      @Nonnull String informationSchemaName,
+      @Nonnull String accountUsageFileName,
+      @Nonnull String accountUsageSchemaName,
+      @Nonnull String accountUsageWhereCondition,
+      boolean isAssessment,
+      @Nonnull String databaseFilter) {
     AbstractJdbcTask<Summary> schemaTask =
-        SnowflakeTaskUtil.withNoFilter(format, alteredSchemaView, schemaZip, header);
+        SnowflakeTaskUtil.withFilter(
+            format,
+            informationSchemaName,
+            informationSchemaFileName,
+            ImmutableList.of(databaseFilter),
+            header);
     AbstractJdbcTask<Summary> usageTask =
-        SnowflakeTaskUtil.withFilter(format, usageView, usageZip, usageFilter, header);
+        SnowflakeTaskUtil.withFilter(
+            format,
+            accountUsageSchemaName,
+            accountUsageFileName,
+            ImmutableList.of(accountUsageWhereCondition, databaseFilter),
+            header);
     if (isAssessment) {
       out.add(usageTask);
     } else {
@@ -142,9 +170,18 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     out.add(new FormatTask(FORMAT_NAME));
 
     boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
-    final String IS = INJECT_IS_FAULT ? "__NONEXISTENT__" : "INFORMATION_SCHEMA";
-    final String AU = "SNOWFLAKE.ACCOUNT_USAGE";
-    final String AU_WHERE = " WHERE DELETED IS NULL";
+    // INFORMATION_SCHEMA queries must be qualified with a database
+    // name or that a "USE DATABASE" command has previously been run
+    // in the same session. Qualify the name to avoid this dependency.
+    final String databaseName = arguments.getDatabaseSingleName();
+    final String IS;
+    if (INJECT_IS_FAULT) {
+      IS = "__NONEXISTENT__";
+    } else if (databaseName == null) {
+      IS = "INFORMATION_SCHEMA";
+    } else {
+      IS = sanitizeDatabaseName(databaseName) + ".INFORMATION_SCHEMA";
+    }
 
     boolean isAssessment = arguments.isAssessment();
     addSqlTasksWithInfoSchemaFallback(
@@ -157,9 +194,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         DatabasesFormat.IS_ZIP_ENTRY_NAME,
         IS,
         DatabasesFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE,
-        isAssessment);
+        ACCOUNT_USAGE_SCHEMA_NAME,
+        ACCOUNT_USAGE_WHERE_CONDITION,
+        isAssessment,
+        getInformationSchemaWhereCondition("database_name", arguments.getDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -171,9 +209,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         SchemataFormat.IS_ZIP_ENTRY_NAME,
         IS,
         SchemataFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE,
-        isAssessment);
+        ACCOUNT_USAGE_SCHEMA_NAME,
+        ACCOUNT_USAGE_WHERE_CONDITION,
+        isAssessment,
+        getInformationSchemaWhereCondition("catalog_name", arguments.getDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -186,9 +225,11 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         TablesFormat.IS_ZIP_ENTRY_NAME,
         IS,
         TablesFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE,
-        isAssessment); // Painfully slow.
+        ACCOUNT_USAGE_SCHEMA_NAME,
+        ACCOUNT_USAGE_WHERE_CONDITION,
+        isAssessment,
+        getInformationSchemaWhereCondition(
+            "table_catalog", arguments.getDatabases())); // Painfully slow.
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -196,14 +237,17 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         getOverrideableQuery(
             arguments,
             "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name,"
-                + " data_type FROM %1$s.COLUMNS%2$s",
+                + " data_type, is_nullable, column_default, character_maximum_length,"
+                + " numeric_precision, numeric_scale, datetime_precision, comment FROM %1$s.COLUMNS%2$s",
             MetadataView.COLUMNS),
         ColumnsFormat.IS_ZIP_ENTRY_NAME,
         IS,
         ColumnsFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE,
-        isAssessment); // Very fast.
+        ACCOUNT_USAGE_SCHEMA_NAME,
+        ACCOUNT_USAGE_WHERE_CONDITION,
+        isAssessment,
+        getInformationSchemaWhereCondition(
+            "table_catalog", arguments.getDatabases())); // Very fast.
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -215,9 +259,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ViewsFormat.IS_ZIP_ENTRY_NAME,
         IS,
         ViewsFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE,
-        isAssessment);
+        ACCOUNT_USAGE_SCHEMA_NAME,
+        ACCOUNT_USAGE_WHERE_CONDITION,
+        isAssessment,
+        getInformationSchemaWhereCondition("table_catalog", arguments.getDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -230,19 +275,60 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         FunctionsFormat.IS_ZIP_ENTRY_NAME,
         IS,
         FunctionsFormat.AU_ZIP_ENTRY_NAME,
-        AU,
-        AU_WHERE,
-        isAssessment);
+        ACCOUNT_USAGE_SCHEMA_NAME,
+        ACCOUNT_USAGE_WHERE_CONDITION,
+        isAssessment,
+        getInformationSchemaWhereCondition("function_catalog", arguments.getDatabases()));
 
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        String formatString = overrideFormatString(item, arguments);
-        String query = String.format(formatString, AU, /* an empty WHERE clause */ "");
-        String zipName = item.zipEntryName;
-        Task<?> task = new JdbcSelectTask(zipName, query).withHeaderTransformer(item.transformer());
-        out.add(task);
+        addAssessmentQuery(item, out, arguments, ACCOUNT_USAGE_SCHEMA_NAME);
+      }
+    } else {
+      if (!arguments.getDatabases().isEmpty()) {
+        TaskOptions taskOptions = TaskOptions.DEFAULT;
+        for (String database : arguments.getDatabases()) {
+          String formatString =
+              String.format(
+                  "%s IN DATABASE %s",
+                  SnowflakePlanner.SHOW_EXTERNAL_TABLES.formatString, databaseNameQuoted(database));
+          addAssessmentQuery(
+              SnowflakePlanner.SHOW_EXTERNAL_TABLES.withFormatString(formatString),
+              out,
+              arguments,
+              ACCOUNT_USAGE_SCHEMA_NAME,
+              taskOptions);
+          // Next tasks will append to the same file.
+          taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
+        }
+      } else {
+        addAssessmentQuery(
+            SnowflakePlanner.SHOW_EXTERNAL_TABLES, out, arguments, ACCOUNT_USAGE_SCHEMA_NAME);
       }
     }
+  }
+
+  private void addAssessmentQuery(
+      @Nonnull AssessmentQuery item,
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull ConnectorArguments arguments,
+      @Nonnull String AU) {
+    addAssessmentQuery(item, out, arguments, AU, TaskOptions.DEFAULT);
+  }
+
+  private void addAssessmentQuery(
+      @Nonnull AssessmentQuery item,
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull ConnectorArguments arguments,
+      @Nonnull String AU,
+      @Nonnull TaskOptions taskOptions) {
+    String formatString = overrideFormatString(item, arguments);
+    String query = String.format(formatString, AU, EMPTY_WHERE_CONDITION);
+    String zipName = item.zipEntryName;
+    Task<?> task =
+        new JdbcSelectTask(zipName, query, TaskCategory.REQUIRED, taskOptions)
+            .withHeaderTransformer(item.transformer());
+    out.add(task);
   }
 
   private String overrideFormatString(AssessmentQuery query, ConnectorArguments arguments) {
@@ -266,9 +352,49 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     ConnectorProperty propertyWhere = PropertyAction.WHERE.toProperty(metadataView);
     String overrideWhere = arguments.getDefinition(propertyWhere);
     if (overrideWhere != null) {
-      return defaultSql + " WHERE " + overrideWhere;
+      // Partially format the SQL template by re-introducing the first format specifier.
+      return String.format(defaultSql, "%1$s", " WHERE " + overrideWhere);
     }
 
     return defaultSql;
+  }
+
+  private static String getInformationSchemaWhereCondition(
+      @Nonnull String databaseNameColumn, @Nonnull ImmutableList<String> databaseNames) {
+    if (databaseNames.isEmpty()) {
+      return EMPTY_WHERE_CONDITION;
+    }
+    String quotedNames =
+        databaseNames.stream()
+            .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
+            .collect(Collectors.joining(", "));
+
+    return String.format("%s IN (%s)", databaseNameColumn, quotedNames);
+  }
+
+  @VisibleForTesting
+  public static String databaseNameStringLiteral(@Nonnull String databaseName) {
+    if (databaseName.startsWith("\"") && databaseName.endsWith("\"")) {
+      // This is a quoted identifier, it should be matched case-sensitively
+      databaseName = databaseName.substring(1, databaseName.length() - 1);
+    } else {
+      // Unquoted identifiers are stored uppercase, single quotes need to be escaped.
+      databaseName = databaseName.toUpperCase();
+    }
+    databaseName = databaseName.replace("'", "''");
+    return String.format("'%s'", databaseName);
+  }
+
+  @VisibleForTesting
+  public static String databaseNameQuoted(@Nonnull String databaseName) {
+    if (databaseName.startsWith("\"") && databaseName.endsWith("\"")) {
+      // This is a quoted identifier, it should be matched case-sensitively
+      databaseName = databaseName.substring(1, databaseName.length() - 1);
+    } else {
+      // Unquoted identifiers are stored uppercase, single quotes need to be escaped.
+      databaseName = databaseName.toUpperCase();
+    }
+    databaseName = databaseName.replace("\"", "\"\"");
+    return String.format("\"%s\"", databaseName);
   }
 }

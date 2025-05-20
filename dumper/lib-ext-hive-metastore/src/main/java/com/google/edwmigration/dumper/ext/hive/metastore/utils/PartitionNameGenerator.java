@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ public final class PartitionNameGenerator {
 
   private PartitionNameGenerator() {}
 
-  private static final Logger LOG = LoggerFactory.getLogger(PartitionNameGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(PartitionNameGenerator.class);
 
   /**
    * Constructs partition name from the list of partition keys and values. It:
@@ -63,7 +63,7 @@ public final class PartitionNameGenerator {
   private static String constructPartitionName(String partitionKey, String partitionValue) {
     if (isNullOrEmpty(partitionValue)) {
       // This is unexpected and the original code throws an exception here.
-      LOG.warn("Got empty partition value for the key '{}', will ignore it.", partitionKey);
+      logger.warn("Got empty partition value for the key '{}', will ignore it.", partitionKey);
       return null;
     }
     return escapePartitionPart(partitionKey) + "=" + escapePartitionPart(partitionValue);

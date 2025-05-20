@@ -47,6 +47,9 @@ class OverridesUtil {
             "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": [
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-dataformats-binary/2.16/LICENSE",
             ],
+            "com.fasterxml.jackson.dataformat:jackson-dataformat-csv": [
+                licenseUrl: "https://github.com/FasterXML/jackson-dataformats-text/blob/2.19/LICENSE",
+            ],
             "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": [
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-dataformats-text/2.16/LICENSE",
             ],
@@ -98,6 +101,9 @@ class OverridesUtil {
             "com.google.api.grpc:grpc-google-cloud-bigquerystorage-v1beta2": [
                 licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
             ],
+            "com.google.api.grpc:grpc-google-cloud-storage-control-v2": [
+                licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
+            ],
             "com.google.api.grpc:grpc-google-cloud-storage-v2": [
                 projectUrl: "https://github.com/googleapis/java-storage",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-storage/main/LICENSE",
@@ -119,6 +125,16 @@ class OverridesUtil {
             "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1beta2": [
                 projectUrl: "https://github.com/googleapis/googleapis",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
+            ],
+            "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1alpha": [
+                projectUrl: "https://github.com/googleapis/googleapis",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
+            ],
+            "com.google.api.grpc:proto-google-cloud-storage-control-v2": [
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
+            ],
+            "com.google.cloud:google-cloud-storage-control": [
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
             ],
             "com.google.api.grpc:proto-google-cloud-kms-v1": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
@@ -205,7 +221,7 @@ class OverridesUtil {
                 licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
             ],
             "com.google.guava:guava": [
-                    licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
+                licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
             ],
             "com.google.guava:failureaccess": [
                 projectUrl: "https://github.com/google/guava",
@@ -281,6 +297,9 @@ class OverridesUtil {
             ],
             "commons-io:commons-io": [
                 licenseUrl: "https://raw.githubusercontent.com/apache/commons-io/master/LICENSE.txt",
+            ],
+            "dev.cel:cel": [
+                    licenseUrl: "https://github.com/google/cel-java/blob/main/LICENSE"
             ],
             "org.apache.hadoop:hadoop-common": [
                 projectUrl: "https://github.com/apache/hadoop",
@@ -412,6 +431,9 @@ class OverridesUtil {
             "org.anarres.jdiagnostics:jdiagnostics": [
                 licenseUrl: "https://raw.githubusercontent.com/shevek/jdiagnostics/master/LICENSE",
             ],
+            "org.antlr:antlr4-runtime": [
+                licenseUrl: "https://github.com/antlr/antlr4/blob/dev/LICENSE.txt"
+            ],
             "org.apache.arrow:arrow-format": [
                 projectUrl: "https://github.com/apache/arrow",
                 licenseUrl: "https://raw.githubusercontent.com/apache/arrow/main/LICENSE.txt",
@@ -468,6 +490,9 @@ class OverridesUtil {
             ],
             "org.conscrypt:conscrypt-openjdk-uber": [
                 licenseUrl: "https://raw.githubusercontent.com/google/conscrypt/master/LICENSE",
+            ],
+            "org.jspecify:jspecify": [
+                licenseUrl: "https://github.com/jspecify/jspecify/blob/main/LICENSE"
             ],
             "org.postgresql:postgresql": [
                 licenseUrl: "https://raw.githubusercontent.com/pgjdbc/pgjdbc/master/LICENSE",
@@ -788,6 +813,95 @@ class OverridesUtil {
             "javax.xml.stream:stax-api": [
                 projectUrl: "https://github.com/jakartaee/jaxb-api",
                 licenseUrl: "https://raw.githubusercontent.com/jakartaee/jaxb-api/master/LICENSE.md",
+            ],
+            "org.eclipse.collections:eclipse-collections": [
+                projectUrl: "https://github.com/eclipse-collections/eclipse-collections",
+                licenseUrl: "https://raw.githubusercontent.com/eclipse-collections/eclipse-collections/refs/heads/master/LICENSE-EDL-1.0.txt",
+            ],
+            "org.eclipse.collections:eclipse-collections-api": [
+                projectUrl: "https://github.com/eclipse-collections/eclipse-collections",
+                licenseUrl: "https://raw.githubusercontent.com/eclipse-collections/eclipse-collections/refs/heads/master/LICENSE-EDL-1.0.txt",
+            ],
+            "jakarta.annotation:jakarta.annotation-api": [
+                projectUrl: "https://github.com/jakartaee/common-annotations-api",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/common-annotations-api/refs/heads/master/LICENSE.md"
+            ],
+            "jakarta.servlet:jakarta.servlet-api": [
+                projectUrl: "https://github.com/jakartaee/servlet",
+                licenseUrl: "https://raw.githubusercontent.com/jakartaee/servlet/refs/heads/master/LICENSE.md"
+            ],
+            "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1alpha": [
+                projectUrl: "https://github.com/googleapis/googleapis",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
+            ],
+            "com.google.api.grpc:proto-google-cloud-run-v2": [
+                projectUrl: "https://github.com/googleapis/google-cloud-java",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/refs/heads/main/LICENSE"
+            ],
+            "com.google.cloud:google-cloud-run": [
+                projectUrl: "https://github.com/googleapis/google-cloud-java",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/refs/heads/main/LICENSE"
+            ],
+            "commons-logging:commons-logging": [
+                projectUrl: "https://github.com/apache/commons-logging",
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-logging/refs/heads/master/LICENSE.txt"
+            ],
+            "io.netty:netty-codec-http": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/refs/heads/4.1/LICENSE.txt"
+            ],
+            "io.netty:netty-codec-http2": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/refs/heads/4.1/LICENSE.txt"
+            ],
+            "it.unimi.dsi:fastutil": [
+                projectUrl: "http://fastutil.di.unimi.it/",
+                licenseUrl: "https://raw.githubusercontent.com/vigna/fastutil/refs/heads/master/LICENSE-2.0"
+            ],
+            "org.apache.parquet:parquet-generator": [
+                projectUrl: "https://github.com/apache/parquet-java/",
+                licenseUrl: "https://raw.githubusercontent.com/apache/parquet-java/refs/heads/master/LICENSE"
+            ],
+            "org.reactivestreams:reactive-streams": [
+                projectUrl: "https://github.com/reactive-streams/reactive-streams-jvm",
+                licenseUrl: "https://raw.githubusercontent.com/reactive-streams/reactive-streams-jvm/refs/heads/master/LICENSE"
+            ],
+            "software.amazon.awssdk:*": [
+                projectUrl: "https://github.com/aws/aws-sdk-java-v2",
+                licenseUrl: "https://raw.githubusercontent.com/aws/aws-sdk-java-v2/refs/heads/master/LICENSE.txt"
+            ],
+            "software.amazon.eventstream:*": [
+                projectUrl: "https://github.com/awslabs/aws-eventstream-java",
+                licenseUrl: "https://raw.githubusercontent.com/awslabs/aws-eventstream-java/refs/heads/master/LICENSE"
+            ],
+            "com.google.code.javaparser:javaparser": [
+                projectUrl: "https://github.com/javaparser/javaparser/",
+                licenseUrl: "https://github.com/javaparser/javaparser/blob/javaparser-1.0.11/COPYING.LESSER"
+            ],
+            "com.googlecode.json-simple:json-simple": [
+                projectUrl: "https://github.com/fangyidong/json-simple",
+                licenseUrl: "https://github.com/fangyidong/json-simple/blob/master/LICENSE.txt"
+            ],
+            "org.apache.oozie:oozie-client": [
+                projectUrl: "https://github.com/apache/oozie",
+                licenseUrl: "https://github.com/apache/oozie/blob/master/LICENSE.txt"
+            ],
+            "org.objenesis:objenesis": [
+                projectUrl: "https://github.com/easymock/objenesis",
+                licenseUrl: "https://github.com/easymock/objenesis/blob/master/LICENSE.txt"
+            ],
+            "xerces:xercesImpl": [
+                projectUrl: "https://xerces.apache.org/xerces2-j/",
+                licenseUrl: "https://github.com/apache/xerces2-j/blob/Xerces-J_2_11_0/LICENSE"
+            ],
+            "xml-apis:xml-apis": [
+                projectUrl: "https://xerces.apache.org/xml-commons/components/external/",
+                // https://stackoverflow.com/questions/67599196/need-development-code-for-xml-apis-1-4-01
+                licenseUrl: "https://svn.apache.org/repos/asf/xerces/xml-commons/trunk/java/external/build.xml"
+            ],
+            "net.java.dev.jna:jna": [
+                projectUrl: "https://github.com/java-native-access/jna",
+                licenseUrl: "https://github.com/java-native-access/jna/blob/master/LICENSE"
             ]
         ]
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -182,7 +182,7 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
           "WDID",
           "ZoneID");
 
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataUtilityLogsJdbcTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(TeradataUtilityLogsJdbcTask.class);
   private static final String EXPRESSION_VALIDITY_QUERY = "SELECT TOP 1 %s FROM %s";
   private final SharedState state;
   private final String utilityTable;
@@ -259,12 +259,12 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
    */
   private boolean isValid(@Nonnull JdbcTemplate template, @Nonnull String expression) {
     String sql = String.format(EXPRESSION_VALIDITY_QUERY, expression, utilityTable);
-    LOG.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
+    logger.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
     try {
       template.query(sql, rs -> {});
       return true;
     } catch (DataAccessException e) {
-      LOG.info(
+      logger.info(
           "Projection expression '{}' is not valid, will use NULL in projection: {}",
           expression,
           e.getMessage());

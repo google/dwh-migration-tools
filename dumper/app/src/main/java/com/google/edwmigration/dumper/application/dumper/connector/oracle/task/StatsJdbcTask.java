@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 @ParametersAreNonnullByDefault
 public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(StatsJdbcTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(StatsJdbcTask.class);
   private final Condition condition;
   private final OracleStatsQuery query;
 
@@ -95,7 +95,7 @@ public class StatsJdbcTask extends AbstractJdbcTask<Summary> {
       result = doSelect(connection, extractor, query.queryText(), days);
     }
     if (result == null) {
-      LOG.warn("Unexpected data extraction result: null");
+      logger.warn("Unexpected data extraction result: null");
       return Summary.EMPTY;
     }
     return result;

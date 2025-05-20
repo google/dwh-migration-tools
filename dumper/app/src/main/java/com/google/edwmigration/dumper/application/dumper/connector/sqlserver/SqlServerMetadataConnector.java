@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,7 +71,7 @@ public class SqlServerMetadataConnector extends AbstractJdbcConnector
     implements MetadataConnector, SqlServerMetadataDumpFormat {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(SqlServerMetadataConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(SqlServerMetadataConnector.class);
 
   public static final int OPT_PORT_DEFAULT = 1433;
   private static final String SYSTEM_SCHEMAS =
@@ -114,7 +114,7 @@ public class SqlServerMetadataConnector extends AbstractJdbcConnector
       url = buf.toString();
     }
 
-    // LOG.info("Connecting to URL {}", url);
+    // logger.info("Connecting to URL {}", url);
     Driver driver =
         newDriver(arguments.getDriverPaths(), "com.microsoft.sqlserver.jdbc.SQLServerDriver");
     String password = arguments.getPasswordIfFlagProvided().orElse(null);

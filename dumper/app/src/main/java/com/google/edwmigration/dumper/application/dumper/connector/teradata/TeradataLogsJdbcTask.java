@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 
 public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataLogsConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(TeradataLogsConnector.class);
 
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
@@ -292,12 +292,12 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
             ? tableNames.sqlLogsTableName() + " ST"
             : tableNames.queryLogsTableName() + " L";
     String sql = formatQuery(String.format(EXPRESSION_VALIDITY_QUERY, expression, table));
-    LOG.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
+    logger.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
     try {
       template.query(sql, rs -> {});
       return Boolean.TRUE;
     } catch (DataAccessException e) {
-      LOG.info(
+      logger.info(
           "Projection expression '{}' is not valid, will use NULL in projection: {}",
           expression,
           e.getMessage());

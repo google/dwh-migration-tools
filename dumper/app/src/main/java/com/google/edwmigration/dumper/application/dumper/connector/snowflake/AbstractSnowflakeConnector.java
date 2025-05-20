@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPassword;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPrivateKeyFile;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentPrivateKeyPassword;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentUser;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInputs;
@@ -36,8 +37,10 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.sql.Driver;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +51,8 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @RespectsArgumentHostUnlessUrl
 @RespectsArgumentUser
 @RespectsArgumentPassword
+@RespectsArgumentPrivateKeyFile
+@RespectsArgumentPrivateKeyPassword
 @RespectsInputs({
   // Although RespectsInput is @Repeatable, errorprone fails on it.
   @RespectsInput(
@@ -59,7 +64,6 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
       arg = ConnectorArguments.OPT_WAREHOUSE,
       description = "The Snowflake warehouse to use for processing metadata queries.")
 })
-@RespectsArgumentDatabaseForConnection
 @RespectsArgumentDriver
 @RespectsArgumentJDBCUri
 public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
@@ -73,38 +77,90 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    String url = arguments.getUri();
-    if (url == null) {
-      StringBuilder buf = new StringBuilder("jdbc:snowflake://");
-      String host = arguments.getHost("host.snowflakecomputing.com");
-      buf.append(host).append("/");
-      // FWIW we can/should totally use a Properties object here and pass it to
-      // SimpleDriverDataSource rather than messing with the URL.
-      List<String> optionalArguments = new ArrayList<>();
-      if (arguments.getWarehouse() != null) {
-        optionalArguments.add("warehouse=" + arguments.getWarehouse());
-      }
-      if (arguments.getRole() != null) {
-        optionalArguments.add("role=" + arguments.getRole());
-      }
-      if (!optionalArguments.isEmpty()) {
-        buf.append("?").append(Joiner.on("&").join(optionalArguments));
-      }
-      url = buf.toString();
-    }
+  public abstract String getDescription();
+
+  @Nonnull
+  @Override
+  public Handle open(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException, SQLException {
+    validateConnectionArguments(arguments);
+    String url = arguments.getUri() != null ? arguments.getUri() : getUrlFromArguments(arguments);
     String databaseName =
         arguments.getDatabases().isEmpty()
             ? DEFAULT_DATABASE
             : sanitizeDatabaseName(arguments.getDatabases().get(0));
 
-    Driver driver =
-        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-    String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+    DataSource dataSource =
+        arguments.isPrivateKeyFileProvided()
+            ? createPrivateKeyDataSource(arguments, url)
+            : createUserPasswordDataSource(arguments, url);
     JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
+
     setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
     return jdbcHandle;
+  }
+
+  private void validateConnectionArguments(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException {
+    if (arguments.isPasswordFlagProvided() && arguments.isPrivateKeyFileProvided()) {
+      throw new MetadataDumperUsageException(
+          "Private key authentication method can't be used together with user password. "
+              + "If the private key file is encrypted, please use --"
+              + ConnectorArguments.OPT_PRIVATE_KEY_PASSWORD
+              + " to specify the key password.");
+    }
+  }
+
+  private DataSource createUserPasswordDataSource(@Nonnull ConnectorArguments arguments, String url)
+      throws SQLException {
+    Driver driver =
+        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
+    Properties prop = new Properties();
+
+    prop.put("user", arguments.getUser());
+    if (arguments.isPasswordFlagProvided()) {
+      prop.put("password", arguments.getPasswordOrPrompt());
+    }
+    // Set default authenticator only if url is not provided to allow user overriding it
+    if (arguments.getUri() == null) {
+      prop.put("authenticator", "username_password_mfa");
+    }
+    return new SimpleDriverDataSource(driver, url, prop);
+  }
+
+  private DataSource createPrivateKeyDataSource(@Nonnull ConnectorArguments arguments, String url)
+      throws SQLException {
+    Driver driver =
+        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
+    Properties prop = new Properties();
+
+    prop.put("private_key_file", arguments.getPrivateKeyFile());
+    prop.put("user", arguments.getUser());
+    if (arguments.getPrivateKeyPassword() != null) {
+      prop.put("private_key_pwd", arguments.getPrivateKeyPassword());
+    }
+
+    return new SimpleDriverDataSource(driver, url, prop);
+  }
+
+  @Nonnull
+  private String getUrlFromArguments(@Nonnull ConnectorArguments arguments) {
+    StringBuilder buf = new StringBuilder("jdbc:snowflake://");
+    String host = arguments.getHost("host.snowflakecomputing.com");
+    buf.append(host).append("/");
+    // FWIW we can/should totally use a Properties object here and pass it to
+    // SimpleDriverDataSource rather than messing with the URL.
+    List<String> optionalArguments = new ArrayList<>();
+    if (arguments.getWarehouse() != null) {
+      optionalArguments.add("warehouse=" + arguments.getWarehouse());
+    }
+    if (arguments.getRole() != null) {
+      optionalArguments.add("role=" + arguments.getRole());
+    }
+    if (!optionalArguments.isEmpty()) {
+      buf.append("?").append(Joiner.on("&").join(optionalArguments));
+    }
+    return buf.toString();
   }
 
   final ImmutableList<Task<?>> getSqlTasks(
@@ -127,8 +183,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
     String currentDatabase =
-        jdbcTemplate.queryForObject(
-            String.format("USE DATABASE \"%s\";", databaseName), String.class);
+        jdbcTemplate.queryForObject(String.format("USE DATABASE %s;", databaseName), String.class);
     if (currentDatabase == null) {
       List<String> dbNames =
           jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
@@ -140,8 +195,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     }
   }
 
-  private String sanitizeDatabaseName(@Nonnull String databaseName)
-      throws MetadataDumperUsageException {
+  String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {
     CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
     String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
     int charLengthWithQuotes = databaseName.length() + 2;

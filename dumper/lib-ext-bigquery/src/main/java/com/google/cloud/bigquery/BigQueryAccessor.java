@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 public class BigQueryAccessor {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(BigQueryAccessor.class);
+  private static final Logger logger = LoggerFactory.getLogger(BigQueryAccessor.class);
 
   private static class JobPageFetcher implements NextPageFetcher<Job> {
 
@@ -128,7 +128,7 @@ public class BigQueryAccessor {
       @Nonnull String projectId,
       @Nonnull Map<BigQueryRpc.Option, ?> optionsMap)
       throws BigQueryException, RetryHelper.RetryHelperException {
-    // LOG.debug("List jobs: {}.{}", projectId, optionsMap);
+    // logger.debug("List jobs: {}.{}", projectId, optionsMap);
     Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>> result =
         runWithRetries(
             new Callable<Tuple<String, Iterable<com.google.api.services.bigquery.model.Job>>>() {

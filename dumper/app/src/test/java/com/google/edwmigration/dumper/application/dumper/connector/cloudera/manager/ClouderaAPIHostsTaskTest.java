@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
@@ -51,7 +52,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.http.HttpStatus;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -73,7 +73,6 @@ public class ClouderaAPIHostsTaskTest {
 
   @Mock private Writer writer;
   @Mock private CharSink charSink;
-  @Mock private CloseableHttpClient httpClient;
 
   @BeforeClass
   public static void beforeClass() throws Exception {
@@ -133,12 +132,12 @@ public class ClouderaAPIHostsTaskTest {
   }
 
   @Test
-  public void doRun_clouderaReturns4xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturns4xx_throwsException() throws Exception {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     stubClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_BAD_REQUEST);
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
     assertTrue(
         exception
@@ -147,12 +146,12 @@ public class ClouderaAPIHostsTaskTest {
   }
 
   @Test
-  public void doRun_clouderaReturns5xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturns5xx_throwsException() throws Exception {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     stubClouderaClusterAPIResponse("first-cluster", "[]", HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
     assertTrue(
         exception
@@ -161,14 +160,11 @@ public class ClouderaAPIHostsTaskTest {
   }
 
   @Test
-  public void doRun_clouderaReturnsInvalidJsonFormat_throwsCriticalException() throws Exception {
+  public void doRun_clouderaReturnsInvalidJsonFormat_throwsException() throws Exception {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
     stubClouderaClusterAPIResponse("first-cluster", "[}");
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
-
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
+    assertThrows(JsonParseException.class, () -> task.doRun(context, sink, handle));
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {

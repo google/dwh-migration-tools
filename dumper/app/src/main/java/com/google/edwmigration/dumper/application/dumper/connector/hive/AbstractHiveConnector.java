@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,7 +77,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractHiveConnector extends AbstractConnector {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractHiveConnector.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractHiveConnector.class);
 
   /**
    * Each thread in the pool is lazily assigned a new Thrift client upon first use; we don't need to
@@ -114,7 +114,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
           ThreadLocal.withInitial(
               () -> {
                 String threadName = Thread.currentThread().getName();
-                LOG.debug(
+                logger.debug(
                     "Creating new thread-local Thrift client '{}' owned by pooled client '{}'.",
                     threadName,
                     name);
@@ -154,19 +154,19 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
 
     @Override
     public void close() throws Exception {
-      LOG.debug("Shutting down thread pool backing pooled Thrift client '{}'", name);
+      logger.debug("Shutting down thread pool backing pooled Thrift client '{}'", name);
       executorManager.close();
       MoreExecutors.shutdownAndAwaitTermination(executorService, 30, TimeUnit.SECONDS);
       synchronized (lock) {
         for (HiveMetastoreThriftClient client : builtClients) {
           try {
-            LOG.debug(
+            logger.debug(
                 "Closing thread-local Thrift client '{}' owned by pooled client '{}'.",
                 client.getName(),
                 name);
             client.close();
           } catch (Exception ioe) {
-            LOG.warn(
+            logger.warn(
                 "Unable to close Thrift client '"
                     + client.getName()
                     + "' owned by pooled client '"
@@ -177,7 +177,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
           }
         }
       }
-      LOG.debug("Pooled Thrift client '{}' is now closed.", name);
+      logger.debug("Pooled Thrift client '{}' is now closed.", name);
     }
   }
 
@@ -198,14 +198,14 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     @Nonnull
     public HiveMetastoreThriftClient newClient(@Nonnull String name)
         throws TTransportException, SaslException {
-      LOG.debug("Creating a new Thrift client named '{}'.", name);
+      logger.debug("Creating a new Thrift client named '{}'.", name);
       return new HiveMetastoreThriftClient.Builder(thriftClientBuilder).withName(name).build();
     }
 
     /** Returns a thread-safe Thrift client pool suitable for use in multi-threaded contexts. */
     @Nonnull
     public ThriftClientPool newMultiThreadedThriftClientPool(@Nonnull String name) {
-      LOG.debug(
+      logger.debug(
           "Creating a new multi-threaded pooled Thrift client named '{}' backed by a thread pool of"
               + " size {}.",
           name,
@@ -229,7 +229,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
         throws Exception {
       ThriftClientHandle thriftClientHandle = (ThriftClientHandle) handle;
 
-      LOG.info("Writing to " + getTargetPath() + " -> " + sink);
+      logger.info("Writing to " + getTargetPath() + " -> " + sink);
 
       try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
         run(writer, thriftClientHandle);

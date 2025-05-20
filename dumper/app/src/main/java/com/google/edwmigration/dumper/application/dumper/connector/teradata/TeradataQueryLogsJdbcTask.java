@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 @ParametersAreNonnullByDefault
 public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<QueryLogEntries> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TeradataQueryLogsJdbcTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(TeradataQueryLogsJdbcTask.class);
   private final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
   private ZonedDateTime queryLogStartDate, queryLogEndDate;
@@ -59,7 +59,7 @@ public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<QueryLogEntries>
   protected QueryLogEntries doInConnection(
       TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
       throws SQLException {
-    LOG.info("Getting first and last query log entries");
+    logger.info("Getting first and last query log entries");
     String sql = sqlForQueryLogDates(tableName, queryLogStartDate, queryLogEndDate);
     QueryLogEntries queryLogEntries = doSelect(connection, csvResultSetExtractor(sink), sql);
 
@@ -67,7 +67,7 @@ public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<QueryLogEntries>
         so we dont output any message
     */
     if (queryLogEntries.queryLogFirstEntry != null && queryLogEntries.queryLogLastEntry != null) {
-      LOG.info(
+      logger.info(
           "The first query log entry is {} UTC and the last query log entry is {} UTC",
           queryLogEntries.queryLogFirstEntry,
           queryLogEntries.queryLogLastEntry);

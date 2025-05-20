@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,21 +20,19 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
@@ -42,8 +40,8 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -65,7 +63,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaHostRAMChartTaskTest {
   private final ClouderaHostRAMChartTask task =
-      new ClouderaHostRAMChartTask(1, TimeSeriesAggregation.HOURLY);
+      new ClouderaHostRAMChartTask(1, TimeSeriesAggregation.HOURLY, TaskCategory.REQUIRED);
   private ClouderaManagerHandle handle;
   private static WireMockServer server;
 
@@ -105,7 +103,7 @@ public class ClouderaHostRAMChartTaskTest {
 
     task.doRun(context, sink, handle);
 
-    Set<String> fileLines = getWrittenJsonLines();
+    Set<String> fileLines = new HashSet<>(MockUtils.getWrittenJsonLines(writer, 2));
     verify(writer, times(2)).write('\n');
     assertEquals(ImmutableSet.of("{\"items\":[\"host1\"]}", "{\"items\":[\"host2\"]}"), fileLines);
     verify(writer).close();
@@ -125,41 +123,32 @@ public class ClouderaHostRAMChartTaskTest {
   }
 
   @Test
-  public void doRun_clouderaServerReturnsInvalidJson_throwsCriticalException() throws Exception {
+  public void doRun_clouderaServerReturnsInvalidJson_throwsException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
     stubHostAPIResponse("id1", HttpStatus.SC_OK, "\"items\":[\"host1\"]}");
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(JsonParseException.class, () -> task.doRun(context, sink, handle));
 
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
   @Test
-  public void doRun_clouderaServerReturns4xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaServerReturns4xx_throwsException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
     stubHostAPIResponse("id1", HttpStatus.SC_BAD_REQUEST, "{\"items\":[\"host1\"]}");
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
   @Test
-  public void doRun_clouderaServerReturns5xx_throwsCriticalException() throws Exception {
+  public void doRun_clouderaServerReturns5xx_throwsException() throws Exception {
     initHosts(ClouderaHostDTO.create("id1", "first-host"));
     stubHostAPIResponse("id1", HttpStatus.SC_INTERNAL_SERVER_ERROR, "{\"items\":[\"host1\"]}");
 
-    MetadataDumperUsageException exception =
-        assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
+    assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    assertTrue(exception.getMessage().contains("Cloudera Error:"));
-    assertTrue(exception.getCause() instanceof TimeSeriesException);
     verifyNoWrites();
   }
 
@@ -172,23 +161,6 @@ public class ClouderaHostRAMChartTaskTest {
     server.stubFor(
         get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", hostId)))
             .willReturn(okJson(responseContent).withStatus(statusCode)));
-  }
-
-  private Set<String> getWrittenJsonLines() throws IOException {
-    // https://jsonlines.org/
-    Set<String> fileLines = new HashSet<>();
-    verify(writer, times(2))
-        .write(
-            (String)
-                argThat(
-                    content -> {
-                      String str = (String) content;
-                      assertFalse(str.contains("\n"));
-                      assertFalse(str.contains("\r"));
-                      fileLines.add(str);
-                      return true;
-                    }));
-    return fileLines;
   }
 
   private void verifyNoWrites() throws IOException {

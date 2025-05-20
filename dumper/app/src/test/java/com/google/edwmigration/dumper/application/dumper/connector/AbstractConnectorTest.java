@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractConnectorTest {
 
   @SuppressWarnings("UnusedVariable")
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractConnectorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractConnectorTest.class);
 
   protected enum SpecialTaskType {
     Version,
@@ -73,15 +73,15 @@ public abstract class AbstractConnectorTest {
 
     Set<SpecialTaskType> specialTasks = EnumSet.noneOf(SpecialTaskType.class);
 
-    LOG.debug("Tasks are:");
+    logger.debug("Tasks are:");
     for (Task<?> task : out) {
-      LOG.debug(String.valueOf(task));
+      logger.debug(String.valueOf(task));
       if (task instanceof VersionTask) specialTasks.add(SpecialTaskType.Version);
       else if (task instanceof ArgumentsTask) specialTasks.add(SpecialTaskType.Arguments);
       else if (task instanceof FormatTask) specialTasks.add(SpecialTaskType.Format);
     }
 
-    LOG.debug("Special tasks discovered are " + specialTasks);
+    logger.debug("Special tasks discovered are {}", specialTasks);
     assertFalse(
         specialTasks.contains(
             SpecialTaskType.Version)); // Added by MetadataDumper, not the connector.

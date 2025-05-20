@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.application.dumper.io.PasswordReader;
-import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -56,6 +55,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -63,16 +63,12 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
 /** @author shevek */
 public class ConnectorArguments extends DefaultArguments {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ConnectorArguments.class);
-
-  private final String HELP_INFO =
+  private static final String HELP_INFO =
       "The CompilerWorks Metadata Exporters address three goals:\n"
           + "\n"
           + "    1) Extract well-formatted metadata and logs for CompilerWorks suite\n"
@@ -95,6 +91,12 @@ public class ConnectorArguments extends DefaultArguments {
   public static final int OPT_PORT_ORDER = 200;
   public static final String OPT_USER = "user";
   public static final String OPT_PASSWORD = "password";
+  public static final String OPT_START_DATE = "start-date";
+  public static final String OPT_START_DATE_DESC =
+      "Inclusive start date for data to export, value will be truncated to hour.";
+  public static final String OPT_END_DATE = "end-date";
+  public static final String OPT_END_DATE_DESC =
+      "Exclusive end date for data to export, value will be truncated to hour.";
 
   public static final String OPT_CLUSTER = "cluster";
   public static final String OPT_ROLE = "role";
@@ -113,6 +115,14 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_END = "query-log-end";
   public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
   public static final String OPT_QUERY_LOG_ALTERNATES = "query-log-alternates";
+
+  // Snowflake
+  public static final String OPT_PRIVATE_KEY_FILE = "private-key-file";
+  public static final String OPT_PRIVATE_KEY_PASSWORD = "private-key-password";
+
+  // Cloudera
+  public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
+  public static final String OPT_PAGINATION_PAGE_SIZE = "pagination-page-size";
 
   // redshift.
   public static final String OPT_IAM_ACCESSKEYID = "iam-accesskeyid";
@@ -157,11 +167,12 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_RANGER_SCHEME_DEFAULT = "http";
   public static final String OPT_RANGER_DISABLE_TLS_VALIDATION = "ranger-disable-tls-validation";
 
-  // These are blocking threads on the client side, so it doesn't really matter much.
+  // These are blocking threads on the client side, so it doesn't really matter
+  // much.
   public static final Integer OPT_THREAD_POOL_SIZE_DEFAULT = 32;
 
   private final OptionSpec<String> connectorNameOption =
-      parser.accepts(OPT_CONNECTOR, "Target DBMS connector name").withRequiredArg().required();
+      parser.accepts(OPT_CONNECTOR, "Target connector name").withRequiredArg().required();
   private final OptionSpec<String> optionDriver =
       parser
           .accepts(
@@ -227,6 +238,34 @@ public class ConnectorArguments extends DefaultArguments {
           .accepts(OPT_PASSWORD, "Database password, prompted if not provided")
           .withOptionalArg()
           .describedAs("sekr1t");
+
+  private final OptionSpec<String> optionPrivateKeyFile =
+      parser
+          .accepts(OPT_PRIVATE_KEY_FILE, "Path to the Private Key file used for authentication.")
+          .withRequiredArg()
+          .describedAs("/path/to/ras_key.p8");
+  private final OptionSpec<String> optionPrivateKeyPassword =
+      parser
+          .accepts(
+              OPT_PRIVATE_KEY_PASSWORD, "Private Key file password. Required if file is encrypted.")
+          .withRequiredArg()
+          .describedAs("sekr1t");
+
+  private final OptionSpec<ZonedDateTime> optionStartDate =
+      parser
+          .accepts(OPT_START_DATE, OPT_START_DATE_DESC)
+          .withOptionalArg()
+          .ofType(Date.class)
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
+
+  private final OptionSpec<ZonedDateTime> optionEndDate =
+      parser
+          .accepts(OPT_END_DATE, OPT_END_DATE_DESC)
+          .withOptionalArg()
+          .ofType(Date.class)
+          .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
 
   private final OptionSpec<String> optionCluster =
       parser
@@ -309,7 +348,7 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
-          .describedAs("2001-01-01[ 00:00:00.[000]]");
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
   private final OptionSpec<ZonedDateTime> optionQueryLogEnd =
       parser
           .accepts(
@@ -318,11 +357,13 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.END_OF_DAY))
-          .describedAs("2001-01-01[ 00:00:00.[000]]");
+          .describedAs("2001-01-15[ 00:00:00.[000]]");
 
-  // This is intentionally NOT provided as a default value to the optionQueryLogEnd OptionSpec,
+  // This is intentionally NOT provided as a default value to the
+  // optionQueryLogEnd OptionSpec,
   // because some callers
-  // such as ZonedIntervalIterable want to be able to distinguish a user-specified value from this
+  // such as ZonedIntervalIterable want to be able to distinguish a user-specified
+  // value from this
   // dumper-specified default.
   private final ZonedDateTime OPT_QUERY_LOG_END_DEFAULT = ZonedDateTime.now(ZoneOffset.UTC);
 
@@ -503,6 +544,23 @@ public class ConnectorArguments extends DefaultArguments {
               optionHadoopRpcProtection,
               optionHdfsPrincipalPrefix);
 
+  // Cloudera connector
+  private final OptionSpec<String> optionYarnApplicationTypes =
+      parser
+          .accepts(
+              OPT_YARN_APPLICATION_TYPES,
+              "Dump Hadoop jobs by specific YARN application types. "
+                  + "Has to be comma separated. For example: SPARK,MAPREDUCE,TEZ")
+          .withOptionalArg()
+          .ofType(String.class)
+          .defaultsTo("");
+  private final OptionSpec<Integer> optionPaginationPageSize =
+      parser
+          .accepts(OPT_PAGINATION_PAGE_SIZE, "Set page size for API requests.")
+          .withOptionalArg()
+          .ofType(Integer.class)
+          .defaultsTo(1000);
+
   // generic connector
   private final OptionSpec<String> optionGenericQuery =
       parser.accepts("generic-query", "Query for generic connector").withRequiredArg();
@@ -645,14 +703,14 @@ public class ConnectorArguments extends DefaultArguments {
 
   private void printConnectorHelp(@Nonnull Appendable out, @Nonnull Connector connector)
       throws IOException {
-    Description description = connector.getClass().getAnnotation(Description.class);
     out.append("* " + connector.getName());
-    if (description != null) {
-      out.append(" - ").append(description.value());
+    String description = connector.getDescription();
+    if (!description.isEmpty()) {
+      out.append(" - " + description);
     }
     out.append("\n");
     for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
-      out.append("        ").append(descriptor.toString()).append("\n");
+      out.append(String.format("%8s%s\n", "", descriptor));
     }
     ConnectorProperties.printHelp(out, connector);
   }
@@ -680,6 +738,10 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getUri() {
     return getOptions().valueOf(optionUri);
+  }
+
+  public boolean hasUri() {
+    return has(optionUri);
   }
 
   @Nonnull
@@ -742,13 +804,23 @@ public class ConnectorArguments extends DefaultArguments {
         .collect(toImmutableList());
   }
 
+  public boolean isDatabasesProvided() {
+    return has(optionDatabase);
+  }
+
+  @CheckForNull
+  public String getSchema() {
+    return getOptions().valueOf(optionSchema);
+  }
+
   @Nonnull
   public Predicate<String> getDatabasePredicate() {
     return toPredicate(getDatabases());
   }
 
   /** Returns the name of the single database specified, if exactly one database was specified. */
-  // This can be used to generate an output filename, but it makes 1 be a special case
+  // This can be used to generate an output filename, but it makes 1 be a special
+  // case
   // that I find a little uncomfortable from the Unix philosophy:
   // "Sometimes the output filename is different" is hard to automate around.
   @CheckForNull
@@ -817,6 +889,24 @@ public class ConnectorArguments extends DefaultArguments {
     }
   }
 
+  public boolean isPasswordFlagProvided() {
+    return has(optionPass);
+  }
+
+  public boolean isPrivateKeyFileProvided() {
+    return has(optionPrivateKeyFile);
+  }
+
+  @CheckForNull
+  public String getPrivateKeyFile() {
+    return getOptions().valueOf(optionPrivateKeyFile);
+  }
+
+  @CheckForNull
+  public String getPrivateKeyPassword() {
+    return getOptions().valueOf(optionPrivateKeyPassword);
+  }
+
   @CheckForNull
   public String getCluster() {
     return getOptions().valueOf(optionCluster);
@@ -853,6 +943,20 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public Integer getQueryLogDays() {
     return getOptions().valueOf(optionQueryLogDays);
+  }
+
+  @CheckForNull
+  public ZonedDateTime getStartDate() {
+    return getOptions().valueOf(optionStartDate);
+  }
+
+  public ZonedDateTime getStartDate(ZonedDateTime defaultTime) {
+    return firstNonNull(getStartDate(), defaultTime);
+  }
+
+  @CheckForNull
+  public ZonedDateTime getEndDate() {
+    return getOptions().valueOf(optionEndDate);
   }
 
   public Duration getQueryLogRotationFrequency() {
@@ -1054,6 +1158,18 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getDefinition(@Nonnull ConnectorProperty property) {
     return getConnectorProperties().get(property);
+  }
+
+  public int getPaginationPageSize() {
+    return getOptions().valueOf(optionPaginationPageSize);
+  }
+
+  public List<String> getYarnApplicationTypes() {
+    String yarnAppTypesLine = getOptions().valueOf(optionYarnApplicationTypes);
+    return ImmutableList.copyOf(
+        stream(yarnAppTypesLine.split(","))
+            .filter(item -> item.trim().length() > 0)
+            .collect(Collectors.toList()));
   }
 
   /** Checks if the property was specified on the command-line. */
