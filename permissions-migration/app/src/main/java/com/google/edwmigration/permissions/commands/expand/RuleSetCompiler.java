@@ -211,10 +211,12 @@ public class RuleSetCompiler {
   /** Evaluates the map action fields. */
   private static ImmutableMap<String, Object> evalMap(
       CompiledRule compiledRule, ImmutableMap<String, Object> context) {
-    return compiledRule.mapFields
+    return compiledRule
+        .mapFields
         .orElseThrow(
             () -> new IllegalStateException("Invoked evalMap on a rule without map action"))
-        .entrySet().stream()
+        .entrySet()
+        .stream()
         .collect(
             collectingAndThen(
                 toMap(
