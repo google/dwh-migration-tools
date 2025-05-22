@@ -25,6 +25,7 @@ import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
 import com.google.edwmigration.dumper.application.dumper.ResourceLocation;
+import com.google.edwmigration.dumper.application.dumper.SummaryYamlGenerator;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
@@ -274,7 +275,7 @@ public class TeradataMetadataConnectorTest extends AbstractConnectorExecutionTes
             // "--database", "db_0"
             );
 
-    MetadataDumper dumper = new MetadataDumper();
+    MetadataDumper dumper = new MetadataDumper(new SummaryYamlGenerator());
 
     dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
 

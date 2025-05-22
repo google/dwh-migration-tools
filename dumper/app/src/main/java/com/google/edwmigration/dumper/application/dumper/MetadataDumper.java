@@ -61,6 +61,12 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
+  private final SummaryYamlGenerator summaryYamlGenerator;
+
+  public MetadataDumper(SummaryYamlGenerator summaryYamlGenerator) {
+    this.summaryYamlGenerator = summaryYamlGenerator;
+  }
+
   public boolean run(String... args) throws Exception {
     ConnectorArguments arguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
     try {
@@ -161,6 +167,8 @@ public class MetadataDumper {
 
       logger.info("Using " + connector);
       SummaryPrinter summaryPrinter = new SummaryPrinter();
+      boolean requiredTaskSucceeded = false;
+
       try (Closer closer = Closer.create()) {
         Path outputPath = prepareOutputPath(outputFileLocation, closer, arguments);
 
@@ -181,24 +189,28 @@ public class MetadataDumper {
 
         new TasksRunner(sinkFactory, handle, arguments.getThreadPoolSize(), state, tasks, arguments)
             .run();
+
+        requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
+
+        summaryYamlGenerator.generateSummaryYaml(
+            fileSystem, arguments, state, stopwatch, outputFileLocation, requiredTaskSucceeded);
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);
         if (outputFile.isFile()) {
           outputFileLength = outputFile.length();
         }
+
+        printTaskResults(summaryPrinter, state);
+        logFinalSummary(
+            summaryPrinter,
+            state,
+            outputFileLength,
+            stopwatch,
+            outputFileLocation,
+            requiredTaskSucceeded);
       }
 
-      printTaskResults(summaryPrinter, state);
-      boolean requiredTaskSucceeded =
-          checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
-      logFinalSummary(
-          summaryPrinter,
-          state,
-          outputFileLength,
-          stopwatch,
-          outputFileLocation,
-          requiredTaskSucceeded);
       return requiredTaskSucceeded;
     }
   }

@@ -52,7 +52,7 @@ public class MetadataDumperTest {
     }
   }
 
-  private Main dumper = new Main(new MetadataDumper());
+  private Main dumper = new Main(new MetadataDumper(new SummaryYamlGenerator()));
   private final Connector connector = new TestConnector();
 
   @Before
