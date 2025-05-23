@@ -16,12 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.*;
-import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.*;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.DAILY;
+import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.OPTIONAL;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -32,8 +32,9 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.net.URI;
 import java.time.Clock;
-import java.util.ArrayList;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustAllStrategy;
@@ -66,8 +67,18 @@ public class ClouderaManagerConnector extends AbstractConnector {
 
   private static final String FORMAT_NAME = "cloudera-manager.dump.zip";
 
+  private static final int MAX_QUARTER_DAY = 93;
+
+  private final Supplier<ZonedDateTime> currentTimeProvider;
+
+  @SuppressWarnings("unused") // reflection call is expected
   public ClouderaManagerConnector() {
+    this(ZonedDateTime::now);
+  }
+
+  public ClouderaManagerConnector(Supplier<ZonedDateTime> currentTimeProvider) {
     super("cloudera-manager");
+    this.currentTimeProvider = currentTimeProvider;
   }
 
   @Nonnull
@@ -87,45 +98,46 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaServicesTask());
     out.add(new ClouderaHostComponentsTask());
 
-    out.add(new ClouderaClusterCPUChartTask(1, HOURLY, REQUIRED));
-    out.add(new ClouderaClusterCPUChartTask(7, DAILY, OPTIONAL));
-    out.add(new ClouderaClusterCPUChartTask(30, DAILY, OPTIONAL));
-    out.add(new ClouderaClusterCPUChartTask(90, DAILY, OPTIONAL));
+    ZonedDateTime startDate;
+    ZonedDateTime endDate;
+    boolean useDefaultDateRangeToFetch = arguments.getStartDate() == null;
+    if (useDefaultDateRangeToFetch) {
+      endDate = currentTimeProvider.get();
+      startDate = endDate.minusDays(MAX_QUARTER_DAY);
+    } else {
+      startDate = arguments.getStartDate();
+      endDate = arguments.getEndDate();
+    }
 
-    out.add(new ClouderaHostRAMChartTask(1, HOURLY, REQUIRED));
-    out.add(new ClouderaHostRAMChartTask(7, DAILY, OPTIONAL));
-    out.add(new ClouderaHostRAMChartTask(30, DAILY, OPTIONAL));
-    out.add(new ClouderaHostRAMChartTask(90, DAILY, OPTIONAL));
-
-    out.add(new ClouderaYarnApplicationsTask(90, OPTIONAL));
-    out.add(new ClouderaYarnApplicationTypeTask(90, OPTIONAL));
+    out.add(new ClouderaClusterCPUChartTask(startDate, endDate, DAILY));
+    out.add(new ClouderaHostRAMChartTask(startDate, endDate, DAILY));
+    out.add(new ClouderaYarnApplicationsTask(startDate, endDate, OPTIONAL));
+    out.add(new ClouderaYarnApplicationTypeTask(startDate, endDate, OPTIONAL));
   }
 
   @Nonnull
   @Override
   public ClouderaManagerHandle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    List<String> errors = new ArrayList<>();
-    if (arguments.getUri() == null) {
-      errors.add("--url for Cloudera Manager API is required");
-    }
-    if (arguments.getUser() == null) {
-      errors.add("--user is required for Cloudera Manager API connector");
-    }
-
-    if (!errors.isEmpty()) {
-      throw new MetadataDumperUsageException(
-          "Missing arguments for connector generic-args : ", errors);
-    }
     URI uri = new URI(arguments.getUri());
-
     CloseableHttpClient httpClient = disableSSLVerification(HttpClients.custom()).build();
     ClouderaManagerHandle handle = new ClouderaManagerHandle(uri, httpClient);
 
     String user = arguments.getUser();
     String password = arguments.getPasswordOrPrompt();
     doClouderaManagerLogin(handle.getBaseURI(), httpClient, user, password);
-
     return handle;
+  }
+
+  @Override
+  public void validate(ConnectorArguments arguments) {
+    String clouderaUri = arguments.getUri();
+    Preconditions.checkNotNull(clouderaUri, "--url for Cloudera Manager API is required");
+
+    String clouderaUser = arguments.getUser();
+    Preconditions.checkNotNull(
+        clouderaUser, "--user is required for Cloudera Manager API connector");
+
+    validateDateRange(arguments);
   }
 
   private void doClouderaManagerLogin(

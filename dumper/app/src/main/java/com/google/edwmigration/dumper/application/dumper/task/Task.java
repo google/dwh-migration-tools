@@ -118,7 +118,7 @@ public interface Task<T> {
   }
 
   @Nonnull
-  public default TaskCategory getCategory() {
+  default TaskCategory getCategory() {
     return TaskCategory.REQUIRED;
   }
 

@@ -41,6 +41,9 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -58,9 +61,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaYarnApplicationTypeTaskTest {
+
   private static WireMockServer server;
   private final ClouderaYarnApplicationTypeTask task =
-      new ClouderaYarnApplicationTypeTask(30, TaskCategory.OPTIONAL);
+      new ClouderaYarnApplicationTypeTask(
+          timeTravelDaysAgo(30), timeTravelDaysAgo(0), TaskCategory.OPTIONAL);
   private ClouderaManagerHandle handle;
 
   @Mock private ByteSink sink;
@@ -139,16 +144,6 @@ public class ClouderaYarnApplicationTypeTaskTest {
     assertEquals(
         "Clusters must be initialized before fetching YARN application types.",
         exception.getMessage());
-  }
-
-  @Test
-  public void doRun_notPositiveDays_throwsException() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new ClouderaYarnApplicationTypeTask(0, TaskCategory.OPTIONAL));
-
-    assertEquals("Amount of days must be a positive number. Got 0.", exception.getMessage());
   }
 
   @Test
@@ -273,5 +268,10 @@ public class ClouderaYarnApplicationTypeTaskTest {
     server.stubFor(
         get(urlPathMatching(String.format("/api/vTest/clusters/%s/serviceTypes", clusterName)))
             .willReturn(okJson(responseContent).withStatus(statusCode)));
+  }
+
+  private ZonedDateTime timeTravelDaysAgo(int days) {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return today.minusDays(days);
   }
 }

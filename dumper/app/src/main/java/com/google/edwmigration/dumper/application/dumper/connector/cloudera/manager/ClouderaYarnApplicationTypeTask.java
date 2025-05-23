@@ -29,6 +29,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -48,8 +49,9 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   private final ImmutableList<String> predefinedAppTypes =
       ImmutableList.of("MAPREDUCE", "SPARK", "Oozie Launcher");
 
-  public ClouderaYarnApplicationTypeTask(int days, TaskCategory taskCategory) {
-    super("yarn-application-types", days, taskCategory);
+  public ClouderaYarnApplicationTypeTask(
+      ZonedDateTime startDate, ZonedDateTime endDate, TaskCategory taskCategory) {
+    super("yarn-application-types.jsonl", startDate, endDate, taskCategory);
   }
 
   @Override

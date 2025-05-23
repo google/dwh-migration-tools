@@ -41,7 +41,6 @@ import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -50,6 +49,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -66,7 +68,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaClusterCPUChartTaskTest {
   private final ClouderaClusterCPUChartTask task =
-      new ClouderaClusterCPUChartTask(1, TimeSeriesAggregation.HOURLY, TaskCategory.REQUIRED);
+      new ClouderaClusterCPUChartTask(
+          timeTravelDaysAgo(30), timeTravelDaysAgo(0), TimeSeriesAggregation.HOURLY);
   private ClouderaManagerHandle handle;
   private String servicesJson;
   private static WireMockServer server;
@@ -147,24 +150,6 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
-  public void initTask_requestChartWithEmptyDateRange_throwsException() throws Exception {
-    // GIVEN: There is a valid cluster
-    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-
-    // WHEN: CPU usage task with empty date range is initiated
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                new ClouderaClusterCPUChartTask(
-                    0, TimeSeriesAggregation.HOURLY, TaskCategory.REQUIRED));
-
-    // THEN: A relevant exception has been raised
-    assertEquals(
-        "The chart has to include at least one day. Received 0 days.", exception.getMessage());
-  }
-
-  @Test
   public void doRun_clouderaReturns4xx_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
@@ -236,5 +221,10 @@ public class ClouderaClusterCPUChartTaskTest {
 
   private String tojsonl(String json) throws Exception {
     return new ObjectMapper().readTree(json).toString();
+  }
+
+  private ZonedDateTime timeTravelDaysAgo(int days) {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return today.minusDays(days);
   }
 }
