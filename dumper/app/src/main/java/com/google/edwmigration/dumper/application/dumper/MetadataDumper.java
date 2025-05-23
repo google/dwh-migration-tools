@@ -61,10 +61,10 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private final SummaryYamlGenerator summaryYamlGenerator;
+  private final RunSummaryGenerator runSummaryGenerator;
 
-  public MetadataDumper(SummaryYamlGenerator summaryYamlGenerator) {
-    this.summaryYamlGenerator = summaryYamlGenerator;
+  public MetadataDumper(RunSummaryGenerator runSummaryGenerator) {
+    this.runSummaryGenerator = runSummaryGenerator;
   }
 
   public boolean run(String... args) throws Exception {
@@ -192,8 +192,8 @@ public class MetadataDumper {
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        summaryYamlGenerator.generateSummaryYaml(
-            fileSystem, arguments, state, stopwatch, outputFileLocation, requiredTaskSucceeded);
+        runSummaryGenerator.generateSummaryYaml(
+            fileSystem, arguments, state, stopwatch, requiredTaskSucceeded);
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);
