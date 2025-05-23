@@ -50,16 +50,8 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
       ImmutableList.of("MAPREDUCE", "SPARK", "Oozie Launcher");
 
   public ClouderaYarnApplicationTypeTask(
-      String targetPath, ZonedDateTime startDate, TaskCategory taskCategory) {
-    this(targetPath, startDate, null, taskCategory);
-  }
-
-  public ClouderaYarnApplicationTypeTask(
-      String targetPath,
-      ZonedDateTime startDate,
-      ZonedDateTime endDate,
-      TaskCategory taskCategory) {
-    super(targetPath, startDate, endDate, taskCategory);
+      ZonedDateTime startDate, ZonedDateTime endDate, TaskCategory taskCategory) {
+    super("yarn-application-types.jsonl", startDate, endDate, taskCategory);
   }
 
   @Override

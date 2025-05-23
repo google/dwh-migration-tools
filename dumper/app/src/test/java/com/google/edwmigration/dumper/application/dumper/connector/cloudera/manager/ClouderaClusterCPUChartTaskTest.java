@@ -41,7 +41,6 @@ import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -70,11 +69,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ClouderaClusterCPUChartTaskTest {
   private final ClouderaClusterCPUChartTask task =
       new ClouderaClusterCPUChartTask(
-          "output-file.jsonl",
-          timeTravelDaysAgo(30),
-          timeTravelDaysAgo(0),
-          TimeSeriesAggregation.HOURLY,
-          TaskCategory.REQUIRED);
+          timeTravelDaysAgo(30), timeTravelDaysAgo(0), TimeSeriesAggregation.HOURLY);
   private ClouderaManagerHandle handle;
   private String servicesJson;
   private static WireMockServer server;

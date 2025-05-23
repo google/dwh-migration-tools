@@ -37,16 +37,8 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
   private static final Logger logger = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
 
   public ClouderaYarnApplicationsTask(
-      String targetPath, ZonedDateTime startDate, TaskCategory taskCategory) {
-    this(targetPath, startDate, null, taskCategory);
-  }
-
-  public ClouderaYarnApplicationsTask(
-      String targetPath,
-      ZonedDateTime startDate,
-      ZonedDateTime endDate,
-      TaskCategory taskCategory) {
-    super(targetPath, startDate, endDate, taskCategory);
+      ZonedDateTime startDate, ZonedDateTime endDate, TaskCategory taskCategory) {
+    super("yarn-applications.jsonl", startDate, endDate, taskCategory);
   }
 
   @Override

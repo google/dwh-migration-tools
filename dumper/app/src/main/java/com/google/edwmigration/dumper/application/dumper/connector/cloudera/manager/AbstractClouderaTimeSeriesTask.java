@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.net.URI;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,19 +33,16 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
   private final ZonedDateTime startDate;
   private final ZonedDateTime endDate;
   private final TimeSeriesAggregation tsAggregation;
-  private final TaskCategory taskCategory;
 
   public AbstractClouderaTimeSeriesTask(
       @Nonnull String targetPath,
       @Nonnull ZonedDateTime startDate,
       @Nonnull ZonedDateTime endDate,
-      @Nonnull TimeSeriesAggregation tsAggregation,
-      @Nonnull TaskCategory taskCategory) {
+      @Nonnull TimeSeriesAggregation tsAggregation) {
     super(targetPath);
     Preconditions.checkNotNull(targetPath, "Target path must be not null.");
     Preconditions.checkState(!targetPath.isEmpty(), "Target file path must be not empty.");
     Preconditions.checkNotNull(tsAggregation, "TimeSeriesAggregation must be not null.");
-    Preconditions.checkNotNull(taskCategory, "TaskCategory must be not null.");
     Preconditions.checkNotNull(startDate, "Start date must be not null.");
     Preconditions.checkNotNull(endDate, "End date must be not null.");
     Preconditions.checkState(startDate.isBefore(endDate), "Start Date has to be before End Date.");
@@ -54,13 +50,6 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     this.startDate = startDate;
     this.endDate = endDate;
     this.tsAggregation = tsAggregation;
-    this.taskCategory = taskCategory;
-  }
-
-  @Nonnull
-  @Override
-  public final TaskCategory getCategory() {
-    return taskCategory;
   }
 
   protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query)
@@ -87,41 +76,6 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
       chartInJson = readJsonTree(chart.getEntity().getContent());
     }
     return chartInJson;
-  }
-
-  abstract static class Builder<T extends AbstractClouderaTimeSeriesTask> {
-    String outputFileName;
-    ZonedDateTime startDate;
-    ZonedDateTime endDate;
-    TimeSeriesAggregation tsAggregation;
-    TaskCategory taskCategory;
-
-    abstract T build();
-
-    public Builder<T> setOutputFileName(String outputFileName) {
-      this.outputFileName = outputFileName;
-      return this;
-    }
-
-    public Builder<T> setStartDate(ZonedDateTime startDate) {
-      this.startDate = startDate;
-      return this;
-    }
-
-    public Builder<T> setEndDate(ZonedDateTime endDate) {
-      this.endDate = endDate;
-      return this;
-    }
-
-    public Builder<T> setTsAggregation(TimeSeriesAggregation tsAggregation) {
-      this.tsAggregation = tsAggregation;
-      return this;
-    }
-
-    public Builder<T> setTaskCategory(TaskCategory taskCategory) {
-      this.taskCategory = taskCategory;
-      return this;
-    }
   }
 
   enum TimeSeriesAggregation {

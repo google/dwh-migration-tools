@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -33,14 +32,14 @@ import org.junit.Test;
 public class AbstractClouderaTimeSeriesTaskTest {
 
   @Test
-  public void doRun_missedAggregationParameter_throwsException() throws IOException {
+  public void doRun_missedAggregationParameter_throwsException() {
     // WHEN: CPU/RAM usage task is initiated with no aggregation parameter
     NullPointerException exception =
         assertThrows(
             NullPointerException.class,
             () ->
                 new AbstractClouderaTimeSeriesTask(
-                    "some path", timeTravelDaysAgo(5), timeTravelDaysAgo(0), null, null) {
+                    "some path", timeTravelDaysAgo(5), timeTravelDaysAgo(0), null) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,
@@ -54,31 +53,6 @@ public class AbstractClouderaTimeSeriesTaskTest {
   }
 
   @Test
-  public void doRun_missedCategoryParameter_throwsException() throws IOException {
-    // WHEN: CPU/RAM usage task is initiated with no aggregation parameter
-    NullPointerException exception =
-        assertThrows(
-            NullPointerException.class,
-            () ->
-                new AbstractClouderaTimeSeriesTask(
-                    "some path",
-                    timeTravelDaysAgo(5),
-                    timeTravelDaysAgo(0),
-                    TimeSeriesAggregation.DAILY,
-                    null) {
-                  @Override
-                  protected void doRun(
-                      TaskRunContext context,
-                      @Nonnull ByteSink sink,
-                      @Nonnull ClouderaManagerHandle handle)
-                      throws Exception {}
-                });
-
-    // THEN: There is a relevant exception has been raised
-    assertEquals("TaskCategory must be not null.", exception.getMessage());
-  }
-
-  @Test
   public void doRun_emptyDateRange_throwsException() throws IOException {
     // WHEN: CPU/RAM usage task is initiated with empty date range
     IllegalStateException exception =
@@ -89,8 +63,7 @@ public class AbstractClouderaTimeSeriesTaskTest {
                     "some path",
                     timeTravelDaysAgo(5),
                     timeTravelDaysAgo(8),
-                    TimeSeriesAggregation.DAILY,
-                    TaskCategory.REQUIRED) {
+                    TimeSeriesAggregation.DAILY) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,

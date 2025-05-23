@@ -16,12 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.*;
-import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.*;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.DAILY;
+import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.OPTIONAL;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
@@ -33,12 +32,10 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.net.URI;
 import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -70,8 +67,18 @@ public class ClouderaManagerConnector extends AbstractConnector {
 
   private static final String FORMAT_NAME = "cloudera-manager.dump.zip";
 
+  private static final int MAX_QUARTER_DAY = 93;
+
+  private final Supplier<ZonedDateTime> currentTimeProvider;
+
+  @SuppressWarnings("unused") // reflection call is expected
   public ClouderaManagerConnector() {
+    this(ZonedDateTime::now);
+  }
+
+  public ClouderaManagerConnector(Supplier<ZonedDateTime> currentTimeProvider) {
     super("cloudera-manager");
+    this.currentTimeProvider = currentTimeProvider;
   }
 
   @Nonnull
@@ -91,57 +98,21 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new ClouderaServicesTask());
     out.add(new ClouderaHostComponentsTask());
 
-    if (arguments.getStartDate() == null && arguments.getEndDate() == null) {
-      out.addAll(defaultTasks());
+    ZonedDateTime startDate;
+    ZonedDateTime endDate;
+    boolean useDefaultDateRangeToFetch = arguments.getStartDate() == null;
+    if (useDefaultDateRangeToFetch) {
+      endDate = currentTimeProvider.get();
+      startDate = endDate.minusDays(MAX_QUARTER_DAY);
     } else {
-      out.addAll(customDateRangeTasks(arguments.getStartDate(), arguments.getEndDate()));
+      startDate = arguments.getStartDate();
+      endDate = arguments.getEndDate();
     }
-  }
 
-  private List<? extends Task<?>> defaultTasks() {
-    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
-    ZonedDateTime startDate = today.minusDays(90);
-    return ImmutableList.of(
-        (new ClouderaClusterCPUChartTask.Builder())
-            .setOutputFileName("cluster-cpu-90d.jsonl")
-            .setStartDate(startDate)
-            .setEndDate(today)
-            .setTsAggregation(DAILY)
-            .setTaskCategory(REQUIRED)
-            .build(),
-        (new ClouderaHostRAMChartTask.Builder())
-            .setOutputFileName("host-ram-90d.jsonl")
-            .setStartDate(startDate)
-            .setEndDate(today)
-            .setTsAggregation(DAILY)
-            .setTaskCategory(REQUIRED)
-            .build(),
-        new ClouderaYarnApplicationsTask("yarn-applications-90d.jsonl", startDate, today, OPTIONAL),
-        new ClouderaYarnApplicationTypeTask(
-            "yarn-application-types-90d.jsonl", startDate, today, OPTIONAL));
-  }
-
-  private List<? extends Task<?>> customDateRangeTasks(
-      ZonedDateTime startDate, @Nullable ZonedDateTime endDate) {
-    return ImmutableList.of(
-        (new ClouderaClusterCPUChartTask.Builder())
-            .setOutputFileName("cluster-cpu-custom-date-range.jsonl")
-            .setStartDate(startDate)
-            .setEndDate(endDate)
-            .setTsAggregation(DAILY)
-            .setTaskCategory(REQUIRED)
-            .build(),
-        (new ClouderaHostRAMChartTask.Builder())
-            .setOutputFileName("host-ram-custom-date-range.jsonl")
-            .setStartDate(startDate)
-            .setEndDate(endDate)
-            .setTsAggregation(DAILY)
-            .setTaskCategory(REQUIRED)
-            .build(),
-        new ClouderaYarnApplicationsTask(
-            "yarn-applications-custom-date-range.jsonl", startDate, endDate, OPTIONAL),
-        new ClouderaYarnApplicationTypeTask(
-            "yarn-application-types-custom-date-range.jsonl", startDate, endDate, OPTIONAL));
+    out.add(new ClouderaClusterCPUChartTask(startDate, endDate, DAILY));
+    out.add(new ClouderaHostRAMChartTask(startDate, endDate, DAILY));
+    out.add(new ClouderaYarnApplicationsTask(startDate, endDate, OPTIONAL));
+    out.add(new ClouderaYarnApplicationTypeTask(startDate, endDate, OPTIONAL));
   }
 
   @Nonnull

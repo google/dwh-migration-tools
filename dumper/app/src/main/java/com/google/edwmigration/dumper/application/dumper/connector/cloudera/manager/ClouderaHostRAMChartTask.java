@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -40,18 +39,15 @@ import org.slf4j.LoggerFactory;
  * language.
  */
 public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
+
   private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
 
   private static final String TS_RAM_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
 
   public ClouderaHostRAMChartTask(
-      String outputFileName,
-      ZonedDateTime startDate,
-      ZonedDateTime endDate,
-      TimeSeriesAggregation tsAggregation,
-      TaskCategory taskCategory) {
-    super(outputFileName, startDate, endDate, tsAggregation, taskCategory);
+      ZonedDateTime startDate, ZonedDateTime endDate, TimeSeriesAggregation tsAggregation) {
+    super("host-ram.jsonl", startDate, endDate, tsAggregation);
   }
 
   @Override
@@ -75,14 +71,6 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
         writer.write(chartInJson.toString());
         writer.write('\n');
       }
-    }
-  }
-
-  static class Builder extends AbstractClouderaTimeSeriesTask.Builder<ClouderaHostRAMChartTask> {
-    @Override
-    public ClouderaHostRAMChartTask build() {
-      return new ClouderaHostRAMChartTask(
-          outputFileName, startDate, endDate, tsAggregation, taskCategory);
     }
   }
 }

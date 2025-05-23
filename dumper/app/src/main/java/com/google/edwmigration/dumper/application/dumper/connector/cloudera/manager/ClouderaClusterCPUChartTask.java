@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -46,12 +45,8 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
   public ClouderaClusterCPUChartTask(
-      String outputFileName,
-      ZonedDateTime startDate,
-      ZonedDateTime endDate,
-      TimeSeriesAggregation tsAggregation,
-      TaskCategory taskCategory) {
-    super(outputFileName, startDate, endDate, tsAggregation, taskCategory);
+      ZonedDateTime startDate, ZonedDateTime endDate, TimeSeriesAggregation tsAggregation) {
+    super("cluster-cpu.jsonl", startDate, endDate, tsAggregation);
   }
 
   @Override
@@ -92,13 +87,5 @@ public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask 
       }
     }
     return cpuClusters;
-  }
-
-  static class Builder extends AbstractClouderaTimeSeriesTask.Builder<ClouderaClusterCPUChartTask> {
-    @Override
-    public ClouderaClusterCPUChartTask build() {
-      return new ClouderaClusterCPUChartTask(
-          outputFileName, startDate, endDate, tsAggregation, taskCategory);
-    }
   }
 }

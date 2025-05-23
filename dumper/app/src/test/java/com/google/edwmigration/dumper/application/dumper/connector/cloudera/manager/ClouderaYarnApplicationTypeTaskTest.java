@@ -61,10 +61,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaYarnApplicationTypeTaskTest {
+
   private static WireMockServer server;
   private final ClouderaYarnApplicationTypeTask task =
       new ClouderaYarnApplicationTypeTask(
-          "output-file.jsonl", timeTravelDaysAgo(30), timeTravelDaysAgo(0), TaskCategory.OPTIONAL);
+          timeTravelDaysAgo(30), timeTravelDaysAgo(0), TaskCategory.OPTIONAL);
   private ClouderaManagerHandle handle;
 
   @Mock private ByteSink sink;
