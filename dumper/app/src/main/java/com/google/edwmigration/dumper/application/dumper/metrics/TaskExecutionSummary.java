@@ -16,29 +16,28 @@
  */
 package com.google.edwmigration.dumper.application.dumper.metrics;
 
-
 public class TaskExecutionSummary {
-    private long count;
-    private String status;
+  private long count;
+  private String status;
 
-    public long getCount() {
-        return count;
-    }
+  public long getCount() {
+    return count;
+  }
 
-    public void setCount(long count) {
-        this.count = count;
-    }
+  public void setCount(long count) {
+    this.count = count;
+  }
 
-    public String getStatus() {
-        return status;
-    }
+  public String getStatus() {
+    return status;
+  }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+  public void setStatus(String status) {
+    this.status = status;
+  }
 
-    public TaskExecutionSummary(long count, String status) {
-        this.count = count;
-        this.status = status;
-    }
+  public TaskExecutionSummary(long count, String status) {
+    this.count = count;
+    this.status = status;
+  }
 }
