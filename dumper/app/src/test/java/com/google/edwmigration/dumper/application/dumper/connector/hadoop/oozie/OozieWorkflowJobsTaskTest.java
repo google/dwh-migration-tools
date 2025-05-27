@@ -235,8 +235,7 @@ public class OozieWorkflowJobsTaskTest {
 
     // Assert
     String actual = sink.getContent();
-    String expected =
-        readFileAsString("/oozie/expected-jobs-one-job-from-template.csv");
+    String expected = readFileAsString("/oozie/expected-jobs-one-job-from-template.csv");
     assertEquals(expected, actual);
   }
 
