@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -100,7 +101,8 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
         for (J job : jobs) {
           Date currentJobEndTime = getJobEndTime(job);
           boolean inDateRange =
-              minJobEndTimeTimestamp <= currentJobEndTime.getTime()
+              currentJobEndTime != null
+                  && minJobEndTimeTimestamp <= currentJobEndTime.getTime()
                   && currentJobEndTime.getTime() < maxJobEndTimeTimestamp;
           if (!inDateRange) {
             // It's client side filtering. It's inefficient.
@@ -147,6 +149,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   abstract List<J> fetchJobsWithFilter(
       XOozieClient oozieClient, String oozieFilter, int start, int len) throws OozieClientException;
 
+  @Nullable
   abstract Date getJobEndTime(J job);
 
   private static String toISO(ZonedDateTime dateTime) {
