@@ -196,7 +196,6 @@ public class OozieWorkflowJobsTaskTest {
         ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestampInMockResponses), UTC).plusHours(1);
     final ZonedDateTime startTime = endTime.minusDays(7);
     Date lastCapturedDate = Date.from(startTime.toInstant());
-
     when(context.getArguments()).thenReturn(new ConnectorArguments("--connector", "oozie"));
     MemoryByteSink sink = new MemoryByteSink();
     stubOozieVersionsCall();
