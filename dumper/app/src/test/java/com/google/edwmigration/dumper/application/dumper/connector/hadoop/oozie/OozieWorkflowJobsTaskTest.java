@@ -195,6 +195,7 @@ public class OozieWorkflowJobsTaskTest {
     final ZonedDateTime endTime =
         ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestampInMockResponses), UTC).plusHours(1);
     final ZonedDateTime startTime = endTime.minusDays(7);
+    Date lastCapturedDate = Date.from(startTime.toInstant());
 
     when(context.getArguments()).thenReturn(new ConnectorArguments("--connector", "oozie"));
     MemoryByteSink sink = new MemoryByteSink();
@@ -207,6 +208,25 @@ public class OozieWorkflowJobsTaskTest {
                     .withTransformerParameter(
                         // filter out this job because endTime is null (job is in progress)
                         "endTime", null)));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=2&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // include this job
+                        "endTime", JsonUtils.formatDateRfc822(lastCapturedDate))));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=3&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // filter out this job, because out of range
+                        // before start
+                        "endTime",
+                        JsonUtils.formatDateRfc822(
+                            Date.from(startTime.minusSeconds(1).toInstant())))));
 
     OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(startTime, endTime);
 
@@ -215,11 +235,9 @@ public class OozieWorkflowJobsTaskTest {
 
     // Assert
     String actual = sink.getContent();
-    String justHeader =
-        "acl,actions,appName,appPath,conf,consoleUrl,createdTime,endTime,externalId,"
-            + "group,id,lastModifiedTime,parentId,run,startTime,status,user\n"
-            + "\n";
-    assertEquals(justHeader, actual);
+    String expected =
+        readFileAsString("/oozie/expected-jobs-one-job-from-template.csv");
+    assertEquals(expected, actual);
   }
 
   @Test

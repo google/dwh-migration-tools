@@ -122,10 +122,10 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
 
         J lastJob = jobs.get(jobs.size() - 1);
         Date endTime = getJobEndTime(lastJob);
-        if (endTime == null) {
-          break;
+        boolean isLastJobInProgress = endTime == null;
+        if (!isLastJobInProgress) {
+          latestFetchedJobEndTimestamp = endTime.getTime();
         }
-        latestFetchedJobEndTimestamp = endTime.getTime();
         offset += jobs.size();
       }
 
