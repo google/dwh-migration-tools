@@ -16,9 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
@@ -27,6 +29,28 @@ public class OozieCoordinatorJobsTask extends AbstractOozieJobsTask<CoordinatorJ
 
   public OozieCoordinatorJobsTask(ZonedDateTime startDate, ZonedDateTime endDate) {
     super("oozie_coord_jobs.csv", startDate, endDate);
+  }
+
+  @Nonnull
+  @Override
+  public TaskCategory getCategory() {
+    return TaskCategory.OPTIONAL;
+  }
+
+  @Override
+  boolean isInDateRange(
+      CoordinatorJob job, long minJobEndTimeTimestamp, long maxJobEndTimeTimestamp) {
+    Date jobEndTime = getJobEndTime(job);
+
+    // endTime null for Coordinator means the point in time when
+    // new jobs will not be scheduled anymore within this coordinator
+    // so, we include such Coordinators in the output
+    if (jobEndTime == null) {
+      return job.getStartTime().getTime() < maxJobEndTimeTimestamp;
+    } else {
+      return minJobEndTimeTimestamp <= jobEndTime.getTime()
+          && jobEndTime.getTime() < maxJobEndTimeTimestamp;
+    }
   }
 
   @Override

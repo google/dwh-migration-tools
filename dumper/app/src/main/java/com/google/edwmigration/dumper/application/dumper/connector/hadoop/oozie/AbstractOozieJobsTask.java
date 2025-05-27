@@ -99,12 +99,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
       while (latestFetchedJobEndTimestamp >= minJobEndTimeTimestamp) {
         List<J> jobs = fetchJobsWithFilter(oozieClient, SORT_BY_END_TIME, offset, batchSize);
         for (J job : jobs) {
-          Date currentJobEndTime = getJobEndTime(job);
-          boolean inDateRange =
-              currentJobEndTime != null
-                  && minJobEndTimeTimestamp <= currentJobEndTime.getTime()
-                  && currentJobEndTime.getTime() < maxJobEndTimeTimestamp;
-          if (!inDateRange) {
+          if (!isInDateRange(job, minJobEndTimeTimestamp, maxJobEndTimeTimestamp)) {
             // It's client side filtering. It's inefficient.
             // Unfortunately  Oozie doesn't provide an API to filter by start/end date.
             // It's possible to filter by OozieClient.FILTER_CREATED_TIME_START
@@ -133,6 +128,9 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     }
     return null;
   }
+
+  abstract boolean isInDateRange(
+      @Nullable J job, long minJobEndTimeTimestamp, long maxJobEndTimeTimestamp);
 
   CSVFormat createJobSpecificCSVFormat() {
     return newCsvFormatForClass(oozieJobClass);

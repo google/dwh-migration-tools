@@ -24,8 +24,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -236,6 +240,54 @@ public class OozieWorkflowJobsTaskTest {
     String actual = sink.getContent();
     String expected = readFileAsString("/oozie/expected-jobs-one-job-from-template.csv");
     assertEquals(expected, actual);
+  }
+
+  @Test
+  public void isInDateRange_endDateIsIncluded() {
+    OozieWorkflowJobsTask task = mock(OozieWorkflowJobsTask.class);
+    when(task.isInDateRange(any(), anyLong(), anyLong())).thenCallRealMethod();
+    when(task.getJobEndTime(any())).thenCallRealMethod();
+
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    when(job.getEndTime()).thenReturn(new Date(5L));
+    assertTrue(
+        "a job with endDate in the range must be included", task.isInDateRange(job, 0L, 10L));
+  }
+
+  @Test
+  public void isInDateRange_endDateIsExcluded() {
+    OozieWorkflowJobsTask task = mock(OozieWorkflowJobsTask.class);
+    when(task.isInDateRange(any(), anyLong(), anyLong())).thenCallRealMethod();
+    when(task.getJobEndTime(any())).thenCallRealMethod();
+
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    when(job.getEndTime()).thenReturn(new Date(-1L));
+    assertFalse(
+        "a job with endDate before the range must not be included",
+        task.isInDateRange(job, 0L, 10L));
+
+    when(job.getEndTime()).thenReturn(new Date(5L));
+    assertFalse("a defined date range must be excluded.", task.isInDateRange(job, 0L, 5L));
+
+    when(job.getEndTime()).thenReturn(new Date(6L));
+    assertFalse(
+        "a job with endDate after the range must not be included", task.isInDateRange(job, 0L, 5L));
+  }
+
+  @Test
+  public void isInDateRange_endDateIsNull() {
+    OozieWorkflowJobsTask task = mock(OozieWorkflowJobsTask.class);
+    when(task.isInDateRange(any(), anyLong(), anyLong())).thenCallRealMethod();
+    when(task.getJobEndTime(any())).thenCallRealMethod();
+
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    when(job.getEndTime()).thenReturn(null);
+    assertFalse(
+        "in progress jobs are not included",
+        task.isInDateRange(job, Long.MIN_VALUE, Long.MAX_VALUE));
   }
 
   @Test
