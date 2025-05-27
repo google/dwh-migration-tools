@@ -1,19 +1,20 @@
-tasks.register('listAllSubmoduleDependenciesInOneFile') {
+tasks.register('generateDependenciesReport') {
     group = 'reporting'
-    description = 'Generates a single file with a list of all unique dependencies (groupId:name:version) from all resolvable configurations in all submodules.'
+    description = 'Generates a single file with all unique dependencies from all submodules, and separate files for each submodule.'
 
-    def outputFile = project.layout.buildDirectory.file('reports/all-submodules-unique-dependencies.txt')
+    def reportsDir = project.layout.buildDirectory.dir('reports/dependencies')
+    def consolidatedOutputFile = reportsDir.map { it.file('all-submodules-unique-dependencies.txt') }
 
     doLast {
-        // Ensure the report directory exists
-        outputFile.get().asFile.parentFile.mkdirs()
+        reportsDir.get().asFile.mkdirs()
 
-        def allUniqueDependencies = [] as Set<String>
+        def allUniqueDependenciesForConsolidatedFile = [] as Set<String>
         int configurationsProcessedTotal = 0
         int configurationsSkippedTotal = 0
 
         subprojects.each { subproject ->
             logger.lifecycle("\nProcessing dependencies for submodule: ${subproject.name}")
+            def submoduleUniqueDependencies = [] as Set<String>
             int subprojectConfigsProcessed = 0
             int subprojectConfigsSkipped = 0
 
@@ -22,7 +23,9 @@ tasks.register('listAllSubmoduleDependenciesInOneFile') {
                     try {
                         config.resolvedConfiguration.resolvedArtifacts.each { resolvedArtifact ->
                             def moduleId = resolvedArtifact.moduleVersion.id
-                            allUniqueDependencies.add("${moduleId.group}:${moduleId.name}:${moduleId.version}")
+                            def dependencyString = "${moduleId.group}:${moduleId.name}:${moduleId.version}"
+                            submoduleUniqueDependencies.add(dependencyString)
+                            allUniqueDependenciesForConsolidatedFile.add(dependencyString) // Also add to the global set
                         }
                         subprojectConfigsProcessed++
                     } catch (Exception e) {
@@ -34,17 +37,29 @@ tasks.register('listAllSubmoduleDependenciesInOneFile') {
                     subprojectConfigsSkipped++
                 }
             }
+
+            // Write per-submodule dependency file
+            if (!submoduleUniqueDependencies.isEmpty()) {
+                def perSubmoduleOutputFile = reportsDir.get().file("${subproject.name}-dependencies.txt")
+                def sortedSubmoduleDependencies = submoduleUniqueDependencies.toList().sort()
+                perSubmoduleOutputFile.asFile.text = sortedSubmoduleDependencies.join('\n')
+                logger.lifecycle("  [${subproject.name}] Generated dependency list with ${sortedSubmoduleDependencies.size()} unique dependencies at: ${perSubmoduleOutputFile.asFile.absolutePath}")
+            } else {
+                logger.lifecycle("  [${subproject.name}] No unique dependencies found for this submodule.")
+            }
+
             logger.lifecycle("  [${subproject.name}] Processed ${subprojectConfigsProcessed} configurations, skipped ${subprojectConfigsSkipped}.")
             configurationsProcessedTotal += subprojectConfigsProcessed
             configurationsSkippedTotal += subprojectConfigsSkipped
         }
 
-        if (!allUniqueDependencies.isEmpty()) {
-            def sortedDependencies = allUniqueDependencies.toList().sort()
-            outputFile.get().asFile.text = sortedDependencies.join('\n')
-            logger.lifecycle("\nSuccessfully generated a consolidated list of ${sortedDependencies.size()} unique dependencies from all submodules at: ${outputFile.get().asFile.absolutePath}")
+        // Write the consolidated dependency file
+        if (!allUniqueDependenciesForConsolidatedFile.isEmpty()) {
+            def sortedConsolidatedDependencies = allUniqueDependenciesForConsolidatedFile.toList().sort()
+            consolidatedOutputFile.get().asFile.text = sortedConsolidatedDependencies.join('\n')
+            logger.lifecycle("\nSuccessfully generated a consolidated list of ${sortedConsolidatedDependencies.size()} unique dependencies from all submodules at: ${consolidatedOutputFile.get().asFile.absolutePath}")
         } else {
-            logger.warn("\nNo unique dependencies found across all submodules and their resolvable configurations.")
+            logger.warn("\nNo unique dependencies found across all submodules for the consolidated file.")
         }
         logger.lifecycle("Total configurations processed across all submodules: ${configurationsProcessedTotal}. Total skipped: ${configurationsSkippedTotal}.")
     }
