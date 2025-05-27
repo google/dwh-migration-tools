@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -59,6 +60,13 @@ public class OozieCoordinatorJobsTaskTest {
     // Verify
     verify(job).getEndTime();
     verifyNoMoreInteractions(job);
+  }
+
+  @Test
+  public void getJobEndTime_nullable() {
+    CoordinatorJob job = mock(CoordinatorJob.class);
+
+    assertNull("null is expected value for end time", task.getJobEndTime(job));
   }
 
   @Test

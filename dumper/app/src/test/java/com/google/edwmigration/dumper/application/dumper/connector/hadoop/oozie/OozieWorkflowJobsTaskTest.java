@@ -24,6 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -190,6 +191,54 @@ public class OozieWorkflowJobsTaskTest {
   }
 
   @Test
+  public void doRun_requestBatchesFilterOnClient_nullDate_success() throws Exception {
+    final ZonedDateTime endTime =
+        ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestampInMockResponses), UTC).plusHours(1);
+    final ZonedDateTime startTime = endTime.minusDays(7);
+    Date lastCapturedDate = Date.from(startTime.toInstant());
+    when(context.getArguments()).thenReturn(new ConnectorArguments("--connector", "oozie"));
+    MemoryByteSink sink = new MemoryByteSink();
+    stubOozieVersionsCall();
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=1&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // filter out this job because endTime is null (job is in progress)
+                        "endTime", null)));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=2&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // include this job
+                        "endTime", JsonUtils.formatDateRfc822(lastCapturedDate))));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=3&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // filter out this job, because out of range
+                        // before start
+                        "endTime",
+                        JsonUtils.formatDateRfc822(
+                            Date.from(startTime.minusSeconds(1).toInstant())))));
+
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(startTime, endTime);
+
+    // Act
+    task.doRun(context, sink, new OozieHandle(oozieClient));
+
+    // Assert
+    String actual = sink.getContent();
+    String expected = readFileAsString("/oozie/expected-jobs-one-job-from-template.csv");
+    assertEquals(expected, actual);
+  }
+
+  @Test
   public void doRun_requestBatchesUntilEmptyResponse_ok() throws Exception {
     when(context.getArguments()).thenReturn(new ConnectorArguments("--connector", "oozie"));
 
@@ -282,6 +331,14 @@ public class OozieWorkflowJobsTaskTest {
     // Verify
     verify(job).getEndTime();
     verifyNoMoreInteractions(job);
+  }
+
+  @Test
+  public void getJobEndTime_nullable() {
+    OozieWorkflowJobsTask task = newOozieWorkflowJobTaskForOneDay();
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    assertNull("null is expected value for end time", task.getJobEndTime(job));
   }
 
   @Test
