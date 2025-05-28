@@ -110,8 +110,8 @@ public class OozieConnectorTest {
             "compilerworks-metadata.yaml", TaskCategory.REQUIRED,
             "compilerworks-format.txt", TaskCategory.REQUIRED,
             "oozie_info.csv", TaskCategory.REQUIRED,
-            "oozie_coord_jobs.csv", TaskCategory.REQUIRED,
-            "oozie_bundle_jobs.csv", TaskCategory.REQUIRED,
+            "oozie_coord_jobs.csv", TaskCategory.OPTIONAL,
+            "oozie_bundle_jobs.csv", TaskCategory.OPTIONAL,
             "oozie_servers.csv", TaskCategory.REQUIRED,
             "oozie_workflow_jobs.csv", TaskCategory.REQUIRED);
     List<Task<?>> tasks = new ArrayList<>();
