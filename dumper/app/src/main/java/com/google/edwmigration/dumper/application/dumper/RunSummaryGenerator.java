@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -57,7 +58,7 @@ public class RunSummaryGenerator {
     return mapper;
   }
 
-  public void generateSummaryYaml(
+  public void generateSummary(
       FileSystem fileSystem,
       ConnectorArguments arguments,
       TaskSetState state,
@@ -143,11 +144,13 @@ public class RunSummaryGenerator {
                             : null))
             .collect(Collectors.toList());
 
+    Duration elapsed = stopwatch.elapsed();
+
     CriticalUserJourneyMetric CujMetrics =
         CriticalUserJourneyMetric.builder()
             .setId(UUID.randomUUID().toString())
-            .setLogTime(LocalDateTime.now().toString())
-            .setRunDuration(stopwatch.toString())
+            .setRunStartTime(LocalDateTime.now().minus(elapsed))
+            .setRunDurationInSeconds(elapsed.getSeconds())
             .setOverallStatus(success ? "SUCCESS" : "FAILURE")
             .setTaskExecutionSummary(taskExecutionSummaries)
             .setTaskDetailedSummary(taskDetailedSummaries)

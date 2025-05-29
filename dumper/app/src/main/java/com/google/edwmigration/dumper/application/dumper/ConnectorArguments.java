@@ -61,6 +61,7 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.commons.collections.functors.StringValueTransformer;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -424,6 +425,21 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .withValuesConvertedBy(BooleanValueConverter.INSTANCE)
           .defaultsTo(Boolean.parseBoolean(OPT_HIVE_METASTORE_DUMP_PARTITION_METADATA_DEFAULT));
+  public final OptionSpec<String> name =
+          parser
+                  .accepts("name")
+                  .withOptionalArg()
+                  .ofType(String.class);
+  public final OptionSpec<String> jobTitle =
+          parser
+                  .accepts("jobTitle")
+                  .withOptionalArg()
+                  .ofType(String.class);
+  public final OptionSpec<String> company =
+          parser
+                  .accepts("company")
+                  .withOptionalArg()
+                  .ofType(String.class);
   private final OptionSpec<String> optionHiveKerberosUrl =
       parser
           .accepts(
@@ -840,6 +856,18 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isAssessment() {
     return getOptions().has(optionAssessment);
+  }
+
+  public String getName() {
+    return getOptions().valueOf(name);
+  }
+
+  public String getJobTitle() {
+    return getOptions().valueOf(jobTitle);
+  }
+
+  public String getCompany() {
+    return getOptions().valueOf(company);
   }
 
   private <T> Optional<T> optionAsOptional(OptionSpec<T> spec) {

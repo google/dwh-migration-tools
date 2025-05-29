@@ -192,7 +192,7 @@ public class MetadataDumper {
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        runSummaryGenerator.generateSummaryYaml(
+        runSummaryGenerator.generateSummary(
             fileSystem, arguments, state, stopwatch, requiredTaskSucceeded);
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.

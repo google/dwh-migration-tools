@@ -35,6 +35,9 @@ public class ArgumentSummary {
   private String driver;
   private List<String> database;
   private List<String> configuration;
+  private String name;
+  private String jobTitle;
+  private String company;
 
   public ArgumentSummary(ConnectorArguments arguments) {
     this.connector = arguments.getConnectorName();
@@ -55,7 +58,23 @@ public class ArgumentSummary {
     this.database = arguments.getDatabases();
     this.configuration = arguments.getConfiguration();
     this.isAssessment = arguments.isAssessment();
+    this.name = arguments.getName();
+    this.jobTitle = arguments.getJobTitle();
+    this.company = arguments.getCompany();
   }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getJobTitle() {
+    return jobTitle;
+  }
+
+  public String getCompany() {
+    return company;
+  }
+
 
   public String getConnector() {
     return connector;
