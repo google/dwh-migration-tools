@@ -30,6 +30,16 @@ public class OozieWorkflowJobsTask extends AbstractOozieJobsTask<WorkflowJob> {
   }
 
   @Override
+  boolean isInDateRange(WorkflowJob job, long minJobEndTimeTimestamp, long maxJobEndTimeTimestamp) {
+    Date jobEndTime = getJobEndTime(job);
+
+    // endTime null for Workflow means the job is in progress
+    return jobEndTime != null
+        && minJobEndTimeTimestamp <= jobEndTime.getTime()
+        && jobEndTime.getTime() < maxJobEndTimeTimestamp;
+  }
+
+  @Override
   List<WorkflowJob> fetchJobsWithFilter(
       XOozieClient oozieClient, String oozieFilter, int start, int len)
       throws OozieClientException {

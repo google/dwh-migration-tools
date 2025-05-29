@@ -18,12 +18,17 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.XOozieClient;
 import org.junit.Test;
@@ -59,6 +64,51 @@ public class OozieBundleJobsTaskTest {
     // Verify
     verify(job).getEndTime();
     verifyNoMoreInteractions(job);
+  }
+
+  @Test
+  public void isInDateRange_endDateIsExcluded() {
+    BundleJob job = mock(BundleJob.class);
+
+    when(job.getEndTime()).thenReturn(new Date(-1L));
+    assertFalse(
+        "a job with endDate before the range must not be included",
+        task.isInDateRange(job, 0L, 10L));
+
+    when(job.getEndTime()).thenReturn(new Date(5L));
+    assertFalse("a defined date range must be excluded.", task.isInDateRange(job, 0L, 5L));
+
+    when(job.getEndTime()).thenReturn(new Date(6L));
+    assertFalse(
+        "a job with endDate after the range must not be included", task.isInDateRange(job, 0L, 5L));
+  }
+
+  @Test
+  public void isInDateRange_endDateIsNull() {
+    BundleJob job = mock(BundleJob.class);
+    when(job.getEndTime()).thenReturn(null);
+
+    when(job.getStartTime()).thenReturn(new Date(2L));
+    assertTrue(
+        "endTime is null, so Coordinators with start time before end should be included",
+        task.isInDateRange(job, 4L, 6L));
+
+    when(job.getStartTime()).thenReturn(new Date(5L));
+    assertTrue(
+        "endTime is null, so Coordinators with start time before end should be included",
+        task.isInDateRange(job, 4L, 6L));
+
+    when(job.getStartTime()).thenReturn(new Date(7L));
+    assertFalse(
+        "endTime is null, so Coordinators with start time after end should not be included",
+        task.isInDateRange(job, 4L, 6L));
+  }
+
+  @Test
+  public void getJobEndTime_nullable() {
+    BundleJob job = mock(BundleJob.class);
+
+    assertNull("null is expected value for end time", task.getJobEndTime(job));
   }
 
   @Test

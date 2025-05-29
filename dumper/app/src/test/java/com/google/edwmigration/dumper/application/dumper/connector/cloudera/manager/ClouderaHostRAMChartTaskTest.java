@@ -41,12 +41,14 @@ import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -63,7 +65,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaHostRAMChartTaskTest {
   private final ClouderaHostRAMChartTask task =
-      new ClouderaHostRAMChartTask(1, TimeSeriesAggregation.HOURLY, TaskCategory.REQUIRED);
+      new ClouderaHostRAMChartTask(
+          timeTravelDaysAgo(1), timeTravelDaysAgo(0), TimeSeriesAggregation.HOURLY);
   private ClouderaManagerHandle handle;
   private static WireMockServer server;
 
@@ -169,5 +172,10 @@ public class ClouderaHostRAMChartTaskTest {
     verify(writer, never()).write(anyString(), anyInt(), anyInt());
     verify(writer, never()).write(any(char[].class));
     verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
+  }
+
+  private ZonedDateTime timeTravelDaysAgo(int days) {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return today.minusDays(days);
   }
 }

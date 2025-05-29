@@ -16,9 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.apache.oozie.client.BundleJob;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
@@ -27,6 +29,25 @@ public class OozieBundleJobsTask extends AbstractOozieJobsTask<BundleJob> {
 
   public OozieBundleJobsTask(ZonedDateTime startDate, ZonedDateTime endDate) {
     super("oozie_bundle_jobs.csv", startDate, endDate);
+  }
+
+  @Nonnull
+  @Override
+  public TaskCategory getCategory() {
+    return TaskCategory.OPTIONAL;
+  }
+
+  @Override
+  boolean isInDateRange(BundleJob job, long minJobEndTimeTimestamp, long maxJobEndTimeTimestamp) {
+    Date jobEndTime = getJobEndTime(job);
+    // Bundle's endTime is obtained from Coordinators under the bundle control,
+    // so the similar logic is applied.
+    if (jobEndTime == null) {
+      return job.getStartTime().getTime() < maxJobEndTimeTimestamp;
+    } else {
+      return minJobEndTimeTimestamp <= jobEndTime.getTime()
+          && jobEndTime.getTime() < maxJobEndTimeTimestamp;
+    }
   }
 
   @Override

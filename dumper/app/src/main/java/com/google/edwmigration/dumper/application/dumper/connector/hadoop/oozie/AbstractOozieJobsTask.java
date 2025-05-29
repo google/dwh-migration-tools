@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -98,11 +99,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
       while (latestFetchedJobEndTimestamp >= minJobEndTimeTimestamp) {
         List<J> jobs = fetchJobsWithFilter(oozieClient, SORT_BY_END_TIME, offset, batchSize);
         for (J job : jobs) {
-          Date currentJobEndTime = getJobEndTime(job);
-          boolean inDateRange =
-              minJobEndTimeTimestamp <= currentJobEndTime.getTime()
-                  && currentJobEndTime.getTime() < maxJobEndTimeTimestamp;
-          if (!inDateRange) {
+          if (!isInDateRange(job, minJobEndTimeTimestamp, maxJobEndTimeTimestamp)) {
             // It's client side filtering. It's inefficient.
             // Unfortunately  Oozie doesn't provide an API to filter by start/end date.
             // It's possible to filter by OozieClient.FILTER_CREATED_TIME_START
@@ -120,10 +117,10 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
 
         J lastJob = jobs.get(jobs.size() - 1);
         Date endTime = getJobEndTime(lastJob);
-        if (endTime == null) {
-          break;
+        boolean isLastJobInProgress = endTime == null;
+        if (!isLastJobInProgress) {
+          latestFetchedJobEndTimestamp = endTime.getTime();
         }
-        latestFetchedJobEndTimestamp = endTime.getTime();
         offset += jobs.size();
       }
 
@@ -131,6 +128,9 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     }
     return null;
   }
+
+  abstract boolean isInDateRange(
+      @Nullable J job, long minJobEndTimeTimestamp, long maxJobEndTimeTimestamp);
 
   CSVFormat createJobSpecificCSVFormat() {
     return newCsvFormatForClass(oozieJobClass);
@@ -147,6 +147,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   abstract List<J> fetchJobsWithFilter(
       XOozieClient oozieClient, String oozieFilter, int start, int len) throws OozieClientException;
 
+  @Nullable
   abstract Date getJobEndTime(J job);
 
   private static String toISO(ZonedDateTime dateTime) {
