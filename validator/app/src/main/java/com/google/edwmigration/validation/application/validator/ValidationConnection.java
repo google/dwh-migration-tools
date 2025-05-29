@@ -90,16 +90,19 @@ public class ValidationConnection {
 
   @CheckForNull
   public Integer getPort() {
-    return Integer.valueOf(port);
+    if (port != null){
+      return Integer.valueOf(port);
+    }
+    return null;
   }
 
   @Nonnegative
   public int getPort(@Nonnegative int defaultPort) {
     Integer customPort = getPort();
-    if (customPort != null) {
-      return customPort.intValue();
+    if (customPort == null) {
+      return defaultPort;
     }
-    return defaultPort;
+    return customPort;
   }
 
   @CheckForNull
@@ -133,10 +136,16 @@ public class ValidationConnection {
 
   @CheckForNull
   public List<String> getDriverPaths() {
-    return Arrays.asList(driver.split(",")).stream()
+    try {
+      return Arrays.asList(driver.split(",")).stream()
         .map(String::trim)
         .filter(StringUtils::isNotEmpty)
         .collect(Collectors.toList());
+    }
+    catch (NullPointerException e ){
+      LOG.error("Null driver path provided.");
+      return null;
+    }
   }
 
   @CheckForNull
@@ -146,7 +155,12 @@ public class ValidationConnection {
 
   @CheckForNull
   public String getDriverClass(String defaultDriverClass) {
-    return firstNonNull(jdbcDriverClass, defaultDriverClass);
+    try {
+      return firstNonNull(jdbcDriverClass, defaultDriverClass);
+    } catch (NullPointerException e) {
+      LOG.error("Null default DriverClass provided.");
+      return null;
+    }
   }
 
   @Override

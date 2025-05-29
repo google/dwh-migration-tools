@@ -283,6 +283,7 @@ public class ValidationArguments extends DefaultArguments {
     return getOptions().valueOf(gcsStagingBucketOption);
   }
 
+
   public ImmutableMap<String, String> getColumnMappings() {
     List<String> mappings = getOptions().valuesOf(columnMappingsOption);
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

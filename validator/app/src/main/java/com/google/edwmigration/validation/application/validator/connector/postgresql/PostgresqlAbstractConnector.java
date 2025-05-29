@@ -21,6 +21,7 @@ import com.google.edwmigration.validation.application.validator.connector.Abstra
 import com.google.edwmigration.validation.application.validator.handle.Handle;
 import com.google.edwmigration.validation.application.validator.handle.JdbcHandle;
 import java.sql.Driver;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
@@ -48,6 +49,10 @@ public abstract class PostgresqlAbstractConnector extends AbstractJdbcConnector 
       if (database != null) url = url + database;
     }
 
+    List<String> driverPaths = arguments.getDriverPaths();
+    if (driverPaths == null){
+      throw new IllegalArgumentException("No PostgreSQL driver path provided.");
+    }
     Driver driver =
         newDriver(arguments.getDriverPaths(), arguments.getDriverClass("org.postgresql.Driver"));
     DataSource dataSource = newSimpleDataSource(driver, url, arguments);

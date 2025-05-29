@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.validation.application.validator;
 
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.edwmigration.validation.application.validator.connector.Connector;
@@ -47,9 +46,6 @@ public class ConnectorRepository {
     return connectors.keySet();
   }
 
-  ImmutableCollection<Connector> getAllConnectors() {
-    return connectors.values();
-  }
 
   @Nullable
   public Connector getByName(@Nonnull String connectorName) {

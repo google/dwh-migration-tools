@@ -22,12 +22,9 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.anarres.jdiagnostics.ProductMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 public class DefaultArguments {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultArguments.class);
 
   private static final String PRODUCT_GROUP = "com.google.edwmigration.validator";
   private static final String PRODUCT_CORE_MODULE = "app";

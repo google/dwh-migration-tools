@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,6 +50,8 @@ public class ValidationColumnMapping {
   }
 
   public void buildColumnEntries() {
+    // Create copy to delete keys as pairs are created
+    HashMap<String, DataType<?>> targetSample = new HashMap<>(targetColumns);
 
     for (Map.Entry<String, DataType<?>> sourceEntry : sourceColumns.entrySet()) {
       String sourceColumnName = sourceEntry.getKey();
@@ -76,13 +78,14 @@ public class ValidationColumnMapping {
         }
       }
 
-      if (targetColumns.containsKey(targetColumnName)) {
-        DataType<?> targetDataType = targetColumns.get(targetColumnName);
+      if (targetSample.containsKey(targetColumnName)) {
+        DataType<?> targetDataType = targetSample.get(targetColumnName);
         if (sourceDataType.equals(targetDataType)) {
           ColumnEntry columnEntry =
               new ColumnEntry(
                   sourceColumnName, targetColumnName, sourceDataType, targetDataType, isPrimaryKey);
           columnEntries.add(columnEntry);
+          targetSample.remove(targetColumnName);
         } else {
           String errorMsg =
               String.format(
@@ -101,18 +104,18 @@ public class ValidationColumnMapping {
       }
     }
 
-    for (Map.Entry<String, DataType<?>> targetEntry : targetColumns.entrySet()) {
+    for (Map.Entry<String, DataType<?>> targetEntry : targetSample.entrySet()) {
       String targetColumnName = targetEntry.getKey();
       DataType<?> targetDataType = targetEntry.getValue();
-
-      if (!sourceColumns.containsKey(targetColumnName)) {
-        LOG.debug(
-            String.format(
-                "No matching source column found for target column: %s", targetColumnName));
-        ColumnEntry columnEntry =
-            new ColumnEntry(null, targetColumnName, null, targetDataType, false);
-        columnEntries.add(columnEntry);
+      boolean isPrimaryKey = false;
+      LOG.debug(
+          String.format("No matching source column found for target column: %s", targetColumnName));
+      if (primaryKeys.containsValue(targetColumnName)) {
+        isPrimaryKey = true;
       }
+      ColumnEntry columnEntry =
+          new ColumnEntry(null, targetColumnName, null, targetDataType, isPrimaryKey);
+      columnEntries.add(columnEntry);
     }
   }
 

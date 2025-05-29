@@ -1,0 +1,74 @@
+[
+  {
+    "name": "run_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Run ID of validation."
+  },
+  {
+    "name": "start_time",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "Start time of validation comparison."
+  },
+  {
+    "name": "source_column_name",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Name of the source column being validated."
+  },
+  {
+    "name": "target_column_name",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Name of the target column being validated."
+  },
+  {
+    "name": "validation_type",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Type of validation performed [row, count, sum, avg, min, max]"
+  },
+  {
+    "name": "source_table_name",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Name of the source table"
+  },
+  {
+    "name": "target_table_name",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Name of the target table"
+  },
+  {
+    "name": "source_agg_value",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Aggregated value from the source. Defaults to row count for row validations"
+  },
+  {
+    "name": "target_agg_value",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Aggregated value from the target. Defaults to row count for row validations"
+  },
+  {
+    "name": "count_differences",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Count of differences between source and target rows for row validation"
+  },
+  {
+    "name": "max_differences",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Maximum differences between source and target rows for row validation"
+  },
+  {
+    "name": "stddev_differences",
+    "type": "NUMERIC",
+    "mode": "NULLABLE",
+    "description": "Standard deviation of differences between source and target rows for row validation"
+  }
+]

@@ -25,6 +25,7 @@ import static org.jooq.impl.DSL.stddevSamp;
 import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.val;
 import static org.jooq.impl.DSL.when;
+import static org.jooq.tools.StringUtils.firstNonNull;
 
 import com.google.edwmigration.validation.application.validator.NameManager;
 import com.google.edwmigration.validation.application.validator.NameManager.ValidationType;
@@ -346,6 +347,10 @@ public class ComparisonSqlGenerator implements SqlGenerator {
             stddevSamp(difference).cast(BigDecimal.class).as("stddev_differences");
 
         selectFields.addAll(Arrays.asList(countDiff, max, stddev));
+      } else {
+        // TODO: Add additional logic to handle missing or extra columns.
+        String colName = firstNonNull(colEntry.getSourceColumnName(), colEntry.getTargetColumnName());
+        LOG.info(String.format("Missing or additional column %s detected. Skipping for now." + colName));
       }
 
       if (finalQuery == null) {

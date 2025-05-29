@@ -48,6 +48,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import javax.annotation.CheckForNull;
 import org.apache.commons.io.FileUtils;
 import org.jooq.DataType;
 import org.jooq.SQLDialect;
@@ -90,6 +91,7 @@ public class ComparisonTask {
     return args;
   }
 
+  @CheckForNull
   public String getResultProject() {
     return resultProject;
   }
@@ -166,7 +168,7 @@ public class ComparisonTask {
     }
   }
 
-  private Schema loadSchemaFromJson() {
+  protected Schema loadSchemaFromJson() {
 
     URL resource = this.getClass().getClassLoader().getResource("results_schema.json");
     String jsonContent = null;

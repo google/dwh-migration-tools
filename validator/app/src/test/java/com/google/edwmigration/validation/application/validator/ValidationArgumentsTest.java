@@ -17,7 +17,9 @@
 package com.google.edwmigration.validation.application.validator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.runners.model.MultipleFailureException.assertEmpty;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -59,7 +61,17 @@ public class ValidationArgumentsTest {
             "--target-connection",
             "bigquery.json",
             "--table",
-            "table");
+            "table",
+            "--bq-staging-dataset",
+            "dataset",
+            "--gcs-path",
+            "path",
+            "--bq-results-table",
+            "table",
+            "--bq-staging-dataset",
+            "dataset",
+            "--primary-keys",
+            "pk");
     Path sourceConnectionPath = arguments.getSourceConnectionPath();
     ValidationConnection sourceConn = arguments.getSourceConnection();
 
@@ -68,4 +80,28 @@ public class ValidationArgumentsTest {
     assertEquals(sourceConn.getDriverPaths(), Arrays.asList("teradata.jar"));
     assertNull(sourceConn.getProjectId());
   }
+
+  @Test
+  public void testGetColumnMappingsEmpty() {
+    ValidationArguments arguments =
+        new ValidationArguments(
+            "--source-connection",
+            "path.json",
+            "--target-connection",
+            "bigquery.json",
+            "--table",
+            "--bq-staging-dataset",
+            "dataset",
+            "--gcs-path",
+            "path",
+            "--bq-results-table",
+            "table",
+            "--bq-staging-dataset",
+            "dataset",
+            "--primary-keys",
+            "pk")
+        ;
+    assertNotNull(arguments.getColumnMappings());
+  }
+
 }
