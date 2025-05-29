@@ -67,6 +67,7 @@ public class ComparisonTask {
 
   private final ValidationArguments args;
   private final NameManager nameManager;
+  private final String BQ_RESULTS_SCHEMA_JSON = "results_schema.json";
 
   public ComparisonTask(ValidationArguments args, NameManager nameManager) {
     String[] tableId = args.getBqResultsTable().split("\\.");
@@ -169,12 +170,16 @@ public class ComparisonTask {
   }
 
   protected Schema loadSchemaFromJson() {
-
-    URL resource = this.getClass().getClassLoader().getResource("results_schema.json");
-    String jsonContent = null;
+    URL resource = this.getClass().getClassLoader().getResource(BQ_RESULTS_SCHEMA_JSON);
+    String jsonContent;
 
     try {
-      jsonContent = new String(Files.readAllBytes(Paths.get(resource.toURI())));
+      if (resource != null){
+        jsonContent = new String(Files.readAllBytes(Paths.get(resource.toURI())));
+      } else {
+        throw new RuntimeException("Error reading JSON BQ schema file: " + BQ_RESULTS_SCHEMA_JSON);
+      }
+
     } catch (IOException | URISyntaxException e) {
       throw new RuntimeException("Error reading JSON BQ schema file: " + resource);
     }
@@ -202,7 +207,7 @@ public class ComparisonTask {
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
 
     JobId jobId = JobId.of();
-    Job queryJob = bigQuery.create(Job.newBuilder(queryConfig).build());
+    Job queryJob = bigQuery.create(Job.newBuilder(queryConfig).setJobId(jobId).build());
 
     queryJob = queryJob.waitFor();
 
@@ -220,7 +225,7 @@ public class ComparisonTask {
     for (FieldValueList row : result.iterateAll()) {
       String word = row.get(0).getStringValue();
       String dataType = row.get(1).getStringValue();
-      DataType<?> sqlDataType = generator.getSqlDataType(dataType, null, null);
+      DataType<?> sqlDataType = generator.getSqlDataType(dataType);
       results.put(word, sqlDataType);
     }
     LOG.debug(String.valueOf(results));
@@ -240,7 +245,7 @@ public class ComparisonTask {
             .build();
 
     JobId jobId = JobId.of();
-    Job queryJob = bigQuery.create(Job.newBuilder(queryConfig).build());
+    Job queryJob = bigQuery.create(Job.newBuilder(queryConfig).setJobId(jobId).build());
 
     queryJob = queryJob.waitFor();
 

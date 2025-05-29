@@ -30,13 +30,9 @@ import java.util.Set;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import joptsimple.OptionSpec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** @author nehanene */
 public class ValidationArguments extends DefaultArguments {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ValidationArguments.class);
   public static final String OPT_SOURCE_CONNECTION = "source-connection";
   public static final String OPT_TARGET_CONNECTION = "target-connection";
   public static final String OPT_OUTPUT = "local-path";
@@ -277,12 +273,6 @@ public class ValidationArguments extends DefaultArguments {
 
     return builder.build();
   }
-
-  @Nonnull
-  public String getGcsStagingBucket() {
-    return getOptions().valueOf(gcsStagingBucketOption);
-  }
-
 
   public ImmutableMap<String, String> getColumnMappings() {
     List<String> mappings = getOptions().valuesOf(columnMappingsOption);

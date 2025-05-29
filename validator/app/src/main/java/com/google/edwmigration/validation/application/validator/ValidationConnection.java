@@ -137,7 +137,7 @@ public class ValidationConnection {
   @CheckForNull
   public List<String> getDriverPaths() {
     try {
-      return Arrays.asList(driver.split(",")).stream()
+      return Arrays.stream(driver.split(","))
         .map(String::trim)
         .filter(StringUtils::isNotEmpty)
         .collect(Collectors.toList());

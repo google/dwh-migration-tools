@@ -35,6 +35,13 @@ Sample BigQuery connection file:
 ```
 
 ## Run a Validation
+Set your environment variables if needed:
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=path/to/key.json
+export DV_CONN_HOME=/path/to/json/connectionsDir
+```
+
+Run a validation:
 ```commandline
 ./gradlew :validator:app:run --args="
 --table employees=validation.employees 

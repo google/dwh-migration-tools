@@ -133,7 +133,7 @@ public class ComparisonSqlGenerator implements SqlGenerator {
   }
 
   public DataType<?> getSqlDataType(
-      String dataType, Integer numericPrecision, Integer numericScale) {
+      String dataType) {
     return typeMappings.get(dataType);
   }
 

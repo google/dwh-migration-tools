@@ -113,9 +113,9 @@ public abstract class AbstractTargetTask {
 
     Table existingTable = bigQuery.getTable(destinationTable);
     if (existingTable != null && existingTable.exists()) {
-      LOG.warn("Destination table exists and will be overwritten: " + destinationTable);
+      LOG.warn(String.format("Destination table exists and will be overwritten: %s.%s ", dataset, targetTableId));
     } else {
-      LOG.warn("Destination table does not exist and will be created: " + destinationTable);
+      LOG.warn(String.format("Destination table does not exist and will be created: %s.%s ", dataset, targetTableId));
     }
 
     QueryJobConfiguration queryConfig =
@@ -126,7 +126,7 @@ public abstract class AbstractTargetTask {
             .build();
 
     JobId jobId = JobId.of();
-    Job queryJob = bigQuery.create(Job.newBuilder(queryConfig).build());
+    Job queryJob = bigQuery.create(Job.newBuilder(queryConfig).setJobId(jobId).build());
 
     queryJob = queryJob.waitFor();
 

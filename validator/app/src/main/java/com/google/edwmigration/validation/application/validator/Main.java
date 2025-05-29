@@ -22,9 +22,6 @@ import org.slf4j.LoggerFactory;
 
 /** @author nehanene */
 public class Main {
-
-  private static final Logger LOG = LoggerFactory.getLogger(Main.class);
-
   private final Validator validator;
 
   public Main(Validator validator) {
