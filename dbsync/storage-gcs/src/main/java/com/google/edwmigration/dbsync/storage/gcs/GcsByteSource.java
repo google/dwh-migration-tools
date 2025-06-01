@@ -16,14 +16,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class GcsByteSource extends AbstractRemoteByteSource {
 
-  private static final int CHUNK_SIZE = 32 * 1024 * 1024; // 32 Mib
-
-  private static final Logger LOG = LoggerFactory.getLogger(GcsByteSource.class);
+  private static final int CHUNK_SIZE = 16 * 1024 * 1024; // 16 Mib
 
   private final Storage storage;
   private final BlobId blobId;
