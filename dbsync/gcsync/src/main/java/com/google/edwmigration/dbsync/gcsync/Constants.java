@@ -15,7 +15,7 @@ public class Constants {
 
   public static final String TMP_FILE_SUFFIX = "updated";
 
-  public static final int BLOCK_SIZE = 4096;
+  public static final int BLOCK_SIZE = 4 * 4096;
 
   // 10 MiB
   public static final long RSYNC_SIZE_THRESHOLD = 10 * 1024 * 1024;
