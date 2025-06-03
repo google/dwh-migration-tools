@@ -1,4 +1,20 @@
-package com.google.edwmigration.validation.application.validator.task;
+/*
+ * Copyright 2022-2025 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.google.edwmigration.validation.task;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -7,25 +23,22 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
+import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.Field;
-import com.google.edwmigration.validation.application.validator.NameManager;
-import com.google.edwmigration.validation.application.validator.ValidationArguments;
+import com.google.edwmigration.validation.NameManager;
+import com.google.edwmigration.validation.ValidationArguments;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 /** @author nehanene */
 @RunWith(MockitoJUnitRunner.class)
 public class ComparisonTaskTest {
-  @Mock
-  private ValidationArguments mockArgs;
-  @Mock
-  private NameManager mockNameManager;
+  @Mock private ValidationArguments mockArgs;
+  @Mock private NameManager mockNameManager;
 
   @Test
   public void testConstructor_ThreePartTableId() {
@@ -64,8 +77,11 @@ public class ComparisonTaskTest {
       new ComparisonTask(mockArgs, mockNameManager);
       fail("IllegalArgumentException was expected but not thrown for too few table ID parts.");
     } catch (IllegalArgumentException e) {
-      String expectedMessagePart = "Invalid BQ result table ID. Please provide `project.dataset.table`: " + bqResultsTable;
-      assertTrue("Exception message should indicate invalid ID format", e.getMessage().contains(expectedMessagePart));
+      String expectedMessagePart =
+          "Invalid BQ result table ID. Please provide `project.dataset.table`: " + bqResultsTable;
+      assertTrue(
+          "Exception message should indicate invalid ID format",
+          e.getMessage().contains(expectedMessagePart));
     }
   }
 
@@ -78,8 +94,11 @@ public class ComparisonTaskTest {
       new ComparisonTask(mockArgs, mockNameManager);
       fail("IllegalArgumentException was expected but not thrown for too many table ID parts.");
     } catch (IllegalArgumentException e) {
-      String expectedMessagePart = "Invalid BQ result table ID. Please provide `project.dataset.table`: " + bqResultsTable;
-      assertTrue("Exception message should indicate invalid ID format", e.getMessage().contains(expectedMessagePart));
+      String expectedMessagePart =
+          "Invalid BQ result table ID. Please provide `project.dataset.table`: " + bqResultsTable;
+      assertTrue(
+          "Exception message should indicate invalid ID format",
+          e.getMessage().contains(expectedMessagePart));
     }
   }
 
@@ -103,12 +122,15 @@ public class ComparisonTaskTest {
 
     Field field2 = fields.get(1);
     assertEquals("Second field name should be 'start_time'", "start_time", field2.getName());
-    assertEquals("Second field type should be TIMESTAMP", LegacySQLTypeName.TIMESTAMP, field2.getType());
+    assertEquals(
+        "Second field type should be TIMESTAMP", LegacySQLTypeName.TIMESTAMP, field2.getType());
 
     Field field11 = fields.get(11);
-    assertEquals("Fourth field name should be 'stddev_differences'", "stddev_differences", field11.getName());
-    assertEquals("Fourth field type should be NUMERIC", LegacySQLTypeName.NUMERIC, field11.getType());
+    assertEquals(
+        "Fourth field name should be 'stddev_differences'",
+        "stddev_differences",
+        field11.getName());
+    assertEquals(
+        "Fourth field type should be NUMERIC", LegacySQLTypeName.NUMERIC, field11.getType());
   }
-
-
 }

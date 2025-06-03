@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,6 +42,8 @@ dependencies {
     implementation libs.google.cloud.nio
     implementation libs.google.cloud.kms
 
+    implementation 'com.moandjiezana.toml:toml4j:0.7.2'
+
     runtimeOnly libs.logback.classic
     runtimeOnly libs.jcl.over.slf4j
 
@@ -55,5 +57,5 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'com.google.edwmigration.validation.application.validator.Main'
+    mainClass = 'com.google.edwmigration.validation.Main'
 }

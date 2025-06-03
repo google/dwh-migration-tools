@@ -1,15 +1,29 @@
-package com.google.edwmigration.validation.application.validator;
+/*
+ * Copyright 2022-2025 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.google.edwmigration.validation;
+
+import static org.junit.Assert.*;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
+import java.util.List;
 import org.jooq.DataType;
 import org.jooq.impl.SQLDataType;
 import org.junit.Test;
-import static org.junit.Assert.*;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -21,13 +35,9 @@ public class ValidationColumnMappingTest {
 
   @Test
   public void testColumnEntry_AllNonNullNamesAndDataTypes() {
-    ValidationColumnMapping.ColumnEntry entry = new ValidationColumnMapping.ColumnEntry(
-        "source_col",
-        "target_col",
-        SQLDataType.VARCHAR,
-        SQLDataType.VARCHAR,
-        true
-    );
+    ValidationColumnMapping.ColumnEntry entry =
+        new ValidationColumnMapping.ColumnEntry(
+            "source_col", "target_col", SQLDataType.VARCHAR, SQLDataType.VARCHAR, true);
 
     assertEquals("source_col", entry.getSourceColumnName());
     assertEquals("target_col", entry.getTargetColumnName());
@@ -40,13 +50,13 @@ public class ValidationColumnMappingTest {
 
   @Test
   public void testColumnEntry_NullSourceColumnName() {
-    ValidationColumnMapping.ColumnEntry entry = new ValidationColumnMapping.ColumnEntry(
-        null,
-        "target_col",
-        null, // Source data type can be null if name is null
-        SQLDataType.INTEGER,
-        false
-    );
+    ValidationColumnMapping.ColumnEntry entry =
+        new ValidationColumnMapping.ColumnEntry(
+            null,
+            "target_col",
+            null, // Source data type can be null if name is null
+            SQLDataType.INTEGER,
+            false);
 
     assertNull(entry.getSourceColumnName());
     assertEquals("target_col", entry.getTargetColumnName());
@@ -59,13 +69,13 @@ public class ValidationColumnMappingTest {
 
   @Test
   public void testColumnEntry_NullTargetColumnName() {
-    ValidationColumnMapping.ColumnEntry entry = new ValidationColumnMapping.ColumnEntry(
-        "source_col",
-        null,
-        SQLDataType.BIGINT,
-        null, // Target data type can be null if name is null
-        true
-    );
+    ValidationColumnMapping.ColumnEntry entry =
+        new ValidationColumnMapping.ColumnEntry(
+            "source_col",
+            null,
+            SQLDataType.BIGINT,
+            null, // Target data type can be null if name is null
+            true);
 
     assertEquals("source_col", entry.getSourceColumnName());
     assertNull(entry.getTargetColumnName());
@@ -78,17 +88,16 @@ public class ValidationColumnMappingTest {
 
   @Test
   public void testColumnEntry_AliasesAreGeneratedCorrectly() {
-    ValidationColumnMapping.ColumnEntry entry = new ValidationColumnMapping.ColumnEntry(
-        "column_with_spaces",
-        "another_column",
-        SQLDataType.VARCHAR,
-        SQLDataType.VARCHAR,
-        false
-    );
+    ValidationColumnMapping.ColumnEntry entry =
+        new ValidationColumnMapping.ColumnEntry(
+            "column_with_spaces",
+            "another_column",
+            SQLDataType.VARCHAR,
+            SQLDataType.VARCHAR,
+            false);
     assertEquals("s_column_with_spaces", entry.getSourceColumnAlias());
     assertEquals("t_another_column", entry.getTargetColumnAlias());
   }
-
 
   // --- Tests for ValidationColumnMapping class and buildColumnEntries() ---
 
@@ -108,24 +117,29 @@ public class ValidationColumnMappingTest {
     ImmutableMap<String, String> columnMappings = ImmutableMap.of();
     ImmutableMap<String, String> primaryKeys = ImmutableMap.of();
 
-    ValidationColumnMapping mapping = new ValidationColumnMapping(columnMappings, sourceCols, targetCols, primaryKeys);
+    ValidationColumnMapping mapping =
+        new ValidationColumnMapping(columnMappings, sourceCols, targetCols, primaryKeys);
     List<ValidationColumnMapping.ColumnEntry> entries = mapping.getColumnEntries();
 
     assertNotNull(entries);
     assertEquals(2, entries.size());
 
-    ValidationColumnMapping.ColumnEntry idEntry = entries.stream()
-        .filter(e -> "id".equals(e.getSourceColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("ID column entry not found"));
+    ValidationColumnMapping.ColumnEntry idEntry =
+        entries.stream()
+            .filter(e -> "id".equals(e.getSourceColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("ID column entry not found"));
     assertEquals("id", idEntry.getSourceColumnName());
     assertEquals("id", idEntry.getTargetColumnName());
     assertEquals(SQLDataType.INTEGER, idEntry.getSourceColumnDataType());
     assertEquals(SQLDataType.INTEGER, idEntry.getTargetColumnDataType());
     assertFalse(idEntry.isPrimaryKey());
 
-    ValidationColumnMapping.ColumnEntry nameEntry = entries.stream()
-        .filter(e -> "name".equals(e.getSourceColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("Name column entry not found"));
+    ValidationColumnMapping.ColumnEntry nameEntry =
+        entries.stream()
+            .filter(e -> "name".equals(e.getSourceColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Name column entry not found"));
     assertEquals("name", nameEntry.getSourceColumnName());
     assertEquals("name", nameEntry.getTargetColumnName());
     assertEquals(SQLDataType.VARCHAR, nameEntry.getSourceColumnDataType());
@@ -146,28 +160,33 @@ public class ValidationColumnMappingTest {
     targetCols.put("t_full_name", SQLDataType.VARCHAR);
 
     // Explicit column mappings
-    ImmutableMap<String, String> columnMappings = ImmutableMap.of(
-        "s_id", "t_id",
-        "s_name", "t_full_name"
-    );
+    ImmutableMap<String, String> columnMappings =
+        ImmutableMap.of(
+            "s_id", "t_id",
+            "s_name", "t_full_name");
     ImmutableMap<String, String> primaryKeys = ImmutableMap.of(); // No PKs
 
-    ValidationColumnMapping mapping = new ValidationColumnMapping(columnMappings, sourceCols, targetCols, primaryKeys);
+    ValidationColumnMapping mapping =
+        new ValidationColumnMapping(columnMappings, sourceCols, targetCols, primaryKeys);
     List<ValidationColumnMapping.ColumnEntry> entries = mapping.getColumnEntries();
 
     assertEquals(2, entries.size());
 
-    ValidationColumnMapping.ColumnEntry idEntry = entries.stream()
-        .filter(e -> "s_id".equals(e.getSourceColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("s_id column entry not found"));
+    ValidationColumnMapping.ColumnEntry idEntry =
+        entries.stream()
+            .filter(e -> "s_id".equals(e.getSourceColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("s_id column entry not found"));
     assertEquals("s_id", idEntry.getSourceColumnName());
     assertEquals("t_id", idEntry.getTargetColumnName());
     assertEquals(SQLDataType.INTEGER, idEntry.getSourceColumnDataType());
     assertEquals(SQLDataType.INTEGER, idEntry.getTargetColumnDataType());
 
-    ValidationColumnMapping.ColumnEntry nameEntry = entries.stream()
-        .filter(e -> "s_name".equals(e.getSourceColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("s_name column entry not found"));
+    ValidationColumnMapping.ColumnEntry nameEntry =
+        entries.stream()
+            .filter(e -> "s_name".equals(e.getSourceColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("s_name column entry not found"));
     assertEquals("s_name", nameEntry.getSourceColumnName());
     assertEquals("t_full_name", nameEntry.getTargetColumnName());
     assertEquals(SQLDataType.VARCHAR, nameEntry.getSourceColumnDataType());
@@ -189,20 +208,25 @@ public class ValidationColumnMappingTest {
     // Primary keys
     ImmutableMap<String, String> primaryKeys = ImmutableMap.of("product_id", "product_id");
 
-    ValidationColumnMapping mapping = new ValidationColumnMapping(ImmutableMap.of(), sourceCols, targetCols, primaryKeys);
+    ValidationColumnMapping mapping =
+        new ValidationColumnMapping(ImmutableMap.of(), sourceCols, targetCols, primaryKeys);
     List<ValidationColumnMapping.ColumnEntry> entries = mapping.getColumnEntries();
 
     assertEquals(2, entries.size());
 
-    ValidationColumnMapping.ColumnEntry idEntry = entries.stream()
-        .filter(e -> "product_id".equals(e.getSourceColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("product_id column entry not found"));
+    ValidationColumnMapping.ColumnEntry idEntry =
+        entries.stream()
+            .filter(e -> "product_id".equals(e.getSourceColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("product_id column entry not found"));
     assertTrue(idEntry.isPrimaryKey());
     assertEquals("product_id", idEntry.getTargetColumnName()); // Should match target name
 
-    ValidationColumnMapping.ColumnEntry nameEntry = entries.stream()
-        .filter(e -> "product_name".equals(e.getSourceColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("product_name column entry not found"));
+    ValidationColumnMapping.ColumnEntry nameEntry =
+        entries.stream()
+            .filter(e -> "product_name".equals(e.getSourceColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("product_name column entry not found"));
     assertFalse(nameEntry.isPrimaryKey());
   }
 
@@ -242,19 +266,24 @@ public class ValidationColumnMappingTest {
     HashMap<String, DataType<?>> targetCols = new HashMap<>();
     targetCols.put("id", SQLDataType.INTEGER);
 
-    ValidationColumnMapping mapping = new ValidationColumnMapping(ImmutableMap.of(), sourceCols, targetCols, ImmutableMap.of());
+    ValidationColumnMapping mapping =
+        new ValidationColumnMapping(ImmutableMap.of(), sourceCols, targetCols, ImmutableMap.of());
     List<ValidationColumnMapping.ColumnEntry> entries = mapping.getColumnEntries();
 
     assertEquals(2, entries.size());
 
-    ValidationColumnMapping.ColumnEntry idEntry = entries.stream()
-        .filter(e -> "id".equals(e.getSourceColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("ID column entry not found"));
+    ValidationColumnMapping.ColumnEntry idEntry =
+        entries.stream()
+            .filter(e -> "id".equals(e.getSourceColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("ID column entry not found"));
     assertNotNull(idEntry.getTargetColumnName());
 
-    ValidationColumnMapping.ColumnEntry nameEntry = entries.stream()
-        .filter(e -> "name".equals(e.getSourceColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("Name column entry not found"));
+    ValidationColumnMapping.ColumnEntry nameEntry =
+        entries.stream()
+            .filter(e -> "name".equals(e.getSourceColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Name column entry not found"));
     assertNull(nameEntry.getTargetColumnName());
     assertNull(nameEntry.getTargetColumnDataType());
     assertFalse(nameEntry.isPrimaryKey());
@@ -269,20 +298,21 @@ public class ValidationColumnMappingTest {
     targetCols.put("id", SQLDataType.INTEGER);
     targetCols.put("description", SQLDataType.CLOB);
 
-    ValidationColumnMapping mapping = new ValidationColumnMapping(ImmutableMap.of(), sourceCols, targetCols, ImmutableMap.of());
+    ValidationColumnMapping mapping =
+        new ValidationColumnMapping(ImmutableMap.of(), sourceCols, targetCols, ImmutableMap.of());
     List<ValidationColumnMapping.ColumnEntry> entries = mapping.getColumnEntries();
 
     assertEquals(2, entries.size());
 
-    ValidationColumnMapping.ColumnEntry descEntry = entries.stream()
-        .filter(e -> "description".equals(e.getTargetColumnName()))
-        .findFirst().orElseThrow(() -> new AssertionError("Description column entry not found"));
+    ValidationColumnMapping.ColumnEntry descEntry =
+        entries.stream()
+            .filter(e -> "description".equals(e.getTargetColumnName()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Description column entry not found"));
     assertNull(descEntry.getSourceColumnName()); // No matching source column
     assertNull(descEntry.getSourceColumnDataType()); // No matching source data type
     assertEquals("description", descEntry.getTargetColumnName());
     assertEquals(SQLDataType.CLOB, descEntry.getTargetColumnDataType());
     assertFalse(descEntry.isPrimaryKey());
   }
-
-
 }

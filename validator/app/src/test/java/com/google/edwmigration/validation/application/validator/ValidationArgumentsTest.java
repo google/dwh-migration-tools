@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.validation.application.validator;
+package com.google.edwmigration.validation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.runners.model.MultipleFailureException.assertEmpty;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -99,9 +98,7 @@ public class ValidationArgumentsTest {
             "--bq-staging-dataset",
             "dataset",
             "--primary-keys",
-            "pk")
-        ;
+            "pk");
     assertNotNull(arguments.getColumnMappings());
   }
-
 }

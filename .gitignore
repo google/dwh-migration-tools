@@ -19,6 +19,10 @@ node_modules
 /*.tmp
 .DS_Store
 /progress.log.*
+**/.project
+**/.classpath
+**/.settings
+**/.factorypath
 
 /dbsync/**/bin/
 /dumper/**/bin/
