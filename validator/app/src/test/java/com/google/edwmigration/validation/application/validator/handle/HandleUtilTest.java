@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 Google LLC
+ * Copyright 2022-2025 Google LLC
  * Copyright 2013-2021 CompilerWorks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.validation.application.validator.handle;
+package com.google.edwmigration.validation.handle;
 
-import static com.google.edwmigration.validation.application.validator.handle.HandleUtil.createHikariConfig;
-import static com.google.edwmigration.validation.application.validator.handle.HandleUtil.createJdbcTemplate;
-import static com.google.edwmigration.validation.application.validator.handle.HandleUtil.verifyJdbcConnection;
+import static com.google.edwmigration.validation.handle.HandleUtil.createHikariConfig;
+import static com.google.edwmigration.validation.handle.HandleUtil.createJdbcTemplate;
+import static com.google.edwmigration.validation.handle.HandleUtil.verifyJdbcConnection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;

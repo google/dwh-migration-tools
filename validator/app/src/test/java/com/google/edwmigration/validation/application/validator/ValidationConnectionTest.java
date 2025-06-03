@@ -1,10 +1,26 @@
-package com.google.edwmigration.validation.application.validator;
+/*
+ * Copyright 2022-2025 Google LLC
+ * Copyright 2013-2021 CompilerWorks
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.google.edwmigration.validation;
 
-import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -40,27 +56,26 @@ public class ValidationConnectionTest {
         projectId,
         serviceAccount,
         uri,
-        jdbcDriverClass
-    );
+        jdbcDriverClass);
   }
 
   // --- Constructor and basic Getters Tests ---
 
   @Test
   public void testConstructorAndGetters_AllNonNull() {
-    ValidationConnection connection = createConnection(
-        "TEST_TYPE",
-        "path/to/driver.jar",
-        "test_host",
-        "5432",
-        "test_user",
-        "test_pass",
-        "test_db",
-        "test_project",
-        "test_sa",
-        "jdbc:uri",
-        "com.example.JdbcDriver"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "TEST_TYPE",
+            "path/to/driver.jar",
+            "test_host",
+            "5432",
+            "test_user",
+            "test_pass",
+            "test_db",
+            "test_project",
+            "test_sa",
+            "jdbc:uri",
+            "com.example.JdbcDriver");
 
     assertEquals("TEST_TYPE", connection.getConnectionType());
     assertEquals("test_host", connection.getHost());
@@ -77,19 +92,20 @@ public class ValidationConnectionTest {
 
   @Test
   public void testConstructorAndGetters_SomeNull() {
-    ValidationConnection connection = createConnection(
-        null, // connectionType
-        "path/to/driver.jar",
-        null, // host
-        "8080", // port
-        null, // user
-        null, // password (will trigger PasswordReader, not testing here)
-        null, // database
-        null, // projectId
-        null, // serviceAccount
-        null, // uri
-        null // jdbcDriverClass
-    );
+    ValidationConnection connection =
+        createConnection(
+            null, // connectionType
+            "path/to/driver.jar",
+            null, // host
+            "8080", // port
+            null, // user
+            null, // password (will trigger PasswordReader, not testing here)
+            null, // database
+            null, // projectId
+            null, // serviceAccount
+            null, // uri
+            null // jdbcDriverClass
+            );
 
     assertNull(connection.getConnectionType());
     assertNull(connection.getHost());
@@ -108,17 +124,37 @@ public class ValidationConnectionTest {
 
   @Test
   public void testGetHost_WithHostValue() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "myhost.com", "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "myhost.com",
+            "1234",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     assertEquals("myhost.com", connection.getHost(DEFAULT_HOST));
   }
 
   @Test
   public void testGetHost_WithNullHostValue() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", null, "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            null,
+            "1234",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     assertEquals(DEFAULT_HOST, connection.getHost(DEFAULT_HOST));
   }
 
@@ -126,25 +162,55 @@ public class ValidationConnectionTest {
 
   @Test
   public void testGetPort_ValidPortString() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", "54321", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "host",
+            "54321",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     assertEquals(Integer.valueOf(54321), connection.getPort());
   }
 
   @Test(expected = NumberFormatException.class)
   public void testGetPort_InvalidPortStringThrowsNumberFormatException() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", "not_a_number", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "host",
+            "not_a_number",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     connection.getPort();
   }
 
   @Test
   public void testGetPort_NullPortStringReturnsNull() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", null, "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "host",
+            null,
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     assertNull(connection.getPort()); // Explicitly returns null if port is null
   }
 
@@ -152,35 +218,74 @@ public class ValidationConnectionTest {
 
   @Test
   public void testGetPortWithDefault_ValidPortString() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", "54321", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "host",
+            "54321",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     assertEquals(54321, connection.getPort(DEFAULT_PORT));
   }
 
   @Test(expected = NumberFormatException.class)
   public void testGetPortWithDefault_InvalidPortStringThrowsNumberFormatException() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", "not_a_number", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "host",
+            "not_a_number",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     connection.getPort(DEFAULT_PORT);
   }
 
   @Test
   public void testGetPortWithDefault_NullPortStringReturnsDefault() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", null, "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "host",
+            null,
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     assertEquals(DEFAULT_PORT, connection.getPort(DEFAULT_PORT));
   }
-
 
   // --- GetPassword Tests ---
   @Test
   public void testGetPassword_WithProvidedPassword() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", "1234", "user", "mysecret", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "host",
+            "1234",
+            "user",
+            "mysecret",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     assertEquals("mysecret", connection.getPassword());
   }
 
@@ -188,63 +293,102 @@ public class ValidationConnectionTest {
 
   @Test
   public void testGetDriverPaths_SingleDriver() {
-    ValidationConnection connection = createConnection(
-        "type", "path/to/driver.jar", "host", "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "path/to/driver.jar",
+            "host",
+            "1234",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     List<String> expected = Arrays.asList("path/to/driver.jar");
     assertEquals(expected, connection.getDriverPaths());
   }
 
   @Test
   public void testGetDriverPaths_MultipleDrivers() {
-    ValidationConnection connection = createConnection(
-        "type", "driver1.jar,driver2.jar,driver3.jar", "host", "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver1.jar,driver2.jar,driver3.jar",
+            "host",
+            "1234",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     List<String> expected = Arrays.asList("driver1.jar", "driver2.jar", "driver3.jar");
     assertEquals(expected, connection.getDriverPaths());
   }
 
   @Test
   public void testGetDriverPaths_MultipleDriversWithSpacesAndEmptyParts() {
-    ValidationConnection connection = createConnection(
-        "type", " driver1.jar , , driver2.jar ", "host", "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            " driver1.jar , , driver2.jar ",
+            "host",
+            "1234",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "driverClass");
     List<String> expected = Arrays.asList("driver1.jar", "driver2.jar");
     assertEquals(expected, connection.getDriverPaths());
   }
 
   @Test
   public void testGetDriverPaths_EmptyDriverString() {
-    ValidationConnection connection = createConnection(
-        "type", "", "host", "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type", "", "host", "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass");
     assertTrue(connection.getDriverPaths().isEmpty());
   }
 
   @Test
   public void testGetDriverPaths_NullDriverString() {
-    ValidationConnection connection = createConnection(
-        "type", null, "host", "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type", null, "host", "1234", "user", "pass", "db", "proj", "sa", "uri", "driverClass");
     assertNull(connection.getDriverPaths());
   }
-
 
   // --- GetDriverClass(defaultDriverClass) Tests ---
 
   @Test
   public void testGetDriverClass_WithDriverClassValue() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", "1234", "user", "pass", "db", "proj", "sa", "uri", "my.custom.Driver"
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type",
+            "driver",
+            "host",
+            "1234",
+            "user",
+            "pass",
+            "db",
+            "proj",
+            "sa",
+            "uri",
+            "my.custom.Driver");
     assertEquals("my.custom.Driver", connection.getDriverClass(DEFAULT_DRIVER_CLASS));
   }
 
   @Test
   public void testGetDriverClass_WithNullDriverClassValue() {
-    ValidationConnection connection = createConnection(
-        "type", "driver", "host", "1234", "user", "pass", "db", "proj", "sa", "uri", null
-    );
+    ValidationConnection connection =
+        createConnection(
+            "type", "driver", "host", "1234", "user", "pass", "db", "proj", "sa", "uri", null);
     assertEquals(DEFAULT_DRIVER_CLASS, connection.getDriverClass(DEFAULT_DRIVER_CLASS));
   }
 
@@ -252,19 +396,20 @@ public class ValidationConnectionTest {
 
   @Test
   public void testToString_WithNullValues() {
-    ValidationConnection connection = createConnection(
-        null, // connectionType
-        "", // driver (empty, results in empty list for getDriverPaths)
-        null, // host
-        "8080", // port
-        null, // user
-        "password_value", // password (will not be in toString anyway)
-        null, // database
-        null, // projectId
-        null, // serviceAccount
-        null, // uri (not included in toString)
-        null // jdbcDriverClass (not included in toString)
-    );
+    ValidationConnection connection =
+        createConnection(
+            null, // connectionType
+            "", // driver (empty, results in empty list for getDriverPaths)
+            null, // host
+            "8080", // port
+            null, // user
+            "password_value", // password (will not be in toString anyway)
+            null, // database
+            null, // projectId
+            null, // serviceAccount
+            null, // uri (not included in toString)
+            null // jdbcDriverClass (not included in toString)
+            );
 
     String toStringResult = connection.toString();
     assertNotNull(toStringResult);
