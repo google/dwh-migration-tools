@@ -16,13 +16,9 @@
  */
 package com.google.edwmigration.validation.sql;
 
-import com.google.edwmigration.validation.ValidationTableMapping;
 import org.jooq.DSLContext;
 
 /** @author nehanene */
 public interface SqlGenerator {
-
   DSLContext getDSLContext();
-
-  ValidationTableMapping getValidationTableMapping();
 }

@@ -16,9 +16,9 @@
  */
 package com.google.edwmigration.validation.connector;
 
-import com.google.edwmigration.validation.NameManager;
-import com.google.edwmigration.validation.ValidationArguments;
-import com.google.edwmigration.validation.ValidationConnection;
+import com.google.edwmigration.validation.config.SourceConnection;
+import com.google.edwmigration.validation.config.ValidationConfig;
+import com.google.edwmigration.validation.core.BqNameFormatter;
 import com.google.edwmigration.validation.handle.Handle;
 import com.google.edwmigration.validation.task.AbstractSourceTask;
 import com.google.edwmigration.validation.task.AbstractTargetTask;
@@ -31,13 +31,12 @@ public interface Connector {
   String getName();
 
   @Nonnull
-  Handle open(@Nonnull ValidationConnection arguments) throws Exception;
+  Handle open(@Nonnull SourceConnection arguments) throws Exception;
 
   @Nonnull
-  AbstractSourceTask getSourceQueryTask(
-      Handle handle, URI outputUri, ValidationArguments arguments);
+  AbstractSourceTask getSourceQueryTask(Handle handle, URI outputUri, ValidationConfig arguments);
 
   @Nonnull
   AbstractTargetTask getTargetQueryTask(
-      Handle handle, NameManager nameManager, ValidationArguments arguments);
+      Handle handle, BqNameFormatter nameManager, ValidationConfig arguments);
 }

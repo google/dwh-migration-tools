@@ -16,6 +16,12 @@
  */
 package com.google.edwmigration.validation;
 
+import com.google.edwmigration.validation.model.ConnectionType;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+/** Handles connection with JDBC */
 public class JdbcConnectionConfig {
   public ConnectionType connectionType;
   public String database;
@@ -24,4 +30,14 @@ public class JdbcConnectionConfig {
   public String password;
   public String host;
   public int port;
+
+  public Connection connect() throws SQLException, ClassNotFoundException {
+    // Register driver explicitly
+    Class.forName("org.postgresql.Driver"); // TODO: dynamically load by connectionType
+
+    String jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
+    System.out.println("  → Connecting to: " + jdbcUrl);
+
+    return DriverManager.getConnection(jdbcUrl, user, password);
+  }
 }

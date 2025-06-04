@@ -35,10 +35,9 @@ import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
 import com.google.cloud.bigquery.TableResult;
-import com.google.edwmigration.validation.NameManager;
-import com.google.edwmigration.validation.NameManager.ValidationType;
-import com.google.edwmigration.validation.ValidationArguments;
-import com.google.edwmigration.validation.ValidationColumnMapping;
+import com.google.edwmigration.validation.config.ValidationConfig;
+import com.google.edwmigration.validation.core.BqNameFormatter;
+import com.google.edwmigration.validation.core.BqNameFormatter.ValidationType;
 import com.google.edwmigration.validation.sql.ComparisonSqlGenerator;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -48,7 +47,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import javax.annotation.CheckForNull;
 import org.apache.commons.io.FileUtils;
 import org.jooq.DataType;
 import org.jooq.SQLDialect;
@@ -65,12 +63,12 @@ public class ComparisonTask {
   private final String resultDataset;
   private final String resultTable;
 
-  private final ValidationArguments args;
-  private final NameManager nameManager;
+  private final ValidationConfig config;
+  private final BqNameFormatter bqNameFormatter;
   private final String BQ_RESULTS_SCHEMA_JSON = "results_schema.json";
 
-  public ComparisonTask(ValidationArguments args, NameManager nameManager) {
-    String[] tableId = args.getBqResultsTable().split("\\.");
+  public ComparisonTask(ValidationConfig config, BqNameFormatter bqNameFormatter) {
+    String[] tableId = config.ResultTable.name.split("\\.");
     if (tableId.length == 2) {
       this.resultDataset = tableId[0];
       this.resultTable = tableId[1];
@@ -81,33 +79,33 @@ public class ComparisonTask {
     } else {
       throw new IllegalArgumentException(
           "Invalid BQ result table ID. Please provide `project.dataset.table`: "
-              + args.getBqResultsTable());
+              + config.ResultTable.name);
     }
 
-    this.args = args;
-    this.nameManager = nameManager;
+    this.config = config;
+    this.bqNameFormatter = bqNameFormatter;
   }
 
-  public ValidationArguments getArguments() {
-    return args;
-  }
+  // //   public ValidationConfig getArguments() {
+  // //     return config;
+  // //   }
 
-  @CheckForNull
-  public String getResultProject() {
-    return resultProject;
-  }
+  //   @CheckForNull
+  //   public String getResultProject() {
+  //     return resultProject;
+  //   }
 
-  public NameManager getNameManager() {
-    return nameManager;
-  }
+  //   public BqNameFormatter bqNameFormatter {
+  //     return bqNameFormatter;
+  //   }
 
-  public String getResultDataset() {
-    return resultDataset;
-  }
+  //   public String resultDataset {
+  //     return resultDataset;
+  //   }
 
-  public String getResultTable() {
-    return resultTable;
-  }
+  //   public String resultTable {
+  //     return resultTable;
+  //   }
 
   public static BigQuery getBigQuery() {
     String credentialsFile = System.getenv(ServiceOptions.CREDENTIAL_ENV_NAME);
@@ -134,8 +132,8 @@ public class ComparisonTask {
     BigQuery bigQuery = getBigQuery();
 
     TableId tableId;
-    if (getResultProject() != null) {
-      tableId = TableId.of(getResultProject(), datasetName, tableName);
+    if (resultProject != null) {
+      tableId = TableId.of(resultProject, datasetName, tableName);
     } else {
       tableId = TableId.of(datasetName, tableName);
     }
@@ -236,7 +234,7 @@ public class ComparisonTask {
   public void executeComparisonQuery(String query) throws Exception {
     BigQuery bigQuery = getBigQuery();
 
-    TableId destinationTable = TableId.of(getResultDataset(), getResultTable());
+    TableId destinationTable = TableId.of(resultProject, resultTable);
 
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query)
@@ -259,36 +257,38 @@ public class ComparisonTask {
       LOG.info(
           String.format(
               "Comparison query results successfully written to BQ results table with ID: %s and job ID: %s",
-              getArguments().getBqResultsTable(), jobId.toString()));
+              config.ResultTable, jobId.toString()));
     }
   }
 
   public void run() throws Exception {
-    createBqResultsTableIfNotExists(getResultDataset(), getResultTable());
+    createBqResultsTableIfNotExists(resultDataset, resultTable);
     ComparisonSqlGenerator generator =
         new ComparisonSqlGenerator(
-            SQLDialect.MYSQL, getArguments().getTableMapping(), getNameManager());
+            SQLDialect.MYSQL, config.SourceTable, config.BqTargetTable, bqNameFormatter);
     String aggCompareQuery = generator.getAggregateCompareQuery();
     executeComparisonQuery(aggCompareQuery);
 
     String sourceColMetadataQuery =
-        generator.getColumnMetadataQuery(getNameManager().getBqSourceTableName(ValidationType.ROW));
+        generator.getColumnMetadataQuery(bqNameFormatter.getBqSourceTableName(ValidationType.ROW));
     HashMap<String, DataType<?>> rowSourceColumns =
         executeColumnMetadataQuery(generator, sourceColMetadataQuery);
 
     String targetColMetadataQuery =
-        generator.getColumnMetadataQuery(getNameManager().getBqTargetTableName(ValidationType.ROW));
+        generator.getColumnMetadataQuery(bqNameFormatter.getBqTargetTableName(ValidationType.ROW));
     HashMap<String, DataType<?>> rowTargetColumns =
         executeColumnMetadataQuery(generator, targetColMetadataQuery);
 
-    ValidationColumnMapping validationColumnMapping =
-        new ValidationColumnMapping(
-            getArguments().getColumnMappings(),
-            rowSourceColumns,
-            rowTargetColumns,
-            getArguments().getPrimaryKeys());
+    // ColumnMapping validationColumnMapping =
+    //     new ColumnMapping(
+    //         config.columnMapping, // getColumnMappings(),
+    //         rowSourceColumns,
+    //         rowTargetColumns,
+    //         config.
+    //         getPrimaryKeys()
+    //         );
 
-    String rowCompareQuery = generator.getRowCompareQuery(validationColumnMapping);
-    executeComparisonQuery(rowCompareQuery);
+    // String rowCompareQuery = generator.getRowCompareQuery(validationColumnMapping);
+    // executeComparisonQuery(rowCompareQuery);
   }
 }

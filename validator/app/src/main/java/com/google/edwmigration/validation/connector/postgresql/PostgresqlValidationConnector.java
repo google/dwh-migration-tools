@@ -16,24 +16,17 @@
  */
 package com.google.edwmigration.validation.connector.postgresql;
 
-import com.google.edwmigration.validation.NameManager;
-import com.google.edwmigration.validation.NameManager.ValidationType;
-import com.google.edwmigration.validation.ValidationArguments;
-import com.google.edwmigration.validation.ValidationTableMapping.TableType;
+import com.google.edwmigration.validation.config.ValidationConfig;
+import com.google.edwmigration.validation.core.BqNameFormatter;
 import com.google.edwmigration.validation.handle.Handle;
 import com.google.edwmigration.validation.handle.JdbcHandle;
 import com.google.edwmigration.validation.task.AbstractJdbcSourceTask;
 import com.google.edwmigration.validation.task.AbstractSourceTask;
 import com.google.edwmigration.validation.task.AbstractTargetTask;
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSetMetaData;
-import java.util.HashMap;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.NotImplementedException;
-import org.jooq.DataType;
-import org.jooq.SQLDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +40,7 @@ public class PostgresqlValidationConnector extends PostgresqlAbstractConnector {
   }
 
   public static class PostgresqlSourceTask extends AbstractJdbcSourceTask {
-    public PostgresqlSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
+    public PostgresqlSourceTask(Handle handle, URI outputUri, ValidationConfig arguments) {
       super(handle, outputUri, arguments);
     }
 
@@ -56,44 +49,44 @@ public class PostgresqlValidationConnector extends PostgresqlAbstractConnector {
       JdbcHandle pg = (JdbcHandle) getHandle();
       DataSource ds = pg.getDataSource();
 
-      try (Connection connection = ds.getConnection()) {
-        LOG.debug("Connected to " + connection);
-        PostgresqlSqlGenerator generator =
-            new PostgresqlSqlGenerator(
-                SQLDialect.POSTGRES,
-                getArguments().getTableMapping(),
-                getArguments().getOptConfidenceInterval(),
-                getArguments().getColumnMappings(),
-                TableType.SOURCE,
-                getArguments().getPrimaryKeys());
-        String numericColsQuery = generator.getNumericColumnsQuery();
-        HashMap<String, DataType<? extends Number>> numericCols =
-            executeNumericColsQuery(connection, generator, numericColsQuery);
+      //   try (Connection connection = ds.getConnection()) {
+      //     LOG.debug("Connected to " + connection);
+      //     PostgresqlSqlGenerator generator =
+      //         new PostgresqlSqlGenerator(
+      //             SQLDialect.POSTGRES,
+      //             getArguments().tableMapping,
+      //             .99,
+      //             getArguments().getColumnMappings(),
+      //             TableType.SOURCE,
+      //             getArguments().getPrimaryKeys());
+      //     String numericColsQuery = generator.getNumericColumnsQuery();
+      //     HashMap<String, DataType<? extends Number>> numericCols =
+      //         executeNumericColsQuery(connection, generator, numericColsQuery);
 
-        String aggregateQuery = generator.getAggregateQuery(numericCols);
-        String rowSampleQuery = generator.getRowSampleQuery();
+      //     String aggregateQuery = generator.getAggregateQuery(numericCols);
+      //     String rowSampleQuery = generator.getRowSampleQuery();
 
-        ResultSetMetaData aggregateMetadata =
-            extractQueryResults(connection, aggregateQuery, ValidationType.AGGREGATE);
-        setAggregateQueryMetadata(aggregateMetadata);
-        ResultSetMetaData rowMetadata =
-            extractQueryResults(connection, rowSampleQuery, ValidationType.ROW);
-        setRowQueryMetadata(rowMetadata);
-      }
+      //     ResultSetMetaData aggregateMetadata =
+      //         extractQueryResults(connection, aggregateQuery, ValidationType.AGGREGATE);
+      //     setAggregateQueryMetadata(aggregateMetadata);
+      //     ResultSetMetaData rowMetadata =
+      //         extractQueryResults(connection, rowSampleQuery, ValidationType.ROW);
+      //     setRowQueryMetadata(rowMetadata);
+      //   }
     }
   }
 
   @Nonnull
   @Override
   public AbstractSourceTask getSourceQueryTask(
-      Handle handle, URI outputUri, ValidationArguments arguments) {
+      Handle handle, URI outputUri, ValidationConfig arguments) {
     return new PostgresqlSourceTask(handle, outputUri, arguments);
   }
 
   @Nonnull
   @Override
   public AbstractTargetTask getTargetQueryTask(
-      Handle handle, NameManager nameManager, ValidationArguments arguments) {
+      Handle handle, BqNameFormatter nameManager, ValidationConfig arguments) {
     throw new NotImplementedException("PostgreSQL as a target is not implemented.");
   }
 }

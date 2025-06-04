@@ -16,19 +16,14 @@
  */
 package com.google.edwmigration.validation.connector.bigquery;
 
-import com.google.edwmigration.validation.NameManager;
-import com.google.edwmigration.validation.NameManager.ValidationType;
-import com.google.edwmigration.validation.ValidationArguments;
-import com.google.edwmigration.validation.ValidationTableMapping.TableType;
+import com.google.edwmigration.validation.config.ValidationConfig;
+import com.google.edwmigration.validation.core.BqNameFormatter;
 import com.google.edwmigration.validation.handle.Handle;
 import com.google.edwmigration.validation.task.AbstractSourceTask;
 import com.google.edwmigration.validation.task.AbstractTargetTask;
 import java.net.URI;
-import java.util.HashMap;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.NotImplementedException;
-import org.jooq.DataType;
-import org.jooq.SQLDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,46 +39,48 @@ public class BigQueryValidationConnector extends BigQueryAbstractConnector {
   public static class BigQueryTargetTask extends AbstractTargetTask {
 
     public BigQueryTargetTask(
-        Handle handle, NameManager nameManager, ValidationArguments arguments) {
-      super(handle, nameManager, arguments);
+        Handle handle, BqNameFormatter bqNameFormatter, ValidationConfig arguments) {
+      super(handle, bqNameFormatter, arguments);
     }
 
     @Override
     public void run() throws Exception {
-      BigQuerySqlGenerator generator =
-          new BigQuerySqlGenerator(
-              SQLDialect.MYSQL,
-              getArguments().getTableMapping(),
-              getArguments().getOptConfidenceInterval(),
-              getArguments().getColumnMappings(),
-              TableType.TARGET,
-              getArguments().getPrimaryKeys());
-      String numericColsQuery = generator.getNumericColumnsQuery();
-      LOG.debug(numericColsQuery);
-      HashMap<String, DataType<? extends Number>> numericCols =
-          executeNumericColsQuery(generator, numericColsQuery);
+      //   BigQuerySqlGenerator generator =
+      //       new BigQuerySqlGenerator(
+      //           SQLDialect.MYSQL,
+      //           getArguments().tableMapping,
+      //           .99,
+      //           getArguments().columnMapping,
+      //           TableType.TARGET,
+      //           ImmutableMap.of("dingo", "id")
+      //         );
+      //   String numericColsQuery = generator.getNumericColumnsQuery();
+      //   LOG.debug(numericColsQuery);
+      //   HashMap<String, DataType<? extends Number>> numericCols =
+      //       executeNumericColsQuery(generator, numericColsQuery);
 
-      String aggregateQuery = generator.getAggregateQuery(numericCols);
-      String aggTargetTable = getNameManager().getBqTargetTableName(ValidationType.AGGREGATE);
-      extractQueryResultsToTable(aggregateQuery, aggTargetTable);
+      //   String aggregateQuery = generator.getAggregateQuery(numericCols);
+      //   String aggTargetTable =
+      // getBqNameFormatter().getBqTargetTableName(ValidationType.AGGREGATE);
+      //   extractQueryResultsToTable(aggregateQuery, aggTargetTable);
 
-      String rowSampleQuery = generator.getRowSampleQuery();
-      String rowTargetTable = getNameManager().getBqTargetTableName(ValidationType.ROW);
-      extractQueryResultsToTable(rowSampleQuery, rowTargetTable);
+      //   String rowSampleQuery = generator.getRowSampleQuery();
+      //   String rowTargetTable = getBqNameFormatter().getBqTargetTableName(ValidationType.ROW);
+      //   extractQueryResultsToTable(rowSampleQuery, rowTargetTable);
     }
   }
 
   @Nonnull
   @Override
   public AbstractSourceTask getSourceQueryTask(
-      Handle handle, URI outputUri, ValidationArguments arguments) {
+      Handle handle, URI outputUri, ValidationConfig arguments) {
     throw new NotImplementedException("BigQuery as a source is not implemented.");
   }
 
   @Nonnull
   @Override
   public AbstractTargetTask getTargetQueryTask(
-      Handle handle, NameManager nameManager, ValidationArguments arguments) {
-    return new BigQueryTargetTask(handle, nameManager, arguments);
+      Handle handle, BqNameFormatter bqNameFormatter, ValidationConfig arguments) {
+    return new BigQueryTargetTask(handle, bqNameFormatter, arguments);
   }
 }

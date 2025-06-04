@@ -28,9 +28,9 @@ import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 import com.google.common.base.Preconditions;
-import com.google.edwmigration.validation.NameManager;
-import com.google.edwmigration.validation.ValidationArguments;
+import com.google.edwmigration.validation.config.ValidationConfig;
 import com.google.edwmigration.validation.connector.bigquery.BigQueryAbstractConnector.BigQueryHandle;
+import com.google.edwmigration.validation.core.BqNameFormatter;
 import com.google.edwmigration.validation.handle.Handle;
 import com.google.edwmigration.validation.sql.AbstractSqlGenerator;
 import java.util.HashMap;
@@ -44,14 +44,15 @@ public abstract class AbstractTargetTask {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractTargetTask.class);
 
   private final Handle handle;
-  private final NameManager nameManager;
+  private final BqNameFormatter bqNameFormatter;
 
-  private final ValidationArguments arguments;
+  private final ValidationConfig arguments;
 
-  public AbstractTargetTask(Handle handle, NameManager nameManager, ValidationArguments arguments) {
+  public AbstractTargetTask(
+      Handle handle, BqNameFormatter bqNameFormatter, ValidationConfig arguments) {
     Preconditions.checkNotNull(handle, "Handle is null.");
     this.handle = handle;
-    this.nameManager = nameManager;
+    this.bqNameFormatter = bqNameFormatter;
     this.arguments = arguments;
   }
 
@@ -59,12 +60,12 @@ public abstract class AbstractTargetTask {
     return handle;
   }
 
-  public ValidationArguments getArguments() {
+  public ValidationConfig getArguments() {
     return arguments;
   }
 
-  public NameManager getNameManager() {
-    return nameManager;
+  public BqNameFormatter getBqNameFormatter() {
+    return bqNameFormatter;
   }
 
   public HashMap<String, DataType<? extends Number>> executeNumericColsQuery(
@@ -107,7 +108,7 @@ public abstract class AbstractTargetTask {
   public void extractQueryResultsToTable(String query, String targetTableId) throws Exception {
     BigQueryHandle bqHandle = (BigQueryHandle) getHandle();
     BigQuery bigQuery = bqHandle.getBigQuery();
-    String dataset = getArguments().getBqStagingDataset();
+    String dataset = getArguments().BqTargetTable.dataset;
 
     TableId destinationTable = TableId.of(dataset, targetTableId);
 

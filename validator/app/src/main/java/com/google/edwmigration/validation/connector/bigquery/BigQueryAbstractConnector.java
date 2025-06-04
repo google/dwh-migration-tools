@@ -20,7 +20,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.ServiceOptions;
 import com.google.cloud.bigquery.*;
 import com.google.common.base.Preconditions;
-import com.google.edwmigration.validation.ValidationConnection;
+import com.google.edwmigration.validation.config.SourceConnection;
 import com.google.edwmigration.validation.connector.AbstractConnector;
 import com.google.edwmigration.validation.handle.AbstractHandle;
 import com.google.edwmigration.validation.handle.Handle;
@@ -52,7 +52,7 @@ public abstract class BigQueryAbstractConnector extends AbstractConnector {
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ValidationConnection arguments) throws Exception {
+  public Handle open(@Nonnull SourceConnection arguments) throws Exception {
     String credentialsFile = System.getenv(ServiceOptions.CREDENTIAL_ENV_NAME);
     BigQuery bigQuery;
     if (credentialsFile != null) {

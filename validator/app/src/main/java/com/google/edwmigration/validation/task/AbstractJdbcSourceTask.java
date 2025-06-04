@@ -17,8 +17,8 @@
 package com.google.edwmigration.validation.task;
 
 import com.google.common.base.Stopwatch;
-import com.google.edwmigration.validation.NameManager.ValidationType;
-import com.google.edwmigration.validation.ValidationArguments;
+import com.google.edwmigration.validation.config.ValidationConfig;
+import com.google.edwmigration.validation.core.BqNameFormatter.ValidationType;
 import com.google.edwmigration.validation.handle.Handle;
 import com.google.edwmigration.validation.sql.AbstractSqlGenerator;
 import java.io.IOException;
@@ -39,12 +39,12 @@ public abstract class AbstractJdbcSourceTask extends AbstractSourceTask {
 
   private static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcSourceTask.class);
 
-  public AbstractJdbcSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
+  public AbstractJdbcSourceTask(Handle handle, URI outputUri, ValidationConfig arguments) {
     super(handle, outputUri, arguments);
   }
 
   private String createCsvFilePath(ValidationType validationType) {
-    String tableName = getArguments().getTableMapping().getSourceTable().getTable();
+    String tableName = getArguments().SourceTable.name;
     String filename = null;
 
     switch (validationType) {

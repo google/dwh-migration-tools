@@ -16,32 +16,37 @@
  */
 package com.google.edwmigration.validation;
 
-import javax.annotation.Nonnull;
+import com.google.edwmigration.validation.config.ValidationConfig;
+import com.google.edwmigration.validation.core.Validator;
+import com.google.edwmigration.validation.io.ConfigLoader;
+import com.google.edwmigration.validation.logging.ConsoleLogger;
+import com.google.edwmigration.validation.logging.Logger;
+import com.google.edwmigration.validation.logging.Slf4jLogger;
 
-/** @author nehanene */
 public class Main {
-  private final Validator validator;
+  public static void main(String[] args) {
+    String loggerType = System.getenv("VALIDATOR_LOGGER");
+    if ("slf4j".equalsIgnoreCase(loggerType)) {
+      Logger.setLogger(new Slf4jLogger(Main.class));
+    } else {
+      Logger.setLogger(new ConsoleLogger());
+    }
 
-  public Main(Validator validator) {
-    this.validator = validator;
-  }
-
-  public boolean run(@Nonnull String... args) throws Exception {
-    return validator.run(args);
-  }
-
-  public static void main(String... args) {
-    try {
-      Main main = new Main(new Validator());
-      if (args.length == 0) {
-        args = new String[] {"--help"};
-      }
-      if (!main.run(args)) {
-        System.exit(1);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+    if (args.length < 1) {
+      Logger.error("Usage: java Main <path-to-config.toml>");
       System.exit(1);
     }
+
+    String configPath = args[0];
+    ValidationConfig config = ConfigLoader.load(configPath);
+    if (config == null) {
+      Logger.error("❌ Failed to load config — is your TOML file malformed?");
+      System.exit(1);
+    }
+
+    Validator validator = new Validator(config);
+    boolean success = validator.run();
+
+    System.exit(success ? 0 : 1);
   }
 }

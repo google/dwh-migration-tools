@@ -19,7 +19,7 @@ package com.google.edwmigration.validation.task;
 import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
-import com.google.edwmigration.validation.ValidationArguments;
+import com.google.edwmigration.validation.config.ValidationConfig;
 import com.google.edwmigration.validation.handle.Handle;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -40,12 +40,12 @@ public abstract class AbstractSourceTask {
 
   private final Handle handle;
   private final URI outputUri;
-  private final ValidationArguments arguments;
+  private final ValidationConfig arguments;
 
   private ResultSetMetaData aggregateQueryMetadata;
   private ResultSetMetaData rowQueryMetadata;
 
-  public AbstractSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
+  public AbstractSourceTask(Handle handle, URI outputUri, ValidationConfig arguments) {
     Preconditions.checkNotNull(handle, "Handle is null.");
     this.handle = handle;
     this.outputUri = outputUri;
@@ -56,7 +56,7 @@ public abstract class AbstractSourceTask {
     return handle;
   }
 
-  public ValidationArguments getArguments() {
+  public ValidationConfig getArguments() {
     return arguments;
   }
 

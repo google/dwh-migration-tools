@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.validation.connector;
 
-import com.google.edwmigration.validation.ValidationConnection;
+import com.google.edwmigration.validation.config.SourceConnection;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -166,11 +166,11 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
   }
 
   protected SimpleDriverDataSource newSimpleDataSource(
-      @Nonnull Driver driver, @Nonnull String url, @Nonnull ValidationConnection arguments)
+      @Nonnull Driver driver, @Nonnull String url, @Nonnull SourceConnection arguments)
       throws SQLException {
     if (!driver.acceptsURL(url))
       throw new SQLException("JDBC driver " + driver + " does not accept URL " + url);
-    String password = arguments.getPassword();
-    return new JdbcDataSource(driver, url, arguments.getUser(), password);
+    String password = arguments.password;
+    return new JdbcDataSource(driver, url, arguments.user, password);
   }
 }

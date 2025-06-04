@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.validation.connector.postgresql;
 
-import com.google.edwmigration.validation.ValidationConnection;
+import com.google.edwmigration.validation.config.SourceConnection;
 import com.google.edwmigration.validation.connector.AbstractJdbcConnector;
 import com.google.edwmigration.validation.handle.Handle;
 import com.google.edwmigration.validation.handle.JdbcHandle;
@@ -39,22 +39,23 @@ public abstract class PostgresqlAbstractConnector extends AbstractJdbcConnector 
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ValidationConnection arguments) throws Exception {
-    String url = arguments.getUri();
+  public Handle open(@Nonnull SourceConnection arguments) throws Exception {
+    String url = arguments.uri;
     if (url == null) {
-      String host = arguments.getHost("localhost");
-      int port = arguments.getPort(OPT_PORT_DEFAULT);
-      String database = arguments.getDatabase();
+      String host = arguments.host.length() > 0 ? arguments.host : "localhost";
+      //   int port = arguments.port.length() > 0 ? Integer.parsedInt(arguments.port) :
+      // OPT_PORT_DEFAULT;
+      int port = OPT_PORT_DEFAULT;
+      String database = arguments.database;
       url = "jdbc:postgresql://" + host + ":" + port + "/";
       if (database != null) url = url + database;
     }
 
-    List<String> driverPaths = arguments.getDriverPaths();
+    String driverPaths = arguments.driver;
     if (driverPaths == null) {
       throw new IllegalArgumentException("No PostgreSQL driver path provided.");
     }
-    Driver driver =
-        newDriver(arguments.getDriverPaths(), arguments.getDriverClass("org.postgresql.Driver"));
+    Driver driver = newDriver(List.of(arguments.driver), "org.postgresql.Driver");
     DataSource dataSource = newSimpleDataSource(driver, url, arguments);
     return new JdbcHandle(dataSource);
   }
