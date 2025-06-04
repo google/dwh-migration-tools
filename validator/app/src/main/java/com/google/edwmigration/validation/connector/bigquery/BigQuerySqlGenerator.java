@@ -16,84 +16,87 @@
  */
 package com.google.edwmigration.validation.connector.bigquery;
 
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.name;
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.val;
+import static org.jooq.impl.DSL.*;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.edwmigration.validation.ValidationTableMapping;
-import com.google.edwmigration.validation.ValidationTableMapping.TableType;
+import com.google.edwmigration.validation.config.BqTargetTable;
+import com.google.edwmigration.validation.config.SourceTable;
+import com.google.edwmigration.validation.model.UserInputContext;
 import com.google.edwmigration.validation.sql.AbstractSqlGenerator;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import org.jooq.DataType;
-import org.jooq.Record2;
-import org.jooq.SQLDialect;
-import org.jooq.SelectConditionStep;
+import org.jooq.*;
 import org.jooq.conf.ParamType;
 import org.jooq.impl.SQLDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author nehanene */
 public class BigQuerySqlGenerator extends AbstractSqlGenerator {
 
   private static final Logger LOG = LoggerFactory.getLogger(BigQuerySqlGenerator.class);
 
+  private final SourceTable sourceTable;
+  private final BqTargetTable targetTable;
+
   public BigQuerySqlGenerator(
       @Nonnull SQLDialect dialect,
-      @Nonnull ValidationTableMapping tableMapping,
-      @Nonnull Double confidenceInterval,
-      @Nonnull ImmutableMap<String, String> columnMappings,
-      @Nonnull TableType tableType,
-      @Nonnull ImmutableMap<String, String> primaryKeys) {
-    super(dialect, tableMapping, confidenceInterval, columnMappings, tableType, primaryKeys);
+      @Nonnull UserInputContext context,
+      @Nonnull ImmutableMap<String, String> columnMappings) {
+    super(dialect, context, columnMappings);
+    this.sourceTable = context.sourceTable;
+    this.targetTable = context.bqTargetTable;
   }
 
-  @Override
-  public Long getRowCount() {
-    // TODO: Update with metadata query which returns row count
-    return 49L;
-  }
-
-  static Map<String, DataType<? extends Number>> typeMappings = new HashMap<>();
+  private static final Map<String, DataType<? extends Number>> typeMappings = new HashMap<>();
 
   static {
     typeMappings.put("INT64", SQLDataType.BIGINT);
-    typeMappings.put("NUMERIC", SQLDataType.NUMERIC.precision((38)));
+    typeMappings.put("NUMERIC", SQLDataType.NUMERIC.precision(38));
     typeMappings.put("BIGNUMERIC", SQLDataType.DECIMAL.precision(76));
     typeMappings.put("FLOAT64", SQLDataType.DOUBLE);
   }
 
   @Override
   public DataType<? extends Number> getSqlDataType(
-      String dataType, Integer numericPrecision, Integer numericScale) {
+      String dataType, Integer precision, Integer scale) {
     return typeMappings.get(dataType);
   }
 
-  public String getNumericColumnsQuery() {
-    String table = getValidationTable().getTable();
-    String schema = getValidationTable().getSchema();
-    if (schema == null) {
+  public String getNumericColumnsQuery(BqTargetTable table) {
+    // TODO move to validation
+    if (table.schema == null) {
       throw new IllegalArgumentException(
           String.format(
-              "Invalid BigQuery target table %s. Please provide `dataset.tableName`.", table));
+              "Invalid BigQuery target table %s. Please provide `dataset.tableName`.", table.name));
     }
 
     SelectConditionStep<Record2<Object, Object>> query =
         getDSLContext()
             .select(field("column_name"), field("data_type"))
-            .from(table(name(schema, "INFORMATION_SCHEMA", "COLUMNS")))
-            .where(field(name("table_schema"), SQLDataType.VARCHAR).eq(schema))
-            .and(field(name("table_name"), SQLDataType.VARCHAR).eq(table))
+            .from(table(name(table.schema, "INFORMATION_SCHEMA", "COLUMNS")))
+            .where(field(name("table_schema"), SQLDataType.VARCHAR).eq(table.schema))
+            .and(field(name("table_name"), SQLDataType.VARCHAR).eq(table.name))
             .and(
                 field(name("data_type"), SQLDataType.VARCHAR)
                     .in(val("INT64"), val("NUMERIC"), val("BIGNUMERIC"), val("FLOAT64")));
-    String inlinedQuery = query.getSQL(ParamType.INLINED);
 
-    LOG.debug("Metadata query generated: " + inlinedQuery);
-    return inlinedQuery;
+    String sql = query.getSQL(ParamType.INLINED);
+    LOG.debug("Metadata query generated: {}", sql);
+    return sql;
+  }
+
+  @Override
+  public Long getRowCount() {
+    // Replace with actual implementation
+    return 49L;
+  }
+
+  public SourceTable getSourceTable() {
+    return sourceTable;
+  }
+
+  public BqTargetTable getBqTargetTable() {
+    return targetTable;
   }
 }

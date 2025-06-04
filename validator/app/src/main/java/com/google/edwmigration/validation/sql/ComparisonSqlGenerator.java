@@ -27,11 +27,14 @@ import static org.jooq.impl.DSL.val;
 import static org.jooq.impl.DSL.when;
 import static org.jooq.tools.StringUtils.firstNonNull;
 
-import com.google.edwmigration.validation.NameManager;
-import com.google.edwmigration.validation.NameManager.ValidationType;
-import com.google.edwmigration.validation.ValidationColumnMapping;
-import com.google.edwmigration.validation.ValidationColumnMapping.ColumnEntry;
-import com.google.edwmigration.validation.ValidationTableMapping;
+import com.google.edwmigration.validation.config.BqTargetTable;
+import com.google.edwmigration.validation.config.ColumnMapping;
+import com.google.edwmigration.validation.config.ColumnMapping.ColumnEntry;
+import com.google.edwmigration.validation.config.SourceTable;
+import com.google.edwmigration.validation.config.ValidationType;
+import com.google.edwmigration.validation.connector.api.SqlGenerator;
+import com.google.edwmigration.validation.model.UserInputContext;
+import com.google.edwmigration.validation.util.BigQueryTableNamer;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -66,33 +69,24 @@ public class ComparisonSqlGenerator implements SqlGenerator {
 
   private static final Logger LOG = LoggerFactory.getLogger(ComparisonSqlGenerator.class);
   private final DSLContext create;
-  private final ValidationTableMapping validationTableMapping;
+  private final SourceTable sourceTable;
+  private final BqTargetTable bqTargetTable;
 
-  private final NameManager nameManager;
   private String startTime = null;
   private String runId = null;
 
   public ComparisonSqlGenerator(
       @Nonnull SQLDialect dialect,
-      @Nonnull ValidationTableMapping validationTableMapping,
-      @Nonnull NameManager nameManager) {
+      @Nonnull SourceTable sourceTable,
+      @Nonnull BqTargetTable bqTargetTable) {
     this.create = DSL.using(dialect);
-    this.validationTableMapping = validationTableMapping;
-    this.nameManager = nameManager;
-  }
-
-  public NameManager getNameManager() {
-    return nameManager;
+    this.sourceTable = sourceTable;
+    this.bqTargetTable = bqTargetTable;
   }
 
   @Override
   public DSLContext getDSLContext() {
     return create;
-  }
-
-  @Override
-  public ValidationTableMapping getValidationTableMapping() {
-    return validationTableMapping;
   }
 
   private String getRunId() {
@@ -136,14 +130,14 @@ public class ComparisonSqlGenerator implements SqlGenerator {
     return typeMappings.get(dataType);
   }
 
-  public String getAggregateCompareQuery() {
-    String sourceTableName = getValidationTableMapping().getSourceTable().getFullyQualifiedTable();
-    String targetTableName = getValidationTableMapping().getTargetTable().getFullyQualifiedTable();
+  public String getAggregateCompareQuery(UserInputContext context) {
+    String sourceTableName = sourceTable.getFullyQualifiedTable();
+    String targetTableName = bqTargetTable.getFullyQualifiedTable();
 
     String aggSourceTable =
-        getNameManager().getFullyQualifiedBqSourceTableName(ValidationType.AGGREGATE);
+        BigQueryTableNamer.getFullyQualifiedSourceTableName(context, ValidationType.AGGREGATE);
     String aggTargetTable =
-        getNameManager().getFullyQualifiedBqTargetTableName(ValidationType.AGGREGATE);
+        BigQueryTableNamer.getFullyQualifiedTargetTableName(context, ValidationType.AGGREGATE);
 
     Field<String> s_source_column_name = field(name("s", "source_column_name"), String.class);
     Field<String> t_target_column_name = field(name("t", "target_column_name"), String.class);
@@ -184,9 +178,8 @@ public class ComparisonSqlGenerator implements SqlGenerator {
     return result;
   }
 
-  public String getColumnMetadataQuery(String table) {
-    String schema = getNameManager().getDataset();
-    if (schema == null) {
+  public String getColumnMetadataQuery(String table, String dataset) {
+    if (dataset == null) {
       throw new IllegalArgumentException(
           String.format(
               "Invalid BigQuery target table %s. Please provide `dataset.tableName`.", table));
@@ -195,8 +188,8 @@ public class ComparisonSqlGenerator implements SqlGenerator {
     SelectConditionStep<Record2<Object, Object>> query =
         getDSLContext()
             .select(field("column_name"), field("data_type"))
-            .from(table(name(schema, "INFORMATION_SCHEMA", "COLUMNS")))
-            .where(field(name("table_schema"), SQLDataType.VARCHAR).eq(schema))
+            .from(table(name(dataset, "INFORMATION_SCHEMA", "COLUMNS")))
+            .where(field(name("table_schema"), SQLDataType.VARCHAR).eq(dataset))
             .and(field(name("table_name"), SQLDataType.VARCHAR).eq(table));
 
     String inlinedQuery = query.getSQL(ParamType.INLINED);
@@ -224,12 +217,15 @@ public class ComparisonSqlGenerator implements SqlGenerator {
     return joinCondition;
   }
 
-  public String getRowCompareQuery(ValidationColumnMapping validationColumnMapping) {
-    String sourceTableName = getValidationTableMapping().getSourceTable().getFullyQualifiedTable();
-    String targetTableName = getValidationTableMapping().getTargetTable().getFullyQualifiedTable();
+  public String getRowCompareQuery(
+      UserInputContext context, ColumnMapping validationColumnMapping) {
+    String sourceTableName = sourceTable.getFullyQualifiedTable();
+    String targetTableName = bqTargetTable.getFullyQualifiedTable();
 
-    String rowSourceTable = getNameManager().getFullyQualifiedBqSourceTableName(ValidationType.ROW);
-    String rowTargetTable = getNameManager().getFullyQualifiedBqTargetTableName(ValidationType.ROW);
+    String rowSourceTable =
+        BigQueryTableNamer.getFullyQualifiedSourceTableName(context, ValidationType.ROW);
+    String rowTargetTable =
+        BigQueryTableNamer.getFullyQualifiedTargetTableName(context, ValidationType.ROW);
 
     Set<Field<?>> joinedFields = new HashSet<>();
     Condition joinCondition = null;

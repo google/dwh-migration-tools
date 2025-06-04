@@ -16,32 +16,31 @@
  */
 package com.google.edwmigration.validation;
 
-import javax.annotation.Nonnull;
+import com.google.edwmigration.validation.core.Validator;
+import com.google.edwmigration.validation.io.ConfigLoader;
+import com.google.edwmigration.validation.model.UserInputContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/** @author nehanene */
 public class Main {
-  private final Validator validator;
+  private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-  public Main(Validator validator) {
-    this.validator = validator;
-  }
-
-  public boolean run(@Nonnull String... args) throws Exception {
-    return validator.run(args);
-  }
-
-  public static void main(String... args) {
-    try {
-      Main main = new Main(new Validator());
-      if (args.length == 0) {
-        args = new String[] {"--help"};
-      }
-      if (!main.run(args)) {
-        System.exit(1);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+  public static void main(String[] args) {
+    if (args.length < 1) {
+      LOG.error("Usage: java Main <path-to-config.toml>");
       System.exit(1);
     }
+
+    String configPath = args[0];
+    UserInputContext config = ConfigLoader.load(configPath);
+    if (config == null) {
+      LOG.error("Failed to load config");
+      System.exit(1);
+    }
+
+    Validator validator = new Validator(config);
+    boolean success = validator.run();
+
+    System.exit(success ? 0 : 1);
   }
 }

@@ -16,45 +16,31 @@
  */
 package com.google.edwmigration.validation.connector.postgresql;
 
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.name;
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.val;
+import static org.jooq.impl.DSL.*;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.edwmigration.validation.ValidationTableMapping;
-import com.google.edwmigration.validation.ValidationTableMapping.TableType;
+import com.google.edwmigration.validation.config.SourceTable;
+import com.google.edwmigration.validation.model.UserInputContext;
 import com.google.edwmigration.validation.sql.AbstractSqlGenerator;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import org.jooq.DataType;
-import org.jooq.Record4;
-import org.jooq.SQLDialect;
-import org.jooq.SelectConditionStep;
+import org.jooq.*;
 import org.jooq.conf.ParamType;
 import org.jooq.impl.SQLDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author nehanene */
 public class PostgresqlSqlGenerator extends AbstractSqlGenerator {
 
   private static final Logger LOG = LoggerFactory.getLogger(PostgresqlSqlGenerator.class);
 
-  private static final String PG_DEFAULT_SCHEMA = "public";
+  public PostgresqlSqlGenerator(@Nonnull SQLDialect dialect, @Nonnull UserInputContext context) {
 
-  public PostgresqlSqlGenerator(
-      @Nonnull SQLDialect dialect,
-      @Nonnull ValidationTableMapping tableMapping,
-      @Nonnull Double confidenceInterval,
-      @Nonnull ImmutableMap<String, String> columnMappings,
-      @Nonnull TableType tableType,
-      @Nonnull ImmutableMap<String, String> primaryKeys) {
-    super(dialect, tableMapping, confidenceInterval, columnMappings, tableType, primaryKeys);
+    super(dialect, context, ImmutableMap.of());
   }
 
-  static Map<String, DataType<? extends Number>> typeMappings = new HashMap<>();
+  private static final Map<String, DataType<? extends Number>> typeMappings = new HashMap<>();
 
   static {
     typeMappings.put("integer", SQLDataType.INTEGER);
@@ -67,20 +53,20 @@ public class PostgresqlSqlGenerator extends AbstractSqlGenerator {
     typeMappings.put("money", SQLDataType.DECIMAL);
   }
 
+  @Override
   public DataType<? extends Number> getSqlDataType(
       String dataType, Integer precision, Integer scale) {
     DataType<? extends Number> type = typeMappings.get(dataType);
-    type.precision(precision);
-    type.scale(scale);
+    if (type == null) {
+      throw new IllegalArgumentException("Unsupported data type: " + dataType);
+    }
+    if (precision != null) type = type.precision(precision);
+    if (scale != null) type = type.scale(scale);
     return type;
   }
 
-  public String getNumericColumnsQuery() {
-    String table = getValidationTable().getTable();
-    String schema = getValidationTable().getDefaultSchema(PG_DEFAULT_SCHEMA);
-
-    LOG.debug(
-        String.format("Getting metadata for Postgresql schema %s and table %s", schema, table));
+  public String getNumericColumnsQuery(SourceTable table) {
+    LOG.debug("Getting metadata for PostgreSQL schema {} and table {}", table.schema, table.name);
 
     SelectConditionStep<Record4<Object, Object, Object, Object>> query =
         getDSLContext()
@@ -90,8 +76,8 @@ public class PostgresqlSqlGenerator extends AbstractSqlGenerator {
                 field(name("numeric_precision")),
                 field(name("numeric_scale")))
             .from(table(name("information_schema", "columns")))
-            .where(field(name("table_schema"), SQLDataType.VARCHAR).eq(schema))
-            .and(field(name("table_name"), SQLDataType.VARCHAR).eq(table))
+            .where(field(name("table_schema"), SQLDataType.VARCHAR).eq(table.schema))
+            .and(field(name("table_name"), SQLDataType.VARCHAR).eq(table.name))
             .and(
                 field(name("data_type"), SQLDataType.VARCHAR)
                     .in(
@@ -105,13 +91,13 @@ public class PostgresqlSqlGenerator extends AbstractSqlGenerator {
                         val("money")));
 
     String inlinedQuery = query.getSQL(ParamType.INLINED);
-
-    LOG.debug("Metadata query generated: " + inlinedQuery);
+    LOG.debug("Metadata query generated: {}", inlinedQuery);
     return inlinedQuery;
   }
 
+  @Override
   public Long getRowCount() {
-    // TODO: Update with metadata query that returns row count
+    // Replace with actual implementation that returns the row count from PostgreSQL
     return 49L;
   }
 }

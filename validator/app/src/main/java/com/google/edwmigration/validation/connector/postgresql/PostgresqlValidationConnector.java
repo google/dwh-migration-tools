@@ -16,84 +16,25 @@
  */
 package com.google.edwmigration.validation.connector.postgresql;
 
-import com.google.edwmigration.validation.NameManager;
-import com.google.edwmigration.validation.NameManager.ValidationType;
-import com.google.edwmigration.validation.ValidationArguments;
-import com.google.edwmigration.validation.ValidationTableMapping.TableType;
-import com.google.edwmigration.validation.handle.Handle;
-import com.google.edwmigration.validation.handle.JdbcHandle;
-import com.google.edwmigration.validation.task.AbstractJdbcSourceTask;
-import com.google.edwmigration.validation.task.AbstractSourceTask;
-import com.google.edwmigration.validation.task.AbstractTargetTask;
-import java.net.URI;
-import java.sql.Connection;
-import java.sql.ResultSetMetaData;
-import java.util.HashMap;
-import javax.annotation.Nonnull;
-import javax.sql.DataSource;
+import com.google.edwmigration.validation.connector.common.AbstractSourceTask;
+import com.google.edwmigration.validation.connector.common.AbstractTargetTask;
+import com.google.edwmigration.validation.io.writer.ResultSetWriterFactory;
+import com.google.edwmigration.validation.model.ExecutionState;
 import org.apache.commons.lang3.NotImplementedException;
-import org.jooq.DataType;
-import org.jooq.SQLDialect;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/** @author nehanene */
-public class PostgresqlValidationConnector extends PostgresqlAbstractConnector {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PostgresqlValidationConnector.class);
-
+public class PostgresqlValidationConnector extends PostgresqlJdbcConnector {
   public PostgresqlValidationConnector() {
     super("postgresql");
   }
 
-  public static class PostgresqlSourceTask extends AbstractJdbcSourceTask {
-    public PostgresqlSourceTask(Handle handle, URI outputUri, ValidationArguments arguments) {
-      super(handle, outputUri, arguments);
-    }
-
-    @Override
-    public void run() throws Exception {
-      JdbcHandle pg = (JdbcHandle) getHandle();
-      DataSource ds = pg.getDataSource();
-
-      try (Connection connection = ds.getConnection()) {
-        LOG.debug("Connected to " + connection);
-        PostgresqlSqlGenerator generator =
-            new PostgresqlSqlGenerator(
-                SQLDialect.POSTGRES,
-                getArguments().getTableMapping(),
-                getArguments().getOptConfidenceInterval(),
-                getArguments().getColumnMappings(),
-                TableType.SOURCE,
-                getArguments().getPrimaryKeys());
-        String numericColsQuery = generator.getNumericColumnsQuery();
-        HashMap<String, DataType<? extends Number>> numericCols =
-            executeNumericColsQuery(connection, generator, numericColsQuery);
-
-        String aggregateQuery = generator.getAggregateQuery(numericCols);
-        String rowSampleQuery = generator.getRowSampleQuery();
-
-        ResultSetMetaData aggregateMetadata =
-            extractQueryResults(connection, aggregateQuery, ValidationType.AGGREGATE);
-        setAggregateQueryMetadata(aggregateMetadata);
-        ResultSetMetaData rowMetadata =
-            extractQueryResults(connection, rowSampleQuery, ValidationType.ROW);
-        setRowQueryMetadata(rowMetadata);
-      }
-    }
-  }
-
-  @Nonnull
   @Override
   public AbstractSourceTask getSourceQueryTask(
-      Handle handle, URI outputUri, ValidationArguments arguments) {
-    return new PostgresqlSourceTask(handle, outputUri, arguments);
+      ExecutionState state, ResultSetWriterFactory writerFactory) {
+    return new PostgresqlSourceTask(state, writerFactory);
   }
 
-  @Nonnull
   @Override
-  public AbstractTargetTask getTargetQueryTask(
-      Handle handle, NameManager nameManager, ValidationArguments arguments) {
+  public AbstractTargetTask getTargetQueryTask(ExecutionState state) {
     throw new NotImplementedException("PostgreSQL as a target is not implemented.");
   }
 }

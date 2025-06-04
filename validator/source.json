@@ -1,0 +1,9 @@
+{
+  "connectionType": "postgresql",
+  "database": "validation",
+  "driver": "/usr/local/google/home/nehanene/Downloads/postgresql-42.7.5.jar",
+  "user": "testuser",
+  "password": "testpassword",
+  "host": "localhost",
+  "port": 5432
+}

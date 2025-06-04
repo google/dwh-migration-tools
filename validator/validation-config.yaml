@@ -1,0 +1,35 @@
+sourceConnection:
+  connectionType: "postgresql"
+  database: "validation"
+  driver: "/usr/local/google/home/pbreeden/Downloads/postgresql-42.7.6.jar"
+  user: "testuser"
+  password: "testpassword"
+  host: "localhost"
+  port: 5432
+  # uri: "dingo"
+  # jdbcDriverClass: "rubberBabyBuggyBumpers"
+
+googleCloudStorage:
+  gcsPath: "gs://bqms_validation"
+  # TODO unsure if this is necessary
+  projectId: "bqms-validation-sandbox-153923"
+
+sourceTable:
+  schema: "public"
+  name: "employees"
+  primaryKey: "id"
+
+bqTargetTable:
+  projectId: "bqms-validation-sandbox-153923"
+  dataset: "validation"
+  schema: "employees"
+  name: "validation.employees_invalid"
+  primaryKey: "id"
+
+resultTable:
+  name: "project.dataset.results"
+  # projectId: "bqms-validation-sandbox-153923"
+  # dataset: "validation"
+
+# columnMapping:
+#   rubberBabyBuggyBumpers: true
