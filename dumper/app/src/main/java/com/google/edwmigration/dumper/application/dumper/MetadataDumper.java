@@ -173,7 +173,7 @@ public class MetadataDumper {
         Path outputPath = prepareOutputPath(outputFileLocation, closer, arguments);
 
         URI outputUri = URI.create("jar:" + outputPath.toUri());
-        // logger.debug("Is a zip file: " + outputUri);
+
         Map<String, Object> fileSystemProperties =
             ImmutableMap.<String, Object>builder()
                 .put("create", "true")
@@ -192,8 +192,10 @@ public class MetadataDumper {
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        runSummaryGenerator.generateSummaryYaml(
+        runSummaryGenerator.generateSummary(
             fileSystem, arguments, state, stopwatch, requiredTaskSucceeded);
+      } catch (IOException e) {
+        logger.error("Unable to generate run Summary");
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);

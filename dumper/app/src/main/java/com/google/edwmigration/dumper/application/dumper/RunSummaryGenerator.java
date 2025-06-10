@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -57,25 +58,22 @@ public class RunSummaryGenerator {
     return mapper;
   }
 
-  public void generateSummaryYaml(
+  public void generateSummary(
       FileSystem fileSystem,
       ConnectorArguments arguments,
       TaskSetState state,
       Stopwatch stopwatch,
-      boolean requiredTaskSucceeded) {
+      boolean requiredTaskSucceeded)
+      throws IOException {
 
-    try {
-      String currentRunSummaryYaml =
-          generateCurrentRunSummaryYaml(arguments, state, stopwatch, requiredTaskSucceeded);
+    String currentRunSummary =
+        generateCurrentRunSummary(arguments, state, stopwatch, requiredTaskSucceeded);
 
-      String cacheDir = createDirPathIfNotExist();
+    String cacheDir = createDirPathIfNotExist();
 
-      Path PathToCachedCumulativeSummary = Paths.get(cacheDir + CACHED_CUMULATIVE_SUMMARY_FILENAME);
-      appendToCachedSummary(PathToCachedCumulativeSummary, currentRunSummaryYaml);
-      copyCachedAsCurrent(fileSystem, PathToCachedCumulativeSummary);
-    } catch (IOException e) {
-      logger.error("Failed to generate YAML summary", e);
-    }
+    Path PathToCachedCumulativeSummary = Paths.get(cacheDir + CACHED_CUMULATIVE_SUMMARY_FILENAME);
+    appendToCachedSummary(PathToCachedCumulativeSummary, currentRunSummary);
+    copyCachedAsCurrent(fileSystem, PathToCachedCumulativeSummary);
   }
 
   private String createDirPathIfNotExist() throws IOException {
@@ -120,7 +118,7 @@ public class RunSummaryGenerator {
    * Generates a list of strings representing the summary for the current run. This summary does NOT
    * include the final ZIP file size, as it's generated before the ZIP is closed.
    */
-  private String generateCurrentRunSummaryYaml(
+  private String generateCurrentRunSummary(
       ConnectorArguments arguments, TaskSetState state, Stopwatch stopwatch, boolean success) {
 
     List<TaskExecutionSummary> taskExecutionSummaries =
@@ -143,11 +141,13 @@ public class RunSummaryGenerator {
                             : null))
             .collect(Collectors.toList());
 
+    Duration elapsed = stopwatch.elapsed();
+
     CriticalUserJourneyMetric CujMetrics =
         CriticalUserJourneyMetric.builder()
             .setId(UUID.randomUUID().toString())
-            .setLogTime(LocalDateTime.now().toString())
-            .setRunDuration(stopwatch.toString())
+            .setRunStartTime(LocalDateTime.now().minus(elapsed))
+            .setRunDurationInSeconds(elapsed.getSeconds())
             .setOverallStatus(success ? "SUCCESS" : "FAILURE")
             .setTaskExecutionSummary(taskExecutionSummaries)
             .setTaskDetailedSummary(taskDetailedSummaries)
@@ -157,10 +157,8 @@ public class RunSummaryGenerator {
     try {
       return MAPPER.writeValueAsString(CujMetrics);
     } catch (IOException e) {
-      logger.error("Failed to generate YAML summary", e);
-      return "error: \"Failed to generate YAML summary: "
-          + e.getMessage().replace("\"", "\\\"")
-          + "\""; // Basic YAML error
+      logger.error("Failed to generate Jsonl summary", e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -178,11 +176,6 @@ public class RunSummaryGenerator {
       printer.flush();
     } catch (IOException e) {
       logger.error("Failed to append to external cumulative summary log: {}", externalLogPath, e);
-      System.err.println(
-          "ERROR: Could not write to external cumulative summary log "
-              + externalLogPath
-              + ": "
-              + e.getMessage());
     }
   }
 }
