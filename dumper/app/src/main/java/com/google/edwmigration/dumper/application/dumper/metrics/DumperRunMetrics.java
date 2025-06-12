@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CriticalUserJourneyMetric {
+public class DumperRunMetrics {
 
   @JsonProperty private String id;
 
@@ -38,7 +38,7 @@ public class CriticalUserJourneyMetric {
 
   @JsonProperty private ArgumentSummary argumentSummary;
 
-  private CriticalUserJourneyMetric(Builder builder) {
+  private DumperRunMetrics(Builder builder) {
     this.id = builder.id;
     this.runStartTime = builder.runStartTime;
     this.runDurationInSeconds = builder.runDurationInSeconds;
@@ -127,8 +127,8 @@ public class CriticalUserJourneyMetric {
       return this;
     }
 
-    public CriticalUserJourneyMetric build() {
-      return new CriticalUserJourneyMetric(this);
+    public DumperRunMetrics build() {
+      return new DumperRunMetrics(this);
     }
   }
 }

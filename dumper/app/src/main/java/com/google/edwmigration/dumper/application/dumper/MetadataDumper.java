@@ -61,10 +61,10 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private final RunSummaryGenerator runSummaryGenerator;
+  private final DumperRunMetricsGenerator dumperRunMetricsGenerator;
 
-  public MetadataDumper(RunSummaryGenerator runSummaryGenerator) {
-    this.runSummaryGenerator = runSummaryGenerator;
+  public MetadataDumper(DumperRunMetricsGenerator dumperRunMetricsGenerator) {
+    this.dumperRunMetricsGenerator = dumperRunMetricsGenerator;
   }
 
   public boolean run(String... args) throws Exception {
@@ -192,10 +192,10 @@ public class MetadataDumper {
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        runSummaryGenerator.generateSummary(
+        dumperRunMetricsGenerator.generateRunMetrics(
             fileSystem, arguments, state, stopwatch, requiredTaskSucceeded);
       } catch (IOException e) {
-        logger.error("Unable to generate run Summary");
+        logger.warn("Unable to generate dumper run metrics");
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);
@@ -272,9 +272,7 @@ public class MetadataDumper {
     long failedRequiredTasks = state.getFailedRequiredTaskCount();
     if (failedRequiredTasks > 0) {
       summaryPrinter.printSummarySection(
-          linePrinter -> {
-            linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks);
-          });
+          linePrinter -> linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks));
       return false;
     }
     return true;

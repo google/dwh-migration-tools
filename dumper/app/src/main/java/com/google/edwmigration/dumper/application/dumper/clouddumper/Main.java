@@ -19,9 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.clouddumper;
 import com.google.cloud.kms.v1.CryptoKeyName;
 import com.google.cloud.kms.v1.DecryptResponse;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
+import com.google.edwmigration.dumper.application.dumper.DumperRunMetricsGenerator;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.RunSummaryGenerator;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
@@ -100,7 +100,7 @@ public class Main {
                     /* maxRetries= */ 3, /* defaultRetryInterval= */ TimeValue.ofSeconds(1L)))
             .build()) {
       new Main(
-              () -> new MetadataDumper(new RunSummaryGenerator()),
+              () -> new MetadataDumper(new DumperRunMetricsGenerator()),
               new HttpClientMetadataRetriever(httpClient),
               DriverRetriever.create(httpClient, Files.createTempDirectory("clouddumper")))
           .run();

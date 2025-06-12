@@ -17,11 +17,12 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.base.Stopwatch;
-import com.google.edwmigration.dumper.application.dumper.metrics.CriticalUserJourneyMetric;
+import com.google.edwmigration.dumper.application.dumper.metrics.DumperRunMetrics;
 import com.google.edwmigration.dumper.application.dumper.metrics.TaskDetailedSummary;
 import com.google.edwmigration.dumper.application.dumper.metrics.TaskExecutionSummary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
@@ -40,12 +41,11 @@ import net.harawata.appdirs.AppDirsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RunSummaryGenerator {
+public class DumperRunMetricsGenerator {
 
-  private static final Logger logger = LoggerFactory.getLogger(RunSummaryGenerator.class);
-  private static final String CACHED_CUMULATIVE_SUMMARY_FILENAME =
-      "dumper_cumulative_run_summary.jsonl";
-  private static final String CURRENT_SUMMARY_SNAPSHOT_FILENAME = "run_summary_snapshot.jsonl";
+  private static final Logger logger = LoggerFactory.getLogger(DumperRunMetricsGenerator.class);
+  private static final String ALL_DUMPER_RUN_METRICS = "all_dumper_run_metrics.jsonl";
+  private static final String DUMPER_RUN_METRICS = "dumper_run_metrics.jsonl";
   private static final ObjectMapper MAPPER = createObjectMapper();
 
   private static ObjectMapper createObjectMapper() {
@@ -58,7 +58,7 @@ public class RunSummaryGenerator {
     return mapper;
   }
 
-  public void generateSummary(
+  public void generateRunMetrics(
       FileSystem fileSystem,
       ConnectorArguments arguments,
       TaskSetState state,
@@ -66,14 +66,20 @@ public class RunSummaryGenerator {
       boolean requiredTaskSucceeded)
       throws IOException {
 
-    String currentRunSummary =
-        generateCurrentRunSummary(arguments, state, stopwatch, requiredTaskSucceeded);
+    DumperRunMetrics currentDumperRunMetrics =
+        generateCurrentDumperRunMetrics(arguments, state, stopwatch, requiredTaskSucceeded);
 
     String cacheDir = createDirPathIfNotExist();
 
-    Path PathToCachedCumulativeSummary = Paths.get(cacheDir + CACHED_CUMULATIVE_SUMMARY_FILENAME);
-    appendToCachedSummary(PathToCachedCumulativeSummary, currentRunSummary);
-    copyCachedAsCurrent(fileSystem, PathToCachedCumulativeSummary);
+    Path PathToCachedCumulativeSummary = Paths.get(cacheDir + ALL_DUMPER_RUN_METRICS);
+
+    try {
+      String serializedMetrics = MAPPER.writeValueAsString(currentDumperRunMetrics);
+      appendToCacheOnDisk(PathToCachedCumulativeSummary, serializedMetrics);
+      copyCachedAsCurrent(fileSystem, PathToCachedCumulativeSummary);
+    } catch (JsonProcessingException e) {
+      logger.warn("Failed to serialize dumperRunMetrics", e);
+    }
   }
 
   private String createDirPathIfNotExist() throws IOException {
@@ -93,7 +99,7 @@ public class RunSummaryGenerator {
   }
 
   private static void copyCachedAsCurrent(FileSystem zipFs, Path externalLogPath) {
-    Path snapshotInZipPath = zipFs.getPath(CURRENT_SUMMARY_SNAPSHOT_FILENAME);
+    Path snapshotInZipPath = zipFs.getPath(DUMPER_RUN_METRICS);
     try {
       Path parentInZip = snapshotInZipPath.getParent();
       if (parentInZip != null && java.nio.file.Files.notExists(parentInZip)) {
@@ -118,7 +124,7 @@ public class RunSummaryGenerator {
    * Generates a list of strings representing the summary for the current run. This summary does NOT
    * include the final ZIP file size, as it's generated before the ZIP is closed.
    */
-  private String generateCurrentRunSummary(
+  private DumperRunMetrics generateCurrentDumperRunMetrics(
       ConnectorArguments arguments, TaskSetState state, Stopwatch stopwatch, boolean success) {
 
     List<TaskExecutionSummary> taskExecutionSummaries =
@@ -143,27 +149,19 @@ public class RunSummaryGenerator {
 
     Duration elapsed = stopwatch.elapsed();
 
-    CriticalUserJourneyMetric CujMetrics =
-        CriticalUserJourneyMetric.builder()
-            .setId(UUID.randomUUID().toString())
-            .setRunStartTime(LocalDateTime.now().minus(elapsed))
-            .setRunDurationInSeconds(elapsed.getSeconds())
-            .setOverallStatus(success ? "SUCCESS" : "FAILURE")
-            .setTaskExecutionSummary(taskExecutionSummaries)
-            .setTaskDetailedSummary(taskDetailedSummaries)
-            .setArguments(arguments)
-            .build();
-
-    try {
-      return MAPPER.writeValueAsString(CujMetrics);
-    } catch (IOException e) {
-      logger.error("Failed to generate Jsonl summary", e);
-      throw new RuntimeException(e);
-    }
+    return DumperRunMetrics.builder()
+        .setId(UUID.randomUUID().toString())
+        .setRunStartTime(LocalDateTime.now().minus(elapsed))
+        .setRunDurationInSeconds(elapsed.getSeconds())
+        .setOverallStatus(success ? "SUCCESS" : "FAILURE")
+        .setTaskExecutionSummary(taskExecutionSummaries)
+        .setTaskDetailedSummary(taskDetailedSummaries)
+        .setArguments(arguments)
+        .build();
   }
 
   /** Appends the given summary lines for the current run to the external log file. */
-  private void appendToCachedSummary(Path externalLogPath, String summaryLines) {
+  private void appendToCacheOnDisk(Path externalLogPath, String summaryLines) {
     try (BufferedWriter writer =
             java.nio.file.Files.newBufferedWriter(
                 externalLogPath,
@@ -175,7 +173,7 @@ public class RunSummaryGenerator {
       printer.println(summaryLines);
       printer.flush();
     } catch (IOException e) {
-      logger.error("Failed to append to external cumulative summary log: {}", externalLogPath, e);
+      logger.warn("Failed to append to external cumulative summary log: {}", externalLogPath, e);
     }
   }
 }
