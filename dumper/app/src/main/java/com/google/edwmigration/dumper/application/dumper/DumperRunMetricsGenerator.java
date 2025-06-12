@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
 public class DumperRunMetricsGenerator {
 
   private static final Logger logger = LoggerFactory.getLogger(DumperRunMetricsGenerator.class);
-  private static final String ALL_DUMPER_RUN_METRICS = "all_dumper_run_metrics.jsonl";
-  private static final String DUMPER_RUN_METRICS = "dumper_run_metrics.jsonl";
+  private static final String ALL_DUMPER_RUN_METRICS = "all-dumper-telemetry.jsonl";
+  private static final String DUMPER_RUN_METRICS = "dumper-telemetry.jsonl";
   private static final ObjectMapper MAPPER = createObjectMapper();
 
   private static ObjectMapper createObjectMapper() {
