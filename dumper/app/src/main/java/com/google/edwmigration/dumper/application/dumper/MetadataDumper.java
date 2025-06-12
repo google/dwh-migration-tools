@@ -61,6 +61,12 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
+  private final DumperRunMetricsGenerator dumperRunMetricsGenerator;
+
+  public MetadataDumper(DumperRunMetricsGenerator dumperRunMetricsGenerator) {
+    this.dumperRunMetricsGenerator = dumperRunMetricsGenerator;
+  }
+
   public boolean run(String... args) throws Exception {
     ConnectorArguments arguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
     try {
@@ -161,11 +167,13 @@ public class MetadataDumper {
 
       logger.info("Using " + connector);
       SummaryPrinter summaryPrinter = new SummaryPrinter();
+      boolean requiredTaskSucceeded = false;
+
       try (Closer closer = Closer.create()) {
         Path outputPath = prepareOutputPath(outputFileLocation, closer, arguments);
 
         URI outputUri = URI.create("jar:" + outputPath.toUri());
-        // logger.debug("Is a zip file: " + outputUri);
+
         Map<String, Object> fileSystemProperties =
             ImmutableMap.<String, Object>builder()
                 .put("create", "true")
@@ -181,24 +189,30 @@ public class MetadataDumper {
 
         new TasksRunner(sinkFactory, handle, arguments.getThreadPoolSize(), state, tasks, arguments)
             .run();
+
+        requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
+
+        dumperRunMetricsGenerator.generateRunMetrics(
+            fileSystem, arguments, state, stopwatch, requiredTaskSucceeded);
+      } catch (IOException e) {
+        logger.warn("Unable to generate dumper run metrics");
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);
         if (outputFile.isFile()) {
           outputFileLength = outputFile.length();
         }
+
+        printTaskResults(summaryPrinter, state);
+        logFinalSummary(
+            summaryPrinter,
+            state,
+            outputFileLength,
+            stopwatch,
+            outputFileLocation,
+            requiredTaskSucceeded);
       }
 
-      printTaskResults(summaryPrinter, state);
-      boolean requiredTaskSucceeded =
-          checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
-      logFinalSummary(
-          summaryPrinter,
-          state,
-          outputFileLength,
-          stopwatch,
-          outputFileLocation,
-          requiredTaskSucceeded);
       return requiredTaskSucceeded;
     }
   }
@@ -258,9 +272,8 @@ public class MetadataDumper {
     long failedRequiredTasks = state.getFailedRequiredTaskCount();
     if (failedRequiredTasks > 0) {
       summaryPrinter.printSummarySection(
-          linePrinter -> {
-            linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks);
-          });
+          linePrinter ->
+              linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks));
       return false;
     }
     return true;

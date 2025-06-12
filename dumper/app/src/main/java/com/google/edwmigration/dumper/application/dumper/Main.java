@@ -64,7 +64,7 @@ public class Main {
     try {
       StartUpMetainformationPrinter.printMetainfo();
 
-      Main main = new Main(new MetadataDumper());
+      Main main = new Main(new MetadataDumper(new DumperRunMetricsGenerator()));
       if (args.length == 0) {
         args = new String[] {"--help"};
       }
