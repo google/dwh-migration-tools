@@ -272,7 +272,8 @@ public class MetadataDumper {
     long failedRequiredTasks = state.getFailedRequiredTaskCount();
     if (failedRequiredTasks > 0) {
       summaryPrinter.printSummarySection(
-          linePrinter -> linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks));
+          linePrinter ->
+              linePrinter.println("ERROR: %s required task[s] failed.", failedRequiredTasks));
       return false;
     }
     return true;
