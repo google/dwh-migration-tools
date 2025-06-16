@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static java.nio.file.Files.newBufferedWriter;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -107,12 +109,12 @@ public class DumperRunMetricsGenerator {
       }
       java.nio.file.Files.copy(
           externalLogPath, snapshotInZipPath, StandardCopyOption.REPLACE_EXISTING);
-      logger.info(
+      logger.debug(
           "Copied cumulative run summary from {} to {} in the output ZIP.",
           externalLogPath,
           snapshotInZipPath);
     } catch (IOException e) {
-      logger.error(
+      logger.warn(
           "Failed to copy cumulative summary log {} to ZIP at {}",
           externalLogPath,
           snapshotInZipPath,
@@ -163,7 +165,7 @@ public class DumperRunMetricsGenerator {
   /** Appends the given summary lines for the current run to the external log file. */
   private void appendToCacheOnDisk(Path externalLogPath, String summaryLines) {
     try (BufferedWriter writer =
-            java.nio.file.Files.newBufferedWriter(
+            newBufferedWriter(
                 externalLogPath,
                 StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE,
