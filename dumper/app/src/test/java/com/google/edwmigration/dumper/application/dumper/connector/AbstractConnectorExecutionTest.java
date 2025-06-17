@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
 import com.google.common.io.ByteSource;
+import com.google.edwmigration.dumper.application.dumper.DumperRunMetricsGenerator;
 import com.google.edwmigration.dumper.application.dumper.Main;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -114,7 +115,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
   }
 
   public void runDumper(@Nonnull String... args) throws Exception {
-    Main dumper = new Main(new MetadataDumper());
+    Main dumper = new Main(new MetadataDumper(new DumperRunMetricsGenerator()));
     dumper.run(args);
   }
 

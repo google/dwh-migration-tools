@@ -23,6 +23,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
 import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.DumperRunMetricsGenerator;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
 import com.google.edwmigration.dumper.application.dumper.ResourceLocation;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
@@ -274,7 +275,7 @@ public class TeradataMetadataConnectorTest extends AbstractConnectorExecutionTes
             // "--database", "db_0"
             );
 
-    MetadataDumper dumper = new MetadataDumper();
+    MetadataDumper dumper = new MetadataDumper(new DumperRunMetricsGenerator());
 
     dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
 
