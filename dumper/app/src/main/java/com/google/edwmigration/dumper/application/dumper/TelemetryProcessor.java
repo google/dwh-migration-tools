@@ -48,7 +48,7 @@ public class TelemetryProcessor {
   public void addDumperRunMetricsToPayload(
       ConnectorArguments arguments, TaskSetState state, Stopwatch stopwatch, boolean success) {
     try {
-      clientTelemetry.setEventType(EventType.DumperRunMetrics);
+      clientTelemetry.setEventType(EventType.DUMPER_RUN_METRICS);
 
       List<TaskExecutionSummary> taskExecutionSummaries =
           state.getTasksReports().stream()
