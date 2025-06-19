@@ -28,7 +28,7 @@ public class DumperRunMetrics implements TelemetryPayload {
 
   @JsonProperty private ZonedDateTime measuringStartTime;
 
-  @JsonProperty private Long runDurationInSeconds;
+  @JsonProperty private Long runDurationInMinutes;
 
   @JsonProperty private String overallStatus;
 
@@ -41,7 +41,7 @@ public class DumperRunMetrics implements TelemetryPayload {
   private DumperRunMetrics(Builder builder) {
     this.id = builder.id;
     this.measuringStartTime = builder.runStartTime;
-    this.runDurationInSeconds = builder.runDurationInMinutes;
+    this.runDurationInMinutes = builder.runDurationInMinutes;
     this.overallStatus = builder.overallStatus;
     this.taskExecutionSummary = builder.taskExecutionSummary;
     this.taskDetailedSummary = builder.taskDetailedSummary;
@@ -56,8 +56,8 @@ public class DumperRunMetrics implements TelemetryPayload {
     return measuringStartTime;
   }
 
-  public Long getRunDurationInSeconds() {
-    return runDurationInSeconds;
+  public Long getRunDurationInMinutes() {
+    return runDurationInMinutes;
   }
 
   public String getOverallStatus() {
