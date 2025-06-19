@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper;
 
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE;
 
+import com.google.edwmigration.dumper.application.dumper.metrics.DumperMetadata;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,20 +28,26 @@ import java.util.Objects;
 import java.util.jar.Manifest;
 import org.springframework.core.io.ClassPathResource;
 
-public class StartUpMetainformationPrinter {
+public class StartUpMetaInfoProcessor {
 
-  public static void printMetainfo() {
+  private static final DumperMetadata dumperMetadata = generateDumperMetadata();
+
+  public static void printMetaInfo() {
     try {
       printBanner();
-      printMetainfFile();
+      printMetaInfoFile();
     } catch (Exception ignore) {
     }
+  }
+
+  public static DumperMetadata getDumperMetadata() {
+    return dumperMetadata;
   }
 
   private static void printBanner() {
     try {
       ClassPathResource classPathResource =
-          new ClassPathResource("/banner/banner.txt", StartUpMetainformationPrinter.class);
+          new ClassPathResource("/banner/banner.txt", StartUpMetaInfoProcessor.class);
       try (BufferedReader reader =
           new BufferedReader(new InputStreamReader(classPathResource.getInputStream()))) {
         reader.lines().forEach(System.out::println);
@@ -49,26 +56,40 @@ public class StartUpMetainformationPrinter {
     }
   }
 
-  private static void printMetainfFile() {
-    Manifest manifest = loadCurrentClassManifest();
-    if (manifest == null) {
+  private static void printMetaInfoFile() {
+    if (dumperMetadata == null) {
       return;
+    }
+
+    System.out.println(
+        "App version: ["
+            + dumperMetadata.getVersion()
+            + "], change: ["
+            + dumperMetadata.getGitCommit()
+            + "]");
+    System.out.println("Build date: " + dumperMetadata.getBuildDate());
+    System.out.println();
+  }
+
+  private static DumperMetadata generateDumperMetadata() {
+    Manifest manifest = loadCurrentClassManifest();
+
+    if (manifest == null) {
+      return null;
     }
 
     String buildDate = manifest.getMainAttributes().getValue("Build-Date-UTC");
     String change = manifest.getMainAttributes().getValue("Change");
     String version = manifest.getMainAttributes().getValue("Implementation-Version");
 
-    System.out.println("App version: [" + version + "], change: [" + change + "]");
-    System.out.println("Build date: " + buildDate);
-    System.out.println();
+    return new DumperMetadata(version, change, buildDate);
   }
 
   private static Manifest loadCurrentClassManifest() {
     try {
       final String implementationTitle =
-          StartUpMetainformationPrinter.class.getPackage().getImplementationTitle();
-      final ClassLoader classLoader = StartUpMetainformationPrinter.class.getClassLoader();
+          StartUpMetaInfoProcessor.class.getPackage().getImplementationTitle();
+      final ClassLoader classLoader = StartUpMetaInfoProcessor.class.getClassLoader();
 
       Enumeration<URL> manifestResources = classLoader.getResources("META-INF/MANIFEST.MF");
       while (manifestResources.hasMoreElements()) {
