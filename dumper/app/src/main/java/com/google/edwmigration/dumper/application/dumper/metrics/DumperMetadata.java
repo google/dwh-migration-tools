@@ -35,7 +35,7 @@ public class DumperMetadata {
   public String getGitCommit() {
     return gitCommit;
   }
-  
+
   public final String getBuildDate() {
     return buildDate;
   }
