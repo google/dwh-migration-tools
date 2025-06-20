@@ -75,7 +75,7 @@ public class TelemetryProcessor {
       DumperRunMetrics dumperRunMetrics =
           DumperRunMetrics.builder()
               .setId(UUID.randomUUID().toString())
-              .setRunStartTime(ZonedDateTime.now().minus(elapsed))
+              .setMeasureStartTime(ZonedDateTime.now().minus(elapsed))
               .setRunDurationInMinutes(elapsed.getSeconds() / 60)
               .setOverallStatus(success ? "SUCCESS" : "FAILURE")
               .setTaskExecutionSummary(taskExecutionSummaries)
