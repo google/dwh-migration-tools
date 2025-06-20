@@ -52,7 +52,7 @@ public class MetadataDumperTest {
     }
   }
 
-  private Main dumper = new Main(new MetadataDumper(new DumperRunMetricsGenerator()));
+  private Main dumper = new Main(new MetadataDumper(new TelemetryProcessor()));
   private final Connector connector = new TestConnector();
 
   @Before

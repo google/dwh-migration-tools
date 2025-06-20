@@ -61,10 +61,10 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private final DumperRunMetricsGenerator dumperRunMetricsGenerator;
+  private final TelemetryProcessor telemetryProcessor;
 
-  public MetadataDumper(DumperRunMetricsGenerator dumperRunMetricsGenerator) {
-    this.dumperRunMetricsGenerator = dumperRunMetricsGenerator;
+  public MetadataDumper(TelemetryProcessor telemetryProcessor) {
+    this.telemetryProcessor = telemetryProcessor;
   }
 
   public boolean run(String... args) throws Exception {
@@ -192,10 +192,9 @@ public class MetadataDumper {
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        dumperRunMetricsGenerator.generateRunMetrics(
-            fileSystem, arguments, state, stopwatch, requiredTaskSucceeded);
-      } catch (IOException e) {
-        logger.warn("Unable to generate dumper run metrics");
+        telemetryProcessor.addDumperRunMetricsToPayload(
+            arguments, state, stopwatch, requiredTaskSucceeded);
+        telemetryProcessor.processTelemetry(fileSystem);
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);
@@ -226,7 +225,7 @@ public class MetadataDumper {
     return arguments
         .getOutputFile()
         .map(file -> getVerifiedFile(defaultFileName, file))
-        .orElseGet(() -> defaultFileName);
+        .orElse(defaultFileName);
   }
 
   private String getVerifiedFile(String defaultFileName, String fileName) {

@@ -18,17 +18,17 @@ package com.google.edwmigration.dumper.application.dumper.metrics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DumperRunMetrics {
+public class DumperRunMetrics implements TelemetryPayload {
 
   @JsonProperty private String id;
 
-  @JsonProperty private LocalDateTime runStartTime;
+  @JsonProperty private ZonedDateTime measureStartTime;
 
-  @JsonProperty private Long runDurationInSeconds;
+  @JsonProperty private Long runDurationInMinutes;
 
   @JsonProperty private String overallStatus;
 
@@ -40,8 +40,8 @@ public class DumperRunMetrics {
 
   private DumperRunMetrics(Builder builder) {
     this.id = builder.id;
-    this.runStartTime = builder.runStartTime;
-    this.runDurationInSeconds = builder.runDurationInSeconds;
+    this.measureStartTime = builder.measureStartTime;
+    this.runDurationInMinutes = builder.runDurationInMinutes;
     this.overallStatus = builder.overallStatus;
     this.taskExecutionSummary = builder.taskExecutionSummary;
     this.taskDetailedSummary = builder.taskDetailedSummary;
@@ -52,12 +52,12 @@ public class DumperRunMetrics {
     return id;
   }
 
-  public LocalDateTime getRunStartTime() {
-    return runStartTime;
+  public ZonedDateTime getMeasureStartTime() {
+    return measureStartTime;
   }
 
-  public Long getRunDurationInSeconds() {
-    return runDurationInSeconds;
+  public Long getRunDurationInMinutes() {
+    return runDurationInMinutes;
   }
 
   public String getOverallStatus() {
@@ -72,7 +72,7 @@ public class DumperRunMetrics {
     return taskDetailedSummary;
   }
 
-  public ArgumentSummary getArgumentProperties() {
+  public ArgumentSummary getArgumentSummary() {
     return argumentSummary;
   }
 
@@ -82,8 +82,8 @@ public class DumperRunMetrics {
 
   public static class Builder {
     private String id;
-    private LocalDateTime runStartTime;
-    private Long runDurationInSeconds;
+    private ZonedDateTime measureStartTime;
+    private Long runDurationInMinutes;
     private String overallStatus;
     private List<TaskExecutionSummary> taskExecutionSummary = new ArrayList<>();
     private List<TaskDetailedSummary> taskDetailedSummary = new ArrayList<>();
@@ -94,13 +94,13 @@ public class DumperRunMetrics {
       return this;
     }
 
-    public Builder setRunStartTime(LocalDateTime runStartTime) {
-      this.runStartTime = runStartTime;
+    public Builder setMeasureStartTime(ZonedDateTime measureStartTime) {
+      this.measureStartTime = measureStartTime;
       return this;
     }
 
-    public Builder setRunDurationInSeconds(Long runDurationInSeconds) {
-      this.runDurationInSeconds = runDurationInSeconds;
+    public Builder setRunDurationInMinutes(Long runDurationInMinutes) {
+      this.runDurationInMinutes = runDurationInMinutes;
       return this;
     }
 

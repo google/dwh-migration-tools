@@ -23,29 +23,20 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.google.common.base.Stopwatch;
-import com.google.edwmigration.dumper.application.dumper.metrics.DumperRunMetrics;
-import com.google.edwmigration.dumper.application.dumper.metrics.TaskDetailedSummary;
-import com.google.edwmigration.dumper.application.dumper.metrics.TaskExecutionSummary;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
+import com.google.edwmigration.dumper.application.dumper.metrics.ClientTelemetry;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import net.harawata.appdirs.AppDirs;
 import net.harawata.appdirs.AppDirsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DumperRunMetricsGenerator {
+public class TelemetryWriter {
 
-  private static final Logger logger = LoggerFactory.getLogger(DumperRunMetricsGenerator.class);
+  private static final Logger logger = LoggerFactory.getLogger(TelemetryWriter.class);
   private static final String ALL_DUMPER_RUN_METRICS = "all-dumper-telemetry.jsonl";
   private static final String DUMPER_RUN_METRICS = "dumper-telemetry.jsonl";
   private static final ObjectMapper MAPPER = createObjectMapper();
@@ -60,23 +51,15 @@ public class DumperRunMetricsGenerator {
     return mapper;
   }
 
-  public void generateRunMetrics(
-      FileSystem fileSystem,
-      ConnectorArguments arguments,
-      TaskSetState state,
-      Stopwatch stopwatch,
-      boolean requiredTaskSucceeded)
+  public static void write(FileSystem fileSystem, ClientTelemetry clientTelemetry)
       throws IOException {
-
-    DumperRunMetrics currentDumperRunMetrics =
-        generateCurrentDumperRunMetrics(arguments, state, stopwatch, requiredTaskSucceeded);
 
     String cacheDir = createDirPathIfNotExist();
 
     Path PathToCachedCumulativeSummary = Paths.get(cacheDir + ALL_DUMPER_RUN_METRICS);
 
     try {
-      String serializedMetrics = MAPPER.writeValueAsString(currentDumperRunMetrics);
+      String serializedMetrics = MAPPER.writeValueAsString(clientTelemetry);
       appendToCacheOnDisk(PathToCachedCumulativeSummary, serializedMetrics);
       copyCachedAsCurrent(fileSystem, PathToCachedCumulativeSummary);
     } catch (JsonProcessingException e) {
@@ -84,7 +67,7 @@ public class DumperRunMetricsGenerator {
     }
   }
 
-  private String createDirPathIfNotExist() throws IOException {
+  private static String createDirPathIfNotExist() throws IOException {
     AppDirs appDirs = AppDirsFactory.getInstance();
 
     String appName = "DWH-Dumper";
@@ -122,48 +105,8 @@ public class DumperRunMetricsGenerator {
     }
   }
 
-  /**
-   * Generates a list of strings representing the summary for the current run. This summary does NOT
-   * include the final ZIP file size, as it's generated before the ZIP is closed.
-   */
-  private DumperRunMetrics generateCurrentDumperRunMetrics(
-      ConnectorArguments arguments, TaskSetState state, Stopwatch stopwatch, boolean success) {
-
-    List<TaskExecutionSummary> taskExecutionSummaries =
-        state.getTasksReports().stream()
-            .map(
-                tasksReport ->
-                    new TaskExecutionSummary(tasksReport.count(), tasksReport.state().name()))
-            .collect(Collectors.toList());
-
-    List<TaskDetailedSummary> taskDetailedSummaries =
-        state.getTaskResultSummaries().stream()
-            .map(
-                item ->
-                    new TaskDetailedSummary(
-                        item.getTask().getName(),
-                        item.getTask().getCategory().name(),
-                        item.getTaskState().name(),
-                        item.getThrowable().isPresent()
-                            ? item.getThrowable().get().getMessage()
-                            : null))
-            .collect(Collectors.toList());
-
-    Duration elapsed = stopwatch.elapsed();
-
-    return DumperRunMetrics.builder()
-        .setId(UUID.randomUUID().toString())
-        .setRunStartTime(LocalDateTime.now().minus(elapsed))
-        .setRunDurationInSeconds(elapsed.getSeconds())
-        .setOverallStatus(success ? "SUCCESS" : "FAILURE")
-        .setTaskExecutionSummary(taskExecutionSummaries)
-        .setTaskDetailedSummary(taskDetailedSummaries)
-        .setArguments(arguments)
-        .build();
-  }
-
   /** Appends the given summary lines for the current run to the external log file. */
-  private void appendToCacheOnDisk(Path externalLogPath, String summaryLines) {
+  private static void appendToCacheOnDisk(Path externalLogPath, String summaryLines) {
     try (BufferedWriter writer =
             newBufferedWriter(
                 externalLogPath,
