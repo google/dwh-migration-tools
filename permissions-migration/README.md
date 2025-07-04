@@ -4,7 +4,7 @@ This directory contains the permissions migration tool. The tool can be used to 
 2. translation service is used to provide the Hive to GCS mappings
 3. BigQuery DTS is used to transfer the metadata (table schemas) and data to GCP
 
-While it is possible to use permissions-migration standalone, using it with the migration service tools (available soon) provides a much better user experience.
+While it is possible to use permissions-migration standalone, using it with the migration service tools provides a much better user experience (for more information see [link](https://cloud.google.com/bigquery/docs/hadoop-permissions-migration)) .
 
 ## Usage
 
