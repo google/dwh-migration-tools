@@ -126,7 +126,7 @@ def execute(
             return
 
         with source_file_path.open(mode="rb") as source_file:
-            source_text = EncodingDetector().decode(data=source_file.read())
+            source_text = EncodingDetector().decode(source_file_path, data=source_file.read())
 
         preprocessed_text = preprocess_hook(relative_file_path, source_text)
         macro_expanded_text = (
@@ -149,7 +149,7 @@ def execute(
         target_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         with source_file_path.open(mode="rb") as source_file:
-            source_text = EncodingDetector().decode(data=source_file.read())
+            source_text = EncodingDetector().decode(source_file_path, data=source_file.read())
 
         macro_unexpanded_text = (
             macro_expander_router.un_expand(relative_file_path, source_text)

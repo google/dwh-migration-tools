@@ -14,6 +14,7 @@
 """Encoding utilities."""
 
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +54,14 @@ class EncodingDetector:
                 )
             return EncodingDetector.DEFAULT_ENCODING
 
-    def decode(self, data: bytes) -> str:
+    def decode(self, path: Path, data: bytes) -> str:
         """
         Detect the encoding of the provided bytes, then decode them to string.
         """
         encoding = self.detect(data)
         logger.debug("Detected encoding: %s", encoding)
-        return data.decode(encoding)
+        try:
+          return data.decode(encoding)
+        except Exception as ex:
+          logger.warning("Failed to decode %s using encoding %s (reason: %s). Will decode using iso-8859-1.", path, encoding, ex)
+          return data.decode('iso-8859-1')
