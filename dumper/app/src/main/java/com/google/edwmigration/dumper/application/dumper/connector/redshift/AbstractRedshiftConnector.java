@@ -68,7 +68,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
     order = 457,
     arg = ConnectorArguments.OPT_IAM_SESSIONTOKEN,
     description = "The IAM Session Token to use for authentication.",
-    required = "Required if temporary IAM session is created.")
+    required = "Required if temporary IAM session is created")
 @RespectsArgumentJDBCUri
 public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
 
