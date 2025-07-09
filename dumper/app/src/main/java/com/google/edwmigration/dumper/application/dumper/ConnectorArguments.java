@@ -123,6 +123,7 @@ public class ConnectorArguments extends DefaultArguments {
   // redshift.
   public static final String OPT_IAM_ACCESSKEYID = "iam-accesskeyid";
   public static final String OPT_IAM_SECRETACCESSKEY = "iam-secretaccesskey";
+  public static final String OPT_IAM_SESSIONTOKEN = "iam-sessiontoken";
   public static final String OPT_IAM_PROFILE = "iam-profile";
 
   // Port 8020 is used by HDFS to communicate with the NameNode.
@@ -408,6 +409,8 @@ public class ConnectorArguments extends DefaultArguments {
       parser.accepts(OPT_IAM_ACCESSKEYID).withRequiredArg();
   private final OptionSpec<String> optionRedshiftIAMSecretAccessKey =
       parser.accepts(OPT_IAM_SECRETACCESSKEY).withRequiredArg();
+  private final OptionSpec<String> optionRedshiftIAMSessionToken =
+    parser.accepts(OPT_IAM_SESSIONTOKEN).withRequiredArg();
   private final OptionSpec<String> optionRedshiftIAMProfile =
       parser.accepts(OPT_IAM_PROFILE).withRequiredArg();
 
@@ -1066,6 +1069,11 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getIAMSecretAccessKey() {
     return getOptions().valueOf(optionRedshiftIAMSecretAccessKey);
+  }
+
+  @CheckForNull
+  public String getIamSessionToken() {
+    return getOptions().valueOf(optionRedshiftIAMSessionToken);
   }
 
   @CheckForNull
