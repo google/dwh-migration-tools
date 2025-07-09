@@ -410,7 +410,7 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<String> optionRedshiftIAMSecretAccessKey =
       parser.accepts(OPT_IAM_SECRETACCESSKEY).withRequiredArg();
   private final OptionSpec<String> optionRedshiftIAMSessionToken =
-    parser.accepts(OPT_IAM_SESSIONTOKEN).withRequiredArg();
+      parser.accepts(OPT_IAM_SESSIONTOKEN).withRequiredArg();
   private final OptionSpec<String> optionRedshiftIAMProfile =
       parser.accepts(OPT_IAM_PROFILE).withRequiredArg();
 

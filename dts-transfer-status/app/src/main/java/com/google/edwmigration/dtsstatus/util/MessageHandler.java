@@ -30,9 +30,12 @@ public class MessageHandler {
       Stream<Optional<TransferStatus>> statuses, Consumer<TransferStatus> statusConsumer) {
     statuses
         // filter out missing statuses
-        .filter(Optional::isPresent).map(Optional::get)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         // group by database and table and return the latest status for each group
-        .collect(groupingBy(TransferStatus::getDatabase)).values().stream()
+        .collect(groupingBy(TransferStatus::getDatabase))
+        .values()
+        .stream()
         .flatMap(
             dbGroup ->
                 dbGroup.stream().collect(groupingBy(TransferStatus::getTable)).values().stream())

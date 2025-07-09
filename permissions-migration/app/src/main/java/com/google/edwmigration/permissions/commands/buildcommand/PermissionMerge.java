@@ -149,7 +149,8 @@ class PermissionMerge implements Mapper<IamBinding> {
                         roleMappings
                             .getOrDefault(permission.role(), RoleMapping.create(null, null))
                             .renameTo())
-                    .orElse(ImmutableList.of(permission.role())).stream()
+                    .orElse(ImmutableList.of(permission.role()))
+                    .stream()
                     .map(
                         renamedRole ->
                             IamBinding.builder()
