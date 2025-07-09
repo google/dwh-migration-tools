@@ -63,7 +63,7 @@ class RedshiftUrlUtil {
             .toJdbcPart();
   }
 
-  // TODO:  [cluster-id]:[region] syntax.
+  // TODO: [cluster-id]:[region] syntax.
   // either profile, or key+ secret
   @Nonnull
   static String makeJdbcUrlRedshiftIAM(ConnectorArguments arguments)
@@ -89,10 +89,14 @@ class RedshiftUrlUtil {
     }
     String keyId = arguments.getIAMAccessKeyID();
     String secretKey = arguments.getIAMSecretAccessKey();
+    String sessionToken = arguments.getIamSessionToken();
     if (keyId != null && secretKey != null) {
-      return new JdbcPropBuilder("?=&")
-          .prop("AccessKeyID", keyId)
-          .prop("SecretAccessKey", secretKey)
+      JdbcPropBuilder builder =
+          new JdbcPropBuilder("?=&").prop("AccessKeyID", keyId).prop("SecretAccessKey", secretKey);
+      if (sessionToken != null) {
+        builder.prop("SessionToken", sessionToken);
+      }
+      return builder
           .propOrError("DbUser", arguments.getUser(), "--user must be specified")
           .toJdbcPart();
     } else {
