@@ -47,12 +47,18 @@ class OverridesUtil {
             "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": [
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-dataformats-binary/2.16/LICENSE",
             ],
+            "com.fasterxml.jackson.dataformat:jackson-dataformat-csv": [
+                licenseUrl: "https://github.com/FasterXML/jackson-dataformats-text/blob/2.19/LICENSE",
+            ],
             "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": [
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-dataformats-text/2.16/LICENSE",
             ],
             "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": [
                 projectUrl: "https://github.com/FasterXML/jackson-modules-java8",
                 licenseUrl: "https://raw.githubusercontent.com/FasterXML/jackson-modules-java8/2.16/LICENSE",
+            ],
+            "com.github.freva:ascii-table":[
+                licenseUrl: "https://github.com/freva/ascii-table/blob/master/LICENSE"
             ],
             "com.github.stephenc.jcip:jcip-annotations": [
                 projectUrl: "https://github.com/stephenc/jcip-annotations",
@@ -98,6 +104,9 @@ class OverridesUtil {
             "com.google.api.grpc:grpc-google-cloud-bigquerystorage-v1beta2": [
                 licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
             ],
+            "com.google.api.grpc:grpc-google-cloud-storage-control-v2": [
+                licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
+            ],
             "com.google.api.grpc:grpc-google-cloud-storage-v2": [
                 projectUrl: "https://github.com/googleapis/java-storage",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-storage/main/LICENSE",
@@ -107,6 +116,9 @@ class OverridesUtil {
             ],
             "com.google.api.grpc:grpc-google-iam-v1": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/sdk-platform-java/main/LICENSE",
+            ],
+            "com.google.api.grpc:proto-google-cloud-bigquerydatatransfer-v1": [
+                licenseUrl: "https://github.com/googleapis/java-bigquery-datatransfer/blob/main/LICENSE"
             ],
             "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1": [
                 projectUrl: "https://github.com/googleapis/googleapis",
@@ -120,8 +132,18 @@ class OverridesUtil {
                 projectUrl: "https://github.com/googleapis/googleapis",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
             ],
+            "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1alpha": [
+                projectUrl: "https://github.com/googleapis/googleapis",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
+            ],
+            "com.google.api.grpc:proto-google-cloud-storage-control-v2": [
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
+            ],
             "com.google.api.grpc:proto-google-cloud-kms-v1": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
+            ],
+            "com.google.api.grpc:proto-google-cloud-logging-v2": [
+                licenseUrl: "https://github.com/googleapis/java-logging/blob/main/LICENSE"
             ],
             "com.google.api.grpc:proto-google-cloud-monitoring-v3": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
@@ -164,6 +186,9 @@ class OverridesUtil {
             "com.google.cloud:google-cloud-bigquerystorage": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-bigquerystorage/main/LICENSE",
             ],
+            "com.google.cloud:google-cloud-bigquerydatatransfer": [
+                    licenseUrl: "https://github.com/googleapis/python-bigquery-datatransfer/blob/main/LICENSE"
+            ],
             "com.google.cloud:google-cloud-core": [
                 projectUrl: "https://github.com/googleapis/java-core",
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-core/main/LICENSE",
@@ -179,6 +204,9 @@ class OverridesUtil {
             "com.google.cloud:google-cloud-kms": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/google-cloud-java/main/LICENSE",
             ],
+            "com.google.cloud:google-cloud-logging": [
+                licenseUrl: "https://github.com/googleapis/java-logging/blob/main/LICENSE"
+            ],
             "com.google.cloud:google-cloud-monitoring": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-core/main/LICENSE",
             ],
@@ -187,6 +215,9 @@ class OverridesUtil {
             ],
             "com.google.cloud:google-cloud-storage": [
                 licenseUrl: "https://raw.githubusercontent.com/googleapis/java-storage/main/LICENSE",
+            ],
+            "com.google.cloud:google-cloud-storage-control": [
+                    licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE"
             ],
             "com.google.code.findbugs:jsr305": [
                 projectUrl: "http://code.google.com/p/jsr-305/",
@@ -205,7 +236,7 @@ class OverridesUtil {
                 licenseUrl: "https://raw.githubusercontent.com/google/flatbuffers/master/LICENSE",
             ],
             "com.google.guava:guava": [
-                    licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
+                licenseUrl: "https://raw.githubusercontent.com/google/guava/master/LICENSE",
             ],
             "com.google.guava:failureaccess": [
                 projectUrl: "https://github.com/google/guava",
@@ -281,6 +312,9 @@ class OverridesUtil {
             ],
             "commons-io:commons-io": [
                 licenseUrl: "https://raw.githubusercontent.com/apache/commons-io/master/LICENSE.txt",
+            ],
+            "dev.cel:cel": [
+                    licenseUrl: "https://github.com/google/cel-java/blob/main/LICENSE"
             ],
             "org.apache.hadoop:hadoop-common": [
                 projectUrl: "https://github.com/apache/hadoop",
@@ -412,6 +446,9 @@ class OverridesUtil {
             "org.anarres.jdiagnostics:jdiagnostics": [
                 licenseUrl: "https://raw.githubusercontent.com/shevek/jdiagnostics/master/LICENSE",
             ],
+            "org.antlr:antlr4-runtime": [
+                licenseUrl: "https://github.com/antlr/antlr4/blob/dev/LICENSE.txt"
+            ],
             "org.apache.arrow:arrow-format": [
                 projectUrl: "https://github.com/apache/arrow",
                 licenseUrl: "https://raw.githubusercontent.com/apache/arrow/main/LICENSE.txt",
@@ -468,6 +505,9 @@ class OverridesUtil {
             ],
             "org.conscrypt:conscrypt-openjdk-uber": [
                 licenseUrl: "https://raw.githubusercontent.com/google/conscrypt/master/LICENSE",
+            ],
+            "org.jspecify:jspecify": [
+                licenseUrl: "https://github.com/jspecify/jspecify/blob/main/LICENSE"
             ],
             "org.postgresql:postgresql": [
                 licenseUrl: "https://raw.githubusercontent.com/pgjdbc/pgjdbc/master/LICENSE",

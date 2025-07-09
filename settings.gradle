@@ -16,5 +16,7 @@ include(
     ':dbsync:storage-hdfs',
     ':dbsync:server',
     ':dbsync:client',
-    ':dbsync:gcsync'
+    ':dbsync:gcsync',
+    ':permissions-migration:app',
+    ':dts-transfer-status:app'
 )

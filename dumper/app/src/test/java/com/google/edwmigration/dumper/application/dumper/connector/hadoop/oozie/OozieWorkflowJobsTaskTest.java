@@ -24,7 +24,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -41,9 +46,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import org.apache.oozie.client.AuthOozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.XOozieClient;
@@ -58,7 +67,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class OozieWorkflowJobsTaskTest {
+
   private static final long timestampInMockResponses = 1742220060000L;
+  private static final ZoneId UTC = ZoneId.of("UTC");
+  private static final DateTimeFormatter ISO8601_UTC_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm'Z'").withZone(ZoneOffset.UTC);
   private static WireMockServer server;
 
   @Mock private TaskRunContext context;
@@ -86,35 +99,195 @@ public class OozieWorkflowJobsTaskTest {
   }
 
   @Test
-  public void doRun_requestBatchesUntilAllDaysFetched_ok() throws Exception {
+  public void doRun_requestBatchesUntilFullDateRangeFetched_ok() throws Exception {
+    final ZonedDateTime endTime =
+        ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestampInMockResponses), UTC).plusHours(1);
+    final ZonedDateTime startTime = endTime.minusDays(7);
+    Date lastCapturedDate = Date.from(startTime.toInstant());
+
     when(context.getArguments()).thenReturn(new ConnectorArguments("--connector", "oozie"));
     MemoryByteSink sink = new MemoryByteSink();
     stubOozieVersionsCall();
     server.stubFor(
         get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=1&len=1000"))
             .willReturn(okJsonWithBodyFile("oozie/jobs-batch1.json")));
-
-    final int maxDaysToFetch = 4;
-    Date lastCapturedDate =
-        new Date(timestampInMockResponses - TimeUnit.DAYS.toMillis(maxDaysToFetch));
     server.stubFor(
         get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=4&len=1000"))
             .willReturn(
                 okJsonWithBodyFile("oozie/jobs-one-item-template.json")
                     .withTransformers("response-template")
                     .withTransformerParameter(
-                        "endDateParam", JsonUtils.formatDateRfc822(lastCapturedDate))));
+                        "endTime", JsonUtils.formatDateRfc822(lastCapturedDate))));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=5&len=1000"))
+            .willReturn(okJson("{}")));
 
-    OozieWorkflowJobsTask task =
-        new OozieWorkflowJobsTask(maxDaysToFetch, timestampInMockResponses);
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(startTime, endTime);
 
     // Act
     task.doRun(context, sink, new OozieHandle(oozieClient));
 
     // Assert
     String actual = sink.getContent();
-    String expected = readFileAsString("/oozie/expected-jobs-byenddate.csv");
+    String expected = readFileAsString("/oozie/expected-jobs-all-in-range-byenddate.csv");
     assertEquals(expected, actual);
+  }
+
+  @Test
+  public void doRun_requestBatchesFilterOnClient_ok() throws Exception {
+    final ZonedDateTime endTime =
+        ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestampInMockResponses), UTC).plusHours(1);
+    final ZonedDateTime startTime = endTime.minusDays(7);
+    Date lastCapturedDate = Date.from(startTime.toInstant());
+
+    when(context.getArguments()).thenReturn(new ConnectorArguments("--connector", "oozie"));
+    MemoryByteSink sink = new MemoryByteSink();
+    stubOozieVersionsCall();
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=1&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // filter out this job because after endTime
+                        "endTime",
+                        JsonUtils.formatDateRfc822(
+                            Date.from(endTime.plusSeconds(1).toInstant())))));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=2&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // filter out this job because equals endTime
+                        "endTime", JsonUtils.formatDateRfc822(Date.from(endTime.toInstant())))));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=3&len=1000"))
+            .willReturn(okJsonWithBodyFile("oozie/jobs-batch1.json")));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=6&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        "endTime", JsonUtils.formatDateRfc822(lastCapturedDate))));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=7&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // filter out this job because before startTime
+                        "endTime",
+                        JsonUtils.formatDateRfc822(
+                            Date.from(startTime.minusSeconds(1).toInstant())))));
+
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(startTime, endTime);
+
+    // Act
+    task.doRun(context, sink, new OozieHandle(oozieClient));
+
+    // Assert
+    String actual = sink.getContent();
+    String expected =
+        readFileAsString("/oozie/expected-jobs-filtered-by-range-sorted-byenddate.csv");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void doRun_requestBatchesFilterOnClient_nullDate_success() throws Exception {
+    final ZonedDateTime endTime =
+        ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestampInMockResponses), UTC).plusHours(1);
+    final ZonedDateTime startTime = endTime.minusDays(7);
+    Date lastCapturedDate = Date.from(startTime.toInstant());
+    when(context.getArguments()).thenReturn(new ConnectorArguments("--connector", "oozie"));
+    MemoryByteSink sink = new MemoryByteSink();
+    stubOozieVersionsCall();
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=1&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // filter out this job because endTime is null (job is in progress)
+                        "endTime", null)));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=2&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // include this job
+                        "endTime", JsonUtils.formatDateRfc822(lastCapturedDate))));
+    server.stubFor(
+        get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=3&len=1000"))
+            .willReturn(
+                okJsonWithBodyFile("oozie/jobs-one-item-template.json")
+                    .withTransformers("response-template")
+                    .withTransformerParameter(
+                        // filter out this job, because out of range
+                        // before start
+                        "endTime",
+                        JsonUtils.formatDateRfc822(
+                            Date.from(startTime.minusSeconds(1).toInstant())))));
+
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(startTime, endTime);
+
+    // Act
+    task.doRun(context, sink, new OozieHandle(oozieClient));
+
+    // Assert
+    String actual = sink.getContent();
+    String expected = readFileAsString("/oozie/expected-jobs-one-job-from-template.csv");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void isInDateRange_endDateIsIncluded() {
+    OozieWorkflowJobsTask task = mock(OozieWorkflowJobsTask.class);
+    when(task.isInDateRange(any(), anyLong(), anyLong())).thenCallRealMethod();
+    when(task.getJobEndTime(any())).thenCallRealMethod();
+
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    when(job.getEndTime()).thenReturn(new Date(5L));
+    assertTrue(
+        "a job with endDate in the range must be included", task.isInDateRange(job, 0L, 10L));
+  }
+
+  @Test
+  public void isInDateRange_endDateIsExcluded() {
+    OozieWorkflowJobsTask task = mock(OozieWorkflowJobsTask.class);
+    when(task.isInDateRange(any(), anyLong(), anyLong())).thenCallRealMethod();
+    when(task.getJobEndTime(any())).thenCallRealMethod();
+
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    when(job.getEndTime()).thenReturn(new Date(-1L));
+    assertFalse(
+        "a job with endDate before the range must not be included",
+        task.isInDateRange(job, 0L, 10L));
+
+    when(job.getEndTime()).thenReturn(new Date(5L));
+    assertFalse("a defined date range must be excluded.", task.isInDateRange(job, 0L, 5L));
+
+    when(job.getEndTime()).thenReturn(new Date(6L));
+    assertFalse(
+        "a job with endDate after the range must not be included", task.isInDateRange(job, 0L, 5L));
+  }
+
+  @Test
+  public void isInDateRange_endDateIsNull() {
+    OozieWorkflowJobsTask task = mock(OozieWorkflowJobsTask.class);
+    when(task.isInDateRange(any(), anyLong(), anyLong())).thenCallRealMethod();
+    when(task.getJobEndTime(any())).thenCallRealMethod();
+
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    when(job.getEndTime()).thenReturn(null);
+    assertFalse(
+        "in progress jobs are not included",
+        task.isInDateRange(job, Long.MIN_VALUE, Long.MAX_VALUE));
   }
 
   @Test
@@ -134,6 +307,10 @@ public class OozieWorkflowJobsTaskTest {
   }
 
   private void testWithBatchSize(int batchSize) throws Exception {
+    final ZonedDateTime endTime =
+        ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestampInMockResponses), UTC).plusHours(1);
+    final ZonedDateTime startTime = endTime.minusDays(7);
+
     MemoryByteSink sink = new MemoryByteSink();
     stubOozieVersionsCall();
     server.stubFor(
@@ -146,7 +323,7 @@ public class OozieWorkflowJobsTaskTest {
         get(urlEqualTo("/v2/jobs?filter=sortby%3DendTime%3B&jobtype=wf&offset=5&len=" + batchSize))
             .willReturn(okJson("{}")));
 
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10, timestampInMockResponses);
+    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(startTime, endTime);
 
     // Act
     task.doRun(context, sink, new OozieHandle(oozieClient));
@@ -158,46 +335,50 @@ public class OozieWorkflowJobsTaskTest {
   }
 
   @Test
-  public void create_nonpositiveDays_throwsException() throws Exception {
+  public void create_invalidDateRange_throwsException() throws Exception {
+    assertThrows(
+        NullPointerException.class, () -> new OozieWorkflowJobsTask(ZonedDateTime.now(), null));
+
+    assertThrows(
+        NullPointerException.class, () -> new OozieWorkflowJobsTask(null, ZonedDateTime.now()));
+
+    ZonedDateTime date = ZonedDateTime.of(2000, 1, 4, 4, 59, 47, 0, UTC);
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(0));
+        assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(date, date));
+    assertEquals(
+        "Start date [2000-01-04T04:59:47Z[UTC]] must be before end date [2000-01-04T04:59:47Z[UTC]].",
+        exception.getMessage());
 
-    assertEquals("Amount of days must be a positive number. Got 0.", exception.getMessage());
-
-    exception = assertThrows(IllegalArgumentException.class, () -> new OozieWorkflowJobsTask(-3));
-
-    assertEquals("Amount of days must be a positive number. Got -3.", exception.getMessage());
-
-    new OozieWorkflowJobsTask(1);
+    newOozieWorkflowJobTaskForOneDay();
   }
 
   @Test
   public void fileName() {
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    OozieWorkflowJobsTask task = newOozieWorkflowJobTaskForOneDay();
 
     assertEquals("oozie_workflow_jobs.csv", task.getTargetPath());
   }
 
   @Test
   public void fetchJobs_success() throws Exception {
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    OozieWorkflowJobsTask task = newOozieWorkflowJobTaskForOneDay();
     XOozieClient oozieClient = mock(XOozieClient.class);
 
     // Act
-    task.fetchJobs(oozieClient, null, null, 3, 17);
+    task.fetchJobsWithFilter(oozieClient, "some;filter", 3, 17);
 
     // Verify
-    verify(oozieClient).getJobsInfo("sortby=endTime;", 3, 17);
+    verify(oozieClient).getJobsInfo("some;filter", 3, 17);
     verifyNoMoreInteractions(oozieClient);
   }
 
   @Test
   public void getJobEndTime_success() throws Exception {
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    OozieWorkflowJobsTask task = newOozieWorkflowJobTaskForOneDay();
     WorkflowJob job = mock(WorkflowJob.class);
 
     // Act
-    task.getJobEndDateTime(job);
+    task.getJobEndTime(job);
 
     // Verify
     verify(job).getEndTime();
@@ -205,8 +386,16 @@ public class OozieWorkflowJobsTaskTest {
   }
 
   @Test
+  public void getJobEndTime_nullable() {
+    OozieWorkflowJobsTask task = newOozieWorkflowJobTaskForOneDay();
+    WorkflowJob job = mock(WorkflowJob.class);
+
+    assertNull("null is expected value for end time", task.getJobEndTime(job));
+  }
+
+  @Test
   public void csvHeadersContainRequiredFields() {
-    OozieWorkflowJobsTask task = new OozieWorkflowJobsTask(10);
+    OozieWorkflowJobsTask task = newOozieWorkflowJobTaskForOneDay();
     String[] header = task.createJobSpecificCSVFormat().getHeader();
     Arrays.sort(header);
 
@@ -232,6 +421,10 @@ public class OozieWorkflowJobsTaskTest {
     assertArrayEquals(expected, header);
   }
 
+  private static OozieWorkflowJobsTask newOozieWorkflowJobTaskForOneDay() {
+    return new OozieWorkflowJobsTask(ZonedDateTime.now().minusDays(1), ZonedDateTime.now());
+  }
+
   private static void stubOozieVersionsCall() {
     server.stubFor(
         options(urlEqualTo("/versions")).willReturn(okJsonWithBodyFile("oozie/versions.json")));
@@ -245,5 +438,9 @@ public class OozieWorkflowJobsTaskTest {
 
   private String readFileAsString(String fileName) throws IOException, URISyntaxException {
     return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(fileName).toURI())));
+  }
+
+  private static String toISO(ZonedDateTime dateTime) {
+    return ISO8601_UTC_FORMAT.format(dateTime.toInstant());
   }
 }

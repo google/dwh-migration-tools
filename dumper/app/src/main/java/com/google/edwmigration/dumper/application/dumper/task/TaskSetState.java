@@ -61,6 +61,18 @@ public interface TaskSetState {
       }
       return buf.toString();
     }
+
+    public TaskState getTaskState() {
+      return state();
+    }
+
+    public Task<?> getTask() {
+      return task();
+    }
+
+    public Optional<Throwable> getThrowable() {
+      return throwable();
+    }
   }
 
   @AutoValue

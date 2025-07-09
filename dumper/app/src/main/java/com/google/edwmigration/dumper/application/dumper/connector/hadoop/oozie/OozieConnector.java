@@ -17,7 +17,11 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
 import com.google.auto.service.AutoService;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentsStartEndDate;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -29,7 +33,9 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import java.time.Clock;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.apache.oozie.client.XOozieClient;
 
@@ -45,13 +51,25 @@ import org.apache.oozie.client.XOozieClient;
     arg = ConnectorArguments.OPT_PASSWORD,
     description = "The password for Oozie with BASIC authentication",
     required = "If not specified as an argument, will use a secure prompt")
+@RespectsArgumentsStartEndDate
+@RespectsArgumentAssessment
 public class OozieConnector extends AbstractConnector implements MetadataConnector {
+
   private static final String FORMAT_NAME = "oozie.dump.zip";
 
   private static final int MAX_QUARTER_DAY = 93;
 
+  private final Supplier<ZonedDateTime> currentTimeProvider;
+
+  @SuppressWarnings("unused") // reflection call is expected
   public OozieConnector() {
+    this(ZonedDateTime::now);
+  }
+
+  @VisibleForTesting
+  OozieConnector(Supplier<ZonedDateTime> currentTimeProvider) {
     super("oozie");
+    this.currentTimeProvider = currentTimeProvider;
   }
 
   @Nonnull
@@ -61,15 +79,33 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
   }
 
   @Override
+  public void validate(ConnectorArguments arguments) {
+    Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
+
+    validateDateRange(arguments);
+  }
+
+  @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.add(new OozieInfoTask());
     out.add(new OozieServersTask());
-    out.add(new OozieWorkflowJobsTask(MAX_QUARTER_DAY));
-    out.add(new OozieCoordinatorJobsTask(MAX_QUARTER_DAY));
-    out.add(new OozieBundleJobsTask(MAX_QUARTER_DAY));
+
+    ZonedDateTime startDate;
+    ZonedDateTime endDate;
+    boolean useDefaultDateRangeToFetch = arguments.getStartDate() == null;
+    if (useDefaultDateRangeToFetch) {
+      endDate = currentTimeProvider.get();
+      startDate = endDate.minusDays(MAX_QUARTER_DAY);
+    } else {
+      startDate = arguments.getStartDate();
+      endDate = arguments.getEndDate();
+    }
+    out.add(new OozieWorkflowJobsTask(startDate, endDate));
+    out.add(new OozieCoordinatorJobsTask(startDate, endDate));
+    out.add(new OozieBundleJobsTask(startDate, endDate));
   }
 
   @Nonnull

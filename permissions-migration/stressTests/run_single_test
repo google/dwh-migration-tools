@@ -1,0 +1,145 @@
+#!/bin/bash
+
+set -e
+
+
+#declare the number of users, groups, roles and tables to be generated/used
+#in the case of users, groups and roles the declared values will be used to:
+#   - generate the specified number of objects of the specific type for the ranger dump
+#   - determine how many objects will be cycled through in the ranger hdfs and ranger hive dumps (there will be num_tables policies created for both hdfs and hive))
+#   - determine how many objects will be cycled through in the hdfs dump (the number of entries depends on the number of tables)
+#   - determine how many rules will be generated in the one-to-one principal ruleset for the expand phase (the regex ruleset has a fixed number of 10 regex buckets for each object type)
+# in the case of tables the declared value will be used to:
+#   - determine how many hdfs entries will be generated (there will be num_tables entries in the format db2/tab[n])
+#   - determine how many ranger policies will be created
+#   - determine how many table dump files will be generated (the script generates 3 databases (db0-db2) each with num_tables files)
+num_users="${1:-100}"
+num_groups="${2:-100}"
+num_roles="${3:-100}"
+num_tables="${4:-30000}"
+
+#the bucket where the table dumps are located
+table_bucket="bqms-source-bucket"
+
+#the prefix under which the table dumps are located in the bucket
+table_gcs_prefix="${5:-tables_30k}"
+
+#the path to the permissions_migration binary
+permission_migration_binary="../../release/dwh-permissions-migration/dwh-permissions-migration/bin/dwh-permissions-migration"
+
+##############################################################################
+#cleanup any leftover logs
+rm -f progress.log*
+
+
+#create and activate a python3 venv
+venv_name="python3_venv"
+
+if [ ! -d "$venv_name" ]; then
+  python3 -m venv "$venv_name"
+fi
+
+source "$venv_name/bin/activate"
+pip install ruamel.yaml
+
+
+#generate and zip hdfs dump - a simulated dumper hdfs result file
+echo "Generating hdfs dump"
+python3 ./generate_hdfs_dump.py $num_users $num_groups $num_tables
+rm -f hdfs_dump.zip
+zip hdfs_dump.zip hdfs.csv
+rm hdfs.csv
+
+#generate and zip ranger dump - a simulated dumper ranger result file with groups, roles, users, services and policies
+#TODO add services.jsonl generation?
+echo "Generating ranger dump"
+python3 ./generate_ranger_dump.py $num_users $num_groups $num_roles $num_tables
+rm -f ranger_dump.zip
+zip ranger_dump.zip policies.jsonl users.jsonl groups.jsonl roles.jsonl services.jsonl
+rm policies.jsonl users.jsonl groups.jsonl roles.jsonl
+
+#generate the principal mapping ruleset - the onfig file used in the expand phase.
+#both a one-to-one mapping and a regex mapping config file is generated. the one-to-one file may be too large to use.
+echo "Generating principal ruleset"
+python3 ./generate_principal_ruleset.py $num_users $num_groups $num_roles
+
+#generate the tables files - a simulated output of the translation service. the files need to be uploaded to a gcs bucket.
+#rm -rf ./tables
+#echo "Generating table files"
+#python3 ./generate_tables.py $num_tables
+#echo "Uploading table files to gcs"
+#gsutil -m cp -r ./tables/** gs://$table_bucket/$table_gcs_prefix/tables &> upload.log
+
+#deactivate the python venv
+deactivate
+
+########################################################################################
+
+echo "Running expand command"
+$permission_migration_binary expand \
+    --principal-ruleset ./regex-principal-ruleset.yaml \
+    --ranger-dumper-output ./ranger_dump.zip \
+    --hdfs-dumper-output ./hdfs_dump.zip \
+    --output-principals ./principal_mapping_result.yaml
+
+
+echo "Running build command"
+$permission_migration_binary build \
+    --permissions-ruleset ./permissions-config.yaml \
+    --tables gs://$table_bucket/$table_gcs_prefix/ \
+    --principals ./principal_mapping_result.yaml \
+    --ranger-dumper-output ./ranger_dump.zip \
+    --hdfs-dumper-output ./hdfs_dump.zip \
+    --output-permissions ./permissions_output.yaml &
+
+java_pid=$!  # $! stores the PID of the last background process
+
+
+start_time=$(date +%s) # Record start time
+
+sum_mem=0
+sum_cpu=0
+count=0
+max_mem=-1
+max_cpu=-1
+
+while [[ -e "/proc/$java_pid" ]]; do # Check if process is still running
+  mem_usage=$(jstat -gc $java_pid | tail -n 1 | awk '{print int($3 + $4 + $6 + $8)}') 
+  cpu_usage=$(pidstat -u -p $java_pid | tail -n 1 | awk '{print int($9 * 100)}')
+  sum_mem=$((sum_mem + mem_usage))
+  sum_cpu=$((sum_cpu + cpu_usage))
+  if((mem_usage > max_mem)); then
+    max_mem=$mem_usage
+  fi
+  if((cpu_usage > max_cpu)); then
+    max_cpu=$cpu_usage
+  fi
+  
+  count=$((count + 1))
+  sleep 5 # Adjust the interval as needed (e.g., every 5 seconds)
+done
+
+
+wait $java_pid
+
+avg_mem=$((sum_mem / count))
+avg_cpu=$((sum_cpu / count))
+elapsed_time=$(( $(date +%s) - $start_time ))
+echo "build command time: $elapsed_time s"
+echo "max memory usage: $max_mem kB"
+echo "average memory usage: $avg_mem kB"
+echo "max cpu usage: $max_cpu %"
+echo "average cpu usage: $avg_cpu %"
+
+echo -e "$num_users\t$num_groups\t$num_roles\t$num_tables\t$elapsed_time\t$max_mem\t$avg_mem\t$max_cpu\t$avg_cpu" >> stats.tsv
+
+
+#we should end up with a permissions_output.yaml file with (4xnum_tables [ranger hdfs + ranger hive + hdfs users + hdfs groups] resourceType: "GCS_MANAGED_FOLDER" entries and the same number for resourceType: "BQ_TABLE"
+echo "Number of GCS permissions in the output (expecting $((4*num_tables))):"
+cat ./permissions_output.yaml | grep 'resourceType: "GCS_MANAGED_FOLDER"' | wc -l
+echo "Number of BQ permissions in the output (expecting $((4*num_tables))):"
+cat ./permissions_output.yaml | grep 'resourceType: "BQ_TABLE"' | wc -l
+
+
+
+

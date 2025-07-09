@@ -20,10 +20,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -39,14 +39,15 @@ import org.slf4j.LoggerFactory;
  * language.
  */
 public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
+
   private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
 
   private static final String TS_RAM_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
 
   public ClouderaHostRAMChartTask(
-      int includedLastDays, TimeSeriesAggregation tsAggregation, TaskCategory taskCategory) {
-    super(buildOutputFileName(includedLastDays), includedLastDays, tsAggregation, taskCategory);
+      ZonedDateTime startDate, ZonedDateTime endDate, TimeSeriesAggregation tsAggregation) {
+    super("host-ram.jsonl", startDate, endDate, tsAggregation);
   }
 
   @Override
@@ -71,9 +72,5 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
         writer.write('\n');
       }
     }
-  }
-
-  static String buildOutputFileName(int includedLastDays) {
-    return String.format("host-ram-%sd.jsonl", includedLastDays);
   }
 }

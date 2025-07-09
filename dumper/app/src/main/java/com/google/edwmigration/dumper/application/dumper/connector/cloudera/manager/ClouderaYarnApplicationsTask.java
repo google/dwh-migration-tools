@@ -26,6 +26,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -35,8 +36,9 @@ import org.slf4j.LoggerFactory;
 public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicationTask {
   private static final Logger logger = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
 
-  public ClouderaYarnApplicationsTask(int days, TaskCategory taskCategory) {
-    super("yarn-applications", days, taskCategory);
+  public ClouderaYarnApplicationsTask(
+      ZonedDateTime startDate, ZonedDateTime endDate, TaskCategory taskCategory) {
+    super("yarn-applications.jsonl", startDate, endDate, taskCategory);
   }
 
   @Override

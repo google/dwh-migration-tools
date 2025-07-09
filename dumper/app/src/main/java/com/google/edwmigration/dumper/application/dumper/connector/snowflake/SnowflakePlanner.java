@@ -97,8 +97,6 @@ final class SnowflakePlanner {
     builder.add(proceduresTask());
     builder.add(reportDateRangeTask());
     builder.add(eventStateTask());
-    builder.add(operationEndsTask());
-    builder.add(operationStartsTask());
     builder.add(warehouseEventsHistoryTask());
     builder.add(warehouseMeteringTask());
     builder.add(storageMetricsLiteTask());
@@ -160,36 +158,6 @@ final class SnowflakePlanner {
     return new LiteTimeSeriesTask("event_state.csv", query, header);
   }
 
-  Task<?> operationEndsTask() {
-    String selectList = "warehouse_name, cluster_number, event_state, timestamp";
-    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY";
-    String predicate =
-        "upper(event_name) LIKE '%SUSPEND%'"
-            + " AND "
-            + "upper(event_name) LIKE '%CLUSTER%'"
-            + " AND "
-            + TIME_PREDICATE;
-    String query = buildQuery(selectList, view, predicate);
-    ImmutableList<String> header =
-        ImmutableList.of("WarehouseName", "ClusterNumber", "EventState", "Timestamp");
-    return new LiteTimeSeriesTask("clusters_spin_downs.csv", query, header);
-  }
-
-  Task<?> operationStartsTask() {
-    String selectList = "warehouse_name, cluster_number, event_state, timestamp";
-    String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY";
-    String predicate =
-        "upper(event_name) LIKE '%RESUME%'"
-            + " AND "
-            + "upper(event_name) LIKE '%CLUSTER%'"
-            + " AND "
-            + TIME_PREDICATE;
-    String query = buildQuery(selectList, view, predicate);
-    ImmutableList<String> header =
-        ImmutableList.of("WarehouseName", "ClusterNumber", "EventState", "Timestamp");
-    return new LiteTimeSeriesTask("clusters_spin_ups.csv", query, header);
-  }
-
   Task<?> proceduresTask() {
     String view = "SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES";
     String query =
@@ -233,7 +201,7 @@ final class SnowflakePlanner {
             "deleted");
     String view = "SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS";
     String predicate =
-        "deleted IS FALSE" + " AND " + "schema_dropped IS NULL" + " AND " + "table_dropped IS NULL";
+        "deleted = FALSE" + " AND " + "schema_dropped IS NULL" + " AND " + "table_dropped IS NULL";
     String query = String.format("SELECT %s FROM %s WHERE %s", selectList, view, predicate);
     ImmutableList<String> header =
         ImmutableList.of(

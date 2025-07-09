@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 public class Main {
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
+  private static final TelemetryProcessor telemetryProcessor = new TelemetryProcessor();
 
   private final MetadataDumper metadataDumper;
 
@@ -62,9 +63,11 @@ public class Main {
 
   public static void main(String... args) throws Exception {
     try {
-      StartUpMetainformationPrinter.printMetainfo();
+      StartUpMetaInfoProcessor.printMetaInfo();
+      telemetryProcessor.setDumperMetadata(StartUpMetaInfoProcessor.getDumperMetadata());
 
-      Main main = new Main(new MetadataDumper());
+      Main main = new Main(new MetadataDumper(telemetryProcessor));
+
       if (args.length == 0) {
         args = new String[] {"--help"};
       }

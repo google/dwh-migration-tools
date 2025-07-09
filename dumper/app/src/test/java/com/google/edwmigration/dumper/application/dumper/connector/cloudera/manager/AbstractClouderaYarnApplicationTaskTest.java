@@ -29,7 +29,11 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.io.IOException;
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,12 +73,12 @@ public class AbstractClouderaYarnApplicationTaskTest {
     URI uri = URI.create(server.baseUrl() + "/api/vTest");
     handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
 
-    task = new MockedYarnApplicationTask();
+    task = new MockedYarnApplicationTask(timeTravelDaysAgo(10), timeTravelDaysAgo(0));
     loadResponse = new ArrayList<>();
   }
 
   @Test
-  public void paginatedLoad_twoPages_callApiThreeTimes() {
+  public void paginatedLoad_twoPages_callApiThreeTimes() throws IOException {
     Map<String, StringValuePattern> queryParams = new HashMap<>();
     queryParams.put("limit", matching("2"));
     queryParams.put("offset", matching("0"));
@@ -100,7 +104,7 @@ public class AbstractClouderaYarnApplicationTaskTest {
   }
 
   @Test
-  public void paginatedLoad_singlePage_callApiTwice() {
+  public void paginatedLoad_singlePage_callApiTwice() throws IOException {
     Map<String, StringValuePattern> queryParams = new HashMap<>();
     queryParams.put("limit", matching("2"));
     queryParams.put("offset", matching("0"));
@@ -121,7 +125,7 @@ public class AbstractClouderaYarnApplicationTaskTest {
   }
 
   @Test
-  public void paginatedLoad_noPages_callApiOnce() {
+  public void paginatedLoad_noPages_callApiOnce() throws IOException {
     Map<String, StringValuePattern> queryParams = new HashMap<>();
     queryParams.put("limit", matching("2"));
     queryParams.put("offset", matching("0"));
@@ -161,8 +165,8 @@ public class AbstractClouderaYarnApplicationTaskTest {
       loader.load(clusterName, loadedApps -> loadResponse.addAll(loadedApps));
     }
 
-    public MockedYarnApplicationTask() {
-      super("", 30, TaskCategory.OPTIONAL);
+    public MockedYarnApplicationTask(ZonedDateTime startDate, ZonedDateTime endDate) {
+      super("", startDate, endDate, TaskCategory.OPTIONAL);
     }
 
     @Override
@@ -170,5 +174,10 @@ public class AbstractClouderaYarnApplicationTaskTest {
         TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle) {
       throw new UnsupportedOperationException("Test implementation");
     }
+  }
+
+  private ZonedDateTime timeTravelDaysAgo(int days) {
+    ZonedDateTime today = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC"));
+    return today.minusDays(days);
   }
 }

@@ -1,0 +1,29 @@
+field {
+  map_str_str_type {
+    key : "1"
+    value : "2"
+  }
+  map_str_str_type {
+    key : "3"
+    value : "4"
+  }
+
+  enum_type : ONE
+  str_type : "5"
+  int32_type : 6
+  int64_type : 7
+  float_type : 8.0
+  double_type : 9.0
+  repeated_str_type : "10"
+  repeated_str_type : "11"
+}
+
+repeated_field {
+  str_type : "12"
+}
+
+repeated_field {
+  str_type : "13"
+}
+
+str_type : "14"

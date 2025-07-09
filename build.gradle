@@ -12,11 +12,18 @@ distributions {
     published {
         distributionBaseName = "dwh-migration-tools"
         contents {
+            duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
             from("client") {
                 exclude "**/__pycache__"
                 into "client"
             }
             project(":dumper:app").afterEvaluate {
+                from it.tasks.installPublishedDist
+            }
+            project(":permissions-migration:app").afterEvaluate {
+                from it.tasks.installPublishedDist
+            }
+            project(":dts-transfer-status:app").afterEvaluate {
                 from it.tasks.installPublishedDist
             }
         }

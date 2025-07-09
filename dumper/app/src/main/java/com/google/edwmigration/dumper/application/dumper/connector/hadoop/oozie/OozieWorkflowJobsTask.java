@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import org.apache.oozie.client.OozieClientException;
@@ -24,23 +25,29 @@ import org.apache.oozie.client.XOozieClient;
 
 public class OozieWorkflowJobsTask extends AbstractOozieJobsTask<WorkflowJob> {
 
-  public OozieWorkflowJobsTask(int maxDaysToFetch) {
-    this(maxDaysToFetch, System.currentTimeMillis());
-  }
-
-  OozieWorkflowJobsTask(int maxDaysToFetch, long initialTimestamp) {
-    super("oozie_workflow_jobs.csv", maxDaysToFetch, initialTimestamp);
+  public OozieWorkflowJobsTask(ZonedDateTime startDate, ZonedDateTime endDate) {
+    super("oozie_workflow_jobs.csv", startDate, endDate);
   }
 
   @Override
-  List<WorkflowJob> fetchJobs(
-      XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
+  boolean isInDateRange(WorkflowJob job, long minJobEndTimeTimestamp, long maxJobEndTimeTimestamp) {
+    Date jobEndTime = getJobEndTime(job);
+
+    // endTime null for Workflow means the job is in progress
+    return jobEndTime != null
+        && minJobEndTimeTimestamp <= jobEndTime.getTime()
+        && jobEndTime.getTime() < maxJobEndTimeTimestamp;
+  }
+
+  @Override
+  List<WorkflowJob> fetchJobsWithFilter(
+      XOozieClient oozieClient, String oozieFilter, int start, int len)
       throws OozieClientException {
-    return oozieClient.getJobsInfo("sortby=endTime;", start, len);
+    return oozieClient.getJobsInfo(oozieFilter, start, len);
   }
 
   @Override
-  Date getJobEndDateTime(WorkflowJob job) {
+  Date getJobEndTime(WorkflowJob job) {
     return job.getEndTime();
   }
 }

@@ -21,7 +21,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentJDBCUri;
@@ -65,7 +64,6 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
       arg = ConnectorArguments.OPT_WAREHOUSE,
       description = "The Snowflake warehouse to use for processing metadata queries.")
 })
-@RespectsArgumentDatabaseForConnection
 @RespectsArgumentDriver
 @RespectsArgumentJDBCUri
 public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {

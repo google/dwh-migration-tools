@@ -16,14 +16,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.Channels;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class GcsByteSource extends AbstractRemoteByteSource {
 
-  private static final boolean DEBUG = false;
-
-  private static final Logger LOG = LoggerFactory.getLogger(GcsByteSource.class);
+  private static final int CHUNK_SIZE = 16 * 1024 * 1024; // 16 Mib
 
   private final Storage storage;
   private final BlobId blobId;
@@ -33,8 +29,10 @@ public class GcsByteSource extends AbstractRemoteByteSource {
     super(slice);
     this.storage = storage;
     this.blobId = blobId;
+    ReadChannel readChannel = storage.reader(blobId);
+    readChannel.setChunkSize(CHUNK_SIZE);
     this.inputStreamCache =
-        new InputStreamCache(Channels.newInputStream(storage.reader(blobId)), 0);
+        new InputStreamCache(Channels.newInputStream(readChannel), 0, CHUNK_SIZE);
   }
 
   private GcsByteSource(
@@ -72,16 +70,14 @@ public class GcsByteSource extends AbstractRemoteByteSource {
       return super.copyTo(outputStream);
     }
 
-    if (slice.getOffset() < inputStreamCache.getCurrentOffset()) {
-      if (DEBUG) {
-        LOG.info(
-            String.format(
-                "Target offset %d smaller than current offset %d, reopen stream",
-                slice.getOffset(), inputStreamCache.currentOffset));
-      }
+    // If the target offset is before the current pointer or if it's after the last byte that has
+    // been cached, we re-position the stream which would result in a new HTTP ranged read.
+    if (slice.getOffset() < inputStreamCache.getCurrentOffset()
+        || slice.getOffset() > inputStreamCache.getLastByteOffset()) {
       inputStreamCache.getSourceStream().close();
-      inputStreamCache.setSourceStream(Channels.newInputStream(storage.reader(blobId)));
-      inputStreamCache.setCurrentOffset(0);
+      inputStreamCache.setSourceStream(repositionStream(slice.getOffset()));
+      inputStreamCache.setCurrentOffset(slice.getOffset());
+      inputStreamCache.setLastByteOffset(slice.getOffset() + CHUNK_SIZE);
     }
 
     // Skip forward to the desired start.
@@ -105,6 +101,15 @@ public class GcsByteSource extends AbstractRemoteByteSource {
   @Override
   public Optional<Long> sizeIfKnown() {
     return Optional.of(storage.get(blobId).asBlobInfo().getSize());
+  }
+
+  private InputStream repositionStream(long offset) throws IOException {
+    ReadChannel channel = storage.reader(blobId);
+    Slice slice = getSlice();
+    if (slice != null) {
+      channel.seek(offset);
+    }
+    return Channels.newInputStream(channel);
   }
 
   private void skip(long length) throws IOException {
@@ -152,9 +157,13 @@ public class GcsByteSource extends AbstractRemoteByteSource {
     private InputStream sourceStream;
     private long currentOffset;
 
-    private InputStreamCache(InputStream inputStream, long currentOffSet) {
+    // The last byte that has been cached or would have been cached as part of the ranged read.
+    private long lastByteOffset;
+
+    private InputStreamCache(InputStream inputStream, long currentOffSet, long lastByteOffset) {
       this.sourceStream = inputStream;
       this.currentOffset = currentOffSet;
+      this.lastByteOffset = lastByteOffset;
     }
 
     private InputStream getSourceStream() {
@@ -171,6 +180,14 @@ public class GcsByteSource extends AbstractRemoteByteSource {
 
     public void setCurrentOffset(long currentOffset) {
       this.currentOffset = currentOffset;
+    }
+
+    public void setLastByteOffset(long lastByteOffset) {
+      this.lastByteOffset = lastByteOffset;
+    }
+
+    public long getLastByteOffset() {
+      return lastByteOffset;
     }
   }
 }

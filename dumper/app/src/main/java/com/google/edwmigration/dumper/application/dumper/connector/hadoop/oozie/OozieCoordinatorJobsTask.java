@@ -16,31 +16,52 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.apache.oozie.client.CoordinatorJob;
 import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
 
 public class OozieCoordinatorJobsTask extends AbstractOozieJobsTask<CoordinatorJob> {
 
-  public OozieCoordinatorJobsTask(int maxDaysToFetch) {
-    this(maxDaysToFetch, System.currentTimeMillis());
+  public OozieCoordinatorJobsTask(ZonedDateTime startDate, ZonedDateTime endDate) {
+    super("oozie_coord_jobs.csv", startDate, endDate);
   }
 
-  OozieCoordinatorJobsTask(int maxDaysToFetch, long initialTimestamp) {
-    super("oozie_coord_jobs.csv", maxDaysToFetch, initialTimestamp);
+  @Nonnull
+  @Override
+  public TaskCategory getCategory() {
+    return TaskCategory.OPTIONAL;
   }
 
   @Override
-  List<CoordinatorJob> fetchJobs(
-      XOozieClient oozieClient, Date startDate, Date endDate, int start, int len)
+  boolean isInDateRange(
+      CoordinatorJob job, long minJobEndTimeTimestamp, long maxJobEndTimeTimestamp) {
+    Date jobEndTime = getJobEndTime(job);
+
+    // endTime null for Coordinator means the point in time when
+    // new jobs will not be scheduled anymore within this coordinator
+    // so, we include such Coordinators in the output
+    if (jobEndTime == null) {
+      return job.getStartTime().getTime() < maxJobEndTimeTimestamp;
+    } else {
+      return minJobEndTimeTimestamp <= jobEndTime.getTime()
+          && jobEndTime.getTime() < maxJobEndTimeTimestamp;
+    }
+  }
+
+  @Override
+  List<CoordinatorJob> fetchJobsWithFilter(
+      XOozieClient oozieClient, String oozieFilter, int start, int len)
       throws OozieClientException {
-    return oozieClient.getCoordJobsInfo("sortby=endTime;", start, len);
+    return oozieClient.getCoordJobsInfo(oozieFilter, start, len);
   }
 
   @Override
-  Date getJobEndDateTime(CoordinatorJob job) {
+  Date getJobEndTime(CoordinatorJob job) {
     return job.getEndTime();
   }
 }

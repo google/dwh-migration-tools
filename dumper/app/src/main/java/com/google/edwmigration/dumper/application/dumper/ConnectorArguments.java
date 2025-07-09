@@ -92,7 +92,11 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_USER = "user";
   public static final String OPT_PASSWORD = "password";
   public static final String OPT_START_DATE = "start-date";
+  public static final String OPT_START_DATE_DESC =
+      "Inclusive start date for data to export, value will be truncated to hour.";
   public static final String OPT_END_DATE = "end-date";
+  public static final String OPT_END_DATE_DESC =
+      "Exclusive end date for data to export, value will be truncated to hour.";
 
   public static final String OPT_CLUSTER = "cluster";
   public static final String OPT_ROLE = "role";
@@ -250,9 +254,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   private final OptionSpec<ZonedDateTime> optionStartDate =
       parser
-          .accepts(
-              OPT_START_DATE,
-              "Inclusive start date for data to export, value will be truncated to hour")
+          .accepts(OPT_START_DATE, OPT_START_DATE_DESC)
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
@@ -260,9 +262,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   private final OptionSpec<ZonedDateTime> optionEndDate =
       parser
-          .accepts(
-              OPT_END_DATE,
-              "Exclusive end date for data to export, value will be truncated to hour")
+          .accepts(OPT_END_DATE, OPT_END_DATE_DESC)
           .withOptionalArg()
           .ofType(Date.class)
           .withValuesConvertedBy(ZonedParser.withDefaultPattern(DayOffset.START_OF_DAY))
