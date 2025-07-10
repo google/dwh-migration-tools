@@ -917,7 +917,15 @@ class OverridesUtil {
             "net.java.dev.jna:jna": [
                 projectUrl: "https://github.com/java-native-access/jna",
                 licenseUrl: "https://github.com/java-native-access/jna/blob/master/LICENSE"
-            ]
+            ],
+            "net.java.dev.jna:jna-platform": [
+                projectUrl: "https://github.com/java-native-access/jna",
+                licenseUrl: "https://github.com/java-native-access/jna/blob/master/LICENSE"
+            ],
+            "net.harawata:appdirs": [
+                projectUrl: "https://github.com/harawata/appdirs",
+                licenseUrl: "https://raw.githubusercontent.com/harawata/appdirs/refs/heads/master/LICENSE.txt"
+            ],
         ]
     }
 }
