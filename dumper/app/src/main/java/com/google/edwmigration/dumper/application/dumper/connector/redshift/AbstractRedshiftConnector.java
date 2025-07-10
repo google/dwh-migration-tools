@@ -64,6 +64,11 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
     arg = ConnectorArguments.OPT_IAM_SECRETACCESSKEY,
     description = "The IAM Secret Access Key to use for authentication.",
     required = "If present, performs explicit IAM authentication")
+@RespectsInput(
+    order = 457,
+    arg = ConnectorArguments.OPT_IAM_SESSIONTOKEN,
+    description = "The IAM Session Token to use for authentication.",
+    required = "Required if temporary IAM session is created")
 @RespectsArgumentJDBCUri
 public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
 

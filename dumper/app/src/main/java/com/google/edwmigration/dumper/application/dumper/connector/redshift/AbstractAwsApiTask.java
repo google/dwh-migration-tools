@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
@@ -115,11 +116,17 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
     }
     String accessKeyId = arguments.getIAMAccessKeyID();
     String secretAccessKey = arguments.getIAMSecretAccessKey();
-    if (accessKeyId != null && secretAccessKey != null) {
-      BasicAWSCredentials credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
-      return new AWSStaticCredentialsProvider(credentials);
-    } else {
+    String sessionToken = arguments.getIamSessionToken();
+    if (accessKeyId == null || secretAccessKey == null) {
       return null;
     }
+
+    if (sessionToken != null) {
+      BasicSessionCredentials credentials =
+          new BasicSessionCredentials(accessKeyId, secretAccessKey, sessionToken);
+      return new AWSStaticCredentialsProvider(credentials);
+    }
+    BasicAWSCredentials credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
+    return new AWSStaticCredentialsProvider(credentials);
   }
 }
