@@ -43,7 +43,7 @@ def test_commented_ksh():
         data = file.read()
         encoding = EncodingDetector().detect(data)
         assert "ISO-8859-1" == encoding
-        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(data))
+        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(Path(file.name), data))
         assert ["select 1\n"] == KshExtractor.filter_heredoc_sql_texts(fragments)
 
 
@@ -52,7 +52,7 @@ def test_empty_ksh():
         data = file.read()
         encoding = EncodingDetector().detect(data)
         assert "ISO-8859-1" == encoding
-        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(data))
+        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(Path(file.name), data))
         assert not KshExtractor.filter_heredoc_sql_texts(fragments)
 
 
@@ -61,7 +61,7 @@ def test_no_prefix_ksh():
         data = file.read()
         encoding = EncodingDetector().detect(data)
         assert "ISO-8859-1" == encoding
-        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(data))
+        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(Path(file.name), data))
         assert ["select 1 + 1;\n"] == KshExtractor.filter_heredoc_sql_texts(fragments)
 
 
@@ -70,7 +70,7 @@ def test_simple_ksh():
         data = file.read()
         encoding = EncodingDetector().detect(data)
         assert "ISO-8859-1" == encoding
-        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(data))
+        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(Path(file.name), data))
         assert [
             "SELECT 1 ; select '$Something' ; select '`backtick`'; select '\\\\esc'; ",
             "SELECT 2 ; select '$Something' ; select '`backtick`'; select '\\\\esc'; ",
@@ -83,7 +83,7 @@ def test_with_flags_ksh():
         data = file.read()
         encoding = EncodingDetector().detect(data)
         assert "ISO-8859-1" == encoding
-        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(data))
+        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(Path(file.name), data))
         assert [
             " .LOGON ${LOGON_STRING}; .export data file=${OUTDIR}/file.tmp; select trim(((date - ${DAYIND}(integer)) (integer))(char(20)))(char(7)); .export reset; .quit errorcode; ",  # pylint: disable=line-too-long
             " .LOGON ${LOGON_STRING}; select 'uninteresting-lot-of-sql'; .if errorcode != 0 then .quit errorcode .quit errorcode; ",  # pylint: disable=line-too-long
@@ -95,7 +95,7 @@ def test_with_prefix_ksh():
         data = file.read()
         encoding = EncodingDetector().detect(data)
         assert "ISO-8859-1" == encoding
-        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(data))
+        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(Path(file.name), data))
         assert [
             ".maxerror 1; .run file = $SCRIPTS_DIR/ETL_USER_$test_environment.login; delete stg.foo; ;insert into stg.foo SELECT A.foo, A.bar, A.baz, cast(AVG(b.quam) as decimal) as quix, cast(avg(cast(A.qib as date) - cast(A.zim as date)) as decimal) as zob, SUM(A.jibber) as jabber FROM tb.foo a,sys_calendar.calendar b WHERE a.qib = b.quam AND A.zif = 1 AND A.zaf = 1 AND A.cor >= (select year_of_calendar-1||'0101' from sys_calendar.calendar where calendar_date = current_date) AND A.jif = 1 AND A.foo IS NOT NULL AND A.bar IS NOT NULL AND A.quam IS NOT NULL GROUP BY A.foo,A.bar,A.baz; .quit; "  # pylint: disable=line-too-long
         ] == collapse_whitespace(KshExtractor.filter_heredoc_sql_texts(fragments))
@@ -106,7 +106,7 @@ def test_iso_8859_1_ksh():
         data = file.read()
         encoding = EncodingDetector().detect(data)
         assert "ISO-8859-1" == encoding
-        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(data))
+        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(Path(file.name), data))
         assert ["SELECT 'ä,ö,ü' ; "] == collapse_whitespace(
             KshExtractor.filter_heredoc_sql_texts(fragments)
         )
@@ -117,7 +117,7 @@ def test_utf8_ksh():
         data = file.read()
         encoding = EncodingDetector().detect(data)
         assert "UTF-8" == encoding
-        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(data))
+        fragments = KshExtractor("bteq").read_fragments(EncodingDetector().decode(Path(file.name), data))
         assert ["SELECT '🌩' ; "] == collapse_whitespace(
             KshExtractor.filter_heredoc_sql_texts(fragments)
         )
