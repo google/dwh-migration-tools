@@ -20,13 +20,17 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.edwmigration.permissions.commands.expand.StreamProcessor;
+import com.google.edwmigration.permissions.models.Principal;
 import com.google.edwmigration.permissions.models.Rule;
 import com.google.edwmigration.permissions.models.Table;
 import com.google.edwmigration.permissions.models.ranger.RangerDumpFormat.Policy;
 import com.google.edwmigration.permissions.models.ranger.RangerDumpFormat.Policy.PolicyItemAccess;
 import com.google.edwmigration.permissions.models.ranger.RangerDumpFormat.Policy.PolicyResource;
+import com.google.edwmigration.permissions.models.ranger.RangerDumpFormat.Service;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +52,7 @@ public abstract class AbstractRangerHiveToIamBindingMapper extends AbstractRange
 
   private static final ImmutableSet<String> RANGER_READ_ACCESSES =
       ImmutableSet.of("select", "read");
+  static final Integer ACCESS_POLICY_TYPE = 0;
 
   private final String readIamRole;
 
@@ -55,10 +60,10 @@ public abstract class AbstractRangerHiveToIamBindingMapper extends AbstractRange
 
   AbstractRangerHiveToIamBindingMapper(
       ImmutableList<Rule> rules,
-      TableReader tableReader,
-      PrincipalReader principalReader,
-      RangerPolicyReader rangerPolicyReader,
-      RangerServiceReader rangerServiceReader,
+      StreamProcessor<Table> tableReader,
+      StreamProcessor<Principal> principalReader,
+      StreamProcessor<Policy> rangerPolicyReader,
+      StreamProcessor<Service> rangerServiceReader,
       String readIamRole,
       String writeIamRole) {
     super(
@@ -75,22 +80,39 @@ public abstract class AbstractRangerHiveToIamBindingMapper extends AbstractRange
 
   @Override
   protected boolean policyMatchesTable(Policy policy, Table table) {
+    if (!Objects.equals(policy.serviceType(), RANGER_HIVE_SERVICE)) {
+      LOG.warn(
+          "Policy {} is not a hive service policy but a {} policy",
+          policy.name(),
+          policy.service());
+      return false;
+    }
+    if (!Objects.equals(policy.policyType(), ACCESS_POLICY_TYPE)) {
+      LOG.debug("Policy {} is not an access policy, skipping", policy.name());
+      return false;
+    }
     Map<String, PolicyResource> resources = policy.resources();
-    // TODO(aleofreddi): filter for Hive services.
+    if (resources == null) {
+      LOG.warn("Policy {} has no resources", policy.name());
+      return false;
+    }
     // TODO(aleofreddi): it's unclear to me if Ranger supports just '*' as a placeholder
     // for any value or it has a complete support for wildcard expansion (like `*sales`,
     //  `sales*`, or even `*some*thing*`). If that's the case, we should take care of
     // these here.
-    if (resources.getOrDefault(RANGER_DATABASE_RESOURCE, ANY_RESOURCE).values().stream()
-        .noneMatch(database -> database.equals("*") || database.equals(table.schemaName()))) {
+    PolicyResource databaseResource = resources.get(RANGER_DATABASE_RESOURCE);
+    if (databaseResource == null
+        || databaseResource.values().stream()
+            .noneMatch(database -> database.equals("*") || database.equals(table.schemaName()))) {
       LOG.debug(
-          "Table '{}'.'{}' does not match policy '{}' database resource",
-          table.schemaName(),
+          "Table '{}' does not match policy '{}' database resource",
           table.fullName(),
           policy.name());
       return false;
     }
-    if (resources.getOrDefault(RANGER_TABLE_RESOURCE, ANY_RESOURCE).values().stream()
+    PolicyResource tableResource = resources.getOrDefault(RANGER_TABLE_RESOURCE, ANY_RESOURCE);
+
+    if (tableResource.values().stream()
         .noneMatch(tableName -> tableName.equals("*") || tableName.equals(table.name()))) {
       LOG.debug(
           "Table '{}' does not match policy '{}' table resource", table.fullName(), policy.name());
