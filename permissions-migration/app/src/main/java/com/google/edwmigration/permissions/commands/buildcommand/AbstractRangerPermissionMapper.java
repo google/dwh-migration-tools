@@ -62,6 +62,8 @@ public abstract class AbstractRangerPermissionMapper
 
   protected static final PolicyResource ANY_RESOURCE =
       PolicyResource.create(ImmutableList.of("*"), false, false);
+  private static final ImmutableList<String> UNSUPPORTED_RANGER_PRINCIPALS =
+      ImmutableList.of("{OWNER}");
 
   public enum RangerType {
     USER,
@@ -244,25 +246,29 @@ public abstract class AbstractRangerPermissionMapper
                         policies.stream()
                             .filter(policy -> policyMatchesTable(policy, table))
                             .flatMap(
-                                policy ->
-                                    // Cross product with policy items.
-                                    policy.policyItems().stream()
-                                        .flatMap(
-                                            policyItem ->
-                                                // Cross product with policy principals.
-                                                getRangerPrincipalsForPolicyItem(policyItem)
-                                                    .flatMap(
-                                                        rangerPrincipal ->
-                                                            createPermissionContext(
-                                                                policy,
-                                                                policyStats.computeIfAbsent(
-                                                                    policy,
-                                                                    key -> new PolicyState()),
-                                                                policyItem,
-                                                                table,
-                                                                principals,
-                                                                rangerPrincipal)
-                                                                .stream())))));
+                                policy -> {
+                                  // Cross product with policy items.
+                                  if (policy.policyItems() == null) {
+                                    LOG.warn("Policy {} has no policy items", policy.name());
+                                    return Stream.empty();
+                                  }
+                                  return policy.policyItems().stream()
+                                      .flatMap(
+                                          policyItem ->
+                                              // Cross product with policy principals.
+                                              getRangerPrincipalsForPolicyItem(policyItem)
+                                                  .flatMap(
+                                                      rangerPrincipal ->
+                                                          createPermissionContext(
+                                                              policy,
+                                                              policyStats.computeIfAbsent(
+                                                                  policy, key -> new PolicyState()),
+                                                              policyItem,
+                                                              table,
+                                                              principals,
+                                                              rangerPrincipal)
+                                                              .stream()));
+                                })));
     return new SimpleStreamProcessor<>(permissionContextes);
   }
 
@@ -279,6 +285,13 @@ public abstract class AbstractRangerPermissionMapper
       Table table,
       ImmutableMap<RangerPrincipal, Principal> principals,
       RangerPrincipal rangerPrincipal) {
+    if (UNSUPPORTED_RANGER_PRINCIPALS.contains(rangerPrincipal.name())) {
+      LOG.warn(
+          "Ranger policy '{}' used unsupported principal {}. Ignoring the policy.",
+          policy.name(),
+          rangerPrincipal.name());
+      return ImmutableList.of();
+    }
     Principal principal = principals.get(rangerPrincipal);
     if (principal == null) {
       throw new IllegalArgumentException(
