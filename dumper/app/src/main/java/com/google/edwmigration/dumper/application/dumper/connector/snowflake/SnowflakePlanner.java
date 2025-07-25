@@ -21,6 +21,7 @@ import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -32,6 +33,8 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 /**
  * The generator of task lists for Snowflake connectors.
@@ -62,16 +65,53 @@ final class SnowflakePlanner {
       "timestamp > CURRENT_TIMESTAMP(0) - INTERVAL '14 days'";
 
   ImmutableList<AssessmentQuery> generateAssessmentQueries() {
-    return ImmutableList.of(
-        AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
-        AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
-        SHOW_EXTERNAL_TABLES,
-        AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+    return generateAssessmentQueries(null);
+  }
+
+  ImmutableList<AssessmentQuery> generateAssessmentQueries(@Nullable ConnectorArguments arguments) {
+    ImmutableList.Builder<AssessmentQuery> builder = ImmutableList.builder();
+    
+    // Add database filtering to assessment queries if limit-to-databases is provided
+    String databaseFilter = "";
+    if (arguments != null && !arguments.getLimitToDatabases().isEmpty()) {
+      String quotedNames = arguments.getLimitToDatabases().stream()
+          .map(SnowflakeMetadataConnector::databaseNameQuoted)
+          .collect(Collectors.joining(", "));
+      databaseFilter = String.format(" IN DATABASE %s", quotedNames);
+    }
+    
+    builder.add(AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE));
+    builder.add(AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE));
+    
+    // Add database filter to external tables query if provided
+    if (!databaseFilter.isEmpty()) {
+      String externalTablesQuery = String.format("SHOW EXTERNAL TABLES%s", databaseFilter);
+      builder.add(AssessmentQuery.createCustomShow(externalTablesQuery, Format.EXTERNAL_TABLES, LOWER_UNDERSCORE));
+    } else {
+      builder.add(SHOW_EXTERNAL_TABLES);
+    }
+    
+    builder.add(AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+    
+    return builder.build();
   }
 
   ImmutableList<Task<?>> generateLiteSpecificQueries() {
+    return generateLiteSpecificQueries(null);
+  }
+
+  ImmutableList<Task<?>> generateLiteSpecificQueries(@Nullable ConnectorArguments arguments) {
     String view = "SNOWFLAKE.ACCOUNT_USAGE";
     String filter = " WHERE DELETED IS NULL";
+    
+    // Add database filtering if limit-to-databases is provided
+    if (arguments != null && !arguments.getLimitToDatabases().isEmpty()) {
+      String quotedNames = arguments.getLimitToDatabases().stream()
+          .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
+          .collect(Collectors.joining(", "));
+      filter += String.format(" AND database_name IN (%s)", quotedNames);
+    }
+    
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
 
     String databases =
@@ -141,6 +181,10 @@ final class SnowflakePlanner {
 
     static AssessmentQuery createShow(String view, Format zipFormat, CaseFormat caseFormat) {
       String queryString = String.format("SHOW %s", view);
+      return new AssessmentQuery(false, queryString, zipFormat.value, caseFormat);
+    }
+
+    static AssessmentQuery createCustomShow(String queryString, Format zipFormat, CaseFormat caseFormat) {
       return new AssessmentQuery(false, queryString, zipFormat.value, caseFormat);
     }
 
