@@ -34,7 +34,6 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.Nullable;
-import java.util.stream.Collectors;
 
 /**
  * The generator of task lists for Snowflake connectors.
@@ -72,13 +71,7 @@ final class SnowflakePlanner {
     ImmutableList.Builder<AssessmentQuery> builder = ImmutableList.builder();
     
     // Add database filtering to assessment queries if limit-to-databases is provided
-    String databaseFilter = "";
-    if (arguments != null && !arguments.getLimitToDatabases().isEmpty()) {
-      String quotedNames = arguments.getLimitToDatabases().stream()
-          .map(SnowflakeMetadataConnector::databaseNameQuoted)
-          .collect(Collectors.joining(", "));
-      databaseFilter = String.format(" IN DATABASE %s", quotedNames);
-    }
+    String databaseFilter = AbstractSnowflakeConnector.createShowDatabaseFilter(arguments);
     
     builder.add(AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE));
     builder.add(AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE));
@@ -102,16 +95,14 @@ final class SnowflakePlanner {
 
   ImmutableList<Task<?>> generateLiteSpecificQueries(@Nullable ConnectorArguments arguments) {
     String view = "SNOWFLAKE.ACCOUNT_USAGE";
-    String filter = " WHERE DELETED IS NULL";
+    StringBuilder filterBuilder = new StringBuilder(" WHERE DELETED IS NULL");
     
     // Add database filtering if limit-to-databases is provided
-    if (arguments != null && !arguments.getLimitToDatabases().isEmpty()) {
-      String quotedNames = arguments.getLimitToDatabases().stream()
-          .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
-          .collect(Collectors.joining(", "));
-      filter += String.format(" AND database_name IN (%s)", quotedNames);
+    if (arguments != null) {
+      AbstractSnowflakeConnector.appendDatabaseFilterIfPresent(arguments, filterBuilder);
     }
     
+    String filter = filterBuilder.toString();
     ImmutableList.Builder<Task<?>> builder = ImmutableList.builder();
 
     String databases =

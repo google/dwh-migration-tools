@@ -41,6 +41,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
@@ -220,6 +221,32 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
               + ", use one of: "
               + StringUtils.join(dbNames, ", "));
     }
+  }
+
+  /**
+   * Appends a database filter to the query if the limit-to-databases argument is provided.
+   */
+  public static void appendDatabaseFilterIfPresent(ConnectorArguments arguments, StringBuilder queryBuilder) {
+    if (!arguments.getLimitToDatabases().isEmpty()) {
+      String quotedNames = arguments.getLimitToDatabases().stream()
+          .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
+          .collect(Collectors.joining(", "));
+      queryBuilder.append("AND database_name IN (").append(quotedNames).append(")\n");
+    }
+  }
+
+  /**
+   * Creates a database filter string for SHOW statements if the limit-to-databases argument is provided.
+   * Returns an empty string if no database filter is needed.
+   */
+  public static String createShowDatabaseFilter(ConnectorArguments arguments) {
+    if (arguments != null && !arguments.getLimitToDatabases().isEmpty()) {
+      String quotedNames = arguments.getLimitToDatabases().stream()
+          .map(SnowflakeMetadataConnector::databaseNameQuoted)
+          .collect(Collectors.joining(", "));
+      return String.format(" IN DATABASE %s", quotedNames);
+    }
+    return "";
   }
 
   String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {

@@ -56,7 +56,6 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFor
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.TaskHistoryFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.WarehouseEventsHistoryFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.WarehouseLoadHistoryFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.WarehouseMeteringHistoryFormat;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -234,13 +233,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "WHERE end_time >= to_timestamp_ltz('%s')\n"
                 + "AND end_time <= to_timestamp_ltz('%s')\n");
     
-    // Add database filtering if limit-to-databases is provided
-    if (!arguments.getLimitToDatabases().isEmpty()) {
-      String quotedNames = arguments.getLimitToDatabases().stream()
-          .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
-          .collect(Collectors.joining(", "));
-      queryBuilder.append("AND database_name IN (").append(quotedNames).append(")\n");
-    }
+    AbstractSnowflakeConnector.appendDatabaseFilterIfPresent(arguments, queryBuilder);
     
     if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
       queryBuilder
@@ -360,13 +353,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "AND end_time <= to_timestamp_ltz('%s')\n"
                 + "AND is_client_generated_statement = FALSE\n");
     
-    // Add database filtering if limit-to-databases is provided
-    if (!arguments.getLimitToDatabases().isEmpty()) {
-      String quotedNames = arguments.getLimitToDatabases().stream()
-          .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
-          .collect(Collectors.joining(", "));
-      queryBuilder.append("AND database_name IN (").append(quotedNames).append(")\n");
-    }
+    AbstractSnowflakeConnector.appendDatabaseFilterIfPresent(arguments, queryBuilder);
     
     if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
       queryBuilder
@@ -376,6 +363,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
     return queryBuilder.toString().replace('\n', ' ');
   }
+
+
 
   @CheckForNull
   private String getOverrideQuery(@Nonnull ConnectorArguments arguments)
