@@ -296,8 +296,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         for (String database : arguments.getLimitToDatabases()) {
           String formatString =
               String.format(
-                  "%s IN DATABASE \"%s\"",
-                  SnowflakePlanner.SHOW_EXTERNAL_TABLES.formatString, database);
+                  "%s IN DATABASE %s",
+                  SnowflakePlanner.SHOW_EXTERNAL_TABLES.formatString, databaseNameQuoted(database));
           addAssessmentQuery(
               SnowflakePlanner.SHOW_EXTERNAL_TABLES.withFormatString(formatString),
               out,
