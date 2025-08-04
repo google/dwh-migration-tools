@@ -179,7 +179,10 @@ def execute(
 
         # Postprocess.
         logger.info("Postprocessing translated paths.")
-        for translated_path in iterdirfiles(paths.translated_path):
+        for translated_path in filter(
+            lambda file: not file.parent.name.endswith("lineage"),
+            iterdirfiles(paths.translated_path),
+        ):
             futures.append(executor.submit(_postprocess, translated_path))
 
         # Trigger any exceptions caught during postprocessing.
