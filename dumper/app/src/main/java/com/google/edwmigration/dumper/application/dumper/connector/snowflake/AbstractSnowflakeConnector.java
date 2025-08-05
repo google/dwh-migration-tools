@@ -227,8 +227,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
    * Appends a database filter to the query if the limit-to-databases argument is provided.
    */
   public static void appendDatabaseFilterIfPresent(ConnectorArguments arguments, StringBuilder queryBuilder) {
-    if (!arguments.getLimitToDatabases().isEmpty()) {
-      String quotedNames = arguments.getLimitToDatabases().stream()
+    if (!arguments.getFilteredDatabases().isEmpty()) {
+      String quotedNames = arguments.getFilteredDatabases().stream()
           .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
           .collect(Collectors.joining(", "));
       queryBuilder.append("AND database_name IN (").append(quotedNames).append(")\n");
@@ -240,8 +240,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
    * Returns an empty string if no database filter is needed.
    */
   public static String createShowDatabaseFilter(ConnectorArguments arguments) {
-    if (arguments != null && !arguments.getLimitToDatabases().isEmpty()) {
-      String quotedNames = arguments.getLimitToDatabases().stream()
+    if (arguments != null && !arguments.getFilteredDatabases().isEmpty()) {
+      String quotedNames = arguments.getFilteredDatabases().stream()
           .map(SnowflakeMetadataConnector::databaseNameQuoted)
           .collect(Collectors.joining(", "));
       return String.format(" IN DATABASE %s", quotedNames);

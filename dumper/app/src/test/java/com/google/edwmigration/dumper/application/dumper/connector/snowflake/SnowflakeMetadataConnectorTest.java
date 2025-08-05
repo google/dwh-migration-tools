@@ -279,6 +279,73 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   }
 
   @Test
+  public void connector_generatesExpectedSql_withSfOnlySelectedDatabases() throws IOException {
+    ImmutableMultimap<String, String> actualSqls = collectSqlStatementsAsMultimap("--sf-only-selected-databases", "--database", "db1,db2");
+
+    assertEquals(
+        ImmutableList.of("SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE DELETED IS NULL AND catalog_name IN ('DB1', 'DB2')"),
+        actualSqls.get("schemata-au.csv"));
+    assertEquals(
+        ImmutableList.of("SELECT catalog_name, schema_name FROM db1.INFORMATION_SCHEMA.SCHEMATA WHERE catalog_name IN ('DB1', 'DB2')"),
+        actualSqls.get("schemata.csv"));
+    assertEquals(
+        ImmutableList.of("SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", "SHOW EXTERNAL TABLES IN DATABASE \"DB2\""),
+        actualSqls.get("external_tables.csv"));
+  }
+
+  @Test
+  public void connector_generatesExpectedSql_withSfOnlySelectedDatabasesAndWhereOverride()
+      throws IOException {
+    ImmutableMultimap<String, String> actualSqls =
+        collectSqlStatementsAsMultimap(
+            "--sf-only-selected-databases", "--database", "db1,db2", "-Dsnowflake.metadata.schemata.where=SQL_OVERRIDE");
+
+    assertEquals(
+        ImmutableList.of(
+            "SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE SQL_OVERRIDE"),
+        actualSqls.get("schemata-au.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT catalog_name, schema_name FROM db1.INFORMATION_SCHEMA.SCHEMATA WHERE SQL_OVERRIDE"),
+        actualSqls.get("schemata.csv"));
+
+    // Two SHOW commands are executed and the result is appended to the same output file.
+    assertEquals(
+        ImmutableList.of(
+            "SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", "SHOW EXTERNAL TABLES IN DATABASE \"DB2\""),
+        actualSqls.get("external_tables.csv"));
+  }
+
+  @Test
+  public void connector_generatesExpectedSql_withDatabaseForConnectionAndSfOnlySelectedDatabasesForFiltering()
+      throws IOException {
+    ImmutableMultimap<String, String> actualSqls = collectSqlStatementsAsMultimap("--database", "connection_db,filter_db1,filter_db2", "--sf-only-selected-databases");
+
+    // The database parameter should be used for INFORMATION_SCHEMA connection
+    assertEquals(
+        ImmutableList.of("SELECT catalog_name, schema_name FROM connection_db.INFORMATION_SCHEMA.SCHEMATA WHERE catalog_name IN ('CONNECTION_DB', 'FILTER_DB1', 'FILTER_DB2')"),
+        actualSqls.get("schemata.csv"));
+    
+    // The database parameter should be used for filtering when sf-only-selected-databases is provided
+    assertEquals(
+        ImmutableList.of("SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE DELETED IS NULL AND catalog_name IN ('CONNECTION_DB', 'FILTER_DB1', 'FILTER_DB2')"),
+        actualSqls.get("schemata-au.csv"));
+    
+    // Multiple external table queries for different databases
+    assertEquals(
+        ImmutableList.of(
+            "SHOW EXTERNAL TABLES IN DATABASE \"CONNECTION_DB\"", 
+            "SHOW EXTERNAL TABLES IN DATABASE \"FILTER_DB1\"",
+            "SHOW EXTERNAL TABLES IN DATABASE \"FILTER_DB2\""),
+        actualSqls.get("external_tables.csv"));
+  }
+
+  @Test(expected = MetadataDumperUsageException.class)
+  public void connector_throwsException_whenSfOnlySelectedDatabasesWithoutDatabase() throws IOException {
+    collectSqlStatements("--sf-only-selected-databases");
+  }
+
+  @Test
   public void databaseNameQuoted() {
     assertEquals("\"ABC\"", SnowflakeMetadataConnector.databaseNameQuoted("abc"));
     assertEquals("\"abc\"", SnowflakeMetadataConnector.databaseNameQuoted("\"abc\""));

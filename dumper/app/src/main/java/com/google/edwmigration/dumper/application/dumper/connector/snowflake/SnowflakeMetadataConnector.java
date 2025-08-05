@@ -166,6 +166,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    // Validate sf-only-selected-databases flag
+    arguments.validateSfOnlySelectedDatabases();
+    
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
@@ -178,10 +181,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (INJECT_IS_FAULT) {
       IS = "__NONEXISTENT__";
     } else if (databaseName == null) {
-      // When no database is provided, use the first database from limit-to-databases
+      // When no database is provided, use the first database from filtered databases
       // for INFORMATION_SCHEMA access, or fall back to INFORMATION_SCHEMA without prefix
-      if (!arguments.getLimitToDatabases().isEmpty()) {
-        IS = sanitizeDatabaseName(arguments.getLimitToDatabases().get(0)) + ".INFORMATION_SCHEMA";
+      if (!arguments.getFilteredDatabases().isEmpty()) {
+        IS = sanitizeDatabaseName(arguments.getFilteredDatabases().get(0)) + ".INFORMATION_SCHEMA";
       } else {
         IS = "INFORMATION_SCHEMA";
       }
@@ -203,7 +206,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
-        getInformationSchemaWhereCondition("database_name", arguments.getLimitToDatabases()));
+        getInformationSchemaWhereCondition("database_name", arguments.getFilteredDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -218,7 +221,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
-        getInformationSchemaWhereCondition("catalog_name", arguments.getLimitToDatabases()));
+        getInformationSchemaWhereCondition("catalog_name", arguments.getFilteredDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -235,7 +238,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition(
-            "table_catalog", arguments.getLimitToDatabases())); // Painfully slow.
+            "table_catalog", arguments.getFilteredDatabases())); // Painfully slow.
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -253,7 +256,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition(
-            "table_catalog", arguments.getLimitToDatabases())); // Very fast.
+            "table_catalog", arguments.getFilteredDatabases())); // Very fast.
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -268,7 +271,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
-        getInformationSchemaWhereCondition("table_catalog", arguments.getLimitToDatabases()));
+        getInformationSchemaWhereCondition("table_catalog", arguments.getFilteredDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -284,16 +287,16 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
-        getInformationSchemaWhereCondition("function_catalog", arguments.getLimitToDatabases()));
+        getInformationSchemaWhereCondition("function_catalog", arguments.getFilteredDatabases()));
 
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries(arguments)) {
         addAssessmentQuery(item, out, arguments, ACCOUNT_USAGE_SCHEMA_NAME);
       }
     } else {
-      if (!arguments.getLimitToDatabases().isEmpty()) {
+      if (!arguments.getFilteredDatabases().isEmpty()) {
         TaskOptions taskOptions = TaskOptions.DEFAULT;
-        for (String database : arguments.getLimitToDatabases()) {
+        for (String database : arguments.getFilteredDatabases()) {
           String formatString =
               String.format(
                   "%s IN DATABASE %s",
