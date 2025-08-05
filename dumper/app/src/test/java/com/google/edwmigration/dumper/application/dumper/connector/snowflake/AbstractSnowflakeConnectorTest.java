@@ -16,14 +16,17 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOf;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import org.apache.commons.lang.ArrayUtils;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,67 +46,60 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
 
   @Test
   public void openConnection_failsForVeryLongInput() throws IOException {
-    List<String> args = new ArrayList<>(ARGS);
-    args.add("--connector");
-    args.add(metadataConnector.getName());
-
-    args.add("--database");
-    args.add(
-        "db12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
-
+    // 262 characters
+    String longInput =
+        "db12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
     ConnectorArguments arguments =
-        new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+        makeArguments("--connector", metadataConnector.getName(), "--database", longInput);
+
     MetadataDumperUsageException e =
-        Assert.assertThrows(
-            MetadataDumperUsageException.class,
-            () -> {
-              metadataConnector.open(arguments);
-            });
-    Assert.assertTrue(e.getMessage().contains("longer than the maximum allowed number"));
+        assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
+
+    assertTrue(e.getMessage(), e.getMessage().contains("longer than the maximum allowed number"));
   }
 
   @Test
   public void openConnection_failsForMalformedInput() throws IOException {
-    List<String> args = new ArrayList<>(ARGS);
-    args.add("--connector");
-    args.add(metadataConnector.getName());
-
-    args.add("--database");
-    args.add("testdb\";DROP DATABASE testdb");
-
     ConnectorArguments arguments =
-        new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+        makeArguments(
+            "--connector",
+            metadataConnector.getName(),
+            "--database",
+            "testdb\";DROP DATABASE testdb");
+
     MetadataDumperUsageException e =
-        Assert.assertThrows(
-            MetadataDumperUsageException.class,
-            () -> {
-              metadataConnector.open(arguments);
-            });
-    Assert.assertTrue(
+        assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
+
+    assertTrue(
+        e.getMessage(),
         e.getMessage().contains("Database name has incorrectly placed double quote(s)."));
   }
 
   @Test
   public void openConnection_failsForMixedPrivateKeyAndPassword() throws IOException {
-    List<String> args = new ArrayList<>(ARGS);
-    args.add("--connector");
-    args.add(metadataConnector.getName());
-
-    args.add("--private-key-file");
-    args.add("/path/to/file.r8");
-
     ConnectorArguments arguments =
-        new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+        makeArguments(
+            "--connector", metadataConnector.getName(), "--private-key-file", "/path/to/file.r8");
+
     MetadataDumperUsageException e =
-        Assert.assertThrows(
-            MetadataDumperUsageException.class,
-            () -> {
-              metadataConnector.open(arguments);
-            });
-    Assert.assertTrue(
+        assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
+
+    assertTrue(
+        e.getMessage(),
         e.getMessage()
             .contains(
                 "Private key authentication method can't be used together with user password"));
+  }
+
+  @Test
+  public void open_assessmentEnabledWithDatabaseFilter_throwsUsageException() throws IOException {
+    ConnectorArguments arguments =
+        makeArguments("--connector", "snowflake", "--database", "SNOWFLAKE", "--assessment");
+
+    MetadataDumperUsageException e =
+        assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
+
+    assertTrue(e.getMessage(), e.getMessage().contains("Trying to filter by database with the --assessment flag."));
   }
 
   @Test
@@ -114,6 +110,16 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
     } catch (ClassNotFoundException e) {
       Assert.fail(
           "net.java.dev.jna was not found in the classpath it is required for the Snowflake MFA caching.");
+    }
+  }
+
+  private static ConnectorArguments makeArguments(String... extraArguments) {
+    try {
+      String[] arguments = copyOf(extraArguments, extraArguments.length + ARGS.size());
+      arraycopy(ARGS.toArray(), 0, arguments, extraArguments.length, ARGS.size());
+      return new ConnectorArguments(arguments);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 }
