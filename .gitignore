@@ -27,3 +27,4 @@ node_modules
 # Gradle build folders
 /**/build/
 !/**/scr/**/build/
+bin/

@@ -103,6 +103,8 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_WAREHOUSE = "warehouse";
   public static final String OPT_DATABASE = "database";
   public static final String OPT_SCHEMA = "schema";
+  public static final String OPT_LIMIT_TO_DATABASES = "limit-to-databases";
+  public static final String OPT_SF_ONLY_SELECTED_DATABASES = "sf-only-selected-databases";
   public static final String OPT_OUTPUT = "output";
   public static final String OPT_CONFIG = "config";
   public static final String OPT_ASSESSMENT = "assessment";
@@ -220,6 +222,16 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(String.class)
           .withValuesSeparatedBy(',')
           .describedAs("db0,db1,...");
+  private final OptionSpec<String> optionLimitToDatabases =
+      parser
+          .accepts(OPT_LIMIT_TO_DATABASES, "Limit data extraction to specific databases")
+          .withRequiredArg()
+          .ofType(String.class)
+          .withValuesSeparatedBy(',')
+          .describedAs("db0,db1,...");
+  private final OptionSpec<Void> optionSfOnlySelectedDatabases =
+      parser
+          .accepts(OPT_SF_ONLY_SELECTED_DATABASES, "Use database argument as filter for Snowflake connectors");
   private final OptionSpec<String> optionSchema =
       parser
           .accepts(OPT_SCHEMA, "Schemata to export")
@@ -805,6 +817,41 @@ public class ConnectorArguments extends DefaultArguments {
         .map(String::trim)
         .filter(StringUtils::isNotEmpty)
         .collect(toImmutableList());
+  }
+
+  @Nonnull
+  public ImmutableList<String> getLimitToDatabases() {
+    return getOptions().valuesOf(optionLimitToDatabases).stream()
+        .map(String::trim)
+        .filter(StringUtils::isNotEmpty)
+        .collect(toImmutableList());
+  }
+
+  public boolean isSfOnlySelectedDatabases() {
+    return has(optionSfOnlySelectedDatabases);
+  }
+
+  /**
+   * Validates that when sf-only-selected-databases flag is provided, the database argument is also provided.
+   */
+  public void validateSfOnlySelectedDatabases() {
+    if (isSfOnlySelectedDatabases() && !isDatabasesProvided()) {
+      throw new MetadataDumperUsageException(
+          "The --" + OPT_SF_ONLY_SELECTED_DATABASES + " flag requires the --" + OPT_DATABASE + " argument to be provided.");
+    }
+  }
+
+  /**
+   * Returns the list of databases to filter by. If sf-only-selected-databases flag is provided,
+   * returns the databases from the database argument. Otherwise, returns the limit-to-databases list.
+   */
+  @Nonnull
+  public ImmutableList<String> getFilteredDatabases() {
+    if (isSfOnlySelectedDatabases()) {
+      return getDatabases();
+    } else {
+      return getLimitToDatabases();
+    }
   }
 
   public boolean isDatabasesProvided() {

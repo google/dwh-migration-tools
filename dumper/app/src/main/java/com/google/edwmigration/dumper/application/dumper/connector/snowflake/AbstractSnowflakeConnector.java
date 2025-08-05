@@ -41,6 +41,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
@@ -85,10 +86,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       throws MetadataDumperUsageException, SQLException {
     validateConnectionArguments(arguments);
     String url = arguments.getUri() != null ? arguments.getUri() : getUrlFromArguments(arguments);
-    String databaseName =
-        arguments.getDatabases().isEmpty()
-            ? DEFAULT_DATABASE
-            : sanitizeDatabaseName(arguments.getDatabases().get(0));
+    String databaseName = selectDatabaseForConnection(arguments);
 
     DataSource dataSource =
         arguments.isPrivateKeyFileProvided()
@@ -98,6 +96,36 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
     setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
     return jdbcHandle;
+  }
+
+  private String selectDatabaseForConnection(@Nonnull ConnectorArguments arguments)
+      throws MetadataDumperUsageException, SQLException {
+    if (!arguments.getDatabases().isEmpty()) {
+      return sanitizeDatabaseName(arguments.getDatabases().get(0));
+    }
+    
+    // If no database is specified, we need to select one for INFORMATION_SCHEMA access
+    // Create a temporary connection to discover available databases
+    String url = arguments.getUri() != null ? arguments.getUri() : getUrlFromArguments(arguments);
+    DataSource tempDataSource =
+        arguments.isPrivateKeyFileProvided()
+            ? createPrivateKeyDataSource(arguments, url)
+            : createUserPasswordDataSource(arguments, url);
+    
+    JdbcTemplate tempJdbcTemplate = new JdbcTemplate(tempDataSource);
+    List<String> availableDatabases =
+        tempJdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
+    
+    if (availableDatabases.isEmpty()) {
+      throw new MetadataDumperUsageException("No databases found in the Snowflake account.");
+    }
+    
+    // Prefer SNOWFLAKE database if available, otherwise use the first available database
+    if (availableDatabases.contains("SNOWFLAKE")) {
+      return "SNOWFLAKE";
+    } else {
+      return availableDatabases.get(0);
+    }
   }
 
   private void validateConnectionArguments(@Nonnull ConnectorArguments arguments)
@@ -193,6 +221,32 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
               + ", use one of: "
               + StringUtils.join(dbNames, ", "));
     }
+  }
+
+  /**
+   * Appends a database filter to the query if the limit-to-databases argument is provided.
+   */
+  public static void appendDatabaseFilterIfPresent(ConnectorArguments arguments, StringBuilder queryBuilder) {
+    if (!arguments.getFilteredDatabases().isEmpty()) {
+      String quotedNames = arguments.getFilteredDatabases().stream()
+          .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
+          .collect(Collectors.joining(", "));
+      queryBuilder.append("AND database_name IN (").append(quotedNames).append(")\n");
+    }
+  }
+
+  /**
+   * Creates a database filter string for SHOW statements if the limit-to-databases argument is provided.
+   * Returns an empty string if no database filter is needed.
+   */
+  public static String createShowDatabaseFilter(ConnectorArguments arguments) {
+    if (arguments != null && !arguments.getFilteredDatabases().isEmpty()) {
+      String quotedNames = arguments.getFilteredDatabases().stream()
+          .map(SnowflakeMetadataConnector::databaseNameQuoted)
+          .collect(Collectors.joining(", "));
+      return String.format(" IN DATABASE %s", quotedNames);
+    }
+    return "";
   }
 
   String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {

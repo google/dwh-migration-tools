@@ -21,6 +21,7 @@ import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNam
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -34,12 +35,27 @@ import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.AutomaticClusteringHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.CopyHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.DatabaseReplicationUsageHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.LoginHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.MeteringDailyHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.PipeUsageHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.QueryHistoryExtendedFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.QueryAccelerationHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.ReplicationGroupUsageHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.ServerlessTaskHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.TaskHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.WarehouseEventsHistoryFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat.WarehouseLoadHistoryFormat;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -216,6 +232,9 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
                 + "WHERE end_time >= to_timestamp_ltz('%s')\n"
                 + "AND end_time <= to_timestamp_ltz('%s')\n");
+    
+    AbstractSnowflakeConnector.appendDatabaseFilterIfPresent(arguments, queryBuilder);
+    
     if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
       queryBuilder
           .append("AND start_time >= ")
@@ -333,6 +352,9 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "WHERE end_time >= to_timestamp_ltz('%s')\n"
                 + "AND end_time <= to_timestamp_ltz('%s')\n"
                 + "AND is_client_generated_statement = FALSE\n");
+    
+    AbstractSnowflakeConnector.appendDatabaseFilterIfPresent(arguments, queryBuilder);
+    
     if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
       queryBuilder
           .append("AND start_time >= ")
@@ -341,6 +363,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
     return queryBuilder.toString().replace('\n', ' ');
   }
+
+
 
   @CheckForNull
   private String getOverrideQuery(@Nonnull ConnectorArguments arguments)

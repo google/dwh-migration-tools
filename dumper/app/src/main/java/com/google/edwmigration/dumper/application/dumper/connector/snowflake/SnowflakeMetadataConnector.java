@@ -166,6 +166,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    // Validate sf-only-selected-databases flag
+    arguments.validateSfOnlySelectedDatabases();
+    
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
@@ -178,7 +181,13 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (INJECT_IS_FAULT) {
       IS = "__NONEXISTENT__";
     } else if (databaseName == null) {
-      IS = "INFORMATION_SCHEMA";
+      // When no database is provided, use the first database from filtered databases
+      // for INFORMATION_SCHEMA access, or fall back to INFORMATION_SCHEMA without prefix
+      if (!arguments.getFilteredDatabases().isEmpty()) {
+        IS = sanitizeDatabaseName(arguments.getFilteredDatabases().get(0)) + ".INFORMATION_SCHEMA";
+      } else {
+        IS = "INFORMATION_SCHEMA";
+      }
     } else {
       IS = sanitizeDatabaseName(databaseName) + ".INFORMATION_SCHEMA";
     }
@@ -197,7 +206,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
-        getInformationSchemaWhereCondition("database_name", arguments.getDatabases()));
+        getInformationSchemaWhereCondition("database_name", arguments.getFilteredDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -212,7 +221,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
-        getInformationSchemaWhereCondition("catalog_name", arguments.getDatabases()));
+        getInformationSchemaWhereCondition("catalog_name", arguments.getFilteredDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -229,7 +238,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition(
-            "table_catalog", arguments.getDatabases())); // Painfully slow.
+            "table_catalog", arguments.getFilteredDatabases())); // Painfully slow.
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -247,7 +256,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition(
-            "table_catalog", arguments.getDatabases())); // Very fast.
+            "table_catalog", arguments.getFilteredDatabases())); // Very fast.
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -262,7 +271,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
-        getInformationSchemaWhereCondition("table_catalog", arguments.getDatabases()));
+        getInformationSchemaWhereCondition("table_catalog", arguments.getFilteredDatabases()));
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -278,16 +287,16 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
-        getInformationSchemaWhereCondition("function_catalog", arguments.getDatabases()));
+        getInformationSchemaWhereCondition("function_catalog", arguments.getFilteredDatabases()));
 
     if (isAssessment) {
-      for (AssessmentQuery item : planner.generateAssessmentQueries()) {
+      for (AssessmentQuery item : planner.generateAssessmentQueries(arguments)) {
         addAssessmentQuery(item, out, arguments, ACCOUNT_USAGE_SCHEMA_NAME);
       }
     } else {
-      if (!arguments.getDatabases().isEmpty()) {
+      if (!arguments.getFilteredDatabases().isEmpty()) {
         TaskOptions taskOptions = TaskOptions.DEFAULT;
-        for (String database : arguments.getDatabases()) {
+        for (String database : arguments.getFilteredDatabases()) {
           String formatString =
               String.format(
                   "%s IN DATABASE %s",
@@ -302,6 +311,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
           taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
         }
       } else {
+        // If no limit is provided, extract external tables for all databases
         addAssessmentQuery(
             SnowflakePlanner.SHOW_EXTERNAL_TABLES, out, arguments, ACCOUNT_USAGE_SCHEMA_NAME);
       }
