@@ -83,7 +83,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException, SQLException {
-    validateConnectionArguments(arguments);
+    validateArguments(arguments);
     String url = arguments.getUri() != null ? arguments.getUri() : getUrlFromArguments(arguments);
     String databaseName =
         arguments.getDatabases().isEmpty()
@@ -100,14 +100,40 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     return jdbcHandle;
   }
 
-  private void validateConnectionArguments(@Nonnull ConnectorArguments arguments)
+  private void validateArguments(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
+    ArrayList<String> messages = new ArrayList<>();
+    MetadataDumperUsageException exception = null;
+
     if (arguments.isPasswordFlagProvided() && arguments.isPrivateKeyFileProvided()) {
-      throw new MetadataDumperUsageException(
+      String inconsistentAuth =
           "Private key authentication method can't be used together with user password. "
               + "If the private key file is encrypted, please use --"
               + ConnectorArguments.OPT_PRIVATE_KEY_PASSWORD
-              + " to specify the key password.");
+              + " to specify the key password.";
+      messages.add(inconsistentAuth);
+      exception = new MetadataDumperUsageException(inconsistentAuth, messages);
+    }
+
+    boolean hasDatabases = !arguments.getDatabases().isEmpty();
+    if (arguments.isAssessment()
+        && hasDatabases
+        && arguments.getConnectorName().equals("snowflake")) {
+      String unsupportedFilter =
+          "Trying to filter by database with the --"
+              + ConnectorArguments.OPT_ASSESSMENT
+              + " flag. This is unsupported in Assessment. Remove either the --"
+              + ConnectorArguments.OPT_ASSESSMENT
+              + " or the --"
+              + ConnectorArguments.OPT_DATABASE
+              + " flag.";
+      messages.add(unsupportedFilter);
+      exception = new MetadataDumperUsageException(unsupportedFilter, messages);
+    }
+
+    if (exception != null) {
+      messages.remove(messages.size() - 1);
+      throw exception;
     }
   }
 
