@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOf;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
 import java.io.IOException;
-
+import java.util.stream.IntStream;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -99,7 +98,9 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
     MetadataDumperUsageException e =
         assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
 
-    assertTrue(e.getMessage(), e.getMessage().contains("Trying to filter by database with the --assessment flag."));
+    assertTrue(
+        e.getMessage(),
+        e.getMessage().contains("Trying to filter by database with the --assessment flag."));
   }
 
   @Test
@@ -116,7 +117,8 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   private static ConnectorArguments makeArguments(String... extraArguments) {
     try {
       String[] arguments = copyOf(extraArguments, extraArguments.length + ARGS.size());
-      arraycopy(ARGS.toArray(), 0, arguments, extraArguments.length, ARGS.size());
+      IntStream.range(0, ARGS.size())
+          .forEach(el -> arguments[el + extraArguments.length] = ARGS.get(el));
       return new ConnectorArguments(arguments);
     } catch (IOException e) {
       throw new RuntimeException(e);
