@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -118,7 +119,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     boolean hasDatabases = !arguments.getDatabases().isEmpty();
     if (arguments.isAssessment()
         && hasDatabases
-        && arguments.getConnectorName().equals("snowflake")) {
+        && arguments.getConnectorName().toLowerCase().equals("snowflake")) {
       String unsupportedFilter =
           "Trying to filter by database with the --"
               + ConnectorArguments.OPT_ASSESSMENT
@@ -130,8 +131,13 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       messages.add(unsupportedFilter);
       exception = new MetadataDumperUsageException(unsupportedFilter, messages);
     }
+    removeDuplicateMessageAndThrow(exception);
+  }
 
+  private static void removeDuplicateMessageAndThrow(
+      @Nullable MetadataDumperUsageException exception) {
     if (exception != null) {
+      List<String> messages = exception.getMessages();
       messages.remove(messages.size() - 1);
       throw exception;
     }
