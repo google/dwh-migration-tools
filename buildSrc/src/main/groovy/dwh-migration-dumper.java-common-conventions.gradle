@@ -20,7 +20,6 @@ plugins {
     id 'java-test-fixtures'
     id 'com.diffplug.spotless'
     id 'nebula.info'
-    id 'com.google.cloud.artifactregistry.gradle-plugin'
 }
 
 repositories {
