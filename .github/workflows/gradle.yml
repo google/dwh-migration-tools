@@ -33,7 +33,7 @@ jobs:
       run: ./gradlew :dumper:app:test
       
   dependency-submission:
-    name: dependabot-graph-creation
+    name: create-dependabot-graph
     runs-on: ubuntu-latest
     permissions:
       contents: write
