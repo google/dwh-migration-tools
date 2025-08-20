@@ -8,6 +8,10 @@ plugins {
 apply plugin: 'com.github.jk1.dependency-license-report'
 apply plugin: 'com.adarshr.test-logger'
 
+if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+    throw new GradleException("The Dumper build must be run with JDK 8 but was executed with JDK " + JavaVersion.current())
+}
+
 distributions {
     published {
         distributionBaseName = "dwh-migration-tools"
