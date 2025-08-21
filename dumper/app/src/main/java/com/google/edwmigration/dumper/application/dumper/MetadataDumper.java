@@ -113,9 +113,7 @@ public class MetadataDumper {
     if (matcher.matches()) {
       String bucket = matcher.group("bucket");
       String path = matcher.group("path");
-      logger.debug(
-          String.format(
-              "Setting up CloudStorageFileSystem with bucket '%s' and path '%s'.", bucket, path));
+      logger.debug("Setting up CloudStorageFileSystem with bucket '{}' and path '{}'.", bucket, path);
       CloudStorageFileSystem cloudStorageFileSystem =
           closer.register(CloudStorageFileSystem.forBucket(bucket));
       return cloudStorageFileSystem.getPath(path);
@@ -165,7 +163,7 @@ public class MetadataDumper {
       long outputFileLength = 0;
       TaskSetState.Impl state = new TaskSetState.Impl();
 
-      logger.info("Using " + connector);
+      logger.info("Using connector: [{}]", connector);
       SummaryPrinter summaryPrinter = new SummaryPrinter();
       boolean requiredTaskSucceeded = false;
 
@@ -183,7 +181,7 @@ public class MetadataDumper {
             closer.register(FileSystems.newFileSystem(outputUri, fileSystemProperties));
         OutputHandleFactory sinkFactory =
             new FileSystemOutputHandleFactory(fileSystem, "/"); // It's required to be "/"
-        logger.debug("Target filesystem is " + sinkFactory);
+        logger.debug("Target filesystem is [{}]", sinkFactory);
 
         Handle handle = closer.register(connector.open(arguments));
 
