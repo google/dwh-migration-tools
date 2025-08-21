@@ -113,7 +113,8 @@ public class MetadataDumper {
     if (matcher.matches()) {
       String bucket = matcher.group("bucket");
       String path = matcher.group("path");
-      logger.debug("Setting up CloudStorageFileSystem with bucket '{}' and path '{}'.", bucket, path);
+      logger.debug(
+          "Setting up CloudStorageFileSystem with bucket '{}' and path '{}'.", bucket, path);
       CloudStorageFileSystem cloudStorageFileSystem =
           closer.register(CloudStorageFileSystem.forBucket(bucket));
       return cloudStorageFileSystem.getPath(path);
