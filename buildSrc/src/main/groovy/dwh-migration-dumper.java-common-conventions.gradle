@@ -20,19 +20,10 @@ plugins {
     id 'java-test-fixtures'
     id 'com.diffplug.spotless'
     id 'nebula.info'
-    id 'com.google.cloud.artifactregistry.gradle-plugin'
 }
 
 repositories {
-    if (project.hasProperty('profile') &&  project.property('profile') == 'google') {
-        println("ACTIVE PROFILE: " + project.property('profile'))
-        maven {
-            url System.getenv("INTERNAL_REPOSITORY")
-        }
-    } else {
-        println("ACTIVE PROFILE: DEFAULT")
-        mavenCentral()
-    }
+    mavenCentral()
 }
 
 configurations {
