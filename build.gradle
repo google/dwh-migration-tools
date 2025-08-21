@@ -8,10 +8,10 @@ plugins {
 apply plugin: 'com.github.jk1.dependency-license-report'
 apply plugin: 'com.adarshr.test-logger'
 
-if (project.hasProperty('release')) {
+if (project.hasProperty('release') || project.hasProperty('ci')) {
     // todo add check for version ends with '-SNAPSHOT' after b/440037454
     if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
-        throw new GradleException("The Dumper release build must be run with JDK 8 but was executed with JDK " + JavaVersion.current())
+        throw new GradleException("The Dumper release and CI builds must be run with JDK 8 but was executed with JDK " + JavaVersion.current())
     }
 }
 
