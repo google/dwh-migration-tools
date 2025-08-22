@@ -17,9 +17,14 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.common.base.Predicates;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -40,5 +45,20 @@ public class SnowflakeLogsConnectorTest extends AbstractSnowflakeConnectorExecut
     validator.withAllowedEntries(Predicates.alwaysTrue()); // Permit any files.
 
     validator.run(outputFile);
+  }
+
+  @Test
+  public void addTasksTo_unsupportedOption_throwsException() throws IOException {
+    ConnectorArguments arguments =
+        new ConnectorArguments(
+            "--connector",
+            "snowflake-logs",
+            "--assessment",
+            "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
+            "2024");
+
+    Assert.assertThrows(
+        MetadataDumperUsageException.class,
+        () -> connector.addTasksTo(new ArrayList<>(), arguments));
   }
 }
