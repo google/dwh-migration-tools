@@ -21,7 +21,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import java.util.Objects;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,17 +28,6 @@ import org.slf4j.LoggerFactory;
 public class Main {
 
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
-  private static final TelemetryProcessor telemetryProcessor = new TelemetryProcessor();
-
-  private final MetadataDumper metadataDumper;
-
-  public Main(MetadataDumper metadataDumper) {
-    this.metadataDumper = metadataDumper;
-  }
-
-  public boolean run(@Nonnull String... args) throws Exception {
-    return metadataDumper.run(args);
-  }
 
   private static void printErrorMessages(Throwable e) {
     new SummaryPrinter()
@@ -64,14 +52,14 @@ public class Main {
   public static void main(String... args) throws Exception {
     try {
       StartUpMetaInfoProcessor.printMetaInfo();
-      telemetryProcessor.setDumperMetadata(StartUpMetaInfoProcessor.getDumperMetadata());
-
-      Main main = new Main(new MetadataDumper(telemetryProcessor));
 
       if (args.length == 0) {
         args = new String[] {"--help"};
       }
-      if (!main.run(args)) {
+
+      MetadataDumper metadataDumper = new MetadataDumper(args);
+
+      if (!metadataDumper.run()) {
         System.exit(1);
       }
     } catch (MetadataDumperUsageException e) {

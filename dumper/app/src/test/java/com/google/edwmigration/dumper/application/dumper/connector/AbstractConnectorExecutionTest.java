@@ -21,9 +21,7 @@ import static org.junit.Assert.*;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
 import com.google.common.io.ByteSource;
-import com.google.edwmigration.dumper.application.dumper.Main;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumper;
-import com.google.edwmigration.dumper.application.dumper.TelemetryProcessor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.common.io.ZipArchiveEntryByteSource;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
@@ -115,8 +113,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
   }
 
   public void runDumper(@Nonnull String... args) throws Exception {
-    Main dumper = new Main(new MetadataDumper(new TelemetryProcessor()));
-    dumper.run(args);
+    new MetadataDumper().run(args);
   }
 
   protected static class ZipEntryValidator<E extends Enum<E>> {

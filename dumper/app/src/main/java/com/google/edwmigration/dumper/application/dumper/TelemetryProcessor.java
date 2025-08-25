@@ -32,13 +32,13 @@ public class TelemetryProcessor {
   private static final Logger logger = LoggerFactory.getLogger(TelemetryProcessor.class);
 
   private final ClientTelemetry clientTelemetry;
+  private final boolean shouldWrite;
 
-  public TelemetryProcessor() {
+  public TelemetryProcessor(boolean shouldWrite) {
     clientTelemetry = new ClientTelemetry();
-  }
+    clientTelemetry.setDumperMetadata(StartUpMetaInfoProcessor.getDumperMetadata());
 
-  public void setDumperMetadata(DumperMetadata dumperMetadata) {
-    clientTelemetry.setDumperMetadata(dumperMetadata);
+    this.shouldWrite = shouldWrite;
   }
 
   /**
@@ -47,6 +47,9 @@ public class TelemetryProcessor {
    */
   public void addDumperRunMetricsToPayload(
       ConnectorArguments arguments, TaskSetState state, Stopwatch stopwatch, boolean success) {
+    if (!shouldWrite) {
+      return;
+    }
     try {
       clientTelemetry.setEventType(EventType.DUMPER_RUN_METRICS);
 
@@ -89,6 +92,9 @@ public class TelemetryProcessor {
   }
 
   public void processTelemetry(FileSystem fileSystem) {
+    if (!shouldWrite) {
+      return;
+    }
     try {
       TelemetryWriter.write(fileSystem, clientTelemetry);
     } catch (Exception e) {

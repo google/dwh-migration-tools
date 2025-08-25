@@ -82,6 +82,7 @@ public class ConnectorArguments extends DefaultArguments {
           + "\n";
 
   public static final String OPT_CONNECTOR = "connector";
+  public static final String OPT_DIAGNOSTICS = "diagnostics";
   public static final String OPT_DRIVER = "driver";
   public static final String OPT_CLASS = "jdbcDriverClass";
   public static final String OPT_URI = "url";
@@ -470,6 +471,13 @@ public class ConnectorArguments extends DefaultArguments {
           .withRequiredArg()
           .ofType(Integer.class)
           .defaultsTo(OPT_THREAD_POOL_SIZE_DEFAULT);
+
+  private final OptionSpec<Boolean> optionDiagnostics =
+      parser
+          .accepts(OPT_DIAGNOSTICS, "Allows dumper diagnostics to be turned on/off")
+          .withOptionalArg()
+          .ofType(Boolean.class)
+          .defaultsTo(true);
 
   public final OptionSpec<String> optionHadoopHdfsSiteXml =
       parser
@@ -1048,6 +1056,10 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valuesOf(optionQueryLogAlternates);
   }
 
+  public boolean isDiagnosticsOn() {
+    return getOptions().valueOf(optionDiagnostics);
+  }
+
   public boolean isTestFlag(char c) {
     String flags = getOptions().valueOf(optionFlags);
     if (flags == null) {
@@ -1214,7 +1226,8 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_QUERY_LOG_START, getQueryLogStart())
             .add(OPT_QUERY_LOG_END, getQueryLogEnd())
             .add(OPT_QUERY_LOG_ALTERNATES, getQueryLogAlternates())
-            .add(OPT_ASSESSMENT, isAssessment());
+            .add(OPT_ASSESSMENT, isAssessment())
+            .add(OPT_DIAGNOSTICS, isDiagnosticsOn());
     getConnectorProperties().getDefinitionMap().forEach(toStringHelper::add);
     return toStringHelper.toString();
   }
