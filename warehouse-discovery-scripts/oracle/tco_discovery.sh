@@ -23,9 +23,17 @@ for sql_file in "${DISCOVERY_SQLS[@]}"; do
 
   if [ -f "$file_path" ]; then
     echo "Executing $base_name.sql"
-    sqlplus -s "$ORACLE_CONN" @export.sql "$file_path" "$output_csv" "$DURATION_DAYS"
+    SQL_OUTPUT=$(sqlplus -s "$ORACLE_CONN" @export.sql "$file_path" "$output_csv" "$DURATION_DAYS" 2>&1)
+    if [ $? -ne 0 ]; then
+      echo "[ERROR]: $base_name extraction failed."
+      echo "--- Error Output ---"
+      echo "$SQL_OUTPUT"
+      echo "--------------------"
+    else
+      echo "[SUCCESS]: $base_name extraction ran without errors."
+    fi
   else
-    echo "[ERROR] The file '$file_path' does not exist."
+    echo "[ERROR]: The file '$file_path' does not exist."
   fi
 done
 
