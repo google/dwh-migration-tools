@@ -29,7 +29,7 @@ Run the script from your terminal, passing the Oracle connection string as the f
 **Example:**
 
 ```bash
-./tco_discovery.sh system/manager@192.168.1.10:1521
+./tco_discovery.sh system/PASSWORD@localhost:1521/ORCLCDB
 ```
 
 ## 🛠️ Configuration

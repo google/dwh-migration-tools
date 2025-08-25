@@ -1,3 +1,5 @@
+WHENEVER SQLERROR EXIT 1;
+
 -- Set SQL*Plus environment options for CSV output
 SET HEADING ON;
 SET FEEDBACK OFF;

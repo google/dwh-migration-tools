@@ -13,14 +13,20 @@ DISCOVERY_SQLS=(
     "native/app-schemas-pdbs.sql"       # CDB_PDBS - Pluggable databases info
 )
 DISCOVERY_SQL_DIR="$(dirname "$0")/../../dumper/app/src/main/resources/oracle-stats/cdb"
+mkdir -p "$OUTPUT_DIR"
 
 # Run each SQL query and export result to CSV file
 for sql_file in "${DISCOVERY_SQLS[@]}"; do
-    file_path="$DISCOVERY_SQL_DIR/$sql_file"
-    base_name=$(basename "$file_path" .sql)
-    output_csv="$OUTPUT_DIR/$base_name.csv"
+  file_path="$DISCOVERY_SQL_DIR/$sql_file"
+  base_name=$(basename "$file_path" .sql)
+  output_csv="$OUTPUT_DIR/$base_name.csv"
+
+  if [ -f "$file_path" ]; then
     echo "Executing $base_name.sql"
     sqlplus -s "$ORACLE_CONN" @export.sql "$file_path" "$output_csv" "$DURATION_DAYS"
+  else
+    echo "[ERROR] The file '$file_path' does not exist."
+  fi
 done
 
 # Generate zip metadata files that are required by BigQuery Migration Assessment
