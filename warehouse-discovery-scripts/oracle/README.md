@@ -37,7 +37,7 @@ Run the script from your terminal, passing the Oracle connection string as the f
 The script's behavior can be customized by modifying the variables within the script itself:
 
 - `ORACLE_CONN`: The Oracle connection string. This is passed as a command-line argument, as shown in the usage example.
-- `DURATION_DAYS`: The number of days of historical data to collect for AWR-based queries. Defaults to 30.
+- `DURATION_DAYS`: The number of days of historical data to collect for AWR-based queries. Defaults to 7.
 - `OUTPUT_DIR`: The directory where the generated CSV files will be stored. The script will create this directory if it doesn't already exist. Defaults to ./out.
 - `DISCOVERY_SQLS`: An array of SQL script filenames to be executed. You can easily add or remove scripts from this list to customize your data collection.
 
