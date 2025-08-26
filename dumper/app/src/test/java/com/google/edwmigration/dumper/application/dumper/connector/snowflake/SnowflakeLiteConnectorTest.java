@@ -28,10 +28,10 @@ import org.junit.runners.JUnit4;
 public class SnowflakeLiteConnectorTest {
 
   @Test
-  public void open_noAssessmentFlag_throwsUsageException() throws Exception {
+  public void validate_noAssessmentFlag_throwsUsageException() throws Exception {
     ConnectorArguments noFlagArguments = new ConnectorArguments("--connector", "snowflake-lite");
     SnowflakeLiteConnector connector = new SnowflakeLiteConnector();
 
-    assertThrows(MetadataDumperUsageException.class, () -> connector.open(noFlagArguments));
+    assertThrows(MetadataDumperUsageException.class, () -> connector.validate(noFlagArguments));
   }
 }

@@ -58,7 +58,7 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   }
 
   @Test
-  public void openConnection_failsForMalformedInput() throws IOException {
+  public void open_malformedInput_fail() throws IOException {
     ConnectorArguments arguments =
         makeArguments(
             "--connector",
@@ -75,13 +75,14 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   }
 
   @Test
-  public void openConnection_failsForMixedPrivateKeyAndPassword() throws IOException {
+  public void validate_mixedPrivateKeyAndPassword_fail() throws IOException {
     ConnectorArguments arguments =
         makeArguments(
             "--connector", metadataConnector.getName(), "--private-key-file", "/path/to/file.r8");
 
     MetadataDumperUsageException e =
-        assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
+        assertThrows(
+            MetadataDumperUsageException.class, () -> metadataConnector.validate(arguments));
 
     assertTrue(
         e.getMessage(),
@@ -91,12 +92,14 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   }
 
   @Test
-  public void open_assessmentEnabledWithDatabaseFilter_throwsUsageException() throws IOException {
+  public void validate_assessmentEnabledWithDatabaseFilter_throwsUsageException()
+      throws IOException {
     ConnectorArguments arguments =
         makeArguments("--connector", "snowflake", "--database", "SNOWFLAKE", "--assessment");
 
     MetadataDumperUsageException e =
-        assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
+        assertThrows(
+            MetadataDumperUsageException.class, () -> metadataConnector.validate(arguments));
 
     assertTrue(
         e.getMessage(),
