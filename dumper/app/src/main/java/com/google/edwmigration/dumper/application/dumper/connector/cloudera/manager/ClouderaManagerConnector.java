@@ -130,7 +130,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
   }
 
   @Override
-  public void validate(@Nonnull ConnectorArguments arguments) {
+  public final void validate(@Nonnull ConnectorArguments arguments) {
     String clouderaUri = arguments.getUri();
     Preconditions.checkNotNull(clouderaUri, "--url for Cloudera Manager API is required");
 

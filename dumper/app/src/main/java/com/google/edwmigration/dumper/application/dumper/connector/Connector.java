@@ -26,7 +26,6 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
-import javax.annotation.OverridingMethodsMustInvokeSuper;
 
 /** @author shevek */
 public interface Connector {
@@ -53,7 +52,6 @@ public interface Connector {
    * @param arguments cli params
    * @throws RuntimeException if incorrect set of arguments passed to the particular connector
    */
-  @OverridingMethodsMustInvokeSuper
   default void validate(@Nonnull ConnectorArguments arguments) {}
 
   static void validateDateRange(@Nonnull ConnectorArguments arguments) {

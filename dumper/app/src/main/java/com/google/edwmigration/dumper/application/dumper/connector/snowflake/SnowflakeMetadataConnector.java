@@ -129,6 +129,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     return builder.build();
   }
 
+  @Override
+  protected final void validateForSnowflake(@Nonnull ConnectorArguments arguments) {}
+
   private void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,
       @Nonnull Class<? extends Enum<?>> header,
