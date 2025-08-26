@@ -16,58 +16,55 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-import java.time.Clock;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.junit.Test;
 
 public class ConnectorTest {
-  private final Connector connector = new EmptyConnector();
 
   @Test
   public void validateDateRange_startDateAndEndDate_success() throws Exception {
-    String argsStr = "--connector test --start-date=2001-02-20 --end-date=2001-02-25";
+    ConnectorArguments args =
+        new ConnectorArguments(
+            "--connector", "test", "--start-date=2001-02-20", "--end-date=2001-02-25");
 
     // Act
-    connector.validateDateRange(toArgs(argsStr));
+    validateDateRange(args);
   }
 
   @Test
-  public void validateDateRange_startDateAfterEndDate_throws() {
-    String argsStr = "--connector test --start-date=2001-02-20 --end-date=2001-02-20";
+  public void validateDateRange_startDateAfterEndDate_throws() throws Exception {
+    ConnectorArguments args =
+        new ConnectorArguments(
+            "--connector", "test", "--start-date=2001-02-20", "--end-date=2001-02-20");
 
     Exception exception =
-        assertThrows(
-            IllegalStateException.class, () -> connector.validateDateRange(toArgs(argsStr)));
+        assertThrows(IllegalStateException.class, () -> Connector.validateDateRange(args));
     assertEquals(
         "Start date [2001-02-20T00:00Z] must be before end date [2001-02-20T00:00Z].",
         exception.getMessage());
   }
 
   @Test
-  public void validateDateRange_endDateAlone_throws() {
-    String argsStr = "--connector test --end-date=2001-02-20";
+  public void validateDateRange_endDateAlone_throws() throws Exception {
+    ConnectorArguments args =
+        new ConnectorArguments("--connector", "test", "--end-date=2001-02-20");
 
-    Exception exception =
-        assertThrows(
-            IllegalStateException.class, () -> connector.validateDateRange(toArgs(argsStr)));
+    Exception exception = assertThrows(IllegalStateException.class, () -> validateDateRange(args));
     assertEquals(
         "End date can be specified only with start date, but start date was null.",
         exception.getMessage());
   }
 
   @Test
-  public void validateDateRange_startDateAlone_throws() {
-    String argsStr = "--connector test --start-date=2001-02-20";
+  public void validateDateRange_startDateAlone_throws() throws Exception {
+    ConnectorArguments args =
+        new ConnectorArguments("--connector", "test", "--start-date=2001-02-20");
 
-    Exception exception =
-        assertThrows(RuntimeException.class, () -> connector.validateDateRange(toArgs(argsStr)));
+    Exception exception = assertThrows(RuntimeException.class, () -> validateDateRange(args));
     assertEquals(
         "End date must be specified with start date, but was null.", exception.getMessage());
   }
@@ -75,42 +72,6 @@ public class ConnectorTest {
   @Test
   public void validateDateRange_requiredArgs_success() throws Exception {
     // Act
-    connector.validateDateRange(toArgs("--connector test"));
-  }
-
-  private static class EmptyConnector implements Connector {
-
-    @Nonnull
-    @Override
-    public String getName() {
-      return null;
-    }
-
-    @Nonnull
-    @Override
-    public String getDefaultFileName(boolean isAssessment, Clock clock) {
-      return null;
-    }
-
-    @Override
-    public void addTasksTo(
-        @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
-        throws Exception {}
-
-    @Nonnull
-    @Override
-    public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
-      return null;
-    }
-
-    @Nonnull
-    @Override
-    public Iterable<ConnectorProperty> getPropertyConstants() {
-      return null;
-    }
-  }
-
-  private static ConnectorArguments toArgs(String args) throws Exception {
-    return new ConnectorArguments(args.split(" "));
+    validateDateRange(new ConnectorArguments("--connector", "test"));
   }
 }

@@ -236,7 +236,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       Preconditions.checkState(arguments.getSchema() != null, "--schema is required with --host");
     }
 
-    validateDateRange(arguments);
+    Connector.validateDateRange(arguments);
   }
 
   @Nonnull

@@ -137,7 +137,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
     Preconditions.checkNotNull(
         clouderaUser, "--user is required for Cloudera Manager API connector");
 
-    validateDateRange(arguments);
+    Connector.validateDateRange(arguments);
   }
 
   private void doClouderaManagerLogin(

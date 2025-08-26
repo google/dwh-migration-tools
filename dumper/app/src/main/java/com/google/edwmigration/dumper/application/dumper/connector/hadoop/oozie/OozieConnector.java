@@ -82,7 +82,7 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
   public void validate(@Nonnull ConnectorArguments arguments) {
     Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
 
-    validateDateRange(arguments);
+    Connector.validateDateRange(arguments);
   }
 
   @Override

@@ -54,7 +54,7 @@ public interface Connector {
   @OverridingMethodsMustInvokeSuper
   default void validate(@Nonnull ConnectorArguments arguments) {}
 
-  default void validateDateRange(ConnectorArguments arguments) {
+  static void validateDateRange(@Nonnull ConnectorArguments arguments) {
     ZonedDateTime startDate = arguments.getStartDate();
     ZonedDateTime endDate = arguments.getEndDate();
 
