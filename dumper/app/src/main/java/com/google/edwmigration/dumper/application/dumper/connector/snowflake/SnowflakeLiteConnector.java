@@ -28,6 +28,7 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -49,9 +50,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   @Nonnull
   public Handle open(ConnectorArguments arguments)
       throws MetadataDumperUsageException, SQLException {
-    if (!arguments.isAssessment()) {
-      throw noAssessmentException();
-    }
     return super.open(arguments);
   }
 
@@ -72,6 +70,16 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.addAll(planner.generateLiteSpecificQueries());
+  }
+
+  @Override
+  public final void validate(@Nullable ConnectorArguments arguments) {
+    super.validate(arguments);
+
+    Objects.requireNonNull(arguments);
+    if (!arguments.isAssessment()) {
+      throw noAssessmentException();
+    }
   }
 
   private static MetadataDumperUsageException noAssessmentException() {

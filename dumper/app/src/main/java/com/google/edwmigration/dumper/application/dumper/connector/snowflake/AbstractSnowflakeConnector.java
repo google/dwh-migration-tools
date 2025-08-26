@@ -84,7 +84,6 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   @Override
   public Handle open(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException, SQLException {
-    validateArguments(arguments);
     String url = arguments.getUri() != null ? arguments.getUri() : getUrlFromArguments(arguments);
     String databaseName =
         arguments.getDatabases().isEmpty()
@@ -101,8 +100,10 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     return jdbcHandle;
   }
 
-  private void validateArguments(@Nonnull ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
+  @Override
+  public void validate(ConnectorArguments arguments) {
+    super.validate(arguments);
+
     ArrayList<String> messages = new ArrayList<>();
     MetadataDumperUsageException exception = null;
 
