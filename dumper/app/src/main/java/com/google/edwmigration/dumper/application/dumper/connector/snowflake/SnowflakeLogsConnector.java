@@ -160,6 +160,15 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     }
   }
 
+  @Override
+  public final void validate(ConnectorArguments arguments) {
+    super.validate(arguments);
+
+    if (arguments.isAssessment() && arguments.hasQueryLogEarliestTimestamp()) {
+      throw unsupportedOption(ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP);
+    }
+  }
+
   @Nonnull
   @Override
   public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
@@ -369,10 +378,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     boolean isAssessment = arguments.isAssessment();
 
-    if (isAssessment && arguments.hasQueryLogEarliestTimestamp()) {
-      throw unsupportedOption(ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP);
-    }
-
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
@@ -387,7 +392,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
     logger.info("Exporting query log for " + queryLogIntervals);
 
-    if (!arguments.isAssessment()) {
+    if (!isAssessment) {
       TaskDescription queryHistoryTask =
           new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
       queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
@@ -408,13 +413,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
   }
 
-  private static MetadataDumperUsageException unsupportedOption(String option) {
-    String assessment = ConnectorArguments.OPT_ASSESSMENT;
-    String message =
-        String.format("Unsupported option used with --%s: please remove --%s", assessment, option);
-    return new MetadataDumperUsageException(message);
-  }
-
   private static void addJdbcTask(
       List<? super Task<?>> out, ZonedInterval interval, TaskDescription task) {
     String query =
@@ -425,6 +423,13 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     String file = getEntryFileNameWithTimestamp(task.zipPrefix, interval);
     out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
+  }
+
+  private static MetadataDumperUsageException unsupportedOption(String option) {
+    String assessment = ConnectorArguments.OPT_ASSESSMENT;
+    String message =
+        String.format("Unsupported option used with --%s: please remove --%s", assessment, option);
+    return new MetadataDumperUsageException(message);
   }
 
   private String getOverrideableQuery(
