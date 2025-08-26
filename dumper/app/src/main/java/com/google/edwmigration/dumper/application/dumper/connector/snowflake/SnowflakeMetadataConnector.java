@@ -130,7 +130,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   @Override
-  protected final void validateForSnowflake(@Nonnull ConnectorArguments arguments) {}
+  protected final void validateForConnector(@Nonnull ConnectorArguments arguments) {}
 
   private void addSqlTasksWithInfoSchemaFallback(
       @Nonnull List<? super Task<?>> out,

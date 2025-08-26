@@ -63,7 +63,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   }
 
   @Override
-  protected void validateForSnowflake(ConnectorArguments arguments) {
+  protected void validateForConnector(ConnectorArguments arguments) {
     if (!arguments.isAssessment()) {
       throw noAssessmentException();
     }

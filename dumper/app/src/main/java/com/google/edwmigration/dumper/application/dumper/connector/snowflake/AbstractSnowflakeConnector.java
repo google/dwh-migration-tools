@@ -131,7 +131,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       exception = new MetadataDumperUsageException(unsupportedFilter, messages);
     }
     removeDuplicateMessageAndThrow(exception);
-    validateForSnowflake(arguments);
+    validateForConnector(arguments);
   }
 
   /**
@@ -141,7 +141,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
    *
    * @param arguments User-provided arguments of the Dumper run.
    */
-  protected abstract void validateForSnowflake(@Nonnull ConnectorArguments arguments);
+  protected abstract void validateForConnector(@Nonnull ConnectorArguments arguments);
 
   private static void removeDuplicateMessageAndThrow(
       @Nullable MetadataDumperUsageException exception) {
