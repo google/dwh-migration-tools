@@ -20,25 +20,24 @@ import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.metrics.*;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import java.nio.file.FileSystem;
-import java.time.Duration;
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * TelemetryProcessor that uses the Strategy pattern to handle telemetry operations. This replaces
+ * the boolean shouldWrite flag with a more flexible approach.
+ */
 public class TelemetryProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(TelemetryProcessor.class);
-
   private final ClientTelemetry clientTelemetry;
-  private final boolean shouldWrite;
+  private final TelemetryStrategy telemetryStrategy;
 
-  public TelemetryProcessor(boolean shouldWrite) {
+  /**
+   * Constructor that takes a TelemetryStrategy instead of a boolean flag.
+   *
+   * @param telemetryStrategy the strategy to use for telemetry operations
+   */
+  public TelemetryProcessor(TelemetryStrategy telemetryStrategy) {
+    this.telemetryStrategy = telemetryStrategy;
     clientTelemetry = new ClientTelemetry();
     clientTelemetry.setDumperMetadata(StartUpMetaInfoProcessor.getDumperMetadata());
-
-    this.shouldWrite = shouldWrite;
   }
 
   /**
@@ -47,58 +46,11 @@ public class TelemetryProcessor {
    */
   public void addDumperRunMetricsToPayload(
       ConnectorArguments arguments, TaskSetState state, Stopwatch stopwatch, boolean success) {
-    if (!shouldWrite) {
-      return;
-    }
-    try {
-      clientTelemetry.setEventType(EventType.DUMPER_RUN_METRICS);
-
-      List<TaskExecutionSummary> taskExecutionSummaries =
-          state.getTasksReports().stream()
-              .map(
-                  tasksReport ->
-                      new TaskExecutionSummary(tasksReport.count(), tasksReport.state().name()))
-              .collect(Collectors.toList());
-
-      List<TaskDetailedSummary> taskDetailedSummaries =
-          state.getTaskResultSummaries().stream()
-              .map(
-                  item ->
-                      new TaskDetailedSummary(
-                          item.getTask().getName(),
-                          item.getTask().getCategory().name(),
-                          item.getTaskState().name(),
-                          item.getThrowable().isPresent()
-                              ? item.getThrowable().get().getMessage()
-                              : null))
-              .collect(Collectors.toList());
-
-      Duration elapsed = stopwatch.elapsed();
-
-      DumperRunMetrics dumperRunMetrics =
-          DumperRunMetrics.builder()
-              .setId(UUID.randomUUID().toString())
-              .setMeasureStartTime(ZonedDateTime.now().minus(elapsed))
-              .setRunDurationInMinutes(elapsed.getSeconds() / 60)
-              .setOverallStatus(success ? "SUCCESS" : "FAILURE")
-              .setTaskExecutionSummary(taskExecutionSummaries)
-              .setTaskDetailedSummary(taskDetailedSummaries)
-              .setArguments(arguments)
-              .build();
-      clientTelemetry.addToPayload(dumperRunMetrics);
-    } catch (Exception e) {
-      logger.warn("Failed to generate dumperRunMetrics and add it to payload", e);
-    }
+    telemetryStrategy.processDumperRunMetrics(
+        clientTelemetry, arguments, state, stopwatch, success);
   }
 
   public void processTelemetry(FileSystem fileSystem) {
-    if (!shouldWrite) {
-      return;
-    }
-    try {
-      TelemetryWriter.write(fileSystem, clientTelemetry);
-    } catch (Exception e) {
-      logger.warn("Failed to write telemetry", e);
-    }
+    telemetryStrategy.writeTelemetry(fileSystem, clientTelemetry);
   }
 }
