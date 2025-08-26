@@ -101,7 +101,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   }
 
   @Override
-  public void validate(ConnectorArguments arguments) {
+  public void validate(@Nonnull ConnectorArguments arguments) {
     super.validate(arguments);
 
     ArrayList<String> messages = new ArrayList<>();

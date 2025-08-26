@@ -28,7 +28,6 @@ import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -73,10 +72,9 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   }
 
   @Override
-  public final void validate(@Nullable ConnectorArguments arguments) {
+  public final void validate(ConnectorArguments arguments) {
     super.validate(arguments);
 
-    Objects.requireNonNull(arguments);
     if (!arguments.isAssessment()) {
       throw noAssessmentException();
     }
