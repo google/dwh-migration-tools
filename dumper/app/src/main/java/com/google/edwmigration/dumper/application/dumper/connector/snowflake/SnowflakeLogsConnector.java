@@ -161,7 +161,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   }
 
   @Override
-  public final void validate(ConnectorArguments arguments) {
+  public final void validate(@Nonnull ConnectorArguments arguments) {
     super.validate(arguments);
 
     if (arguments.isAssessment() && arguments.hasQueryLogEarliestTimestamp()) {
