@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.metrics.ClientTelemetry;
@@ -41,19 +40,19 @@ public class TelemetryStrategyTest {
   public void testWriteTelemetryStrategy_ProcessesMetrics() {
     WriteTelemetryStrategy strategy = new WriteTelemetryStrategy();
     Stopwatch stopwatch = Stopwatch.createUnstarted();
-    
+
     strategy.processDumperRunMetrics(
         mockClientTelemetry, mockArguments, mockState, stopwatch, true);
-    
+
     assertNotNull(strategy);
   }
 
   @Test
   public void testWriteTelemetryStrategy_WritesTelemetry() {
     WriteTelemetryStrategy strategy = new WriteTelemetryStrategy();
-    
+
     strategy.writeTelemetry(mockFileSystem, mockClientTelemetry);
-    
+
     assertNotNull(strategy);
   }
 
@@ -61,11 +60,11 @@ public class TelemetryStrategyTest {
   public void testNoOpTelemetryStrategy_DoesNothing() {
     NoOpTelemetryStrategy strategy = new NoOpTelemetryStrategy();
     Stopwatch stopwatch = Stopwatch.createUnstarted();
-    
+
     strategy.processDumperRunMetrics(
         mockClientTelemetry, mockArguments, mockState, stopwatch, true);
     strategy.writeTelemetry(mockFileSystem, mockClientTelemetry);
-    
+
     assertNotNull(strategy);
   }
 
@@ -73,7 +72,7 @@ public class TelemetryStrategyTest {
   public void testTelemetryStrategyFactory_CreatesCorrectStrategies() {
     TelemetryStrategy writeStrategy = TelemetryStrategyFactory.createStrategy(true);
     TelemetryStrategy noOpStrategy = TelemetryStrategyFactory.createStrategy(false);
-    
+
     assertTrue(writeStrategy instanceof WriteTelemetryStrategy);
     assertTrue(noOpStrategy instanceof NoOpTelemetryStrategy);
   }
@@ -81,9 +80,9 @@ public class TelemetryStrategyTest {
   @Test
   public void testTelemetryProcessor_StrategyConstructor() {
     TelemetryStrategy strategy = new WriteTelemetryStrategy();
-    
+
     TelemetryProcessor processor = new TelemetryProcessor(strategy);
-    
+
     assertNotNull(processor);
   }
 }
