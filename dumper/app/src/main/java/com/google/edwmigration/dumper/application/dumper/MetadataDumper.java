@@ -68,7 +68,7 @@ public class MetadataDumper {
     this.connectorArguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
     telemetryProcessor =
         new TelemetryProcessor(
-            TelemetryStrategyFactory.createStrategy(connectorArguments.isDiagnosticsOn()));
+            TelemetryStrategyFactory.createStrategy(connectorArguments.isTelemetryOn()));
     if (connectorArguments.saveResponseFile()) {
       JsonResponseFile.save(connectorArguments);
     }
