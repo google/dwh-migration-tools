@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -55,22 +57,19 @@ public interface Connector {
   default void validate(@Nonnull ConnectorArguments arguments) {}
 
   static void validateDateRange(@Nonnull ConnectorArguments arguments) {
-    ZonedDateTime startDate = arguments.getStartDate();
-    ZonedDateTime endDate = arguments.getEndDate();
+    ZonedDateTime start = arguments.getStartDate();
+    ZonedDateTime end = arguments.getEndDate();
 
-    if (startDate != null) {
-      Preconditions.checkNotNull(
-          endDate, "End date must be specified with start date, but was null.");
-      Preconditions.checkState(
-          startDate.isBefore(endDate),
-          "Start date [%s] must be before end date [%s].",
-          startDate,
-          endDate);
-    } else {
-      Preconditions.checkState(
-          endDate == null,
-          "End date can be specified only with start date, but start date was null.");
+    if (start == null && end == null) {
+      return;
     }
+    checkState(
+        start != null, "End date can be specified only with start date, but start date was null.");
+    // The assignment makes 'end' recognized as @Nonnull.
+    end = checkNotNull(end, "End date must be specified with start date, but was null.");
+
+    String message = String.format("Start date [%s] must be before end date [%s].", start, end);
+    checkState(end.isAfter(start), message);
   }
 
   void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
