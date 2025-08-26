@@ -943,6 +943,10 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionQueryLogEarliestTimestamp);
   }
 
+  public boolean hasQueryLogEarliestTimestamp() {
+    return getOptions().valueOf(optionQueryLogEarliestTimestamp) != null;
+  }
+
   @CheckForNull
   public Integer getQueryLogDays() {
     return getOptions().valueOf(optionQueryLogDays);

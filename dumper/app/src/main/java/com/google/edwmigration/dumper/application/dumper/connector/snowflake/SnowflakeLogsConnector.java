@@ -160,6 +160,15 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     }
   }
 
+  @Override
+  public final void validate(ConnectorArguments arguments) {
+    super.validate(arguments);
+
+    if (arguments.isAssessment() && arguments.hasQueryLogEarliestTimestamp()) {
+      throw unsupportedOption(ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP);
+    }
+  }
+
   @Nonnull
   @Override
   public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
@@ -281,8 +290,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     String overrideQuery = getOverrideQuery(arguments);
     if (overrideQuery != null) return overrideQuery;
 
-    String overrideWhere = getOverrideWhere(arguments);
-
     @SuppressWarnings("OrphanedFormatString")
     StringBuilder queryBuilder =
         new StringBuilder(
@@ -333,12 +340,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "WHERE end_time >= to_timestamp_ltz('%s')\n"
                 + "AND end_time <= to_timestamp_ltz('%s')\n"
                 + "AND is_client_generated_statement = FALSE\n");
-    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
-      queryBuilder
-          .append("AND start_time >= ")
-          .append(arguments.getQueryLogEarliestTimestamp())
-          .append("\n");
-    if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
+
+    queryBuilder.append(getOverrideWhere(arguments));
     return queryBuilder.toString().replace('\n', ' ');
   }
 
@@ -356,16 +359,25 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     return null;
   }
 
-  @CheckForNull
+  @Nonnull
   private String getOverrideWhere(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    return arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_WHERE);
+    ConnectorProperty property = SnowflakeLogConnectorProperties.OVERRIDE_WHERE;
+    String overrideWhere = arguments.getDefinition(property);
+    if (overrideWhere != null) {
+      return String.format(" AND %s", overrideWhere);
+    } else {
+      return "";
+    }
   }
 
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
+
+    boolean isAssessment = arguments.isAssessment();
+
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
@@ -380,7 +392,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
     logger.info("Exporting query log for " + queryLogIntervals);
 
-    if (!arguments.isAssessment()) {
+    if (!isAssessment) {
       TaskDescription queryHistoryTask =
           new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
       queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
@@ -411,6 +423,13 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     String file = getEntryFileNameWithTimestamp(task.zipPrefix, interval);
     out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
+  }
+
+  private static MetadataDumperUsageException unsupportedOption(String option) {
+    String assessment = ConnectorArguments.OPT_ASSESSMENT;
+    String message =
+        String.format("Unsupported option used with --%s: please remove --%s", assessment, option);
+    return new MetadataDumperUsageException(message);
   }
 
   private String getOverrideableQuery(
