@@ -52,7 +52,6 @@ public class MetadataDumperTest {
     }
   }
 
-  private final MetadataDumper dumper = new MetadataDumper();
   private final Connector connector = new TestConnector();
 
   @Before
@@ -80,7 +79,8 @@ public class MetadataDumperTest {
 
   @Test
   public void testInstantiate() throws Exception {
-    boolean result = dumper.run("--connector", new BigQueryLogsConnector().getName(), "--dry-run");
+    boolean result =
+        new MetadataDumper("--connector", new BigQueryLogsConnector().getName(), "--dry-run").run();
     assertTrue(result);
   }
 
@@ -89,7 +89,7 @@ public class MetadataDumperTest {
     File expectedFile = new File(DEFAULT_FILENAME);
 
     // Act
-    dumper.run("--connector", connector.getName());
+    new MetadataDumper("--connector", connector.getName()).run();
 
     // Assert
     assertTrue(expectedFile.exists());
@@ -101,7 +101,7 @@ public class MetadataDumperTest {
     File expectedFile = new File(path, DEFAULT_FILENAME);
 
     // Act
-    dumper.run("--connector", connector.getName(), "--output", path);
+    new MetadataDumper("--connector", connector.getName(), "--output", path).run();
 
     // Assert
     assertTrue(expectedFile.exists());
@@ -113,7 +113,7 @@ public class MetadataDumperTest {
     File expectedFile = new File(name);
 
     // Act
-    dumper.run("--connector", connector.getName(), "--output", name);
+    new MetadataDumper("--connector", connector.getName(), "--output", name).run();
 
     // Assert
     assertTrue(expectedFile.exists());
@@ -127,7 +127,7 @@ public class MetadataDumperTest {
 
     // Act
     dir.mkdirs();
-    dumper.run("--connector", connector.getName(), "--output", dirName);
+    new MetadataDumper("--connector", connector.getName(), "--output", dirName).run();
 
     // Assert
     assertTrue(expectedFile.exists());
@@ -141,7 +141,7 @@ public class MetadataDumperTest {
 
     // Act
     dir.mkdirs();
-    dumper.run("--connector", connector.getName(), "--output", dirName);
+    new MetadataDumper("--connector", connector.getName(), "--output", dirName).run();
 
     // Assert
     assertTrue(expectedFile.exists());
@@ -157,7 +157,8 @@ public class MetadataDumperTest {
     IllegalStateException exception =
         assertThrows(
             IllegalStateException.class,
-            () -> dumper.run("--connector", connector.getName(), "--output", filename));
+            () ->
+                new MetadataDumper("--connector", connector.getName(), "--output", filename).run());
 
     // Assert
     assertTrue(exception.getMessage().startsWith("A file already exists at test"));
@@ -167,7 +168,8 @@ public class MetadataDumperTest {
   public void testFailsOnUnrecognizedFlag() {
     OptionException exception =
         assertThrows(
-            OptionException.class, () -> dumper.run("--unrecognized-flag", "random-value"));
+            OptionException.class,
+            () -> new MetadataDumper("--unrecognized-flag", "random-value").run());
 
     // Assert
     assertEquals("unrecognized-flag is not a recognized option", exception.getMessage());
@@ -179,8 +181,9 @@ public class MetadataDumperTest {
         assertThrows(
             MetadataDumperUsageException.class,
             () ->
-                dumper.run(
-                    "--connector", connector.getName(), "-DImaginaryDialect.flag=random-value"));
+                new MetadataDumper(
+                        "--connector", connector.getName(), "-DImaginaryDialect.flag=random-value")
+                    .run());
 
     // Assert
     assertEquals(
@@ -194,7 +197,9 @@ public class MetadataDumperTest {
         assertThrows(
             MetadataDumperUsageException.class,
             () ->
-                dumper.run("--connector", connector.getName(), "-Dhiveql.rpc.protection=privacy"));
+                new MetadataDumper(
+                        "--connector", connector.getName(), "-Dhiveql.rpc.protection=privacy")
+                    .run());
 
     // Assert
     assertEquals(
@@ -208,7 +213,7 @@ public class MetadataDumperTest {
     File file = new File(DEFAULT_FILENAME);
 
     // Act
-    dumper.run("--connector", connector.getName(), "-Dtest.test.property=test-value");
+    new MetadataDumper("--connector", connector.getName(), "-Dtest.test.property=test-value").run();
 
     // Assert
     assertTrue(file.exists());

@@ -87,7 +87,7 @@ public class Main {
                 args.add(driverPath.toString());
               });
       args.addAll(connectorConfiguration.args);
-      metadataDumperSupplier.get().run(args.toArray(new String[args.size()]));
+      metadataDumperSupplier.get().run();
     }
   }
 
@@ -99,7 +99,13 @@ public class Main {
                     /* maxRetries= */ 3, /* defaultRetryInterval= */ TimeValue.ofSeconds(1L)))
             .build()) {
       new Main(
-              () -> new MetadataDumper(),
+              () -> {
+                try {
+                  return new MetadataDumper(args);
+                } catch (Exception e) {
+                  throw new RuntimeException(e);
+                }
+              },
               new HttpClientMetadataRetriever(httpClient),
               DriverRetriever.create(httpClient, Files.createTempDirectory("clouddumper")))
           .run();

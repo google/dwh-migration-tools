@@ -113,7 +113,7 @@ public abstract class AbstractConnectorExecutionTest extends AbstractConnectorTe
   }
 
   public void runDumper(@Nonnull String... args) throws Exception {
-    new MetadataDumper().run(args);
+    new MetadataDumper(args).run();
   }
 
   protected static class ZipEntryValidator<E extends Enum<E>> {
