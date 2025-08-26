@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.airflow;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
 import static com.google.edwmigration.dumper.application.dumper.connector.airflow.AirflowDatabaseDriverClasses.jdbcPrefixForClassName;
 
 import com.google.auto.service.AutoService;
@@ -236,7 +237,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
       Preconditions.checkState(arguments.getSchema() != null, "--schema is required with --host");
     }
 
-    Connector.validateDateRange(arguments);
+    validateDateRange(arguments);
   }
 
   @Nonnull
