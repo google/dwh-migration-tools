@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.metrics.TaskRunMetrics;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -35,7 +36,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
@@ -56,6 +59,8 @@ public class TasksRunner implements TaskRunContextOps {
   private final TaskRunContext context;
   private final TaskSetState.Impl state;
   private final List<Task<?>> tasks;
+  private final TelemetryProcessor telemetryProcessor;
+  private final HashMap<String, String> MetricToErrorMap = new HashMap<>();
 
   public TasksRunner(
       OutputHandleFactory sinkFactory,
@@ -63,10 +68,12 @@ public class TasksRunner implements TaskRunContextOps {
       int threadPoolSize,
       @Nonnull TaskSetState.Impl state,
       List<Task<?>> tasks,
-      ConnectorArguments arguments) {
+      ConnectorArguments arguments,
+      TelemetryProcessor telemetryProcessor) {
     context = createContext(sinkFactory, handle, threadPoolSize, arguments);
     this.state = state;
     this.tasks = tasks;
+    this.telemetryProcessor = telemetryProcessor;
     totalNumberOfTasks = countTasks(tasks);
     stopwatch = Stopwatch.createStarted();
     numberOfCompletedTasks = new AtomicInteger();
@@ -93,7 +100,13 @@ public class TasksRunner implements TaskRunContextOps {
 
   public void run() throws MetadataDumperUsageException {
     for (Task<?> task : tasks) {
+      Instant taskStartTime = Instant.now();
+
       handleTask(task);
+
+      Instant taskEndTime = Instant.now();
+      TaskState finalState = getTaskState(task);
+      addTaskTelemetry(task.getName(), taskStartTime, taskEndTime, finalState);
     }
   }
 
@@ -168,6 +181,7 @@ public class TasksRunner implements TaskRunContextOps {
       else if (!task.handleException(e))
         logger.warn("Task failed: {}: {}", task, e.getMessage(), e);
       state.setTaskException(task, TaskState.FAILED, e);
+      MetricToErrorMap.put(task.getName(), e.getMessage());
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
         sink.asCharSink(StandardCharsets.UTF_8, WriteMode.CREATE_TRUNCATE)
@@ -178,6 +192,7 @@ public class TasksRunner implements TaskRunContextOps {
                     String.valueOf(new DumperDiagnosticQuery(e).call())));
       } catch (Exception f) {
         logger.warn("Exception-recorder failed:  {}", f.getMessage(), f);
+        MetricToErrorMap.put(task.getName(), f.getMessage());
       }
     }
     return null;
@@ -187,5 +202,25 @@ public class TasksRunner implements TaskRunContextOps {
     return tasks.stream()
         .mapToInt(task -> task instanceof TaskGroup ? countTasks(((TaskGroup) task).getTasks()) : 1)
         .sum();
+  }
+
+  private void addTaskTelemetry(
+      String taskName, Instant startTime, Instant endTime, TaskState state) {
+    if (telemetryProcessor != null) {
+      try {
+        TaskRunMetrics taskMetrics =
+            new TaskRunMetrics(
+                taskName,
+                state.name(),
+                startTime,
+                endTime,
+                MetricToErrorMap.getOrDefault(taskName, null));
+
+        // Add to the telemetry payload
+        telemetryProcessor.addTaskTelemetry(taskMetrics);
+      } catch (Exception e) {
+        logger.warn("Failed to add task telemetry for task: {}", taskName, e);
+      }
+    }
   }
 }

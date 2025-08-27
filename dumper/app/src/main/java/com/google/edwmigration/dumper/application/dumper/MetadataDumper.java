@@ -148,7 +148,8 @@ public class MetadataDumper {
                 connectorArguments.getThreadPoolSize(),
                 state,
                 tasks,
-                connectorArguments)
+                connectorArguments,
+                telemetryProcessor)
             .run();
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
