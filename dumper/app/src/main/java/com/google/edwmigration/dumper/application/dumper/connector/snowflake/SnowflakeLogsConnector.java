@@ -290,6 +290,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     String overrideQuery = getOverrideQuery(arguments);
     if (overrideQuery != null) return overrideQuery;
 
+    String overrideWhere = getOverrideWhere(arguments);
+
     @SuppressWarnings("OrphanedFormatString")
     StringBuilder queryBuilder =
         new StringBuilder(
@@ -341,7 +343,12 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "AND end_time <= to_timestamp_ltz('%s')\n"
                 + "AND is_client_generated_statement = FALSE\n");
 
-    queryBuilder.append(getOverrideWhere(arguments));
+    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
+      queryBuilder
+          .append("AND start_time >= ")
+          .append(arguments.getQueryLogEarliestTimestamp())
+          .append("\n");
+    if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
     return queryBuilder.toString().replace('\n', ' ');
   }
 
@@ -359,25 +366,16 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     return null;
   }
 
-  @Nonnull
+  @CheckForNull
   private String getOverrideWhere(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    ConnectorProperty property = SnowflakeLogConnectorProperties.OVERRIDE_WHERE;
-    String overrideWhere = arguments.getDefinition(property);
-    if (overrideWhere != null) {
-      return String.format(" AND %s", overrideWhere);
-    } else {
-      return "";
-    }
+    return arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_WHERE);
   }
 
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-
-    boolean isAssessment = arguments.isAssessment();
-
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
 
@@ -392,7 +390,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             arguments, rotationDuration, IntervalExpander.createBasedOnDuration(rotationDuration));
     logger.info("Exporting query log for " + queryLogIntervals);
 
-    if (!isAssessment) {
+    if (!arguments.isAssessment()) {
       TaskDescription queryHistoryTask =
           new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
       queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
