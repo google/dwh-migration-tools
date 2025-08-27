@@ -26,6 +26,8 @@ public class TaskRunMetrics implements TelemetryPayload {
 
   @JsonProperty private String name;
 
+  @JsonProperty private EventType eventType = EventType.TASK_RUN_METRICS;
+
   @JsonProperty private String overallStatus;
 
   @JsonProperty private Instant measureStartInstance;
@@ -51,8 +53,8 @@ public class TaskRunMetrics implements TelemetryPayload {
     this.error = error;
   }
 
-  public String getId() {
-    return name;
+  public EventType getEventType() {
+    return eventType;
   }
 
   public String getName() {
