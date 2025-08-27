@@ -20,7 +20,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 
 /**
- * @author kakha keep immutable. TaskRunner is multi-threaded, so we need to make it thread-safe.
+ * keep immutable. TaskRunner is multi-threaded, so we need to make it thread-safe.
+ *
+ * @author kakha
  */
 public class TaskRunMetrics implements TelemetryPayload {
 
