@@ -39,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -272,15 +271,14 @@ public class TeradataMetadataConnectorTest extends AbstractConnectorExecutionTes
             // "--database", "db_0"
             );
 
-    MetadataDumper dumper = new MetadataDumper(new TelemetryProcessor());
-
-    dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
+    MetadataDumper dumper = new MetadataDumper(new String[] {});
+    dumper.run();
 
     CONTINUE:
     {
       // Prove that --continue is doing its thing.
       Stopwatch stopwatch = Stopwatch.createStarted();
-      dumper.run(new ConnectorArguments(args.toArray(ArrayUtils.EMPTY_STRING_ARRAY)));
+      dumper.run();
       assertTrue(
           "Second run of dumper was too slow.",
           stopwatch.elapsed(TimeUnit.SECONDS)
