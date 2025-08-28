@@ -28,10 +28,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ZonedParser.DayOffset;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
@@ -43,17 +41,11 @@ import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
@@ -63,7 +55,6 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.core.annotation.AnnotationUtils;
 
 /** @author shevek */
 public class ConnectorArguments extends DefaultArguments {
@@ -311,7 +302,6 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
 
-  // TODO: Make this be an ISO instant.
   @Deprecated
   private final OptionSpec<String> optionQueryLogEarliestTimestamp =
       parser
@@ -606,100 +596,16 @@ public class ConnectorArguments extends DefaultArguments {
     super(args);
   }
 
-  private static class InputDescriptor implements Comparable<InputDescriptor> {
-
-    public enum Category {
-      Arg,
-      Env,
-      Other
-    }
-
-    private final RespectsInput annotation;
-
-    public InputDescriptor(RespectsInput annotation) {
-      this.annotation = annotation;
-    }
-
-    @Nonnull
-    public Category getCategory() {
-      if (!Strings.isNullOrEmpty(annotation.arg())) {
-        return Category.Arg;
-      }
-      if (!Strings.isNullOrEmpty(annotation.env())) {
-        return Category.Env;
-      }
-      return Category.Other;
-    }
-
-    @Nonnull
-    public String getKey() {
-      switch (getCategory()) {
-        case Arg:
-          return "--" + annotation.arg();
-        case Env:
-          return annotation.env();
-        default:
-          return String.valueOf(annotation.hashCode());
-      }
-    }
-
-    @Override
-    public int compareTo(InputDescriptor o) {
-      return ComparisonChain.start()
-          .compare(getCategory(), o.getCategory())
-          .compare(annotation.order(), o.annotation.order())
-          .result();
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder buf = new StringBuilder();
-      String key = getKey();
-      buf.append(key).append(StringUtils.repeat(' ', 12 - key.length()));
-      if (getCategory() == Category.Env) {
-        buf.append(" (environment variable)");
-      }
-      String defaultValue = annotation.defaultValue();
-      if (!Strings.isNullOrEmpty(defaultValue)) {
-        buf.append(" (default: ").append(defaultValue).append(")");
-      }
-      buf.append(" ").append(annotation.description());
-      String required = annotation.required();
-      if (!Strings.isNullOrEmpty(required)) {
-        buf.append(" (Required ").append(required).append(".)");
-      }
-      return buf.toString();
-    }
-  }
-
-  @Nonnull
-  private static Collection<InputDescriptor> getAcceptsInputs(@Nonnull Connector connector) {
-    Map<String, InputDescriptor> tmp = new HashMap<>();
-    Class<?> connectorType = connector.getClass();
-    while (connectorType != null) {
-      Set<RespectsInput> respectsInputs =
-          AnnotationUtils.getDeclaredRepeatableAnnotations(connectorType, RespectsInput.class);
-      for (RespectsInput respectsInput : respectsInputs) {
-        InputDescriptor descriptor = new InputDescriptor(respectsInput);
-        tmp.putIfAbsent(descriptor.getKey(), descriptor);
-      }
-      connectorType = connectorType.getSuperclass();
-    }
-
-    List<InputDescriptor> out = new ArrayList<>(tmp.values());
-    Collections.sort(out);
-    return out;
-  }
-
   @Override
-  protected void printHelpOn(PrintStream out, OptionSet o) throws IOException {
+  protected void printHelpOn(@Nonnull PrintStream out, OptionSet o) throws IOException {
     out.append(HELP_INFO);
     super.printHelpOn(out, o);
 
+    ConnectorRepository repository = ConnectorRepository.getInstance();
     // if --connector <valid-connection> provided, print only that
     if (o.has(connectorNameOption)) {
       String helpOnConnector = o.valueOf(connectorNameOption);
-      Connector connector = ConnectorRepository.getInstance().getByName(helpOnConnector);
+      Connector connector = repository.getByName(helpOnConnector);
       if (connector != null) {
         out.append("\nSelected connector:\n");
         printConnectorHelp(out, connector);
@@ -707,22 +613,14 @@ public class ConnectorArguments extends DefaultArguments {
       }
     }
     out.append("\nAvailable connectors:\n");
-    for (Connector connector : ConnectorRepository.getInstance().getAllConnectors()) {
+    for (Connector connector : repository.getAllConnectors()) {
       printConnectorHelp(out, connector);
     }
   }
 
-  private void printConnectorHelp(@Nonnull Appendable out, @Nonnull Connector connector)
+  private static void printConnectorHelp(@Nonnull Appendable out, @Nonnull Connector connector)
       throws IOException {
-    out.append("* " + connector.getName());
-    String description = connector.getDescription();
-    if (!description.isEmpty()) {
-      out.append(" - " + description);
-    }
-    out.append("\n");
-    for (InputDescriptor descriptor : getAcceptsInputs(connector)) {
-      out.append(String.format("%8s%s\n", "", descriptor));
-    }
+    connector.printHelp(out);
     ConnectorProperties.printHelp(out, connector);
   }
 

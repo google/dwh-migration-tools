@@ -20,11 +20,12 @@ import static com.google.edwmigration.dumper.application.dumper.connector.snowfl
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
+import java.io.IOException;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
 @AutoService(Connector.class)
-public class SnowflakeAccountUsageLogsConnector extends SnowflakeLogsConnector {
+public final class SnowflakeAccountUsageLogsConnector extends SnowflakeLogsConnector {
 
   public SnowflakeAccountUsageLogsConnector() {
     super("snowflake-account-usage-logs", USAGE_ONLY_SOURCE);
@@ -34,5 +35,10 @@ public class SnowflakeAccountUsageLogsConnector extends SnowflakeLogsConnector {
   @Nonnull
   public String getDescription() {
     return "Dumps logs from Snowflake, using ACCOUNT_USAGE only.";
+  }
+
+  @Override
+  public void printHelp(@Nonnull Appendable out) throws IOException {
+    out.append(AbstractSnowflakeConnector.describeAsDelegate(this, "snowflake-logs"));
   }
 }

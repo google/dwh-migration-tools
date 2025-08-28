@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInputs;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
+import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
@@ -251,5 +252,11 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
           "Database name has incorrectly placed double quote(s). Aborting query.");
     }
     return trimmedName;
+  }
+
+  static String describeAsDelegate(Connector connector, String baseName) {
+    String summary = String.format("* %s - %s\n", connector.getName(), connector.getDescription());
+    String details = String.format("%8s[same options as '%s']\n", "", baseName);
+    return summary + details;
   }
 }
