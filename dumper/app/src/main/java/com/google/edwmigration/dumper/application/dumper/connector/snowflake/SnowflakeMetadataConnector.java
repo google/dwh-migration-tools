@@ -287,7 +287,11 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        out.add(taskForAssessment(item, arguments));
+        String query = queryForAssessment(item, arguments);
+        Task<?> task =
+            new JdbcSelectTask(item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
+                .withHeaderTransformer(item.transformer());
+        out.add(task);
       }
     } else {
       if (!arguments.getDatabases().isEmpty()) {
@@ -317,29 +321,28 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  private Task<?> taskForAssessment(AssessmentQuery item, ConnectorArguments arguments) {
-    String formatString =
-        item.needsOverride
-            ? getOverrideableQuery(arguments, item.formatString, TABLE_STORAGE_METRICS)
-            : item.formatString;
-    // Check whether the overrides changed anything.
-    if (formatString.equals(item.formatString)) {
-      // Overrides either not applied or equal to default values.
-      String whereCondition =
-          " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL";
-      // The condition is always passed to String.format. SHOW queries simply ignore it.
-      String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
-      return new JdbcSelectTask(
-              item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
-          .withHeaderTransformer(item.transformer());
-    } else {
-      String whereCondition = "";
-      // The condition is always passed to String.format. SHOW queries simply ignore it.
-      String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
-      return new JdbcSelectTask(
-              item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
-          .withHeaderTransformer(item.transformer());
+  private String queryForAssessment(AssessmentQuery item, ConnectorArguments arguments) {
+    MetadataView view = TABLE_STORAGE_METRICS;
+    String schema = ACCOUNT_USAGE_SCHEMA_NAME;
+    if (!item.needsOverride) {
+      return item.substitute(schema, "");
     }
+
+    ConnectorProperty propertyQuery = PropertyAction.QUERY.toProperty(view);
+    String overrideQuery = arguments.getDefinition(propertyQuery);
+    if (overrideQuery != null) {
+      return String.format(overrideQuery, schema, "");
+    }
+
+    ConnectorProperty propertyWhere = PropertyAction.WHERE.toProperty(view);
+    String overrideWhere = arguments.getDefinition(propertyWhere);
+    if (overrideWhere != null) {
+      return item.substitute(schema, overrideWhere);
+    }
+
+    String whereCondition =
+        " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL";
+    return item.substitute(schema, whereCondition);
   }
 
   private void addAssessmentQuery(
