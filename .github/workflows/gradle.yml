@@ -44,4 +44,3 @@ jobs:
     
     - name: Test Permissions migration
       run: ./gradlew -Pci :permissions-migration:app:test
-)
