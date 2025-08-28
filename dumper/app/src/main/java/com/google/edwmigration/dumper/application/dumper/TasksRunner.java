@@ -37,9 +37,11 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -60,7 +62,7 @@ public class TasksRunner implements TaskRunContextOps {
   private final TaskSetState.Impl state;
   private final List<Task<?>> tasks;
   private final TelemetryProcessor telemetryProcessor;
-  private final HashMap<String, String> MetricToErrorMap = new HashMap<>();
+  private final HashMap<String, String> metricToErrorMap = new HashMap<>();
 
   public TasksRunner(
       OutputHandleFactory sinkFactory,
@@ -70,6 +72,8 @@ public class TasksRunner implements TaskRunContextOps {
       List<Task<?>> tasks,
       ConnectorArguments arguments,
       TelemetryProcessor telemetryProcessor) {
+    Preconditions.checkNotNull(telemetryProcessor);
+
     context = createContext(sinkFactory, handle, threadPoolSize, arguments);
     this.state = state;
     this.tasks = tasks;
@@ -100,13 +104,15 @@ public class TasksRunner implements TaskRunContextOps {
 
   public void run() throws MetadataDumperUsageException {
     for (Task<?> task : tasks) {
-      Instant taskStartTime = Instant.now();
+      ZonedDateTime now = ZonedDateTime.now();
+      Stopwatch stopwatch = Stopwatch.createStarted();
+
 
       handleTask(task);
 
       Instant taskEndTime = Instant.now();
       TaskState finalState = getTaskState(task);
-      addTaskTelemetry(task.getName(), taskStartTime, taskEndTime, finalState);
+      addTaskTelemetry(task.getName(), stopwatch, now, finalState);
     }
   }
 
@@ -181,7 +187,7 @@ public class TasksRunner implements TaskRunContextOps {
       else if (!task.handleException(e))
         logger.warn("Task failed: {}: {}", task, e.getMessage(), e);
       state.setTaskException(task, TaskState.FAILED, e);
-      MetricToErrorMap.put(task.getName(), e.getMessage());
+      metricToErrorMap.put(task.getName(), e.getMessage());
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
         sink.asCharSink(StandardCharsets.UTF_8, WriteMode.CREATE_TRUNCATE)
@@ -192,7 +198,7 @@ public class TasksRunner implements TaskRunContextOps {
                     String.valueOf(new DumperDiagnosticQuery(e).call())));
       } catch (Exception f) {
         logger.warn("Exception-recorder failed:  {}", f.getMessage(), f);
-        MetricToErrorMap.put(task.getName(), f.getMessage());
+        metricToErrorMap.put(task.getName(), f.getMessage());
       }
     }
     return null;
@@ -205,22 +211,18 @@ public class TasksRunner implements TaskRunContextOps {
   }
 
   private void addTaskTelemetry(
-      String taskName, Instant startTime, Instant endTime, TaskState state) {
-    if (telemetryProcessor != null) {
-      try {
-        TaskRunMetrics taskMetrics =
-            new TaskRunMetrics(
-                taskName,
-                state.name(),
-                startTime,
-                endTime,
-                MetricToErrorMap.getOrDefault(taskName, null));
+      String taskName, Stopwatch stopwatch, ZonedDateTime startTime, TaskState state) {
+    Preconditions.checkNotNull(telemetryProcessor);
 
-        // Add to the telemetry payload
-        telemetryProcessor.addTaskTelemetry(taskMetrics);
-      } catch (Exception e) {
-        logger.warn("Failed to add task telemetry for task: {}", taskName, e);
-      }
-    }
+    TaskRunMetrics taskMetrics =
+        new TaskRunMetrics(
+            taskName,
+            state.name(),
+            stopwatch.elapsed(TimeUnit.SECONDS),
+            startTime,
+            metricToErrorMap.getOrDefault(taskName, null));
+
+    // Add to the telemetry payload
+    telemetryProcessor.addToPayload(taskMetrics);
   }
 }

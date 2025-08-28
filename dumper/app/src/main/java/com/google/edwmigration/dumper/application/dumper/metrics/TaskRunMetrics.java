@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.metrics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 
 /**
  * keep immutable. TaskRunner is multi-threaded, so we need to make it thread-safe.
@@ -32,9 +33,9 @@ public class TaskRunMetrics implements TelemetryPayload {
 
   @JsonProperty private String overallStatus;
 
-  @JsonProperty private Instant measureStartInstance;
+  @JsonProperty private long runDurationInSeconds;
 
-  @JsonProperty private Instant measureEndInstance;
+  @JsonProperty private ZonedDateTime measureStartTime;
 
   @JsonProperty private String error;
 
@@ -45,13 +46,13 @@ public class TaskRunMetrics implements TelemetryPayload {
   public TaskRunMetrics(
       String name,
       String overallStatus,
-      Instant measureStartInstance,
-      Instant measureEndInstance,
+      long runDurationInSeconds,
+      ZonedDateTime measureStartTime,
       String error) {
     this.name = name;
     this.overallStatus = overallStatus;
-    this.measureStartInstance = measureStartInstance;
-    this.measureEndInstance = measureEndInstance;
+    this.runDurationInSeconds = runDurationInSeconds;
+    this.measureStartTime = measureStartTime;
     this.error = error;
   }
 
@@ -67,12 +68,12 @@ public class TaskRunMetrics implements TelemetryPayload {
     return overallStatus;
   }
 
-  public Instant getMeasureStartInstance() {
-    return measureStartInstance;
+  public long getRunDurationInSeconds() {
+    return runDurationInSeconds;
   }
 
-  public Instant getMeasureEndInstance() {
-    return measureEndInstance;
+  public ZonedDateTime getMeasureStartTime() {
+    return measureStartTime;
   }
 
   public String getError() {

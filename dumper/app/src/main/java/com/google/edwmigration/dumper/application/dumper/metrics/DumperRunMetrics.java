@@ -27,7 +27,7 @@ public class DumperRunMetrics implements TelemetryPayload {
   @JsonProperty private String id;
 
   @JsonProperty private ZonedDateTime measureStartTime;
-  
+
   @JsonProperty private EventType eventType = EventType.DUMPER_RUN_METRICS;
 
   @JsonProperty private Long runDurationInMinutes;

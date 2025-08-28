@@ -92,4 +92,9 @@ public class WriteTelemetryStrategy implements TelemetryStrategy {
       logger.warn("Failed to write telemetry", e);
     }
   }
+
+  @Override
+  public void addToPayload(ClientTelemetry clientTelemetry, TaskRunMetrics taskMetrics) {
+    clientTelemetry.addToPayload(taskMetrics);
+  }
 }

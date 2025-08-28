@@ -41,4 +41,9 @@ public class NoOpTelemetryStrategy implements TelemetryStrategy {
   public void writeTelemetry(FileSystem fileSystem, ClientTelemetry clientTelemetry) {
     // Do nothing - this is the no-op strategy
   }
+
+  @Override
+  public void addToPayload(ClientTelemetry clientTelemetry, TaskRunMetrics taskMetrics) {
+    // do nothing
+  }
 }
