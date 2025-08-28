@@ -28,10 +28,11 @@ import java.io.IOException;
 import java.util.stream.IntStream;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
+@RunWith(Theories.class)
 public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   private static final ImmutableList<String> ARGS =
       ImmutableList.of(
@@ -42,6 +43,33 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
           "--role", "tester");
 
   private final SnowflakeMetadataConnector metadataConnector = new SnowflakeMetadataConnector();
+
+  public enum TestCase {
+    LOGS(SnowflakeLogsConnector.class),
+    LOGS_AU(SnowflakeAccountUsageLogsConnector.class),
+    LOGS_IS(SnowflakeInformationSchemaLogsConnector.class),
+    META(SnowflakeMetadataConnector.class),
+    META_AU(SnowflakeAccountUsageMetadataConnector.class),
+    META_IS(SnowflakeInformationSchemaMetadataConnector.class);
+
+    final Class<? extends AbstractSnowflakeConnector> subclass;
+
+    TestCase(Class<? extends AbstractSnowflakeConnector> subclass) {
+      this.subclass = subclass;
+    }
+  }
+
+  @Theory
+  public void describeAsDelegate_success(TestCase testCase) throws Exception {
+    AbstractSnowflakeConnector connector = testCase.subclass.newInstance();
+
+    String description = AbstractSnowflakeConnector.describeAsDelegate(connector, "test-connector");
+
+    assertTrue(description, description.contains(connector.getName()));
+    assertTrue(description, description.contains(connector.getDescription()));
+    assertTrue(description, description.contains("[same options as 'test-connector']"));
+    assertTrue(description, description.endsWith("\n"));
+  }
 
   @Test
   public void openConnection_failsForVeryLongInput() throws IOException {
