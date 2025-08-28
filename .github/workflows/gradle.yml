@@ -35,6 +35,13 @@ jobs:
 
     - name: Clean
       run: ./gradlew -Pci clean
-
-    - name: Test
-      run: ./gradlew -Pci test
+    
+    - name: Test Dumper
+      run: ./gradlew -Pci :dumper:app:test
+    
+    - name: Test DTS transfer
+      run: ./gradlew -Pci :dts-transfer-status:app:test
+    
+    - name: Test Permissions migration
+      run: ./gradlew -Pci :permissions-migration:app:test
+)
