@@ -50,4 +50,6 @@ public interface TelemetryStrategy {
    * @param clientTelemetry the telemetry data to write
    */
   void writeTelemetry(FileSystem fileSystem, ClientTelemetry clientTelemetry);
+
+  void addToPayload(ClientTelemetry clientTelemetry, TaskRunMetrics taskMetrics);
 }

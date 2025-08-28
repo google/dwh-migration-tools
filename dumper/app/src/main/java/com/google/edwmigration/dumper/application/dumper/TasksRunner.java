@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.metrics.TaskRunMetrics;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -35,8 +36,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -56,6 +61,8 @@ public class TasksRunner implements TaskRunContextOps {
   private final TaskRunContext context;
   private final TaskSetState.Impl state;
   private final List<Task<?>> tasks;
+  private final TelemetryProcessor telemetryProcessor;
+  private final HashMap<String, String> metricToErrorMap = new HashMap<>();
 
   public TasksRunner(
       OutputHandleFactory sinkFactory,
@@ -63,10 +70,14 @@ public class TasksRunner implements TaskRunContextOps {
       int threadPoolSize,
       @Nonnull TaskSetState.Impl state,
       List<Task<?>> tasks,
-      ConnectorArguments arguments) {
+      ConnectorArguments arguments,
+      TelemetryProcessor telemetryProcessor) {
+    Preconditions.checkNotNull(telemetryProcessor);
+
     context = createContext(sinkFactory, handle, threadPoolSize, arguments);
     this.state = state;
     this.tasks = tasks;
+    this.telemetryProcessor = telemetryProcessor;
     totalNumberOfTasks = countTasks(tasks);
     stopwatch = Stopwatch.createStarted();
     numberOfCompletedTasks = new AtomicInteger();
@@ -93,7 +104,15 @@ public class TasksRunner implements TaskRunContextOps {
 
   public void run() throws MetadataDumperUsageException {
     for (Task<?> task : tasks) {
+      ZonedDateTime now = ZonedDateTime.now();
+      Stopwatch stopwatch = Stopwatch.createStarted();
+
+
       handleTask(task);
+
+      Instant taskEndTime = Instant.now();
+      TaskState finalState = getTaskState(task);
+      addTaskTelemetry(task.getName(), stopwatch, now, finalState);
     }
   }
 
@@ -168,6 +187,7 @@ public class TasksRunner implements TaskRunContextOps {
       else if (!task.handleException(e))
         logger.warn("Task failed: {}: {}", task, e.getMessage(), e);
       state.setTaskException(task, TaskState.FAILED, e);
+      metricToErrorMap.put(task.getName(), e.getMessage());
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
         sink.asCharSink(StandardCharsets.UTF_8, WriteMode.CREATE_TRUNCATE)
@@ -178,6 +198,7 @@ public class TasksRunner implements TaskRunContextOps {
                     String.valueOf(new DumperDiagnosticQuery(e).call())));
       } catch (Exception f) {
         logger.warn("Exception-recorder failed:  {}", f.getMessage(), f);
+        metricToErrorMap.put(task.getName(), f.getMessage());
       }
     }
     return null;
@@ -187,5 +208,21 @@ public class TasksRunner implements TaskRunContextOps {
     return tasks.stream()
         .mapToInt(task -> task instanceof TaskGroup ? countTasks(((TaskGroup) task).getTasks()) : 1)
         .sum();
+  }
+
+  private void addTaskTelemetry(
+      String taskName, Stopwatch stopwatch, ZonedDateTime startTime, TaskState state) {
+    Preconditions.checkNotNull(telemetryProcessor);
+
+    TaskRunMetrics taskMetrics =
+        new TaskRunMetrics(
+            taskName,
+            state.name(),
+            stopwatch.elapsed(TimeUnit.SECONDS),
+            startTime,
+            metricToErrorMap.getOrDefault(taskName, null));
+
+    // Add to the telemetry payload
+    telemetryProcessor.addToPayload(taskMetrics);
   }
 }
