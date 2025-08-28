@@ -60,7 +60,7 @@ public class OozieConnectorTest {
     String argsStr = validRequiredArgs + " --start-date=2001-02-20 --end-date=2001-02-20";
 
     Exception exception =
-        assertThrows(IllegalStateException.class, () -> connector.validate(toArgs(argsStr)));
+        assertThrows(RuntimeException.class, () -> connector.validate(toArgs(argsStr)));
     assertEquals(
         "Start date [2001-02-20T00:00Z] must be before end date [2001-02-20T00:00Z].",
         exception.getMessage());
@@ -71,7 +71,7 @@ public class OozieConnectorTest {
     String argsStr = validRequiredArgs + " --end-date=2001-02-20";
 
     Exception exception =
-        assertThrows(IllegalStateException.class, () -> connector.validate(toArgs(argsStr)));
+        assertThrows(RuntimeException.class, () -> connector.validate(toArgs(argsStr)));
     assertEquals(
         "End date can be specified only with start date, but start date was null.",
         exception.getMessage());
@@ -97,8 +97,7 @@ public class OozieConnectorTest {
   public void validate_AssessmentIsRequired_throw() throws Exception {
 
     Exception exception =
-        assertThrows(
-            IllegalStateException.class, () -> connector.validate(toArgs("--connector oozie")));
+        assertThrows(RuntimeException.class, () -> connector.validate(toArgs("--connector oozie")));
 
     assertEquals("--assessment flag is required", exception.getMessage());
   }

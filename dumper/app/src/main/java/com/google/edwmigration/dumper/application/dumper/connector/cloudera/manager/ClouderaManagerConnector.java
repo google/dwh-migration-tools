@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
 import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.DAILY;
 import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.OPTIONAL;
 
@@ -129,7 +130,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
   }
 
   @Override
-  public void validate(ConnectorArguments arguments) {
+  public final void validate(@Nonnull ConnectorArguments arguments) {
     String clouderaUri = arguments.getUri();
     Preconditions.checkNotNull(clouderaUri, "--url for Cloudera Manager API is required");
 

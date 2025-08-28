@@ -101,9 +101,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   }
 
   @Override
-  public void validate(ConnectorArguments arguments) {
-    super.validate(arguments);
-
+  public final void validate(@Nonnull ConnectorArguments arguments) {
     ArrayList<String> messages = new ArrayList<>();
     MetadataDumperUsageException exception = null;
 
@@ -133,7 +131,17 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       exception = new MetadataDumperUsageException(unsupportedFilter, messages);
     }
     removeDuplicateMessageAndThrow(exception);
+    validateForConnector(arguments);
   }
+
+  /**
+   * Called by {@link #validate} to perform connector-specific checks.
+   *
+   * <p>Subclasses should override this with logic to run after the common validation for Snowflake.
+   *
+   * @param arguments User-provided arguments of the Dumper run.
+   */
+  protected abstract void validateForConnector(@Nonnull ConnectorArguments arguments);
 
   private static void removeDuplicateMessageAndThrow(
       @Nullable MetadataDumperUsageException exception) {

@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
+
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -79,7 +81,7 @@ public class OozieConnector extends AbstractConnector implements MetadataConnect
   }
 
   @Override
-  public void validate(ConnectorArguments arguments) {
+  public final void validate(@Nonnull ConnectorArguments arguments) {
     Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
 
     validateDateRange(arguments);

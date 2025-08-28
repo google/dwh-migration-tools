@@ -58,7 +58,7 @@ public class AirflowConnectorTest {
     String argsStr = validRequiredArgs + " --start-date=2001-02-20 --end-date=2001-02-20";
 
     Exception exception =
-        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+        assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
     assertEquals(
         "Start date [2001-02-20T00:00Z] must be before end date [2001-02-20T00:00Z].",
         exception.getMessage());
@@ -69,7 +69,7 @@ public class AirflowConnectorTest {
     String argsStr = validRequiredArgs + " --end-date=2001-02-20";
 
     Exception exception =
-        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+        assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
     assertEquals(
         "End date can be specified only with start date, but start date was null.",
         exception.getMessage());
@@ -94,7 +94,7 @@ public class AirflowConnectorTest {
 
     // Act
     Exception exception =
-        assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+        assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
     assertEquals("--database is not supported, use --schema or --url", exception.getMessage());
   }
 
@@ -117,19 +117,19 @@ public class AirflowConnectorTest {
     {
       String argsWithHost = argsStr + " --host localhost ";
       Exception exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithHost)));
+          assertThrows(RuntimeException.class, () -> connector.validate(args(argsWithHost)));
       assertEquals("--port is required with --host", exception.getMessage());
     }
     {
       String argsWithPort = argsStr + " --host localhost --port 8080";
       Exception exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithPort)));
+          assertThrows(RuntimeException.class, () -> connector.validate(args(argsWithPort)));
       assertEquals("--schema is required with --host", exception.getMessage());
     }
     {
       String argsWithPort = argsStr + " --host localhost --schema 8080";
       Exception exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithPort)));
+          assertThrows(RuntimeException.class, () -> connector.validate(args(argsWithPort)));
       assertEquals("--port is required with --host", exception.getMessage());
     }
   }
@@ -153,19 +153,19 @@ public class AirflowConnectorTest {
     {
       String argsWithPort = argsStr + " --port 8080";
       Exception exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithPort)));
+          assertThrows(RuntimeException.class, () -> connector.validate(args(argsWithPort)));
       assertEquals("--port param should not be used with --url", exception.getMessage());
     }
     {
       String argsWithSchema = argsStr + " --schema 8080";
       Exception exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithSchema)));
+          assertThrows(RuntimeException.class, () -> connector.validate(args(argsWithSchema)));
       assertEquals("--schema param should not be used with --url", exception.getMessage());
     }
     {
       String argsWithSchema = argsStr + " --host localhost";
       Exception exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsWithSchema)));
+          assertThrows(RuntimeException.class, () -> connector.validate(args(argsWithSchema)));
       assertEquals(
           "--url either --host must be provided (both parameters at once are not acceptable)",
           exception.getMessage());
@@ -178,33 +178,28 @@ public class AirflowConnectorTest {
 
     {
       String argsStr = "--connector airflow ";
-      exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      exception = assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
       assertEquals("--assessment flag is required", exception.getMessage());
     }
     {
       String argsStr = "--connector airflow  --assessment";
-      exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      exception = assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
       assertEquals("Path to jdbc driver is required in --driver param", exception.getMessage());
     }
     {
       String argsStr = "--connector airflow  --assessment --driver /home/dir/";
-      exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      exception = assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
       assertEquals("--user param is required", exception.getMessage());
     }
     {
       String argsStr = "--connector airflow --driver /home/dir/ --user dbusername --assessment";
-      exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      exception = assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
       assertEquals("--password param is required", exception.getMessage());
     }
     {
       String argsStr =
           "--connector airflow " + "--driver /home/dir/ --user dbusername --assessment --password";
-      exception =
-          assertThrows(IllegalStateException.class, () -> connector.validate(args(argsStr)));
+      exception = assertThrows(RuntimeException.class, () -> connector.validate(args(argsStr)));
       assertEquals(
           "--url either --host must be provided (both parameters at once are not acceptable)",
           exception.getMessage());

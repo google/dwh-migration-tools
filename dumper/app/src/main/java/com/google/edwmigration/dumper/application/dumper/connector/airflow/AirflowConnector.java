@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.airflow;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
 import static com.google.edwmigration.dumper.application.dumper.connector.airflow.AirflowDatabaseDriverClasses.jdbcPrefixForClassName;
 
 import com.google.auto.service.AutoService;
@@ -209,7 +210,7 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
   }
 
   @Override
-  public void validate(ConnectorArguments arguments) {
+  public final void validate(@Nonnull ConnectorArguments arguments) {
     Preconditions.checkState(arguments.isAssessment(), "--assessment flag is required");
     Preconditions.checkState(
         arguments.getDriverPaths() != null && !arguments.getDriverPaths().isEmpty(),

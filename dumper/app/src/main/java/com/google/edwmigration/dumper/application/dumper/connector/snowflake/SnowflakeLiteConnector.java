@@ -20,15 +20,12 @@ import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
-import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -44,13 +41,6 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   public SnowflakeLiteConnector() {
     super(NAME);
-  }
-
-  @Override
-  @Nonnull
-  public Handle open(ConnectorArguments arguments)
-      throws MetadataDumperUsageException, SQLException {
-    return super.open(arguments);
   }
 
   @Override
@@ -73,10 +63,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   }
 
   @Override
-  public final void validate(@Nullable ConnectorArguments arguments) {
-    super.validate(arguments);
-
-    Objects.requireNonNull(arguments);
+  protected void validateForConnector(ConnectorArguments arguments) {
     if (!arguments.isAssessment()) {
       throw noAssessmentException();
     }
