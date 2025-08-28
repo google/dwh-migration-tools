@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import javax.annotation.Nonnull;
 
-final class InputDescriptor implements Comparable<InputDescriptor> {
+public final class InputDescriptor {
   private enum Category {
     ARGUMENT(1) {
       @Override
@@ -56,7 +57,7 @@ final class InputDescriptor implements Comparable<InputDescriptor> {
 
   private final RespectsInput annotation;
 
-  InputDescriptor(RespectsInput annotation) {
+  public InputDescriptor(RespectsInput annotation) {
     this.annotation = annotation;
   }
 
@@ -71,11 +72,9 @@ final class InputDescriptor implements Comparable<InputDescriptor> {
     return Category.OTHER;
   }
 
-  @Override
-  public int compareTo(InputDescriptor o) {
-    return Comparator.comparing(InputDescriptor::order)
-        .thenComparing(el -> el.annotation.order())
-        .compare(this, o);
+  public static Comparator<InputDescriptor> comparator() {
+    return comparing(InputDescriptor::categoryOrder)
+        .thenComparing(InputDescriptor::annotationOrder);
   }
 
   @Override
@@ -92,7 +91,7 @@ final class InputDescriptor implements Comparable<InputDescriptor> {
     return buf.stream().filter(el -> !el.isEmpty()).collect(joining(" "));
   }
 
-  String getKey() {
+  public String getKey() {
     return getCategory().getKey(annotation);
   }
 
@@ -112,7 +111,11 @@ final class InputDescriptor implements Comparable<InputDescriptor> {
     }
   }
 
-  private int order() {
+  private int annotationOrder() {
+    return annotation.order();
+  }
+
+  private int categoryOrder() {
     return getCategory().order;
   }
 }

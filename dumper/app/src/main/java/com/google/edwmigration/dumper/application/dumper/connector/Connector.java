@@ -18,13 +18,23 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static org.springframework.core.annotation.AnnotationUtils.getDeclaredRepeatableAnnotations;
 
+import autovalue.shaded.com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.InputDescriptor;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+import java.io.IOException;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -77,4 +87,39 @@ public interface Connector {
 
   @Nonnull
   Iterable<ConnectorProperty> getPropertyConstants();
+
+  default void printHelp(@Nonnull Appendable out) throws IOException {
+    out.append("* " + getName());
+    String description = getDescription();
+    if (!description.isEmpty()) {
+      out.append(" - " + description);
+    }
+    out.append("\n");
+    for (InputDescriptor descriptor : getAcceptsInputs(this)) {
+      out.append(String.format("%8s%s\n", "", descriptor));
+    }
+  }
+
+  @Nonnull
+  static Collection<InputDescriptor> getAcceptsInputs(@Nonnull Connector connector) {
+
+    ArrayList<Class<?>> classes = new ArrayList<>();
+    for (Class<?> type = connector.getClass(); type != null; type = type.getSuperclass()) {
+      classes.add(type);
+    }
+
+    Map<String, InputDescriptor> map = new HashMap<>();
+    for (Class<?> type : classes) {
+      Set<RespectsInput> respectsInputs =
+          getDeclaredRepeatableAnnotations(type, RespectsInput.class);
+      for (RespectsInput item : respectsInputs) {
+        InputDescriptor descriptor = new InputDescriptor(item);
+        map.putIfAbsent(descriptor.getKey(), descriptor);
+      }
+    }
+
+    return map.values().stream()
+        .sorted(InputDescriptor.comparator())
+        .collect(ImmutableList.toImmutableList());
+  }
 }
