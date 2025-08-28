@@ -83,6 +83,7 @@ auto-value = { module = "com.google.auto.value:auto-value", version.ref = "auto-
 auto-value-annotations = { module = "com.google.auto.value:auto-value-annotations", version.ref = "auto-value" }
 aws-java-sdk-cloudwatch = { module = "com.amazonaws:aws-java-sdk-cloudwatch", version.ref = "aws-java-sdk" }
 aws-java-sdk-redshift = { module = "com.amazonaws:aws-java-sdk-redshift", version.ref = "aws-java-sdk" }
+aws-java-sdk-redshiftserverless = { module = "com.amazonaws:aws-java-sdk-redshiftserverless", version.ref = "aws-java-sdk" }
 cel = { module = "dev.cel:cel", version.ref = "cel" }
 checker-qual = { module = "org.checkerframework:checker-qual", version.ref = "checkerframework" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
