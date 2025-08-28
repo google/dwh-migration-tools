@@ -61,8 +61,7 @@ public interface Connector {
     if (start == null && end == null) {
       return;
     }
-    checkState(
-        start != null, "End date can be specified only with start date, but start date was null.");
+    checkNotNull(start, "End date can be specified only with start date, but start date was null.");
     // The assignment makes 'end' recognized as @Nonnull.
     end = checkNotNull(end, "End date must be specified with start date, but was null.");
 
