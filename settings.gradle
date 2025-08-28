@@ -9,13 +9,6 @@ include(
 	':dumper:lib-ext-bigquery',
 	':dumper:lib-ext-hive-metastore',
 	':dumper:app',
-    ':dbsync:common',
-    ':dbsync:storage-gcs',
-    ':dbsync:storage-aws',
-    ':dbsync:storage-hdfs',
-    ':dbsync:server',
-    ':dbsync:client',
-    ':dbsync:gcsync',
     ':permissions-migration:app',
     ':dts-transfer-status:app'
 )
