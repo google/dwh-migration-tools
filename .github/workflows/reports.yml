@@ -40,12 +40,20 @@ jobs:
       - name: Tests report
         run: ./gradlew :dumper:app:jacocoTestReport
 
-      - name: Add coverage to PR
+      - name: Add coverage JaCoCo report to PR
         id: jacoco
         uses: madrapps/jacoco-report@v1.7.2
         with:
           paths: ${{ github.workspace }}/dumper/app/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 50
+          min-coverage-changed-files: 50
           title: "Code Coverage Report"
           debug-mode: false
           update-comment: true
+
+      - name: Upload JaCoCo HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-html-report
+          path: ${{ github.workspace }}/dumper/app/build/reports/jacoco/test/html/
