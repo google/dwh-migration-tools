@@ -1,4 +1,5 @@
 # Data Warehouse Migration Tools
+[![DWH Dumper CI](https://github.com/google/dwh-migration-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/google/dwh-migration-tools/actions/workflows/tests.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This project contains a collection of tools related to the [BigQuery Migration
