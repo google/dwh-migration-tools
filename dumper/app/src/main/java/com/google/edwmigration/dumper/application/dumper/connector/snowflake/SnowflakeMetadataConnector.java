@@ -322,19 +322,24 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         item.needsOverride
             ? getOverrideableQuery(arguments, item.formatString, TABLE_STORAGE_METRICS)
             : item.formatString;
-    String whereCondition;
     // Check whether the overrides changed anything.
     if (formatString.equals(item.formatString)) {
       // Overrides either not applied or equal to default values.
-      whereCondition =
+      String whereCondition =
           " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL";
+      // The condition is always passed to String.format. SHOW queries simply ignore it.
+      String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
+      return new JdbcSelectTask(
+              item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
+          .withHeaderTransformer(item.transformer());
     } else {
-      whereCondition = "";
+      String whereCondition = "";
+      // The condition is always passed to String.format. SHOW queries simply ignore it.
+      String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
+      return new JdbcSelectTask(
+              item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
+          .withHeaderTransformer(item.transformer());
     }
-    // The condition is always passed to String.format. SHOW queries simply ignore it.
-    String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
-    return new JdbcSelectTask(item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
-        .withHeaderTransformer(item.transformer());
   }
 
   private void addAssessmentQuery(
