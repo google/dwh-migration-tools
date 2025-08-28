@@ -84,6 +84,7 @@ dependencies {
     implementation libs.google.cloud.kms
     implementation libs.httpclient5
     implementation libs.aws.java.sdk.redshift
+    implementation libs.aws.java.sdk.redshiftserverless
     implementation libs.aws.java.sdk.cloudwatch
     implementation(libs.oozie.client) {
         exclude group: 'javax.jms', module: 'jms'

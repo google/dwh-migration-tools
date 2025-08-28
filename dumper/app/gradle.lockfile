@@ -7,6 +7,7 @@ com.amazon.redshift:redshift-jdbc42:2.1.0.32=runtimeClasspath,testFixturesRuntim
 com.amazonaws:aws-java-sdk-cloudwatch:1.12.778=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.amazonaws:aws-java-sdk-core:1.12.778=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.amazonaws:aws-java-sdk-redshift:1.12.778=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
+com.amazonaws:aws-java-sdk-redshiftserverless:1.12.778=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 com.amazonaws:jmespath-java:1.12.778=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-annotations:2.18.3=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-core:2.18.3=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
