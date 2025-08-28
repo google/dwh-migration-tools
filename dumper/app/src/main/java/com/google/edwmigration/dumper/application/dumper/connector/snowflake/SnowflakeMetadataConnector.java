@@ -282,7 +282,25 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        addAssessmentQuery(item, out, arguments, ACCOUNT_USAGE_SCHEMA_NAME);
+        String formatString =
+            item.needsOverride
+                ? getOverrideableQuery(arguments, item.formatString, TABLE_STORAGE_METRICS)
+                : item.formatString;
+        String whereCondition;
+        // Check whether the overrides changed anything.
+        if (formatString.equals(item.formatString)) {
+          // Overrides either not applied or equal to default values.
+          whereCondition =
+              " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL";
+        } else {
+          whereCondition = "";
+        }
+        // The condition is always passed to String.format. SHOW queries simply ignore it.
+        String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
+        Task<?> task =
+            new JdbcSelectTask(item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
+                .withHeaderTransformer(item.transformer());
+        out.add(task);
       }
     } else {
       if (!arguments.getDatabases().isEmpty()) {
@@ -303,17 +321,13 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         }
       } else {
         addAssessmentQuery(
-            SnowflakePlanner.SHOW_EXTERNAL_TABLES, out, arguments, ACCOUNT_USAGE_SCHEMA_NAME);
+            SnowflakePlanner.SHOW_EXTERNAL_TABLES,
+            out,
+            arguments,
+            ACCOUNT_USAGE_SCHEMA_NAME,
+            TaskOptions.DEFAULT);
       }
     }
-  }
-
-  private void addAssessmentQuery(
-      @Nonnull AssessmentQuery item,
-      @Nonnull List<? super Task<?>> out,
-      @Nonnull ConnectorArguments arguments,
-      @Nonnull String AU) {
-    addAssessmentQuery(item, out, arguments, AU, TaskOptions.DEFAULT);
   }
 
   private void addAssessmentQuery(
