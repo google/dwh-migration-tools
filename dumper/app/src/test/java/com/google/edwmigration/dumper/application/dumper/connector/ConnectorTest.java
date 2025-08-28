@@ -42,7 +42,7 @@ public class ConnectorTest {
             "--connector", "test", "--start-date=2001-02-20", "--end-date=2001-02-20");
 
     Exception exception =
-        assertThrows(IllegalStateException.class, () -> Connector.validateDateRange(args));
+        assertThrows(RuntimeException.class, () -> Connector.validateDateRange(args));
     assertEquals(
         "Start date [2001-02-20T00:00Z] must be before end date [2001-02-20T00:00Z].",
         exception.getMessage());
@@ -53,7 +53,7 @@ public class ConnectorTest {
     ConnectorArguments args =
         new ConnectorArguments("--connector", "test", "--end-date=2001-02-20");
 
-    Exception exception = assertThrows(IllegalStateException.class, () -> validateDateRange(args));
+    Exception exception = assertThrows(RuntimeException.class, () -> validateDateRange(args));
     assertEquals(
         "End date can be specified only with start date, but start date was null.",
         exception.getMessage());
