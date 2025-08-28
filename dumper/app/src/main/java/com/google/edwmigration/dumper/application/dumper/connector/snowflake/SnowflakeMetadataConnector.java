@@ -287,25 +287,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        String formatString =
-            item.needsOverride
-                ? getOverrideableQuery(arguments, item.formatString, TABLE_STORAGE_METRICS)
-                : item.formatString;
-        String whereCondition;
-        // Check whether the overrides changed anything.
-        if (formatString.equals(item.formatString)) {
-          // Overrides either not applied or equal to default values.
-          whereCondition =
-              " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL";
-        } else {
-          whereCondition = "";
-        }
-        // The condition is always passed to String.format. SHOW queries simply ignore it.
-        String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
-        Task<?> task =
-            new JdbcSelectTask(item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
-                .withHeaderTransformer(item.transformer());
-        out.add(task);
+        out.add(taskForAssessment(item, arguments));
       }
     } else {
       if (!arguments.getDatabases().isEmpty()) {
@@ -333,6 +315,26 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             TaskOptions.DEFAULT);
       }
     }
+  }
+
+  private Task<?> taskForAssessment(AssessmentQuery item, ConnectorArguments arguments) {
+    String formatString =
+        item.needsOverride
+            ? getOverrideableQuery(arguments, item.formatString, TABLE_STORAGE_METRICS)
+            : item.formatString;
+    String whereCondition;
+    // Check whether the overrides changed anything.
+    if (formatString.equals(item.formatString)) {
+      // Overrides either not applied or equal to default values.
+      whereCondition =
+          " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL";
+    } else {
+      whereCondition = "";
+    }
+    // The condition is always passed to String.format. SHOW queries simply ignore it.
+    String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
+    return new JdbcSelectTask(item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
+        .withHeaderTransformer(item.transformer());
   }
 
   private void addAssessmentQuery(
