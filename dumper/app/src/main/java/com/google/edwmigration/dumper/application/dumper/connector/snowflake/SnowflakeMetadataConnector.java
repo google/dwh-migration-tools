@@ -293,31 +293,29 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 .withHeaderTransformer(item.transformer());
         out.add(task);
       }
-    } else {
-      if (!arguments.getDatabases().isEmpty()) {
-        TaskOptions taskOptions = TaskOptions.DEFAULT;
-        for (String database : arguments.getDatabases()) {
-          String formatString =
-              String.format(
-                  "%s IN DATABASE %s",
-                  SnowflakePlanner.SHOW_EXTERNAL_TABLES.formatString, databaseNameQuoted(database));
-          addAssessmentQuery(
-              SnowflakePlanner.SHOW_EXTERNAL_TABLES.withFormatString(formatString),
-              out,
-              arguments,
-              ACCOUNT_USAGE_SCHEMA_NAME,
-              taskOptions);
-          // Next tasks will append to the same file.
-          taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
-        }
-      } else {
-        addAssessmentQuery(
-            SnowflakePlanner.SHOW_EXTERNAL_TABLES,
-            out,
-            arguments,
-            ACCOUNT_USAGE_SCHEMA_NAME,
-            TaskOptions.DEFAULT);
-      }
+      return;
+    }
+    ImmutableList<String> databases = arguments.getDatabases();
+
+    if (databases.isEmpty()) {
+      AssessmentQuery query = SnowflakePlanner.SHOW_EXTERNAL_TABLES;
+      Task<?> task = convertAssessmentQuery(query, arguments, TaskOptions.DEFAULT);
+      out.add(task);
+      return;
+    }
+
+    TaskOptions taskOptions = TaskOptions.DEFAULT;
+
+    for (String item : databases) {
+      String quotedName = databaseNameQuoted(item);
+      AssessmentQuery baseQuery = SnowflakePlanner.SHOW_EXTERNAL_TABLES;
+
+      String formatString = String.format("%s IN DATABASE %s", baseQuery.formatString, quotedName);
+      AssessmentQuery query = baseQuery.withFormatString(formatString);
+      Task<?> task = convertAssessmentQuery(query, arguments, taskOptions);
+      out.add(task);
+      // Next tasks will append to the same file.
+      taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
     }
   }
 
@@ -345,19 +343,15 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     return item.substitute(schema, whereCondition);
   }
 
-  private void addAssessmentQuery(
+  private Task<?> convertAssessmentQuery(
       @Nonnull AssessmentQuery item,
-      @Nonnull List<? super Task<?>> out,
       @Nonnull ConnectorArguments arguments,
-      @Nonnull String AU,
       @Nonnull TaskOptions taskOptions) {
     String formatString = overrideFormatString(item, arguments);
-    String query = String.format(formatString, AU, EMPTY_WHERE_CONDITION);
+    String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, EMPTY_WHERE_CONDITION);
     String zipName = item.zipEntryName;
-    Task<?> task =
-        new JdbcSelectTask(zipName, query, TaskCategory.REQUIRED, taskOptions)
-            .withHeaderTransformer(item.transformer());
-    out.add(task);
+    return new JdbcSelectTask(zipName, query, TaskCategory.REQUIRED, taskOptions)
+        .withHeaderTransformer(item.transformer());
   }
 
   private String overrideFormatString(AssessmentQuery query, ConnectorArguments arguments) {
