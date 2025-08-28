@@ -28,7 +28,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ZonedParser.DayOffset;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
@@ -311,7 +310,6 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
 
-  // TODO: Make this be an ISO instant.
   @Deprecated
   private final OptionSpec<String> optionQueryLogEarliestTimestamp =
       parser
@@ -606,72 +604,6 @@ public class ConnectorArguments extends DefaultArguments {
     super(args);
   }
 
-  private static class InputDescriptor implements Comparable<InputDescriptor> {
-
-    public enum Category {
-      Arg,
-      Env,
-      Other
-    }
-
-    private final RespectsInput annotation;
-
-    public InputDescriptor(RespectsInput annotation) {
-      this.annotation = annotation;
-    }
-
-    @Nonnull
-    public Category getCategory() {
-      if (!Strings.isNullOrEmpty(annotation.arg())) {
-        return Category.Arg;
-      }
-      if (!Strings.isNullOrEmpty(annotation.env())) {
-        return Category.Env;
-      }
-      return Category.Other;
-    }
-
-    @Nonnull
-    public String getKey() {
-      switch (getCategory()) {
-        case Arg:
-          return "--" + annotation.arg();
-        case Env:
-          return annotation.env();
-        default:
-          return String.valueOf(annotation.hashCode());
-      }
-    }
-
-    @Override
-    public int compareTo(InputDescriptor o) {
-      return ComparisonChain.start()
-          .compare(getCategory(), o.getCategory())
-          .compare(annotation.order(), o.annotation.order())
-          .result();
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder buf = new StringBuilder();
-      String key = getKey();
-      buf.append(key).append(StringUtils.repeat(' ', 12 - key.length()));
-      if (getCategory() == Category.Env) {
-        buf.append(" (environment variable)");
-      }
-      String defaultValue = annotation.defaultValue();
-      if (!Strings.isNullOrEmpty(defaultValue)) {
-        buf.append(" (default: ").append(defaultValue).append(")");
-      }
-      buf.append(" ").append(annotation.description());
-      String required = annotation.required();
-      if (!Strings.isNullOrEmpty(required)) {
-        buf.append(" (Required ").append(required).append(".)");
-      }
-      return buf.toString();
-    }
-  }
-
   @Nonnull
   private static Collection<InputDescriptor> getAcceptsInputs(@Nonnull Connector connector) {
     Map<String, InputDescriptor> tmp = new HashMap<>();
@@ -692,7 +624,7 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @Override
-  protected void printHelpOn(PrintStream out, OptionSet o) throws IOException {
+  protected void printHelpOn(@Nonnull PrintStream out, OptionSet o) throws IOException {
     out.append(HELP_INFO);
     super.printHelpOn(out, o);
 
