@@ -147,6 +147,10 @@ final class SnowflakePlanner {
     ResultSetTransformer<String[]> transformer() {
       return HeaderTransformerUtil.toCamelCaseFrom(caseFormat);
     }
+
+    String substitute(String schema, String whereCondition) {
+      return String.format(formatString, schema, whereCondition);
+    }
   }
 
   Task<?> eventStateTask() {
