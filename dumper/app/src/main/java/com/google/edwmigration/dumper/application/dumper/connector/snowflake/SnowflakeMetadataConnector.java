@@ -287,67 +287,71 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
-        String formatString =
-            item.needsOverride
-                ? getOverrideableQuery(arguments, item.formatString, TABLE_STORAGE_METRICS)
-                : item.formatString;
-        String whereCondition;
-        // Check whether the overrides changed anything.
-        if (formatString.equals(item.formatString)) {
-          // Overrides either not applied or equal to default values.
-          whereCondition =
-              " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL";
-        } else {
-          whereCondition = "";
-        }
-        // The condition is always passed to String.format. SHOW queries simply ignore it.
-        String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, whereCondition);
+        String query = queryForAssessment(item, arguments);
         Task<?> task =
             new JdbcSelectTask(item.zipEntryName, query, TaskCategory.REQUIRED, TaskOptions.DEFAULT)
                 .withHeaderTransformer(item.transformer());
         out.add(task);
       }
-    } else {
-      if (!arguments.getDatabases().isEmpty()) {
-        TaskOptions taskOptions = TaskOptions.DEFAULT;
-        for (String database : arguments.getDatabases()) {
-          String formatString =
-              String.format(
-                  "%s IN DATABASE %s",
-                  SnowflakePlanner.SHOW_EXTERNAL_TABLES.formatString, databaseNameQuoted(database));
-          addAssessmentQuery(
-              SnowflakePlanner.SHOW_EXTERNAL_TABLES.withFormatString(formatString),
-              out,
-              arguments,
-              ACCOUNT_USAGE_SCHEMA_NAME,
-              taskOptions);
-          // Next tasks will append to the same file.
-          taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
-        }
-      } else {
-        addAssessmentQuery(
-            SnowflakePlanner.SHOW_EXTERNAL_TABLES,
-            out,
-            arguments,
-            ACCOUNT_USAGE_SCHEMA_NAME,
-            TaskOptions.DEFAULT);
-      }
+      return;
+    }
+    ImmutableList<String> databases = arguments.getDatabases();
+
+    if (databases.isEmpty()) {
+      AssessmentQuery query = SnowflakePlanner.SHOW_EXTERNAL_TABLES;
+      Task<?> task = convertAssessmentQuery(query, arguments, TaskOptions.DEFAULT);
+      out.add(task);
+      return;
+    }
+
+    TaskOptions taskOptions = TaskOptions.DEFAULT;
+
+    for (String item : databases) {
+      String quotedName = databaseNameQuoted(item);
+      AssessmentQuery baseQuery = SnowflakePlanner.SHOW_EXTERNAL_TABLES;
+
+      String formatString = String.format("%s IN DATABASE %s", baseQuery.formatString, quotedName);
+      AssessmentQuery query = baseQuery.withFormatString(formatString);
+      Task<?> task = convertAssessmentQuery(query, arguments, taskOptions);
+      out.add(task);
+      // Next tasks will append to the same file.
+      taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
     }
   }
 
-  private void addAssessmentQuery(
+  private String queryForAssessment(AssessmentQuery item, ConnectorArguments arguments) {
+    MetadataView view = TABLE_STORAGE_METRICS;
+    String schema = ACCOUNT_USAGE_SCHEMA_NAME;
+    if (!item.needsOverride) {
+      return item.substitute(schema, "");
+    }
+
+    ConnectorProperty propertyQuery = PropertyAction.QUERY.toProperty(view);
+    String overrideQuery = arguments.getDefinition(propertyQuery);
+    if (overrideQuery != null) {
+      return String.format(overrideQuery, schema, "");
+    }
+
+    ConnectorProperty propertyWhere = PropertyAction.WHERE.toProperty(view);
+    String overrideWhere = arguments.getDefinition(propertyWhere);
+    if (overrideWhere != null) {
+      return item.substitute(schema, overrideWhere);
+    }
+
+    String whereCondition =
+        " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL";
+    return item.substitute(schema, whereCondition);
+  }
+
+  private Task<?> convertAssessmentQuery(
       @Nonnull AssessmentQuery item,
-      @Nonnull List<? super Task<?>> out,
       @Nonnull ConnectorArguments arguments,
-      @Nonnull String AU,
       @Nonnull TaskOptions taskOptions) {
     String formatString = overrideFormatString(item, arguments);
-    String query = String.format(formatString, AU, EMPTY_WHERE_CONDITION);
+    String query = String.format(formatString, ACCOUNT_USAGE_SCHEMA_NAME, EMPTY_WHERE_CONDITION);
     String zipName = item.zipEntryName;
-    Task<?> task =
-        new JdbcSelectTask(zipName, query, TaskCategory.REQUIRED, taskOptions)
-            .withHeaderTransformer(item.transformer());
-    out.add(task);
+    return new JdbcSelectTask(zipName, query, TaskCategory.REQUIRED, taskOptions)
+        .withHeaderTransformer(item.transformer());
   }
 
   private String overrideFormatString(AssessmentQuery query, ConnectorArguments arguments) {
