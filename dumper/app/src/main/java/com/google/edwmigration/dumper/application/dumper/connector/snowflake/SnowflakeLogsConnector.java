@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY_SOURCE;
 import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
@@ -225,11 +226,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
                 + "WHERE end_time >= to_timestamp_ltz('%s')\n"
                 + "AND end_time <= to_timestamp_ltz('%s')\n");
-    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
-      queryBuilder
-          .append("AND start_time >= ")
-          .append(arguments.getQueryLogEarliestTimestamp())
-          .append("\n");
+    queryBuilder.append(extractEarliestTimestamp(arguments));
     if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
     return queryBuilder.toString().replace('\n', ' ');
   }
@@ -241,8 +238,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // INFORMATION_SCHEMA.
     String overrideQuery = getOverrideQuery(arguments);
     if (overrideQuery != null) return overrideQuery;
-
-    String overrideWhere = getOverrideWhere(arguments);
 
     @SuppressWarnings("OrphanedFormatString")
     StringBuilder queryBuilder =
@@ -268,20 +263,18 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 // maximum range of 7 trailing days.
                 + ",end_time_range_start=>to_timestamp_ltz('%s')\n"
                 + ",end_time_range_end=>to_timestamp_ltz('%s')\n"
-                + "))\n");
+                // It makes leter formatting easier if we always have a 'WHERE'.
+                + ")) WHERE 1=1\n");
     // if the user specifies an earliest start time there will be extraneous empty dump files
     // because we always iterate over the full 7 trailing days; maybe it's worth
     // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
     // to parse and return an ISO instant, not a database-server-specific format.
-    // TODO: Use ZonedIntervalIterableGenerator.forConnectorArguments()
-    boolean appendStartTime = !StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp());
-    if (appendStartTime)
-      queryBuilder
-          .append("WHERE start_time >= ")
-          .append(arguments.getQueryLogEarliestTimestamp())
-          .append("\n");
-    if (overrideWhere != null)
-      queryBuilder.append(appendStartTime ? " AND " : "WHERE").append(overrideWhere);
+    queryBuilder.append(extractEarliestTimestamp(arguments));
+
+    String overrideWhere = getOverrideWhere(arguments);
+    if (overrideWhere != null) {
+      queryBuilder.append(" AND " + overrideWhere);
+    }
     return queryBuilder.toString().replace('\n', ' ');
   }
 
@@ -343,13 +336,19 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                 + "AND end_time <= to_timestamp_ltz('%s')\n"
                 + "AND is_client_generated_statement = FALSE\n");
 
-    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
-      queryBuilder
-          .append("AND start_time >= ")
-          .append(arguments.getQueryLogEarliestTimestamp())
-          .append("\n");
+    queryBuilder.append(extractEarliestTimestamp(arguments));
     if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
     return queryBuilder.toString().replace('\n', ' ');
+  }
+
+  @Nonnull
+  static String extractEarliestTimestamp(@Nonnull ConnectorArguments arguments) {
+    String timestamp = arguments.getQueryLogEarliestTimestamp();
+    if (isBlank(timestamp)) {
+      return "";
+    } else {
+      return String.format("AND start_time >= %s\n", timestamp);
+    }
   }
 
   @CheckForNull
