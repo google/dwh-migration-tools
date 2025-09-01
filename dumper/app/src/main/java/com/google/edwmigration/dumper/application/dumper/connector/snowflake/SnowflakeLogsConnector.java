@@ -142,8 +142,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
   private static class TaskDescription {
     private final String zipPrefix;
-    private final String unformattedQuery;
+    private final String override;
     private final Class<? extends Enum<?>> headerClass;
+    private final String view;
+    private final String whereField;
 
     private final TaskCategory taskCategory;
 
@@ -154,8 +156,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         String view,
         String whereField) {
       this.zipPrefix = zipPrefix;
-      this.unformattedQuery = getOverrideableQuery(override, headerClass, view, whereField);
+      this.override = override;
       this.headerClass = headerClass;
+      this.view = view;
+      this.whereField = whereField;
       this.taskCategory = TaskCategory.REQUIRED;
     }
 
@@ -167,14 +171,11 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         String whereField,
         TaskCategory taskCategory) {
       this.zipPrefix = zipPrefix;
-      this.unformattedQuery = getOverrideableQuery(override, headerClass, view, whereField);
+      this.override = override;
       this.headerClass = headerClass;
+      this.view = view;
+      this.whereField = whereField;
       this.taskCategory = taskCategory;
-    }
-
-    @Nonnull
-    BinaryOperator<String> queryFormat() {
-      return (startTime, endTime) -> String.format(unformattedQuery, startTime, endTime);
     }
   }
 
@@ -346,7 +347,13 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     IntervalExpander expander = IntervalExpander.createBasedOnDuration(Duration.ofDays(1));
     for (ZonedInterval interval : getIntervals(arguments, expander)) {
       for (TaskDescription description : timeSeriesTasks) {
-        BinaryOperator<String> format = description.queryFormat();
+
+        BinaryOperator<String> format =
+            getOverrideableQuery(
+                description.override,
+                description.headerClass,
+                description.view,
+                description.whereField);
 
         out.add(
             makeJdbcTask(
@@ -389,23 +396,21 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   }
 
   @Nonnull
-  private static String getOverrideableQuery(
+  private static BinaryOperator<String> getOverrideableQuery(
       @Nullable String overrideQuery,
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String view,
       @Nonnull String whereField) {
-    String columns = parseColumnsFromHeader(header);
-    String sql = String.format("SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.%s", columns, view);
-    if (overrideQuery != null) {
-      sql = overrideQuery;
-    }
-    return sql
-        + "\nWHERE "
-        + whereField
-        + " >= to_timestamp_ltz('%s')\n"
-        + "AND "
-        + whereField
-        + " <= to_timestamp_ltz('%s')";
+    return (startTime, endTime) -> {
+      String columns = parseColumnsFromHeader(header);
+      String sql = String.format("SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.%s", columns, view);
+      if (overrideQuery != null) {
+        sql = overrideQuery;
+      }
+      String startCondition = String.format("%s >= to_timestamp_ltz('%s')", whereField, startTime);
+      String endCondition = String.format("%s <= to_timestamp_ltz('%s')", whereField, endTime);
+      return sql + String.format("\nWHERE %s\nAND %s", startCondition, endCondition);
+    };
   }
 
   private static String parseColumnsFromHeader(Class<? extends Enum<?>> headerClass) {
