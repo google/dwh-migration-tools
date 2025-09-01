@@ -161,6 +161,11 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       this.headerClass = headerClass;
       this.taskCategory = taskCategory;
     }
+
+    @Nonnull
+    BinaryOperator<String> queryFormat() {
+      return (startTime, endTime) -> String.format(unformattedQuery, startTime, endTime);
+    }
   }
 
   @Override
@@ -314,7 +319,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         String prefix = SnowflakeLogsDumpFormat.ZIP_ENTRY_PREFIX;
         Class<SnowflakeLogsDumpFormat.Header> header = SnowflakeLogsDumpFormat.Header.class;
 
-        out.add(makeJdbcTask(format, interval, prefix, header));
+        out.add(makeJdbcTask(format, interval, prefix, header, TaskCategory.REQUIRED));
       }
       return;
     }
@@ -324,14 +329,24 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       String prefix = QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX;
       Class<QueryHistoryExtendedFormat.Header> header = QueryHistoryExtendedFormat.Header.class;
 
-      out.add(makeJdbcTask(queryFormat, interval, prefix, header));
+      out.add(makeJdbcTask(queryFormat, interval, prefix, header, TaskCategory.REQUIRED));
     }
 
     List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
     IntervalExpander expander = IntervalExpander.createBasedOnDuration(Duration.ofDays(1));
+    for (ZonedInterval interval : getIntervals(arguments, expander)) {
+      for (TaskDescription description : timeSeriesTasks) {
+        BinaryOperator<String> format = description.queryFormat();
 
-    getIntervals(arguments, expander)
-        .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
+        out.add(
+            makeJdbcTask(
+                format,
+                interval,
+                description.zipPrefix,
+                description.headerClass,
+                description.taskCategory));
+      }
+    }
   }
 
   @Nonnull
@@ -346,25 +361,14 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       @Nonnull BinaryOperator<String> queryFormat,
       @Nonnull ZonedInterval interval,
       @Nonnull String zipPrefix,
-      @Nonnull Class<? extends Enum<?>> headerClass) {
+      @Nonnull Class<? extends Enum<?>> headerClass,
+      @Nonnull TaskCategory category) {
     String startTime = SQL_FORMAT.format(interval.getStart());
     String endTime = SQL_FORMAT.format(interval.getEndInclusive());
 
     String query = queryFormat.apply(startTime, endTime);
     String file = getEntryFileNameWithTimestamp(zipPrefix, interval);
-    return new JdbcSelectTask(file, query, TaskCategory.REQUIRED).withHeaderClass(headerClass);
-  }
-
-  private static void addJdbcTask(
-      List<? super Task<?>> out, ZonedInterval interval, TaskDescription task) {
-    String query =
-        String.format(
-            task.unformattedQuery,
-            SQL_FORMAT.format(interval.getStart()),
-            SQL_FORMAT.format(interval.getEndInclusive()));
-
-    String file = getEntryFileNameWithTimestamp(task.zipPrefix, interval);
-    out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
+    return new JdbcSelectTask(file, query, category).withHeaderClass(headerClass);
   }
 
   private static MetadataDumperUsageException unsupportedOption(String option) {
