@@ -103,7 +103,7 @@ public interface Task<T> {
 
     @Override
     public String toSkipReason() {
-      return "all of " + Lists.transform(conditions, t -> t.toSkipReason());
+      return "all of " + Lists.transform(conditions, Condition::toSkipReason);
     }
 
     @Override
