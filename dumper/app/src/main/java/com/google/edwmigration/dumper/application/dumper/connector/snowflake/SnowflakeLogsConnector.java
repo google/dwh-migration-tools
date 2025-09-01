@@ -46,6 +46,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -181,8 +182,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     return "Dumps logs from Snowflake.";
   }
 
-  private String newQueryFormat(@Nonnull ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
+  @Nonnull
+  private BinaryOperator<String> newQueryFormat(@Nonnull ConnectorArguments arguments) {
     // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
     // Per the docref, Snowflake only retains/returns seven trailing days of logs.
     switch (inputSource) {
@@ -196,160 +197,77 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     throw new AssertionError();
   }
 
-  private String createQueryFromAccountUsage(ConnectorArguments arguments)
+  @Nonnull
+  private BinaryOperator<String> createQueryFromAccountUsage(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    String overrideQuery = getOverrideQuery(arguments);
-    if (overrideQuery != null) return overrideQuery;
+    return (startTime, endTime) -> {
+      String overrideQuery = getOverrideQuery(arguments);
+      if (overrideQuery != null) return overrideQuery;
 
-    String overrideWhere = getOverrideWhere(arguments);
+      String overrideWhere = getOverrideWhere(arguments);
 
-    @SuppressWarnings("OrphanedFormatString")
-    StringBuilder queryBuilder =
-        new StringBuilder(
-            "SELECT database_name, \n"
-                + "schema_name, \n"
-                + "user_name, \n"
-                + "warehouse_name, \n"
-                + "query_id, \n"
-                + "session_id, \n"
-                + "query_type, \n"
-                + "execution_status, \n"
-                + "error_code, \n"
-                + "start_time, \n"
-                + "end_time, \n"
-                + "total_elapsed_time, \n"
-                + "bytes_scanned, \n"
-                + "rows_produced, \n"
-                + "credits_used_cloud_services, \n"
-                + "query_text \n"
-                + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
-                + "WHERE end_time >= to_timestamp_ltz('%s')\n"
-                + "AND end_time <= to_timestamp_ltz('%s')\n");
-    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
-      queryBuilder
-          .append("AND start_time >= ")
-          .append(arguments.getQueryLogEarliestTimestamp())
-          .append("\n");
-    if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
-    return queryBuilder.toString().replace('\n', ' ');
+      StringBuilder queryBuilder = new StringBuilder(simpleQuery(startTime, endTime));
+      if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
+        queryBuilder
+            .append("AND start_time >= ")
+            .append(arguments.getQueryLogEarliestTimestamp())
+            .append("\n");
+      if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
+      return queryBuilder.toString().replace('\n', ' ');
+    };
   }
 
-  private String createQueryFromInformationSchema(ConnectorArguments arguments)
+  @Nonnull
+  private BinaryOperator<String> createQueryFromInformationSchema(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
-    // Per the docref, Snowflake only retains/returns seven trailing days of logs in
-    // INFORMATION_SCHEMA.
-    String overrideQuery = getOverrideQuery(arguments);
-    if (overrideQuery != null) return overrideQuery;
 
-    String overrideWhere = getOverrideWhere(arguments);
+    return (startTime, endTime) -> {
+      // Docref:
+      // https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
+      // Per the docref, Snowflake only retains/returns seven trailing days of logs in
+      // INFORMATION_SCHEMA.
+      String overrideQuery = getOverrideQuery(arguments);
+      if (overrideQuery != null) return overrideQuery;
 
-    @SuppressWarnings("OrphanedFormatString")
-    StringBuilder queryBuilder =
-        new StringBuilder(
-            "SELECT database_name, \n"
-                + "schema_name, \n"
-                + "user_name, \n"
-                + "warehouse_name, \n"
-                + "query_id, \n"
-                + "session_id, \n"
-                + "query_type, \n"
-                + "execution_status, \n"
-                + "error_code, \n"
-                + "start_time, \n"
-                + "end_time, \n"
-                + "total_elapsed_time, \n"
-                + "bytes_scanned, \n"
-                + "rows_produced, \n"
-                + "credits_used_cloud_services, \n"
-                + "query_text \n"
-                + "FROM table(INFORMATION_SCHEMA.QUERY_HISTORY(\n"
-                + "result_limit=>10000\n"
-                // maximum range of 7 trailing days.
-                + ",end_time_range_start=>to_timestamp_ltz('%s')\n"
-                + ",end_time_range_end=>to_timestamp_ltz('%s')\n"
-                + "))\n");
-    // if the user specifies an earliest start time there will be extraneous empty dump files
-    // because we always iterate over the full 7 trailing days; maybe it's worth
-    // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
-    // to parse and return an ISO instant, not a database-server-specific format.
-    // TODO: Use ZonedIntervalIterableGenerator.forConnectorArguments()
-    boolean appendStartTime = !StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp());
-    if (appendStartTime)
-      queryBuilder
-          .append("WHERE start_time >= ")
-          .append(arguments.getQueryLogEarliestTimestamp())
-          .append("\n");
-    if (overrideWhere != null)
-      queryBuilder.append(appendStartTime ? " AND " : "WHERE").append(overrideWhere);
-    return queryBuilder.toString().replace('\n', ' ');
+      String overrideWhere = getOverrideWhere(arguments);
+
+      StringBuilder queryBuilder = new StringBuilder(informationSchemaQuery(startTime, endTime));
+      // if the user specifies an earliest start time there will be extraneous empty dump files
+      // because we always iterate over the full 7 trailing days; maybe it's worth
+      // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
+      // to parse and return an ISO instant, not a database-server-specific format.
+      // TODO: Use ZonedIntervalIterableGenerator.forConnectorArguments()
+      boolean appendStartTime = !StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp());
+      if (appendStartTime)
+        queryBuilder
+            .append("WHERE start_time >= ")
+            .append(arguments.getQueryLogEarliestTimestamp())
+            .append("\n");
+      if (overrideWhere != null)
+        queryBuilder.append(appendStartTime ? " AND " : "WHERE").append(overrideWhere);
+      return queryBuilder.toString().replace('\n', ' ');
+    };
   }
 
-  private String createExtendedQueryFromAccountUsage(ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
-    String overrideQuery = getOverrideQuery(arguments);
-    if (overrideQuery != null) return overrideQuery;
+  @Nonnull
+  private BinaryOperator<String> createExtendedQueryFromAccountUsage(
+      @Nonnull ConnectorArguments arguments) {
+    return (startTime, endTime) -> {
+      String overrideQuery = getOverrideQuery(arguments);
+      if (overrideQuery != null) return overrideQuery;
 
-    String overrideWhere = getOverrideWhere(arguments);
+      String overrideWhere = getOverrideWhere(arguments);
 
-    @SuppressWarnings("OrphanedFormatString")
-    StringBuilder queryBuilder =
-        new StringBuilder(
-            "SELECT query_id, \n"
-                + "query_text, \n"
-                + "database_name, \n"
-                + "schema_name, \n"
-                + "query_type, \n"
-                + "session_id, \n"
-                + "user_name, \n"
-                + "warehouse_name, \n"
-                + "cluster_number, \n"
-                + "query_tag, \n"
-                + "execution_status, \n"
-                + "error_code, \n"
-                + "error_message, \n"
-                + "start_time, \n"
-                + "end_time, \n"
-                + "bytes_scanned, \n"
-                + "percentage_scanned_from_cache, \n"
-                + "bytes_written, \n"
-                + "rows_produced, \n"
-                + "rows_inserted, \n"
-                + "rows_updated, \n"
-                + "rows_deleted, \n"
-                + "rows_unloaded, \n"
-                + "bytes_deleted, \n"
-                + "partitions_scanned, \n"
-                + "partitions_total, \n"
-                + "bytes_spilled_to_local_storage, \n"
-                + "bytes_spilled_to_remote_storage, \n"
-                + "bytes_sent_over_the_network, \n"
-                + "total_elapsed_time, \n"
-                + "compilation_time, \n"
-                + "execution_time, \n"
-                + "queued_provisioning_time, \n"
-                + "queued_repair_time, \n"
-                + "queued_overload_time, \n"
-                + "transaction_blocked_time, \n"
-                + "list_external_files_time, \n"
-                + "credits_used_cloud_services, \n"
-                + "query_load_percent, \n"
-                + "query_acceleration_bytes_scanned, \n"
-                + "query_acceleration_partitions_scanned, \n"
-                + "child_queries_wait_time, \n"
-                + "transaction_id \n"
-                + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
-                + "WHERE end_time >= to_timestamp_ltz('%s')\n"
-                + "AND end_time <= to_timestamp_ltz('%s')\n"
-                + "AND is_client_generated_statement = FALSE\n");
+      StringBuilder queryBuilder = new StringBuilder(extendedQuery(startTime, endTime));
 
-    if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
-      queryBuilder
-          .append("AND start_time >= ")
-          .append(arguments.getQueryLogEarliestTimestamp())
-          .append("\n");
-    if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
-    return queryBuilder.toString().replace('\n', ' ');
+      if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp()))
+        queryBuilder
+            .append("AND start_time >= ")
+            .append(arguments.getQueryLogEarliestTimestamp())
+            .append("\n");
+      if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
+      return queryBuilder.toString().replace('\n', ' ');
+    };
   }
 
   @CheckForNull
@@ -391,24 +309,50 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     logger.info("Exporting query log for " + queryLogIntervals);
 
     if (!arguments.isAssessment()) {
-      TaskDescription queryHistoryTask =
-          new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
-      queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
+      BinaryOperator<String> format = newQueryFormat(arguments);
+      for (ZonedInterval interval : queryLogIntervals) {
+        String prefix = SnowflakeLogsDumpFormat.ZIP_ENTRY_PREFIX;
+        Class<SnowflakeLogsDumpFormat.Header> header = SnowflakeLogsDumpFormat.Header.class;
+
+        out.add(makeJdbcTask(format, interval, prefix, header));
+      }
       return;
     }
 
-    TaskDescription queryHistoryTask =
-        new TaskDescription(
-            QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
-            createExtendedQueryFromAccountUsage(arguments),
-            QueryHistoryExtendedFormat.Header.class);
-    queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
+    BinaryOperator<String> queryFormat = createExtendedQueryFromAccountUsage(arguments);
+    for (ZonedInterval interval : queryLogIntervals) {
+      String prefix = QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX;
+      Class<QueryHistoryExtendedFormat.Header> header = QueryHistoryExtendedFormat.Header.class;
+
+      out.add(makeJdbcTask(queryFormat, interval, prefix, header));
+    }
 
     List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
-    Duration duration = Duration.ofDays(1);
-    ZonedIntervalIterableGenerator.forConnectorArguments(
-            arguments, duration, IntervalExpander.createBasedOnDuration(duration))
+    IntervalExpander expander = IntervalExpander.createBasedOnDuration(Duration.ofDays(1));
+
+    getIntervals(arguments, expander)
         .forEach(interval -> timeSeriesTasks.forEach(task -> addJdbcTask(out, interval, task)));
+  }
+
+  @Nonnull
+  private static Iterable<ZonedInterval> getIntervals(
+      @Nonnull ConnectorArguments arguments, @Nonnull IntervalExpander expander) {
+    return ZonedIntervalIterableGenerator.forConnectorArguments(
+        arguments, expander.duration(), expander);
+  }
+
+  @Nonnull
+  private static Task<?> makeJdbcTask(
+      @Nonnull BinaryOperator<String> queryFormat,
+      @Nonnull ZonedInterval interval,
+      @Nonnull String zipPrefix,
+      @Nonnull Class<? extends Enum<?>> headerClass) {
+    String startTime = SQL_FORMAT.format(interval.getStart());
+    String endTime = SQL_FORMAT.format(interval.getEndInclusive());
+
+    String query = queryFormat.apply(startTime, endTime);
+    String file = getEntryFileNameWithTimestamp(zipPrefix, interval);
+    return new JdbcSelectTask(file, query, TaskCategory.REQUIRED).withHeaderClass(headerClass);
   }
 
   private static void addJdbcTask(
@@ -598,5 +542,111 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                     "WAREHOUSE_METERING_HISTORY"),
                 "END_TIME"),
             WarehouseMeteringHistoryFormat.Header.class));
+  }
+
+  @Nonnull
+  private static String simpleQuery(@Nonnull String startTime, @Nonnull String endTime) {
+    return String.format(
+        "SELECT database_name, \n"
+            + "schema_name, \n"
+            + "user_name, \n"
+            + "warehouse_name, \n"
+            + "query_id, \n"
+            + "session_id, \n"
+            + "query_type, \n"
+            + "execution_status, \n"
+            + "error_code, \n"
+            + "start_time, \n"
+            + "end_time, \n"
+            + "total_elapsed_time, \n"
+            + "bytes_scanned, \n"
+            + "rows_produced, \n"
+            + "credits_used_cloud_services, \n"
+            + "query_text \n"
+            + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
+            + "WHERE end_time >= to_timestamp_ltz('%s')\n"
+            + "AND end_time <= to_timestamp_ltz('%s')\n",
+        startTime, endTime);
+  }
+
+  @Nonnull
+  private static String informationSchemaQuery(@Nonnull String startTime, @Nonnull String endTime) {
+    return String.format(
+        "SELECT database_name, \n"
+            + "schema_name, \n"
+            + "user_name, \n"
+            + "warehouse_name, \n"
+            + "query_id, \n"
+            + "session_id, \n"
+            + "query_type, \n"
+            + "execution_status, \n"
+            + "error_code, \n"
+            + "start_time, \n"
+            + "end_time, \n"
+            + "total_elapsed_time, \n"
+            + "bytes_scanned, \n"
+            + "rows_produced, \n"
+            + "credits_used_cloud_services, \n"
+            + "query_text \n"
+            + "FROM table(INFORMATION_SCHEMA.QUERY_HISTORY(\n"
+            + "result_limit=>10000\n"
+            // maximum range of 7 trailing days.
+            + ",end_time_range_start=>to_timestamp_ltz('%s')\n"
+            + ",end_time_range_end=>to_timestamp_ltz('%s')\n"
+            + "))\n",
+        startTime, endTime);
+  }
+
+  @Nonnull
+  private static String extendedQuery(@Nonnull String startTime, @Nonnull String endTime) {
+    return String.format(
+        "SELECT query_id, \n"
+            + "query_text, \n"
+            + "database_name, \n"
+            + "schema_name, \n"
+            + "query_type, \n"
+            + "session_id, \n"
+            + "user_name, \n"
+            + "warehouse_name, \n"
+            + "cluster_number, \n"
+            + "query_tag, \n"
+            + "execution_status, \n"
+            + "error_code, \n"
+            + "error_message, \n"
+            + "start_time, \n"
+            + "end_time, \n"
+            + "bytes_scanned, \n"
+            + "percentage_scanned_from_cache, \n"
+            + "bytes_written, \n"
+            + "rows_produced, \n"
+            + "rows_inserted, \n"
+            + "rows_updated, \n"
+            + "rows_deleted, \n"
+            + "rows_unloaded, \n"
+            + "bytes_deleted, \n"
+            + "partitions_scanned, \n"
+            + "partitions_total, \n"
+            + "bytes_spilled_to_local_storage, \n"
+            + "bytes_spilled_to_remote_storage, \n"
+            + "bytes_sent_over_the_network, \n"
+            + "total_elapsed_time, \n"
+            + "compilation_time, \n"
+            + "execution_time, \n"
+            + "queued_provisioning_time, \n"
+            + "queued_repair_time, \n"
+            + "queued_overload_time, \n"
+            + "transaction_blocked_time, \n"
+            + "list_external_files_time, \n"
+            + "credits_used_cloud_services, \n"
+            + "query_load_percent, \n"
+            + "query_acceleration_bytes_scanned, \n"
+            + "query_acceleration_partitions_scanned, \n"
+            + "child_queries_wait_time, \n"
+            + "transaction_id \n"
+            + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
+            + "WHERE end_time >= to_timestamp_ltz('%s')\n"
+            + "AND end_time <= to_timestamp_ltz('%s')\n"
+            + "AND is_client_generated_statement = FALSE\n",
+        startTime, endTime);
   }
 }

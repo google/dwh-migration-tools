@@ -33,6 +33,9 @@ import javax.annotation.Nonnull;
 public interface IntervalExpander extends Function<ZonedInterval, ZonedInterval> {
 
   @Nonnull
+  Duration duration();
+
+  @Nonnull
   ZonedInterval apply(ZonedInterval interval);
 
   /**
@@ -50,6 +53,13 @@ public interface IntervalExpander extends Function<ZonedInterval, ZonedInterval>
    */
   static IntervalExpander createBasedOnDuration(Duration duration) {
     return new IntervalExpander() {
+
+      @Nonnull
+      @Override
+      public Duration duration() {
+        return duration;
+      }
+
       @Nonnull
       @Override
       public ZonedInterval apply(ZonedInterval interval) {
