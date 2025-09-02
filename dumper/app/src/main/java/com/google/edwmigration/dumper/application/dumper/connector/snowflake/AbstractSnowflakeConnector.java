@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -258,5 +261,10 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     String summary = String.format("* %s - %s\n", connector.getName(), connector.getDescription());
     String details = String.format("%8s[same options as '%s']\n", "", baseName);
     return summary + details;
+  }
+
+  static String columnOf(Enum<?> enumValue) {
+    String name = enumValue.name();
+    return UPPER_CAMEL.to(UPPER_UNDERSCORE, name);
   }
 }
