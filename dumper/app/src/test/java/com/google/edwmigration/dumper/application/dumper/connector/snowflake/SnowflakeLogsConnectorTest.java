@@ -18,9 +18,11 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.common.base.Predicates.alwaysTrue;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.earliestTimestamp;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.formatPrefix;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.overrideableQuery;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -28,7 +30,6 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.io.IOException;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -79,6 +80,20 @@ public class SnowflakeLogsConnectorTest {
     assertTrue(result, result.endsWith("\n"));
   }
 
+  enum TestEnum {
+    FirstValue,
+    SecondValue;
+  };
+
+  @Test
+  public void formatPrefix_success() {
+
+    String result = formatPrefix(TestEnum.class, "TASK_HISTORY");
+
+    assertEquals(
+        "SELECT FIRST_VALUE, SECOND_VALUE FROM SNOWFLAKE.ACCOUNT_USAGE.TASK_HISTORY", result);
+  }
+
   @Test
   public void overrideableQuery_overrideAbsent_defaultUsed() throws IOException {
     String defaultSql = "SELECT event_name, query_id FROM WAREHOUSE_EVENTS_HISTORY";
@@ -119,6 +134,6 @@ public class SnowflakeLogsConnectorTest {
             "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
             "2024");
 
-    Assert.assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
+    assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
   }
 }

@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static java.util.Arrays.copyOf;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -117,6 +118,18 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
         e.getMessage()
             .contains(
                 "Private key authentication method can't be used together with user password"));
+  }
+
+  enum TestEnum {
+    SomeValue
+  }
+
+  @Test
+  public void columnOf_success() {
+
+    String columnName = AbstractSnowflakeConnector.columnOf(TestEnum.SomeValue);
+
+    assertEquals("SOME_VALUE", columnName);
   }
 
   @Test
