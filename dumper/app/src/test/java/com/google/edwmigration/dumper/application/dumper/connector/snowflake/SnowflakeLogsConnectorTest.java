@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.common.base.Predicates.alwaysTrue;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.TimeSeriesView.valuesInOrder;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.addOverridesToQuery;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.earliestTimestamp;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.formatPrefix;
@@ -28,15 +29,17 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.TimeSeriesView;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Test;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 /** @author shevek */
-@RunWith(JUnit4.class)
+@RunWith(Theories.class)
 public class SnowflakeLogsConnectorTest {
 
   @Test
@@ -188,5 +191,16 @@ public class SnowflakeLogsConnectorTest {
             "2024");
 
     assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
+  }
+
+  @Theory
+  public void valuesInOrder_allValuesPresent(TimeSeriesView view) {
+
+    assertTrue(valuesInOrder.contains(view));
+  }
+
+  @Test
+  public void valuesInOrder_sizeMatches() {
+    assertEquals(TimeSeriesView.values().length, valuesInOrder.size());
   }
 }
