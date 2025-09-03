@@ -61,12 +61,21 @@ final class SnowflakePlanner {
   private static final String TIME_PREDICATE =
       "timestamp > CURRENT_TIMESTAMP(0) - INTERVAL '14 days'";
 
+  private final ImmutableList<AssessmentQuery> assessmentQueries =
+      ImmutableList.of(
+          AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
+          AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
+          SHOW_EXTERNAL_TABLES,
+          AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+
+  private final ImmutableList<AssessmentQuery> liteAssessmentQueries =
+      ImmutableList.of(
+          AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
+          AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES, LOWER_UNDERSCORE),
+          AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+
   ImmutableList<AssessmentQuery> generateAssessmentQueries() {
-    return ImmutableList.of(
-        AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
-        AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
-        SHOW_EXTERNAL_TABLES,
-        AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+    return assessmentQueries;
   }
 
   ImmutableList<Task<?>> generateLiteSpecificQueries() {
@@ -100,12 +109,6 @@ final class SnowflakePlanner {
     builder.add(warehouseEventsHistoryTask());
     builder.add(warehouseMeteringTask());
     builder.add(storageMetricsLiteTask());
-
-    ImmutableList<AssessmentQuery> liteAssessmentQueries =
-        ImmutableList.of(
-            AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
-            AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES, LOWER_UNDERSCORE),
-            AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
 
     for (AssessmentQuery item : liteAssessmentQueries) {
       String query = String.format(item.formatString, view, /* an empty WHERE clause */ "");
