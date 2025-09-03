@@ -162,9 +162,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     if (isAssessment) {
       out.add(usageTask);
     } else {
-      ImmutableList<Task<?>> tasks =
-          getSqlTasks(inputSource, header, format, schemaTask, usageTask);
-      out.addAll(tasks);
+      out.addAll(inputSource.sqlTasks(schemaTask, usageTask));
     }
   }
 
