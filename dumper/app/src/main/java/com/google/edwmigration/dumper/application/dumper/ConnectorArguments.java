@@ -302,6 +302,14 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
 
+  /**
+   * (Deprecated) earliest timestamp of logs to extract.
+   *
+   * <p>If the user specifies an earliest start time there will be extraneous empty dump files
+   * because we always iterate over the full 7 trailing days; maybe it's worth preventing that in
+   * the future. To do that, we should require getQueryLogEarliestTimestamp() to parse and return an
+   * ISO instant, not a database-server-specific format.
+   */
   @Deprecated
   private final OptionSpec<String> optionQueryLogEarliestTimestamp =
       parser

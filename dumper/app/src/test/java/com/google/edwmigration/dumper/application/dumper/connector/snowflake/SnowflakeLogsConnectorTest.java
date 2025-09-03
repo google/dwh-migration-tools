@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.common.base.Predicates.alwaysTrue;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.addOverridesToQuery;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.earliestTimestamp;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.formatPrefix;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.overrideableQuery;
@@ -53,6 +54,58 @@ public class SnowflakeLogsConnectorTest {
     File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-logs-au.zip");
 
     new ExecutionTest().test(outputFile);
+  }
+
+  @Test
+  public void addOverridesToQuery_fullQueryOverride_success() throws IOException {
+    String override =
+        "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
+            + "WHERE end_time >= to_timestamp_ltz('%s')\n"
+            + "AND end_time <= to_timestamp_ltz('%s')\n";
+    String property = String.format("-Dsnowflake.logs.query=%s", override);
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "snowflake-logs", property);
+
+    String result = addOverridesToQuery(arguments, "SELECT 1");
+
+    assertEquals(override, result);
+  }
+
+  @Test
+  public void addOverridesToQuery_fullQueryOverrideWithBadValue_throwsException()
+      throws IOException {
+    String override = "text_with_no_format_specifiers";
+    String property = String.format("-Dsnowflake.logs.query=%s", override);
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "snowflake-logs", property);
+
+    assertThrows(
+        MetadataDumperUsageException.class, () -> addOverridesToQuery(arguments, "SELECT 1"));
+  }
+
+  @Test
+  public void addOverridesToQuery_noOverrides_nothingChanges() throws IOException {
+    String originalQuery = "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY WHERE 1=1\n";
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "snowflake-logs");
+
+    String result = addOverridesToQuery(arguments, originalQuery);
+
+    assertEquals(originalQuery, result);
+  }
+
+  @Test
+  public void addOverridesToQuery_whereOverride_success() throws IOException {
+    String originalQuery = "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY WHERE 1=1\n";
+    String override = "rows_inserted > 0";
+    String property = String.format("-Dsnowflake.logs.where=%s", override);
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "snowflake-logs", property);
+
+    String result = addOverridesToQuery(arguments, originalQuery);
+
+    assertTrue(result, result.contains(originalQuery));
+    assertTrue(result, result.contains("AND"));
+    assertTrue(result, result.contains(override));
   }
 
   @Test
