@@ -59,9 +59,6 @@ import org.slf4j.LoggerFactory;
 public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
 
-  @SuppressWarnings("UnusedVariable")
-  private static final Logger logger = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
-
   private static final String ACCOUNT_USAGE_SCHEMA_NAME = "SNOWFLAKE.ACCOUNT_USAGE";
   private static final String ACCOUNT_USAGE_WHERE_CONDITION = "DELETED IS NULL";
   private static final String EMPTY_WHERE_CONDITION = "";
