@@ -50,6 +50,13 @@ public class TelemetryProcessor {
         clientTelemetry, arguments, state, stopwatch, success);
   }
 
+  /**
+   * addss evenets to the paylaod
+   */
+  public void addToPayload(TaskRunMetrics taskMetrics) {
+    telemetryStrategy.addToPayload(clientTelemetry, taskMetrics);
+  }
+
   public void processTelemetry(FileSystem fileSystem) {
     telemetryStrategy.writeTelemetry(fileSystem, clientTelemetry);
   }
