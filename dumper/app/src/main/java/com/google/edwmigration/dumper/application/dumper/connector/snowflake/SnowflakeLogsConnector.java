@@ -83,63 +83,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     this("snowflake-logs", SCHEMA_ONLY_SOURCE);
   }
 
-  enum SnowflakeLogsConnectorProperty implements ConnectorProperty {
-    OVERRIDE_QUERY("snowflake.logs.query", "Custom query for log dump."),
-    OVERRIDE_WHERE(
-        "snowflake.logs.where", "Custom where condition to append to query for log dump."),
-
-    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY(
-        "snowflake.warehouse_events_history.query",
-        "Custom query for warehouse events history dump"),
-    AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY(
-        "snowflake.automatic_clustering_history.query",
-        "Custom query for automatic clustering history dump"),
-    COPY_HISTORY_OVERRIDE_QUERY(
-        "snowflake.copy_history.query", "Custom query for copy history dump"),
-    DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.database_replication_usage_history.query",
-        "Custom query for database replication usage history dump"),
-    LOGIN_HISTORY_OVERRIDE_QUERY(
-        "snowflake.login_history.query", "Custom query for login history dump"),
-    METERING_DAILY_HISTORY_OVERRIDE_QUERY(
-        "snowflake.metering_daily_history.query", "Custom query for metering daily history dump"),
-    PIPE_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.pipe_usage_history.query", "Custom query for pipe usage history dump"),
-    QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY(
-        "snowflake.query_acceleration_history.query",
-        "Custom query for query acceleration history dump"),
-    REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.replication_group_usage_history.query",
-        "Custom query for replication group usage history dump"),
-    SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY(
-        "snowflake.serverless_task_history.query", "Custom query for serverless task history dump"),
-    TASK_HISTORY_OVERRIDE_QUERY(
-        "snowflake.task_history.query", "Custom query for task history dump"),
-    WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY(
-        "snowflake.warehouse_load_history.query", "Custom query for warehouse load history dump"),
-    WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY(
-        "snowflake.warehouse_metering_history.query",
-        "Custom query for warehouse metering history dump");
-
-    private final String name;
-    private final String description;
-
-    SnowflakeLogsConnectorProperty(String name, String description) {
-      this.name = name;
-      this.description = description;
-    }
-
-    @Nonnull
-    public String getName() {
-      return name;
-    }
-
-    @Nonnull
-    public String getDescription() {
-      return description;
-    }
-  }
-
   private static class TaskDescription {
     private final String zipPrefix;
     private final String unformattedQuery;
@@ -180,7 +123,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   @Override
   @Nonnull
   public ImmutableList<ConnectorProperty> getPropertyConstants() {
-    return stream(SnowflakeLogsConnectorProperty.values()).collect(toImmutableList());
+    return SnowflakeLogsConnectorProperty.getConstants();
   }
 
   private String newQueryFormat(@Nonnull ConnectorArguments arguments)
@@ -390,7 +333,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             .map(
                 item -> {
                   String override = arguments.getDefinition(item.property);
-                  String prefix = formatPrefix(item.headerClass, item.name());
+                  String prefix = formatPrefix(item.headerClass, item.viewName());
                   String query = overrideableQuery(override, prefix, item.column.value);
                   return new TaskDescription(item.zipPrefix, query, item.headerClass);
                 })
@@ -547,6 +490,10 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             TASK_HISTORY,
             WAREHOUSE_LOAD_HISTORY,
             WAREHOUSE_METERING_HISTORY);
+
+    String viewName() {
+      return name();
+    }
   }
 
   @Nonnull
