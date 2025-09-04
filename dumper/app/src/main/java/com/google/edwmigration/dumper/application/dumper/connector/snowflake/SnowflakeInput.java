@@ -16,6 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Represents a strategy of getting Snowflake data.
  *
@@ -29,11 +35,33 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
  * https://docs.snowflake.net/manuals/user-guide/data-share-consumers.html You must: GRANT IMPORTED
  * PRIVILEGES ON DATABASE snowflake TO ROLE <SOMETHING>;
  */
+@ParametersAreNonnullByDefault
 enum SnowflakeInput {
   /** Get data from ACCOUNT_USAGE contents, with a fallback to INFORMATION_SCHEMA. */
-  USAGE_THEN_SCHEMA_SOURCE,
+  USAGE_THEN_SCHEMA_SOURCE {
+    @Override
+    @Nonnull
+    ImmutableList<Task<?>> sqlTasks(AbstractJdbcTask<?> schemaTask, AbstractJdbcTask<?> usageTask) {
+      return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
+    }
+  },
   /** Get data relying only on the contents of INFORMATION_SCHEMA */
-  SCHEMA_ONLY_SOURCE,
+  SCHEMA_ONLY_SOURCE {
+    @Override
+    @Nonnull
+    ImmutableList<Task<?>> sqlTasks(AbstractJdbcTask<?> schemaTask, AbstractJdbcTask<?> usageTask) {
+      return ImmutableList.of(schemaTask);
+    }
+  },
   /** Get data relying only on the contents of ACCOUNT_USAGE */
-  USAGE_ONLY_SOURCE;
+  USAGE_ONLY_SOURCE {
+    @Override
+    @Nonnull
+    ImmutableList<Task<?>> sqlTasks(AbstractJdbcTask<?> schemaTask, AbstractJdbcTask<?> usageTask) {
+      return ImmutableList.of(usageTask);
+    }
+  };
+
+  @Nonnull
+  abstract ImmutableList<Task<?>> sqlTasks(AbstractJdbcTask<?> schema, AbstractJdbcTask<?> usage);
 }

@@ -16,12 +16,15 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.SCHEMA_ONLY_SOURCE;
 import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.CaseFormat;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
@@ -45,9 +48,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeLogsDumpFor
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -82,63 +83,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     this("snowflake-logs", SCHEMA_ONLY_SOURCE);
   }
 
-  public enum SnowflakeLogConnectorProperties implements ConnectorProperty {
-    OVERRIDE_QUERY("snowflake.logs.query", "Custom query for log dump."),
-    OVERRIDE_WHERE(
-        "snowflake.logs.where", "Custom where condition to append to query for log dump."),
-
-    WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY(
-        "snowflake.warehouse_events_history.query",
-        "Custom query for warehouse events history dump"),
-    AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY(
-        "snowflake.automatic_clustering_history.query",
-        "Custom query for automatic clustering history dump"),
-    COPY_HISTORY_OVERRIDE_QUERY(
-        "snowflake.copy_history.query", "Custom query for copy history dump"),
-    DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.database_replication_usage_history.query",
-        "Custom query for database replication usage history dump"),
-    LOGIN_HISTORY_OVERRIDE_QUERY(
-        "snowflake.login_history.query", "Custom query for login history dump"),
-    METERING_DAILY_HISTORY_OVERRIDE_QUERY(
-        "snowflake.metering_daily_history.query", "Custom query for metering daily history dump"),
-    PIPE_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.pipe_usage_history.query", "Custom query for pipe usage history dump"),
-    QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY(
-        "snowflake.query_acceleration_history.query",
-        "Custom query for query acceleration history dump"),
-    REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY(
-        "snowflake.replication_group_usage_history.query",
-        "Custom query for replication group usage history dump"),
-    SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY(
-        "snowflake.serverless_task_history.query", "Custom query for serverless task history dump"),
-    TASK_HISTORY_OVERRIDE_QUERY(
-        "snowflake.task_history.query", "Custom query for task history dump"),
-    WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY(
-        "snowflake.warehouse_load_history.query", "Custom query for warehouse load history dump"),
-    WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY(
-        "snowflake.warehouse_metering_history.query",
-        "Custom query for warehouse metering history dump");
-
-    private final String name;
-    private final String description;
-
-    SnowflakeLogConnectorProperties(String name, String description) {
-      this.name = name;
-      this.description = description;
-    }
-
-    @Nonnull
-    public String getName() {
-      return name;
-    }
-
-    @Nonnull
-    public String getDescription() {
-      return description;
-    }
-  }
-
   private static class TaskDescription {
     private final String zipPrefix;
     private final String unformattedQuery;
@@ -170,16 +114,16 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     }
   }
 
-  @Nonnull
-  @Override
-  public Class<? extends Enum<? extends ConnectorProperty>> getConnectorProperties() {
-    return SnowflakeLogConnectorProperties.class;
-  }
-
   @Override
   @Nonnull
   public String getDescription() {
     return "Dumps logs from Snowflake.";
+  }
+
+  @Override
+  @Nonnull
+  public ImmutableList<ConnectorProperty> getPropertyConstants() {
+    return SnowflakeLogsConnectorProperty.getConstants();
   }
 
   private String newQueryFormat(@Nonnull ConnectorArguments arguments)
@@ -199,36 +143,28 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
   private String createQueryFromAccountUsage(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    String overrideQuery = getOverrideQuery(arguments);
-    if (overrideQuery != null) return overrideQuery;
-
-    String overrideWhere = getOverrideWhere(arguments);
-
     @SuppressWarnings("OrphanedFormatString")
-    StringBuilder queryBuilder =
-        new StringBuilder(
-            "SELECT database_name, \n"
-                + "schema_name, \n"
-                + "user_name, \n"
-                + "warehouse_name, \n"
-                + "query_id, \n"
-                + "session_id, \n"
-                + "query_type, \n"
-                + "execution_status, \n"
-                + "error_code, \n"
-                + "start_time, \n"
-                + "end_time, \n"
-                + "total_elapsed_time, \n"
-                + "bytes_scanned, \n"
-                + "rows_produced, \n"
-                + "credits_used_cloud_services, \n"
-                + "query_text \n"
-                + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
-                + "WHERE end_time >= to_timestamp_ltz('%s')\n"
-                + "AND end_time <= to_timestamp_ltz('%s')\n");
-    queryBuilder.append(earliestTimestamp(arguments));
-    if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
-    return queryBuilder.toString().replace('\n', ' ');
+    String baseQuery =
+        "SELECT database_name, \n"
+            + "schema_name, \n"
+            + "user_name, \n"
+            + "warehouse_name, \n"
+            + "query_id, \n"
+            + "session_id, \n"
+            + "query_type, \n"
+            + "execution_status, \n"
+            + "error_code, \n"
+            + "start_time, \n"
+            + "end_time, \n"
+            + "total_elapsed_time, \n"
+            + "bytes_scanned, \n"
+            + "rows_produced, \n"
+            + "credits_used_cloud_services, \n"
+            + "query_text \n"
+            + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
+            + "WHERE end_time >= to_timestamp_ltz('%s')\n"
+            + "AND end_time <= to_timestamp_ltz('%s')\n";
+    return addOverridesToQuery(arguments, baseQuery).replace('\n', ' ');
   }
 
   private String createQueryFromInformationSchema(ConnectorArguments arguments)
@@ -236,109 +172,104 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     // Docref: https://docs.snowflake.net/manuals/sql-reference/functions/query_history.html
     // Per the docref, Snowflake only retains/returns seven trailing days of logs in
     // INFORMATION_SCHEMA.
-    String overrideQuery = getOverrideQuery(arguments);
-    if (overrideQuery != null) return overrideQuery;
-
     @SuppressWarnings("OrphanedFormatString")
-    StringBuilder queryBuilder =
-        new StringBuilder(
-            "SELECT database_name, \n"
-                + "schema_name, \n"
-                + "user_name, \n"
-                + "warehouse_name, \n"
-                + "query_id, \n"
-                + "session_id, \n"
-                + "query_type, \n"
-                + "execution_status, \n"
-                + "error_code, \n"
-                + "start_time, \n"
-                + "end_time, \n"
-                + "total_elapsed_time, \n"
-                + "bytes_scanned, \n"
-                + "rows_produced, \n"
-                + "credits_used_cloud_services, \n"
-                + "query_text \n"
-                + "FROM table(INFORMATION_SCHEMA.QUERY_HISTORY(\n"
-                + "result_limit=>10000\n"
-                // maximum range of 7 trailing days.
-                + ",end_time_range_start=>to_timestamp_ltz('%s')\n"
-                + ",end_time_range_end=>to_timestamp_ltz('%s')\n"
-                // It makes leter formatting easier if we always have a 'WHERE'.
-                + ")) WHERE 1=1\n");
-    // if the user specifies an earliest start time there will be extraneous empty dump files
-    // because we always iterate over the full 7 trailing days; maybe it's worth
-    // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
-    // to parse and return an ISO instant, not a database-server-specific format.
-    queryBuilder.append(earliestTimestamp(arguments));
-
-    String overrideWhere = getOverrideWhere(arguments);
-    if (overrideWhere != null) {
-      queryBuilder.append(" AND " + overrideWhere);
-    }
-    return queryBuilder.toString().replace('\n', ' ');
+    String baseQuery =
+        "SELECT database_name, \n"
+            + "schema_name, \n"
+            + "user_name, \n"
+            + "warehouse_name, \n"
+            + "query_id, \n"
+            + "session_id, \n"
+            + "query_type, \n"
+            + "execution_status, \n"
+            + "error_code, \n"
+            + "start_time, \n"
+            + "end_time, \n"
+            + "total_elapsed_time, \n"
+            + "bytes_scanned, \n"
+            + "rows_produced, \n"
+            + "credits_used_cloud_services, \n"
+            + "query_text \n"
+            + "FROM table(INFORMATION_SCHEMA.QUERY_HISTORY(\n"
+            + "result_limit=>10000\n"
+            // maximum range of 7 trailing days.
+            + ",end_time_range_start=>to_timestamp_ltz('%s')\n"
+            + ",end_time_range_end=>to_timestamp_ltz('%s')\n"
+            // It makes later formatting easier if we always have a 'WHERE'.
+            + ")) WHERE 1=1\n";
+    return addOverridesToQuery(arguments, baseQuery).replace('\n', ' ');
   }
 
   private String createExtendedQueryFromAccountUsage(ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    String overrideQuery = getOverrideQuery(arguments);
-    if (overrideQuery != null) return overrideQuery;
-
-    String overrideWhere = getOverrideWhere(arguments);
-
     @SuppressWarnings("OrphanedFormatString")
-    StringBuilder queryBuilder =
-        new StringBuilder(
-            "SELECT query_id, \n"
-                + "query_text, \n"
-                + "database_name, \n"
-                + "schema_name, \n"
-                + "query_type, \n"
-                + "session_id, \n"
-                + "user_name, \n"
-                + "warehouse_name, \n"
-                + "cluster_number, \n"
-                + "query_tag, \n"
-                + "execution_status, \n"
-                + "error_code, \n"
-                + "error_message, \n"
-                + "start_time, \n"
-                + "end_time, \n"
-                + "bytes_scanned, \n"
-                + "percentage_scanned_from_cache, \n"
-                + "bytes_written, \n"
-                + "rows_produced, \n"
-                + "rows_inserted, \n"
-                + "rows_updated, \n"
-                + "rows_deleted, \n"
-                + "rows_unloaded, \n"
-                + "bytes_deleted, \n"
-                + "partitions_scanned, \n"
-                + "partitions_total, \n"
-                + "bytes_spilled_to_local_storage, \n"
-                + "bytes_spilled_to_remote_storage, \n"
-                + "bytes_sent_over_the_network, \n"
-                + "total_elapsed_time, \n"
-                + "compilation_time, \n"
-                + "execution_time, \n"
-                + "queued_provisioning_time, \n"
-                + "queued_repair_time, \n"
-                + "queued_overload_time, \n"
-                + "transaction_blocked_time, \n"
-                + "list_external_files_time, \n"
-                + "credits_used_cloud_services, \n"
-                + "query_load_percent, \n"
-                + "query_acceleration_bytes_scanned, \n"
-                + "query_acceleration_partitions_scanned, \n"
-                + "child_queries_wait_time, \n"
-                + "transaction_id \n"
-                + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
-                + "WHERE end_time >= to_timestamp_ltz('%s')\n"
-                + "AND end_time <= to_timestamp_ltz('%s')\n"
-                + "AND is_client_generated_statement = FALSE\n");
+    String baseQuery =
+        "SELECT query_id, \n"
+            + "query_text, \n"
+            + "database_name, \n"
+            + "schema_name, \n"
+            + "query_type, \n"
+            + "session_id, \n"
+            + "user_name, \n"
+            + "warehouse_name, \n"
+            + "cluster_number, \n"
+            + "query_tag, \n"
+            + "execution_status, \n"
+            + "error_code, \n"
+            + "error_message, \n"
+            + "start_time, \n"
+            + "end_time, \n"
+            + "bytes_scanned, \n"
+            + "percentage_scanned_from_cache, \n"
+            + "bytes_written, \n"
+            + "rows_produced, \n"
+            + "rows_inserted, \n"
+            + "rows_updated, \n"
+            + "rows_deleted, \n"
+            + "rows_unloaded, \n"
+            + "bytes_deleted, \n"
+            + "partitions_scanned, \n"
+            + "partitions_total, \n"
+            + "bytes_spilled_to_local_storage, \n"
+            + "bytes_spilled_to_remote_storage, \n"
+            + "bytes_sent_over_the_network, \n"
+            + "total_elapsed_time, \n"
+            + "compilation_time, \n"
+            + "execution_time, \n"
+            + "queued_provisioning_time, \n"
+            + "queued_repair_time, \n"
+            + "queued_overload_time, \n"
+            + "transaction_blocked_time, \n"
+            + "list_external_files_time, \n"
+            + "credits_used_cloud_services, \n"
+            + "query_load_percent, \n"
+            + "query_acceleration_bytes_scanned, \n"
+            + "query_acceleration_partitions_scanned, \n"
+            + "child_queries_wait_time, \n"
+            + "transaction_id \n"
+            + "FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
+            + "WHERE end_time >= to_timestamp_ltz('%s')\n"
+            + "AND end_time <= to_timestamp_ltz('%s')\n"
+            + "AND is_client_generated_statement = FALSE\n";
+    return addOverridesToQuery(arguments, baseQuery).replace('\n', ' ');
+  }
 
+  @Nonnull
+  static String addOverridesToQuery(
+      @Nonnull ConnectorArguments arguments, @Nonnull String baseQuery) {
+    String overrideQuery = getOverrideQuery(arguments);
+
+    if (overrideQuery != null) {
+      return overrideQuery;
+    }
+    StringBuilder queryBuilder = new StringBuilder(baseQuery);
     queryBuilder.append(earliestTimestamp(arguments));
-    if (overrideWhere != null) queryBuilder.append(" AND ").append(overrideWhere);
-    return queryBuilder.toString().replace('\n', ' ');
+
+    String overrideWhere = arguments.getDefinition(SnowflakeLogsConnectorProperty.OVERRIDE_WHERE);
+    if (overrideWhere != null) {
+      queryBuilder.append(" AND " + overrideWhere);
+    }
+    return queryBuilder.toString();
   }
 
   @Nonnull
@@ -352,9 +283,9 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   }
 
   @CheckForNull
-  private String getOverrideQuery(@Nonnull ConnectorArguments arguments)
+  private static String getOverrideQuery(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    String overrideQuery = arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_QUERY);
+    String overrideQuery = arguments.getDefinition(SnowflakeLogsConnectorProperty.OVERRIDE_QUERY);
     if (overrideQuery != null) {
       if (StringUtils.countMatches(overrideQuery, "%s") != 2)
         throw new MetadataDumperUsageException(
@@ -363,12 +294,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       return overrideQuery;
     }
     return null;
-  }
-
-  @CheckForNull
-  private String getOverrideWhere(@Nonnull ConnectorArguments arguments)
-      throws MetadataDumperUsageException {
-    return arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_WHERE);
   }
 
   @Override
@@ -403,7 +328,16 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             QueryHistoryExtendedFormat.Header.class);
     queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
 
-    List<TaskDescription> timeSeriesTasks = createTimeSeriesTasks(arguments);
+    List<TaskDescription> timeSeriesTasks =
+        TimeSeriesView.valuesInOrder.stream()
+            .map(
+                item -> {
+                  String override = arguments.getDefinition(item.property);
+                  String prefix = formatPrefix(item.headerClass, item.viewName());
+                  String query = overrideableQuery(override, prefix, item.column.value);
+                  return new TaskDescription(item.zipPrefix, query, item.headerClass);
+                })
+            .collect(toImmutableList());
     Duration duration = Duration.ofDays(1);
     ZonedIntervalIterableGenerator.forConnectorArguments(
             arguments, duration, IntervalExpander.createBasedOnDuration(duration))
@@ -441,160 +375,133 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     }
   }
 
-  private String parseColumnsFromHeader(Class<? extends Enum<?>> headerClass) {
-    return Arrays.stream(headerClass.getEnumConstants())
-        .map(Enum::name)
-        .map(name -> CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, name))
-        .collect(Collectors.joining(", "));
+  enum TimeSeriesColumn {
+    COMPLETED_TIME("COMPLETED_TIME"),
+    END_TIME("END_TIME"),
+    EVENT_TIMESTAMP("EVENT_TIMESTAMP"),
+    LAST_LOAD_TIME("LAST_LOAD_TIME"),
+    TIMESTAMP("TIMESTAMP"),
+    USAGE_DATE("USAGE_DATE");
+
+    String value;
+
+    TimeSeriesColumn(String value) {
+      this.value = value;
+    }
   }
 
-  private List<TaskDescription> createTimeSeriesTasks(ConnectorArguments arguments) {
-    String queryPrefix = "SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.%s";
-    return Arrays.asList(
-        new TaskDescription(
-            WarehouseEventsHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(WarehouseEventsHistoryFormat.Header.class),
-                    "WAREHOUSE_EVENTS_HISTORY"),
-                "TIMESTAMP"),
-            WarehouseEventsHistoryFormat.Header.class),
-        new TaskDescription(
-            AutomaticClusteringHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(AutomaticClusteringHistoryFormat.Header.class),
-                    "AUTOMATIC_CLUSTERING_HISTORY"),
-                "END_TIME"),
-            AutomaticClusteringHistoryFormat.Header.class),
-        new TaskDescription(
-            CopyHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.COPY_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(CopyHistoryFormat.Header.class),
-                    "COPY_HISTORY"),
-                "LAST_LOAD_TIME"),
-            CopyHistoryFormat.Header.class),
-        new TaskDescription(
-            DatabaseReplicationUsageHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties
-                        .DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(DatabaseReplicationUsageHistoryFormat.Header.class),
-                    "DATABASE_REPLICATION_USAGE_HISTORY"),
-                "END_TIME"),
-            DatabaseReplicationUsageHistoryFormat.Header.class),
-        new TaskDescription(
-            LoginHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.LOGIN_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(LoginHistoryFormat.Header.class),
-                    "LOGIN_HISTORY"),
-                "EVENT_TIMESTAMP"),
-            LoginHistoryFormat.Header.class),
-        new TaskDescription(
-            MeteringDailyHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(MeteringDailyHistoryFormat.Header.class),
-                    "METERING_DAILY_HISTORY"),
-                "USAGE_DATE"),
-            MeteringDailyHistoryFormat.Header.class),
-        new TaskDescription(
-            PipeUsageHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(PipeUsageHistoryFormat.Header.class),
-                    "PIPE_USAGE_HISTORY"),
-                "END_TIME"),
-            PipeUsageHistoryFormat.Header.class),
-        new TaskDescription(
-            QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(QueryAccelerationHistoryFormat.Header.class),
-                    "QUERY_ACCELERATION_HISTORY"),
-                "END_TIME"),
-            QueryAccelerationHistoryFormat.Header.class,
-            TaskCategory.OPTIONAL),
-        new TaskDescription(
-            ReplicationGroupUsageHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(ReplicationGroupUsageHistoryFormat.Header.class),
-                    "REPLICATION_GROUP_USAGE_HISTORY"),
-                "END_TIME"),
-            ReplicationGroupUsageHistoryFormat.Header.class),
-        new TaskDescription(
-            ServerlessTaskHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(ServerlessTaskHistoryFormat.Header.class),
-                    "SERVERLESS_TASK_HISTORY"),
-                "END_TIME"),
-            ServerlessTaskHistoryFormat.Header.class),
-        new TaskDescription(
-            TaskHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.TASK_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(TaskHistoryFormat.Header.class),
-                    "TASK_HISTORY"),
-                "COMPLETED_TIME"),
-            TaskHistoryFormat.Header.class),
-        new TaskDescription(
-            WarehouseLoadHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(WarehouseLoadHistoryFormat.Header.class),
-                    "WAREHOUSE_LOAD_HISTORY"),
-                "END_TIME"),
-            WarehouseLoadHistoryFormat.Header.class),
-        new TaskDescription(
-            WarehouseMeteringHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(
-                arguments.getDefinition(
-                    SnowflakeLogConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY),
-                String.format(
-                    queryPrefix,
-                    parseColumnsFromHeader(WarehouseMeteringHistoryFormat.Header.class),
-                    "WAREHOUSE_METERING_HISTORY"),
-                "END_TIME"),
-            WarehouseMeteringHistoryFormat.Header.class));
+  enum TimeSeriesView {
+    WAREHOUSE_EVENTS_HISTORY(
+        WarehouseEventsHistoryFormat.Header.class,
+        WarehouseEventsHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.TIMESTAMP,
+        SnowflakeLogsConnectorProperty.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY),
+    AUTOMATIC_CLUSTERING_HISTORY(
+        AutomaticClusteringHistoryFormat.Header.class,
+        AutomaticClusteringHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY),
+    COPY_HISTORY(
+        CopyHistoryFormat.Header.class,
+        CopyHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.LAST_LOAD_TIME,
+        SnowflakeLogsConnectorProperty.COPY_HISTORY_OVERRIDE_QUERY),
+    DATABASE_REPLICATION_USAGE_HISTORY(
+        DatabaseReplicationUsageHistoryFormat.Header.class,
+        DatabaseReplicationUsageHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY),
+    LOGIN_HISTORY(
+        LoginHistoryFormat.Header.class,
+        LoginHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.EVENT_TIMESTAMP,
+        SnowflakeLogsConnectorProperty.LOGIN_HISTORY_OVERRIDE_QUERY),
+    METERING_DAILY_HISTORY(
+        MeteringDailyHistoryFormat.Header.class,
+        MeteringDailyHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.USAGE_DATE,
+        SnowflakeLogsConnectorProperty.METERING_DAILY_HISTORY_OVERRIDE_QUERY),
+    PIPE_USAGE_HISTORY(
+        PipeUsageHistoryFormat.Header.class,
+        PipeUsageHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.PIPE_USAGE_HISTORY_OVERRIDE_QUERY),
+    QUERY_ACCELERATION_HISTORY(
+        QueryAccelerationHistoryFormat.Header.class,
+        QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY),
+    REPLICATION_GROUP_USAGE_HISTORY(
+        ReplicationGroupUsageHistoryFormat.Header.class,
+        QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
+    SERVERLESS_TASK_HISTORY(
+        ServerlessTaskHistoryFormat.Header.class,
+        ServerlessTaskHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY),
+    TASK_HISTORY(
+        TaskHistoryFormat.Header.class,
+        TaskHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.COMPLETED_TIME,
+        SnowflakeLogsConnectorProperty.TASK_HISTORY_OVERRIDE_QUERY),
+    WAREHOUSE_LOAD_HISTORY(
+        WarehouseLoadHistoryFormat.Header.class,
+        WarehouseLoadHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY),
+    WAREHOUSE_METERING_HISTORY(
+        WarehouseMeteringHistoryFormat.Header.class,
+        WarehouseMeteringHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY);
+
+    final Class<? extends Enum<?>> headerClass;
+    final ConnectorProperty property;
+    final String queryPrefix;
+    final String zipPrefix;
+    final TimeSeriesColumn column;
+
+    TimeSeriesView(
+        Class<? extends Enum<?>> headerClass,
+        String zipPrefix,
+        TimeSeriesColumn column,
+        SnowflakeLogsConnectorProperty property) {
+      this.headerClass = headerClass;
+      this.property = property;
+      this.queryPrefix = formatPrefix(headerClass, name());
+      this.zipPrefix = zipPrefix;
+      this.column = column;
+    }
+
+    static final ImmutableList<TimeSeriesView> valuesInOrder =
+        ImmutableList.of(
+            WAREHOUSE_EVENTS_HISTORY,
+            AUTOMATIC_CLUSTERING_HISTORY,
+            COPY_HISTORY,
+            DATABASE_REPLICATION_USAGE_HISTORY,
+            LOGIN_HISTORY,
+            METERING_DAILY_HISTORY,
+            PIPE_USAGE_HISTORY,
+            QUERY_ACCELERATION_HISTORY,
+            REPLICATION_GROUP_USAGE_HISTORY,
+            SERVERLESS_TASK_HISTORY,
+            TASK_HISTORY,
+            WAREHOUSE_LOAD_HISTORY,
+            WAREHOUSE_METERING_HISTORY);
+
+    String viewName() {
+      return name();
+    }
+  }
+
+  @Nonnull
+  static String formatPrefix(@Nonnull Class<? extends Enum<?>> enumClass, @Nonnull String view) {
+    String selectList =
+        stream(enumClass.getEnumConstants())
+            .map(AbstractSnowflakeConnector::columnOf)
+            .collect(joining(", "));
+    return String.format("SELECT %s FROM SNOWFLAKE.ACCOUNT_USAGE.%s", selectList, view);
   }
 }

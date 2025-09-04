@@ -16,6 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTestUtil.createArgs;
+import static org.junit.Assert.assertThrows;
+
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
@@ -64,5 +69,20 @@ public class SnowflakeAccountUsageMetadataConnectorTest
         SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.FunctionInfoFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.WarehousesFormat.AU_ZIP_ENTRY_NAME);
+  }
+
+  @Test
+  public void validate_success() {
+    ConnectorArguments arguments = createArgs("--connector", "snowflake-account-usage-metadata");
+
+    connector.validate(arguments);
+  }
+
+  @Test
+  public void validate_assessmentFlagProvided_throwsException() {
+    ConnectorArguments arguments =
+        createArgs("--connector", "snowflake-account-usage-metadata", "--assessment");
+
+    assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
   }
 }

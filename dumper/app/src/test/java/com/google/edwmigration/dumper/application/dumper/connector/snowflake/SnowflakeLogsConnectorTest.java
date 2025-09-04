@@ -17,24 +17,29 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.common.base.Predicates.alwaysTrue;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.TimeSeriesView.valuesInOrder;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.addOverridesToQuery;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.earliestTimestamp;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.formatPrefix;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.overrideableQuery;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.TimeSeriesView;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.io.IOException;
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 /** @author shevek */
-@RunWith(JUnit4.class)
+@RunWith(Theories.class)
 public class SnowflakeLogsConnectorTest {
 
   @Test
@@ -52,6 +57,58 @@ public class SnowflakeLogsConnectorTest {
     File outputFile = TestUtils.newOutputFile("compilerworks-snowflake-logs-au.zip");
 
     new ExecutionTest().test(outputFile);
+  }
+
+  @Test
+  public void addOverridesToQuery_fullQueryOverride_success() throws IOException {
+    String override =
+        "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
+            + "WHERE end_time >= to_timestamp_ltz('%s')\n"
+            + "AND end_time <= to_timestamp_ltz('%s')\n";
+    String property = String.format("-Dsnowflake.logs.query=%s", override);
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "snowflake-logs", property);
+
+    String result = addOverridesToQuery(arguments, "SELECT 1");
+
+    assertEquals(override, result);
+  }
+
+  @Test
+  public void addOverridesToQuery_fullQueryOverrideWithBadValue_throwsException()
+      throws IOException {
+    String override = "text_with_no_format_specifiers";
+    String property = String.format("-Dsnowflake.logs.query=%s", override);
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "snowflake-logs", property);
+
+    assertThrows(
+        MetadataDumperUsageException.class, () -> addOverridesToQuery(arguments, "SELECT 1"));
+  }
+
+  @Test
+  public void addOverridesToQuery_noOverrides_nothingChanges() throws IOException {
+    String originalQuery = "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY WHERE 1=1\n";
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "snowflake-logs");
+
+    String result = addOverridesToQuery(arguments, originalQuery);
+
+    assertEquals(originalQuery, result);
+  }
+
+  @Test
+  public void addOverridesToQuery_whereOverride_success() throws IOException {
+    String originalQuery = "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY WHERE 1=1\n";
+    String override = "rows_inserted > 0";
+    String property = String.format("-Dsnowflake.logs.where=%s", override);
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "snowflake-logs", property);
+
+    String result = addOverridesToQuery(arguments, originalQuery);
+
+    assertTrue(result, result.contains(originalQuery));
+    assertTrue(result, result.contains("AND"));
+    assertTrue(result, result.contains(override));
   }
 
   @Test
@@ -77,6 +134,20 @@ public class SnowflakeLogsConnectorTest {
     assertTrue(result, result.contains("2024-03-21"));
     assertTrue(result, result.contains("start_time"));
     assertTrue(result, result.endsWith("\n"));
+  }
+
+  enum TestEnum {
+    FirstValue,
+    SecondValue;
+  };
+
+  @Test
+  public void formatPrefix_success() {
+
+    String result = formatPrefix(TestEnum.class, "TASK_HISTORY");
+
+    assertEquals(
+        "SELECT FIRST_VALUE, SECOND_VALUE FROM SNOWFLAKE.ACCOUNT_USAGE.TASK_HISTORY", result);
   }
 
   @Test
@@ -119,6 +190,17 @@ public class SnowflakeLogsConnectorTest {
             "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
             "2024");
 
-    Assert.assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
+    assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
+  }
+
+  @Theory
+  public void valuesInOrder_allValuesPresent(TimeSeriesView view) {
+
+    assertTrue(valuesInOrder.contains(view));
+  }
+
+  @Test
+  public void valuesInOrder_sizeMatches() {
+    assertEquals(TimeSeriesView.values().length, valuesInOrder.size());
   }
 }

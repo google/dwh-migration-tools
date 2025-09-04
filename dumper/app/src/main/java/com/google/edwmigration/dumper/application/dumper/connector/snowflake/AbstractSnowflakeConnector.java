@@ -16,9 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
@@ -34,16 +36,12 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcC
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
-import com.google.edwmigration.dumper.application.dumper.task.Summary;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -103,35 +101,14 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   @Override
   public final void validate(@Nonnull ConnectorArguments arguments) {
-    ArrayList<String> messages = new ArrayList<>();
-    MetadataDumperUsageException exception = null;
-
     if (arguments.isPasswordFlagProvided() && arguments.isPrivateKeyFileProvided()) {
       String inconsistentAuth =
           "Private key authentication method can't be used together with user password. "
               + "If the private key file is encrypted, please use --"
               + ConnectorArguments.OPT_PRIVATE_KEY_PASSWORD
               + " to specify the key password.";
-      messages.add(inconsistentAuth);
-      exception = new MetadataDumperUsageException(inconsistentAuth, messages);
+      throw new MetadataDumperUsageException(inconsistentAuth);
     }
-
-    boolean hasDatabases = !arguments.getDatabases().isEmpty();
-    if (arguments.isAssessment()
-        && hasDatabases
-        && arguments.getConnectorName().toLowerCase().equals("snowflake")) {
-      String unsupportedFilter =
-          "Trying to filter by database with the --"
-              + ConnectorArguments.OPT_ASSESSMENT
-              + " flag. This is unsupported in Assessment. Remove either the --"
-              + ConnectorArguments.OPT_ASSESSMENT
-              + " or the --"
-              + ConnectorArguments.OPT_DATABASE
-              + " flag.";
-      messages.add(unsupportedFilter);
-      exception = new MetadataDumperUsageException(unsupportedFilter, messages);
-    }
-    removeDuplicateMessageAndThrow(exception);
     validateForConnector(arguments);
   }
 
@@ -143,15 +120,6 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
    * @param arguments User-provided arguments of the Dumper run.
    */
   protected abstract void validateForConnector(@Nonnull ConnectorArguments arguments);
-
-  private static void removeDuplicateMessageAndThrow(
-      @Nullable MetadataDumperUsageException exception) {
-    if (exception != null) {
-      List<String> messages = exception.getMessages();
-      messages.remove(messages.size() - 1);
-      throw exception;
-    }
-  }
 
   private DataSource createUserPasswordDataSource(@Nonnull ConnectorArguments arguments, String url)
       throws SQLException {
@@ -205,23 +173,6 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     return buf.toString();
   }
 
-  final ImmutableList<Task<?>> getSqlTasks(
-      @Nonnull SnowflakeInput inputSource,
-      @Nonnull Class<? extends Enum<?>> header,
-      @Nonnull String format,
-      @Nonnull AbstractJdbcTask<Summary> schemaTask,
-      @Nonnull AbstractJdbcTask<Summary> usageTask) {
-    switch (inputSource) {
-      case USAGE_THEN_SCHEMA_SOURCE:
-        return ImmutableList.of(usageTask, schemaTask.onlyIfFailed(usageTask));
-      case SCHEMA_ONLY_SOURCE:
-        return ImmutableList.of(schemaTask);
-      case USAGE_ONLY_SOURCE:
-        return ImmutableList.of(usageTask);
-    }
-    throw new AssertionError();
-  }
-
   private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
       throws MetadataDumperUsageException {
     String currentDatabase =
@@ -258,5 +209,10 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     String summary = String.format("* %s - %s\n", connector.getName(), connector.getDescription());
     String details = String.format("%8s[same options as '%s']\n", "", baseName);
     return summary + details;
+  }
+
+  static String columnOf(Enum<?> enumValue) {
+    String name = enumValue.name();
+    return UPPER_CAMEL.to(UPPER_UNDERSCORE, name);
   }
 }
