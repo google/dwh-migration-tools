@@ -103,12 +103,12 @@ final class SnowflakePlanner {
     builder.add(
         new JdbcSelectTask(TablesFormat.AU_ZIP_ENTRY_NAME, tables)
             .withHeaderClass(TablesFormat.Header.class));
-    builder.add(proceduresTask());
-    builder.add(reportDateRangeTask());
-    builder.add(eventStateTask());
-    builder.add(warehouseEventsHistoryTask());
-    builder.add(warehouseMeteringTask());
-    builder.add(storageMetricsLiteTask());
+    builder.add(procedures.toTask());
+    builder.add(reportDateRange.toTask());
+    builder.add(eventState.toTask());
+    builder.add(warehouseEventsHistory.toTask());
+    builder.add(warehouseMetering.toTask());
+    builder.add(storageMetrics.toTask());
 
     for (AssessmentQuery item : liteAssessmentQueries) {
       String query = String.format(item.formatString, view, /* an empty WHERE clause */ "");
@@ -156,33 +156,61 @@ final class SnowflakePlanner {
     }
   }
 
-  Task<?> eventStateTask() {
+  private static final class LiteTaskData {
+
+    final String csvFile;
+    final String query;
+    final ImmutableList<String> header;
+
+    LiteTaskData(String csv, String query, ImmutableList<String> header) {
+      this.csvFile = csv;
+      this.query = query;
+      this.header = header;
+    }
+
+    Task<?> toTask() {
+      return new LiteTimeSeriesTask(csvFile, query, header);
+    }
+  }
+
+  private static LiteTaskData eventState = initEventState();
+  private static LiteTaskData procedures = initProcedures();
+  private static LiteTaskData reportDateRange = initReportDateRange();
+  private static LiteTaskData storageMetrics = initStorageMetrics();
+  private static LiteTaskData warehouseEventsHistory = initWarehouseEventsHistory();
+  private static LiteTaskData warehouseMetering = initWarehouseMetering();
+
+  private static String buildQuery(String selectList, String view, String predicate) {
+    return String.format("SELECT %s FROM %s WHERE %s", selectList, view, predicate);
+  }
+
+  private static LiteTaskData initEventState() {
     String query =
         "SELECT event_state, count(*)"
             + " FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY"
             + " WHERE event_name LIKE '%CLUSTER%' GROUP BY ALL";
     ImmutableList<String> header = ImmutableList.of("EventState", "Count");
-    return new LiteTimeSeriesTask("event_state.csv", query, header);
+    return new LiteTaskData("event_state.csv", query, header);
   }
 
-  Task<?> proceduresTask() {
+  private static LiteTaskData initProcedures() {
     String view = "SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES";
     String query =
         String.format(
             "SELECT procedure_language, procedure_owner, count(1) FROM %s GROUP BY ALL", view);
     ImmutableList<String> header = ImmutableList.of("Language", "Owner", "Count");
-    return new LiteTimeSeriesTask("procedures.csv", query, header);
+    return new LiteTaskData("procedures.csv", query, header);
   }
 
-  Task<?> reportDateRangeTask() {
+  private static LiteTaskData initReportDateRange() {
     String selectList = "min(timestamp), max(timestamp)";
     String view = "SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_EVENTS_HISTORY";
     String query = buildQuery(selectList, view, TIME_PREDICATE);
     ImmutableList<String> header = ImmutableList.of("StartTime", "EndTime");
-    return new LiteTimeSeriesTask("report_date_range.csv", query, header);
+    return new LiteTaskData("report_date_range.csv", query, header);
   }
 
-  Task<?> storageMetricsLiteTask() {
+  private static LiteTaskData initStorageMetrics() {
     String selectList =
         String.join(
             ", ",
@@ -231,14 +259,10 @@ final class SnowflakePlanner {
             "SchemaDropped",
             "Comment",
             "Deleted");
-    return new LiteTimeSeriesTask("table_storage_metrics-au.csv", query, header);
+    return new LiteTaskData("table_storage_metrics-au.csv", query, header);
   }
 
-  private static String buildQuery(String selectList, String view, String predicate) {
-    return String.format("SELECT %s FROM %s WHERE %s", selectList, view, predicate);
-  }
-
-  Task<?> warehouseEventsHistoryTask() {
+  private static LiteTaskData initWarehouseEventsHistory() {
     String selectList =
         String.join(
             ", ",
@@ -262,10 +286,10 @@ final class SnowflakePlanner {
             "EventReason",
             "EventState",
             "QueryId");
-    return new LiteTimeSeriesTask("warehouse_events_lite.csv", query, header);
+    return new LiteTaskData("warehouse_events_lite.csv", query, header);
   }
 
-  Task<?> warehouseMeteringTask() {
+  private static LiteTaskData initWarehouseMetering() {
     String selectList =
         String.join(
             ", ",
@@ -287,6 +311,6 @@ final class SnowflakePlanner {
             "WarehouseName",
             "CreditsUsedCompute",
             "CreditsUsedCloudServices");
-    return new LiteTimeSeriesTask("warehouse_metering_lite.csv", query, header);
+    return new LiteTaskData("warehouse_metering_lite.csv", query, header);
   }
 }
