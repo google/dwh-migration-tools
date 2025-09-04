@@ -83,7 +83,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     this("snowflake-logs", SCHEMA_ONLY_SOURCE);
   }
 
-  enum SnowflakeLogConnectorProperties implements ConnectorProperty {
+  enum SnowflakeLogsConnectorProperty implements ConnectorProperty {
     OVERRIDE_QUERY("snowflake.logs.query", "Custom query for log dump."),
     OVERRIDE_WHERE(
         "snowflake.logs.where", "Custom where condition to append to query for log dump."),
@@ -124,7 +124,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     private final String name;
     private final String description;
 
-    SnowflakeLogConnectorProperties(String name, String description) {
+    SnowflakeLogsConnectorProperty(String name, String description) {
       this.name = name;
       this.description = description;
     }
@@ -180,7 +180,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   @Override
   @Nonnull
   public ImmutableList<ConnectorProperty> getPropertyConstants() {
-    return stream(SnowflakeLogConnectorProperties.values()).collect(toImmutableList());
+    return stream(SnowflakeLogsConnectorProperty.values()).collect(toImmutableList());
   }
 
   private String newQueryFormat(@Nonnull ConnectorArguments arguments)
@@ -322,7 +322,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     StringBuilder queryBuilder = new StringBuilder(baseQuery);
     queryBuilder.append(earliestTimestamp(arguments));
 
-    String overrideWhere = arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_WHERE);
+    String overrideWhere = arguments.getDefinition(SnowflakeLogsConnectorProperty.OVERRIDE_WHERE);
     if (overrideWhere != null) {
       queryBuilder.append(" AND " + overrideWhere);
     }
@@ -342,7 +342,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   @CheckForNull
   private static String getOverrideQuery(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    String overrideQuery = arguments.getDefinition(SnowflakeLogConnectorProperties.OVERRIDE_QUERY);
+    String overrideQuery = arguments.getDefinition(SnowflakeLogsConnectorProperty.OVERRIDE_QUERY);
     if (overrideQuery != null) {
       if (StringUtils.countMatches(overrideQuery, "%s") != 2)
         throw new MetadataDumperUsageException(
@@ -452,67 +452,67 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         WarehouseEventsHistoryFormat.Header.class,
         WarehouseEventsHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.TIMESTAMP,
-        SnowflakeLogConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY),
     AUTOMATIC_CLUSTERING_HISTORY(
         AutomaticClusteringHistoryFormat.Header.class,
         AutomaticClusteringHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY),
     COPY_HISTORY(
         CopyHistoryFormat.Header.class,
         CopyHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.LAST_LOAD_TIME,
-        SnowflakeLogConnectorProperties.COPY_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.COPY_HISTORY_OVERRIDE_QUERY),
     DATABASE_REPLICATION_USAGE_HISTORY(
         DatabaseReplicationUsageHistoryFormat.Header.class,
         DatabaseReplicationUsageHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogConnectorProperties.DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY),
     LOGIN_HISTORY(
         LoginHistoryFormat.Header.class,
         LoginHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.EVENT_TIMESTAMP,
-        SnowflakeLogConnectorProperties.LOGIN_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.LOGIN_HISTORY_OVERRIDE_QUERY),
     METERING_DAILY_HISTORY(
         MeteringDailyHistoryFormat.Header.class,
         MeteringDailyHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.USAGE_DATE,
-        SnowflakeLogConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.METERING_DAILY_HISTORY_OVERRIDE_QUERY),
     PIPE_USAGE_HISTORY(
         PipeUsageHistoryFormat.Header.class,
         PipeUsageHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.PIPE_USAGE_HISTORY_OVERRIDE_QUERY),
     QUERY_ACCELERATION_HISTORY(
         QueryAccelerationHistoryFormat.Header.class,
         QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY),
     REPLICATION_GROUP_USAGE_HISTORY(
         ReplicationGroupUsageHistoryFormat.Header.class,
         QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
     SERVERLESS_TASK_HISTORY(
         ServerlessTaskHistoryFormat.Header.class,
         ServerlessTaskHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY),
     TASK_HISTORY(
         TaskHistoryFormat.Header.class,
         TaskHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.COMPLETED_TIME,
-        SnowflakeLogConnectorProperties.TASK_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.TASK_HISTORY_OVERRIDE_QUERY),
     WAREHOUSE_LOAD_HISTORY(
         WarehouseLoadHistoryFormat.Header.class,
         WarehouseLoadHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY),
     WAREHOUSE_METERING_HISTORY(
         WarehouseMeteringHistoryFormat.Header.class,
         WarehouseMeteringHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY);
+        SnowflakeLogsConnectorProperty.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY);
 
     final Class<? extends Enum<?>> headerClass;
     final ConnectorProperty property;
@@ -524,7 +524,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         Class<? extends Enum<?>> headerClass,
         String zipPrefix,
         TimeSeriesColumn column,
-        SnowflakeLogConnectorProperties property) {
+        SnowflakeLogsConnectorProperty property) {
       this.headerClass = headerClass;
       this.property = property;
       this.queryPrefix = formatPrefix(headerClass, name());
