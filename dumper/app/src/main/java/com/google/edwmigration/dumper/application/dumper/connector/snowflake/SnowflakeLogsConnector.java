@@ -387,7 +387,13 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     List<TaskDescription> timeSeriesTasks =
         TimeSeriesView.valuesInOrder.stream()
-            .map(item -> item.taskDescription(arguments))
+            .map(
+                item -> {
+                  String override = arguments.getDefinition(item.property);
+                  String prefix = formatPrefix(item.headerClass, item.name());
+                  String query = overrideableQuery(override, prefix, item.column.value);
+                  return new TaskDescription(item.zipPrefix, query, item.headerClass);
+                })
             .collect(toImmutableList());
     Duration duration = Duration.ofDays(1);
     ZonedIntervalIterableGenerator.forConnectorArguments(
@@ -426,156 +432,104 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     }
   }
 
+  enum TimeSeriesColumn {
+    COMPLETED_TIME("COMPLETED_TIME"),
+    END_TIME("END_TIME"),
+    EVENT_TIMESTAMP("EVENT_TIMESTAMP"),
+    LAST_LOAD_TIME("LAST_LOAD_TIME"),
+    TIMESTAMP("TIMESTAMP"),
+    USAGE_DATE("USAGE_DATE");
+
+    String value;
+
+    TimeSeriesColumn(String value) {
+      this.value = value;
+    }
+  }
+
   enum TimeSeriesView {
-    WAREHOUSE_EVENTS_HISTORY(WarehouseEventsHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            WarehouseEventsHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "TIMESTAMP"),
-            headerClass);
-      }
-    },
-    AUTOMATIC_CLUSTERING_HISTORY(AutomaticClusteringHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            AutomaticClusteringHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "END_TIME"),
-            headerClass);
-      }
-    },
-    COPY_HISTORY(CopyHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property = SnowflakeLogConnectorProperties.COPY_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            CopyHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "LAST_LOAD_TIME"),
-            headerClass);
-      }
-    },
-    DATABASE_REPLICATION_USAGE_HISTORY(DatabaseReplicationUsageHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            DatabaseReplicationUsageHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "END_TIME"),
-            headerClass);
-      }
-    },
-    LOGIN_HISTORY(LoginHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property = SnowflakeLogConnectorProperties.LOGIN_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            LoginHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "EVENT_TIMESTAMP"),
-            headerClass);
-      }
-    },
-    METERING_DAILY_HISTORY(MeteringDailyHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            MeteringDailyHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "USAGE_DATE"),
-            headerClass);
-      }
-    },
-    PIPE_USAGE_HISTORY(PipeUsageHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            PipeUsageHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "END_TIME"),
-            headerClass);
-      }
-    },
-    QUERY_ACCELERATION_HISTORY(QueryAccelerationHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "END_TIME"),
-            headerClass,
-            TaskCategory.OPTIONAL);
-      }
-    },
-    REPLICATION_GROUP_USAGE_HISTORY(ReplicationGroupUsageHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "END_TIME"),
-            headerClass,
-            TaskCategory.OPTIONAL);
-      }
-    },
-    SERVERLESS_TASK_HISTORY(ServerlessTaskHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            ServerlessTaskHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "END_TIME"),
-            headerClass);
-      }
-    },
-    TASK_HISTORY(TaskHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property = SnowflakeLogConnectorProperties.TASK_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            TaskHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "COMPLETED_TIME"),
-            headerClass);
-      }
-    },
-    WAREHOUSE_LOAD_HISTORY(WarehouseLoadHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            WarehouseLoadHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "END_TIME"),
-            headerClass);
-      }
-    },
-    WAREHOUSE_METERING_HISTORY(WarehouseMeteringHistoryFormat.Header.class) {
-      @Override
-      TaskDescription taskDescription(@Nonnull ConnectorArguments arguments) {
-        ConnectorProperty property =
-            SnowflakeLogConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY;
-        return new TaskDescription(
-            WarehouseMeteringHistoryFormat.ZIP_ENTRY_PREFIX,
-            overrideableQuery(arguments.getDefinition(property), queryPrefix, "END_TIME"),
-            headerClass);
-      }
-    };
+    WAREHOUSE_EVENTS_HISTORY(
+        WarehouseEventsHistoryFormat.Header.class,
+        WarehouseEventsHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.TIMESTAMP,
+        SnowflakeLogConnectorProperties.WAREHOUSE_EVENTS_HISTORY_OVERRIDE_QUERY),
+    AUTOMATIC_CLUSTERING_HISTORY(
+        AutomaticClusteringHistoryFormat.Header.class,
+        AutomaticClusteringHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogConnectorProperties.AUTOMATIC_CLUSTERING_HISTORY_OVERRIDE_QUERY),
+    COPY_HISTORY(
+        CopyHistoryFormat.Header.class,
+        CopyHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.LAST_LOAD_TIME,
+        SnowflakeLogConnectorProperties.COPY_HISTORY_OVERRIDE_QUERY),
+    DATABASE_REPLICATION_USAGE_HISTORY(
+        DatabaseReplicationUsageHistoryFormat.Header.class,
+        DatabaseReplicationUsageHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogConnectorProperties.DATABASE_REPLICATION_USAGE_HISTORY_OVERRIDE_QUERY),
+    LOGIN_HISTORY(
+        LoginHistoryFormat.Header.class,
+        LoginHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.EVENT_TIMESTAMP,
+        SnowflakeLogConnectorProperties.LOGIN_HISTORY_OVERRIDE_QUERY),
+    METERING_DAILY_HISTORY(
+        MeteringDailyHistoryFormat.Header.class,
+        MeteringDailyHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.USAGE_DATE,
+        SnowflakeLogConnectorProperties.METERING_DAILY_HISTORY_OVERRIDE_QUERY),
+    PIPE_USAGE_HISTORY(
+        PipeUsageHistoryFormat.Header.class,
+        PipeUsageHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogConnectorProperties.PIPE_USAGE_HISTORY_OVERRIDE_QUERY),
+    QUERY_ACCELERATION_HISTORY(
+        QueryAccelerationHistoryFormat.Header.class,
+        QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogConnectorProperties.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY),
+    REPLICATION_GROUP_USAGE_HISTORY(
+        ReplicationGroupUsageHistoryFormat.Header.class,
+        QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogConnectorProperties.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
+    SERVERLESS_TASK_HISTORY(
+        ServerlessTaskHistoryFormat.Header.class,
+        ServerlessTaskHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogConnectorProperties.SERVERLESS_TASK_HISTORY_OVERRIDE_QUERY),
+    TASK_HISTORY(
+        TaskHistoryFormat.Header.class,
+        TaskHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.COMPLETED_TIME,
+        SnowflakeLogConnectorProperties.TASK_HISTORY_OVERRIDE_QUERY),
+    WAREHOUSE_LOAD_HISTORY(
+        WarehouseLoadHistoryFormat.Header.class,
+        WarehouseLoadHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogConnectorProperties.WAREHOUSE_LOAD_HISTORY_OVERRIDE_QUERY),
+    WAREHOUSE_METERING_HISTORY(
+        WarehouseMeteringHistoryFormat.Header.class,
+        WarehouseMeteringHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogConnectorProperties.WAREHOUSE_METERING_HISTORY_OVERRIDE_QUERY);
 
     final Class<? extends Enum<?>> headerClass;
+    final ConnectorProperty property;
     final String queryPrefix;
+    final String zipPrefix;
+    final TimeSeriesColumn column;
 
-    TimeSeriesView(Class<? extends Enum<?>> headerClass) {
+    TimeSeriesView(
+        Class<? extends Enum<?>> headerClass,
+        String zipPrefix,
+        TimeSeriesColumn column,
+        SnowflakeLogConnectorProperties property) {
       this.headerClass = headerClass;
+      this.property = property;
       this.queryPrefix = formatPrefix(headerClass, name());
+      this.zipPrefix = zipPrefix;
+      this.column = column;
     }
 
     static final ImmutableList<TimeSeriesView> valuesInOrder =
@@ -593,8 +547,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             TASK_HISTORY,
             WAREHOUSE_LOAD_HISTORY,
             WAREHOUSE_METERING_HISTORY);
-
-    abstract TaskDescription taskDescription(@Nonnull ConnectorArguments arguments);
   }
 
   @Nonnull
