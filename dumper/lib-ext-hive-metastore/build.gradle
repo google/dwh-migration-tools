@@ -73,6 +73,12 @@ dependencies {
             strictly '2.18.0'
         }
     }
+
+    hive312RuntimeOnly("com.google.protobuf:protobuf-java") {
+        version {
+            strictly '3.25.5'
+        }
+    }
 }
 
 dependencyLocking {
