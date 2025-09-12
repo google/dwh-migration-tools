@@ -17,6 +17,8 @@ name: Report tests results
 on:
   pull_request:
     branches: [ "main" ]
+  push:
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -43,6 +45,7 @@ jobs:
       - name: Add coverage JaCoCo report to PR
         id: jacoco
         uses: madrapps/jacoco-report@v1.7.2
+        if: github.event_name == 'pull_request'
         with:
           paths: ${{ github.workspace }}/dumper/app/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
