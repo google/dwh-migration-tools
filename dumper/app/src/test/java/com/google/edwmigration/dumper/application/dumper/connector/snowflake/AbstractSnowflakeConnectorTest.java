@@ -16,7 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static java.util.Arrays.copyOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
 import java.io.IOException;
-import java.util.stream.IntStream;
+import java.util.ArrayList;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
@@ -159,13 +158,10 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   }
 
   private static ConnectorArguments makeArguments(String... extraArguments) {
-    try {
-      String[] arguments = copyOf(extraArguments, extraArguments.length + ARGS.size());
-      IntStream.range(0, ARGS.size())
-          .forEach(el -> arguments[el + extraArguments.length] = ARGS.get(el));
-      return new ConnectorArguments(arguments);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    ArrayList<String> arguments = new ArrayList<>(ARGS);
+    for (String item : extraArguments) {
+      arguments.add(item);
     }
+    return ConnectorArguments.create(arguments);
   }
 }

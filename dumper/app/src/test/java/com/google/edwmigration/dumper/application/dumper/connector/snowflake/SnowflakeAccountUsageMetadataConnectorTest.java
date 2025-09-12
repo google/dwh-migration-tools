@@ -16,9 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeTestUtil.createArgs;
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
@@ -73,7 +73,9 @@ public class SnowflakeAccountUsageMetadataConnectorTest
 
   @Test
   public void validate_success() {
-    ConnectorArguments arguments = createArgs("--connector", "snowflake-account-usage-metadata");
+    ConnectorArguments arguments =
+        ConnectorArguments.create(
+            ImmutableList.of("--connector", "snowflake-account-usage-metadata"));
 
     connector.validate(arguments);
   }
@@ -81,7 +83,8 @@ public class SnowflakeAccountUsageMetadataConnectorTest
   @Test
   public void validate_assessmentFlagProvided_throwsException() {
     ConnectorArguments arguments =
-        createArgs("--connector", "snowflake-account-usage-metadata", "--assessment");
+        ConnectorArguments.create(
+            ImmutableList.of("--connector", "snowflake-account-usage-metadata", "--assessment"));
 
     assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
   }

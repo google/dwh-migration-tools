@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -36,14 +37,9 @@ import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
 import org.anarres.jdiagnostics.ProductMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** @author shevek */
 public class DefaultArguments {
-
-  @SuppressWarnings("UnusedVariable")
-  private static final Logger logger = LoggerFactory.getLogger(DefaultArguments.class);
 
   public static class BooleanValueConverter implements ValueConverter<Boolean> {
 
@@ -96,9 +92,8 @@ public class DefaultArguments {
   private final String[] args;
   private OptionSet options;
 
-  @SuppressWarnings("EI_EXPOSE_REP2")
-  public DefaultArguments(@Nonnull String[] args) {
-    this.args = args;
+  DefaultArguments(@Nonnull List<String> args) {
+    this.args = args.toArray(new String[0]);
   }
 
   @Nonnull

@@ -27,12 +27,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.TimeSeriesView;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
-import java.io.IOException;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -60,14 +60,14 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void addOverridesToQuery_fullQueryOverride_success() throws IOException {
+  public void addOverridesToQuery_fullQueryOverride_success() {
     String override =
         "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n"
             + "WHERE end_time >= to_timestamp_ltz('%s')\n"
             + "AND end_time <= to_timestamp_ltz('%s')\n";
     String property = String.format("-Dsnowflake.logs.query=%s", override);
     ConnectorArguments arguments =
-        new ConnectorArguments("--connector", "snowflake-logs", property);
+        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake-logs", property));
 
     String result = addOverridesToQuery(arguments, "SELECT 1");
 
@@ -75,21 +75,21 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void addOverridesToQuery_fullQueryOverrideWithBadValue_throwsException()
-      throws IOException {
+  public void addOverridesToQuery_fullQueryOverrideWithBadValue_throwsException() {
     String override = "text_with_no_format_specifiers";
     String property = String.format("-Dsnowflake.logs.query=%s", override);
     ConnectorArguments arguments =
-        new ConnectorArguments("--connector", "snowflake-logs", property);
+        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake-logs", property));
 
     assertThrows(
         MetadataDumperUsageException.class, () -> addOverridesToQuery(arguments, "SELECT 1"));
   }
 
   @Test
-  public void addOverridesToQuery_noOverrides_nothingChanges() throws IOException {
+  public void addOverridesToQuery_noOverrides_nothingChanges() {
     String originalQuery = "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY WHERE 1=1\n";
-    ConnectorArguments arguments = new ConnectorArguments("--connector", "snowflake-logs");
+    ConnectorArguments arguments =
+        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake-logs"));
 
     String result = addOverridesToQuery(arguments, originalQuery);
 
@@ -97,12 +97,12 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void addOverridesToQuery_whereOverride_success() throws IOException {
+  public void addOverridesToQuery_whereOverride_success() {
     String originalQuery = "SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY WHERE 1=1\n";
     String override = "rows_inserted > 0";
     String property = String.format("-Dsnowflake.logs.where=%s", override);
     ConnectorArguments arguments =
-        new ConnectorArguments("--connector", "snowflake-logs", property);
+        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake-logs", property));
 
     String result = addOverridesToQuery(arguments, originalQuery);
 
@@ -112,8 +112,9 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void earliestTimestamp_notProvided_emptyResult() throws IOException {
-    ConnectorArguments arguments = new ConnectorArguments("--connector", "snowflake-logs");
+  public void earliestTimestamp_notProvided_emptyResult() {
+    ConnectorArguments arguments =
+        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake-logs"));
 
     String result = earliestTimestamp(arguments);
 
@@ -121,13 +122,14 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void earliestTimestamp_provided_resultMatches() throws IOException {
+  public void earliestTimestamp_provided_resultMatches() {
     ConnectorArguments arguments =
-        new ConnectorArguments(
-            "--connector",
-            "snowflake-logs",
-            "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
-            "2024-03-21");
+        ConnectorArguments.create(
+            ImmutableList.of(
+                "--connector",
+                "snowflake-logs",
+                "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
+                "2024-03-21"));
 
     String result = earliestTimestamp(arguments);
 
@@ -151,7 +153,7 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void overrideableQuery_overrideAbsent_defaultUsed() throws IOException {
+  public void overrideableQuery_overrideAbsent_defaultUsed() {
     String defaultSql = "SELECT event_name, query_id FROM WAREHOUSE_EVENTS_HISTORY";
 
     String result = overrideableQuery(null, defaultSql, "timestamp");
@@ -160,7 +162,7 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void overrideableQuery_overrideEmpty_resultEmpty() throws IOException {
+  public void overrideableQuery_overrideEmpty_resultEmpty() {
     String defaultSql = "SELECT event_name, query_id FROM WAREHOUSE_EVENTS_HISTORY";
     String override = "";
 
@@ -170,7 +172,7 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void overrideableQuery_overridePresent_defaultIgnored() throws IOException {
+  public void overrideableQuery_overridePresent_defaultIgnored() {
     String defaultSql = "SELECT event_name, query_id FROM WAREHOUSE_EVENTS_HISTORY";
     String override = "SELECT query_id FROM WAREHOUSE_EVENTS_HISTORY";
 
@@ -180,15 +182,16 @@ public class SnowflakeLogsConnectorTest {
   }
 
   @Test
-  public void validate_unsupportedOption_throwsException() throws IOException {
+  public void validate_unsupportedOption_throwsException() {
     SnowflakeLogsConnector connector = new SnowflakeLogsConnector();
     ConnectorArguments arguments =
-        new ConnectorArguments(
-            "--connector",
-            "snowflake-logs",
-            "--assessment",
-            "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
-            "2024");
+        ConnectorArguments.create(
+            ImmutableList.of(
+                "--connector",
+                "snowflake-logs",
+                "--assessment",
+                "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
+                "2024"));
 
     assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
   }

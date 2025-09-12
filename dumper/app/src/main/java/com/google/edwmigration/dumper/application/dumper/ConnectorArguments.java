@@ -596,10 +596,19 @@ public class ConnectorArguments extends DefaultArguments {
 
   private ConnectorProperties connectorProperties;
 
-  private final PasswordReader passwordReader = new PasswordReader();
+  private final PasswordReader passwordReader;
 
   public ConnectorArguments(@Nonnull String... args) throws IOException {
+    this(Arrays.asList(args), new PasswordReader());
+  }
+
+  private ConnectorArguments(@Nonnull List<String> args, @Nonnull PasswordReader passwordReader) {
     super(args);
+    this.passwordReader = passwordReader;
+  }
+
+  public static ConnectorArguments create(@Nonnull List<String> args) {
+    return new ConnectorArguments(args, new PasswordReader());
   }
 
   @Override

@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import org.junit.Test;
@@ -28,8 +29,9 @@ import org.junit.runners.JUnit4;
 public class SnowflakeLiteConnectorTest {
 
   @Test
-  public void validate_noAssessmentFlag_throwsUsageException() throws Exception {
-    ConnectorArguments noFlagArguments = new ConnectorArguments("--connector", "snowflake-lite");
+  public void validate_noAssessmentFlag_throwsUsageException() {
+    ConnectorArguments noFlagArguments =
+        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake-lite"));
     SnowflakeLiteConnector connector = new SnowflakeLiteConnector();
 
     assertThrows(MetadataDumperUsageException.class, () -> connector.validate(noFlagArguments));
