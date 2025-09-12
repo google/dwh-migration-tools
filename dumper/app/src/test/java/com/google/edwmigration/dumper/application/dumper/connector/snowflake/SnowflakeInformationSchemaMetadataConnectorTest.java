@@ -16,6 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static org.junit.Assert.assertThrows;
+
+import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
@@ -58,5 +63,24 @@ public class SnowflakeInformationSchemaMetadataConnectorTest
         SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
 
     validator.run(outputFile);
+  }
+
+  @Test
+  public void validate_success() {
+    ConnectorArguments arguments =
+        ConnectorArguments.create(
+            ImmutableList.of("--connector", "snowflake-information-schema-metadata"));
+
+    connector.validate(arguments);
+  }
+
+  @Test
+  public void validate_assessmentFlagProvided_throwsException() {
+    ConnectorArguments arguments =
+        ConnectorArguments.create(
+            ImmutableList.of(
+                "--connector", "snowflake-information-schema-metadata", "--assessment"));
+
+    assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments));
   }
 }

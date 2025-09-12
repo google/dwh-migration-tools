@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nonnull;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assume;
 import org.junit.Test;
@@ -249,8 +248,12 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
       String... extraArgs) throws IOException {
     List<Task<?>> tasks = new ArrayList<>();
     SnowflakeMetadataConnector connector = new SnowflakeMetadataConnector();
-    String[] args = ArrayUtils.addAll(new String[] {"--connector", connector.getName()}, extraArgs);
-    connector.addTasksTo(tasks, new ConnectorArguments(args));
+    ImmutableList<String> standardArgs = ImmutableList.of("--connector", connector.getName());
+    ArrayList<String> args = new ArrayList<>(standardArgs);
+    for (String item : extraArgs) {
+      args.add(item);
+    }
+    connector.addTasksTo(tasks, ConnectorArguments.create(args));
     ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap.builder();
     tasks.stream()
         .filter(t -> t instanceof JdbcSelectTask)

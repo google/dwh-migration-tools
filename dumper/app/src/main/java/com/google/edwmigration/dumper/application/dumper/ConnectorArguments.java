@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.edwmigration.dumper.application.dumper.utils.OptionalUtils.optionallyWhen;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.util.Arrays.stream;
@@ -27,7 +26,6 @@ import static java.util.stream.Collectors.joining;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Predicates;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ZonedParser.DayOffset;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -302,6 +300,14 @@ public class ConnectorArguments extends DefaultArguments {
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
 
+  /**
+   * (Deprecated) earliest timestamp of logs to extract.
+   *
+   * <p>If the user specifies an earliest start time there will be extraneous empty dump files
+   * because we always iterate over the full 7 trailing days; maybe it's worth preventing that in
+   * the future. To do that, we should require getQueryLogEarliestTimestamp() to parse and return an
+   * ISO instant, not a database-server-specific format.
+   */
   @Deprecated
   private final OptionSpec<String> optionQueryLogEarliestTimestamp =
       parser
@@ -590,10 +596,19 @@ public class ConnectorArguments extends DefaultArguments {
 
   private ConnectorProperties connectorProperties;
 
-  private final PasswordReader passwordReader = new PasswordReader();
+  private final PasswordReader passwordReader;
 
   public ConnectorArguments(@Nonnull String... args) throws IOException {
+    this(Arrays.asList(args), new PasswordReader());
+  }
+
+  private ConnectorArguments(@Nonnull List<String> args, @Nonnull PasswordReader passwordReader) {
     super(args);
+    this.passwordReader = passwordReader;
+  }
+
+  public static ConnectorArguments create(@Nonnull List<String> args) {
+    return new ConnectorArguments(args, new PasswordReader());
   }
 
   @Override
@@ -751,10 +766,6 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().has(optionAssessment);
   }
 
-  private <T> Optional<T> optionAsOptional(OptionSpec<T> spec) {
-    return optionallyWhen(getOptions().has(spec), () -> getOptions().valueOf(spec));
-  }
-
   @Nonnull
   public Predicate<String> getSchemaPredicate() {
     return toPredicate(getSchemata());
@@ -785,7 +796,11 @@ public class ConnectorArguments extends DefaultArguments {
    */
   @Nonnull
   public Optional<String> getPasswordIfFlagProvided() {
-    return optionallyWhen(getOptions().has(optionPass), this::getPasswordOrPrompt);
+    if (getOptions().has(optionPass)) {
+      return Optional.of(getPasswordOrPrompt());
+    } else {
+      return Optional.empty();
+    }
   }
 
   @Nonnull
@@ -832,7 +847,15 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   public Optional<String> getOutputFile() {
-    return optionAsOptional(optionOutput).filter(file -> !Strings.isNullOrEmpty(file));
+    if (!getOptions().has(optionOutput)) {
+      return Optional.empty();
+    }
+    String file = getOptions().valueOf(optionOutput);
+    if (file == null || file.isEmpty()) {
+      return Optional.empty();
+    } else {
+      return Optional.of(file);
+    }
   }
 
   public boolean isOutputContinue() {
