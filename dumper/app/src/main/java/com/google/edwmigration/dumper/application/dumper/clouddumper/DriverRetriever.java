@@ -113,7 +113,7 @@ public class DriverRetriever {
             .addDriver(
                 "snowflake",
                 URI.create(
-                    "https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.33/snowflake-jdbc-3.13.33.jar"),
+                    "https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.23.2/snowflake-jdbc-3.23.2.jar"),
                 HEX_ENCODER.decode(
                     "84f60f5c2d53f7cbc03ecb6ebf6f78b0e626f450cc7adeb49123959acc440811"),
                 "snowflake-account-usage-logs",
