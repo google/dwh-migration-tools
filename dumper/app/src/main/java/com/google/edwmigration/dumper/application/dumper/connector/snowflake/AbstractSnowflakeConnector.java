@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static org.apache.hadoop.util.Preconditions.checkNotNull;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
@@ -85,7 +86,9 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     DataSource dataSource = new SimpleDriverDataSource(newDriver(arguments), url, properties);
     if (arguments.isAssessment()) {
       JdbcHandle handle = new JdbcHandle(dataSource);
-      setCurrentDatabase("SNOWFLAKE", handle.getJdbcTemplate());
+      JdbcTemplate template = handle.getJdbcTemplate();
+      String actualDatabase = template.queryForObject("USE DATABASE SNOWFLAKE;", String.class);
+      checkNotNull(actualDatabase);
       return handle;
     } else {
       String databaseName =
@@ -204,16 +207,16 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   }
 
   String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {
-    CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
-    String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
-    int charLengthWithQuotes = databaseName.length() + 2;
-    int maxDatabaseCharLength = 255;
-    if (charLengthWithQuotes > 255) {
+    int lengthWithQuotes = databaseName.length() + 2;
+    int maxLength = 255;
+    if (lengthWithQuotes > maxLength) {
       throw new MetadataDumperUsageException(
           String.format(
               "The provided database name has %d characters, which is longer than the maximum allowed number %d for Snowflake identifiers.",
-              charLengthWithQuotes, maxDatabaseCharLength));
+              lengthWithQuotes, maxLength));
     }
+    CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
+    String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
     if (doubleQuoteMatcher.matchesAnyOf(trimmedName)) {
       throw new MetadataDumperUsageException(
           "Database name has incorrectly placed double quote(s). Aborting query.");
