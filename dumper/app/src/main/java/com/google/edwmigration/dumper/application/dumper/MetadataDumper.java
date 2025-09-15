@@ -28,6 +28,8 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.metrics.ClientTelemetry;
+import com.google.edwmigration.dumper.application.dumper.metrics.EventType;
 import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -154,9 +156,11 @@ public class MetadataDumper {
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        telemetryProcessor.addDumperRunMetricsToPayload(
-            connectorArguments, state, stopwatch, requiredTaskSucceeded);
-        telemetryProcessor.processTelemetry(fileSystem);
+        telemetryProcessor
+          .process(ClientTelemetry.builder()
+          .setEventType(EventType.DUMPER_RUN_END)
+          .build());
+        telemetryProcessor.flush(fileSystem);
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);

@@ -16,45 +16,54 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.metrics.*;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import java.nio.file.FileSystem;
+import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * TelemetryProcessor that uses the Strategy pattern to handle telemetry operations. This replaces
  * the boolean shouldWrite flag with a more flexible approach.
  */
 public class TelemetryProcessor {
-  private final ClientTelemetry clientTelemetry;
-  private final TelemetryStrategy telemetryStrategy;
+  private final String runId = UUID.randomUUID().toString();
+  private final TelemetryWriteStrategy telemetryStrategy;
 
   /**
    * Constructor that takes a TelemetryStrategy instead of a boolean flag.
    *
    * @param telemetryStrategy the strategy to use for telemetry operations
    */
-  public TelemetryProcessor(TelemetryStrategy telemetryStrategy) {
+  public TelemetryProcessor(TelemetryWriteStrategy telemetryStrategy) {
     this.telemetryStrategy = telemetryStrategy;
-    clientTelemetry = new ClientTelemetry();
-    clientTelemetry.setDumperMetadata(StartUpMetaInfoProcessor.getDumperMetadata());
+
+    process(createDumperRunStartMetric());
+    process(createMetadataMetric());
   }
 
-  /**
-   * Generates a list of strings representing the summary for the current run. This summary does NOT
-   * include the final ZIP file size, as it's generated before the ZIP is closed.
-   */
-  public void addDumperRunMetricsToPayload(
-      ConnectorArguments arguments, TaskSetState state, Stopwatch stopwatch, boolean success) {
-    telemetryStrategy.processDumperRunMetrics(
-        clientTelemetry, arguments, state, stopwatch, success);
+  public void flush(FileSystem fileSystem) {
+    telemetryStrategy.flush(fileSystem);
   }
 
-  public void addTaskTelemetry(TaskRunMetrics taskMetrics) {
-    clientTelemetry.addToPayload(taskMetrics);
+  public void process(ClientTelemetry clientTelemetry) {
+    telemetryStrategy.process(giveIdToClientTelemetry(clientTelemetry));
   }
 
-  public void processTelemetry(FileSystem fileSystem) {
-    telemetryStrategy.writeTelemetry(fileSystem, clientTelemetry);
+  private ClientTelemetry createDumperRunStartMetric() {
+    return ClientTelemetry.builder()
+        .setEventType(EventType.DUMPER_RUN_METRICS)
+        .build();
   }
+
+  private ClientTelemetry createMetadataMetric() {
+    return ClientTelemetry.builder()
+    .setEventType(EventType.METADATA)
+    .setPayload(Arrays.asList(StartUpMetaInfoProcessor.getDumperMetadata()))
+    .build();
+  }
+
+  private ClientTelemetry giveIdToClientTelemetry(ClientTelemetry clientTelemetry) {
+    return ClientTelemetry.builder(clientTelemetry).setId(runId).build();
+  }
+
 }

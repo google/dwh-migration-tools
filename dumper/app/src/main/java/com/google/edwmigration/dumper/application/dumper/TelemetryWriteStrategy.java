@@ -22,23 +22,21 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import java.nio.file.FileSystem;
 
 /**
- * Strategy implementation that does nothing (no-op). This replaces the behavior when shouldWrite =
- * false.
+ * Strategy interface for handling telemetry operations. This replaces the boolean shouldWrite flag
+ * with a more flexible approach.
  */
-public class NoOpTelemetryStrategy implements TelemetryStrategy {
+public interface TelemetryWriteStrategy {
+  /**
+   * Processes individual telemetry data point for immediate streaming.
+   *
+   * @param telemetryPayload the telemetry payload to process
+   */
+  void process(ClientTelemetry clientTelemetry);
 
-  @Override
-  public void processDumperRunMetrics(
-      ClientTelemetry clientTelemetry,
-      ConnectorArguments arguments,
-      TaskSetState state,
-      Stopwatch stopwatch,
-      boolean success) {
-    // Do nothing - this is the no-op strategy
-  }
-
-  @Override
-  public void writeTelemetry(FileSystem fileSystem, ClientTelemetry clientTelemetry) {
-    // Do nothing - this is the no-op strategy
-  }
+  /**
+   * Flushes individual telemetry data point immediately to disk.
+   *
+   * @param fileSystem the file system to write to
+   */
+  void flush(FileSystem fileSystem);
 }

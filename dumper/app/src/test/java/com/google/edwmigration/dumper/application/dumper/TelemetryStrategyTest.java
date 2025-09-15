@@ -38,7 +38,7 @@ public class TelemetryStrategyTest {
 
   @Test
   public void testWriteTelemetryStrategy_ProcessesMetrics() {
-    WriteTelemetryStrategy strategy = new WriteTelemetryStrategy();
+    DiskTelemetryWriteStrategy strategy = new DiskTelemetryWriteStrategy();
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     strategy.processDumperRunMetrics(
@@ -49,7 +49,7 @@ public class TelemetryStrategyTest {
 
   @Test
   public void testWriteTelemetryStrategy_WritesTelemetry() {
-    WriteTelemetryStrategy strategy = new WriteTelemetryStrategy();
+    DiskTelemetryWriteStrategy strategy = new DiskTelemetryWriteStrategy();
 
     strategy.writeTelemetry(mockFileSystem, mockClientTelemetry);
 
@@ -58,7 +58,7 @@ public class TelemetryStrategyTest {
 
   @Test
   public void testNoOpTelemetryStrategy_DoesNothing() {
-    NoOpTelemetryStrategy strategy = new NoOpTelemetryStrategy();
+    NoOpTelemetryWriteStrategy strategy = new NoOpTelemetryWriteStrategy();
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     strategy.processDumperRunMetrics(
@@ -70,16 +70,16 @@ public class TelemetryStrategyTest {
 
   @Test
   public void testTelemetryStrategyFactory_CreatesCorrectStrategies() {
-    TelemetryStrategy writeStrategy = TelemetryStrategyFactory.createStrategy(true);
-    TelemetryStrategy noOpStrategy = TelemetryStrategyFactory.createStrategy(false);
+    TelemetryWriteStrategy writeStrategy = TelemetryStrategyFactory.createStrategy(true);
+    TelemetryWriteStrategy noOpStrategy = TelemetryStrategyFactory.createStrategy(false);
 
-    assertTrue(writeStrategy instanceof WriteTelemetryStrategy);
-    assertTrue(noOpStrategy instanceof NoOpTelemetryStrategy);
+    assertTrue(writeStrategy instanceof DiskTelemetryWriteStrategy);
+    assertTrue(noOpStrategy instanceof NoOpTelemetryWriteStrategy);
   }
 
   @Test
   public void testTelemetryProcessor_StrategyConstructor() {
-    TelemetryStrategy strategy = new WriteTelemetryStrategy();
+    TelemetryWriteStrategy strategy = new DiskTelemetryWriteStrategy();
 
     TelemetryProcessor processor = new TelemetryProcessor(strategy);
 
