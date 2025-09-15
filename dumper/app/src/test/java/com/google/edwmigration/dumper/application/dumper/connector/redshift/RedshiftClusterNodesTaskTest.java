@@ -20,11 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import autovalue.shaded.com.google.common.collect.ImmutableList;
 import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
 import com.amazonaws.services.redshift.model.Endpoint;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
 import org.junit.Rule;
 import org.junit.Test;

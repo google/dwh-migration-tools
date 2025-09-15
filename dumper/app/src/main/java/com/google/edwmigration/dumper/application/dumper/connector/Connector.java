@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static org.springframework.core.annotation.AnnotationUtils.getDeclaredRepeatableAnnotations;
 
-import autovalue.shaded.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.InputDescriptor;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
