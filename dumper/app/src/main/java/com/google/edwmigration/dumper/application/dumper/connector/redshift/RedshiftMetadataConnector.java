@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
@@ -42,6 +43,7 @@ import javax.annotation.Nonnull;
     description = "The port of the server.",
     required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
     defaultValue = RedshiftUrlUtil.OPT_PORT_DEFAULT)
+@RespectsArgumentAssessment
 public class RedshiftMetadataConnector extends AbstractRedshiftConnector
     implements MetadataConnector, RedshiftMetadataDumpFormat {
 
