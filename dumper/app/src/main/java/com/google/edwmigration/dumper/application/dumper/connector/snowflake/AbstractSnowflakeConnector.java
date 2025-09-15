@@ -72,31 +72,30 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     super(name);
   }
 
-  private static final int MAX_DATABASE_CHAR_LENGTH = 255;
-  private static final String DEFAULT_DATABASE = "SNOWFLAKE";
-
   @Nonnull
   @Override
   public abstract String getDescription();
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ConnectorArguments arguments)
+  public final Handle open(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException, SQLException {
-    String url = arguments.getUri() != null ? arguments.getUri() : getUrlFromArguments(arguments);
-    String databaseName =
-        arguments.getDatabases().isEmpty()
-            ? DEFAULT_DATABASE
-            : sanitizeDatabaseName(arguments.getDatabases().get(0));
-
-    DataSource dataSource =
-        arguments.isPrivateKeyFileProvided()
-            ? createPrivateKeyDataSource(arguments, url)
-            : createUserPasswordDataSource(arguments, url);
-    JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
-
-    setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
-    return jdbcHandle;
+    Properties properties = dataSourceProperties(arguments);
+    String url = getUrlFromArguments(arguments);
+    DataSource dataSource = new SimpleDriverDataSource(newDriver(arguments), url, properties);
+    if (arguments.isAssessment()) {
+      JdbcHandle handle = new JdbcHandle(dataSource);
+      setCurrentDatabase("SNOWFLAKE", handle.getJdbcTemplate());
+      return handle;
+    } else {
+      String databaseName =
+          arguments.getDatabases().isEmpty()
+              ? "SNOWFLAKE"
+              : sanitizeDatabaseName(arguments.getDatabases().get(0));
+      JdbcHandle handle = new JdbcHandle(dataSource);
+      setCurrentDatabase(databaseName, handle.getJdbcTemplate());
+      return handle;
+    }
   }
 
   @Override
@@ -121,40 +120,56 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
    */
   protected abstract void validateForConnector(@Nonnull ConnectorArguments arguments);
 
-  private DataSource createUserPasswordDataSource(@Nonnull ConnectorArguments arguments, String url)
-      throws SQLException {
-    Driver driver =
-        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-    Properties prop = new Properties();
+  @Nonnull
+  private Driver newDriver(@Nonnull ConnectorArguments arguments) throws SQLException {
+    return newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
+  }
 
-    prop.put("user", arguments.getUser());
+  @Nonnull
+  private static Properties dataSourceProperties(@Nonnull ConnectorArguments arguments)
+      throws SQLException {
+    String user = arguments.getUserOrFail();
+    if (arguments.isPrivateKeyFileProvided()) {
+      return createPrivateKeyProperties(arguments, user);
+    } else {
+      return createUserPasswordProperties(arguments, user);
+    }
+  }
+
+  private static Properties createUserPasswordProperties(
+      @Nonnull ConnectorArguments arguments, @Nonnull String user) {
+    Properties properties = new Properties();
+
+    properties.put("user", user);
     if (arguments.isPasswordFlagProvided()) {
-      prop.put("password", arguments.getPasswordOrPrompt());
+      properties.put("password", arguments.getPasswordOrPrompt());
     }
     // Set default authenticator only if url is not provided to allow user overriding it
     if (arguments.getUri() == null) {
-      prop.put("authenticator", "username_password_mfa");
+      properties.put("authenticator", "username_password_mfa");
     }
-    return new SimpleDriverDataSource(driver, url, prop);
+    return properties;
   }
 
-  private DataSource createPrivateKeyDataSource(@Nonnull ConnectorArguments arguments, String url)
-      throws SQLException {
-    Driver driver =
-        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-    Properties prop = new Properties();
+  private static Properties createPrivateKeyProperties(
+      @Nonnull ConnectorArguments arguments, @Nonnull String user) {
+    Properties properties = new Properties();
+    properties.put("user", user);
 
-    prop.put("private_key_file", arguments.getPrivateKeyFile());
-    prop.put("user", arguments.getUser());
+    properties.put("private_key_file", arguments.getPrivateKeyFile());
     if (arguments.getPrivateKeyPassword() != null) {
-      prop.put("private_key_pwd", arguments.getPrivateKeyPassword());
+      properties.put("private_key_pwd", arguments.getPrivateKeyPassword());
     }
-
-    return new SimpleDriverDataSource(driver, url, prop);
+    return properties;
   }
 
   @Nonnull
   private String getUrlFromArguments(@Nonnull ConnectorArguments arguments) {
+    String url = arguments.getUri();
+    if (url != null) {
+      return url;
+    }
+
     StringBuilder buf = new StringBuilder("jdbc:snowflake://");
     String host = arguments.getHost("host.snowflakecomputing.com");
     buf.append(host).append("/");
@@ -192,11 +207,12 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
     String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
     int charLengthWithQuotes = databaseName.length() + 2;
+    int maxDatabaseCharLength = 255;
     if (charLengthWithQuotes > 255) {
       throw new MetadataDumperUsageException(
           String.format(
               "The provided database name has %d characters, which is longer than the maximum allowed number %d for Snowflake identifiers.",
-              charLengthWithQuotes, MAX_DATABASE_CHAR_LENGTH));
+              charLengthWithQuotes, maxDatabaseCharLength));
     }
     if (doubleQuoteMatcher.matchesAnyOf(trimmedName)) {
       throw new MetadataDumperUsageException(

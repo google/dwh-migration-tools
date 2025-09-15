@@ -103,6 +103,14 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   }
 
   @Test
+  public void open_noUser_throwsUsageException() throws Exception {
+    ConnectorArguments arguments =
+        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake", "--assessment"));
+
+    assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
+  }
+
+  @Test
   public void validate_mixedPrivateKeyAndPassword_fail() throws IOException {
     ConnectorArguments arguments =
         makeArguments(
