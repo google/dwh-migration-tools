@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static org.apache.hadoop.util.Preconditions.checkNotNull;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
@@ -41,9 +42,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
@@ -72,31 +73,32 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     super(name);
   }
 
-  private static final int MAX_DATABASE_CHAR_LENGTH = 255;
-  private static final String DEFAULT_DATABASE = "SNOWFLAKE";
-
   @Nonnull
   @Override
   public abstract String getDescription();
 
   @Nonnull
   @Override
-  public Handle open(@Nonnull ConnectorArguments arguments)
+  public final Handle open(@Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException, SQLException {
-    String url = arguments.getUri() != null ? arguments.getUri() : getUrlFromArguments(arguments);
-    String databaseName =
-        arguments.getDatabases().isEmpty()
-            ? DEFAULT_DATABASE
-            : sanitizeDatabaseName(arguments.getDatabases().get(0));
-
-    DataSource dataSource =
-        arguments.isPrivateKeyFileProvided()
-            ? createPrivateKeyDataSource(arguments, url)
-            : createUserPasswordDataSource(arguments, url);
-    JdbcHandle jdbcHandle = new JdbcHandle(dataSource);
-
-    setCurrentDatabase(databaseName, jdbcHandle.getJdbcTemplate());
-    return jdbcHandle;
+    Properties properties = dataSourceProperties(arguments);
+    String url = getUrlFromArguments(arguments);
+    DataSource dataSource = new SimpleDriverDataSource(newDriver(arguments), url, properties);
+    if (arguments.isAssessment()) {
+      JdbcHandle handle = new JdbcHandle(dataSource);
+      JdbcTemplate template = handle.getJdbcTemplate();
+      String actualDatabase = template.queryForObject("USE DATABASE SNOWFLAKE;", String.class);
+      checkNotNull(actualDatabase);
+      return handle;
+    } else {
+      String databaseName =
+          arguments.getDatabases().isEmpty()
+              ? "SNOWFLAKE"
+              : sanitizeDatabaseName(arguments.getDatabases().get(0));
+      JdbcHandle handle = new JdbcHandle(dataSource);
+      setCurrentDatabase(databaseName, handle.getJdbcTemplate());
+      return handle;
+    }
   }
 
   @Override
@@ -121,40 +123,56 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
    */
   protected abstract void validateForConnector(@Nonnull ConnectorArguments arguments);
 
-  private DataSource createUserPasswordDataSource(@Nonnull ConnectorArguments arguments, String url)
-      throws SQLException {
-    Driver driver =
-        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-    Properties prop = new Properties();
+  @Nonnull
+  private Driver newDriver(@Nonnull ConnectorArguments arguments) throws SQLException {
+    return newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
+  }
 
-    prop.put("user", arguments.getUser());
+  @Nonnull
+  private static Properties dataSourceProperties(@Nonnull ConnectorArguments arguments)
+      throws SQLException {
+    String user = arguments.getUserOrFail();
+    if (arguments.isPrivateKeyFileProvided()) {
+      return createPrivateKeyProperties(arguments, user);
+    } else {
+      return createUserPasswordProperties(arguments, user);
+    }
+  }
+
+  private static Properties createUserPasswordProperties(
+      @Nonnull ConnectorArguments arguments, @Nonnull String user) {
+    Properties properties = new Properties();
+
+    properties.put("user", user);
     if (arguments.isPasswordFlagProvided()) {
-      prop.put("password", arguments.getPasswordOrPrompt());
+      properties.put("password", arguments.getPasswordOrPrompt());
     }
     // Set default authenticator only if url is not provided to allow user overriding it
     if (arguments.getUri() == null) {
-      prop.put("authenticator", "username_password_mfa");
+      properties.put("authenticator", "username_password_mfa");
     }
-    return new SimpleDriverDataSource(driver, url, prop);
+    return properties;
   }
 
-  private DataSource createPrivateKeyDataSource(@Nonnull ConnectorArguments arguments, String url)
-      throws SQLException {
-    Driver driver =
-        newDriver(arguments.getDriverPaths(), "net.snowflake.client.jdbc.SnowflakeDriver");
-    Properties prop = new Properties();
+  private static Properties createPrivateKeyProperties(
+      @Nonnull ConnectorArguments arguments, @Nonnull String user) {
+    Properties properties = new Properties();
+    properties.put("user", user);
 
-    prop.put("private_key_file", arguments.getPrivateKeyFile());
-    prop.put("user", arguments.getUser());
+    properties.put("private_key_file", arguments.getPrivateKeyFile());
     if (arguments.getPrivateKeyPassword() != null) {
-      prop.put("private_key_pwd", arguments.getPrivateKeyPassword());
+      properties.put("private_key_pwd", arguments.getPrivateKeyPassword());
     }
-
-    return new SimpleDriverDataSource(driver, url, prop);
+    return properties;
   }
 
   @Nonnull
   private String getUrlFromArguments(@Nonnull ConnectorArguments arguments) {
+    String url = arguments.getUri();
+    if (url != null) {
+      return url;
+    }
+
     StringBuilder buf = new StringBuilder("jdbc:snowflake://");
     String host = arguments.getHost("host.snowflakecomputing.com");
     buf.append(host).append("/");
@@ -178,26 +196,34 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     String currentDatabase =
         jdbcTemplate.queryForObject(String.format("USE DATABASE %s;", databaseName), String.class);
     if (currentDatabase == null) {
-      List<String> dbNames =
-          jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
-      throw new MetadataDumperUsageException(
-          "Database name not found "
-              + databaseName
-              + ", use one of: "
-              + StringUtils.join(dbNames, ", "));
+      Supplier<List<String>> showQuery =
+          () -> jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
+      throw unrecognizedDatabase(databaseName, showQuery);
     }
   }
 
+  @Nonnull
+  static MetadataDumperUsageException unrecognizedDatabase(
+      @Nonnull String database, @Nonnull Supplier<List<String>> availableDatabases) {
+    List<String> names = availableDatabases.get();
+    String joinedNames = String.join(", ", names);
+    String message =
+        String.format("Database name not found %s, use one of: %s", database, joinedNames);
+
+    return new MetadataDumperUsageException(message);
+  }
+
   String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {
-    CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
-    String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
-    int charLengthWithQuotes = databaseName.length() + 2;
-    if (charLengthWithQuotes > 255) {
+    int lengthWithQuotes = databaseName.length() + 2;
+    int maxLength = 255;
+    if (lengthWithQuotes > maxLength) {
       throw new MetadataDumperUsageException(
           String.format(
               "The provided database name has %d characters, which is longer than the maximum allowed number %d for Snowflake identifiers.",
-              charLengthWithQuotes, MAX_DATABASE_CHAR_LENGTH));
+              lengthWithQuotes, maxLength));
     }
+    CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
+    String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
     if (doubleQuoteMatcher.matchesAnyOf(trimmedName)) {
       throw new MetadataDumperUsageException(
           "Database name has incorrectly placed double quote(s). Aborting query.");

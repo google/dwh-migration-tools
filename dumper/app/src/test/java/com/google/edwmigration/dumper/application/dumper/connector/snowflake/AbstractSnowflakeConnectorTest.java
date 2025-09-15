@@ -16,7 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.AbstractSnowflakeConnector.unrecognizedDatabase;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -26,6 +28,8 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
@@ -103,6 +107,14 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   }
 
   @Test
+  public void open_noUser_throwsUsageException() throws Exception {
+    ConnectorArguments arguments =
+        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake", "--assessment"));
+
+    assertThrows(MetadataDumperUsageException.class, () -> metadataConnector.open(arguments));
+  }
+
+  @Test
   public void validate_mixedPrivateKeyAndPassword_fail() throws IOException {
     ConnectorArguments arguments =
         makeArguments(
@@ -117,6 +129,18 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
         e.getMessage()
             .contains(
                 "Private key authentication method can't be used together with user password"));
+  }
+
+  @Test
+  public void unrecognizedDatabase_success() {
+    Supplier<List<String>> databases = () -> ImmutableList.of("SNOWFLAKE", "FIRSTDB", "SECONDDB");
+
+    String message = unrecognizedDatabase("WRONGNAMEDB", databases).getMessage();
+
+    assertNotNull(message);
+    assertTrue(message, message.contains("WRONGNAMEDB"));
+    assertTrue(message, message.contains("Database name not found"));
+    assertTrue(message, message.contains("SNOWFLAKE, FIRSTDB, SECONDDB"));
   }
 
   enum TestEnum {
