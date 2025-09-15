@@ -42,9 +42,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
@@ -196,14 +196,21 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     String currentDatabase =
         jdbcTemplate.queryForObject(String.format("USE DATABASE %s;", databaseName), String.class);
     if (currentDatabase == null) {
-      List<String> dbNames =
-          jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
-      throw new MetadataDumperUsageException(
-          "Database name not found "
-              + databaseName
-              + ", use one of: "
-              + StringUtils.join(dbNames, ", "));
+      Supplier<List<String>> showQuery =
+          () -> jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
+      throw unrecognizedDatabase(databaseName, showQuery);
     }
+  }
+
+  @Nonnull
+  static MetadataDumperUsageException unrecognizedDatabase(
+      @Nonnull String database, @Nonnull Supplier<List<String>> availableDatabases) {
+    List<String> names = availableDatabases.get();
+    String joinedNames = String.join(", ", names);
+    String message =
+        String.format("Database name not found %s, use one of: %s", database, joinedNames);
+
+    return new MetadataDumperUsageException(message);
   }
 
   String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {
