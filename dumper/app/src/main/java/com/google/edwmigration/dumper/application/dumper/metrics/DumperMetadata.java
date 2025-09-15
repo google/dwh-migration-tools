@@ -16,7 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.metrics;
 
-public class DumperMetadata {
+public class DumperMetadata implements TelemetryPayload{
 
   private final String version;
   private final String gitCommit;

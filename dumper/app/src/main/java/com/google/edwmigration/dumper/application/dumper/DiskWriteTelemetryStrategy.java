@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
  * Strategy implementation that writes telemetry data. This replaces the behavior when shouldWrite =
  * true.
  */
-public class WriteTelemetryStrategy implements TelemetryStrategy {
-  private static final Logger logger = LoggerFactory.getLogger(WriteTelemetryStrategy.class);
+public class DiskWriteTelemetryStrategy implements TelemetryWriteStrategy {
+  private static final Logger logger = LoggerFactory.getLogger(DiskWriteTelemetryStrategy.class);
 
   @Override
   public void processDumperRunMetrics(
@@ -78,10 +78,15 @@ public class WriteTelemetryStrategy implements TelemetryStrategy {
               .setTaskDetailedSummary(taskDetailedSummaries)
               .setArguments(arguments)
               .build();
-      clientTelemetry.addToPayload(dumperRunMetrics);
+//      clientTelemetry.addToPayload(dumperRunMetrics);
     } catch (Exception e) {
       logger.warn("Failed to generate dumperRunMetrics and add it to payload", e);
     }
+  }
+
+  @Override
+  public void process(ClientTelemetry clientTelemetry) {
+//    TelemetryWriter.write(fileSystem, clientTelemetry);
   }
 
   @Override

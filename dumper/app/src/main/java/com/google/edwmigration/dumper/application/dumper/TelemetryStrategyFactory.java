@@ -28,8 +28,8 @@ public class TelemetryStrategyFactory {
    * @param shouldWrite whether telemetry should be written
    * @return the appropriate TelemetryStrategy implementation
    */
-  public static TelemetryStrategy createStrategy(boolean shouldWrite) {
-    return shouldWrite ? new WriteTelemetryStrategy() : new NoOpTelemetryStrategy();
+  public static TelemetryWriteStrategy createStrategy(boolean shouldWrite) {
+    return shouldWrite ? new DiskWriteTelemetryStrategy() : new NoOpTelemetryWriteStrategy();
   }
 
   /**
@@ -37,8 +37,8 @@ public class TelemetryStrategyFactory {
    *
    * @return WriteTelemetryStrategy instance
    */
-  public static TelemetryStrategy createWriteStrategy() {
-    return new WriteTelemetryStrategy();
+  public static TelemetryWriteStrategy createWriteStrategy() {
+    return new DiskWriteTelemetryStrategy();
   }
 
   /**
@@ -46,7 +46,7 @@ public class TelemetryStrategyFactory {
    *
    * @return NoOpTelemetryStrategy instance
    */
-  public static TelemetryStrategy createNoOpStrategy() {
-    return new NoOpTelemetryStrategy();
+  public static TelemetryWriteStrategy createNoOpStrategy() {
+    return new NoOpTelemetryWriteStrategy();
   }
 }

@@ -25,7 +25,7 @@ import java.nio.file.FileSystem;
  * Strategy implementation that does nothing (no-op). This replaces the behavior when shouldWrite =
  * false.
  */
-public class NoOpTelemetryStrategy implements TelemetryStrategy {
+public class NoOpTelemetryWriteStrategy implements TelemetryWriteStrategy {
 
   @Override
   public void processDumperRunMetrics(
@@ -34,6 +34,11 @@ public class NoOpTelemetryStrategy implements TelemetryStrategy {
       TaskSetState state,
       Stopwatch stopwatch,
       boolean success) {
+    // Do nothing - this is the no-op strategy
+  }
+
+  @Override
+  public void process(ClientTelemetry clientTelemetry) {
     // Do nothing - this is the no-op strategy
   }
 

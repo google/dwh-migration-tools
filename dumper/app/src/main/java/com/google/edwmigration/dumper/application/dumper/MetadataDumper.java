@@ -28,13 +28,11 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
-import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
+import com.google.edwmigration.dumper.application.dumper.metrics.ClientTelemetry;
+import com.google.edwmigration.dumper.application.dumper.metrics.EventType;
+import com.google.edwmigration.dumper.application.dumper.task.*;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TaskResultSummary;
-import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -46,8 +44,10 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -61,8 +61,8 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private TelemetryProcessor telemetryProcessor;
-  private ConnectorArguments connectorArguments;
+  private final TelemetryProcessor telemetryProcessor;
+  private final ConnectorArguments connectorArguments;
 
   public MetadataDumper(String... args) throws Exception {
     this.connectorArguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
@@ -153,8 +153,8 @@ public class MetadataDumper {
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        telemetryProcessor.addDumperRunMetricsToPayload(
-            connectorArguments, state, stopwatch, requiredTaskSucceeded);
+//        telemetryProcessor.addDumperRunMetricsToPayload(
+//            connectorArguments, state, stopwatch, requiredTaskSucceeded);
         telemetryProcessor.processTelemetry(fileSystem);
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
@@ -281,6 +281,12 @@ public class MetadataDumper {
       Stopwatch stopwatch,
       String outputFileLocation,
       boolean requiredTaskSucceeded) {
+
+    telemetryProcessor.process(new ClientTelemetry.Builder()
+            .eventId(UUID.randomUUID().toString())
+            .eventType(EventType.DUMPER_FINISH_EVENT)
+            .build());
+
     summaryPrinter.printSummarySection(
         linePrinter -> {
           linePrinter.println(

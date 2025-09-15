@@ -25,7 +25,7 @@ import java.nio.file.FileSystem;
  * Strategy interface for handling telemetry operations. This replaces the boolean shouldWrite flag
  * with a more flexible approach.
  */
-public interface TelemetryStrategy {
+public interface TelemetryWriteStrategy {
 
   /**
    * Processes dumper run metrics according to the strategy implementation.
@@ -42,6 +42,8 @@ public interface TelemetryStrategy {
       TaskSetState state,
       Stopwatch stopwatch,
       boolean success);
+
+  void process(ClientTelemetry clientTelemetry);
 
   /**
    * Writes telemetry data according to the strategy implementation.

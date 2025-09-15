@@ -17,5 +17,8 @@
 package com.google.edwmigration.dumper.application.dumper.metrics;
 
 public enum EventType {
-  DUMPER_RUN_METRICS
+  DUMPER_RUN_METRICS,
+  METADATA,
+  DUMPER_START_EVENT,
+  DUMPER_FINISH_EVENT
 }

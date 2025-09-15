@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,35 +20,77 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class ClientTelemetry {
 
-  @JsonProperty private String id;
+  @JsonProperty private final String id;
+  @JsonProperty private final String eventId;
+  @JsonProperty private final EventType eventType;
+  @JsonProperty private final ZonedDateTime timestamp;
+  @JsonProperty private final List<TelemetryPayload> payload;
 
-  @JsonProperty private EventType eventType;
-
-  @JsonProperty private ZonedDateTime dumperRunStartClientTime;
-
-  @JsonProperty private List<TelemetryPayload> payload;
-
-  @JsonProperty private DumperMetadata dumperMetadata;
-
-  public ClientTelemetry() {
-    this.id = UUID.randomUUID().toString();
-    this.dumperRunStartClientTime = ZonedDateTime.now();
-    this.payload = new ArrayList<>();
+  private ClientTelemetry(Builder builder) {
+    this.id = builder.id;
+    this.eventId = builder.eventId;
+    this.eventType = builder.eventType;
+    this.timestamp = builder.timestamp;
+    this.payload = builder.payload;
   }
 
-  public void setDumperMetadata(DumperMetadata dumperMetadata) {
-    this.dumperMetadata = dumperMetadata;
+  public String getId() {
+    return id;
   }
 
-  public void addToPayload(TelemetryPayload telemetryPayload) {
-    this.payload.add(telemetryPayload);
+  public String getEventId() {
+    return eventId;
   }
 
-  public void setEventType(EventType eventType) {
-    this.eventType = eventType;
+  public EventType getEventType() {
+    return eventType;
   }
-}
+
+  public ZonedDateTime timestamp() {
+    return timestamp;
+  }
+
+  public List<TelemetryPayload> getPayload() {
+    return payload;
+  }
+
+  public static class Builder {
+    private String id;
+    private String eventId;
+    private EventType eventType;
+    private ZonedDateTime timestamp = ZonedDateTime.now();
+    private List<TelemetryPayload> payload = new ArrayList<>();
+
+    public Builder id(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public Builder eventId(String eventId) {
+      this.eventId = eventId;
+      return this;
+    }
+
+    public Builder timestamp(ZonedDateTime timestamp) {
+      this.timestamp = timestamp;
+      return this;
+    }
+
+    public Builder eventType(EventType eventType) {
+      this.eventType = eventType;
+      return this;
+    }
+
+    public Builder payload(List<TelemetryPayload> payload) {
+      this.payload = payload;
+      return this;
+    }
+
+    public ClientTelemetry build() {
+        return new ClientTelemetry(this);
+      }
+    }
+  }
