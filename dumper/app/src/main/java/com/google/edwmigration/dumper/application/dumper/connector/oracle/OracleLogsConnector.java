@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.AvoidArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -31,6 +32,7 @@ import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps query logs from Oracle")
+@AvoidArgumentAssessment
 public class OracleLogsConnector extends AbstractOracleConnector
     implements LogsConnector, OracleLogsDumpFormat {
 

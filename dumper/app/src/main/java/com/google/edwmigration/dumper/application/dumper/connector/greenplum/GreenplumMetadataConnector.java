@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.greenplum;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.AvoidArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -39,6 +40,7 @@ import java.util.List;
     required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
     defaultValue = "" + GreenplumMetadataConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentDatabaseForConnection
+@AvoidArgumentAssessment
 public class GreenplumMetadataConnector extends AbstractGreenplumConnector
     implements MetadataConnector, GreenplumMetadataDumpFormat {
 

@@ -23,6 +23,7 @@ import static com.google.edwmigration.dumper.application.dumper.task.TaskCategor
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -64,6 +65,7 @@ import org.apache.http.ssl.SSLContextBuilder;
     arg = ConnectorArguments.OPT_CLUSTER,
     description = "The name of Cloudera's cluster.",
     required = "Only if you need to dump data for a single Cloudera cluster")
+@RespectsArgumentAssessment
 public class ClouderaManagerConnector extends AbstractConnector {
 
   private static final String FORMAT_NAME = "cloudera-manager.dump.zip";
