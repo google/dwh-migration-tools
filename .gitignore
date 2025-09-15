@@ -22,6 +22,7 @@ node_modules
 
 /dbsync/**/bin/
 /dumper/**/bin/
+/dumper/app/progress.log.*
 /permissions-migration/**/bin
 
 # Gradle build folders
