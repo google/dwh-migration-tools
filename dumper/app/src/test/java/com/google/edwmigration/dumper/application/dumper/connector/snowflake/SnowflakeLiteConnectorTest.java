@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,12 +27,23 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SnowflakeLiteConnectorTest {
 
+  final SnowflakeLiteConnector connector = new SnowflakeLiteConnector();
+
+  @Test
+  public void validate_databaseFlag_throwsException() {
+    ImmutableList<String> list =
+        ImmutableList.of(
+            "--connector", "snowflake-lite", "--assessment", "--database", "SNOWFLAKE");
+    ConnectorArguments arguments = ConnectorArguments.create(list);
+
+    assertThrows(SnowflakeUsageException.class, () -> connector.validate(arguments));
+  }
+
   @Test
   public void validate_noAssessmentFlag_throwsUsageException() {
-    ConnectorArguments noFlagArguments =
-        ConnectorArguments.create(ImmutableList.of("--connector", "snowflake-lite"));
-    SnowflakeLiteConnector connector = new SnowflakeLiteConnector();
+    ImmutableList<String> list = ImmutableList.of("--connector", "snowflake-lite");
+    ConnectorArguments arguments = ConnectorArguments.create(list);
 
-    assertThrows(MetadataDumperUsageException.class, () -> connector.validate(noFlagArguments));
+    assertThrows(SnowflakeUsageException.class, () -> connector.validate(arguments));
   }
 }
