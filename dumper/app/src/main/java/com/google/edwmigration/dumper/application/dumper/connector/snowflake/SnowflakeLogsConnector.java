@@ -39,7 +39,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
-import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -295,7 +294,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws MetadataDumperUsageException {
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
     out.add(new FormatTask(FORMAT_NAME));
 
     // (24 * 7) -> 7 trailing days == 168 hours
