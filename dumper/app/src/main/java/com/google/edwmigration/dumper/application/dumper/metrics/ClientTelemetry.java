@@ -45,20 +45,13 @@ public class ClientTelemetry {
   public static Builder builder() {
     return new Builder();
   }
+
   public static Builder builder(ClientTelemetry clientTelemetry) {
     return new Builder()
-      .setEventId(clientTelemetry.getEventId())
-      .setEventType(clientTelemetry.getEventType())
-      .setTimestamp(clientTelemetry.getTimestamp())
-      .setPayload(clientTelemetry.getPayload());
-  }
-
-  public void addToPayload(TelemetryPayload telemetryPayload) {
-    this.payload.add(telemetryPayload);
-  }
-
-  public void setEventType(EventType eventType) {
-    this.eventType = eventType;
+        .setEventId(clientTelemetry.getEventId())
+        .setEventType(clientTelemetry.getEventType())
+        .setTimestamp(clientTelemetry.getTimestamp())
+        .setPayload(clientTelemetry.getPayload());
   }
 
   public String getId() {
@@ -105,11 +98,6 @@ public class ClientTelemetry {
 
     public Builder setTimestamp(ZonedDateTime timestamp) {
       this.timestamp = timestamp;
-      return this;
-    }
-
-    public Builder addPayload(TelemetryPayload telemetryPayload) {
-      this.payload.add(telemetryPayload);
       return this;
     }
 

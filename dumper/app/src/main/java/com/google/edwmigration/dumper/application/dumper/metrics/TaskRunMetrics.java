@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.metrics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.ZonedDateTime;
 
 /**
  * @author kakha keep immutable. TaskRunner is multi-threaded, so we need to make it thread-safe.
@@ -36,11 +35,7 @@ public class TaskRunMetrics implements TelemetryPayload {
     // Default constructor for Jackson deserialization
   }
 
-  public TaskRunMetrics(
-      String name,
-      String className,
-      String overallStatus,
-      String error) {
+  public TaskRunMetrics(String name, String className, String overallStatus, String error) {
     this.name = name;
     this.className = className;
     this.overallStatus = overallStatus;

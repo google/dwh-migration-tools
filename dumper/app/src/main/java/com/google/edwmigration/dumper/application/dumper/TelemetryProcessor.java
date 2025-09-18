@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper;
 
 import com.google.edwmigration.dumper.application.dumper.metrics.*;
 import java.nio.file.FileSystem;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -36,34 +35,24 @@ public class TelemetryProcessor {
    */
   public TelemetryProcessor(TelemetryWriteStrategy telemetryStrategy) {
     this.telemetryStrategy = telemetryStrategy;
-
-    process(createDumperRunStartMetric());
-    process(createMetadataMetric());
   }
 
-  public void flush(FileSystem fileSystem) {
-    telemetryStrategy.flush(fileSystem);
+  public void setZipFilePathForDiskWriteStrategy(FileSystem fileSystem) {
+    if (telemetryStrategy instanceof DiskTelemetryWriteStrategy) {
+      ((DiskTelemetryWriteStrategy) telemetryStrategy).setZipFilePath(fileSystem);
+    }
+    telemetryStrategy.flush();
   }
 
   public void process(ClientTelemetry clientTelemetry) {
     telemetryStrategy.process(giveIdToClientTelemetry(clientTelemetry));
   }
 
-  private ClientTelemetry createDumperRunStartMetric() {
-    return ClientTelemetry.builder()
-        .setEventType(EventType.DUMPER_RUN_METRICS)
-        .build();
-  }
-
-  private ClientTelemetry createMetadataMetric() {
-    return ClientTelemetry.builder()
-    .setEventType(EventType.METADATA)
-    .setPayload(Arrays.asList(StartUpMetaInfoProcessor.getDumperMetadata()))
-    .build();
+  public void flush() {
+    telemetryStrategy.flush();
   }
 
   private ClientTelemetry giveIdToClientTelemetry(ClientTelemetry clientTelemetry) {
     return ClientTelemetry.builder(clientTelemetry).setId(runId).build();
   }
-
 }

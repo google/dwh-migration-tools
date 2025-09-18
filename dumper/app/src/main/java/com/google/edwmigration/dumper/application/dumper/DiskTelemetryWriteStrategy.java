@@ -16,15 +16,23 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import com.google.common.base.Stopwatch;
+import static java.nio.file.Files.newBufferedWriter;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.edwmigration.dumper.application.dumper.metrics.*;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import java.nio.file.FileSystem;
-import java.time.Duration;
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.ArrayDeque;
+import java.util.Queue;
+import net.harawata.appdirs.AppDirs;
+import net.harawata.appdirs.AppDirsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,80 +42,146 @@ import org.slf4j.LoggerFactory;
  */
 public class DiskTelemetryWriteStrategy implements TelemetryWriteStrategy {
   private static final Logger logger = LoggerFactory.getLogger(DiskTelemetryWriteStrategy.class);
+  private static final String ALL_DUMPER_RUN_METRICS = "all-dumper-telemetry.jsonl";
+  private static final String DUMPER_RUN_METRICS = "dumper-telemetry.jsonl";
+  private final Path telemetryOsCachePath;
+  private final ObjectMapper MAPPER;
+  private final Queue<ClientTelemetry> bufferOs;
+  private final Queue<ClientTelemetry> bufferZip;
+  private FileSystem fileSystem;
+  private boolean telemetryOsCacheIsAvailable = true;
 
-  // @Override
-  // public void processDumperRunMetrics(
-  //     ClientTelemetry clientTelemetry,
-  //     ConnectorArguments arguments,
-  //     TaskSetState state,
-  //     Stopwatch stopwatch,
-  //     boolean success) {
+  public DiskTelemetryWriteStrategy() {
+    bufferOs = new ArrayDeque<>();
+    bufferZip = new ArrayDeque<>();
+    MAPPER = createObjectMapper();
+    telemetryOsCachePath = Paths.get(createTelemetryOsDirIfNotExists(), ALL_DUMPER_RUN_METRICS);
+  }
 
-  //   try {
-  //     clientTelemetry.setEventType(EventType.DUMPER_RUN_METRICS);
+  private static ObjectMapper createObjectMapper() {
+    ObjectMapper mapper = new ObjectMapper();
 
-  //     List<TaskExecutionSummary> taskExecutionSummaries =
-  //         state.getTasksReports().stream()
-  //             .map(
-  //                 tasksReport ->
-  //                     new TaskExecutionSummary(tasksReport.count(), tasksReport.state().name()))
-  //             .collect(Collectors.toList());
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+    mapper.registerModule(new JavaTimeModule());
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-  //     List<TaskDetailedSummary> taskDetailedSummaries =
-  //         state.getTaskResultSummaries().stream()
-  //             .map(
-  //                 item ->
-  //                     new TaskDetailedSummary(
-  //                         item.getTask().getName(),
-  //                         item.getTask().getCategory().name(),
-  //                         item.getTaskState().name(),
-  //                         item.getThrowable().isPresent()
-  //                             ? item.getThrowable().get().getMessage()
-  //                             : null))
-  //             .collect(Collectors.toList());
+    return mapper;
+  }
 
-  //     Duration elapsed = stopwatch.elapsed();
-
-  //     DumperRunMetrics dumperRunMetrics =
-  //         DumperRunMetrics.builder()
-  //             .setId(UUID.randomUUID().toString())
-  //             .setMeasureStartTime(ZonedDateTime.now().minus(elapsed))
-  //             .setRunDurationInMinutes(elapsed.getSeconds() / 60)
-  //             .setOverallStatus(success ? "SUCCESS" : "FAILURE")
-  //             .setTaskExecutionSummary(taskExecutionSummaries)
-  //             .setTaskDetailedSummary(taskDetailedSummaries)
-  //             .setArguments(arguments)
-  //             .build();
-  //     clientTelemetry.addToPayload(dumperRunMetrics);
-  //   } catch (Exception e) {
-  //     logger.warn("Failed to generate dumperRunMetrics and add it to payload", e);
-  //   }
-  // }
+  public void setZipFilePath(FileSystem fileSystem) {
+    this.fileSystem = fileSystem;
+    if (copyOsCacheToZip() && telemetryOsCacheIsAvailable) {
+      // these events were already registered in OsCache
+      bufferZip.clear();
+    }
+    flush();
+  }
 
   @Override
   public void process(ClientTelemetry clientTelemetry) {
-    // For disk strategy, processing means preparing the telemetry for writing
-    // The actual processing is done in processDumperRunMetrics
-    logger.debug("Processing telemetry data with {} payload items", 
-        clientTelemetry.getPayload().size());
+    logger.debug(
+        "Processing telemetry data with {} payload items", clientTelemetry.getPayload().size());
 
-    flush(null, clientTelemetry);
-  }
-
-
-  @Override
-  public void flush(FileSystem fileSystem) {
-    // this implementation does not a buffer. It always flushes on process
-  }
-
-  @Override
-  public void flush(FileSystem fileSystem, ClientTelemetry clientTelemetry) {
-    try {      
-      // Write immediately to disk
-      TelemetryWriter.write(fileSystem, clientTelemetry);
-      logger.debug("Flushed telemetry data immediately to disk");
-    } catch (Exception e) {
-      logger.warn("Failed to flush telemetry data", e);
+    if (telemetryOsCacheIsAvailable) {
+      bufferOs.add(clientTelemetry);
     }
+    bufferZip.add(clientTelemetry);
+
+    flush();
+  }
+
+  @Override
+  public void flush() {
+    // this implementation uses buffer until zip file is created afterwords it is flushed per
+    // process
+    flushOsCache();
+    flushZip();
+  }
+
+  private void flushOsCache() {
+    while (telemetryOsCacheIsAvailable && !bufferOs.isEmpty()) {
+      try {
+        writeOnDisk(telemetryOsCachePath, MAPPER.writeValueAsString(bufferOs.poll()));
+      } catch (JsonProcessingException e) {
+        logger.warn("Failed to serialize telemetry to write in Os Cache", e);
+      }
+    }
+  }
+
+  private void flushZip() {
+    while (fileSystem != null && !bufferZip.isEmpty()) {
+      try {
+        writeOnDisk(
+            fileSystem.getPath(DUMPER_RUN_METRICS), MAPPER.writeValueAsString(bufferZip.poll()));
+      } catch (JsonProcessingException e) {
+        logger.warn("Failed to serialize telemetry to write in Zip", e);
+      }
+    }
+  }
+
+  private String createTelemetryOsDirIfNotExists() {
+    AppDirs appDirs = AppDirsFactory.getInstance();
+
+    String appName = "DWH-Dumper";
+    String appVersion = ""; // All versions are accumulated in the same file
+    String appAuthor = "google"; // Optional, can be null
+    String cacheDir = appDirs.getUserCacheDir(appName, appVersion, appAuthor);
+    Path applicationCacheDirPath = Paths.get(cacheDir);
+    if (java.nio.file.Files.notExists(applicationCacheDirPath)) {
+      try {
+        java.nio.file.Files.createDirectories(applicationCacheDirPath);
+        logger.info("Created application telemetry cache directory: {}", applicationCacheDirPath);
+      } catch (IOException e) {
+        disableOsCache();
+        logger.warn(
+            "Unable to create application telemetry cache directory : {}", applicationCacheDirPath);
+      }
+    }
+
+    return cacheDir;
+  }
+
+  private boolean copyOsCacheToZip() {
+    Path snapshotInZipPath = fileSystem.getPath(DUMPER_RUN_METRICS);
+    try {
+      Path parentInZip = snapshotInZipPath.getParent();
+      if (parentInZip != null && java.nio.file.Files.notExists(parentInZip)) {
+        java.nio.file.Files.createDirectories(parentInZip);
+      }
+      java.nio.file.Files.copy(
+          telemetryOsCachePath, snapshotInZipPath, StandardCopyOption.REPLACE_EXISTING);
+      logger.debug(
+          "Copied Cached {} telemetry to zip file {}.", telemetryOsCachePath, snapshotInZipPath);
+      return true;
+    } catch (IOException e) {
+      logger.warn(
+          "Failed to copy cached telemetry from {} to ZIP at {}",
+          telemetryOsCachePath,
+          snapshotInZipPath,
+          e);
+      return false;
+    }
+  }
+
+  /** Appends the given summary lines for the current run to the external log file. */
+  private static void writeOnDisk(Path path, String summaryLines) {
+    try (BufferedWriter writer =
+            newBufferedWriter(
+                path,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND);
+        PrintWriter printer = new PrintWriter(writer)) {
+
+      printer.println(summaryLines);
+      printer.flush();
+    } catch (IOException e) {
+      logger.warn("Failed to append to external cumulative summary log: {}", path, e);
+    }
+  }
+
+  private void disableOsCache() {
+    telemetryOsCacheIsAvailable = false;
+    bufferOs.clear();
   }
 }

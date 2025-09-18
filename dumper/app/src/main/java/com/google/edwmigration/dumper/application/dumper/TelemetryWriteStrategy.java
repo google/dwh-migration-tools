@@ -16,10 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.metrics.*;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import java.nio.file.FileSystem;
 
 /**
  * Strategy interface for handling telemetry operations. This replaces the boolean shouldWrite flag
@@ -29,14 +26,10 @@ public interface TelemetryWriteStrategy {
   /**
    * Processes individual telemetry data point for immediate streaming.
    *
-   * @param telemetryPayload the telemetry payload to process
+   * @param clientTelemetry the telemetry object to process
    */
   void process(ClientTelemetry clientTelemetry);
 
-  /**
-   * Flushes individual telemetry data point immediately to disk.
-   *
-   * @param fileSystem the file system to write to
-   */
-  void flush(FileSystem fileSystem);
+  /** Flushes individual telemetry data point immediately */
+  void flush();
 }

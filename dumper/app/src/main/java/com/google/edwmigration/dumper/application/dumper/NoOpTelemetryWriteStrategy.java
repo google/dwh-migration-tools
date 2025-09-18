@@ -16,10 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.metrics.*;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import java.nio.file.FileSystem;
 
 /**
  * Strategy implementation that does nothing (no-op). This replaces the behavior when shouldWrite =
@@ -32,7 +29,7 @@ public class NoOpTelemetryWriteStrategy implements TelemetryWriteStrategy {
   }
 
   @Override
-  public void flush(FileSystem fileSystem, ClientTelemetry clientTelemetry) {
+  public void flush() {
     // Do nothing - this is the no-op strategy
   }
 }

@@ -38,10 +38,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -107,30 +104,34 @@ public class TasksRunner implements TaskRunContextOps {
 
       handleTask(task);
 
-      processTaskEndTelemetry(task, getTaskState(task), metricToErrorMap.getOrDefault(task, null), taskEventId);
+      processTaskEndTelemetry(
+          task, getTaskState(task), metricToErrorMap.getOrDefault(task, null), taskEventId);
     }
   }
 
   private void processTaskStartTelemetry(Task<?> task, String taskEventId) {
-    TaskRunMetrics taskRunMetrics = new TaskRunMetrics(task.getName(), task.getClass().toString(), null, null);
-    
+    TaskRunMetrics taskRunMetrics =
+        new TaskRunMetrics(task.getName(), task.getClass().toString(), null, null);
+
     telemetryProcessor.process(
-      ClientTelemetry.builder()
-        .setEventId(taskEventId)
-        .setEventType(EventType.TASK_RUN_START)
-        .setPayload(Arrays.asList(taskRunMetrics))
-        .build());
+        ClientTelemetry.builder()
+            .setEventId(taskEventId)
+            .setEventType(EventType.TASK_RUN_START)
+            .setPayload(Collections.singletonList(taskRunMetrics))
+            .build());
   }
 
-  private void processTaskEndTelemetry(Task<?> task, TaskState taskStatus, String error, String taskEventId) {
-    TaskRunMetrics taskMetrics = new TaskRunMetrics(task.getName(), task.getClass().toString(), taskStatus.name(), error);
-    
+  private void processTaskEndTelemetry(
+      Task<?> task, TaskState taskStatus, String error, String taskEventId) {
+    TaskRunMetrics taskMetrics =
+        new TaskRunMetrics(task.getName(), task.getClass().toString(), taskStatus.name(), error);
+
     telemetryProcessor.process(
-      ClientTelemetry.builder()
-        .setEventId(taskEventId)
-        .setEventType(EventType.TASK_RUN_START)
-        .setPayload(Arrays.asList(taskMetrics))
-        .build());
+        ClientTelemetry.builder()
+            .setEventId(taskEventId)
+            .setEventType(EventType.TASK_RUN_END)
+            .setPayload(Collections.singletonList(taskMetrics))
+            .build());
   }
 
   @CheckForNull
