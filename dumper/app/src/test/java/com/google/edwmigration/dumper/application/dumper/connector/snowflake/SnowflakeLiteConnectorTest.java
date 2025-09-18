@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -28,6 +29,15 @@ import org.junit.runners.JUnit4;
 public class SnowflakeLiteConnectorTest {
 
   final SnowflakeLiteConnector connector = new SnowflakeLiteConnector();
+
+  @Test
+  public void getDefaultFileName_success() {
+
+    String name = connector.getDefaultFileName(false, null);
+
+    assertTrue(name, name.contains("snowflake"));
+    assertTrue(name, name.contains("lite"));
+  }
 
   @Test
   public void validate_databaseFlag_throwsException() {
@@ -45,5 +55,13 @@ public class SnowflakeLiteConnectorTest {
     ConnectorArguments arguments = ConnectorArguments.create(list);
 
     assertThrows(SnowflakeUsageException.class, () -> connector.validate(arguments));
+  }
+
+  @Test
+  public void validate_correctArguments_noException() {
+    ImmutableList<String> list = ImmutableList.of("--connector", "snowflake-lite", "--assessment");
+    ConnectorArguments arguments = ConnectorArguments.create(list);
+
+    connector.validate(arguments);
   }
 }
