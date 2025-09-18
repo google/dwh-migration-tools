@@ -74,6 +74,13 @@ dependencies {
         }
     }
 
+    // Hive has many dependencies on core through LogDivertAppender, use latest version
+    hive312RuntimeOnly("com.google.guava:guava") {
+        version {
+            strictly '32.0.1-jre'
+        }
+    }
+
     hive312RuntimeOnly("com.google.protobuf:protobuf-java") {
         version {
             strictly '3.25.5'
