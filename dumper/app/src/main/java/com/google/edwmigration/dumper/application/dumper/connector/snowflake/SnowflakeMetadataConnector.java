@@ -23,7 +23,6 @@ import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
@@ -131,15 +130,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   protected void validateForConnector(@Nonnull ConnectorArguments arguments) {
     boolean hasDatabases = !arguments.getDatabases().isEmpty();
     if (arguments.isAssessment() && hasDatabases) {
-      String unsupportedFilter =
-          "Trying to filter by database with the --"
-              + ConnectorArguments.OPT_ASSESSMENT
-              + " flag. This is unsupported in Assessment. Remove either the --"
-              + ConnectorArguments.OPT_ASSESSMENT
-              + " or the --"
-              + ConnectorArguments.OPT_DATABASE
-              + " flag.";
-      throw new MetadataDumperUsageException(unsupportedFilter);
+      throw SnowflakeUsageException.unsupportedFilter();
     }
   }
 

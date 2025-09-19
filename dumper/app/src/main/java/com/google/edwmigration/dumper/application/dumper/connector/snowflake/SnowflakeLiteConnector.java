@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -67,16 +66,10 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   @Override
   protected void validateForConnector(ConnectorArguments arguments) {
     if (!arguments.isAssessment()) {
-      throw noAssessmentException();
+      throw SnowflakeUsageException.missingAssessmentException(NAME);
     }
-  }
-
-  private static MetadataDumperUsageException noAssessmentException() {
-    String message =
-        String.format(
-            "The %s connector only supports extraction for Assessment."
-                + " Provide the '--%s' flag to use this connector.",
-            NAME, ConnectorArguments.OPT_ASSESSMENT);
-    return new MetadataDumperUsageException(message);
+    if (!arguments.getDatabases().isEmpty()) {
+      throw SnowflakeUsageException.unsupportedFilter();
+    }
   }
 }
