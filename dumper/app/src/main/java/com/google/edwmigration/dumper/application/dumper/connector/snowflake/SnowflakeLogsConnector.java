@@ -432,7 +432,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         TaskCategory.OPTIONAL),
     REPLICATION_GROUP_USAGE_HISTORY(
         ReplicationGroupUsageHistoryFormat.Header.class,
-        QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
+        ReplicationGroupUsageHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
         SnowflakeLogsConnectorProperty.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
     SERVERLESS_TASK_HISTORY(
