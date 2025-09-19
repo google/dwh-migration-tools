@@ -21,7 +21,6 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
-import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
@@ -59,7 +58,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   @Override
   public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
-    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
     out.add(new FormatTask(FORMAT_NAME));
     out.addAll(planner.generateLiteSpecificQueries());
   }
