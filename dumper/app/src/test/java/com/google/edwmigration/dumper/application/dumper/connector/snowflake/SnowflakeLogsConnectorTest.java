@@ -26,11 +26,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeLogsConnector.TimeSeriesView;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import org.junit.Test;
@@ -109,6 +111,20 @@ public class SnowflakeLogsConnectorTest {
     assertTrue(result, result.contains(originalQuery));
     assertTrue(result, result.contains("AND"));
     assertTrue(result, result.contains(override));
+  }
+
+  @Test
+  public void category_accelerationHistory_isOptional() {
+    TimeSeriesView view = TimeSeriesView.QUERY_ACCELERATION_HISTORY;
+
+    assertEquals(view.category, TaskCategory.OPTIONAL);
+  }
+
+  @Theory
+  public void category_notAccelerationHistory_isRequired(TimeSeriesView view) {
+    assumeFalse(view.equals(TimeSeriesView.QUERY_ACCELERATION_HISTORY));
+
+    assertEquals(view.category, TaskCategory.REQUIRED);
   }
 
   @Test
