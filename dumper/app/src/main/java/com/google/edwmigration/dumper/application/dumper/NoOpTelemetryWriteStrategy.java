@@ -16,29 +16,20 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.metrics.*;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
-import java.nio.file.FileSystem;
 
 /**
  * Strategy implementation that does nothing (no-op). This replaces the behavior when shouldWrite =
  * false.
  */
-public class NoOpTelemetryStrategy implements TelemetryStrategy {
-
+public class NoOpTelemetryWriteStrategy implements TelemetryWriteStrategy {
   @Override
-  public void processDumperRunMetrics(
-      ClientTelemetry clientTelemetry,
-      ConnectorArguments arguments,
-      TaskSetState state,
-      Stopwatch stopwatch,
-      boolean success) {
+  public void process(ClientTelemetry clientTelemetry) {
     // Do nothing - this is the no-op strategy
   }
 
   @Override
-  public void writeTelemetry(FileSystem fileSystem, ClientTelemetry clientTelemetry) {
+  public void flush() {
     // Do nothing - this is the no-op strategy
   }
 }

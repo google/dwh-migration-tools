@@ -28,6 +28,8 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.metrics.ClientTelemetry;
+import com.google.edwmigration.dumper.application.dumper.metrics.EventType;
 import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -44,6 +46,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -61,14 +64,22 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private TelemetryProcessor telemetryProcessor;
-  private ConnectorArguments connectorArguments;
+  private final TelemetryProcessor telemetryProcessor;
+  private final ConnectorArguments connectorArguments;
 
   public MetadataDumper(String... args) throws Exception {
     this.connectorArguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
     telemetryProcessor =
         new TelemetryProcessor(
             TelemetryStrategyFactory.createStrategy(connectorArguments.isTelemetryOn()));
+    telemetryProcessor.process(
+        ClientTelemetry.builder().setEventType(EventType.DUMPER_RUN_START).build());
+    telemetryProcessor.process(
+        ClientTelemetry.builder()
+            .setEventType(EventType.METADATA)
+            .setPayload(Collections.singletonList(StartUpMetaInfoProcessor.getDumperMetadata()))
+            .build());
+
     if (connectorArguments.saveResponseFile()) {
       JsonResponseFile.save(connectorArguments);
     }
@@ -140,6 +151,8 @@ public class MetadataDumper {
             new FileSystemOutputHandleFactory(fileSystem, "/"); // It's required to be "/"
         logger.debug("Target filesystem is [{}]", sinkFactory);
 
+        telemetryProcessor.setZipFilePathForDiskWriteStrategy(fileSystem);
+
         Handle handle = closer.register(connector.open(connectorArguments));
 
         new TasksRunner(
@@ -148,14 +161,15 @@ public class MetadataDumper {
                 connectorArguments.getThreadPoolSize(),
                 state,
                 tasks,
-                connectorArguments)
+                connectorArguments,
+                telemetryProcessor)
             .run();
 
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        telemetryProcessor.addDumperRunMetricsToPayload(
-            connectorArguments, state, stopwatch, requiredTaskSucceeded);
-        telemetryProcessor.processTelemetry(fileSystem);
+        telemetryProcessor.process(
+            ClientTelemetry.builder().setEventType(EventType.DUMPER_RUN_END).build());
+        telemetryProcessor.flush();
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
         File outputFile = new File(outputFileLocation);

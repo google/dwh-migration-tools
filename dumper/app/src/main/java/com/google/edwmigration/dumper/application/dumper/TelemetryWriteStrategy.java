@@ -14,12 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.metrics;
+package com.google.edwmigration.dumper.application.dumper;
 
-public enum EventType {
-  DUMPER_RUN_START,
-  DUMPER_RUN_END,
-  METADATA,
-  TASK_RUN_START,
-  TASK_RUN_END,
+import com.google.edwmigration.dumper.application.dumper.metrics.*;
+
+/**
+ * Strategy interface for handling telemetry operations. This replaces the boolean shouldWrite flag
+ * with a more flexible approach.
+ */
+public interface TelemetryWriteStrategy {
+  /**
+   * Processes individual telemetry data point for immediate streaming.
+   *
+   * @param clientTelemetry the telemetry object to process
+   */
+  void process(ClientTelemetry clientTelemetry);
+
+  /** Flushes individual telemetry data point immediately */
+  void flush();
 }
