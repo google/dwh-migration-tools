@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
 import net.harawata.appdirs.AppDirs;
 import net.harawata.appdirs.AppDirsFactory;
 import org.slf4j.Logger;
@@ -44,19 +44,15 @@ public class DiskTelemetryWriteStrategy implements TelemetryWriteStrategy {
   private static final Logger logger = LoggerFactory.getLogger(DiskTelemetryWriteStrategy.class);
   private static final String ALL_DUMPER_RUN_METRICS = "all-dumper-telemetry.jsonl";
   private static final String DUMPER_RUN_METRICS = "dumper-telemetry.jsonl";
-  private final Path telemetryOsCachePath;
-  private final ObjectMapper MAPPER;
-  private final Queue<ClientTelemetry> bufferOs;
-  private final Queue<ClientTelemetry> bufferZip;
+  private static final Path TELEMETRY_OS_CACHE_PATH =
+      Paths.get(createTelemetryOsDirIfNotExists(), ALL_DUMPER_RUN_METRICS);
+  private static final ObjectMapper MAPPER = createObjectMapper();
+  private final List<ClientTelemetry> bufferOs = new ArrayList<>();
+  private final List<ClientTelemetry> bufferZip = new ArrayList<>();
   private FileSystem fileSystem;
-  private boolean telemetryOsCacheIsAvailable = true;
+  private static boolean telemetryOsCacheIsAvailable = true;
 
-  public DiskTelemetryWriteStrategy() {
-    bufferOs = new ArrayDeque<>();
-    bufferZip = new ArrayDeque<>();
-    MAPPER = createObjectMapper();
-    telemetryOsCachePath = Paths.get(createTelemetryOsDirIfNotExists(), ALL_DUMPER_RUN_METRICS);
-  }
+  public DiskTelemetryWriteStrategy() {}
 
   private static ObjectMapper createObjectMapper() {
     ObjectMapper mapper = new ObjectMapper();
@@ -99,27 +95,38 @@ public class DiskTelemetryWriteStrategy implements TelemetryWriteStrategy {
   }
 
   private void flushOsCache() {
-    while (telemetryOsCacheIsAvailable && !bufferOs.isEmpty()) {
-      try {
-        writeOnDisk(telemetryOsCachePath, MAPPER.writeValueAsString(bufferOs.poll()));
-      } catch (JsonProcessingException e) {
-        logger.warn("Failed to serialize telemetry to write in Os Cache", e);
-      }
+    if (!telemetryOsCacheIsAvailable) {
+      return;
     }
+
+    bufferOs.forEach(
+        ct -> {
+          try {
+            writeOnDisk(TELEMETRY_OS_CACHE_PATH, MAPPER.writeValueAsString(ct));
+          } catch (JsonProcessingException e) {
+            logger.warn("Failed to serialize telemetry to write in Os Cache", e);
+          }
+        });
+    bufferOs.clear();
   }
 
   private void flushZip() {
-    while (fileSystem != null && !bufferZip.isEmpty()) {
-      try {
-        writeOnDisk(
-            fileSystem.getPath(DUMPER_RUN_METRICS), MAPPER.writeValueAsString(bufferZip.poll()));
-      } catch (JsonProcessingException e) {
-        logger.warn("Failed to serialize telemetry to write in Zip", e);
-      }
+    if (fileSystem == null) {
+      return;
     }
+
+    bufferZip.forEach(
+        ct -> {
+          try {
+            writeOnDisk(fileSystem.getPath(DUMPER_RUN_METRICS), MAPPER.writeValueAsString(ct));
+          } catch (JsonProcessingException e) {
+            logger.warn("Failed to serialize telemetry to write in Zip", e);
+          }
+        });
+    bufferZip.clear();
   }
 
-  private String createTelemetryOsDirIfNotExists() {
+  private static String createTelemetryOsDirIfNotExists() {
     AppDirs appDirs = AppDirsFactory.getInstance();
 
     String appName = "DWH-Dumper";
@@ -149,14 +156,14 @@ public class DiskTelemetryWriteStrategy implements TelemetryWriteStrategy {
         java.nio.file.Files.createDirectories(parentInZip);
       }
       java.nio.file.Files.copy(
-          telemetryOsCachePath, snapshotInZipPath, StandardCopyOption.REPLACE_EXISTING);
+          TELEMETRY_OS_CACHE_PATH, snapshotInZipPath, StandardCopyOption.REPLACE_EXISTING);
       logger.debug(
-          "Copied Cached {} telemetry to zip file {}.", telemetryOsCachePath, snapshotInZipPath);
+          "Copied Cached {} telemetry to zip file {}.", TELEMETRY_OS_CACHE_PATH, snapshotInZipPath);
       return true;
     } catch (IOException e) {
       logger.warn(
           "Failed to copy cached telemetry from {} to ZIP at {}",
-          telemetryOsCachePath,
+          TELEMETRY_OS_CACHE_PATH,
           snapshotInZipPath,
           e);
       return false;
@@ -180,8 +187,7 @@ public class DiskTelemetryWriteStrategy implements TelemetryWriteStrategy {
     }
   }
 
-  private void disableOsCache() {
+  private static void disableOsCache() {
     telemetryOsCacheIsAvailable = false;
-    bufferOs.clear();
   }
 }
