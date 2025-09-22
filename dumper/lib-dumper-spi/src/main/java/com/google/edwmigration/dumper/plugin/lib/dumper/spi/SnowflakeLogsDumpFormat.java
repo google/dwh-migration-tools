@@ -54,6 +54,7 @@ public interface SnowflakeLogsDumpFormat {
       SessionId,
       UserName,
       WarehouseName,
+      WarehouseSize,
       ClusterNumber,
       QueryTag,
       ExecutionStatus,
@@ -238,6 +239,22 @@ public interface SnowflakeLogsDumpFormat {
       CreditsUsed,
       WarehouseId,
       WarehouseName
+    }
+  }
+
+  interface QueryAttributionHistoryFormat {
+
+    String ZIP_ENTRY_PREFIX = "query_attribution_history-au_";
+
+    enum Header {
+      QueryId,
+      QueryHash,
+      WarehouseName,
+      UserName,
+      StartTime,
+      EndTime,
+      CreditsAttributedCompute,
+      CreditsUsedQueryAcceleration
     }
   }
 
