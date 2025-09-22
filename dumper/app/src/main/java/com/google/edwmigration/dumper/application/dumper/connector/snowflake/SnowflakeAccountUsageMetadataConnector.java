@@ -16,12 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ASSESSMENT;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_ONLY_SOURCE;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import java.io.IOException;
 import javax.annotation.Nonnull;
@@ -50,8 +48,7 @@ public class SnowflakeAccountUsageMetadataConnector extends SnowflakeMetadataCon
   @Override
   public final void validateForConnector(ConnectorArguments arguments) {
     if (arguments.isAssessment()) {
-      String message = String.format("The --%s flag is not supported.", OPT_ASSESSMENT);
-      throw new MetadataDumperUsageException(message);
+      throw SnowflakeUsageException.unsupportedAssessment();
     }
   }
 }
