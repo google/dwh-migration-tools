@@ -19,13 +19,12 @@ package com.google.edwmigration.dumper.application.dumper;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
+import com.google.edwmigration.dumper.application.dumper.metrics.DumperMetadata;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-
-import com.google.edwmigration.dumper.application.dumper.metrics.DumperMetadata;
 import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionDescriptor;
 import joptsimple.OptionParser;
@@ -33,7 +32,6 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.ValueConversionException;
 import joptsimple.ValueConverter;
-import org.anarres.jdiagnostics.ProductMetadata;
 
 /** @author shevek */
 public class DefaultArguments {
