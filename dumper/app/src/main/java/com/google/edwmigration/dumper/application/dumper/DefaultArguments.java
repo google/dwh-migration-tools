@@ -21,14 +21,11 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+
+import com.google.edwmigration.dumper.application.dumper.metrics.DumperMetadata;
 import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionDescriptor;
 import joptsimple.OptionParser;
@@ -139,8 +136,9 @@ public class DefaultArguments {
       System.exit(1);
     }
     if (o.has(versionOption)) {
-      System.err.println(
-          new ProductMetadata().getModule(PRODUCT_GROUP + ":" + PRODUCT_CORE_MODULE));
+      DumperMetadata dumperMetadata = StartUpMetaInfoProcessor.getDumperMetadata();
+      String versionString = dumperMetadata.getVersion() + " : " + dumperMetadata.getGitCommit();
+      System.err.println(versionString);
       System.exit(1);
     }
     return o;
