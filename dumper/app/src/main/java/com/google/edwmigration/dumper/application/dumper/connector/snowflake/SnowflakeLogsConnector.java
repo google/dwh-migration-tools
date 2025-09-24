@@ -105,7 +105,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   @Override
   protected final void validateForConnector(@Nonnull ConnectorArguments arguments) {
     if (arguments.isAssessment() && arguments.hasQueryLogEarliestTimestamp()) {
-      throw unsupportedOption(ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP);
+      throw SnowflakeUsageException.unsupportedEarliestTimestamp();
     }
   }
 
@@ -352,13 +352,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     String file = getEntryFileNameWithTimestamp(task.zipPrefix, interval);
     out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
-  }
-
-  private static MetadataDumperUsageException unsupportedOption(String option) {
-    String assessment = ConnectorArguments.OPT_ASSESSMENT;
-    String message =
-        String.format("Unsupported option used with --%s: please remove --%s", assessment, option);
-    return new MetadataDumperUsageException(message);
   }
 
   static String overrideableQuery(
