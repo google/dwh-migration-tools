@@ -50,22 +50,25 @@ abstract class SnowflakeYamlSummaryTask extends AbstractTask<Void> {
   }
 
   @Override
-  protected final Void doRun(@Nullable TaskRunContext context, ByteSink sink, Handle handle)
+  protected final Void doRun(@Nullable TaskRunContext context, ByteSink sink, Handle unused)
       throws IOException {
+    CharSink streamSupplier = sink.asCharSink(UTF_8);
+    try (Writer writer = streamSupplier.openBufferedStream()) {
+      CoreMetadataDumpFormat.MAPPER.writeValue(writer, createRoot(context));
+      return null;
+    }
+  }
+
+  Root createRoot(@Nullable TaskRunContext context) throws IOException {
     Product product = new Product();
     product.version = String.valueOf(new ProductMetadata());
     product.arguments = serializedArguments(context);
 
-    CharSink streamSupplier = sink.asCharSink(UTF_8);
-    try (Writer writer = streamSupplier.openBufferedStream()) {
-
-      Root root = new Root();
-      root.format = zipFormat;
-      root.timestamp = System.currentTimeMillis();
-      root.product = product;
-      CoreMetadataDumpFormat.MAPPER.writeValue(writer, root);
-      return null;
-    }
+    Root root = new Root();
+    root.format = zipFormat;
+    root.timestamp = System.currentTimeMillis();
+    root.product = product;
+    return root;
   }
 
   @Nonnull
