@@ -207,6 +207,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             + "session_id, \n"
             + "user_name, \n"
             + "warehouse_name, \n"
+            + "warehouse_size, \n"
             + "cluster_number, \n"
             + "query_tag, \n"
             + "execution_status, \n"
@@ -423,6 +424,12 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         TimeSeriesColumn.END_TIME,
         SnowflakeLogsConnectorProperty.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY,
         TaskCategory.OPTIONAL),
+    QUERY_ATTRIBUTION_HISTORY(
+        QueryAttributionHistoryFormat.Header.class,
+        QueryAttributionHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.QUERY_ATTRIBUTION_HISTORY_OVERRIDE_QUERY
+    ),
     REPLICATION_GROUP_USAGE_HISTORY(
         ReplicationGroupUsageHistoryFormat.Header.class,
         ReplicationGroupUsageHistoryFormat.ZIP_ENTRY_PREFIX,
@@ -488,6 +495,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             METERING_DAILY_HISTORY,
             PIPE_USAGE_HISTORY,
             QUERY_ACCELERATION_HISTORY,
+            QUERY_ATTRIBUTION_HISTORY,
             REPLICATION_GROUP_USAGE_HISTORY,
             SERVERLESS_TASK_HISTORY,
             TASK_HISTORY,
