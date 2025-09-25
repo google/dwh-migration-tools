@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.GroupTask;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Oracle")
+@RespectsArgumentAssessment
 public class OracleMetadataConnector extends AbstractOracleConnector
     implements MetadataConnector, OracleMetadataDumpFormat {
 
