@@ -16,41 +16,43 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
-import com.google.common.base.Stopwatch;
 import com.google.edwmigration.dumper.application.dumper.metrics.*;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import java.nio.file.FileSystem;
+import java.util.UUID;
 
 /**
  * TelemetryProcessor that uses the Strategy pattern to handle telemetry operations. This replaces
  * the boolean shouldWrite flag with a more flexible approach.
  */
 public class TelemetryProcessor {
-  private final ClientTelemetry clientTelemetry;
-  private final TelemetryStrategy telemetryStrategy;
+  private final String runId = UUID.randomUUID().toString();
+  private final TelemetryWriteStrategy telemetryStrategy;
 
   /**
    * Constructor that takes a TelemetryStrategy instead of a boolean flag.
    *
    * @param telemetryStrategy the strategy to use for telemetry operations
    */
-  public TelemetryProcessor(TelemetryStrategy telemetryStrategy) {
+  public TelemetryProcessor(TelemetryWriteStrategy telemetryStrategy) {
     this.telemetryStrategy = telemetryStrategy;
-    clientTelemetry = new ClientTelemetry();
-    clientTelemetry.setDumperMetadata(StartUpMetaInfoProcessor.getDumperMetadata());
   }
 
-  /**
-   * Generates a list of strings representing the summary for the current run. This summary does NOT
-   * include the final ZIP file size, as it's generated before the ZIP is closed.
-   */
-  public void addDumperRunMetricsToPayload(
-      ConnectorArguments arguments, TaskSetState state, Stopwatch stopwatch, boolean success) {
-    telemetryStrategy.processDumperRunMetrics(
-        clientTelemetry, arguments, state, stopwatch, success);
+  public void setZipFilePathForDiskWriteStrategy(FileSystem fileSystem) {
+    if (telemetryStrategy instanceof DiskTelemetryWriteStrategy) {
+      ((DiskTelemetryWriteStrategy) telemetryStrategy).setZipFilePath(fileSystem);
+    }
+    telemetryStrategy.flush();
   }
 
-  public void processTelemetry(FileSystem fileSystem) {
-    telemetryStrategy.writeTelemetry(fileSystem, clientTelemetry);
+  public void process(TelemetryEvent telemetryEvent) {
+    telemetryStrategy.process(giveIdToClientTelemetry(telemetryEvent));
+  }
+
+  public void flush() {
+    telemetryStrategy.flush();
+  }
+
+  private TelemetryEvent giveIdToClientTelemetry(TelemetryEvent telemetryEvent) {
+    return TelemetryEvent.builder(telemetryEvent).setRunId(runId).build();
   }
 }

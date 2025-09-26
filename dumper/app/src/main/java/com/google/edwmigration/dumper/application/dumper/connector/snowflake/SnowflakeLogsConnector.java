@@ -428,8 +428,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         QueryAttributionHistoryFormat.Header.class,
         QueryAttributionHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogsConnectorProperty.QUERY_ATTRIBUTION_HISTORY_OVERRIDE_QUERY
-    ),
+        SnowflakeLogsConnectorProperty.QUERY_ATTRIBUTION_HISTORY_OVERRIDE_QUERY),
     REPLICATION_GROUP_USAGE_HISTORY(
         ReplicationGroupUsageHistoryFormat.Header.class,
         ReplicationGroupUsageHistoryFormat.ZIP_ENTRY_PREFIX,

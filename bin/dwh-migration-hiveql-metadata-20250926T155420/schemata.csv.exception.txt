@@ -1,0 +1,2055 @@
+Write schemata.csv from get_all_databases()
+******************************
+classLoader/jdiagnostics
+    loaderClass[0]: class jdk.internal.loader.ClassLoaders$AppClassLoader
+    loader[0]: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    loaderClass[1]: class jdk.internal.loader.ClassLoaders$PlatformClassLoader
+    loader[1]: jdk.internal.loader.ClassLoaders$PlatformClassLoader@66ba7e45
+classLoader/system
+classLoader/threadcontext
+    loaderClass[0]: class jdk.internal.loader.ClassLoaders$AppClassLoader
+    loader[0]: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    loaderClass[1]: class jdk.internal.loader.ClassLoaders$PlatformClassLoader
+    loader[1]: jdk.internal.loader.ClassLoaders$PlatformClassLoader@66ba7e45
+classpath
+    error: Not a dirpath: java.ext.dirs
+    java.class.path
+        0: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jaxb-impl-2.2.3-1.jar
+            md5sum: 1b689e7f87caf2615cf6a47831d342
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jaxb-impl-2.2.3-1.jar
+            stat: size=890168, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        1: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-tx-5.3.39.jar
+            md5sum: bf8fdd25fb856049921f6369e17bf8
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-tx-5.3.39.jar
+            stat: size=333512, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        2: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-webapp-9.4.53.v20231009.jar
+            md5sum: 5d709f504156feaf17d2a941178b70
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-webapp-9.4.53.v20231009.jar
+            stat: size=140307, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        3: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-client-5.2.0.jar
+            md5sum: e511e26039ab3afc9c8574c2a4a96112
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-client-5.2.0.jar
+            stat: size=2983237, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        4: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-handler-4.1.100.Final.jar
+            md5sum: 71115ecf7b56ffa15469fc81c9d8fe5
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-handler-4.1.100.Final.jar
+            stat: size=561288, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        5: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/annotations-4.1.1.4.jar
+            md5sum: c2cdd26a6ae577f24775e8ce75da1fdc
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/annotations-4.1.1.4.jar
+            stat: size=3120, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        6: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            md5sum: 8fa0f89c8e42fc25dc13f79448e53f64
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            stat: size=810207, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        7: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore-4.4.16.jar
+            md5sum: 28d2cd9bf8789fd2ec774fb88436ebd1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore-4.4.16.jar
+            stat: size=327891, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        8: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/nimbus-jose-jwt-9.31.jar
+            md5sum: 4e49eeb9c155514302c5294875efe6
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/nimbus-jose-jwt-9.31.jar
+            stat: size=759031, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        9: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-pkix-2.0.3.jar
+            md5sum: 65eb4a6bc4d77ae69bc2da49c382cd37
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-pkix-2.0.3.jar
+            stat: size=200581, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        10: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snakeyaml-2.4.jar
+            md5sum: 2941ee3a987e3bff7b847933c591972
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snakeyaml-2.4.jar
+            stat: size=339825, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        11: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-protobuf-1.71.0.jar
+            md5sum: 8536e7408eea46e6c8629f55565026b
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-protobuf-1.71.0.jar
+            stat: size=5203, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        12: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/postgresql-42.7.5.jar
+            md5sum: 5cd7badfa9ec82c4812b5bf387de185
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/postgresql-42.7.5.jar
+            stat: size=1087908, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        13: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/shared-resourcemapping-0.33.0.jar
+            md5sum: b4136087a114cf56ef45fd56429073e0
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/shared-resourcemapping-0.33.0.jar
+            stat: size=92851, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        14: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-http-2.60.1.jar
+            md5sum: 9d6323218e13b38e87f138467e5cbb44
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-http-2.60.1.jar
+            stat: size=15812, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        15: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-services-storage-v1-rev20241206-2.0.0.jar
+            md5sum: bf3c2bdfcd62e47753b647ac33d7dd9c
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-services-storage-v1-rev20241206-2.0.0.jar
+            stat: size=258051, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        16: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-protobuf-lite-1.71.0.jar
+            md5sum: facceab01f558777775eeb62a571468
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-protobuf-lite-1.71.0.jar
+            stat: size=7814, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        17: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jopt-simple-5.0.4.jar
+            md5sum: ebd9dffe9b0eddead68fe678be76c49
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jopt-simple-5.0.4.jar
+            stat: size=78146, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        18: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gapic-google-cloud-storage-v2-2.48.0.jar
+            md5sum: 5c5396df1becf61fccf1f6c6b74a9cf
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gapic-google-cloud-storage-v2-2.48.0.jar
+            stat: size=53382, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        19: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-client-2.7.2.jar
+            md5sum: 61aecfcdcacb154df31beaa7552774fe
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-client-2.7.2.jar
+            stat: size=301930, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        20: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/rate-limited-logger-2.0.2.jar
+            md5sum: 857245c5da7a9aedc3abaaa198e95d81
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/rate-limited-logger-2.0.2.jar
+            stat: size=22168, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        21: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-configuration2-2.8.0.jar
+            md5sum: 4bb1f1ad26727cf5966554cb6b9eb073
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-configuration2-2.8.0.jar
+            stat: size=632505, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        22: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-shaded-guava-1.2.0.jar
+            md5sum: da6cc09c973f749b409d2f401962b9b6
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-shaded-guava-1.2.0.jar
+            stat: size=3519512, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        23: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-dataformat-yaml-2.19.0.jar
+            md5sum: 8d55f25db2f8ecbb8f27dfc1928c467
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-dataformat-yaml-2.19.0.jar
+            stat: size=60230, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        24: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-server-2.0.3.jar
+            md5sum: add2551458c887861f61a8ffafc4ad1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-server-2.0.3.jar
+            stat: size=85371, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        25: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-common.jar
+            md5sum: 4998ce8ea7acf97b6c2b5b181fa6d0
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-common.jar
+            stat: size=22232, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        26: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/zookeeper-jute-3.8.3.jar
+            md5sum: 58892dece17f36b9761864d8ee1f317
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/zookeeper-jute-3.8.3.jar
+            stat: size=254933, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        27: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-netty-buffer-patch-17.0.0.jar
+            md5sum: 22ef4b1e726b4ce08a8558c75ea42c
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-netty-buffer-patch-17.0.0.jar
+            stat: size=36267, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        28: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-util-ajax-9.4.53.v20231009.jar
+            md5sum: 1c671e62674d675e971cfb188dd4fa
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-util-ajax-9.4.53.v20231009.jar
+            stat: size=66643, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        29: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta2-0.189.0.jar
+            md5sum: 91c5cea4f8a13cdce65fb78b1ad4ac92
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta2-0.189.0.jar
+            stat: size=465956, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        30: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-2.70.1.jar
+            md5sum: 29594c4bb4399bf79d55b5f4fbfeabd8
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-2.70.1.jar
+            stat: size=437699, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        31: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-identity-2.0.3.jar
+            md5sum: 544f99f7a32aceba84fc081735a585
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-identity-2.0.3.jar
+            stat: size=17834, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        32: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.annotation-api-1.3.2.jar
+            md5sum: 2ab1973eefffaa2aeec47d50b9e4b9d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.annotation-api-1.3.2.jar
+            stat: size=26586, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        33: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-servlet-1.19.4.jar
+            md5sum: c4e975936cc80b481144f9d368231
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-servlet-1.19.4.jar
+            stat: size=128990, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        34: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/stax-api-1.0-2.jar
+            md5sum: 7d18b6306358284c3f5734081fdc99f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/stax-api-1.0-2.jar
+            stat: size=23346, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        35: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-asn1-2.0.3.jar
+            md5sum: e4ffb076c10f5aaf355212ba644dc8
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-asn1-2.0.3.jar
+            stat: size=100095, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        36: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-trace-1.45.0.jar
+            md5sum: e3ac42e14bfa9504efcf1b37cdd9e50
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-trace-1.45.0.jar
+            stat: size=128486, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        37: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-cli-1.5.0.jar
+            md5sum: 6c3b205216144196118b1f019504388
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-cli-1.5.0.jar
+            stat: size=58284, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        38: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/woodstox-core-5.4.0.jar
+            md5sum: 89882f2098e9318ac3c5275bee82443
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/woodstox-core-5.4.0.jar
+            stat: size=522679, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        39: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jna-5.17.0.jar
+            md5sum: 8fc1e1f239ec4511e8d9e5a433f6244
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jna-5.17.0.jar
+            stat: size=2002589, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        40: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/dnsjava-3.4.0.jar
+            md5sum: e7a8cc51edeba9a814365cd4ab14
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/dnsjava-3.4.0.jar
+            stat: size=456514, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        41: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-compress-1.26.2.jar
+            md5sum: d2c5abbda822cb79cf4f3ead483ee
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-compress-1.26.2.jar
+            stat: size=1083634, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        42: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-framework-5.2.0.jar
+            md5sum: f8c775103235dd8d5bfa29e1417a98
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-framework-5.2.0.jar
+            stat: size=336384, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        43: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-1.47.1.jar
+            md5sum: 9e817392d5af068fc9d95af61dfdea
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-1.47.1.jar
+            stat: size=295922, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        44: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jaxb-api-2.2.2.jar
+            md5sum: a415e9a322984be1e1f8a023d09dca5f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jaxb-api-2.2.2.jar
+            stat: size=105134, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        45: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-config-2.0.3.jar
+            md5sum: a0e445209c3c956b864343cb6c621a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-config-2.0.3.jar
+            stat: size=30190, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        46: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-core-1.71.0.jar
+            md5sum: 2922ffc0746dc19042698eff2606e30
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-core-1.71.0.jar
+            stat: size=657414, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        47: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/protobuf-java-util-3.25.8.jar
+            md5sum: 55314446d0ebb420ffabf1e257de1b7c
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/protobuf-java-util-3.25.8.jar
+            stat: size=73138, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        48: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-hdfs-client-3.4.0.jar
+            md5sum: a6b76d419076733b61e9923abf593df
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-hdfs-client-3.4.0.jar
+            stat: size=5561699, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        49: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-util-2.0.3.jar
+            md5sum: 11a9cacab35cf276e668405a781fe3dd
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-util-2.0.3.jar
+            stat: size=36361, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        50: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/animal-sniffer-annotations-1.24.jar
+            md5sum: 508b8c41cb5b48cdd2d9db436c367bb0
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/animal-sniffer-annotations-1.24.jar
+            stat: size=3112, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        51: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-annotations-3.4.0.jar
+            md5sum: 5d88e8a48544d0c883aadf1e51b680d1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-annotations-3.4.0.jar
+            stat: size=25465, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        52: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-csv-1.13.0.jar
+            md5sum: 35f98b40a9c6b81cb09792b944587ff5
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-csv-1.13.0.jar
+            stat: size=59301, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        53: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/checker-qual-3.49.3.jar
+            md5sum: 5881721126d6f442ba85fcd81145a4d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/checker-qual-3.49.3.jar
+            stat: size=238218, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        54: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snowflake-jdbc-3.23.2.jar
+            md5sum: 88b262aca53bb147c541b55a4185aab
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snowflake-jdbc-3.23.2.jar
+            stat: size=82098647, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        55: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-auth-1.71.0.jar
+            md5sum: 73c7e9766763aa514d67db393438c
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-auth-1.71.0.jar
+            stat: size=14757, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        56: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar
+            md5sum: 88a81cac19a2b37e6b6ae64ab497af3
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar
+            stat: size=360107, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        57: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-json-1.20.jar
+            md5sum: 92629e4bd90192c2e1e22b1a9632aa
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-json-1.20.jar
+            stat: size=158695, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        58: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-net-3.9.0.jar
+            md5sum: 5254d7c277c3a378518e99b9d1d3522
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-net-3.9.0.jar
+            stat: size=316431, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        59: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opencensus-api-0.31.1.jar
+            md5sum: a5e792bb89baaaee424f5a7b2d1bad
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opencensus-api-0.31.1.jar
+            stat: size=355405, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        60: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/protobuf-java-3.25.8.jar
+            md5sum: 9a29ba70dd42a68d7aee6903c59a770
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/protobuf-java-3.25.8.jar
+            stat: size=1876626, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        61: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.servlet-api-3.1.0.jar
+            md5sum: 79de69e9f5ed8c7fcb8342585732bbf7
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.servlet-api-3.1.0.jar
+            stat: size=95806, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        62: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-server-1.19.4.jar
+            md5sum: fd0ee21b14e84f4f27a948ec2322cc
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-server-1.19.4.jar
+            stat: size=705276, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        63: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar
+            md5sum: 43584adc1f89562855badaa98a107
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar
+            stat: size=1367760, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        64: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-alts-1.71.0.jar
+            md5sum: 9fa1fcbd79c87fe82ef48af56e85775
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-alts-1.71.0.jar
+            stat: size=323340, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        65: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta-3.17.0.jar
+            md5sum: c7c5299be8a21138a73965dddb71168
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta-3.17.0.jar
+            stat: size=263491, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        66: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-api-1.47.0.jar
+            md5sum: 676c8858cb2e010a462787c743a306
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-api-1.47.0.jar
+            stat: size=158507, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        67: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-datatype-jsr310-2.19.0.jar
+            md5sum: 6e92e0e81ae02e34cf4495839fb04599
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-datatype-jsr310-2.19.0.jar
+            stat: size=136957, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        68: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jmespath-java-1.12.778.jar
+            md5sum: c22e96f1cbab8da9fefdefca1b5b6730
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jmespath-java-1.12.778.jar
+            stat: size=27588, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        69: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-netty-17.0.0.jar
+            md5sum: 41843aabb05fd7a3ac4166f866ed82e1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-netty-17.0.0.jar
+            stat: size=11473, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        70: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-vector-17.0.0.jar
+            md5sum: fee6d3d951de5d5d45961ea33a636d9
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-vector-17.0.0.jar
+            stat: size=2122191, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        71: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-server-9.4.53.v20231009.jar
+            md5sum: cca7e7e1943bf118773f1fa3479e3df5
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-server-9.4.53.v20231009.jar
+            stat: size=736758, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        72: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/perfmark-api-0.27.0.jar
+            md5sum: 73bcc9c91e5b65c4f75b567e7a559f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/perfmark-api-0.27.0.jar
+            stat: size=6954, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        73: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-storage-v2-2.48.0.jar
+            md5sum: c9d1dd61b333a2a7468df0b0eeee60
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-storage-v2-2.48.0.jar
+            stat: size=1003768, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        74: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-util-9.4.53.v20231009.jar
+            md5sum: 493bdf4eda445b096c463196cc22164
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-util-9.4.53.v20231009.jar
+            stat: size=588870, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        75: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta1-0.189.0.jar
+            md5sum: 731844e1212b6cbdeab377ab2168c0ff
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta1-0.189.0.jar
+            stat: size=279926, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        76: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gson-2.12.1.jar
+            md5sum: 691ee29ab94954f46a32a3062c773
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gson-2.12.1.jar
+            stat: size=285943, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        77: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/flatbuffers-java-24.3.25.jar
+            md5sum: 1a69a22070ce829ba8efb923c0cab4
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/flatbuffers-java-24.3.25.jar
+            stat: size=110887, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        78: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jcip-annotations-1.0-1.jar
+            md5sum: d62dbfa8789378457ada685e2f614846
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jcip-annotations-1.0-1.jar
+            stat: size=4722, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        79: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/zookeeper-3.8.3.jar
+            md5sum: c2e5d668a574fce02913b5d7195fe29b
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/zookeeper-3.8.3.jar
+            stat: size=1321779, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        80: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-netty-shaded-1.71.0.jar
+            md5sum: 1d341f67af116dcc4615b9686926db2
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-netty-shaded-1.71.0.jar
+            stat: size=10090585, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        81: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/logback-classic-1.3.15.jar
+            md5sum: 6fae5bf09da596176c45ac35d72e995
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/logback-classic-1.3.15.jar
+            stat: size=274470, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        82: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-io-9.4.53.v20231009.jar
+            md5sum: 840c548d9f6bd79e75a6345e362a23
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-io-9.4.53.v20231009.jar
+            stat: size=183014, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        83: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-annotations-2.19.0.jar
+            md5sum: 59c24289bcb3ba31ef04c2cc0ff0d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-annotations-2.19.0.jar
+            stat: size=78580, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        84: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-appengine-1.47.1.jar
+            md5sum: 51a3889a1d279e9e3bd3cee417235522
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-appengine-1.47.1.jar
+            stat: size=19647, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        85: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsr311-api-1.1.1.jar
+            md5sum: c9803468299ec255c047a280ddec51f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsr311-api-1.1.1.jar
+            stat: size=46367, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        86: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/stax2-api-4.2.1.jar
+            md5sum: af8377bc7882332e22456616a9f164f6
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/stax2-api-4.2.1.jar
+            stat: size=195909, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        87: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-gcp-resources-1.37.0-alpha.jar
+            md5sum: 26b0c19ea7d28baee1cf92b4fb21e1e0
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-gcp-resources-1.37.0-alpha.jar
+            stat: size=8276, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        88: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-databind-2.19.0.jar
+            md5sum: bf9831494eebcd056277e4bd377b5
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-databind-2.19.0.jar
+            stat: size=1678748, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        89: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-xdr-2.0.3.jar
+            md5sum: 39b9d7ab503bfb14d4b7a5727f3c51c5
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-xdr-2.0.3.jar
+            stat: size=31007, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        90: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-nio-0.127.30.jar
+            md5sum: 99827932478ba62f30a4f1766c307945
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-nio-0.127.30.jar
+            stat: size=114208, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        91: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-dumper-spi.jar
+            md5sum: 34f5f844fd3e2f4db8ebb8773773cb6
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-dumper-spi.jar
+            stat: size=308338, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        92: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-classes-epoll-4.1.100.Final.jar
+            md5sum: 33b88f3039a09ea3cf96e4f27fcd95
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-classes-epoll-4.1.100.Final.jar
+            stat: size=147139, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        93: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-context-1.47.0.jar
+            md5sum: 1732aab63979541ea6f19116e4d64f34
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-context-1.47.0.jar
+            stat: size=49307, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        94: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/failureaccess-1.0.2.jar
+            md5sum: 3f75955b49b6758fd6d1e1bd9bf777b3
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/failureaccess-1.0.2.jar
+            stat: size=4740, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        95: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-bigquerystorage-3.17.0.jar
+            md5sum: 7fbd6046f06dd6a4569c95365a1c8c91
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-bigquerystorage-3.17.0.jar
+            stat: size=446123, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        96: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-storage-2.48.0.jar
+            md5sum: 26df3a8619befbec37fccd3e29bfb32
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-storage-2.48.0.jar
+            stat: size=1136707, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        97: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-auth-3.4.0.jar
+            md5sum: 24868514b689f194418020fdace2c1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-auth-3.4.0.jar
+            stat: size=110060, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        98: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-rls-1.69.0.jar
+            md5sum: b01732c3ab98d11a766a49ddf97c6540
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-rls-1.69.0.jar
+            stat: size=253320, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        99: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-jdbc-5.3.39.jar
+            md5sum: 127b7040d0c9bcfa7b56a8cb911912
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-jdbc-5.3.39.jar
+            stat: size=428714, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        100: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-4.1.100.Final.jar
+            md5sum: 5c5833972c90aca3023ca7118d1c6d7
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-4.1.100.Final.jar
+            stat: size=489999, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        101: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-simplekdc-2.0.3.jar
+            md5sum: c1709d8f18ea5e5388af453a3a5cc2
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-simplekdc-2.0.3.jar
+            stat: size=20507, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        102: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-semconv-1.27.0-alpha.jar
+            md5sum: 4ecb9e6f1e6c9c337516c7a1d8d2c20
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-semconv-1.27.0-alpha.jar
+            stat: size=74778, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        103: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-common-protos-2.61.1.jar
+            md5sum: 51a2a847b6cb2ea3b0b3ba835da21275
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-common-protos-2.61.1.jar
+            stat: size=2713809, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        104: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/appdirs-1.3.0.jar
+            md5sum: ca4a2b1edca61a1ddd857816dcb3de
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/appdirs-1.3.0.jar
+            stat: size=13061, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        105: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-metrics-1.45.0.jar
+            md5sum: af668dce3fea2be4aa9f2f39ed0cbd1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-metrics-1.45.0.jar
+            stat: size=313591, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        106: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-kms-v1-0.145.0.jar
+            md5sum: 9d0468e8c5955b512ca3def2979dbbd
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-kms-v1-0.145.0.jar
+            stat: size=1050346, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        107: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/json-simple-1.1.1.jar
+            md5sum: 5cc2c478d73e8454b4c369cee66c5bc7
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/json-simple-1.1.1.jar
+            stat: size=23931, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        108: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore5-5.3.4.jar
+            md5sum: 7b20d8a28f51b648fb3e8e43388569
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore5-5.3.4.jar
+            stat: size=908601, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        109: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1beta2-0.189.0.jar
+            md5sum: 9ca213dbf3c7814ab28ba6bead4ce272
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1beta2-0.189.0.jar
+            stat: size=39444, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        110: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.activation-api-1.2.1.jar
+            md5sum: 9b647398add993324d3d9e5effa605a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.activation-api-1.2.1.jar
+            stat: size=44399, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        111: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snappy-java-1.1.10.4.jar
+            md5sum: d1d3b91e925c46a1a0f68b87298bafe8
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snappy-java-1.1.10.4.jar
+            stat: size=2112099, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        112: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-grpc-2.49.1.jar
+            md5sum: 788ea876cecc80cb10979ff373a4559
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-grpc-2.49.1.jar
+            stat: size=16821, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        113: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-resolver-4.1.100.Final.jar
+            md5sum: ad29e0c4cab6b9b1d83d2dab9a26d3d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-resolver-4.1.100.Final.jar
+            stat: size=37795, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        114: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-common-2.0.3.jar
+            md5sum: 1b15b3b627201819ff6a85b51940cefe
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-common-2.0.3.jar
+            stat: size=71296, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        115: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-api-1.71.0.jar
+            md5sum: 21710bea2b1d2d13d29378cafe1a339
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-api-1.71.0.jar
+            stat: size=323182, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        116: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar
+            md5sum: d094c22570d65e132c19cea5d352e381
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar
+            stat: size=2199, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        117: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opencensus-contrib-http-util-0.31.1.jar
+            md5sum: 9ecc9c428eb87dc734ae8d7b820ce26
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opencensus-contrib-http-util-0.31.1.jar
+            stat: size=23415, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        118: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/metrics-core-3.2.4.jar
+            md5sum: e19fc7c888ec78263be178648712a467
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/metrics-core-3.2.4.jar
+            stat: size=136314, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        119: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-services-bigquery-v2-rev20250706-2.0.0.jar
+            md5sum: 6e92221cece803f47f1279173d793a3
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-services-bigquery-v2-rev20250706-2.0.0.jar
+            stat: size=402088, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        120: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsp-api-2.1.jar
+            md5sum: b8a34113a3a1ce29c8c6d7141f5a74
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsp-api-2.1.jar
+            stat: size=100636, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        121: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-inprocess-1.71.0.jar
+            md5sum: cd1b67f98e9f8eed18f3878f4c1de420
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-inprocess-1.71.0.jar
+            stat: size=39504, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        122: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-core-2.0.3.jar
+            md5sum: c759fd854289ea7efc8dfe34ead41828
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-core-2.0.3.jar
+            stat: size=223129, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        123: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-extension-autoconfigure-spi-1.45.0.jar
+            md5sum: 40c899a0ceee8e70ed496c3b411dfd58
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-extension-autoconfigure-spi-1.45.0.jar
+            stat: size=20575, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        124: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-stub-1.71.0.jar
+            md5sum: b673c3f561969b64603bec94e4995b40
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-stub-1.71.0.jar
+            stat: size=60817, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        125: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-grpc-2.70.1.jar
+            md5sum: 21ec2b8848a28cb8f37137cbca9df54a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-grpc-2.70.1.jar
+            stat: size=158556, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        126: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-dataformat-cbor-2.19.0.jar
+            md5sum: 8fd8e1c7f96223a1c2d4e782e7e52a96
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-dataformat-cbor-2.19.0.jar
+            stat: size=71626, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        127: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-core-1.19.4.jar
+            md5sum: cfc3489cb307a1ef3bce3a5e63dde9b
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-core-1.19.4.jar
+            stat: size=436731, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        128: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/j2objc-annotations-3.0.0.jar
+            md5sum: f59529b2922a5baf37f491ea5ec8627
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/j2objc-annotations-3.0.0.jar
+            stat: size=12467, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        129: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-math3-3.6.1.jar
+            md5sum: 5b73d97e4e6368069de1983937c508e
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-math3-3.6.1.jar
+            stat: size=2213560, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        130: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/error_prone_annotations-2.38.0.jar
+            md5sum: 912f82661400252841d89cb0461895
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/error_prone_annotations-2.38.0.jar
+            stat: size=20389, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        131: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-auth-library-credentials-1.39.0.jar
+            md5sum: eb2f231946c6e6e9fc4dfd4a3253e
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-auth-library-credentials-1.39.0.jar
+            stat: size=8411, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        132: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-codec-1.18.0.jar
+            md5sum: 2abf189633424b9292fd57a3192ced5
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-codec-1.18.0.jar
+            stat: size=373045, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        133: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-auth-library-oauth2-http-1.39.0.jar
+            md5sum: 388bf61ddd779a48c0ad107a5eea9af0
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-auth-library-oauth2-http-1.39.0.jar
+            stat: size=324410, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        134: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/oozie-client-5.2.1.jar
+            md5sum: f9e7d7a3f9cf5022f6b6b7f73816efe2
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/oozie-client-5.2.1.jar
+            stat: size=276747, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        135: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-native-unix-common-4.1.100.Final.jar
+            md5sum: f9e7c0c25233359ce26bcd4827159ed8
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-native-unix-common-4.1.100.Final.jar
+            stat: size=43968, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        136: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-shaded-protobuf_3_21-1.2.0.jar
+            md5sum: f2334927452b6a5238c995912538a39a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-shaded-protobuf_3_21-1.2.0.jar
+            stat: size=1739558, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        137: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/slf4j-api-2.0.17.jar
+            md5sum: b648d114a23683498ac3f746f959d2f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/slf4j-api-2.0.17.jar
+            stat: size=69908, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        138: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-servlet-9.4.53.v20231009.jar
+            md5sum: fd1cf1f03eaaaa4665f6ca9af298
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-servlet-9.4.53.v20231009.jar
+            stat: size=146065, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        139: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-context-1.71.0.jar
+            md5sum: 68a47d81dcfa6b4788859b8cff809a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-context-1.71.0.jar
+            stat: size=292, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        140: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-codec-4.1.100.Final.jar
+            md5sum: 341344475354a0c6ecd0132537e3390
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-codec-4.1.100.Final.jar
+            stat: size=345293, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        141: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.servlet-api-5.0.0.jar
+            md5sum: b950da93e08cf6d5a2d73dc7a8f943
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.servlet-api-5.0.0.jar
+            stat: size=307850, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        142: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-core-2.19.0.jar
+            md5sum: d741d9cff5a56cb6f1307abe947fb7c1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-core-2.19.0.jar
+            stat: size=599926, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        143: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpclient5-5.4.3.jar
+            md5sum: 1c4d8427607d7660e4975928e20566
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpclient5-5.4.3.jar
+            stat: size=909854, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        144: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-collections-3.2.2.jar
+            md5sum: f54a8510f834a1a5716697bfc982e94
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-collections-3.2.2.jar
+            stat: size=588337, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        145: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-util-2.0.3.jar
+            md5sum: 68c6ef08e62ee9130b6e8fceb1285a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-util-2.0.3.jar
+            stat: size=40787, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        146: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar
+            md5sum: 7eaad6fea5925cca6c36ee8b3e2ac9d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar
+            stat: size=220536, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        147: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/conscrypt-openjdk-uber-2.5.2.jar
+            md5sum: 34c8ec40831d77372b2bea95139783b0
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/conscrypt-openjdk-uber-2.5.2.jar
+            stat: size=4534256, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        148: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-xds-1.69.0.jar
+            md5sum: b3e47af1e66dbbe37dfa5fa26d7d71e
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-xds-1.69.0.jar
+            stat: size=9827189, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        149: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/json-20250517.jar
+            md5sum: 5a492fae2d0d499487981f616f81567
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/json-20250517.jar
+            stat: size=82710, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        150: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/guava-33.4.0-jre.jar
+            md5sum: 5732af1636719282c7bf177e9b29512
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/guava-33.4.0-jre.jar
+            stat: size=3080298, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        151: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-lang3-3.17.0.jar
+            md5sum: 7730df72b7fdff4a3a32d89a314f826a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-lang3-3.17.0.jar
+            stat: size=673587, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        152: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jettison-1.5.4.jar
+            md5sum: f6c3eeb572f5833359fec2812821f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jettison-1.5.4.jar
+            stat: size=90184, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        153: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-1.45.0.jar
+            md5sum: 93ad80135955a6deb99e264bd4c32da
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-1.45.0.jar
+            stat: size=6770, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        154: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/api-common-2.53.1.jar
+            md5sum: c30f273003df32efa54ca7aceba98
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/api-common-2.53.1.jar
+            stat: size=50439, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        155: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-monitoring-3.52.0.jar
+            md5sum: dfa4ade25ccba4ab1934af5154e5562
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-monitoring-3.52.0.jar
+            stat: size=255303, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        156: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-core-1.12.778.jar
+            md5sum: 3377d296ee89210a28c4bffdddc516a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-core-1.12.778.jar
+            stat: size=1057981, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        157: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/threeten-extra-1.8.0.jar
+            md5sum: 4af91264b2e3d26f4c41f055f7ce2f8
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/threeten-extra-1.8.0.jar
+            stat: size=280525, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        158: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/audience-annotations-0.12.0.jar
+            md5sum: 76ba71bbe18c4724d96bec68bbe12ff1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/audience-annotations-0.12.0.jar
+            stat: size=20891, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        159: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-beans-5.3.39.jar
+            md5sum: c2f99040fb8bbc98515c87b968227d3
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-beans-5.3.39.jar
+            stat: size=706684, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        160: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-recipes-5.2.0.jar
+            md5sum: bb85b588fa234a218e7231cf038122
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-recipes-5.2.0.jar
+            stat: size=315569, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        161: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-bigquery.jar
+            md5sum: 8eb42e974ca8fc6495df65d7d17882c
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-bigquery.jar
+            stat: size=12684, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        162: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-googleapis-1.71.0.jar
+            md5sum: 1e0997e1ba430b68b1c94ba22e9efe8
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-googleapis-1.71.0.jar
+            stat: size=15091, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        163: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-beanutils-1.9.4.jar
+            md5sum: 7dc532ee316fe1f2f323e9bd2f8df4
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-beanutils-1.9.4.jar
+            stat: size=246918, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        164: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-redshiftserverless-1.12.778.jar
+            md5sum: 57b81c9899e54ff2c8bd1d72978d1b50
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-redshiftserverless-1.12.778.jar
+            stat: size=747185, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        165: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-format-17.0.0.jar
+            md5sum: 3e55b1e6c0302418a14a739baa116bf
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-format-17.0.0.jar
+            stat: size=120807, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        166: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1-3.17.0.jar
+            md5sum: ba33d0ade7536c9f335f597ec2a20d4
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1-3.17.0.jar
+            stat: size=38550, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        167: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-buffer-4.1.110.Final.jar
+            md5sum: c236a18b952798fe425a703d7ebc30
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-buffer-4.1.110.Final.jar
+            stat: size=333176, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        168: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jcl-over-slf4j-2.0.17.jar
+            md5sum: 4fcd46ca51e55b9fd9b0db34474927e0
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jcl-over-slf4j-2.0.17.jar
+            stat: size=18423, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        169: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-crypto-2.0.3.jar
+            md5sum: 8532f0c9939dc62a74e396628cbfb7c0
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-crypto-2.0.3.jar
+            stat: size=115065, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        170: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-api-incubator-1.45.0-alpha.jar
+            md5sum: fa378a32ba95914fb2bc354d7cc92ff7
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-api-incubator-1.45.0-alpha.jar
+            stat: size=64105, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        171: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-oauth-client-1.39.0.jar
+            md5sum: cf4992aee34401b66f6d03e654ab981
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-oauth-client-1.39.0.jar
+            stat: size=81752, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        172: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/avro-1.11.4.jar
+            md5sum: 9150211d651686f94b4e20d25234a6
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/avro-1.11.4.jar
+            stat: size=651391, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        173: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-storage-v2-2.48.0.jar
+            md5sum: 4658143c9c52241c42cae057c77343a2
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-storage-v2-2.48.0.jar
+            stat: size=27091, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        174: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.annotation-api-2.1.1.jar
+            md5sum: 5dac2f68e8288dadd4dc92cb161711d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.annotation-api-2.1.1.jar
+            stat: size=26141, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        175: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/auto-value-annotations-1.11.0.jar
+            md5sum: 8fc3c2d0bbdef8927f8a5c7c829a768
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/auto-value-annotations-1.11.0.jar
+            stat: size=7491, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        176: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1-3.17.0.jar
+            md5sum: f8504b1a29156d1d1d64e84ca3441
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1-3.17.0.jar
+            stat: size=555789, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        177: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-jackson2-1.45.3.jar
+            md5sum: 59380204f41b040add16381f89c5a58
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-jackson2-1.45.3.jar
+            stat: size=9655, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        178: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jline-3.22.0.jar
+            md5sum: 484296621ad63f16202652fbee9ce048
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jline-3.22.0.jar
+            stat: size=1060013, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        179: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-cloudwatch-1.12.778.jar
+            md5sum: 7b948d38f775361e5e6ef7c3c2bb594e
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-cloudwatch-1.12.778.jar
+            stat: size=537842, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        180: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsch-0.1.55.jar
+            md5sum: c395ada0fc12d66f11bd3246f6c84d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsch-0.1.55.jar
+            stat: size=282591, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        181: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-util-1.71.0.jar
+            md5sum: 1e216447f6608ca36a61041412e85cf
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-util-1.71.0.jar
+            stat: size=100711, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        182: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-security-9.4.53.v20231009.jar
+            md5sum: 5eb8358c1ecbc454bada337b1fcdd4ea
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-security-9.4.53.v20231009.jar
+            stat: size=118497, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        183: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-common-4.1.110.Final.jar
+            md5sum: a0cd1e4f10d9325d205a5ddfbfa4897a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-common-4.1.110.Final.jar
+            stat: size=688546, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        184: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore5-h2-5.3.4.jar
+            md5sum: 45cddbe4be80806019ef8d9bfa7931
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore5-h2-5.3.4.jar
+            stat: size=241692, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        185: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/exporter-metrics-0.33.0.jar
+            md5sum: 8e734c32c7919f9618ba979a9e30ff6c
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/exporter-metrics-0.33.0.jar
+            stat: size=39863, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        186: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jdiagnostics-1.0.7.jar
+            md5sum: 1b8cbb9aaab34e975a739cf7c4ae9226
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jdiagnostics-1.0.7.jar
+            stat: size=59539, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        187: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-bigquery-2.55.0.jar
+            md5sum: 5f6948d346e75c6c19cf8a5b52ce28d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-bigquery-2.55.0.jar
+            stat: size=802938, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        188: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-2.60.1.jar
+            md5sum: c1d75cb8274370fcb3b14a84c81874d9
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-2.60.1.jar
+            stat: size=140724, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        189: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-redshift-1.12.778.jar
+            md5sum: 64254cbb0cde4c2775cfcb4cdcd234
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-redshift-1.12.778.jar
+            stat: size=1696269, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        190: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/redshift-jdbc42-2.1.0.32.jar
+            md5sum: 1e723bc412ed7677f4763b1ade95156a
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/redshift-jdbc42-2.1.0.32.jar
+            stat: size=1117050, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        191: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-services-1.69.0.jar
+            md5sum: 837b108d6d9871297a2ae2d07a8e7052
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-services-1.69.0.jar
+            stat: size=942144, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        192: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-admin-2.0.3.jar
+            md5sum: b70552672aa973220393cf1b68441b7
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-admin-2.0.3.jar
+            stat: size=101457, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        193: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-common-3.4.0.jar
+            md5sum: 616ab11943566b869e35f2b557babe40
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-common-3.4.0.jar
+            stat: size=4638196, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        194: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-datatype-guava-2.19.0.jar
+            md5sum: c917f683309253f87b9be2deadc43b7f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-datatype-guava-2.19.0.jar
+            stat: size=113362, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        195: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/checker-compat-qual-2.5.6.jar
+            md5sum: b7a5c96547fb3fb6869f5f76bcd19b15
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/checker-compat-qual-2.5.6.jar
+            stat: size=5852, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        196: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-iam-v1-1.56.1.jar
+            md5sum: a7d5f97d569eab62821977bf2bfdde
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-iam-v1-1.56.1.jar
+            stat: size=186477, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        197: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-core-17.0.0.jar
+            md5sum: f6b5771fdddbaa3203b788776671d47
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-core-17.0.0.jar
+            stat: size=116845, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        198: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-native-epoll-4.1.100.Final.jar
+            md5sum: f84c963e1d5f4d13fecc327a61e5155
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-native-epoll-4.1.100.Final.jar
+            stat: size=5726, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        199: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-http-9.4.53.v20231009.jar
+            md5sum: 493a4b77298bb573a0dce8d7a059c96d
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-http-9.4.53.v20231009.jar
+            stat: size=249062, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        200: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-gson-1.47.1.jar
+            md5sum: 4f8c574f2c7d9ae7ddd8873febf1ff79
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-gson-1.47.1.jar
+            stat: size=12834, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        201: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/threetenbp-1.7.0.jar
+            md5sum: 46702bfa3577c1a9fd1aeeb8a2bababc
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/threetenbp-1.7.0.jar
+            stat: size=514668, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        202: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/detector-resources-support-0.33.0.jar
+            md5sum: c86bb8da14c697ac363cea25f48987
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/detector-resources-support-0.33.0.jar
+            stat: size=18021, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        203: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-kms-2.54.0.jar
+            md5sum: d45ea3729dcbbd321b5e2d75dd3c0d1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-kms-2.54.0.jar
+            stat: size=233757, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        204: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-monitoring-v3-3.52.0.jar
+            md5sum: 775fcbc679423bb98823d37f47f987b
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-monitoring-v3-3.52.0.jar
+            stat: size=2023127, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        205: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsr305-3.0.2.jar
+            md5sum: dd83accb899363c32b7d7a1b2e4ce40
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsr305-3.0.2.jar
+            stat: size=19936, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        206: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-io-2.19.0.jar
+            md5sum: 3d1fd45f9d2a247c1d5ab1e98c07160
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-io-2.19.0.jar
+            stat: size=556073, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        207: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/HikariCP-4.0.3.jar
+            md5sum: e725642926105cd1bbf4ad7fdff5d5a9
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/HikariCP-4.0.3.jar
+            stat: size=159222, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        208: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-hive-metastore.jar
+            md5sum: 211edbf049f8f3bfa1ad7aadfe9e5735
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-hive-metastore.jar
+            stat: size=18211495, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        209: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/bcprov-jdk15on-1.70.jar
+            md5sum: 189d0449a6374279c1fdd3be26cd92
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/bcprov-jdk15on-1.70.jar
+            stat: size=5867298, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        210: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-common-1.45.0.jar
+            md5sum: 5d31b5838165e688b66894d9d12385
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-common-1.45.0.jar
+            stat: size=54519, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        211: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-core-5.3.39.jar
+            md5sum: 632d2a8c30962a69273775968c52651
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-core-5.3.39.jar
+            stat: size=1490485, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        212: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-client-2.0.3.jar
+            md5sum: 12948cb24c1a295c6285c96335cc8c1
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-client-2.0.3.jar
+            stat: size=115643, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        213: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/re2j-1.7.jar
+            md5sum: deb6ffa7ed6d2cc06e6ac1182755c735
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/re2j-1.7.jar
+            stat: size=113826, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        214: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jna-platform-5.16.0.jar
+            md5sum: 12ba6b7a7752ecf0a5baed725f3192c2
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jna-platform-5.16.0.jar
+            stat: size=1375665, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        215: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-xml-9.4.53.v20231009.jar
+            md5sum: ebe76b2bf436c392984fee1a35d4bc3f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-xml-9.4.53.v20231009.jar
+            stat: size=68896, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        216: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-apache-v2-1.47.1.jar
+            md5sum: a4aeac848b1f21a2c22349114b31916f
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-apache-v2-1.47.1.jar
+            stat: size=11678, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        217: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.inject-1.jar
+            md5sum: 289075e48b909e9e74e6c915b3631d2e
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.inject-1.jar
+            stat: size=2497, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        218: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1alpha-3.17.0.jar
+            md5sum: 8a8cc2175c6c12afd5149f12b15173b6
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1alpha-3.17.0.jar
+            stat: size=263920, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        219: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpclient-4.5.14.jar
+            md5sum: 2cb357c4b763f47e58af6cad47df6ba3
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpclient-4.5.14.jar
+            stat: size=785639, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        220: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/joda-time-2.12.7.jar
+            md5sum: e8bb877dfb6d67f6cc78a524264ba83b
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/joda-time-2.12.7.jar
+            stat: size=638434, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        221: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-grpclb-1.71.0.jar
+            md5sum: ab47d748585b257247a5a4d45813146
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-grpclb-1.71.0.jar
+            stat: size=178975, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        222: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/logback-core-1.3.15.jar
+            md5sum: ee43104a7c956cc43bfcba3d51234a5e
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/logback-core-1.3.15.jar
+            stat: size=571734, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        223: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1beta1-0.189.0.jar
+            md5sum: 97f67f53844c9dfd74dd7668f65014d9
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1beta1-0.189.0.jar
+            stat: size=23104, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        224: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/token-provider-2.0.3.jar
+            md5sum: cbfe2859c7097f49be61d52d4966037
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/token-provider-2.0.3.jar
+            stat: size=19116, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        225: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-opentelemetry-1.69.0.jar
+            md5sum: 1bb2cdde7afc13bb4db393238c60a9
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-opentelemetry-1.69.0.jar
+            stat: size=68989, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        226: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-httpjson-2.70.1.jar
+            md5sum: c4efd8db9067bbe0ec9a102728e4ba47
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-httpjson-2.70.1.jar
+            stat: size=166244, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        227: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-logs-1.45.0.jar
+            md5sum: 83fe77bee1c46d27f4ffaac87c509d4
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-logs-1.45.0.jar
+            stat: size=54268, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+        228: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-text-1.10.0.jar
+            md5sum: 4afc9bfa2d31dbf733c98fcc954b892
+            path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-text-1.10.0.jar
+            stat: size=238400, exists=true, isFile=true, isDirectory=false, canRead=true, canWrite=true
+dom
+    v2/class/appClassLoader/class.classLoader: null
+    v2/class/appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    v2/class/appClassLoader/className: org.w3c.dom.Document
+    v2/class/appClassLoader/codesource: (no CodeSource)
+    v2/class/appClassLoader/resources: (2) [jrt:/java.xml/org/w3c/dom/Document.class, jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar!/org/w3c/dom/Document.class]
+    v2/method/createElementNS/method: public abstract org.w3c.dom.Element org.w3c.dom.Document.createElementNS(java.lang.String,java.lang.String) throws org.w3c.dom.DOMException
+    version: >=2.0
+environment
+    locale: en_001
+    proxy/http
+        appClassLoader/class.classLoader: null
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: java.net.ProxySelector
+        appClassLoader/codesource: (no CodeSource)
+        appClassLoader/resources: (1) [jrt:/java.base/java/net/ProxySelector.class]
+        factory/method: public static java.net.ProxySelector java.net.ProxySelector.getDefault()
+        factory/value: sun.net.spi.DefaultProxySelector@646811d6
+        http/method: public abstract java.util.List java.net.ProxySelector.select(java.net.URI)
+        http/value: [DIRECT]
+    proxy/https
+        appClassLoader/class.classLoader: null
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: java.net.ProxySelector
+        appClassLoader/codesource: (no CodeSource)
+        appClassLoader/resources: (1) [jrt:/java.base/java/net/ProxySelector.class]
+        factory/method: public static java.net.ProxySelector java.net.ProxySelector.getDefault()
+        factory/value: sun.net.spi.DefaultProxySelector@646811d6
+        https/method: public abstract java.util.List java.net.ProxySelector.select(java.net.URI)
+        https/value: [DIRECT]
+    timzeone: sun.util.calendar.ZoneInfo[id="Europe/Warsaw",offset=3600000,dstSavings=3600000,useDaylight=true,transitions=165,lastRule=java.util.SimpleTimeZone[id=Europe/Warsaw,offset=3600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=2,startMonth=2,startDay=-1,startDayOfWeek=1,startTime=3600000,startTimeMode=2,endMode=2,endMonth=9,endDay=-1,endDayOfWeek=1,endTime=3600000,endTimeMode=2]]
+jaxp
+    factory/appClassLoader/class.classLoader: null
+    factory/appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    factory/appClassLoader/className: javax.xml.parsers.DocumentBuilderFactory
+    factory/appClassLoader/codesource: (no CodeSource)
+    factory/appClassLoader/resources: (2) [jrt:/java.xml/javax/xml/parsers/DocumentBuilderFactory.class, jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar!/javax/xml/parsers/DocumentBuilderFactory.class]
+    factory/instance/method: public javax.xml.parsers.DocumentBuilder org.apache.xerces.jaxp.DocumentBuilderFactoryImpl.newDocumentBuilder() throws javax.xml.parsers.ParserConfigurationException
+    factory/instance/value: org.apache.xerces.jaxp.DocumentBuilderImpl@cb0f763
+    factory/method: public static javax.xml.parsers.DocumentBuilderFactory javax.xml.parsers.DocumentBuilderFactory.newInstance()
+    factory/type/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    factory/type/className: org.apache.xerces.jaxp.DocumentBuilderImpl
+    factory/type/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar
+    factory/type/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar!/org/apache/xerces/jaxp/DocumentBuilderImpl.class]
+    factory/value: org.apache.xerces.jaxp.DocumentBuilderFactoryImpl@7573e12f
+    version/appClassLoader/class.classLoader: null
+    version/appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    version/appClassLoader/className: javax.xml.parsers.DocumentBuilder
+    version/appClassLoader/codesource: (no CodeSource)
+    version/appClassLoader/resources: (2) [jrt:/java.xml/javax/xml/parsers/DocumentBuilder.class, jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar!/javax/xml/parsers/DocumentBuilder.class]
+    version/method: public abstract org.w3c.dom.DOMImplementation javax.xml.parsers.DocumentBuilder.getDOMImplementation()
+    version/version: >=1.1
+productmetadata
+    API Common
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/api-common-2.53.1.jar
+        summary: API Common:2.53.1
+    Apache Avro
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/avro-1.11.4.jar
+        summary: Apache Avro:1.11.4
+    Apache Commons CSV
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-csv-1.13.0.jar
+        summary: Apache Commons CSV:1.13.0
+    Apache Commons Codec
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-codec-1.18.0.jar
+        summary: Apache Commons Codec:1.18.0
+    Apache Commons Configuration
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-configuration2-2.8.0.jar
+        summary: Apache Commons Configuration:2.8.0
+    Apache Commons IO
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-io-2.19.0.jar
+        summary: Apache Commons IO:2.19.0
+    Apache Commons Lang
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-lang3-3.17.0.jar
+        summary: Apache Commons Lang:3.17.0
+    Apache Commons Net
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-net-3.9.0.jar
+        summary: Apache Commons Net:3.9.0
+    Apache Commons Text
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-text-1.10.0.jar
+        summary: Apache Commons Text:1.10.0
+    Apache ZooKeeper - Jute
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/zookeeper-jute-3.8.3.jar
+        summary: Apache ZooKeeper - Jute:3.8.3
+    Apache ZooKeeper - Server
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/zookeeper-3.8.3.jar
+        summary: Apache ZooKeeper - Server:3.8.3
+    Arrow Format
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-format-17.0.0.jar
+        summary: Arrow Format:17.0.0
+    Arrow Memory - Core
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-core-17.0.0.jar
+        summary: Arrow Memory - Core:17.0.0
+    Arrow Memory - Netty
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-netty-17.0.0.jar
+        summary: Arrow Memory - Netty:17.0.0
+    Arrow Memory - Netty Buffer
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-netty-buffer-patch-17.0.0.jar
+        summary: Arrow Memory - Netty Buffer:17.0.0
+    Arrow Vectors
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-vector-17.0.0.jar
+        summary: Arrow Vectors:17.0.0
+    BigQuery
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-bigquery-2.55.0.jar
+        summary: BigQuery:2.55.0
+    BigQuery Storage
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-bigquerystorage-3.17.0.jar
+        summary: BigQuery Storage:3.17.0
+    Curator Framework
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-framework-5.2.0.jar
+        summary: Curator Framework:5.2.0
+    Curator Recipes
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-recipes-5.2.0.jar
+        summary: Curator Recipes:5.2.0
+    GAX (Google Api eXtensions) for Java (Core)
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-2.70.1.jar
+        summary: GAX (Google Api eXtensions) for Java (Core):2.70.1
+    GAX (Google Api eXtensions) for Java (HTTP JSON)
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-httpjson-2.70.1.jar
+        summary: GAX (Google Api eXtensions) for Java (HTTP JSON):2.70.1
+    GAX (Google Api eXtensions) for Java (gRPC)
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-grpc-2.70.1.jar
+        summary: GAX (Google Api eXtensions) for Java (gRPC):2.70.1
+    Google APIs Client Library for Java
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-client-2.7.2.jar
+        summary: Google APIs Client Library for Java:2.7.2
+    Google Auth Library for Java - Credentials
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-auth-library-credentials-1.39.0.jar
+        summary: Google Auth Library for Java - Credentials:1.39.0
+    Google Auth Library for Java - OAuth2 HTTP
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-auth-library-oauth2-http-1.39.0.jar
+        summary: Google Auth Library for Java - OAuth2 HTTP:1.39.0
+    Google Cloud Core
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-2.60.1.jar
+        summary: Google Cloud Core:2.60.1
+    Google Cloud Core HTTP
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-http-2.60.1.jar
+        summary: Google Cloud Core HTTP:2.60.1
+    Google Cloud Core gRPC
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-grpc-2.49.1.jar
+        summary: Google Cloud Core gRPC:2.49.1
+    Google Cloud KMS
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-kms-2.54.0.jar
+        summary: Google Cloud KMS:2.54.0
+    Google Cloud Monitoring
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-monitoring-3.52.0.jar
+        summary: Google Cloud Monitoring:3.52.0
+    Google Cloud NIO
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-nio-0.127.30.jar
+        summary: Google Cloud NIO:0.127.30
+    Google Cloud Storage
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-storage-2.48.0.jar
+        summary: Google Cloud Storage:2.48.0
+    Google HTTP Client Library for Java
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-1.47.1.jar
+        summary: Google HTTP Client Library for Java:1.47.1
+    Google OAuth Client Library for Java
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-oauth-client-1.39.0.jar
+        summary: Google OAuth Client Library for Java:1.39.0
+    Jettison
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jettison-1.5.4.jar
+        summary: Jettison:1.5.4
+    Kerb Simple Kdc
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-simplekdc-2.0.3.jar
+        summary: Kerb Simple Kdc:2.0.3
+    Kerby ASN1 Project
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-asn1-2.0.3.jar
+        summary: Kerby ASN1 Project:2.0.3
+    Kerby Config
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-config-2.0.3.jar
+        summary: Kerby Config:2.0.3
+    Kerby PKIX Project
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-pkix-2.0.3.jar
+        summary: Kerby PKIX Project:2.0.3
+    Kerby Util
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-util-2.0.3.jar
+        summary: Kerby Util:2.0.3
+    Kerby XDR Project
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-xdr-2.0.3.jar
+        summary: Kerby XDR Project:2.0.3
+    Kerby-kerb Admin
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-admin-2.0.3.jar
+        summary: Kerby-kerb Admin:2.0.3
+    Kerby-kerb Client
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-client-2.0.3.jar
+        summary: Kerby-kerb Client:2.0.3
+    Kerby-kerb Common
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-common-2.0.3.jar
+        summary: Kerby-kerb Common:2.0.3
+    Kerby-kerb Crypto
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-crypto-2.0.3.jar
+        summary: Kerby-kerb Crypto:2.0.3
+    Kerby-kerb Identity
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-identity-2.0.3.jar
+        summary: Kerby-kerb Identity:2.0.3
+    Kerby-kerb Server
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-server-2.0.3.jar
+        summary: Kerby-kerb Server:2.0.3
+    Kerby-kerb Util
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-util-2.0.3.jar
+        summary: Kerby-kerb Util:2.0.3
+    Kerby-kerb core
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-core-2.0.3.jar
+        summary: Kerby-kerb core:2.0.3
+    Logback Classic Module
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/logback-classic-1.3.15.jar
+        summary: Logback Classic Module:1.3.15
+    Logback Core Module
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/logback-core-1.3.15.jar
+        summary: Logback Core Module:1.3.15
+    PerfMark (https://www.perfmark.io/)
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/perfmark-api-0.27.0.jar
+        summary: PerfMark (https://www.perfmark.io/):0.27.0
+    ThreeTen backport
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/threetenbp-1.7.0.jar
+        summary: ThreeTen backport:1.7.0
+    ThreeTen-Extra
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/threeten-extra-1.8.0.jar
+        summary: ThreeTen-Extra:1.8.0
+    Token provider
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/token-provider-2.0.3.jar
+        summary: Token provider:2.0.3
+    all
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-1.45.0.jar
+        summary: all:1.45.0
+    autoconfigure-spi
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-extension-autoconfigure-spi-1.45.0.jar
+        summary: autoconfigure-spi:1.45.0
+    bcprov
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/bcprov-jdk15on-1.70.jar
+        summary: bcprov:1.70
+    checker-qual
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/checker-qual-3.49.3.jar
+        summary: checker-qual:3.49.3
+    com.fasterxml.jackson.core:Jackson-annotations
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-annotations-2.19.0.jar
+        summary: com.fasterxml.jackson.core:Jackson-annotations:2.19.0
+    com.fasterxml.jackson.core:Jackson-core
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-core-2.19.0.jar
+        summary: com.fasterxml.jackson.core:Jackson-core:2.19.0
+    com.fasterxml.jackson.core:jackson-databind
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-databind-2.19.0.jar
+        summary: com.fasterxml.jackson.core:jackson-databind:2.19.0
+    com.fasterxml.jackson.dataformat:Jackson dataformat: CBOR
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-dataformat-cbor-2.19.0.jar
+        summary: com.fasterxml.jackson.dataformat:Jackson dataformat: CBOR:2.19.0
+    com.fasterxml.jackson.dataformat:Jackson-dataformat-YAML
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-dataformat-yaml-2.19.0.jar
+        summary: com.fasterxml.jackson.dataformat:Jackson-dataformat-YAML:2.19.0
+    com.fasterxml.jackson.datatype:Jackson datatype: Guava
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-datatype-guava-2.19.0.jar
+        summary: com.fasterxml.jackson.datatype:Jackson datatype: Guava:2.19.0
+    com.fasterxml.jackson.datatype:Jackson datatype: JSR310
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-datatype-jsr310-2.19.0.jar
+        summary: com.fasterxml.jackson.datatype:Jackson datatype: JSR310:2.19.0
+    com.fasterxml.woodstox:Woodstox
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/woodstox-core-5.4.0.jar
+        summary: com.fasterxml.woodstox:Woodstox:5.4.0
+    com.google.errorprone.annotations
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/error_prone_annotations-2.38.0.jar
+        summary: com.google.errorprone.annotations:2.38.0
+    com.google.flatbuffers.java
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/flatbuffers-java-24.3.25.jar
+        summary: com.google.flatbuffers.java:24.3.25
+    com.google.gson
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gson-2.12.1.jar
+        summary: com.google.gson:2.12.1
+    com.google.guava
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/guava-33.4.0-jre.jar
+        summary: com.google.guava:33.4.0.jre
+    com.google.guava.failureaccess
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/failureaccess-1.0.2.jar
+        summary: com.google.guava.failureaccess:1.0.2
+    com.google.http-client.google-http-client-apache-v2
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-apache-v2-1.47.1.jar
+        summary: com.google.http-client.google-http-client-apache-v2:1.47.1
+    com.google.protobuf
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/protobuf-java-3.25.8.jar
+        summary: com.google.protobuf:3.25.8
+    com.google.protobuf.util
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/protobuf-java-util-3.25.8.jar
+        summary: com.google.protobuf.util:3.25.8
+    com.googlecode.json-simple
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/json-simple-1.1.1.jar
+        summary: com.googlecode.json-simple:1.1.1
+    com.nimbusds:Nimbus JOSE+JWT
+        date: ${timestamp}
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/nimbus-jose-jwt-9.31.jar
+        summary: com.nimbusds:Nimbus JOSE+JWT:9.31 built on ${timestamp}
+    com.sun.jersey:jersey-core
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-core-1.19.4.jar
+        summary: com.sun.jersey:jersey-core:1.19.4
+    com.sun.jersey:jersey-server
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-server-1.19.4.jar
+        summary: com.sun.jersey:jersey-server:1.19.4
+    com.sun.jersey:jersey-servlet
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-servlet-1.19.4.jar
+        summary: com.sun.jersey:jersey-servlet:1.19.4
+    com.sun.jna
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jna-platform-5.16.0.jar
+        summary: com.sun.jna:5.16.0 (b0)
+    com.sun:JAXB Reference Implementation 
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jaxb-impl-2.2.3-1.jar
+        summary: com.sun:JAXB Reference Implementation :2.2.3
+    com.sun:jakarta.activation.jakarta.activation-api
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.activation-api-1.2.1.jar
+        summary: com.sun:jakarta.activation.jakarta.activation-api:1.2.1
+    com.zaxxer.HikariCP
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/HikariCP-4.0.3.jar
+        summary: com.zaxxer.HikariCP:4.0.3
+    common
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-common-1.45.0.jar
+        summary: common:1.45.0
+    conscrypt-openjdk-uber
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/conscrypt-openjdk-uber-2.5.2.jar
+        summary: conscrypt-openjdk-uber:2.5.2
+    context
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-context-1.47.0.jar
+        summary: context:1.47.0
+    curator-client
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-client-5.2.0.jar
+        summary: curator-client:5.2.0
+    dwh-migration-tools.dumper:app
+        date: 2025-09-26_15:52:04
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        summary: dwh-migration-tools.dumper:app:unspecified (branch streaming-telemetry-implementation) (rev 1612f0c) built on 2025-09-26_15:52:04
+    dwh-migration-tools.dumper:lib-common
+        date: 2025-09-26_15:52:04
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-common.jar
+        summary: dwh-migration-tools.dumper:lib-common:unspecified (branch streaming-telemetry-implementation) (rev 1612f0c) built on 2025-09-26_15:52:04
+    dwh-migration-tools.dumper:lib-dumper-spi
+        date: 2025-09-26_15:52:04
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-dumper-spi.jar
+        summary: dwh-migration-tools.dumper:lib-dumper-spi:unspecified (branch streaming-telemetry-implementation) (rev 1612f0c) built on 2025-09-26_15:52:04
+    dwh-migration-tools.dumper:lib-ext-bigquery
+        date: 2025-09-26_15:52:04
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-bigquery.jar
+        summary: dwh-migration-tools.dumper:lib-ext-bigquery:unspecified (branch streaming-telemetry-implementation) (rev 1612f0c) built on 2025-09-26_15:52:04
+    dwh-migration-tools.dumper:lib-ext-hive-metastore
+        date: 2025-09-26_15:52:04
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-hive-metastore.jar
+        summary: dwh-migration-tools.dumper:lib-ext-hive-metastore:unspecified (branch streaming-telemetry-implementation) (rev 1612f0c) built on 2025-09-26_15:52:04
+    gapic-google-cloud-storage-v2
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gapic-google-cloud-storage-v2-2.48.0.jar
+        summary: gapic-google-cloud-storage-v2:2.48.0
+    grpc-google-cloud-bigquerystorage-v1
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1-3.17.0.jar
+        summary: grpc-google-cloud-bigquerystorage-v1:3.17.0
+    grpc-google-cloud-bigquerystorage-v1beta1
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1beta1-0.189.0.jar
+        summary: grpc-google-cloud-bigquerystorage-v1beta1:0.189.0
+    grpc-google-cloud-bigquerystorage-v1beta2
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1beta2-0.189.0.jar
+        summary: grpc-google-cloud-bigquerystorage-v1beta2:0.189.0
+    grpc-google-cloud-storage-v2
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-storage-v2-2.48.0.jar
+        summary: grpc-google-cloud-storage-v2:2.48.0
+    incubator
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-api-incubator-1.45.0-alpha.jar
+        summary: incubator:1.45.0-alpha
+    io.dropwizard.metrics:Metrics Core
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/metrics-core-3.2.4.jar
+        summary: io.dropwizard.metrics:Metrics Core:3.2.4
+    io.netty:Netty/Buffer
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-buffer-4.1.110.Final.jar
+        summary: io.netty:Netty/Buffer:4.1.110.Final
+    io.netty:Netty/Codec
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-codec-4.1.100.Final.jar
+        summary: io.netty:Netty/Codec:4.1.100.Final
+    io.netty:Netty/Common
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-common-4.1.110.Final.jar
+        summary: io.netty:Netty/Common:4.1.110.Final
+    io.netty:Netty/Handler
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-handler-4.1.100.Final.jar
+        summary: io.netty:Netty/Handler:4.1.100.Final
+    io.netty:Netty/Resolver
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-resolver-4.1.100.Final.jar
+        summary: io.netty:Netty/Resolver:4.1.100.Final
+    io.netty:Netty/Transport
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-4.1.100.Final.jar
+        summary: io.netty:Netty/Transport:4.1.100.Final
+    io.netty:Netty/Transport/Classes/Epoll
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-classes-epoll-4.1.100.Final.jar
+        summary: io.netty:Netty/Transport/Classes/Epoll:4.1.100.Final
+    io.netty:Netty/Transport/Native/Epoll
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-native-epoll-4.1.100.Final.jar
+        summary: io.netty:Netty/Transport/Native/Epoll:4.1.100.Final
+    io.netty:Netty/Transport/Native/Unix/Common
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-native-unix-common-4.1.100.Final.jar
+        summary: io.netty:Netty/Transport/Native/Unix/Common:4.1.100.Final
+    jakarta.annotation-api
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.annotation-api-2.1.1.jar
+        summary: jakarta.annotation-api:2.1.1
+    jakarta.servlet-api
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.servlet-api-5.0.0.jar
+        summary: jakarta.servlet-api:5.0.0
+    jar
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-opentelemetry-1.69.0.jar
+        summary: jar:1.69.0
+    javax.annotation-api
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.annotation-api-1.3.2.jar
+        summary: javax.annotation-api:1.3.2
+    javax.servlet-api
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.servlet-api-3.1.0.jar
+        summary: javax.servlet-api:3.1.0
+    javax.ws.rs.jsr311-api
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsr311-api-1.1.1.jar
+        summary: javax.ws.rs.jsr311-api:1.1.1
+    jcl-over-slf4j
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jcl-over-slf4j-2.0.17.jar
+        summary: jcl-over-slf4j:2.0.17
+    json
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/json-20250517.jar
+        summary: json:20250517.0.0
+    logs
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-logs-1.45.0.jar
+        summary: logs:1.45.0
+    metrics
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-metrics-1.45.0.jar
+        summary: metrics:1.45.0
+    net.sf.jopt-simple.jopt-simple
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jopt-simple-5.0.4.jar
+        summary: net.sf.jopt-simple.jopt-simple:5.0.4
+    opencensus-api
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opencensus-api-0.31.1.jar
+        summary: opencensus-api:0.31.1
+    opencensus-contrib-http-util
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opencensus-contrib-http-util-0.31.1.jar
+        summary: opencensus-contrib-http-util:0.31.1
+    opentelemetry-semconv
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-semconv-1.27.0-alpha.jar
+        summary: opentelemetry-semconv:1.27.0-alpha
+    org.anarres.jdiagnostics:jdiagnostics
+        date: 2021-09-13_21:41:00
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jdiagnostics-1.0.7.jar
+        summary: org.anarres.jdiagnostics:jdiagnostics:1.0.7 (rev 01b7a79) built on 2021-09-13_21:41:00
+    org.apache.hadoop.thirdparty:Apache Hadoop shaded Guava
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-shaded-guava-1.2.0.jar
+        summary: org.apache.hadoop.thirdparty:Apache Hadoop shaded Guava:1.2.0
+    org.apache.hadoop.thirdparty:Apache Hadoop shaded Protobuf
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-shaded-protobuf_3_21-1.2.0.jar
+        summary: org.apache.hadoop.thirdparty:Apache Hadoop shaded Protobuf:1.2.0
+    org.apache.httpcomponents:Apache HttpClient
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpclient-4.5.14.jar
+        summary: org.apache.httpcomponents:Apache HttpClient:4.5.14
+    org.apache.oozie:Apache Oozie Client
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/oozie-client-5.2.1.jar
+        summary: org.apache.oozie:Apache Oozie Client:5.2.1
+    org.apache.thrift
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar
+        summary: org.apache.thrift:0.20.0
+    org.apache.yetus:Apache Yetus - Audience Annotations
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/audience-annotations-0.12.0.jar
+        summary: org.apache.yetus:Apache Yetus - Audience Annotations:0.12.0
+    org.apache:Apache Commons BeanUtils
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-beanutils-1.9.4.jar
+        summary: org.apache:Apache Commons BeanUtils:1.9.4
+    org.apache:Apache Commons CLI
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-cli-1.5.0.jar
+        summary: org.apache:Apache Commons CLI:1.5.0
+    org.apache:Apache Commons Collections
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-collections-3.2.2.jar
+        summary: org.apache:Apache Commons Collections:3.2.2
+    org.apache:Apache Commons Compress
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-compress-1.26.2.jar
+        summary: org.apache:Apache Commons Compress:1.26.2
+    org.apache:Apache Commons Math
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-math3-3.6.1.jar
+        summary: org.apache:Apache Commons Math:3.6.1
+    org.apache:Apache HttpClient
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpclient5-5.4.3.jar
+        summary: org.apache:Apache HttpClient:5.4.3
+    org.apache:Apache HttpComponents Core HTTP/1.1
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore5-5.3.4.jar
+        summary: org.apache:Apache HttpComponents Core HTTP/1.1:5.3.4
+    org.apache:Apache HttpComponents Core HTTP/2
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore5-h2-5.3.4.jar
+        summary: org.apache:Apache HttpComponents Core HTTP/2:5.3.4
+    org.apache:HttpComponents Apache HttpCore
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore-4.4.16.jar
+        summary: org.apache:HttpComponents Apache HttpCore:4.4.16
+    org.apache:Sun Java System Application Server
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsp-api-2.1.jar
+        summary: org.apache:Sun Java System Application Server:2.1
+    org.codehaus.woodstox:Stax2 API
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/stax2-api-4.2.1.jar
+        summary: org.codehaus.woodstox:Stax2 API:4.2.1
+    org.eclipse.jetty.http
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-http-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.http:9.4.53.v20231009
+    org.eclipse.jetty.io
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-io-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.io:9.4.53.v20231009
+    org.eclipse.jetty.security
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-security-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.security:9.4.53.v20231009
+    org.eclipse.jetty.server
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-server-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.server:9.4.53.v20231009
+    org.eclipse.jetty.servlet
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-servlet-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.servlet:9.4.53.v20231009
+    org.eclipse.jetty.util
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-util-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.util:9.4.53.v20231009
+    org.eclipse.jetty.util.ajax
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-util-ajax-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.util.ajax:9.4.53.v20231009
+    org.eclipse.jetty.webapp
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-webapp-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.webapp:9.4.53.v20231009
+    org.eclipse.jetty.xml
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-xml-9.4.53.v20231009.jar
+        summary: org.eclipse.jetty.xml:9.4.53.v20231009
+    org.jline
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jline-3.22.0.jar
+        summary: org.jline:3.22.0
+    org.joda:org.joda.time
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/joda-time-2.12.7.jar
+        summary: org.joda:org.joda.time:2.12.7
+    org.jsr-305
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsr305-3.0.2.jar
+        summary: org.jsr-305:3.0.2
+    org.postgresql:PostgreSQL JDBC Driver
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/postgresql-42.7.5.jar
+        summary: org.postgresql:PostgreSQL JDBC Driver:42.7.5
+    org.xbill.dns
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/dnsjava-3.4.0.jar
+        summary: org.xbill.dns:3.4.0
+    org.xerial.snappy:snappy-java
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snappy-java-1.1.10.4.jar
+        summary: org.xerial.snappy:snappy-java:1.1.10.4
+    org.yaml.snakeyaml
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snakeyaml-2.4.jar
+        summary: org.yaml.snakeyaml:2.4.0
+    proto-google-cloud-bigquerystorage-v1
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1-3.17.0.jar
+        summary: proto-google-cloud-bigquerystorage-v1:3.17.0
+    proto-google-cloud-bigquerystorage-v1alpha
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1alpha-3.17.0.jar
+        summary: proto-google-cloud-bigquerystorage-v1alpha:3.17.0
+    proto-google-cloud-bigquerystorage-v1beta
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta-3.17.0.jar
+        summary: proto-google-cloud-bigquerystorage-v1beta:3.17.0
+    proto-google-cloud-bigquerystorage-v1beta1
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta1-0.189.0.jar
+        summary: proto-google-cloud-bigquerystorage-v1beta1:0.189.0
+    proto-google-cloud-bigquerystorage-v1beta2
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta2-0.189.0.jar
+        summary: proto-google-cloud-bigquerystorage-v1beta2:0.189.0
+    proto-google-cloud-kms-v1
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-kms-v1-0.145.0.jar
+        summary: proto-google-cloud-kms-v1:0.145.0
+    proto-google-cloud-monitoring-v3
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-monitoring-v3-3.52.0.jar
+        summary: proto-google-cloud-monitoring-v3:3.52.0
+    proto-google-cloud-storage-v2
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-storage-v2-2.48.0.jar
+        summary: proto-google-cloud-storage-v2:2.48.0
+    proto-google-common-protos
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-common-protos-2.61.1.jar
+        summary: proto-google-common-protos:2.61.1
+    proto-google-iam-v1
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-iam-v1-1.56.1.jar
+        summary: proto-google-iam-v1:1.56.1
+    slf4j-api
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/slf4j-api-2.0.17.jar
+        summary: slf4j-api:2.0.17
+    snowflake-jdbc
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snowflake-jdbc-3.23.2.jar
+        summary: snowflake-jdbc:3.23.2
+    spring-beans
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-beans-5.3.39.jar
+        summary: spring-beans:5.3.39
+    spring-core
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-core-5.3.39.jar
+        summary: spring-core:5.3.39
+    spring-jdbc
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-jdbc-5.3.39.jar
+        summary: spring-jdbc:5.3.39
+    spring-tx
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-tx-5.3.39.jar
+        summary: spring-tx:5.3.39
+    trace
+        date: null
+        jar: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-trace-1.45.0.jar
+        summary: trace:1.45.0
+sax
+    factory/appClassLoader/class.classLoader: null
+    factory/appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    factory/appClassLoader/className: javax.xml.parsers.SAXParserFactory
+    factory/appClassLoader/codesource: (no CodeSource)
+    factory/appClassLoader/resources: (2) [jrt:/java.xml/javax/xml/parsers/SAXParserFactory.class, jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar!/javax/xml/parsers/SAXParserFactory.class]
+    factory/instance/method: public javax.xml.parsers.SAXParser org.apache.xerces.jaxp.SAXParserFactoryImpl.newSAXParser() throws javax.xml.parsers.ParserConfigurationException
+    factory/instance/value: org.apache.xerces.jaxp.SAXParserImpl@51b1a8f6
+    factory/method: public static javax.xml.parsers.SAXParserFactory javax.xml.parsers.SAXParserFactory.newInstance()
+    factory/type/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    factory/type/className: org.apache.xerces.jaxp.SAXParserImpl
+    factory/type/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar
+    factory/type/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar!/org/apache/xerces/jaxp/SAXParserImpl.class]
+    factory/value: org.apache.xerces.jaxp.SAXParserFactoryImpl@2a389173
+    version/v2/class/appClassLoader/class.classLoader: null
+    version/v2/class/appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    version/v2/class/appClassLoader/className: org.xml.sax.helpers.AttributesImpl
+    version/v2/class/appClassLoader/codesource: (no CodeSource)
+    version/v2/class/appClassLoader/resources: (2) [jrt:/java.xml/org/xml/sax/helpers/AttributesImpl.class, jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar!/org/xml/sax/helpers/AttributesImpl.class]
+    version/v2/method/setAttributes/method: public void org.xml.sax.helpers.AttributesImpl.setAttributes(org.xml.sax.Attributes)
+    version/v2arg/appClassLoader/class.classLoader: null
+    version/v2arg/appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    version/v2arg/appClassLoader/className: org.xml.sax.Attributes
+    version/v2arg/appClassLoader/codesource: (no CodeSource)
+    version/v2arg/appClassLoader/resources: (2) [jrt:/java.xml/org/xml/sax/Attributes.class, jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar!/org/xml/sax/Attributes.class]
+    version/version: >=2.0
+systemProperties
+    file.encoding: UTF-8
+    file.separator: /
+    ftp.nonProxyHosts: local|*.local|169.254/16|*.169.254/16
+    http.nonProxyHosts: local|*.local|169.254/16|*.169.254/16
+    java.class.path: /Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jaxb-impl-2.2.3-1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-tx-5.3.39.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-webapp-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-client-5.2.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-handler-4.1.100.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/annotations-4.1.1.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore-4.4.16.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/nimbus-jose-jwt-9.31.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-pkix-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snakeyaml-2.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-protobuf-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/postgresql-42.7.5.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/shared-resourcemapping-0.33.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-http-2.60.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-services-storage-v1-rev20241206-2.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-protobuf-lite-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jopt-simple-5.0.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gapic-google-cloud-storage-v2-2.48.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-client-2.7.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/rate-limited-logger-2.0.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-configuration2-2.8.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-shaded-guava-1.2.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-dataformat-yaml-2.19.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-server-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-common.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/zookeeper-jute-3.8.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-netty-buffer-patch-17.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-util-ajax-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta2-0.189.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-2.70.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-identity-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.annotation-api-1.3.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-servlet-1.19.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/stax-api-1.0-2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-asn1-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-trace-1.45.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-cli-1.5.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/woodstox-core-5.4.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jna-5.17.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/dnsjava-3.4.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-compress-1.26.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-framework-5.2.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-1.47.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jaxb-api-2.2.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-config-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-core-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/protobuf-java-util-3.25.8.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-hdfs-client-3.4.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-util-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/animal-sniffer-annotations-1.24.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-annotations-3.4.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-csv-1.13.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/checker-qual-3.49.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snowflake-jdbc-3.23.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-auth-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-json-1.20.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-net-3.9.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opencensus-api-0.31.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/protobuf-java-3.25.8.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.servlet-api-3.1.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-server-1.19.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-alts-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta-3.17.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-api-1.47.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-datatype-jsr310-2.19.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jmespath-java-1.12.778.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-netty-17.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-vector-17.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-server-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/perfmark-api-0.27.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-storage-v2-2.48.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-util-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1beta1-0.189.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gson-2.12.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/flatbuffers-java-24.3.25.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jcip-annotations-1.0-1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/zookeeper-3.8.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-netty-shaded-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/logback-classic-1.3.15.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-io-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-annotations-2.19.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-appengine-1.47.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsr311-api-1.1.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/stax2-api-4.2.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-gcp-resources-1.37.0-alpha.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-databind-2.19.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-xdr-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-nio-0.127.30.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-dumper-spi.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-classes-epoll-4.1.100.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-context-1.47.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/failureaccess-1.0.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-bigquerystorage-3.17.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-storage-2.48.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-auth-3.4.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-rls-1.69.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-jdbc-5.3.39.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-4.1.100.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-simplekdc-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-semconv-1.27.0-alpha.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-common-protos-2.61.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/appdirs-1.3.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-metrics-1.45.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-kms-v1-0.145.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/json-simple-1.1.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore5-5.3.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1beta2-0.189.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.activation-api-1.2.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/snappy-java-1.1.10.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-grpc-2.49.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-resolver-4.1.100.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-common-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-api-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opencensus-contrib-http-util-0.31.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/metrics-core-3.2.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-api-services-bigquery-v2-rev20250706-2.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsp-api-2.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-inprocess-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-core-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-extension-autoconfigure-spi-1.45.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-stub-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-grpc-2.70.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-dataformat-cbor-2.19.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jersey-core-1.19.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/j2objc-annotations-3.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-math3-3.6.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/error_prone_annotations-2.38.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-auth-library-credentials-1.39.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-codec-1.18.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-auth-library-oauth2-http-1.39.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/oozie-client-5.2.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-native-unix-common-4.1.100.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-shaded-protobuf_3_21-1.2.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/slf4j-api-2.0.17.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-servlet-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-context-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-codec-4.1.100.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.servlet-api-5.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-core-2.19.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpclient5-5.4.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-collections-3.2.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerby-util-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xml-apis-1.4.01.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/conscrypt-openjdk-uber-2.5.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-xds-1.69.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/json-20250517.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/guava-33.4.0-jre.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-lang3-3.17.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jettison-1.5.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-1.45.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/api-common-2.53.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-monitoring-3.52.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-core-1.12.778.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/threeten-extra-1.8.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/audience-annotations-0.12.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-beans-5.3.39.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/curator-recipes-5.2.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-bigquery.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-googleapis-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-beanutils-1.9.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-redshiftserverless-1.12.778.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-format-17.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1-3.17.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-buffer-4.1.110.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jcl-over-slf4j-2.0.17.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-crypto-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-api-incubator-1.45.0-alpha.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-oauth-client-1.39.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/avro-1.11.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-storage-v2-2.48.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jakarta.annotation-api-2.1.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/auto-value-annotations-1.11.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1-3.17.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-jackson2-1.45.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jline-3.22.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-cloudwatch-1.12.778.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsch-0.1.55.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-util-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-security-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-common-4.1.110.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpcore5-h2-5.3.4.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/exporter-metrics-0.33.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jdiagnostics-1.0.7.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-bigquery-2.55.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-core-2.60.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/aws-java-sdk-redshift-1.12.778.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/redshift-jdbc42-2.1.0.32.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-services-1.69.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-admin-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/hadoop-common-3.4.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jackson-datatype-guava-2.19.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/checker-compat-qual-2.5.6.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-iam-v1-1.56.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/arrow-memory-core-17.0.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/netty-transport-native-epoll-4.1.100.Final.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-http-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-gson-1.47.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/threetenbp-1.7.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/detector-resources-support-0.33.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-cloud-kms-2.54.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-monitoring-v3-3.52.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jsr305-3.0.2.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-io-2.19.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/HikariCP-4.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-hive-metastore.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/bcprov-jdk15on-1.70.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-common-1.45.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/spring-core-5.3.39.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/kerb-client-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/re2j-1.7.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jna-platform-5.16.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/jetty-xml-9.4.53.v20231009.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/google-http-client-apache-v2-1.47.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/javax.inject-1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/proto-google-cloud-bigquerystorage-v1alpha-3.17.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/httpclient-4.5.14.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/joda-time-2.12.7.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-grpclb-1.71.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/logback-core-1.3.15.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-google-cloud-bigquerystorage-v1beta1-0.189.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/token-provider-2.0.3.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/grpc-opentelemetry-1.69.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/gax-httpjson-2.70.1.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/opentelemetry-sdk-logs-1.45.0.jar:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/commons-text-1.10.0.jar
+    java.class.version: 61.0
+    java.home: /Users/kakha/.sdkman/candidates/java/17.0.16-amzn
+    java.io.tmpdir: /var/folders/zf/7n2xy21n3tg4z27vy47ry6wm019nmy/T/
+    java.library.path: /Users/kakha/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+    java.runtime.name: OpenJDK Runtime Environment
+    java.runtime.version: 17.0.16+8-LTS
+    java.specification.maintenance.version: 1
+    java.specification.name: Java Platform API Specification
+    java.specification.vendor: Oracle Corporation
+    java.specification.version: 17
+    java.vendor: Amazon.com Inc.
+    java.vendor.url: https://aws.amazon.com/corretto/
+    java.vendor.url.bug: https://github.com/corretto/corretto-17/issues/
+    java.vendor.version: Corretto-17.0.16.8.1
+    java.version: 17.0.16
+    java.version.date: 2025-07-15
+    java.vm.compressedOopsMode: Zero based
+    java.vm.info: mixed mode, sharing
+    java.vm.name: OpenJDK 64-Bit Server VM
+    java.vm.specification.name: Java Virtual Machine Specification
+    java.vm.specification.vendor: Oracle Corporation
+    java.vm.specification.version: 17
+    java.vm.vendor: Amazon.com Inc.
+    java.vm.version: 17.0.16+8-LTS
+    jdk.debug: release
+    line.separator: 
+
+    native.encoding: UTF-8
+    os.arch: aarch64
+    os.name: Mac OS X
+    os.version: 15.6.1
+    path.separator: :
+    socksNonProxyHosts: local|*.local|169.254/16|*.169.254/16
+    sun.arch.data.model: 64
+    sun.boot.library.path: /Users/kakha/.sdkman/candidates/java/17.0.16-amzn/lib
+    sun.cpu.endian: little
+    sun.io.unicode.encoding: UnicodeBig
+    sun.java.command: com.google.edwmigration.dumper.application.dumper.Main --host localhost --port 9083 --connector hiveql --assessment
+    sun.java.launcher: SUN_STANDARD
+    sun.jnu.encoding: UTF-8
+    sun.management.compiler: HotSpot 64-Bit Tiered Compilers
+    sun.stderr.encoding: UTF-8
+    sun.stdout.encoding: UTF-8
+    user.country: 001
+    user.dir: /Users/kakha/github/dumper-/bin
+    user.home: /Users/kakha
+    user.language: en
+    user.name: kakha
+    user.timezone: Europe/Warsaw
+throwable
+    throwable/className: org.apache.thrift.transport.TTransportException
+    throwable/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    throwable/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar
+    throwable/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar!/org/apache/thrift/transport/TTransportException.class]
+    message: java.net.ConnectException: Connection refused
+    frame0/element: org.apache.thrift.transport.TSocket.open(TSocket.java:231)
+    frame0/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: org.apache.thrift.transport.TSocket
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar!/org/apache/thrift/transport/TSocket.class]
+    frame1/element: com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient$Builder.build(HiveMetastoreThriftClient.java:185)
+    frame1/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient$Builder
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-hive-metastore.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-hive-metastore.jar!/com/google/edwmigration/dumper/ext/hive/metastore/HiveMetastoreThriftClient$Builder.class]
+    frame2/element: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$ThriftClientHandle.newClient(AbstractHiveConnector.java:202)
+    frame2/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$ThriftClientHandle
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/connector/hive/AbstractHiveConnector$ThriftClientHandle.class]
+    frame3/element: com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector$SchemataTask.run(HiveMetadataConnector.java:111)
+    frame3/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector$SchemataTask
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/connector/hive/HiveMetadataConnector$SchemataTask.class]
+    frame4/element: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask.doRun(AbstractHiveConnector.java:235)
+    frame4/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/connector/hive/AbstractHiveConnector$AbstractHiveTask.class]
+    frame5/element: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask.doRun(AbstractHiveConnector.java:217)
+    frame5/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/connector/hive/AbstractHiveConnector$AbstractHiveTask.class]
+    frame6/element: com.google.edwmigration.dumper.application.dumper.task.AbstractTask.run(AbstractTask.java:127)
+    frame6/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.task.AbstractTask
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/task/AbstractTask.class]
+    frame7/element: com.google.edwmigration.dumper.application.dumper.TasksRunner.runTask(TasksRunner.java:186)
+    frame7/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.TasksRunner
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/TasksRunner.class]
+    frame8/element: com.google.edwmigration.dumper.application.dumper.TasksRunner.handleTask(TasksRunner.java:137)
+    frame8/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.TasksRunner
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/TasksRunner.class]
+    frame9/element: com.google.edwmigration.dumper.application.dumper.TasksRunner.run(TasksRunner.java:105)
+    frame9/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.TasksRunner
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/TasksRunner.class]
+    frame10/element: com.google.edwmigration.dumper.application.dumper.MetadataDumper.run(MetadataDumper.java:165)
+    frame10/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.MetadataDumper
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/MetadataDumper.class]
+    frame11/element: com.google.edwmigration.dumper.application.dumper.MetadataDumper.run(MetadataDumper.java:99)
+    frame11/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.MetadataDumper
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/MetadataDumper.class]
+    frame12/element: com.google.edwmigration.dumper.application.dumper.Main.main(Main.java:62)
+    frame12/class
+        appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+        appClassLoader/className: com.google.edwmigration.dumper.application.dumper.Main
+        appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+        appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/Main.class]
+    cause/method: public synchronized java.lang.Throwable java.lang.Throwable.getCause()
+    cause/value: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:579)
+	at java.base/sun.nio.ch.Net.connect(Net.java:568)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:593)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:633)
+	at org.apache.thrift.transport.TSocket.open(TSocket.java:226)
+	at com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient$Builder.build(HiveMetastoreThriftClient.java:185)
+	at com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$ThriftClientHandle.newClient(AbstractHiveConnector.java:202)
+	at com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector$SchemataTask.run(HiveMetadataConnector.java:111)
+	at com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask.doRun(AbstractHiveConnector.java:235)
+	at com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask.doRun(AbstractHiveConnector.java:217)
+	at com.google.edwmigration.dumper.application.dumper.task.AbstractTask.run(AbstractTask.java:127)
+	at com.google.edwmigration.dumper.application.dumper.TasksRunner.runTask(TasksRunner.java:186)
+	at com.google.edwmigration.dumper.application.dumper.TasksRunner.handleTask(TasksRunner.java:137)
+	at com.google.edwmigration.dumper.application.dumper.TasksRunner.run(TasksRunner.java:105)
+	at com.google.edwmigration.dumper.application.dumper.MetadataDumper.run(MetadataDumper.java:165)
+	at com.google.edwmigration.dumper.application.dumper.MetadataDumper.run(MetadataDumper.java:99)
+	at com.google.edwmigration.dumper.application.dumper.Main.main(Main.java:62)
+
+    cause
+        throwable/className: java.net.ConnectException
+        throwable/class.classLoader: null
+        throwable/codesource: (no CodeSource)
+        throwable/resources: (1) [jrt:/java.base/java/net/ConnectException.class]
+        message: Connection refused
+        frame0/element: java.base/sun.nio.ch.Net.connect0(Native Method)
+        frame0/class
+            appClassLoader/class.classLoader: null
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: sun.nio.ch.Net
+            appClassLoader/codesource: (no CodeSource)
+            appClassLoader/resources: (1) [jrt:/java.base/sun/nio/ch/Net.class]
+        frame1/element: java.base/sun.nio.ch.Net.connect(Net.java:579)
+        frame1/class
+            appClassLoader/class.classLoader: null
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: sun.nio.ch.Net
+            appClassLoader/codesource: (no CodeSource)
+            appClassLoader/resources: (1) [jrt:/java.base/sun/nio/ch/Net.class]
+        frame2/element: java.base/sun.nio.ch.Net.connect(Net.java:568)
+        frame2/class
+            appClassLoader/class.classLoader: null
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: sun.nio.ch.Net
+            appClassLoader/codesource: (no CodeSource)
+            appClassLoader/resources: (1) [jrt:/java.base/sun/nio/ch/Net.class]
+        frame3/element: java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:593)
+        frame3/class
+            appClassLoader/class.classLoader: null
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: sun.nio.ch.NioSocketImpl
+            appClassLoader/codesource: (no CodeSource)
+            appClassLoader/resources: (1) [jrt:/java.base/sun/nio/ch/NioSocketImpl.class]
+        frame4/element: java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+        frame4/class
+            appClassLoader/class.classLoader: null
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: java.net.SocksSocketImpl
+            appClassLoader/codesource: (no CodeSource)
+            appClassLoader/resources: (1) [jrt:/java.base/java/net/SocksSocketImpl.class]
+        frame5/element: java.base/java.net.Socket.connect(Socket.java:633)
+        frame5/class
+            appClassLoader/class.classLoader: null
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: java.net.Socket
+            appClassLoader/codesource: (no CodeSource)
+            appClassLoader/resources: (1) [jrt:/java.base/java/net/Socket.class]
+        frame6/element: org.apache.thrift.transport.TSocket.open(TSocket.java:226)
+        frame6/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: org.apache.thrift.transport.TSocket
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/libthrift-0.20.0.jar!/org/apache/thrift/transport/TSocket.class]
+        frame7/element: com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient$Builder.build(HiveMetastoreThriftClient.java:185)
+        frame7/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient$Builder
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-hive-metastore.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/lib-ext-hive-metastore.jar!/com/google/edwmigration/dumper/ext/hive/metastore/HiveMetastoreThriftClient$Builder.class]
+        frame8/element: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$ThriftClientHandle.newClient(AbstractHiveConnector.java:202)
+        frame8/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$ThriftClientHandle
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/connector/hive/AbstractHiveConnector$ThriftClientHandle.class]
+        frame9/element: com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector$SchemataTask.run(HiveMetadataConnector.java:111)
+        frame9/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.connector.hive.HiveMetadataConnector$SchemataTask
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/connector/hive/HiveMetadataConnector$SchemataTask.class]
+        frame10/element: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask.doRun(AbstractHiveConnector.java:235)
+        frame10/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/connector/hive/AbstractHiveConnector$AbstractHiveTask.class]
+        frame11/element: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask.doRun(AbstractHiveConnector.java:217)
+        frame11/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.connector.hive.AbstractHiveConnector$AbstractHiveTask
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/connector/hive/AbstractHiveConnector$AbstractHiveTask.class]
+        frame12/element: com.google.edwmigration.dumper.application.dumper.task.AbstractTask.run(AbstractTask.java:127)
+        frame12/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.task.AbstractTask
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/task/AbstractTask.class]
+        frame13/element: com.google.edwmigration.dumper.application.dumper.TasksRunner.runTask(TasksRunner.java:186)
+        frame13/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.TasksRunner
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/TasksRunner.class]
+        frame14/element: com.google.edwmigration.dumper.application.dumper.TasksRunner.handleTask(TasksRunner.java:137)
+        frame14/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.TasksRunner
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/TasksRunner.class]
+        frame15/element: com.google.edwmigration.dumper.application.dumper.TasksRunner.run(TasksRunner.java:105)
+        frame15/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.TasksRunner
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/TasksRunner.class]
+        frame16/element: com.google.edwmigration.dumper.application.dumper.MetadataDumper.run(MetadataDumper.java:165)
+        frame16/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.MetadataDumper
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/MetadataDumper.class]
+        frame17/element: com.google.edwmigration.dumper.application.dumper.MetadataDumper.run(MetadataDumper.java:99)
+        frame17/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.MetadataDumper
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/MetadataDumper.class]
+        frame18/element: com.google.edwmigration.dumper.application.dumper.Main.main(Main.java:62)
+        frame18/class
+            appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+            appClassLoader/className: com.google.edwmigration.dumper.application.dumper.Main
+            appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar
+            appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/app.jar!/com/google/edwmigration/dumper/application/dumper/Main.class]
+        cause/method: public synchronized java.lang.Throwable java.lang.Throwable.getCause()
+        cause/value: null
+        suppressed/method: public final synchronized java.lang.Throwable[] java.lang.Throwable.getSuppressed()
+        suppressed/value: [Ljava.lang.Throwable;@795fd838
+    suppressed/method: public final synchronized java.lang.Throwable[] java.lang.Throwable.getSuppressed()
+    suppressed/value: [Ljava.lang.Throwable;@795fd838
+tmpdir
+    canonicalPath: /private/var/folders/zf/7n2xy21n3tg4z27vy47ry6wm019nmy/T
+    drift: 1
+    name: /var/folders/zf/7n2xy21n3tg4z27vy47ry6wm019nmy/T/
+    path: /var/folders/zf/7n2xy21n3tg4z27vy47ry6wm019nmy/T
+    stat: size=47136, exists=true, isFile=false, isDirectory=true, canRead=true, canWrite=true
+xalan
+    com.sun.org.apache.xalan.internal.xalan1/appClassLoader/className: com.sun.org.apache.xalan.internal.xslt.XSLProcessorVersion (not found)
+    com.sun.org.apache.xalan.internal.xalan2.2/appClassLoader/className: com.sun.org.apache.xalan.internal.Version (not found)
+    com.sun.org.apache.xalan.internal.xalan2/appClassLoader/className: com.sun.org.apache.xalan.internal.processor.XSLProcessorVersion (not found)
+    org.apache.xalan.xalan1/appClassLoader/className: org.apache.xalan.xslt.XSLProcessorVersion (not found)
+    org.apache.xalan.xalan2.2/appClassLoader/className: org.apache.xalan.Version (not found)
+    org.apache.xalan.xalan2/appClassLoader/className: org.apache.xalan.processor.XSLProcessorVersion (not found)
+xerces
+    com.sun.org.apache.xerces.internal.xerces1/appClassLoader/className: com.sun.org.apache.xerces.internal.framework.Version (not found)
+    com.sun.org.apache.xerces.internal.xerces2/appClassLoader/className: com.sun.org.apache.xerces.internal.impl.Version (not found)
+    org.apache.xerces.xerces1/appClassLoader/className: org.apache.xerces.framework.Version (not found)
+    org.apache.xerces.xerces2/appClassLoader/class.classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    org.apache.xerces.xerces2/appClassLoader/classLoader: jdk.internal.loader.ClassLoaders$AppClassLoader@5ffd2b27
+    org.apache.xerces.xerces2/appClassLoader/className: org.apache.xerces.impl.Version
+    org.apache.xerces.xerces2/appClassLoader/codesource: file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar
+    org.apache.xerces.xerces2/appClassLoader/resources: (1) [jar:file:/Users/kakha/github/dumper-/dumper/app/build/install/app/lib/xercesImpl-2.11.0.jar!/org/apache/xerces/impl/Version.class]
+    org.apache.xerces.xerces2/fVersion/field: public static java.lang.String org.apache.xerces.impl.Version.fVersion
+    org.apache.xerces.xerces2/fVersion/value: Xerces-J 2.11.0
+

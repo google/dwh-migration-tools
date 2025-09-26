@@ -25,6 +25,10 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
+import com.google.edwmigration.dumper.application.dumper.metrics.EventType;
+import com.google.edwmigration.dumper.application.dumper.metrics.TaskRunEnd;
+import com.google.edwmigration.dumper.application.dumper.metrics.TaskRunStart;
+import com.google.edwmigration.dumper.application.dumper.metrics.TelemetryEvent;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -35,8 +39,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -56,6 +59,8 @@ public class TasksRunner implements TaskRunContextOps {
   private final TaskRunContext context;
   private final TaskSetState.Impl state;
   private final List<Task<?>> tasks;
+  private final TelemetryProcessor telemetryProcessor;
+  private final HashMap<Task<?>, String> metricToErrorMap = new HashMap<>();
 
   public TasksRunner(
       OutputHandleFactory sinkFactory,
@@ -63,10 +68,12 @@ public class TasksRunner implements TaskRunContextOps {
       int threadPoolSize,
       @Nonnull TaskSetState.Impl state,
       List<Task<?>> tasks,
-      ConnectorArguments arguments) {
+      ConnectorArguments arguments,
+      TelemetryProcessor telemetryProcessor) {
     context = createContext(sinkFactory, handle, threadPoolSize, arguments);
     this.state = state;
     this.tasks = tasks;
+    this.telemetryProcessor = telemetryProcessor;
     totalNumberOfTasks = countTasks(tasks);
     stopwatch = Stopwatch.createStarted();
     numberOfCompletedTasks = new AtomicInteger();
@@ -93,8 +100,37 @@ public class TasksRunner implements TaskRunContextOps {
 
   public void run() throws MetadataDumperUsageException {
     for (Task<?> task : tasks) {
+      String taskEventId = UUID.randomUUID().toString();
+      processTaskStartTelemetry(task, taskEventId);
+
       handleTask(task);
+
+      processTaskEndTelemetry(
+          task, getTaskState(task), metricToErrorMap.getOrDefault(task, null), taskEventId);
     }
+  }
+
+  private void processTaskStartTelemetry(Task<?> task, String taskId) {
+    TaskRunStart taskRunStart =
+        new TaskRunStart(taskId, task.getName(), task.getClass().toString());
+
+    telemetryProcessor.process(
+        TelemetryEvent.builder()
+            .setEventType(EventType.TASK_RUN_START)
+            .setPayload(taskRunStart)
+            .build());
+  }
+
+  private void processTaskEndTelemetry(
+      Task<?> task, TaskState taskStatus, String error, String taskId) {
+    TaskRunEnd taskMetrics =
+        new TaskRunEnd(taskId, task.getName(), task.getClass().toString(), taskStatus, error);
+
+    telemetryProcessor.process(
+        TelemetryEvent.builder()
+            .setEventType(EventType.TASK_RUN_END)
+            .setPayload(taskMetrics)
+            .build());
   }
 
   @CheckForNull
@@ -168,6 +204,7 @@ public class TasksRunner implements TaskRunContextOps {
       else if (!task.handleException(e))
         logger.warn("Task failed: {}: {}", task, e.getMessage(), e);
       state.setTaskException(task, TaskState.FAILED, e);
+      metricToErrorMap.put(task, e.getMessage());
       try {
         OutputHandle sink = context.newOutputFileHandle(task.getTargetPath() + ".exception.txt");
         sink.asCharSink(StandardCharsets.UTF_8, WriteMode.CREATE_TRUNCATE)
@@ -178,6 +215,7 @@ public class TasksRunner implements TaskRunContextOps {
                     String.valueOf(new DumperDiagnosticQuery(e).call())));
       } catch (Exception f) {
         logger.warn("Exception-recorder failed:  {}", f.getMessage(), f);
+        metricToErrorMap.put(task, f.getMessage());
       }
     }
     return null;

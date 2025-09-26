@@ -18,7 +18,7 @@ package com.google.edwmigration.dumper.application.dumper;
 
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE;
 
-import com.google.edwmigration.dumper.application.dumper.metrics.DumperMetadata;
+import com.google.edwmigration.dumper.application.dumper.metrics.DumperInitialization;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,7 +30,7 @@ import org.springframework.core.io.ClassPathResource;
 
 public class StartUpMetaInfoProcessor {
 
-  private static final DumperMetadata dumperMetadata = generateDumperMetadata();
+  private static final DumperInitialization DUMPER_INITIALIZATION = generateDumperMetadata();
 
   public static void printMetaInfo() {
     try {
@@ -40,8 +40,8 @@ public class StartUpMetaInfoProcessor {
     }
   }
 
-  public static DumperMetadata getDumperMetadata() {
-    return dumperMetadata;
+  public static DumperInitialization getDumperMetadata() {
+    return DUMPER_INITIALIZATION;
   }
 
   private static void printBanner() {
@@ -57,21 +57,21 @@ public class StartUpMetaInfoProcessor {
   }
 
   private static void printMetaInfoFile() {
-    if (dumperMetadata == null) {
+    if (DUMPER_INITIALIZATION == null) {
       return;
     }
 
     System.out.println(
         "App version: ["
-            + dumperMetadata.getVersion()
+            + DUMPER_INITIALIZATION.getVersion()
             + "], change: ["
-            + dumperMetadata.getGitCommit()
+            + DUMPER_INITIALIZATION.getGitCommit()
             + "]");
-    System.out.println("Build date: " + dumperMetadata.getBuildDate());
+    System.out.println("Build date: " + DUMPER_INITIALIZATION.getBuildDate());
     System.out.println();
   }
 
-  private static DumperMetadata generateDumperMetadata() {
+  private static DumperInitialization generateDumperMetadata() {
     Manifest manifest = loadCurrentClassManifest();
 
     if (manifest == null) {
@@ -82,7 +82,7 @@ public class StartUpMetaInfoProcessor {
     String change = manifest.getMainAttributes().getValue("Change");
     String version = manifest.getMainAttributes().getValue("Implementation-Version");
 
-    return new DumperMetadata(version, change, buildDate);
+    return new DumperInitialization(version, change, buildDate);
   }
 
   private static Manifest loadCurrentClassManifest() {
