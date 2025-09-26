@@ -1,0 +1,1 @@
+ConnectorArguments{connector=hiveql, driver=[], host=localhost, port=9083, warehouse=null, database=[], user=null, config=[], output=null, query-log-earliest-timestamp=null, query-log-days=null, query-log-start=null, query-log-end=null, query-log-alternates=[], assessment=true, telemetry=true}
