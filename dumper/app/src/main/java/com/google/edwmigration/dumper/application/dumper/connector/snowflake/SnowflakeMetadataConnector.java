@@ -33,6 +33,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.snowflake.Sno
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
+import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
@@ -168,8 +169,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
-    out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
+    out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
 
     boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
     // INFORMATION_SCHEMA queries must be qualified with a database

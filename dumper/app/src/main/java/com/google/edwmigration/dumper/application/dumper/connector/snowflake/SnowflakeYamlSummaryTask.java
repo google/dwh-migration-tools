@@ -17,107 +17,87 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
+import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat.CompilerWorksDumpMetadataTaskFormat;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat.CompilerWorksDumpMetadataTaskFormat.Product;
-import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat.CompilerWorksDumpMetadataTaskFormat.Root;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.sql.Connection;
+import java.sql.SQLException;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import org.anarres.jdiagnostics.ProductMetadata;
+import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** A {@link Task} that creates YAML with extraction metadata. */
 @ParametersAreNonnullByDefault
-abstract class SnowflakeYamlSummaryTask extends AbstractTask<Void> {
+final class SnowflakeYamlSummaryTask extends AbstractJdbcTask<Void> {
 
-  private static final String zipEntryName = CompilerWorksDumpMetadataTaskFormat.ZIP_ENTRY_NAME;
-
-  @Nonnull private final String zipFormat;
+  private final boolean isAssessment;
 
   @Override
   public final String describeSourceData() {
     return "containing dump metadata.";
   }
 
-  @Override
-  protected final Void doRun(@Nullable TaskRunContext context, ByteSink sink, Handle unused)
+  static ImmutableMap<String, String> createRoot(boolean isAssessment, String count)
       throws IOException {
-    CharSink streamSupplier = sink.asCharSink(UTF_8);
-    try (Writer writer = streamSupplier.openBufferedStream()) {
-      CoreMetadataDumpFormat.MAPPER.writeValue(writer, createRoot(context));
-      return null;
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    builder.put("assessment", String.valueOf(isAssessment));
+    builder.put("warehouse_count", count);
+    return builder.build();
+  }
+
+  static String rootString(boolean isAssessment, String count) {
+    try {
+      ImmutableMap<String, String> root = createRoot(isAssessment, count);
+      return CoreMetadataDumpFormat.MAPPER.writeValueAsString(root);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
-  }
-
-  Root createRoot(@Nullable TaskRunContext context) throws IOException {
-    Product product = new Product();
-    product.version = String.valueOf(new ProductMetadata());
-    product.arguments = serializedArguments(context);
-
-    Root root = new Root();
-    root.format = zipFormat;
-    root.timestamp = System.currentTimeMillis();
-    root.product = product;
-    return root;
-  }
-
-  @Nonnull
-  static SnowflakeYamlSummaryTask create(String zipFormat) {
-    return new ContextArgumentsTask(zipFormat);
   }
 
   @Nonnull
   static SnowflakeYamlSummaryTask create(String zipFormat, ConnectorArguments arguments) {
-    return new FixedArgumentsTask(zipFormat, arguments);
+    return new SnowflakeYamlSummaryTask(arguments.isAssessment());
   }
 
-  private SnowflakeYamlSummaryTask(String format) {
-    super(zipEntryName);
-    this.zipFormat = format;
+  private SnowflakeYamlSummaryTask(boolean isAssessment) {
+    super("snowflake.yaml");
+    this.isAssessment = isAssessment;
   }
 
-  @Nonnull
-  abstract String serializedArguments(@Nullable TaskRunContext context);
-
-  /** A task that takes arguments from {@link TaskRunContext}. */
-  private static class ContextArgumentsTask extends SnowflakeYamlSummaryTask {
-
-    ContextArgumentsTask(String zipFormat) {
-      super(zipFormat);
-    }
-
-    @Override
-    @Nonnull
-    String serializedArguments(@Nullable TaskRunContext context) {
-      context = requireNonNull(context);
-      return String.valueOf(context.getArguments());
-    }
+  @Override
+  protected Void doInConnection(
+      TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
+      throws SQLException {
+    ResultSetExtractor<Void> extractor =
+        resultSet -> {
+          try {
+            Object value = String.valueOf(resultSet.getMetaData().getColumnCount());
+            action(sink, isAssessment, String.valueOf(value));
+            return null;
+          } catch (IOException e) {
+            throw new UncheckedIOException(e);
+          }
+        };
+    String sql = "SHOW WAREHOUSES ->> SELECT count(*) FROM $1";
+    doSelect(connection, extractor, sql);
+    return null;
   }
 
-  /** A task that stores its own {@link ConnectorArguments}. */
-  private static class FixedArgumentsTask extends SnowflakeYamlSummaryTask {
+  private static void action(ByteSink sink, boolean isAssessment, String count) throws IOException {
 
-    @Nonnull final ConnectorArguments arguments;
-
-    FixedArgumentsTask(String zipFormat, ConnectorArguments arguments) {
-      super(zipFormat);
-      this.arguments = arguments;
-    }
-
-    @Override
-    @Nonnull
-    String serializedArguments(@Nullable TaskRunContext unused) {
-      return String.valueOf(arguments);
+    CharSink streamSupplier = sink.asCharSink(UTF_8);
+    try (Writer writer = streamSupplier.openBufferedStream()) {
+      String value = rootString(isAssessment, count);
+      CoreMetadataDumpFormat.MAPPER.writeValue(writer, value);
     }
   }
 }
