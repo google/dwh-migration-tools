@@ -104,12 +104,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   @Override
   public final void validate(@Nonnull ConnectorArguments arguments) {
     if (arguments.isPasswordFlagProvided() && arguments.isPrivateKeyFileProvided()) {
-      String inconsistentAuth =
-          "Private key authentication method can't be used together with user password. "
-              + "If the private key file is encrypted, please use --"
-              + ConnectorArguments.OPT_PRIVATE_KEY_PASSWORD
-              + " to specify the key password.";
-      throw new MetadataDumperUsageException(inconsistentAuth);
+      throw SnowflakeUsageException.mixedAuthentication();
     }
     validateForConnector(arguments);
   }

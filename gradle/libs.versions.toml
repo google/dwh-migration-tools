@@ -4,14 +4,14 @@
 apache-avro = "1.11.4"
 apache-commons-compress = "1.27.1"
 apache-commons-csv = "1.13.0"
-apache-commons-lang3 = "3.17.0"
+apache-commons-lang3 = "3.18.0"
 ascii-table = "1.8.0"
 auto-service = "1.1.1"
 auto-value = "1.11.0"
-aws-java-sdk = "1.12.778"
+aws-java-sdk = "1.12.791"
 ben-manes-versions-plugin = "0.52.0"
 cel = "0.8.0"
-checkerframework = "3.49.3"
+checkerframework = "3.51.0"
 commons-io = "2.19.0"
 datanucleus-api-jdo = "4.2.5"
 datanucleus-core = "4.1.17"
@@ -154,7 +154,7 @@ aws-s3 = { group = "software.amazon.awssdk", name = "s3", version.ref = "amazon"
 asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
 avro = { group = "org.apache.avro", name = "avro", version.ref = "avro" }
 commons-csv = { group = "org.apache.commons", name = "commons-csv", version = "1.11.0" }
-commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version = "3.15.0" }
+commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version = "3.18.0" }
 fastutil = { group = "it.unimi.dsi", name = "fastutil", version.ref = "fastutil" }
 google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version.ref = "google" }
 google-cloud-run = { group = "com.google.cloud", name = "google-cloud-run", version.ref = "cloudrun" }

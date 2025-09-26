@@ -91,11 +91,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     private final TaskCategory taskCategory;
 
     private TaskDescription(
-        String zipPrefix, String unformattedQuery, Class<? extends Enum<?>> headerClass) {
-      this(zipPrefix, unformattedQuery, headerClass, TaskCategory.REQUIRED);
-    }
-
-    private TaskDescription(
         String zipPrefix,
         String unformattedQuery,
         Class<? extends Enum<?>> headerClass,
@@ -110,7 +105,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   @Override
   protected final void validateForConnector(@Nonnull ConnectorArguments arguments) {
     if (arguments.isAssessment() && arguments.hasQueryLogEarliestTimestamp()) {
-      throw unsupportedOption(ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP);
+      throw SnowflakeUsageException.unsupportedEarliestTimestamp();
     }
   }
 
@@ -212,6 +207,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             + "session_id, \n"
             + "user_name, \n"
             + "warehouse_name, \n"
+            + "warehouse_size, \n"
             + "cluster_number, \n"
             + "query_tag, \n"
             + "execution_status, \n"
@@ -316,7 +312,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     if (!arguments.isAssessment()) {
       TaskDescription queryHistoryTask =
-          new TaskDescription(ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class);
+          new TaskDescription(
+              ZIP_ENTRY_PREFIX, newQueryFormat(arguments), Header.class, TaskCategory.REQUIRED);
       queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
       return;
     }
@@ -325,7 +322,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         new TaskDescription(
             QueryHistoryExtendedFormat.ZIP_ENTRY_PREFIX,
             createExtendedQueryFromAccountUsage(arguments),
-            QueryHistoryExtendedFormat.Header.class);
+            QueryHistoryExtendedFormat.Header.class,
+            TaskCategory.REQUIRED);
     queryLogIntervals.forEach(interval -> addJdbcTask(out, interval, queryHistoryTask));
 
     List<TaskDescription> timeSeriesTasks =
@@ -335,7 +333,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
                   String override = arguments.getDefinition(item.property);
                   String prefix = formatPrefix(item.headerClass, item.viewName());
                   String query = overrideableQuery(override, prefix, item.column.value);
-                  return new TaskDescription(item.zipPrefix, query, item.headerClass);
+                  return new TaskDescription(
+                      item.zipPrefix, query, item.headerClass, item.category);
                 })
             .collect(toImmutableList());
     Duration duration = Duration.ofDays(1);
@@ -354,13 +353,6 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     String file = getEntryFileNameWithTimestamp(task.zipPrefix, interval);
     out.add(new JdbcSelectTask(file, query, task.taskCategory).withHeaderClass(task.headerClass));
-  }
-
-  private static MetadataDumperUsageException unsupportedOption(String option) {
-    String assessment = ConnectorArguments.OPT_ASSESSMENT;
-    String message =
-        String.format("Unsupported option used with --%s: please remove --%s", assessment, option);
-    return new MetadataDumperUsageException(message);
   }
 
   static String overrideableQuery(
@@ -430,10 +422,17 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
         QueryAccelerationHistoryFormat.Header.class,
         QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
-        SnowflakeLogsConnectorProperty.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY),
+        SnowflakeLogsConnectorProperty.QUERY_ACCELERATION_HISTORY_OVERRIDE_QUERY,
+        TaskCategory.OPTIONAL),
+    QUERY_ATTRIBUTION_HISTORY(
+        QueryAttributionHistoryFormat.Header.class,
+        QueryAttributionHistoryFormat.ZIP_ENTRY_PREFIX,
+        TimeSeriesColumn.END_TIME,
+        SnowflakeLogsConnectorProperty.QUERY_ATTRIBUTION_HISTORY_OVERRIDE_QUERY
+    ),
     REPLICATION_GROUP_USAGE_HISTORY(
         ReplicationGroupUsageHistoryFormat.Header.class,
-        QueryAccelerationHistoryFormat.ZIP_ENTRY_PREFIX,
+        ReplicationGroupUsageHistoryFormat.ZIP_ENTRY_PREFIX,
         TimeSeriesColumn.END_TIME,
         SnowflakeLogsConnectorProperty.REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY),
     SERVERLESS_TASK_HISTORY(
@@ -461,18 +460,29 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     final ConnectorProperty property;
     final String queryPrefix;
     final String zipPrefix;
+    final TaskCategory category;
     final TimeSeriesColumn column;
 
     TimeSeriesView(
         Class<? extends Enum<?>> headerClass,
         String zipPrefix,
         TimeSeriesColumn column,
-        SnowflakeLogsConnectorProperty property) {
+        SnowflakeLogsConnectorProperty property,
+        TaskCategory category) {
       this.headerClass = headerClass;
       this.property = property;
       this.queryPrefix = formatPrefix(headerClass, name());
       this.zipPrefix = zipPrefix;
+      this.category = category;
       this.column = column;
+    }
+
+    TimeSeriesView(
+        Class<? extends Enum<?>> headerClass,
+        String zipPrefix,
+        TimeSeriesColumn column,
+        SnowflakeLogsConnectorProperty property) {
+      this(headerClass, zipPrefix, column, property, TaskCategory.REQUIRED);
     }
 
     static final ImmutableList<TimeSeriesView> valuesInOrder =
@@ -485,6 +495,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
             METERING_DAILY_HISTORY,
             PIPE_USAGE_HISTORY,
             QUERY_ACCELERATION_HISTORY,
+            QUERY_ATTRIBUTION_HISTORY,
             REPLICATION_GROUP_USAGE_HISTORY,
             SERVERLESS_TASK_HISTORY,
             TASK_HISTORY,
