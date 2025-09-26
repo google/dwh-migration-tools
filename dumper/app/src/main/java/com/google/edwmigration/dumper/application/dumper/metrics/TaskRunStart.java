@@ -16,28 +16,19 @@
  */
 package com.google.edwmigration.dumper.application.dumper.metrics;
 
-public class TaskExecutionSummary {
-  private long count;
-  private String status;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-  public long getCount() {
-    return count;
-  }
+public class TaskRunStart implements TelemetryPayload {
 
-  public void setCount(long count) {
-    this.count = count;
-  }
+  @JsonProperty private final String id;
 
-  public String getStatus() {
-    return status;
-  }
+  @JsonProperty private final String taskName;
 
-  public void setStatus(String status) {
-    this.status = status;
-  }
+  @JsonProperty private final String taskClassName;
 
-  public TaskExecutionSummary(long count, String status) {
-    this.count = count;
-    this.status = status;
+  public TaskRunStart(String id, String taskName, String taskClassName) {
+    this.id = id;
+    this.taskName = taskName;
+    this.taskClassName = taskClassName;
   }
 }

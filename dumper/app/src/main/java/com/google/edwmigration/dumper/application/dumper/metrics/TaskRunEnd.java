@@ -16,27 +16,27 @@
  */
 package com.google.edwmigration.dumper.application.dumper.metrics;
 
-public class DumperMetadata implements TelemetryPayload {
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 
-  private final String version;
-  private final String gitCommit;
-  private final String buildDate;
+public class TaskRunEnd implements TelemetryPayload {
 
-  public DumperMetadata(String version, String gitCommit, String buildDate) {
-    this.version = version;
-    this.gitCommit = gitCommit;
-    this.buildDate = buildDate;
-  }
+  @JsonProperty private final String id;
 
-  public String getVersion() {
-    return version;
-  }
+  @JsonProperty private final String taskName;
 
-  public String getGitCommit() {
-    return gitCommit;
-  }
+  @JsonProperty private final String taskClassName;
 
-  public final String getBuildDate() {
-    return buildDate;
+  @JsonProperty private final TaskState taskStatus;
+
+  @JsonProperty private final String error;
+
+  public TaskRunEnd(
+      String id, String taskName, String taskClassName, TaskState taskStatus, String error) {
+    this.id = id;
+    this.taskName = taskName;
+    this.taskClassName = taskClassName;
+    this.taskStatus = taskStatus;
+    this.error = error;
   }
 }

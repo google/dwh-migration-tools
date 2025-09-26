@@ -26,9 +26,9 @@ public interface TelemetryWriteStrategy {
   /**
    * Processes individual telemetry data point for immediate streaming.
    *
-   * @param clientTelemetry the telemetry object to process
+   * @param telemetryEvent the telemetry object to process
    */
-  void process(ClientTelemetry clientTelemetry);
+  void process(TelemetryEvent telemetryEvent);
 
   /** Flushes individual telemetry data point immediately */
   void flush();

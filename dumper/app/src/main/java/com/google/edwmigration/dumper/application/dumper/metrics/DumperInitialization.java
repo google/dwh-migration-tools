@@ -16,10 +16,27 @@
  */
 package com.google.edwmigration.dumper.application.dumper.metrics;
 
-public enum EventType {
-  DUMPER_INIT,
-  DUMPER_RUN_START,
-  DUMPER_RUN_END,
-  TASK_RUN_START,
-  TASK_RUN_END,
+public class DumperInitialization implements TelemetryPayload {
+
+  private final String version;
+  private final String gitCommit;
+  private final String buildDate;
+
+  public DumperInitialization(String version, String gitCommit, String buildDate) {
+    this.version = version;
+    this.gitCommit = gitCommit;
+    this.buildDate = buildDate;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public String getGitCommit() {
+    return gitCommit;
+  }
+
+  public final String getBuildDate() {
+    return buildDate;
+  }
 }

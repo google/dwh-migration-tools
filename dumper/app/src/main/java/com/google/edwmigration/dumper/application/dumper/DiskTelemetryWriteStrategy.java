@@ -47,8 +47,8 @@ public class DiskTelemetryWriteStrategy implements TelemetryWriteStrategy {
   private static final Path TELEMETRY_OS_CACHE_PATH =
       Paths.get(createTelemetryOsDirIfNotExists(), ALL_DUMPER_RUN_METRICS);
   private static final ObjectMapper MAPPER = createObjectMapper();
-  private final List<ClientTelemetry> bufferOs = new ArrayList<>();
-  private final List<ClientTelemetry> bufferZip = new ArrayList<>();
+  private final List<TelemetryEvent> bufferOs = new ArrayList<>();
+  private final List<TelemetryEvent> bufferZip = new ArrayList<>();
   private FileSystem fileSystem;
   private static boolean telemetryOsCacheIsAvailable = true;
 
@@ -74,9 +74,8 @@ public class DiskTelemetryWriteStrategy implements TelemetryWriteStrategy {
   }
 
   @Override
-  public void process(ClientTelemetry clientTelemetry) {
-    logger.debug(
-        "Processing telemetry data with {} payload items", clientTelemetry.getPayload().size());
+  public synchronized void process(TelemetryEvent clientTelemetry) {
+    logger.debug("Processing telemetry data with {} payload items", clientTelemetry.getPayload());
 
     if (telemetryOsCacheIsAvailable) {
       bufferOs.add(clientTelemetry);
@@ -87,7 +86,7 @@ public class DiskTelemetryWriteStrategy implements TelemetryWriteStrategy {
   }
 
   @Override
-  public void flush() {
+  public synchronized void flush() {
     // this implementation uses buffer until zip file is created afterwords it is flushed per
     // process
     flushOsCache();

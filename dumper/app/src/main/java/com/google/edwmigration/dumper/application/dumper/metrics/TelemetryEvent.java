@@ -17,26 +17,22 @@
 package com.google.edwmigration.dumper.application.dumper.metrics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
-public class ClientTelemetry {
+public class TelemetryEvent {
 
-  // Uniquer run Id. Is Set by the TelemetryProcessor.
-  @JsonProperty private String id;
+  @JsonProperty private final String runId;
 
-  @JsonProperty private String eventId;
+  @JsonProperty private final String eventId = UUID.randomUUID().toString();
 
-  @JsonProperty private EventType eventType;
+  @JsonProperty private final EventType eventType;
 
-  @JsonProperty private ZonedDateTime timestamp;
+  @JsonProperty private final Long timestamp;
 
-  @JsonProperty private List<TelemetryPayload> payload;
+  @JsonProperty private final TelemetryPayload payload;
 
-  private ClientTelemetry(Builder builder) {
-    this.id = builder.id;
-    this.eventId = builder.eventId;
+  private TelemetryEvent(Builder builder) {
+    this.runId = builder.runId;
     this.eventType = builder.eventType;
     this.timestamp = builder.timestamp;
     this.payload = builder.payload;
@@ -46,48 +42,33 @@ public class ClientTelemetry {
     return new Builder();
   }
 
-  public static Builder builder(ClientTelemetry clientTelemetry) {
+  public static Builder builder(TelemetryEvent clientTelemetry) {
     return new Builder()
-        .setEventId(clientTelemetry.getEventId())
         .setEventType(clientTelemetry.getEventType())
         .setTimestamp(clientTelemetry.getTimestamp())
         .setPayload(clientTelemetry.getPayload());
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public String getEventId() {
-    return eventId;
   }
 
   public EventType getEventType() {
     return eventType;
   }
 
-  public ZonedDateTime getTimestamp() {
+  public Long getTimestamp() {
     return timestamp;
   }
 
-  public List<TelemetryPayload> getPayload() {
+  public TelemetryPayload getPayload() {
     return payload;
   }
 
   public static class Builder {
-    private String id;
-    private String eventId;
-    private EventType eventType = EventType.METADATA;
-    private ZonedDateTime timestamp = ZonedDateTime.now();
-    private List<TelemetryPayload> payload = new ArrayList<>();
+    private String runId;
+    private EventType eventType = EventType.DUMPER_INIT;
+    private Long timestamp = System.currentTimeMillis();
+    private TelemetryPayload payload;
 
-    public Builder setId(String id) {
-      this.id = id;
-      return this;
-    }
-
-    public Builder setEventId(String eventId) {
-      this.eventId = eventId;
+    public Builder setRunId(String runId) {
+      this.runId = runId;
       return this;
     }
 
@@ -96,18 +77,18 @@ public class ClientTelemetry {
       return this;
     }
 
-    public Builder setTimestamp(ZonedDateTime timestamp) {
+    public Builder setTimestamp(Long timestamp) {
       this.timestamp = timestamp;
       return this;
     }
 
-    public Builder setPayload(List<TelemetryPayload> payload) {
-      this.payload = payload != null ? new ArrayList<>(payload) : new ArrayList<>();
+    public Builder setPayload(TelemetryPayload payload) {
+      this.payload = payload;
       return this;
     }
 
-    public ClientTelemetry build() {
-      return new ClientTelemetry(this);
+    public TelemetryEvent build() {
+      return new TelemetryEvent(this);
     }
   }
 }

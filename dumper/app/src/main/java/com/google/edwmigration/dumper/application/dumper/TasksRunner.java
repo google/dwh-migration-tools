@@ -25,9 +25,10 @@ import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.metrics.ClientTelemetry;
 import com.google.edwmigration.dumper.application.dumper.metrics.EventType;
-import com.google.edwmigration.dumper.application.dumper.metrics.TaskRunMetrics;
+import com.google.edwmigration.dumper.application.dumper.metrics.TaskRunEnd;
+import com.google.edwmigration.dumper.application.dumper.metrics.TaskRunStart;
+import com.google.edwmigration.dumper.application.dumper.metrics.TelemetryEvent;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -45,7 +46,9 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author ishmum */
+/**
+ * @author ishmum
+ */
 public class TasksRunner implements TaskRunContextOps {
 
   private static final Logger logger = LoggerFactory.getLogger(TasksRunner.class);
@@ -109,28 +112,26 @@ public class TasksRunner implements TaskRunContextOps {
     }
   }
 
-  private void processTaskStartTelemetry(Task<?> task, String taskEventId) {
-    TaskRunMetrics taskRunMetrics =
-        new TaskRunMetrics(task.getName(), task.getClass().toString(), null, null);
+  private void processTaskStartTelemetry(Task<?> task, String taskId) {
+    TaskRunStart taskRunStart =
+        new TaskRunStart(taskId, task.getName(), task.getClass().toString());
 
     telemetryProcessor.process(
-        ClientTelemetry.builder()
-            .setEventId(taskEventId)
+        TelemetryEvent.builder()
             .setEventType(EventType.TASK_RUN_START)
-            .setPayload(Collections.singletonList(taskRunMetrics))
+            .setPayload(taskRunStart)
             .build());
   }
 
   private void processTaskEndTelemetry(
-      Task<?> task, TaskState taskStatus, String error, String taskEventId) {
-    TaskRunMetrics taskMetrics =
-        new TaskRunMetrics(task.getName(), task.getClass().toString(), taskStatus.name(), error);
+      Task<?> task, TaskState taskStatus, String error, String taskId) {
+    TaskRunEnd taskMetrics =
+        new TaskRunEnd(taskId, task.getName(), task.getClass().toString(), taskStatus, error);
 
     telemetryProcessor.process(
-        ClientTelemetry.builder()
-            .setEventId(taskEventId)
+        TelemetryEvent.builder()
             .setEventType(EventType.TASK_RUN_END)
-            .setPayload(Collections.singletonList(taskMetrics))
+            .setPayload(taskMetrics)
             .build());
   }
 

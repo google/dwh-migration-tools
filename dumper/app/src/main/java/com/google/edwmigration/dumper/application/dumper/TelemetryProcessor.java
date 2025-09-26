@@ -44,15 +44,15 @@ public class TelemetryProcessor {
     telemetryStrategy.flush();
   }
 
-  public void process(ClientTelemetry clientTelemetry) {
-    telemetryStrategy.process(giveIdToClientTelemetry(clientTelemetry));
+  public void process(TelemetryEvent telemetryEvent) {
+    telemetryStrategy.process(giveIdToClientTelemetry(telemetryEvent));
   }
 
   public void flush() {
     telemetryStrategy.flush();
   }
 
-  private ClientTelemetry giveIdToClientTelemetry(ClientTelemetry clientTelemetry) {
-    return ClientTelemetry.builder(clientTelemetry).setId(runId).build();
+  private TelemetryEvent giveIdToClientTelemetry(TelemetryEvent telemetryEvent) {
+    return TelemetryEvent.builder(telemetryEvent).setRunId(runId).build();
   }
 }

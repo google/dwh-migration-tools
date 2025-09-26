@@ -24,7 +24,7 @@ import com.google.edwmigration.dumper.application.dumper.metrics.*;
  */
 public class NoOpTelemetryWriteStrategy implements TelemetryWriteStrategy {
   @Override
-  public void process(ClientTelemetry clientTelemetry) {
+  public void process(TelemetryEvent telemetryEvent) {
     // Do nothing - this is the no-op strategy
   }
 

@@ -28,8 +28,8 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
-import com.google.edwmigration.dumper.application.dumper.metrics.ClientTelemetry;
 import com.google.edwmigration.dumper.application.dumper.metrics.EventType;
+import com.google.edwmigration.dumper.application.dumper.metrics.TelemetryEvent;
 import com.google.edwmigration.dumper.application.dumper.task.ArgumentsTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcRunSQLScript;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -46,7 +46,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -73,11 +72,11 @@ public class MetadataDumper {
         new TelemetryProcessor(
             TelemetryStrategyFactory.createStrategy(connectorArguments.isTelemetryOn()));
     telemetryProcessor.process(
-        ClientTelemetry.builder().setEventType(EventType.DUMPER_RUN_START).build());
+        TelemetryEvent.builder().setEventType(EventType.DUMPER_RUN_START).build());
     telemetryProcessor.process(
-        ClientTelemetry.builder()
-            .setEventType(EventType.METADATA)
-            .setPayload(Collections.singletonList(StartUpMetaInfoProcessor.getDumperMetadata()))
+        TelemetryEvent.builder()
+            .setEventType(EventType.DUMPER_INIT)
+            .setPayload(StartUpMetaInfoProcessor.getDumperMetadata())
             .build());
 
     if (connectorArguments.saveResponseFile()) {
@@ -168,7 +167,7 @@ public class MetadataDumper {
         requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
         telemetryProcessor.process(
-            ClientTelemetry.builder().setEventType(EventType.DUMPER_RUN_END).build());
+            TelemetryEvent.builder().setEventType(EventType.DUMPER_RUN_END).build());
         telemetryProcessor.flush();
       } finally {
         // We must do this in finally after the ZipFileSystem has been closed.
