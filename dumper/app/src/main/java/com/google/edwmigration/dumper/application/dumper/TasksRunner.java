@@ -46,9 +46,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author ishmum
- */
+/** @author ishmum */
 public class TasksRunner implements TaskRunContextOps {
 
   private static final Logger logger = LoggerFactory.getLogger(TasksRunner.class);

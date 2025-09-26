@@ -19,7 +19,7 @@ package com.google.edwmigration.dumper.application.dumper;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
-import com.google.edwmigration.dumper.application.dumper.metrics.DumperMetadata;
+import com.google.edwmigration.dumper.application.dumper.metrics.DumperInitialization;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
@@ -134,8 +134,9 @@ public class DefaultArguments {
       System.exit(1);
     }
     if (o.has(versionOption)) {
-      DumperMetadata dumperMetadata = StartUpMetaInfoProcessor.getDumperMetadata();
-      String versionString = dumperMetadata.getVersion() + " : " + dumperMetadata.getGitCommit();
+      DumperInitialization dumperInitialization = StartUpMetaInfoProcessor.getDumperMetadata();
+      String versionString =
+          dumperInitialization.getVersion() + " : " + dumperInitialization.getGitCommit();
       System.err.println(versionString);
       System.exit(1);
     }
