@@ -190,7 +190,7 @@ jna = { group = "net.java.dev.jna", "name" = "jna", version.ref = "jna"}
 ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions-plugin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow-plugin" }
 version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "version-catalog-update-plugin" }
-jmh = { id = "me.champeau.jmh", version = "0.7.2" }
+jmh = { id = "me.champeau.jmh", version = "0.7.3" }
 jmh-report = { id = "io.morethan.jmhreport", version = "0.9.6" }
 protobuf = { id = "com.google.protobuf", version = "0.9.4" }
 test-logger = {id = "com.adarshr.test-logger", version="4.0.0"}
