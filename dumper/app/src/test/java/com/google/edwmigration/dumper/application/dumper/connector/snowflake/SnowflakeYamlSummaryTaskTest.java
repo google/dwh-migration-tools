@@ -16,8 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeYamlSummaryTask.createRoot;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeYamlSummaryTask.rootString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -26,7 +31,34 @@ import org.junit.runners.JUnit4;
 public class SnowflakeYamlSummaryTaskTest {
 
   @Test
-  public void createRoot_success() {
-    assertTrue(true);
+  public void rootString_success() {
+
+    String rootString = rootString(true, Optional.of("2345"));
+
+    assertTrue(rootString, rootString.contains("assessment"));
+    assertTrue(rootString, rootString.contains("true"));
+    assertTrue(rootString, rootString.contains("warehouse_count"));
+    assertTrue(rootString, rootString.contains("2345"));
+  }
+
+  @Test
+  public void createRoot_countAbsent_setToZero() {
+
+    ImmutableMap<String, ?> root = createRoot(true, Optional.empty());
+
+    assertTrue(root.toString(), root.containsKey("metadata"));
+    ImmutableMap<?, ?> value = (ImmutableMap<?, ?>) root.get("metadata");
+    assertEquals(0, value.get("warehouse_count"));
+  }
+
+  @Test
+  public void createRoot_noAssessment_success() {
+
+    ImmutableMap<String, ?> root = createRoot(false, Optional.of("123"));
+
+    assertTrue(root.toString(), root.containsKey("metadata"));
+    ImmutableMap<?, ?> value = (ImmutableMap<?, ?>) root.get("metadata");
+    assertEquals(false, value.get("assessment"));
+    assertEquals(123, value.get("warehouse_count"));
   }
 }
