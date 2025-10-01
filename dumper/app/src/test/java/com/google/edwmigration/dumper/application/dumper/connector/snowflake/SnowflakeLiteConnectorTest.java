@@ -40,6 +40,15 @@ public class SnowflakeLiteConnectorTest {
   }
 
   @Test
+  public void getDescription_success() {
+
+    String description = connector.getDescription();
+
+    assertTrue(description, description.contains("lite"));
+    assertTrue(description, description.contains("Snowflake"));
+  }
+
+  @Test
   public void validate_databaseFlag_throwsException() {
     ImmutableList<String> list =
         ImmutableList.of(

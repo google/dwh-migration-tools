@@ -60,6 +60,7 @@ public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
   public final void addTasksTo(List<? super Task<?>> out, ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
+    out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
     out.addAll(planner.generateLiteSpecificQueries());
   }
 

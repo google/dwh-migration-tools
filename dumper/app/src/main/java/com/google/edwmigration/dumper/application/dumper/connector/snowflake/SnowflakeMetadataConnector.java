@@ -171,6 +171,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
+    out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
 
     boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
     // INFORMATION_SCHEMA queries must be qualified with a database
