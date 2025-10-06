@@ -49,8 +49,7 @@ enum SnowflakeLogsConnectorProperty implements ConnectorProperty {
       "Custom query for query acceleration history dump"),
   QUERY_ATTRIBUTION_HISTORY_OVERRIDE_QUERY(
       "snowflake.query_attribution_history.query",
-      "Custom query for query attribution history dump"
-  ),
+      "Custom query for query attribution history dump"),
   REPLICATION_GROUP_USAGE_HISTORY_OVERRIDE_QUERY(
       "snowflake.replication_group_usage_history.query",
       "Custom query for replication group usage history dump"),
