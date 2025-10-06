@@ -50,10 +50,10 @@ jobs:
       run: ./gradlew -Pci clean
     
     - name: Test Dumper
-      run: ./gradlew -Pci :dumper:app:test --stacktrace
+      run: ./gradlew -Pci :dumper:app:build --stacktrace
     
     - name: Test DTS transfer
-      run: ./gradlew -Pci :dts-transfer-status:app:test --stacktrace
+      run: ./gradlew -Pci :dts-transfer-status:app:build --stacktrace
     
     - name: Test Permissions migration
-      run: ./gradlew -Pci :permissions-migration:app:test --stacktrace
+      run: ./gradlew -Pci :permissions-migration:app:build --stacktrace
