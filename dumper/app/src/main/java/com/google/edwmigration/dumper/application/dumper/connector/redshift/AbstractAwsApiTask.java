@@ -22,9 +22,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.redshift.AmazonRedshift;
-import com.amazonaws.services.redshift.AmazonRedshiftClient;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -33,7 +31,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -41,42 +38,26 @@ import org.apache.commons.csv.CSVPrinter;
 /** Abstract class that provides methods for connecting with AWS API and writing results. */
 public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
 
-  AWSCredentialsProvider credentialsProvider;
   Class<? extends Enum<?>> headerEnum;
-  Optional<AmazonRedshift> redshiftClient;
-  Optional<AmazonCloudWatch> cloudWatchClient;
+  AmazonRedshift redshiftClient;
+  AmazonCloudWatch cloudWatchClient;
 
   public AbstractAwsApiTask(
-      AWSCredentialsProvider credentialsProvider,
+      AmazonRedshift redshiftClient, String zipEntryName, Class<? extends Enum<?>> headerEnum) {
+    super(zipEntryName);
+    this.redshiftClient = redshiftClient;
+    this.headerEnum = headerEnum;
+  }
+
+  public AbstractAwsApiTask(
+      AmazonRedshift redshiftClient,
+      AmazonCloudWatch amazonCloudWatch,
       String zipEntryName,
       Class<? extends Enum<?>> headerEnum) {
     super(zipEntryName);
     this.headerEnum = headerEnum;
-    this.redshiftClient = Optional.empty();
-    this.cloudWatchClient = Optional.empty();
-    this.credentialsProvider = credentialsProvider;
-  }
-
-  @Nonnull
-  public AbstractAwsApiTask withRedshiftApiClient(AmazonRedshift redshiftClient) {
-    this.redshiftClient = Optional.of(redshiftClient);
-    return this;
-  }
-
-  @Nonnull
-  public AbstractAwsApiTask withCloudWatchApiClient(AmazonCloudWatch cloudWatchClient) {
-    this.cloudWatchClient = Optional.of(cloudWatchClient);
-    return this;
-  }
-
-  public AmazonRedshift redshiftApiClient() {
-    return redshiftClient.orElseGet(
-        () -> AmazonRedshiftClient.builder().withCredentials(credentialsProvider).build());
-  }
-
-  public AmazonCloudWatch cloudWatchApiClient() {
-    return cloudWatchClient.orElseGet(
-        () -> AmazonCloudWatchClient.builder().withCredentials(credentialsProvider).build());
+    this.redshiftClient = redshiftClient;
+    this.cloudWatchClient = amazonCloudWatch;
   }
 
   static class CsvRecordWriter implements AutoCloseable {

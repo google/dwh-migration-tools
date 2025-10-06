@@ -18,6 +18,10 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import static com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil.getEntryFileNameWithTimestamp;
 
+import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
+import com.amazonaws.services.redshift.AmazonRedshift;
+import com.amazonaws.services.redshift.AmazonRedshiftClient;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -243,13 +247,17 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
     AbstractAwsApiTask.createCredentialsProvider(arguments)
         .ifPresent(
             awsCredentials -> {
+              AmazonCloudWatch amazonCloudWatch =
+                  AmazonCloudWatchClient.builder().withCredentials(awsCredentials).build();
+              AmazonRedshift redshiftClient =
+                  AmazonRedshiftClient.builder().withCredentials(awsCredentials).build();
               for (ZonedInterval interval : intervals) {
                 String file =
                     getEntryFileNameWithTimestamp(
                         RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX, interval);
                 out.add(
                     new RedshiftClusterUsageMetricsTask(
-                        awsCredentials, ZonedDateTime.now(), interval, file));
+                        redshiftClient, amazonCloudWatch, ZonedDateTime.now(), interval, file));
               }
             });
   }

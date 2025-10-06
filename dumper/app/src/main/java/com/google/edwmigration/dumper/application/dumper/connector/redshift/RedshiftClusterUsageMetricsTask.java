@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
@@ -96,12 +95,14 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
   private final String zipEntryName;
 
   public RedshiftClusterUsageMetricsTask(
-      AWSCredentialsProvider credentialsProvider,
+      AmazonRedshift redshiftClient,
+      AmazonCloudWatch amazonCloudWatch,
       ZonedDateTime currentTime,
       ZonedInterval interval,
       String zipEntryName) {
     super(
-        credentialsProvider,
+        redshiftClient,
+        amazonCloudWatch,
         zipEntryName,
         RedshiftRawLogsDumpFormat.ClusterUsageMetrics.Header.class);
     this.interval = interval;
@@ -114,8 +115,8 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
       throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
     try (CsvRecordWriter writer = new CsvRecordWriter(sink, format, getName())) {
-      AmazonRedshift client = redshiftApiClient();
-      List<Cluster> clusters = client.describeClusters(new DescribeClustersRequest()).getClusters();
+      List<Cluster> clusters =
+          redshiftClient.describeClusters(new DescribeClustersRequest()).getClusters();
       for (Cluster item : clusters) {
         writeCluster(writer, item.getClusterIdentifier());
       }
@@ -146,7 +147,6 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
 
   private ImmutableList<MetricDataPoint> getMetricDataPoints(
       String clusterId, MetricConfig metricConfig) {
-    AmazonCloudWatch client = cloudWatchApiClient();
     GetMetricStatisticsRequest request =
         new GetMetricStatisticsRequest()
             .withMetricName(metricConfig.name().name())
@@ -157,7 +157,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
             .withEndTime(Date.from(interval.getEndExclusiveUTC().toInstant()))
             .withPeriod((int) metricDataPeriod().getSeconds());
 
-    GetMetricStatisticsResult result = client.getMetricStatistics(request);
+    GetMetricStatisticsResult result = cloudWatchClient.getMetricStatistics(request);
     return result.getDatapoints().stream()
         .map(
             datapoint ->
