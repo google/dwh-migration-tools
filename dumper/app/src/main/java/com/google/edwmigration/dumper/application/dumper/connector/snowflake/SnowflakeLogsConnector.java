@@ -298,6 +298,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
       throws MetadataDumperUsageException {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
+    out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
 
     // (24 * 7) -> 7 trailing days == 168 hours
     // Actually, on Snowflake, 7 days ago starts at midnight in an unadvertised time zone. What the
