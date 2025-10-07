@@ -27,7 +27,6 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -114,28 +113,23 @@ class RedshiftUrlUtil {
 
   public static Optional<AWSCredentialsProvider> createCredentialsProvider(
       ConnectorArguments arguments) {
-    return Optional.ofNullable(doCreateProvider(arguments));
-  }
-
-  @Nullable
-  private static AWSCredentialsProvider doCreateProvider(ConnectorArguments arguments) {
     String profileName = arguments.getIAMProfile();
     if (profileName != null) {
-      return new ProfileCredentialsProvider(profileName);
+      return Optional.of(new ProfileCredentialsProvider(profileName));
     }
     String accessKeyId = arguments.getIAMAccessKeyID();
     String secretAccessKey = arguments.getIAMSecretAccessKey();
     String sessionToken = arguments.getIamSessionToken();
     if (accessKeyId == null || secretAccessKey == null) {
-      return null;
+      return Optional.empty();
     }
 
     if (sessionToken != null) {
       BasicSessionCredentials credentials =
           new BasicSessionCredentials(accessKeyId, secretAccessKey, sessionToken);
-      return new AWSStaticCredentialsProvider(credentials);
+      return Optional.of(new AWSStaticCredentialsProvider(credentials));
     }
     BasicAWSCredentials credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
-    return new AWSStaticCredentialsProvider(credentials);
+    return Optional.of(new AWSStaticCredentialsProvider(credentials));
   }
 }
