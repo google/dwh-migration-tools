@@ -29,8 +29,6 @@ import java.sql.SQLException;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is thread-safe as log as the provided {@link DataSource} is thread-safe.
