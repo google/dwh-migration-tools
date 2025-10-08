@@ -31,8 +31,8 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
-import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricDataPoint;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.handle.RedshiftHandle;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.io.IOException;
@@ -49,7 +49,6 @@ import org.apache.commons.csv.CSVFormat;
 
 /** Extraction task to get Redshift time series metrics from AWS CloudWatch API. */
 public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
-
   protected static enum MetricName {
     CPUUtilization,
     PercentageDiskSpaceUsed
@@ -73,7 +72,6 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
 
   @AutoValue
   protected abstract static class MetricDataPoint {
-
     public abstract Instant instant();
 
     public abstract Double value();
@@ -95,16 +93,8 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
   private final String zipEntryName;
 
   public RedshiftClusterUsageMetricsTask(
-      AmazonRedshift redshiftClient,
-      AmazonCloudWatch amazonCloudWatch,
-      ZonedDateTime currentTime,
-      ZonedInterval interval,
-      String zipEntryName) {
-    super(
-        redshiftClient,
-        amazonCloudWatch,
-        zipEntryName,
-        RedshiftRawLogsDumpFormat.ClusterUsageMetrics.Header.class);
+      ZonedDateTime currentTime, ZonedInterval interval, String zipEntryName) {
+    super(zipEntryName, RedshiftRawLogsDumpFormat.ClusterUsageMetrics.Header.class);
     this.interval = interval;
     this.currentTime = currentTime;
     this.zipEntryName = zipEntryName;
@@ -114,26 +104,44 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
+    RedshiftHandle redshiftHandle;
+    if (handle instanceof RedshiftHandle) {
+      redshiftHandle = (RedshiftHandle) handle;
+    } else {
+      throw new IllegalStateException("Redshift handle was expected but got " + handle);
+    }
+
+    // customer did not provide aws credentials;
+    if (!redshiftHandle.getRedshiftClient().isPresent()
+        || !redshiftHandle.getCloudWatchClient().isPresent()) {
+      return null;
+    }
+
+    AmazonRedshift redshiftClient = redshiftHandle.getRedshiftClient().get();
+
     try (CsvRecordWriter writer = new CsvRecordWriter(sink, format, getName())) {
       List<Cluster> clusters =
           redshiftClient.describeClusters(new DescribeClustersRequest()).getClusters();
       for (Cluster item : clusters) {
-        writeCluster(writer, item.getClusterIdentifier());
+        writeCluster(
+            writer, item.getClusterIdentifier(), redshiftHandle.getCloudWatchClient().get());
       }
     }
     return null;
   }
 
-  private void writeCluster(CsvRecordWriter writer, String clusterId) throws IOException {
+  private void writeCluster(
+      CsvRecordWriter writer, String clusterId, AmazonCloudWatch cloudWatchClient)
+      throws IOException {
     TreeMap<Instant, String> cpuPoints = new TreeMap<>();
     TreeMap<Instant, String> diskPoints = new TreeMap<>();
 
-    for (MetricDataPoint dataPoint : getCpuMetrics(clusterId)) {
+    for (MetricDataPoint dataPoint : getCpuMetrics(clusterId, cloudWatchClient)) {
       cpuPoints.put(dataPoint.instant(), dataPoint.value().toString());
       diskPoints.putIfAbsent(dataPoint.instant(), "");
     }
 
-    for (MetricDataPoint dataPoint : getDiskMetrics(clusterId)) {
+    for (MetricDataPoint dataPoint : getDiskMetrics(clusterId, cloudWatchClient)) {
       cpuPoints.putIfAbsent(dataPoint.instant(), "");
       diskPoints.put(dataPoint.instant(), dataPoint.value().toString());
     }
@@ -146,7 +154,7 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
   }
 
   private ImmutableList<MetricDataPoint> getMetricDataPoints(
-      String clusterId, MetricConfig metricConfig) {
+      String clusterId, MetricConfig metricConfig, AmazonCloudWatch cloudWatchClient) {
     GetMetricStatisticsRequest request =
         new GetMetricStatisticsRequest()
             .withMetricName(metricConfig.name().name())
@@ -177,15 +185,17 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
     }
   }
 
-  private ImmutableList<MetricDataPoint> getDiskMetrics(String clusterId) {
+  private ImmutableList<MetricDataPoint> getDiskMetrics(
+      String clusterId, AmazonCloudWatch cloudWatchClient) {
     MetricConfig config =
         MetricConfig.create(MetricName.PercentageDiskSpaceUsed, MetricType.Average);
-    return getMetricDataPoints(clusterId, config);
+    return getMetricDataPoints(clusterId, config, cloudWatchClient);
   }
 
-  private ImmutableList<MetricDataPoint> getCpuMetrics(String clusterId) {
+  private ImmutableList<MetricDataPoint> getCpuMetrics(
+      String clusterId, AmazonCloudWatch cloudWatchClient) {
     MetricConfig config = MetricConfig.create(MetricName.CPUUtilization, MetricType.Average);
-    return getMetricDataPoints(clusterId, config);
+    return getMetricDataPoints(clusterId, config, cloudWatchClient);
   }
 
   /**

@@ -21,8 +21,6 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
-import com.amazonaws.services.redshift.AmazonRedshift;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
@@ -39,25 +37,10 @@ import org.apache.commons.csv.CSVPrinter;
 public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
 
   Class<? extends Enum<?>> headerEnum;
-  AmazonRedshift redshiftClient;
-  AmazonCloudWatch cloudWatchClient;
 
-  public AbstractAwsApiTask(
-      AmazonRedshift redshiftClient, String zipEntryName, Class<? extends Enum<?>> headerEnum) {
-    super(zipEntryName);
-    this.redshiftClient = redshiftClient;
-    this.headerEnum = headerEnum;
-  }
-
-  public AbstractAwsApiTask(
-      AmazonRedshift redshiftClient,
-      AmazonCloudWatch amazonCloudWatch,
-      String zipEntryName,
-      Class<? extends Enum<?>> headerEnum) {
+  public AbstractAwsApiTask(String zipEntryName, Class<? extends Enum<?>> headerEnum) {
     super(zipEntryName);
     this.headerEnum = headerEnum;
-    this.redshiftClient = redshiftClient;
-    this.cloudWatchClient = amazonCloudWatch;
   }
 
   static class CsvRecordWriter implements AutoCloseable {

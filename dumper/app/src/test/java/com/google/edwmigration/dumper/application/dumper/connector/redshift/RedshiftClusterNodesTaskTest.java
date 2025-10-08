@@ -25,7 +25,9 @@ import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
 import com.amazonaws.services.redshift.model.Endpoint;
 import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.handle.RedshiftHandle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,9 +42,12 @@ public class RedshiftClusterNodesTaskTest extends AbstractTaskTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private AmazonRedshift redshiftClientMock;
+  @Mock private RedshiftHandle redshiftHandle;
 
   @Test
   public void doRun_success() throws Exception {
+    when(redshiftHandle.getRedshiftClient()).thenReturn(Optional.of(redshiftClientMock));
+
     when(redshiftClientMock.describeClusters(any()))
         .thenReturn(
             new DescribeClustersResult()
@@ -63,8 +68,8 @@ public class RedshiftClusterNodesTaskTest extends AbstractTaskTest {
 
     MemoryByteSink sink = new MemoryByteSink();
 
-    RedshiftClusterNodesTask task = new RedshiftClusterNodesTask(redshiftClientMock);
-    task.doRun(null, sink, null);
+    RedshiftClusterNodesTask task = new RedshiftClusterNodesTask();
+    task.doRun(null, sink, redshiftHandle);
 
     String actualOutput = sink.openStream().toString();
     assertEquals(

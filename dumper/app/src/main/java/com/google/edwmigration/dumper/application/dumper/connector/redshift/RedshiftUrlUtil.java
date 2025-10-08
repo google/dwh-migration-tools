@@ -16,16 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.google.common.collect.Iterables;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.io.UnsupportedEncodingException;
-import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -109,27 +103,5 @@ class RedshiftUrlUtil {
       // Use the default IAM from ~/.aws/credentials/
       return "";
     }
-  }
-
-  public static Optional<AWSCredentialsProvider> createCredentialsProvider(
-      ConnectorArguments arguments) {
-    String profileName = arguments.getIAMProfile();
-    if (profileName != null) {
-      return Optional.of(new ProfileCredentialsProvider(profileName));
-    }
-    String accessKeyId = arguments.getIAMAccessKeyID();
-    String secretAccessKey = arguments.getIAMSecretAccessKey();
-    String sessionToken = arguments.getIamSessionToken();
-    if (accessKeyId == null || secretAccessKey == null) {
-      return Optional.empty();
-    }
-
-    if (sessionToken != null) {
-      BasicSessionCredentials credentials =
-          new BasicSessionCredentials(accessKeyId, secretAccessKey, sessionToken);
-      return Optional.of(new AWSStaticCredentialsProvider(credentials));
-    }
-    BasicAWSCredentials credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
-    return Optional.of(new AWSStaticCredentialsProvider(credentials));
   }
 }
