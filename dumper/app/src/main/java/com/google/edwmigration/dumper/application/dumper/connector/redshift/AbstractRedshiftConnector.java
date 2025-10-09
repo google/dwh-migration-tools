@@ -26,7 +26,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.handle.RedshiftHandle;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
@@ -172,7 +172,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     DataSource dataSource =
         new SimpleDriverDataSource(driver, url, arguments.getUser(), password.orElse(null));
 
-    return JdbcHandle.newPooledJdbcHandle(dataSource, arguments.getThreadPoolSize());
+    return new RedshiftHandle(dataSource, arguments);
   }
 
   private static void logDriverInfo(@Nonnull Driver driver) throws SQLException {

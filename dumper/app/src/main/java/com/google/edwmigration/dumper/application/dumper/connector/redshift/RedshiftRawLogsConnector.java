@@ -192,7 +192,7 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
           "service_class_start_time",
           parallelTask);
 
-      makeClusterMetricsTasks(arguments, intervals, out);
+      makeClusterMetricsTasks(intervals, out);
     }
 
     out.add(parallelTask.build());
@@ -238,19 +238,12 @@ public class RedshiftRawLogsConnector extends AbstractRedshiftConnector
   }
 
   /** Creates tasks to get Redshift cluster metrics from AWS CloudWatch API. */
-  private void makeClusterMetricsTasks(
-      ConnectorArguments arguments, ZonedIntervalIterable intervals, List<? super Task<?>> out) {
-    AbstractAwsApiTask.createCredentialsProvider(arguments)
-        .ifPresent(
-            awsCredentials -> {
-              for (ZonedInterval interval : intervals) {
-                String file =
-                    getEntryFileNameWithTimestamp(
-                        RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX, interval);
-                out.add(
-                    new RedshiftClusterUsageMetricsTask(
-                        awsCredentials, ZonedDateTime.now(), interval, file));
-              }
-            });
+  private void makeClusterMetricsTasks(ZonedIntervalIterable intervals, List<? super Task<?>> out) {
+    for (ZonedInterval interval : intervals) {
+      String file =
+          getEntryFileNameWithTimestamp(
+              RedshiftRawLogsDumpFormat.ClusterUsageMetrics.ZIP_ENTRY_PREFIX, interval);
+      out.add(new RedshiftClusterUsageMetricsTask(ZonedDateTime.now(), interval, file));
+    }
   }
 }

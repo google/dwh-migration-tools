@@ -115,66 +115,66 @@ public class MetadataDumper {
         print(task, 1);
       }
       return true;
-    } else {
-      Stopwatch stopwatch = Stopwatch.createStarted();
-      long outputFileLength = 0;
-      TaskSetState.Impl state = new TaskSetState.Impl();
+    }
 
-      logger.info("Using connector: [{}]", connector);
-      SummaryPrinter summaryPrinter = new SummaryPrinter();
-      boolean requiredTaskSucceeded = false;
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    long outputFileLength = 0;
+    TaskSetState.Impl state = new TaskSetState.Impl();
 
-      try (Closer closer = Closer.create()) {
-        Path outputPath = prepareOutputPath(outputFileLocation, closer, connectorArguments);
+    logger.info("Using connector: [{}]", connector);
+    SummaryPrinter summaryPrinter = new SummaryPrinter();
+    boolean requiredTaskSucceeded = false;
 
-        URI outputUri = URI.create("jar:" + outputPath.toUri());
+    try (Closer closer = Closer.create()) {
+      Path outputPath = prepareOutputPath(outputFileLocation, closer, connectorArguments);
 
-        Map<String, Object> fileSystemProperties =
-            ImmutableMap.<String, Object>builder()
-                .put("create", "true")
-                .put("useTempFile", Boolean.TRUE)
-                .build();
-        FileSystem fileSystem =
-            closer.register(FileSystems.newFileSystem(outputUri, fileSystemProperties));
-        OutputHandleFactory sinkFactory =
-            new FileSystemOutputHandleFactory(fileSystem, "/"); // It's required to be "/"
-        logger.debug("Target filesystem is [{}]", sinkFactory);
+      URI outputUri = URI.create("jar:" + outputPath.toUri());
 
-        Handle handle = closer.register(connector.open(connectorArguments));
+      Map<String, Object> fileSystemProperties =
+          ImmutableMap.<String, Object>builder()
+              .put("create", "true")
+              .put("useTempFile", Boolean.TRUE)
+              .build();
+      FileSystem fileSystem =
+          closer.register(FileSystems.newFileSystem(outputUri, fileSystemProperties));
+      OutputHandleFactory sinkFactory =
+          new FileSystemOutputHandleFactory(fileSystem, "/"); // It's required to be "/"
+      logger.debug("Target filesystem is [{}]", sinkFactory);
 
-        new TasksRunner(
-                sinkFactory,
-                handle,
-                connectorArguments.getThreadPoolSize(),
-                state,
-                tasks,
-                connectorArguments)
-            .run();
+      Handle handle = closer.register(connector.open(connectorArguments));
 
-        requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
+      new TasksRunner(
+              sinkFactory,
+              handle,
+              connectorArguments.getThreadPoolSize(),
+              state,
+              tasks,
+              connectorArguments)
+          .run();
 
-        telemetryProcessor.addDumperRunMetricsToPayload(
-            connectorArguments, state, stopwatch, requiredTaskSucceeded);
-        telemetryProcessor.processTelemetry(fileSystem);
-      } finally {
-        // We must do this in finally after the ZipFileSystem has been closed.
-        File outputFile = new File(outputFileLocation);
-        if (outputFile.isFile()) {
-          outputFileLength = outputFile.length();
-        }
+      requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
-        printTaskResults(summaryPrinter, state);
-        logFinalSummary(
-            summaryPrinter,
-            state,
-            outputFileLength,
-            stopwatch,
-            outputFileLocation,
-            requiredTaskSucceeded);
+      telemetryProcessor.addDumperRunMetricsToPayload(
+          connectorArguments, state, stopwatch, requiredTaskSucceeded);
+      telemetryProcessor.processTelemetry(fileSystem);
+    } finally {
+      // We must do this in finally after the ZipFileSystem has been closed.
+      File outputFile = new File(outputFileLocation);
+      if (outputFile.isFile()) {
+        outputFileLength = outputFile.length();
       }
 
-      return requiredTaskSucceeded;
+      printTaskResults(summaryPrinter, state);
+      logFinalSummary(
+          summaryPrinter,
+          state,
+          outputFileLength,
+          stopwatch,
+          outputFileLocation,
+          requiredTaskSucceeded);
     }
+
+    return requiredTaskSucceeded;
   }
 
   private void print(@Nonnull Task<?> task, int indent) {

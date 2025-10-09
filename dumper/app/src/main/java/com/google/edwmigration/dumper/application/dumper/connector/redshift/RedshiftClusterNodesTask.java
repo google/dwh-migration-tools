@@ -18,14 +18,13 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import static com.google.edwmigration.dumper.application.dumper.SummaryPrinter.joinSummaryDoubleLine;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.redshift.AmazonRedshift;
 import com.amazonaws.services.redshift.model.Cluster;
 import com.amazonaws.services.redshift.model.DescribeClustersRequest;
 import com.amazonaws.services.redshift.model.DescribeClustersResult;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.connector.redshift.AbstractAwsApiTask.CsvRecordWriter;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.handle.RedshiftHandle;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftMetadataDumpFormat.ClusterNodes;
 import java.io.IOException;
@@ -35,29 +34,46 @@ import org.apache.commons.csv.CSVFormat;
 /** Extraction task to get information about Redshift Cluster nodes from AWS API. */
 public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
 
-  public RedshiftClusterNodesTask(AWSCredentialsProvider credentialsProvider) {
-    super(credentialsProvider, ClusterNodes.ZIP_ENTRY_NAME, ClusterNodes.Header.class);
+  public RedshiftClusterNodesTask() {
+    super(ClusterNodes.ZIP_ENTRY_NAME, ClusterNodes.Header.class);
   }
 
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, Handle handle)
       throws IOException {
-    AmazonRedshift client = redshiftApiClient();
-    DescribeClustersRequest request = new DescribeClustersRequest();
-    DescribeClustersResult result = client.describeClusters(request);
 
+    RedshiftHandle redshiftHandle = (RedshiftHandle) handle;
+    // customer did not provide aws credentials;
+    if (!redshiftHandle.getRedshiftClient().isPresent()) {
+      return null;
+    }
+
+    AmazonRedshift redshiftClient = redshiftHandle.getRedshiftClient().get();
+
+    dumpClusterNodes(redshiftClient, sink);
+    return null;
+  }
+
+  private void dumpClusterNodes(AmazonRedshift redshiftClient, @Nonnull ByteSink sink)
+      throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
     try (CsvRecordWriter writer = new CsvRecordWriter(sink, format, getName())) {
-      for (Cluster item : result.getClusters()) {
-        writer.handleRecord(
-            item.getClusterIdentifier(),
-            item.getEndpoint() != null ? item.getEndpoint().getAddress() : "",
-            item.getNumberOfNodes(),
-            item.getNodeType(),
-            item.getTotalStorageCapacityInMegaBytes());
-      }
+      DescribeClustersRequest request = new DescribeClustersRequest();
+      String marker = null;
+      do {
+        request.setMarker(marker);
+        DescribeClustersResult result = redshiftClient.describeClusters(request);
+        for (Cluster item : result.getClusters()) {
+          writer.handleRecord(
+              item.getClusterIdentifier(),
+              item.getEndpoint() != null ? item.getEndpoint().getAddress() : "",
+              item.getNumberOfNodes(),
+              item.getNodeType(),
+              item.getTotalStorageCapacityInMegaBytes());
+        }
+        marker = result.getMarker();
+      } while (marker != null);
     }
-    return null;
   }
 
   private String toCallDescription() {
