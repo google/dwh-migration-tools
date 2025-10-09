@@ -22,9 +22,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -42,7 +39,6 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.slf4j.LoggerFactory;
 
 @RunWith(JUnit4.class)
 public class TasksRunnerTest {
@@ -70,7 +66,6 @@ public class TasksRunnerTest {
             Collections.emptyList(),
             arguments);
 
-    // Use reflection to access the private createContext method for direct testing
     try {
       java.lang.reflect.Method method =
           TasksRunner.class.getDeclaredMethod(
@@ -105,13 +100,11 @@ public void testGetTaskDuration_ReturnsMaxOfAllAndLatest() throws Exception {
   TasksRunner runner =
       new TasksRunner(mockSinkFactory, mockHandle, threadPoolSize, mockState, tasks, arguments);
 
-  // Set numberOfCompletedTasks to 5
   java.lang.reflect.Field completedField =
       TasksRunner.class.getDeclaredField("numberOfCompletedTasks");
   completedField.setAccessible(true);
   completedField.set(runner, new java.util.concurrent.atomic.AtomicInteger(5));
 
-  // Mock stopwatch to control elapsed time
   java.lang.reflect.Field stopwatchField =
       TasksRunner.class.getDeclaredField("stopwatch");
   stopwatchField.setAccessible(true);
@@ -119,7 +112,6 @@ public void testGetTaskDuration_ReturnsMaxOfAllAndLatest() throws Exception {
   when(mockStopwatch.elapsed()).thenReturn(Duration.ofSeconds(50));
   stopwatchField.set(runner, mockStopwatch);
 
-  // Fill lastTaskDurations with 5 durations: 10, 20, 30, 40, 50 seconds
   java.lang.reflect.Field durationsField =
       TasksRunner.class.getDeclaredField("lastTaskDurations");
   durationsField.setAccessible(true);
@@ -153,13 +145,11 @@ public void testGetTaskDuration_EmptyLastTaskDurations() throws Exception {
   TasksRunner runner =
       new TasksRunner(mockSinkFactory, mockHandle, threadPoolSize, mockState, tasks, arguments);
 
-  // Set numberOfCompletedTasks to 3
   java.lang.reflect.Field completedField =
       TasksRunner.class.getDeclaredField("numberOfCompletedTasks");
   completedField.setAccessible(true);
   completedField.set(runner, new java.util.concurrent.atomic.AtomicInteger(3));
 
-  // Mock stopwatch to control elapsed time
   java.lang.reflect.Field stopwatchField =
       TasksRunner.class.getDeclaredField("stopwatch");
   stopwatchField.setAccessible(true);
@@ -167,7 +157,6 @@ public void testGetTaskDuration_EmptyLastTaskDurations() throws Exception {
   when(mockStopwatch.elapsed()).thenReturn(Duration.ofSeconds(9));
   stopwatchField.set(runner, mockStopwatch);
 
-  // Ensure lastTaskDurations is empty
   java.lang.reflect.Field durationsField =
       TasksRunner.class.getDeclaredField("lastTaskDurations");
   durationsField.setAccessible(true);
@@ -202,7 +191,6 @@ public void testGetTaskDuration_LastTaskDurationsGreaterThanAllTasks() throws Ex
   completedField.setAccessible(true);
   completedField.set(runner, new java.util.concurrent.atomic.AtomicInteger(2));
 
-  // Mock stopwatch to control elapsed time
   java.lang.reflect.Field stopwatchField =
       TasksRunner.class.getDeclaredField("stopwatch");
   stopwatchField.setAccessible(true);
@@ -210,7 +198,6 @@ public void testGetTaskDuration_LastTaskDurationsGreaterThanAllTasks() throws Ex
   when(mockStopwatch.elapsed()).thenReturn(Duration.ofSeconds(6));
   stopwatchField.set(runner, mockStopwatch);
 
-  // Fill lastTaskDurations with 2 durations: 2s, 10s
   java.lang.reflect.Field durationsField =
       TasksRunner.class.getDeclaredField("lastTaskDurations");
   durationsField.setAccessible(true);
