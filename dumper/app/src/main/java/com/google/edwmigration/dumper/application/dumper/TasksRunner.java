@@ -134,8 +134,8 @@ public class TasksRunner implements TaskRunContextOps {
 
   private Duration getTaskDuration() {
     return Collections.max(
-            Arrays.asList(
-                getAverageTaskDurationFromAllTasks(), getAverageTaskDurationFromLatestTasks()));
+        Arrays.asList(
+            getAverageTaskDurationFromAllTasks(), getAverageTaskDurationFromLatestTasks()));
   }
 
   private void logProgress() {
