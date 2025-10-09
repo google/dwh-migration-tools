@@ -155,7 +155,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     @Override
     public void close() throws Exception {
       logger.debug("Shutting down thread pool backing pooled Thrift client '{}'", name);
-      logger.debug("DO NOT SUBMIT< TESTING '{}'", name);
+      logger.debug("DO NOT SUBMIT< TESTIN NO LABELS G '{}'", name);
       executorManager.close();
       MoreExecutors.shutdownAndAwaitTermination(executorService, 30, TimeUnit.SECONDS);
       synchronized (lock) {
