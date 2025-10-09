@@ -35,7 +35,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.CheckForNull;
@@ -56,6 +59,9 @@ public class TasksRunner implements TaskRunContextOps {
   private final TaskRunContext context;
   private final TaskSetState.Impl state;
   private final List<Task<?>> tasks;
+
+  // For tracking last 10 finished task durations
+  private final Deque<Duration> lastTaskDurations = new ArrayDeque<>(10);
 
   public TasksRunner(
       OutputHandleFactory sinkFactory,
@@ -102,15 +108,40 @@ public class TasksRunner implements TaskRunContextOps {
     T t = runTask(task);
     if (!(task instanceof TaskGroup)) {
       numberOfCompletedTasks.getAndIncrement();
+
+      Duration taskDuration = stopwatch.elapsed();
+      if (lastTaskDurations.size() == 10) {
+        lastTaskDurations.removeFirst();
+      }
+      lastTaskDurations.addLast(taskDuration);
     }
     logProgress();
     return t;
   }
 
+  private Duration getAverageTaskDurationFromAllTasks() {
+    return stopwatch.elapsed().dividedBy(max(1, numberOfCompletedTasks.get()));
+  }
+
+  private Duration getAverageTaskDurationFromLatestTasks() {
+    if (lastTaskDurations.isEmpty()) {
+      return Duration.ZERO;
+    }
+    Duration total = lastTaskDurations.getLast().minus(lastTaskDurations.getFirst());
+
+    return total.dividedBy(lastTaskDurations.size());
+  }
+
+  private Duration getTaskDuration() {
+    return Collections.max(
+            Arrays.asList(
+                getAverageTaskDurationFromAllTasks(), getAverageTaskDurationFromLatestTasks()));
+  }
+
   private void logProgress() {
     int numberOfCompletedTasks = this.numberOfCompletedTasks.get();
 
-    Duration averageTimePerTask = stopwatch.elapsed().dividedBy(max(1, numberOfCompletedTasks));
+    Duration averageTimePerTask = getTaskDuration();
 
     int percentFinished = numberOfCompletedTasks * 100 / totalNumberOfTasks;
     String progressMessage = percentFinished + "% Completed";

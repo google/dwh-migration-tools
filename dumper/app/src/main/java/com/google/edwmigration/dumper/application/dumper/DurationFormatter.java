@@ -25,8 +25,8 @@ public class DurationFormatter {
     long minutes = duration.toMinutes() % 60;
     long hours = duration.toHours();
 
-    if (hours == 0 && minutes == 0) {
-      return "less than one minute";
+    if (hours == 0 && minutes < 15) {
+      return "less than 15 minutes";
     }
 
     ImmutableList.Builder<String> tokens = ImmutableList.builder();
