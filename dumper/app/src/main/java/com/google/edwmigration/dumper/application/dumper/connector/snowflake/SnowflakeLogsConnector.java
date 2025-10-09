@@ -77,6 +77,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   SnowflakeLogsConnector(@Nonnull String name, @Nonnull SnowflakeInput inputSource) {
     super(name);
     this.inputSource = inputSource;
+    logger.info("TEST_TEST_TEST_DO NOT SUBMITT!!!!!!!");
   }
 
   public SnowflakeLogsConnector() {
