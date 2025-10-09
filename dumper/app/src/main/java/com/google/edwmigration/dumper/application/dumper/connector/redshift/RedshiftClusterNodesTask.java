@@ -41,16 +41,13 @@ public class RedshiftClusterNodesTask extends AbstractAwsApiTask {
   @Override
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, Handle handle)
       throws IOException {
-    if (!(handle instanceof RedshiftHandle)) {
-      throw new IllegalStateException("Redshift handle was expected but got " + handle);
-    }
-    RedshiftHandle redshiftHandle = (RedshiftHandle) handle;
 
-    // If the user did not provide AWS credentials, the client will not be present.
-    // In this case, we can simply skip the execution of this task.
+    RedshiftHandle redshiftHandle = (RedshiftHandle) handle;
+    // customer did not provide aws credentials;
     if (!redshiftHandle.getRedshiftClient().isPresent()) {
       return null;
     }
+
     AmazonRedshift redshiftClient = redshiftHandle.getRedshiftClient().get();
 
     dumpClusterNodes(redshiftClient, sink);

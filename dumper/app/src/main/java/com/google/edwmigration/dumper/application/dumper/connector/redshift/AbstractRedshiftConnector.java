@@ -172,7 +172,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     DataSource dataSource =
         new SimpleDriverDataSource(driver, url, arguments.getUser(), password.orElse(null));
 
-    return RedshiftHandle.getInstance(dataSource, arguments);
+    return new RedshiftHandle(dataSource, arguments);
   }
 
   private static void logDriverInfo(@Nonnull Driver driver) throws SQLException {

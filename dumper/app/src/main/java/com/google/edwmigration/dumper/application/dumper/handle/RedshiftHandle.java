@@ -36,38 +36,8 @@ import javax.sql.DataSource;
  * @author kakha
  */
 public class RedshiftHandle extends JdbcHandle {
-
-  private static RedshiftHandle INSTANCE;
-
-  private Optional<AmazonRedshift> redshiftClient;
-  private Optional<AmazonCloudWatch> cloudWatchClient;
-
-  /**
-   * Gets the single instance of the RedshiftHandle.
-   *
-   * <p>This method is thread-safe. The arguments are only used during the very first call to create
-   * the instance. All subsequent calls will ignore the arguments and return the already-created
-   * instance.
-   *
-   * @param dataSource The JDBC DataSource to wrap.
-   * @param arguments The connector arguments for configuration.
-   * @return The singleton RedshiftHandle instance.
-   * @throws SQLException if there is an issue with the database connection during initialization.
-   */
-  public static RedshiftHandle getInstance(
-      @Nonnull DataSource dataSource, ConnectorArguments arguments) throws SQLException {
-    RedshiftHandle result = INSTANCE;
-    if (result == null) {
-      // Synchronize on the class object to ensure only one thread can create the instance.
-      synchronized (RedshiftHandle.class) {
-        result = INSTANCE; // Re-check inside the synchronized block.
-        if (result == null) {
-          INSTANCE = result = new RedshiftHandle(dataSource, arguments);
-        }
-      }
-    }
-    return result;
-  }
+  private AmazonRedshift redshiftClient;
+  private AmazonCloudWatch cloudWatchClient;
 
   /**
    * The constructor is private to make class singleton.
@@ -76,7 +46,7 @@ public class RedshiftHandle extends JdbcHandle {
    * @param arguments The connector arguments for configuration.
    * @throws SQLException if there is an issue with the database connection.
    */
-  private RedshiftHandle(@Nonnull DataSource dataSource, ConnectorArguments arguments)
+  public RedshiftHandle(@Nonnull DataSource dataSource, ConnectorArguments arguments)
       throws SQLException {
     super(
         new HikariDataSource(
@@ -84,25 +54,20 @@ public class RedshiftHandle extends JdbcHandle {
 
     // AWS API tasks, enabled by default if IAM credentials are provided
     Optional<AWSCredentialsProvider> awsCredentials = createCredentialsProvider(arguments);
-    redshiftClient = Optional.empty();
-    this.cloudWatchClient = Optional.empty();
-
     awsCredentials.ifPresent(
         awsCreds -> {
-          this.redshiftClient =
-              Optional.ofNullable(AmazonRedshiftClient.builder().withCredentials(awsCreds).build());
+          this.redshiftClient = AmazonRedshiftClient.builder().withCredentials(awsCreds).build();
           this.cloudWatchClient =
-              Optional.ofNullable(
-                  AmazonCloudWatchClient.builder().withCredentials(awsCreds).build());
+              AmazonCloudWatchClient.builder().withCredentials(awsCreds).build();
         });
   }
 
   public Optional<AmazonRedshift> getRedshiftClient() {
-    return redshiftClient;
+    return Optional.ofNullable(redshiftClient);
   }
 
   public Optional<AmazonCloudWatch> getCloudWatchClient() {
-    return cloudWatchClient;
+    return Optional.ofNullable(cloudWatchClient);
   }
 
   @Override
@@ -118,8 +83,12 @@ public class RedshiftHandle extends JdbcHandle {
       }
     }
 
-    redshiftClient.ifPresent(AmazonRedshift::shutdown);
-    cloudWatchClient.ifPresent(AmazonCloudWatch::shutdown);
+    if (redshiftClient != null) {
+      redshiftClient.shutdown();
+    }
+    if (cloudWatchClient != null) {
+      cloudWatchClient.shutdown();
+    }
   }
 
   private Optional<AWSCredentialsProvider> createCredentialsProvider(ConnectorArguments arguments) {

@@ -104,13 +104,8 @@ public class RedshiftClusterUsageMetricsTask extends AbstractAwsApiTask {
   protected Void doRun(TaskRunContext context, @Nonnull ByteSink sink, @Nonnull Handle handle)
       throws IOException {
     CSVFormat format = FORMAT.builder().setHeader(headerEnum).build();
-    RedshiftHandle redshiftHandle;
-    if (handle instanceof RedshiftHandle) {
-      redshiftHandle = (RedshiftHandle) handle;
-    } else {
-      throw new IllegalStateException("Redshift handle was expected but got " + handle);
-    }
 
+    RedshiftHandle redshiftHandle = (RedshiftHandle) handle;
     // customer did not provide aws credentials;
     if (!redshiftHandle.getRedshiftClient().isPresent()
         || !redshiftHandle.getCloudWatchClient().isPresent()) {
