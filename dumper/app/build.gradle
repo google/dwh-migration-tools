@@ -68,6 +68,7 @@ dependencies {
         exclude group: "ch.qos.reload4j", module: "reload4j"
         exclude group: "org.slf4j", module: "slf4j-reload4j"
     }
+    implementation libs.commons.beanutils // explicit version for vulnerabilities update
     implementation libs.hadoop.hdfs.client
     implementation(libs.harawata.appdirs) {
         exclude group: "net.java.dev.jna", module: "jna"
