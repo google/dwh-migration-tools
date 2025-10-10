@@ -76,6 +76,7 @@ jetty-server = "9.4.58.v20250814"
 netty-handler = "4.1.127.Final"
 dnsjava = "3.6.3"
 nimbus-jose-jwt = "9.37.4"
+io-grpc = "1.76.0"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
@@ -97,6 +98,15 @@ datanucleus-core = { module = "org.datanucleus:datanucleus-core", version.ref = 
 datanucleus-javax-jdo = { module = "org.datanucleus:javax.jdo", version.ref = "datanucleus-javax-jdo" }
 datanucleus-rdbms = { module = "org.datanucleus:datanucleus-rdbms", version.ref = "datanucleus-rdbms" }
 google-cloud-bigquery = { module = "com.google.cloud:google-cloud-bigquery", version.ref = "google-cloud-bigquery" }
+grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "io-grpc" }
+grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "io-grpc" }
+grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "io-grpc" }
+grpc-auth = { module = "io.grpc:grpc-auth", version.ref = "io-grpc" }
+grpc-opentelemetry = { module = "io.grpc:grpc-opentelemetry", version.ref = "io-grpc" }
+grpc-services = { module = "io.grpc:grpc-services", version.ref = "io-grpc" }
+grpc-rls = { module = "io.grpc:grpc-rls", version.ref = "io-grpc" }
+grpc-xds = { module = "io.grpc:grpc-xds", version.ref = "io-grpc" }
+grpc-bom = { module = "io.grpc:grpc-bom", version.ref = "io-grpc" }
 google-cloud-bigquerydatatransfer = { module = "com.google.cloud:google-cloud-bigquerydatatransfer", version.ref = "google-cloud-bigquerydatatransfer" }
 google-cloud-kms = { module = "com.google.cloud:google-cloud-kms", version.ref = "google-cloud-kms" }
 google-cloud-logging = { module = "com.google.cloud:google-cloud-logging", version.ref = "google-cloud-logging"}
