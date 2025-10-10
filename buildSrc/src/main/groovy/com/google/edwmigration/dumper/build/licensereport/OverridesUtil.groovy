@@ -618,6 +618,10 @@ class OverridesUtil {
                 projectUrl: "https://github.com/bcgit/bc-java",
                 licenseUrl: "https://raw.githubusercontent.com/bcgit/bc-java/main/LICENSE.html",
             ],
+            "org.bouncycastle:bcprov-jdk18on": [
+                projectUrl: "https://github.com/bcgit/bc-java",
+                licenseUrl: "https://raw.githubusercontent.com/bcgit/bc-java/main/LICENSE.html",
+            ],
             "org.codehaus.jettison:jettison": [
                 licenseUrl: "https://raw.githubusercontent.com/jettison-json/jettison/master/LICENSE",
             ],

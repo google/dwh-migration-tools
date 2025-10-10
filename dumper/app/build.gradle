@@ -67,6 +67,7 @@ dependencies {
         // *-over-slf4j bridges used
         exclude group: "ch.qos.reload4j", module: "reload4j"
         exclude group: "org.slf4j", module: "slf4j-reload4j"
+        exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
     }
     //Overrides for hadoop-common transient deps
     implementation libs.commons.beanutils // explicit version for vulnerabilities update
@@ -75,6 +76,7 @@ dependencies {
     implementation libs.dnsjava // explicit version for vulnerabilities update
     implementation libs.nimbus.jose.jwt // explicit version for vulnerabilities update
     implementation libs.zookeeper // explicit version for vulnerabilities update
+    implementation libs.bcprov.jdk18on // explicit version for vulnerabilities update
 
     implementation libs.hadoop.hdfs.client
     implementation(libs.harawata.appdirs) {
@@ -293,9 +295,9 @@ distributions {
             from(generateLicenseReport) {
                 into "docs/licenses"
             }
-            from(generateSourceMirror) {
-                into "docs/sources"
-            }
+//            from(generateSourceMirror) {
+//                into "docs/sources"
+//            }
         }
     }
 }
