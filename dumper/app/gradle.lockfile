@@ -273,6 +273,6 @@ org.threeten:threetenbp:1.7.0=compileClasspath,runtimeClasspath,testCompileClass
 org.xerial.snappy:snappy-java:1.1.10.4=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 org.xerial:sqlite-jdbc:3.49.1.0=testCompileClasspath,testRuntimeClasspath
 org.yaml:snakeyaml:2.4=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
-xerces:xercesImpl:2.11.0=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
+xerces:xercesImpl:2.12.2=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 xml-apis:xml-apis:1.4.01=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 empty=
