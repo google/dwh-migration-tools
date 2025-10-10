@@ -113,6 +113,10 @@ dependencies {
         //Not used and has LGPLv3 transient deps
         exclude group: 'org.apache.oozie', module: 'oozie-fluent-job-api'
     }
+
+    //Overrides for oozie-client transient deps
+    implementation libs.xerces // explicit version for vulnerabilities update
+
     implementation libs.hadoop.auth
 
     // `implementation` scope is used because some of our dependencies

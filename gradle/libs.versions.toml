@@ -77,6 +77,7 @@ netty-handler = "4.1.127.Final"
 dnsjava = "3.6.3"
 nimbus-jose-jwt = "9.37.4"
 io-grpc = "1.76.0"
+xerces = "2.12.2"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
@@ -182,6 +183,7 @@ h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
 parquet-generator = { group = "org.apache.parquet", name = "parquet-generator", version.ref = "parquet" }
 parquet = { group = "org.apache.parquet", name = "parquet", version.ref = "parquet" }
 oozie-client = { group = "org.apache.oozie", name = "oozie-client", version.ref = "oozie-client"}
+xerces = { module = "xerces:xercesImpl", version.ref = "xerces"}
 jna = { group = "net.java.dev.jna", "name" = "jna", version.ref = "jna"}
 
 [plugins]
