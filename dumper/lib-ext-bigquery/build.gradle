@@ -21,6 +21,13 @@ plugins {
 dependencies {
     implementation "com.swrve:rate-limited-logger"
     implementation "com.google.cloud:google-cloud-bigquery"
+
+    //Overrides for google-cloud-bigquery transient deps
+    implementation libs.grpc.netty.shaded // explicit version for vulnerabilities update
+    implementation libs.grpc.protobuf // explicit version for vulnerabilities update
+    implementation libs.grpc.stub // explicit version for vulnerabilities update
+    implementation libs.grpc.auth // explicit version for vulnerabilities update
+    implementation libs.grpc.bom // explicit version for vulnerabilities update
 }
 
 dependencyLocking {
