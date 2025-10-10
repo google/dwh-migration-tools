@@ -87,6 +87,18 @@ dependencies {
     implementation libs.jackson.dataformat.yaml
     implementation libs.jackson.datatype.guava
     implementation libs.google.cloud.bigquery
+
+    //Overrides for google-cloud-bigquery transient deps
+    implementation libs.grpc.netty.shaded // explicit version for vulnerabilities update
+    implementation libs.grpc.protobuf // explicit version for vulnerabilities update
+    implementation libs.grpc.stub // explicit version for vulnerabilities update
+    implementation libs.grpc.auth // explicit version for vulnerabilities update
+    implementation libs.grpc.opentelemetry // explicit version for vulnerabilities update
+    implementation libs.grpc.services // explicit version for vulnerabilities update
+    implementation libs.grpc.rls // explicit version for vulnerabilities update
+    implementation libs.grpc.xds // explicit version for vulnerabilities update
+    implementation libs.grpc.bom // explicit version for vulnerabilities update
+
     implementation libs.google.cloud.nio
     implementation libs.google.cloud.kms
     implementation libs.httpclient5
