@@ -68,10 +68,13 @@ dependencies {
         exclude group: "ch.qos.reload4j", module: "reload4j"
         exclude group: "org.slf4j", module: "slf4j-reload4j"
     }
+    //Overrides for hadoop-common transient deps
     implementation libs.commons.beanutils // explicit version for vulnerabilities update
     implementation libs.jetty.server // explicit version for vulnerabilities update
     implementation libs.netty.handler // explicit version for vulnerabilities update
     implementation libs.dnsjava // explicit version for vulnerabilities update
+    implementation libs.nimbus.jose.jwt // explicit version for vulnerabilities update
+
     implementation libs.hadoop.hdfs.client
     implementation(libs.harawata.appdirs) {
         exclude group: "net.java.dev.jna", module: "jna"
