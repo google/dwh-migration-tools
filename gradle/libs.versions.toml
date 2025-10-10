@@ -72,6 +72,7 @@ amazon = "2.31.16"
 cloudrun = "0.60.0"
 jna = "5.17.0"
 commons-beanutils = "1.11.0"
+jetty-server = "9.4.58.v20250814"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
@@ -104,6 +105,7 @@ guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hadoop-auth = { module = "org.apache.hadoop:hadoop-auth", version.ref = "hadoop"}
 hadoop-common = { module = "org.apache.hadoop:hadoop-common", version.ref = "hadoop" }
 commons-beanutils = { module = "commons-beanutils:commons-beanutils", version.ref = "commons-beanutils" }
+jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty-server" }
 hadoop-hdfs-client = { module = "org.apache.hadoop:hadoop-hdfs-client", version.ref = "hadoop" }
 harawata-appdirs = {module = "net.harawata:appdirs", version = "1.3.0"}
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
