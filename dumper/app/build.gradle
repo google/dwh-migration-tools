@@ -75,6 +75,7 @@ dependencies {
     implementation libs.dnsjava // explicit version for vulnerabilities update
     implementation libs.nimbus.jose.jwt // explicit version for vulnerabilities update
     implementation libs.zookeeper // explicit version for vulnerabilities update
+    implementation libs.common.configuration2 // explicit version for vulnerabilities update
 
     implementation libs.hadoop.hdfs.client
     implementation(libs.harawata.appdirs) {
