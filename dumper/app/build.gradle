@@ -74,6 +74,7 @@ dependencies {
     implementation libs.netty.handler // explicit version for vulnerabilities update
     implementation libs.dnsjava // explicit version for vulnerabilities update
     implementation libs.nimbus.jose.jwt // explicit version for vulnerabilities update
+    implementation libs.zookeeper // explicit version for vulnerabilities update
 
     implementation libs.hadoop.hdfs.client
     implementation(libs.harawata.appdirs) {
@@ -292,9 +293,9 @@ distributions {
             from(generateLicenseReport) {
                 into "docs/licenses"
             }
-            from(generateSourceMirror) {
-                into "docs/sources"
-            }
+//            from(generateSourceMirror) {
+//                into "docs/sources"
+//            }
         }
     }
 }
