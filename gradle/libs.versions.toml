@@ -175,8 +175,8 @@ wiremock = { module = "com.github.tomakehurst:wiremock-standalone", version.ref 
 aws-s3 = { group = "software.amazon.awssdk", name = "s3", version.ref = "amazon" }
 asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
 avro = { group = "org.apache.avro", name = "avro", version.ref = "avro" }
-commons-csv = { group = "org.apache.commons", name = "commons-csv", version = "1.14.1" }
-commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version = "3.18.0" }
+commons-csv = { module = "org.apache.commons:commons-csv", version = "1.14.1" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version = "3.18.0" }
 fastutil = { group = "it.unimi.dsi", name = "fastutil", version.ref = "fastutil" }
 google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version.ref = "google" }
 google-cloud-run = { group = "com.google.cloud", name = "google-cloud-run", version.ref = "cloudrun" }
