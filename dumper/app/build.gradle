@@ -67,6 +67,7 @@ dependencies {
         // *-over-slf4j bridges used
         exclude group: "ch.qos.reload4j", module: "reload4j"
         exclude group: "org.slf4j", module: "slf4j-reload4j"
+        exclude group: "org.bouncycastle", module: "bcprov-jdk15on" // We use 18, which is the latest and support JDK 1.8+
     }
     //Overrides for hadoop-common transient deps
     implementation libs.commons.beanutils // explicit version for vulnerabilities update
@@ -76,6 +77,7 @@ dependencies {
     implementation libs.nimbus.jose.jwt // explicit version for vulnerabilities update
     implementation libs.zookeeper // explicit version for vulnerabilities update
     implementation libs.common.configuration2 // explicit version for vulnerabilities update
+    implementation libs.bouncycastle // explicit version for vulnerabilities update
 
     implementation libs.hadoop.hdfs.client
     implementation(libs.harawata.appdirs) {

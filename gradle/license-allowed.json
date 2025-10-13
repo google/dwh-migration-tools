@@ -114,6 +114,10 @@
 			"moduleName": "org.bouncycastle:bcprov-jdk15on"
 		},
 		{
+			"moduleLicense": "Bouncy Castle Licence",
+			"moduleName": "org.bouncycastle:bcprov-jdk18on"
+		},
+		{
 			"moduleLicense": null,
 			"moduleName": "javax.servlet.jsp:jsp-api"
 		}
