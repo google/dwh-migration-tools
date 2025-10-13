@@ -75,10 +75,11 @@ commons-beanutils = "1.11.0"
 jetty-server = "9.4.58.v20250814"
 netty-handler = "4.1.127.Final"
 dnsjava = "3.6.3"
-nimbus-jose-jwt = "9.37.4"
+nimbus-jose-jwt = "10.5"
 io-grpc = "1.76.0"
 xerces = "2.12.2"
 zookeeper = "3.9.4"
+common-configuration2 = "2.12.0"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
@@ -119,6 +120,7 @@ gradle-license-report = { module = "com.github.jk1:gradle-license-report", versi
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hadoop-auth = { module = "org.apache.hadoop:hadoop-auth", version.ref = "hadoop"}
 hadoop-common = { module = "org.apache.hadoop:hadoop-common", version.ref = "hadoop" }
+common-configuration2 = { module = "org.apache.commons:commons-configuration2", version.ref = "common-configuration2" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus-jose-jwt" }
 dnsjava = { module = "dnsjava:dnsjava", version.ref = "dnsjava" }
 commons-beanutils = { module = "commons-beanutils:commons-beanutils", version.ref = "commons-beanutils" }
