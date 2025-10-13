@@ -32,6 +32,7 @@ configurations {
         // *-over-slf4j bridges used
         exclude group: "ch.qos.reload4j", module: "reload4j"
         exclude group: "org.slf4j", module: "slf4j-reload4j"
+        exclude group: "org.bouncycastle", module: "bcprov-jdk15on" // We use 18, which latest and support JDK 1.8+
     }
 }
 
