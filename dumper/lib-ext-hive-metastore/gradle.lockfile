@@ -100,7 +100,6 @@ javax.annotation:javax.annotation-api:1.3.2=compileClasspath
 javax.inject:javax.inject:1=hive312RuntimeClasspath
 javax.jdo:jdo-api:3.0.1=hive312RuntimeClasspath
 javax.servlet.jsp:javax.servlet.jsp-api:2.3.1=hive312RuntimeClasspath
-javax.servlet.jsp:jsp-api:2.1=hive312RuntimeClasspath
 javax.servlet:javax.servlet-api:3.1.0=hive312RuntimeClasspath
 javax.transaction:jta:1.1=hive312RuntimeClasspath
 javax.transaction:transaction-api:1.1=hive312RuntimeClasspath
