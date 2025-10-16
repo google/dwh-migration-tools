@@ -36,7 +36,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
 
   private static final String FORMAT_NAME = "snowflake-lite.zip";
-  private static final String NAME = "snowflake-lite-1234";
+  private static final String NAME = "snowflake-lite-1234-56";
 
   private final SnowflakePlanner planner = new SnowflakePlanner();
 
