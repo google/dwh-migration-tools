@@ -296,6 +296,9 @@ public class MetadataDumper {
             linePrinter.println(
                 "Output, including debugging information, saved to '%s'", outputFileLocation);
           }
+
+          String stateToPrint = requiredTaskSucceeded ? "SUCCEEDED" : "FAILED";
+          linePrinter.println("Dumper execution: " + stateToPrint);
         });
   }
 }
