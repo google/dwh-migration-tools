@@ -87,7 +87,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
   @SuppressWarnings("UnusedVariable")
   private static final Logger logger = LoggerFactory.getLogger(AbstractTeradataConnector.class);
 
-  public static final int OPT_PORT_DEFAULT = 1025;
+  public static final int OPT_PORT_DEFAULT = 12345;
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
   @VisibleForTesting /* pp */ static final String DEF_LOG_TABLE = "dbc.DBQLogTbl";
