@@ -74,7 +74,7 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
 @RespectsInput(
     order = ConnectorArguments.OPT_PORT_ORDER,
     arg = ConnectorArguments.OPT_PORT,
-    description = "The port of the server.",
+    description = "The port number of the server.",
     required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
     defaultValue = "" + AbstractTeradataConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentUser
@@ -87,7 +87,7 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
   @SuppressWarnings("UnusedVariable")
   private static final Logger logger = LoggerFactory.getLogger(AbstractTeradataConnector.class);
 
-  public static final int OPT_PORT_DEFAULT = 12345;
+  public static final int OPT_PORT_DEFAULT = 1025;
   protected static final DateTimeFormatter SQL_FORMAT =
       DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC);
   @VisibleForTesting /* pp */ static final String DEF_LOG_TABLE = "dbc.DBQLogTbl";
