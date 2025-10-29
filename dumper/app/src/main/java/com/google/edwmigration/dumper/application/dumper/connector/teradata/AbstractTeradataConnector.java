@@ -72,9 +72,9 @@ import org.springframework.jdbc.core.SingleColumnRowMapper;
  */
 @RespectsArgumentHostUnlessUrl
 @RespectsInput(
-    order = ConnectorArguments.OPT_PORT_ORDER,
     arg = ConnectorArguments.OPT_PORT,
     description = "The port number of the server.",
+    order = ConnectorArguments.OPT_PORT_ORDER,
     required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
     defaultValue = "" + AbstractTeradataConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentUser
