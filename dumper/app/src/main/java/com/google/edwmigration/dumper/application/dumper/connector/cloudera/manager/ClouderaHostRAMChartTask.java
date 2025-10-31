@@ -50,6 +50,8 @@ public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
     super("host-ram.jsonl", startDate, endDate, tsAggregation);
   }
 
+  static void test() {}
+
   @Override
   protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
