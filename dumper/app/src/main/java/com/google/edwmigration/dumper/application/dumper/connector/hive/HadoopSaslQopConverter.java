@@ -43,6 +43,8 @@ public class HadoopSaslQopConverter {
     }
   }
 
+  static void test() {}
+
   static Optional<String> convert(String value) throws MetadataDumperUsageException {
     return optionallyIfNotEmpty(value).map(HadoopSaslQopConverter::convertInternal);
   }

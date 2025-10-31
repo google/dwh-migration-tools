@@ -45,6 +45,8 @@ public class OracleLogsConnector extends AbstractOracleConnector
       super(ZIP_ENTRY_FILENAME, sql());
     }
 
+    static void test() {}
+
     private static String sql() {
       return "SELECT sql_fulltext, cpu_time, elapsed_time, disk_reads, runtime_mem FROM v$sql";
     }

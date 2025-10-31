@@ -102,6 +102,8 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     }
   }
 
+  static void test() {}
+
   @Override
   protected final void validateForConnector(@Nonnull ConnectorArguments arguments) {
     if (arguments.isAssessment() && arguments.hasQueryLogEarliestTimestamp()) {

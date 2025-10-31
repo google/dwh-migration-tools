@@ -54,6 +54,8 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
         new JdbcSelectTask(name.toLowerCase() + ".csv", "SELECT * FROM " + name.toLowerCase()));
   }
 
+  static void test() {}
+
   private static JdbcSelectTask createPgDatabaseSelect() {
     String outputFile = "pg_database.csv";
     String selectList =
