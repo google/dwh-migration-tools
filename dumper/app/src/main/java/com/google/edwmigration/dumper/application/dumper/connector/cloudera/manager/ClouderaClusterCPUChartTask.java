@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * language.
  */
 public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask {
-  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaClusterCPUChartTask.class);
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
