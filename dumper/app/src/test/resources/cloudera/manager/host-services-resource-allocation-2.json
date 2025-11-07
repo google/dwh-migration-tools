@@ -1,0 +1,404 @@
+{
+  "items": [
+    {
+      "timeSeries": [
+        {
+          "metadata": {
+            "metricName": "mem_rss",
+            "entityName": "HiveServer2 (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "HIVE_ON_TEZ",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "abcdef668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Hive",
+              "serviceName": "hive_on_tez",
+              "roleType": "HIVESERVER2",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "HiveServer2 Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "bytes"
+            ],
+            "unitDenominators": [],
+            "expression": "SELECT mem_rss WHERE entityName = \"hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 11792621568,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:53.000Z",
+                "sampleValue": 11792621568,
+                "count": 10,
+                "min": 11792621568,
+                "minTime": "2025-10-30T08:20:52.000Z",
+                "max": 11792621568,
+                "maxTime": "2025-10-30T08:20:52.000Z",
+                "mean": 11792621568,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 11792621568,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:53.000Z",
+                "sampleValue": 11792621568,
+                "count": 10,
+                "min": 11792621568,
+                "minTime": "2025-10-30T08:30:53.000Z",
+                "max": 11792621568,
+                "maxTime": "2025-10-30T08:30:53.000Z",
+                "mean": 11792621568,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 11792621568,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:53.000Z",
+                "sampleValue": 11792621568,
+                "count": 10,
+                "min": 11792621568,
+                "minTime": "2025-10-30T08:40:53.000Z",
+                "max": 11792621568,
+                "maxTime": "2025-10-30T08:40:53.000Z",
+                "mean": 11792621568,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 11792621568,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:53.000Z",
+                "sampleValue": 11792621568,
+                "count": 10,
+                "min": 11792621568,
+                "minTime": "2025-10-30T08:50:53.000Z",
+                "max": 11792621568,
+                "maxTime": "2025-10-30T08:50:53.000Z",
+                "mean": 11792621568,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 11792621568,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:53.000Z",
+                "sampleValue": 11792621568,
+                "count": 10,
+                "min": 11792621568,
+                "minTime": "2025-10-30T09:00:53.000Z",
+                "max": 11792621568,
+                "maxTime": "2025-10-30T09:00:53.000Z",
+                "mean": 11792621568,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 11792621568,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:53.000Z",
+                "sampleValue": 11792621568,
+                "count": 10,
+                "min": 11792621568,
+                "minTime": "2025-10-30T09:10:53.000Z",
+                "max": 11792621568,
+                "maxTime": "2025-10-30T09:10:53.000Z",
+                "mean": 11792621568,
+                "stdDev": 0.0
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "cpu_user_rate",
+            "entityName": "HiveServer2 (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "HIVE_ON_TEZ",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "abcdef668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Hive",
+              "serviceName": "hive_on_tez",
+              "roleType": "HIVESERVER2",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "HiveServer2 Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "seconds"
+            ],
+            "unitDenominators": [
+              "seconds"
+            ],
+            "expression": "SELECT cpu_user_rate WHERE entityName = \"hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 0.0012328424562378596,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:53.000Z",
+                "sampleValue": 0.0013333333333340155,
+                "count": 10,
+                "min": 0.001016949152543375,
+                "minTime": "2025-10-30T08:20:52.000Z",
+                "max": 0.0013333333333340155,
+                "maxTime": "2025-10-30T08:24:53.000Z",
+                "mean": 0.0012328424562378596,
+                "stdDev": 0.00011090720144477281
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 0.001283333333333303,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:53.000Z",
+                "sampleValue": 0.0013333333333321207,
+                "count": 10,
+                "min": 0.0011666666666656055,
+                "minTime": "2025-10-30T08:31:53.000Z",
+                "max": 0.0015000000000005306,
+                "maxTime": "2025-10-30T08:33:53.000Z",
+                "mean": 0.001283333333333303,
+                "stdDev": 0.00011249142628523944
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 0.001333333333333447,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:53.000Z",
+                "sampleValue": 0.0015000000000005306,
+                "count": 10,
+                "min": 0.0011666666666675003,
+                "minTime": "2025-10-30T08:42:53.000Z",
+                "max": 0.0015000000000005306,
+                "maxTime": "2025-10-30T08:43:53.000Z",
+                "mean": 0.001333333333333447,
+                "stdDev": 0.00013608276348757277
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 0.001349999999999909,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:53.000Z",
+                "sampleValue": 0.0011666666666675003,
+                "count": 10,
+                "min": 0.0011666666666656055,
+                "minTime": "2025-10-30T08:52:53.000Z",
+                "max": 0.0015000000000005306,
+                "maxTime": "2025-10-30T08:53:53.000Z",
+                "mean": 0.001349999999999909,
+                "stdDev": 0.00014593250596154188
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 0.0014000000000000531,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:53.000Z",
+                "sampleValue": 0.0013333333333340155,
+                "count": 10,
+                "min": 0.0013333333333321207,
+                "minTime": "2025-10-30T09:04:53.000Z",
+                "max": 0.0015000000000005306,
+                "maxTime": "2025-10-30T09:00:53.000Z",
+                "mean": 0.0014000000000000531,
+                "stdDev": 0.00008606629658239033
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 0.0014500000000000077,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:53.000Z",
+                "sampleValue": 0.0013333333333340155,
+                "count": 10,
+                "min": 0.0013333333333321207,
+                "minTime": "2025-10-30T09:10:53.000Z",
+                "max": 0.0016666666666670456,
+                "maxTime": "2025-10-30T09:13:53.000Z",
+                "mean": 0.0014500000000000077,
+                "stdDev": 0.00011249142628502104
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "cpu_system_rate",
+            "entityName": "HiveServer2 (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "HIVE_ON_TEZ",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "abcdef668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Hive",
+              "serviceName": "hive_on_tez",
+              "roleType": "HIVESERVER2",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "HiveServer2 Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "seconds"
+            ],
+            "unitDenominators": [
+              "seconds"
+            ],
+            "expression": "SELECT cpu_system_rate WHERE entityName = \"hive_on_tez-HIVESERVER2-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 0.00023362508104100694,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:53.000Z",
+                "sampleValue": 0.0001666666666665151,
+                "count": 10,
+                "min": 0.00016393442622982503,
+                "minTime": "2025-10-30T08:22:53.000Z",
+                "max": 0.00033898305084763107,
+                "maxTime": "2025-10-30T08:20:52.000Z",
+                "mean": 0.00023362508104100694,
+                "stdDev": 0.00008705007637557179
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 0.0002500000000000095,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:53.000Z",
+                "sampleValue": 0.0001666666666665151,
+                "count": 10,
+                "min": 0.0001666666666665151,
+                "minTime": "2025-10-30T08:33:53.000Z",
+                "max": 0.00033333333333350387,
+                "maxTime": "2025-10-30T08:32:53.000Z",
+                "mean": 0.0002500000000000095,
+                "stdDev": 0.00008784104611575835
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 0.0002500000000000095,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:53.000Z",
+                "sampleValue": 0.00033333333333350387,
+                "count": 10,
+                "min": 0.0001666666666665151,
+                "minTime": "2025-10-30T08:41:53.000Z",
+                "max": 0.00033333333333350387,
+                "maxTime": "2025-10-30T08:42:53.000Z",
+                "mean": 0.0002500000000000095,
+                "stdDev": 0.00008784104611585822
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 0.0002500000000000095,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:53.000Z",
+                "sampleValue": 0.00033333333333350387,
+                "count": 10,
+                "min": 0.0001666666666665151,
+                "minTime": "2025-10-30T08:50:53.000Z",
+                "max": 0.00033333333333350387,
+                "maxTime": "2025-10-30T08:51:53.000Z",
+                "mean": 0.0002500000000000095,
+                "stdDev": 0.00008784104611595809
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 0.0002333333333333106,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:53.000Z",
+                "sampleValue": 0.0001666666666665151,
+                "count": 10,
+                "min": 0.0001666666666665151,
+                "minTime": "2025-10-30T09:00:53.000Z",
+                "max": 0.00033333333333350387,
+                "maxTime": "2025-10-30T09:08:53.000Z",
+                "mean": 0.0002333333333333106,
+                "stdDev": 0.00008606629658224762
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 0.0002166666666666591,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:53.000Z",
+                "sampleValue": 0.0003333333333330302,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T09:14:53.000Z",
+                "max": 0.00033333333333350387,
+                "maxTime": "2025-10-30T09:10:53.000Z",
+                "mean": 0.0002166666666666591,
+                "stdDev": 0.00011249142628497426
+              }
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "timeSeriesQuery": "SELECT mem_rss, cpu_user_rate, cpu_system_rate, read_bytes_rate, write_bytes_rate WHERE category = \"ROLE\" AND hostId = \"abcdef668a1861ab926151f1b11a726d\""
+    }
+  ]
+}
