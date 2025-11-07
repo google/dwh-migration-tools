@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -39,7 +40,11 @@ public class AbstractClouderaTimeSeriesTaskTest {
             NullPointerException.class,
             () ->
                 new AbstractClouderaTimeSeriesTask(
-                    "some path", timeTravelDaysAgo(5), timeTravelDaysAgo(0), null) {
+                    "some path",
+                    timeTravelDaysAgo(5),
+                    timeTravelDaysAgo(0),
+                    null,
+                    TaskCategory.REQUIRED) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,
@@ -63,7 +68,8 @@ public class AbstractClouderaTimeSeriesTaskTest {
                     "some path",
                     timeTravelDaysAgo(5),
                     timeTravelDaysAgo(8),
-                    TimeSeriesAggregation.DAILY) {
+                    TimeSeriesAggregation.DAILY,
+                    TaskCategory.REQUIRED) {
                   @Override
                   protected void doRun(
                       TaskRunContext context,
