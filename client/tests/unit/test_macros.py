@@ -20,6 +20,7 @@ from bqms_run.macros import (
     MacroExpanderRouter,
     PatternMacroExpander,
     SimpleMacroExpander,
+    ParameterAwareMacroExpander
 )
 
 
@@ -160,3 +161,71 @@ def test_basic_expand():
     assert expanded == "abcdef alpha.bravo ghijkl"
     un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
     assert un_expanded == input_text
+
+def test_complex_1():
+    expander = MacroExpanderRouter(
+        {
+            "*.sql": ParameterAwareMacroExpander(
+                pattern="(\\[\\$\\w+\\])",
+                value_stripper='__bq__\\d+__(.*)__bq__\\d+__',
+                mapping={"[$table1]": "__bq__0__ABCDEF__bq__0__"},
+                source_bind_generator=lambda arg: "@"+arg,
+                target_bind_generator=lambda arg: arg
+            )
+        }
+    )
+
+    input_text="SELECT * FROM WXYZ.[$table1]"
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
+    assert expanded == "SELECT * FROM WXYZ.__bq__0__ABCDEF__bq__0__"
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
+    assert un_expanded == input_text
+
+def test_complex_2():
+    expander = MacroExpanderRouter(
+        {
+            "*.sql": ParameterAwareMacroExpander(
+                pattern="\\[\\$(\\w+)\\]",
+                value_stripper='__bq__\\d+__(.*)__bq__\\d+__',
+                mapping={
+                    "table1": "__bq__0__ABCDEF__bq__0__",
+                    "limit_val1": "__bq__1__5__bq__1__"
+                },
+                source_bind_generator=lambda arg: "@"+arg,
+                target_bind_generator=lambda arg: arg
+            )
+        }
+    )
+
+    input_text = "SELECT * FROM WXYZ.[$table1] LIMIT [$limit_val1]"
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
+    assert expanded == "SELECT * FROM WXYZ.__bq__0__ABCDEF__bq__0__ LIMIT @__bq__1__5__bq__1__"
+    expanded = "SELECT * FROM WXYZ.__bq__0__ABCDEF__bq__0__ LIMIT __bq__1__5__bq__1__"
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
+    assert un_expanded == input_text
+
+def test_unexpand_after_database_added():
+    expander = MacroExpanderRouter(
+        {
+            "*.sql": ParameterAwareMacroExpander(
+                pattern="(\\[\\$\\w+\\])",
+                value_stripper='__bq__\\d+__(.*)__bq__\\d+__',
+                mapping={
+                    "[$table]": "__bq__0__table__bq__0__",
+                },
+                source_bind_generator=lambda arg: "@"+arg,
+                target_bind_generator=lambda arg: arg
+            )
+        }
+    )
+
+    input_text = "CREATE TABLE [$table](a INT64);"
+    expanded = expander.expand(pathlib.Path("abc.sql"), input_text)
+    assert expanded == "CREATE TABLE __bq__0__table__bq__0__(a INT64);"
+    expanded = "CREATE TABLE db_name.__bq__0__table__bq__0__(a INT64);"
+    un_expanded = expander.un_expand(pathlib.Path("abc.sql"), expanded)
+    expected_output = "CREATE TABLE db_name.[$table](a INT64);"
+    assert un_expanded == expected_output
+
+
+
