@@ -235,8 +235,6 @@ class ParameterAwareMacroExpander(MacroExpander):
             target_bind_generator: A function that format parameter in a way that it's detected as bind parameter in target dialect
         """
         super().__init__(mapping)
-        # what if we have mapping and wrap it here.
-        pattern = f"([=\\(, \\[]?){pattern}"
         self.pattern = re.compile(pattern, re.I)
         self.source_bind_generator = source_bind_generator
         self.target_bind_generator = target_bind_generator
@@ -245,18 +243,17 @@ class ParameterAwareMacroExpander(MacroExpander):
         self.value_stripper = re.compile(value_stripper)
 
     def _substitution(self, path: Path, match: Match[str]) -> str:
-        prefix = match.group(1)
-        macro_name = match.group(2)
+        macro_name = match.group(1)
         full_match = match.group(0)
         if self.mapping and macro_name in self.mapping:
             replacement = self.mapping[macro_name]
             stripped_replacement = self.value_stripper.match(replacement).group(1)
-            if (stripped_replacement.isnumeric() or stripped_replacement.lower() in ("true", "false")) and prefix:
-                generated = '{}{}'.format(prefix, self.source_bind_generator(self.mapping[macro_name]))
-                reverse_search = '{}{}'.format(prefix, self.target_bind_generator(self.mapping[macro_name]))
+            if (stripped_replacement.isnumeric() or stripped_replacement.lower() in ("true", "false")):
+                generated = self.source_bind_generator(self.mapping[macro_name])
+                reverse_search = self.target_bind_generator(self.mapping[macro_name])
             else:
-                generated = '{}{}'.format(prefix,self.mapping[macro_name])
-                reverse_search = '{}{}'.format(prefix,self.mapping[macro_name])
+                generated = self.mapping[macro_name]
+                reverse_search = self.mapping[macro_name]
         else:
             self.warn_log(
                 "Could not expand '{0}' as it is not "
