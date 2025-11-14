@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
 
-  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaHostRAMChartTask.class);
 
   private static final String TS_RAM_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";

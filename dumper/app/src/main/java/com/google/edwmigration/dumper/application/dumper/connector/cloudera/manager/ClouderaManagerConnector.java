@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
 import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.DAILY;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.HOURLY;
 import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.OPTIONAL;
 
 import com.google.auto.service.AutoService;
@@ -112,6 +113,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
 
     out.add(new ClouderaClusterCPUChartTask(startDate, endDate, DAILY));
     out.add(new ClouderaHostRAMChartTask(startDate, endDate, DAILY));
+    out.add(new ClouderaServiceResourceAllocationChartTask(startDate, endDate, HOURLY));
     out.add(new ClouderaYarnApplicationsTask(startDate, endDate, OPTIONAL));
     out.add(new ClouderaYarnApplicationTypeTask(startDate, endDate, OPTIONAL));
   }
