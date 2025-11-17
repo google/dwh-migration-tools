@@ -116,6 +116,8 @@ public class TeradataMetadataConnector extends AbstractTeradataConnector
     super("teradata");
   }
 
+  static void test() {}
+
   /* The sql here are passed to teradata as well as postgresql acting as teradata for testing.
    * QuotedIdentifiers are needed to make the queries work in PG.
    * It looks like quoted teradata identifiers are also case insensitive, so this should be ok. */

@@ -109,6 +109,8 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     return ArchiveNameUtil.getFileNameWithTimestamp(getName(), clock);
   }
 
+  static void test() {}
+
   @Override
   public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
       throws Exception {
