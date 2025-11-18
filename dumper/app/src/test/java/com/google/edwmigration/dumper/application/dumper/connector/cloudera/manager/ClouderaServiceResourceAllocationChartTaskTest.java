@@ -190,7 +190,7 @@ public class ClouderaServiceResourceAllocationChartTaskTest {
   }
 
   private void initHosts(ClouderaHostDTO... hosts) {
-    handle.initHostsIfNull(Arrays.asList(hosts));
+    handle.initHosts(Arrays.asList(hosts));
   }
 
   private void stubHttpRequestToFetchHostServicesResourceAllocationChart(

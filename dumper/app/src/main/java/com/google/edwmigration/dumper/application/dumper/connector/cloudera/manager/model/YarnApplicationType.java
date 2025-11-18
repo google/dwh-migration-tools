@@ -14,28 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto;
+package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+public enum YarnApplicationType {
+  MAPREDUCE("MAPREDUCE"),
+  SPARK("SPARK"),
+  OOZIE_LAUNCHER("Oozie Launcher");
 
-/**
- * DTO class for the unofficial UI part of Cloudera Management. Display the host from a Memory Usage
- * chart.
- */
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class CMFHostDTO {
-  @JsonProperty(required = true)
-  private String hostName;
+  private final String value;
 
-  @JsonProperty(required = true)
-  private String hostId;
-
-  public String getName() {
-    return hostName;
+  YarnApplicationType(String value) {
+    this.value = value;
   }
 
-  public String getId() {
-    return hostId;
+  public String getValue() {
+    return value;
   }
 }
