@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "maintenanceOwners": [],
+      "hostId": "1",
+      "ipAddress": "10.10.1.155",
+      "hostname": "first-host",
+      "rackId": "/us-west-2b",
+      "hostUrl": "https://cldr-e2e-data-hub-master0.cldr-e2e.svye-dcxb.a5.cloudera.site/cmf/hostRedirect/855220dcd69cd2da77eed368e9d4df0f",
+      "maintenanceMode": false,
+      "commissionState": "COMMISSIONED",
+      "numCores": 4,
+      "numPhysicalCores": 2,
+      "totalPhysMemBytes": 33046466560,
+      "clusterRef": {
+        "clusterName": "first-cluster",
+        "displayName": "first-cluster"
+      },
+      "distribution": {
+        "distributionType": "RHEL8",
+        "name": "redhat",
+        "version": "8.10"
+      },
+      "tags": [
+        {
+          "name": "_cldr_cm_host_template_name",
+          "value": "compute"
+        }
+      ]
+    },
+    {
+      "maintenanceOwners": [],
+      "hostId": "2",
+      "ipAddress": "10.10.1.233",
+      "hostname": "second-host",
+      "rackId": "/us-west-2b",
+      "hostUrl": "https://cldr-e2e-data-hub-master0.cldr-e2e.svye-dcxb.a5.cloudera.site/cmf/hostRedirect/f04fa33e3af5ec7dcbe16c394adeb17c",
+      "maintenanceMode": false,
+      "commissionState": "COMMISSIONED",
+      "numCores": 16,
+      "numPhysicalCores": 8,
+      "totalPhysMemBytes": 65809149952,
+      "clusterRef": {
+        "clusterName": "first-cluster",
+        "displayName": "first-cluster"
+      },
+      "distribution": {
+        "distributionType": "RHEL8",
+        "name": "redhat",
+        "version": "8.10"
+      },
+      "tags": [
+        {
+          "name": "_cldr_cm_host_template_name",
+          "value": "master"
+        }
+      ]
+    }
+  ]
+}

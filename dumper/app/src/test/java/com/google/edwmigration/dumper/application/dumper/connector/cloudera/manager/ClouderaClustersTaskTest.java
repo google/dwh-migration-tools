@@ -21,6 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.readFileAsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -40,13 +41,9 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterListDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.AfterClass;
@@ -98,9 +95,9 @@ public class ClouderaClustersTaskTest {
     when(charSink.openBufferedStream()).thenReturn(writer);
     when(context.getArguments()).thenReturn(arguments);
 
-    apiClusterListJson = readString("/cloudera/manager/dto/ApiClusterList.json");
-    apiClusterJson = readString("/cloudera/manager/dto/ApiCluster.json");
-    clusterStatusJson = readString("/cloudera/manager/cluster-status.json");
+    apiClusterListJson = readFileAsString("/cloudera/manager/dto/ApiClusterList.json");
+    apiClusterJson = readFileAsString("/cloudera/manager/dto/ApiCluster.json");
+    clusterStatusJson = readFileAsString("/cloudera/manager/cluster-status.json");
   }
 
   @Test
@@ -189,9 +186,5 @@ public class ClouderaClustersTaskTest {
 
   private String clusterStatusJsonWithId(String clusterId) {
     return clusterStatusJson.replaceAll("" + clusterStatusId, clusterId);
-  }
-
-  private String readString(String name) throws IOException, URISyntaxException {
-    return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(name).toURI())));
   }
 }

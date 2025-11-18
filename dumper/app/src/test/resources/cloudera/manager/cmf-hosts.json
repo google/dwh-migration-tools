@@ -1,0 +1,172 @@
+{
+  "healthTestDisplayNames": {},
+  "healthTestFilters": {},
+  "hosts": [
+    {
+      "cdhVersion": "CDH 7.2.18",
+      "clusterId": 1546337345,
+      "clusterName": "first-cluster",
+      "commissionStateTag": "COMMISSIONED",
+      "commissionStateText": "Commissioned",
+      "diskPercentageUsed": 0.16187594620605952,
+      "diskTotal": 361243934720,
+      "diskUsed": 58476703744,
+      "displayStatusTag": "GOOD_HEALTH",
+      "displayStatusText": "Good Health",
+      "heartbeatHealth": "good",
+      "hostId": "855220dcd69cd2da77eed368e9d4df0f",
+      "hostName": "cldr-e2e-data-hub-compute0.cldr-e2e.svye-dcxb.a5.cloudera.site",
+      "id": 1546336928,
+      "ipAddress": "10.10.1.155",
+      "loadAverage15Min": "0.00",
+      "loadAverage1Min": "0.01",
+      "loadAverage5Min": "0.00",
+      "maintenanceMode": "no",
+      "msSinceLastSeen": 2460,
+      "numCores": 4,
+      "physicalMemoryPercentageUsed": 0.055655904169380585,
+      "physicalMemoryTotal": 33046466560,
+      "physicalMemoryUsed": 1839230976,
+      "rackId": "/us-west-2b",
+      "roleCount": 9,
+      "tagCount": 1
+    },
+    {
+      "cdhVersion": "CDH 7.2.18",
+      "clusterId": 1546337345,
+      "clusterName": "first-cluster",
+      "commissionStateTag": "COMMISSIONED",
+      "commissionStateText": "Commissioned",
+      "diskPercentageUsed": 0.18000125199076944,
+      "diskTotal": 424914059264,
+      "diskUsed": 76485062656,
+      "displayStatusTag": "GOOD_HEALTH",
+      "displayStatusText": "Good Health",
+      "heartbeatHealth": "good",
+      "hostId": "f04fa33e3af5ec7dcbe16c394adeb17c",
+      "hostName": "cldr-e2e-data-hub-master0.cldr-e2e.svye-dcxb.a5.cloudera.site",
+      "id": 1546336918,
+      "ipAddress": "10.10.1.233",
+      "loadAverage15Min": "0.99",
+      "loadAverage1Min": "0.55",
+      "loadAverage5Min": "0.59",
+      "maintenanceMode": "no",
+      "msSinceLastSeen": 2174,
+      "numCores": 16,
+      "physicalMemoryPercentageUsed": 0.46078678199183193,
+      "physicalMemoryTotal": 65809149952,
+      "physicalMemoryUsed": 30323986432,
+      "rackId": "/us-west-2b",
+      "roleCount": 34,
+      "tagCount": 1
+    }
+  ],
+  "humanizedValues": {
+    "no": "No",
+    "yes": "Yes"
+  },
+  "roleFilters": {
+    "YARN": [
+      1546336921,
+      1546336925,
+      1546336931,
+      1546336928,
+      1546336918
+    ],
+    "TEZ": [
+      1546336921,
+      1546336925,
+      1546336931,
+      1546336928,
+      1546336918
+    ],
+    "HUE": [
+      1546336918
+    ],
+    "ZOOKEEPER": [
+      1546336918
+    ],
+    "SPARK3_ON_YARN": [
+      1546336921,
+      1546336925,
+      1546336931,
+      1546336928,
+      1546336918
+    ],
+    "LIVY_FOR_SPARK3": [
+      1546336921,
+      1546336925,
+      1546336931,
+      1546336928,
+      1546336918
+    ],
+    "HIVE_ON_TEZ": [
+      1546336921,
+      1546336925,
+      1546336931,
+      1546336928,
+      1546336918
+    ],
+    "HDFS": [
+      1546336921,
+      1546336925,
+      1546336931,
+      1546336928,
+      1546336918
+    ],
+    "SQOOP_CLIENT": [
+      1546336918
+    ],
+    "DATA_CONTEXT_CONNECTOR": [
+      1546336921,
+      1546336925,
+      1546336931,
+      1546336928,
+      1546336918
+    ],
+    "HIVE": [
+      1546336921,
+      1546336925,
+      1546336931,
+      1546336928,
+      1546336918
+    ],
+    "QUERY_PROCESSOR": [
+      1546336918
+    ],
+    "ZEPPELIN": [
+      1546336918
+    ],
+    "RANGER_RAZ": [
+      1546336918
+    ],
+    "OOZIE": [
+      1546336918
+    ],
+    "QUEUEMANAGER": [
+      1546336918
+    ],
+    "KNOX": [
+      1546336918
+    ]
+  },
+  "serviceDisplayNames": {
+    "YARN": "YARN",
+    "TEZ": "Tez",
+    "HUE": "Hue",
+    "ZOOKEEPER": "ZooKeeper",
+    "SPARK3_ON_YARN": "Spark 3",
+    "LIVY_FOR_SPARK3": "Livy for Spark 3",
+    "HIVE_ON_TEZ": "Hive on Tez",
+    "HDFS": "HDFS",
+    "SQOOP_CLIENT": "SQOOP_CLIENT",
+    "DATA_CONTEXT_CONNECTOR": "Data Context Connector",
+    "HIVE": "Hive",
+    "QUERY_PROCESSOR": "Query Processor",
+    "ZEPPELIN": "Zeppelin",
+    "RANGER_RAZ": "Ranger Raz",
+    "OOZIE": "Oozie",
+    "QUEUEMANAGER": "YARN Queue Manager",
+    "KNOX": "Knox"
+  }
+}
