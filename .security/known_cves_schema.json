@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Know vulnerabilities exceptions report",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "CVE": {
+        "type": "string",
+        "description": "The Common Vulnerabilities and Exposures Id. https://www.cve.org/",
+        "pattern": "^CVE-\\d{4}-\\d{4,}$"
+      },
+      "artifact": {
+        "type": "string",
+        "description": "The Maven style artifact id. (group:artifact:version)"
+      },
+      "justification": {
+        "type": "string",
+        "description": "The reason why this vulnerability does not impact the tools."
+      },
+      "expiration_date": {
+        "type": "string",
+        "format": "date",
+        "description": "The date (YYYY-MM-DD) when this waiver expires and must be reviewed."
+      }
+    },
+    "required": [
+      "CVE",
+      "artifact",
+      "justification"
+    ]
+  }
+}
