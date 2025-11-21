@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=./known_cves_schema.json
+
+- CVE: CVE-2025-52999
+  artifact: org.example:vulnerability-lib:3.18.0
+  justification: >
+    Some text
+    with very nice and clear explanation
+  expiration_date: 2030-05-18
