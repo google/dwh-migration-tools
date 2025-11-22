@@ -1,8 +1,17 @@
 # yaml-language-server: $schema=./known_cves_schema.json
 
-- CVE: CVE-2025-52999
-  artifact: org.example:vulnerability-lib:3.18.0
+- CVE: CVE-2025-41249
+  artifact: org.springframework:spring-core:5.3.39
   justification: >
-    Some text
-    with very nice and clear explanation
-  expiration_date: 2030-05-18
+    The CVE is in Spring Security's @EnableMethodSecurity feature,
+    this annotation or any other spring-security is not used in the Dumper tools.
+    There is no dependency on Spring Security in the Dumper tools.
+
+- CVE: CVE-2025-41242
+  artifact: org.springframework:spring-core:5.3.39
+  justification: >
+    Spring Framework MVC applications can be vulnerable to a “Path Traversal Vulnerability” when deployed on a 
+    non-compliant Servlet container. An application can be vulnerable when all the following are true: 
+    * the application is deployed as a WAR or with an embedded Servlet container * ... and so on.
+    The Dumper tools distributes as Jar only, Spring MVC is not used in the code.
+    There is no dependency on Spring MVC in the Dumper tools.
