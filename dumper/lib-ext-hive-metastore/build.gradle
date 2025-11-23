@@ -113,7 +113,7 @@ shadowJar {
         exclude(dependency('org.datanucleus:.*')) // can't be safely shadowed
     }
 
-    exclude 'META-INF/versions/**' // // Exclude the specific Java 8+ deps versions
+    exclude 'META-INF/versions/**' // Exclude the specific Java 8+ deps versions
 
     relocate 'org.apache.thrift', 'shadow.org.apache.thrift' // this is the whole point of doing this
     relocate 'com.google.common', 'shadow.com.google.common'
