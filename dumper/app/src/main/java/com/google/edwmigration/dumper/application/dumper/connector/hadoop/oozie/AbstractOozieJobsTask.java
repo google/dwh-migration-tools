@@ -35,7 +35,6 @@ import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.oozie.client.OozieClient;
@@ -43,6 +42,8 @@ import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 
 public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
 
@@ -156,8 +157,9 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
 
   private static Object[] toCSVRecord(Object job, ImmutableList<String> header) throws Exception {
     Object[] record = new Object[header.size()];
+    BeanWrapper jobObjectWrapper = new BeanWrapperImpl(job);
     for (int i = 0; i < header.size(); i++) {
-      record[i] = PropertyUtils.getProperty(job, header.get(i));
+      record[i] = jobObjectWrapper.getPropertyValue(header.get(i));
       if (record[i] != null && record[i] instanceof Date) {
         // avoid date formats complexity and use milliseconds
         record[i] = ((Date) record[i]).getTime();

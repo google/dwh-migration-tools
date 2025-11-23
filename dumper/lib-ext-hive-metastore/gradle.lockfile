@@ -62,7 +62,6 @@ com.yahoo.datasketches:memory:0.9.0=hive312RuntimeClasspath
 com.yahoo.datasketches:sketches-core:0.9.0=hive312RuntimeClasspath
 com.zaxxer:HikariCP-java7:2.4.12=hive312RuntimeClasspath
 com.zaxxer:HikariCP:2.6.1=hive312RuntimeClasspath
-commons-beanutils:commons-beanutils:1.11.0=hive312RuntimeClasspath
 commons-cli:commons-cli:1.5.0=hive312RuntimeClasspath
 commons-codec:commons-codec:1.17.0=hive312RuntimeClasspath
 commons-collections:commons-collections:3.2.2=hive312RuntimeClasspath

@@ -60,7 +60,6 @@ dependencies {
     hive312RuntimeOnly libs.hadoop.common
 
     //Overrides for hadoop-common transient deps
-    hive312RuntimeOnly libs.commons.beanutils // explicit version for vulnerabilities update
     hive312RuntimeOnly libs.netty.handler // explicit version for vulnerabilities update
     hive312RuntimeOnly libs.dnsjava // explicit version for vulnerabilities update
     hive312RuntimeOnly libs.nimbus.jose.jwt // explicit version for vulnerabilities update
