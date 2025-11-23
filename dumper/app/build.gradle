@@ -297,9 +297,9 @@ distributions {
             from(generateLicenseReport) {
                 into "docs/licenses"
             }
-            from(generateSourceMirror) {
-                into "docs/sources"
-            }
+//            from(generateSourceMirror) {
+//                into "docs/sources"
+//            }
         }
     }
 }
