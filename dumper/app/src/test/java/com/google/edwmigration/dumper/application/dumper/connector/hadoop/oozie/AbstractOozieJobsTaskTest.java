@@ -31,29 +31,29 @@ public class AbstractOozieJobsTaskTest {
   static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
   @Test
-  public void toRecord_dateArgument_convertsToLong() throws Exception {
+  public void toRecordProperty_dateArgument_convertsToLong() throws Exception {
     Date christmas = dateFormat.parse("2025-12-25");
 
-    Object result = AbstractOozieJobsTask.toRecord(christmas);
+    Object result = AbstractOozieJobsTask.toRecordProperty(christmas);
 
     assertEquals(Long.class, result.getClass());
     assertEquals("2025-12-25", convertDate(result));
   }
 
   @Test
-  public void toRecord_listArgument_success() throws Exception {
+  public void toRecordProperty_listArgument_success() throws Exception {
     ImmutableList<String> list = ImmutableList.of("abcde", "fghi");
 
-    Object result = AbstractOozieJobsTask.toRecord(list);
+    Object result = AbstractOozieJobsTask.toRecordProperty(list);
 
     assertEquals("[\"abcde\",\"fghi\"]", result);
   }
 
   @Test
-  public void toRecord_otherArgument_nothingChanges() throws Exception {
+  public void toRecordProperty_otherArgument_nothingChanges() throws Exception {
     Object value = new Object();
 
-    Object result = AbstractOozieJobsTask.toRecord(value);
+    Object result = AbstractOozieJobsTask.toRecordProperty(value);
 
     assertEquals(value, result);
   }

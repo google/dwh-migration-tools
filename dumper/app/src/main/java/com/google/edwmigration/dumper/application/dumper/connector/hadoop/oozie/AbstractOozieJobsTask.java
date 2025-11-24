@@ -162,13 +162,13 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     for (int i = 0; i < header.size(); i++) {
       Object property = jobObjectWrapper.getPropertyValue(header.get(i));
       if (property != null) {
-        record[i] = toRecord(property);
+        record[i] = toRecordProperty(property);
       }
     }
     return record;
   }
 
-  static Object toRecord(Object property) throws JsonProcessingException {
+  static Object toRecordProperty(Object property) throws JsonProcessingException {
     if (property instanceof Date) {
       // avoid date formats complexity and use milliseconds
       return ((Date) property).getTime();
