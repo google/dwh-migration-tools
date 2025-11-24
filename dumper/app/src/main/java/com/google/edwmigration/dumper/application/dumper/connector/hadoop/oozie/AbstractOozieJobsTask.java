@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop.oozie
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -159,17 +160,24 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     Object[] record = new Object[header.size()];
     BeanWrapper jobObjectWrapper = new BeanWrapperImpl(job);
     for (int i = 0; i < header.size(); i++) {
-      record[i] = jobObjectWrapper.getPropertyValue(header.get(i));
-      if (record[i] != null && record[i] instanceof Date) {
-        // avoid date formats complexity and use milliseconds
-        record[i] = ((Date) record[i]).getTime();
-      }
-      if (record[i] != null && record[i] instanceof List) {
-        // write Actions arrays as json string in csv
-        record[i] = objectMapper.writeValueAsString(record[i]);
+      Object property = jobObjectWrapper.getPropertyValue(header.get(i));
+      if (property != null) {
+        record[i] = toRecord(property);
       }
     }
     return record;
+  }
+
+  static Object toRecord(Object property) throws JsonProcessingException {
+    if (property instanceof Date) {
+      // avoid date formats complexity and use milliseconds
+      return ((Date) property).getTime();
+    } else if (property instanceof List) {
+      // write Actions arrays as json string in csv
+      return objectMapper.writeValueAsString(property);
+    } else {
+      return property;
+    }
   }
 
   @VisibleForTesting
