@@ -71,7 +71,6 @@ dependencies {
         exclude group: "javax.servlet.jsp", module: "jsp-api"
     }
     //Overrides for hadoop-common transient deps
-    implementation libs.commons.beanutils // explicit version for vulnerabilities update
     implementation libs.jetty.server // explicit version for vulnerabilities update
     implementation libs.netty.handler // explicit version for vulnerabilities update
     implementation libs.dnsjava // explicit version for vulnerabilities update
