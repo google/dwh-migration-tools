@@ -15,6 +15,7 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 35 # 5 working weeks should be ok
           days-before-close: 14 # plus 2 weeks to act
           stale-pr-label: 'stale'
