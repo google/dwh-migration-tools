@@ -66,6 +66,7 @@ dependencies {
     hive312RuntimeOnly libs.zookeeper // explicit version for vulnerabilities update
     hive312RuntimeOnly libs.common.configuration2 // explicit version for vulnerabilities update
     hive312RuntimeOnly libs.bouncycastle // explicit version for vulnerabilities update
+    hive312RuntimeOnly libs.hadoop.shaded.protobuf // explicit version for vulnerabilities update
 
     // For HiveServer2
     hive312RuntimeOnly libs.tez.common
