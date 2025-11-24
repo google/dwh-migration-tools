@@ -15,3 +15,11 @@
     * the application is deployed as a WAR or with an embedded Servlet container * ... and so on.
     The Dumper tools distributes as Jar only, Spring MVC is not used in the code.
     There is no dependency on Spring MVC in the Dumper tools.
+
+- CVE: CVE-2024-6763
+  artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
+  justification: >
+    The Dumper is a CLI app, not a public-facing web server. It does not accept or process arbitrary URIs from untrusted
+    external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
+    a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
+    
