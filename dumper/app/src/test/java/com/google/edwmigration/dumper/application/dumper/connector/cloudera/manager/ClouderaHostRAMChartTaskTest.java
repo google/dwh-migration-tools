@@ -41,6 +41,7 @@ import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -66,7 +67,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ClouderaHostRAMChartTaskTest {
   private final ClouderaHostRAMChartTask task =
       new ClouderaHostRAMChartTask(
-          timeTravelDaysAgo(1), timeTravelDaysAgo(0), TimeSeriesAggregation.HOURLY);
+          timeTravelDaysAgo(1),
+          timeTravelDaysAgo(0),
+          TimeSeriesAggregation.HOURLY,
+          TaskCategory.REQUIRED);
   private ClouderaManagerHandle handle;
   private static WireMockServer server;
 

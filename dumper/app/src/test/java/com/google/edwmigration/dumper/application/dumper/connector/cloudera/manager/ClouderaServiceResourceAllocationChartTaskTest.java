@@ -40,7 +40,7 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -67,16 +67,16 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaClusterCPUChartTaskTest {
-  private final ClouderaClusterCPUChartTask task =
-      new ClouderaClusterCPUChartTask(
+public class ClouderaServiceResourceAllocationChartTaskTest {
+
+  private static WireMockServer server;
+  private final ClouderaServiceResourceAllocationChartTask task =
+      new ClouderaServiceResourceAllocationChartTask(
           timeTravelDaysAgo(30),
           timeTravelDaysAgo(0),
           TimeSeriesAggregation.HOURLY,
-          TaskCategory.REQUIRED);
+          TaskCategory.OPTIONAL);
   private ClouderaManagerHandle handle;
-  private String servicesJson;
-  private static WireMockServer server;
 
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
@@ -97,7 +97,6 @@ public class ClouderaClusterCPUChartTaskTest {
   @Before
   public void setUp() throws Exception {
     server.resetAll();
-    servicesJson = readFileAsString("/cloudera/manager/cluster-cpu-status.json");
     URI uri = URI.create(server.baseUrl() + "/api/vTest");
     handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
 
@@ -106,62 +105,61 @@ public class ClouderaClusterCPUChartTaskTest {
   }
 
   @Test
-  public void doRun_initiatedClusterWithoutId_skipWrites() throws Exception {
-    // GIVEN: There is no cluster with a valid cluster ID
-    initClusters(ClouderaClusterDTO.create(null, "single cluster"));
+  public void doRun_initiatedHostWithoutId_skipWrites() throws Exception {
+    initHosts(ClouderaHostDTO.create(null, "host1"));
 
-    // WHEN
     task.doRun(context, sink, handle);
 
-    // THEN: Task for such clusters should be skipped
     verifyNoWrites();
   }
 
   @Test
   public void doRun_clouderaReturnsValidJson_writeJsonLines() throws Exception {
-    // GIVEN: Two valid clusters
-    initClusters(
-        ClouderaClusterDTO.create("id1", "first-cluster"),
-        ClouderaClusterDTO.create("id2", "second-cluster"));
-    String firstClusterServicesJson = servicesJson;
-    String secondClusterServicesJson = "{\"key\":" + servicesJson + "}";
-    stubHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
-    stubHttpRequestToFetchClusterCPUChart("id2", secondClusterServicesJson);
+    String firstHostId = "becfcf668a1861ab926151f1b11a726d";
+    String secondHostId = "abcdef668a1861ab926151f1b11a726d";
+    initHosts(
+        ClouderaHostDTO.create(firstHostId, "host1"),
+        ClouderaHostDTO.create(secondHostId, "host2"));
+    String firstHostServicesResourceAllocationJson =
+        readFileAsString("/cloudera/manager/host-services-resource-allocation-1.json");
+    String secondHostServicesResourceAllocationJson =
+        readFileAsString("/cloudera/manager/host-services-resource-allocation-2.json");
+    stubHttpRequestToFetchHostServicesResourceAllocationChart(
+        firstHostId, firstHostServicesResourceAllocationJson);
+    stubHttpRequestToFetchHostServicesResourceAllocationChart(
+        secondHostId, secondHostServicesResourceAllocationJson);
 
-    // WHEN:
     task.doRun(context, sink, handle);
 
-    // THEN: the output should be dumped into the jsonl format for both clusters
     Set<String> fileLines = new HashSet<>(MockUtils.getWrittenJsonLines(writer, 2));
     assertEquals(
-        ImmutableSet.of(tojsonl(firstClusterServicesJson), tojsonl(secondClusterServicesJson)),
+        ImmutableSet.of(
+            tojsonl(firstHostServicesResourceAllocationJson),
+            tojsonl(secondHostServicesResourceAllocationJson)),
         fileLines);
   }
 
   @Test
-  public void doRun_clustersWereNotInitialized_throwsException() throws Exception {
-    // GIVEN: There is no valid cluster
-    assertNull(handle.getClusters());
+  public void doRun_hostsWereNotInitialized_throwsException() throws Exception {
+    assertNull(handle.getHosts());
 
-    // WHEN:
     MetadataDumperUsageException exception =
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
 
-    // THEN: There is a relevant exception has been raised
     assertEquals(
-        "Cloudera clusters must be initialized before CPU charts dumping.", exception.getMessage());
+        "Cloudera hosts must be initialized before service resource allocation charts dumping.",
+        exception.getMessage());
     verifyNoWrites();
   }
 
   @Test
   public void doRun_clouderaReturns4xx_throwsException() throws Exception {
-    // GIVEN: There is a valid cluster
-    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    String firstClusterServicesJson = servicesJson;
-    stubHttpRequestToFetchClusterCPUChart(
-        "id1", firstClusterServicesJson, HttpStatus.SC_BAD_REQUEST);
+    initHosts(ClouderaHostDTO.create("id1", "host1"));
+    String hostServicesResourceAllocationJson =
+        readFileAsString("/cloudera/manager/host-services-resource-allocation-1.json");
+    stubHttpRequestToFetchHostServicesResourceAllocationChart(
+        "id1", hostServicesResourceAllocationJson, HttpStatus.SC_BAD_REQUEST);
 
-    // WHEN: Cloudera returns 4xx http status code
     assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
     verifyNoWrites();
@@ -169,45 +167,42 @@ public class ClouderaClusterCPUChartTaskTest {
 
   @Test
   public void doRun_clouderaReturns5xx_throwsException() throws Exception {
-    // GIVEN: There is a valid cluster
-    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    String firstClusterServicesJson = servicesJson;
-    stubHttpRequestToFetchClusterCPUChart(
-        "id1", firstClusterServicesJson, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+    initHosts(ClouderaHostDTO.create("id1", "host1"));
+    String hostServicesResourceAllocationJson =
+        readFileAsString("/cloudera/manager/host-services-resource-allocation-1.json");
+    stubHttpRequestToFetchHostServicesResourceAllocationChart(
+        "id1", hostServicesResourceAllocationJson, HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
-    // WHEN: Cloudera returns 4xx http status code
     assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    // THEN: There is a relevant exception has been raised
     verifyNoWrites();
   }
 
   @Test
   public void doRun_clouderaReturnsInvalidJson_throwsException() throws Exception {
-    // GIVEN: There is a valid cluster
-    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    String firstClusterServicesJson = "{\"key\": []]";
-    stubHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
+    initHosts(ClouderaHostDTO.create("id1", "host1"));
+    String invalidJson = "{\"key\": []]";
+    stubHttpRequestToFetchHostServicesResourceAllocationChart("id1", invalidJson);
 
-    // WHEN: Cloudera returns 4xx http status code
     assertThrows(JsonParseException.class, () -> task.doRun(context, sink, handle));
 
     verifyNoWrites();
   }
 
-  private void initClusters(ClouderaClusterDTO... clusters) {
-    handle.initClusters(Arrays.asList(clusters));
+  private void initHosts(ClouderaHostDTO... hosts) {
+    handle.initHostsIfNull(Arrays.asList(hosts));
   }
 
-  private void stubHttpRequestToFetchClusterCPUChart(String clusterName, String mockedContent)
-      throws IOException {
-    stubHttpRequestToFetchClusterCPUChart(clusterName, mockedContent, HttpStatus.SC_OK);
+  private void stubHttpRequestToFetchHostServicesResourceAllocationChart(
+      String hostId, String mockedContent) throws IOException {
+    stubHttpRequestToFetchHostServicesResourceAllocationChart(
+        hostId, mockedContent, HttpStatus.SC_OK);
   }
 
-  private void stubHttpRequestToFetchClusterCPUChart(
-      String clusterName, String mockedContent, int statusCode) throws IOException {
+  private void stubHttpRequestToFetchHostServicesResourceAllocationChart(
+      String hostId, String mockedContent, int statusCode) throws IOException {
     server.stubFor(
-        get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", clusterName)))
+        get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", hostId)))
             .willReturn(okJson(mockedContent).withStatus(statusCode)));
   }
 

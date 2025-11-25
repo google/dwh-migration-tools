@@ -55,6 +55,7 @@ public class ClouderaManagerConnectorTest {
                 ImmutableMap.of(
                     "cluster-cpu.jsonl", TaskCategory.REQUIRED,
                     "host-ram.jsonl", TaskCategory.REQUIRED,
+                    "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
                     "yarn-application-types.jsonl", TaskCategory.OPTIONAL))
             .build();
@@ -87,6 +88,8 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", ClouderaHostComponentsTask.class,
                     "cluster-cpu.jsonl", ClouderaClusterCPUChartTask.class,
                     "host-ram.jsonl", ClouderaHostRAMChartTask.class,
+                    "service-resource-allocation.jsonl",
+                        ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,
                     "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class))
             .build();
@@ -128,6 +131,7 @@ public class ClouderaManagerConnectorTest {
                 ImmutableMap.of(
                     "cluster-cpu.jsonl", TaskCategory.REQUIRED,
                     "host-ram.jsonl", TaskCategory.REQUIRED,
+                    "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
                     "yarn-application-types.jsonl", TaskCategory.OPTIONAL))
             .build();
@@ -169,6 +173,8 @@ public class ClouderaManagerConnectorTest {
                 ImmutableMap.of(
                     "cluster-cpu.jsonl", ClouderaClusterCPUChartTask.class,
                     "host-ram.jsonl", ClouderaHostRAMChartTask.class,
+                    "service-resource-allocation.jsonl",
+                        ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,
                     "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class))
             .build();
