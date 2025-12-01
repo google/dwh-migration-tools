@@ -78,7 +78,7 @@ nimbus-jose-jwt = "10.5"
 io-grpc = "1.76.1"
 xerces = "2.12.2"
 zookeeper = "3.9.4"
-common-configuration2 = "2.12.0"
+common-configuration2 = "2.13.0"
 
 [libraries]
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
