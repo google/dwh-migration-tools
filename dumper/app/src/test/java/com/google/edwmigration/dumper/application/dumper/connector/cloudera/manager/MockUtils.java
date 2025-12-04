@@ -17,6 +17,11 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyChar;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -35,5 +40,13 @@ public class MockUtils {
       assertFalse(line.contains("\r"));
     }
     return fileLines;
+  }
+
+  public static void verifyNoWrites(Writer writer) throws IOException {
+    verify(writer, never()).write(anyChar());
+    verify(writer, never()).write(anyString());
+    verify(writer, never()).write(anyString(), anyInt(), anyInt());
+    verify(writer, never()).write(any(char[].class));
+    verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
   }
 }

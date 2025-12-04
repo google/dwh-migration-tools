@@ -20,20 +20,17 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.MockUtils.verifyNoWrites;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.readFileAsString;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.toJsonl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyChar;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableList;
@@ -42,13 +39,9 @@ import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -115,7 +108,7 @@ public class ClouderaServicesTaskTest {
     server.verify(getRequestedFor(urlEqualTo("/api/vTest/clusters/first-cluster/services")));
     server.verify(getRequestedFor(urlEqualTo("/api/vTest/clusters/second-cluster/services")));
 
-    verify(writer).write(tojsonl(servicesJson));
+    verify(writer).write(toJsonl(servicesJson));
     verify(writer).write("{\"some\":\"json\"}");
     verify(writer, times(2)).write('\n');
     verify(writer).close();
@@ -131,22 +124,6 @@ public class ClouderaServicesTaskTest {
     assertEquals(
         "Cloudera clusters must be initialized before services dumping.", exception.getMessage());
 
-    verifyNoWrites();
-  }
-
-  private void verifyNoWrites() throws IOException {
-    verify(writer, never()).write(anyChar());
-    verify(writer, never()).write(anyString());
-    verify(writer, never()).write(anyString(), anyInt(), anyInt());
-    verify(writer, never()).write(any(char[].class));
-    verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
-  }
-
-  private String tojsonl(String json) throws Exception {
-    return new ObjectMapper().readTree(json).toString();
-  }
-
-  private String readFileAsString(String fileName) throws IOException, URISyntaxException {
-    return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(fileName).toURI())));
+    verifyNoWrites(writer);
   }
 }
