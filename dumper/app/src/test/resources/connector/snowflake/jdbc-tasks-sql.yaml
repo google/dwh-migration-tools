@@ -11,3 +11,4 @@ views.csv: "SELECT table_catalog, table_schema, table_name, view_definition FROM
 functions-au.csv: "SELECT function_schema, function_name, data_type, argument_signature FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL"
 functions.csv: "SELECT function_schema, function_name, data_type, argument_signature FROM INFORMATION_SCHEMA.FUNCTIONS"
 external_tables.csv: "SHOW EXTERNAL TABLES"
+features.csv: "SELECT 'STORAGE', 'DYNAMIC_TABLES', COUNT(*), 'TABLES' FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES WHERE IS_DYNAMIC = 'YES'"
