@@ -284,6 +284,19 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         isAssessment,
         getInformationSchemaWhereCondition("function_catalog", arguments.getDatabases()));
 
+    String featuresQuery =
+        "SELECT 'STORAGE', 'DYNAMIC_TABLES', COUNT(*), 'TABLES' FROM"
+            + " SNOWFLAKE.ACCOUNT_USAGE.TABLES WHERE IS_DYNAMIC = 'YES'";
+
+    out.add(
+        new JdbcSelectTask(
+                FeaturesFormat.IS_ZIP_ENTRY_NAME,
+                featuresQuery,
+                TaskCategory
+                    .OPTIONAL, // TODO: Change to REQUIRED after implementation is finished
+                TaskOptions.DEFAULT)
+            .withHeaderClass(FeaturesFormat.Header.class));
+
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
         String query = queryForAssessment(item, arguments);
