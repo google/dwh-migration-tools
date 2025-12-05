@@ -292,8 +292,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         new JdbcSelectTask(
                 FeaturesFormat.IS_ZIP_ENTRY_NAME,
                 featuresQuery,
-                TaskCategory
-                    .OPTIONAL, // TODO: Change to REQUIRED after implementation is finished
+                TaskCategory.OPTIONAL, // TODO: Change to REQUIRED after implementation is finished
                 TaskOptions.DEFAULT)
             .withHeaderClass(FeaturesFormat.Header.class));
 
