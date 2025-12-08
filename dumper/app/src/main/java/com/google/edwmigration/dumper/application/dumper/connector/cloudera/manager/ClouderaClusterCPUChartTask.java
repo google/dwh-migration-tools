@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -40,13 +41,16 @@ import org.slf4j.LoggerFactory;
  * language.
  */
 public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask {
-  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaClusterCPUChartTask.class);
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
   public ClouderaClusterCPUChartTask(
-      ZonedDateTime startDate, ZonedDateTime endDate, TimeSeriesAggregation tsAggregation) {
-    super("cluster-cpu.jsonl", startDate, endDate, tsAggregation);
+      ZonedDateTime startDate,
+      ZonedDateTime endDate,
+      TimeSeriesAggregation tsAggregation,
+      TaskCategory taskCategory) {
+    super("cluster-cpu.jsonl", startDate, endDate, tsAggregation, taskCategory);
   }
 
   @Override
