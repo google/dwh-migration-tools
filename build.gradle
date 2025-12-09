@@ -24,14 +24,25 @@ distributions {
                 exclude "**/__pycache__"
                 into "client"
             }
-            project(":dumper:app").afterEvaluate {
-                from it.tasks.installPublishedDist
+
+            def dumperProject = project(':dumper:app')
+            def permissionsProject = project(':permissions-migration:app')
+            def dtsTransferProject = project(':dts-transfer-status:app')
+
+            dumperProject.afterEvaluate {
+                into("dumper") {
+                    from dumperProject.tasks.installPublishedDist
+                }
             }
-            project(":permissions-migration:app").afterEvaluate {
-                from it.tasks.installPublishedDist
+            permissionsProject.afterEvaluate {
+                into("permissions-migration") {
+                    from permissionsProject.tasks.installPublishedDist
+                }
             }
-            project(":dts-transfer-status:app").afterEvaluate {
-                from it.tasks.installPublishedDist
+            dtsTransferProject.afterEvaluate {
+                into("dts-transfer-status") {
+                    from dtsTransferProject.tasks.installPublishedDist
+                }
             }
         }
     }
