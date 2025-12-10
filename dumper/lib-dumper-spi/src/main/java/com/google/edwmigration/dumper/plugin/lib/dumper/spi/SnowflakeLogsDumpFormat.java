@@ -20,7 +20,6 @@ package com.google.edwmigration.dumper.plugin.lib.dumper.spi;
 public interface SnowflakeLogsDumpFormat {
 
   String FORMAT_NAME = "snowflake.logs.zip";
-
   String ZIP_ENTRY_PREFIX = "query_history_";
 
   enum Header {
