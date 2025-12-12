@@ -129,6 +129,9 @@ public class ClouderaManagerConnector extends AbstractConnector {
     String user = arguments.getUser();
     String password = arguments.getPasswordOrPrompt();
     doClouderaManagerLogin(handle.getBaseURI(), httpClient, user, password);
+
+    ClouderaConnectorVerifier.verify(handle, arguments);
+
     return handle;
   }
 
