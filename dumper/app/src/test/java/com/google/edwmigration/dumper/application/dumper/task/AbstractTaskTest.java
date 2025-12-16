@@ -16,9 +16,97 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
+import static com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode.APPEND_EXISTING;
+import static com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode.CREATE_TRUNCATE;
+import static com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TargetInitialization.CREATE;
+import static com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TargetInitialization.DO_NOT_CREATE;
+import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.REQUIRED;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
+import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.DummyByteSink;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.SinkWrapper;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TargetInitialization;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import org.junit.Test;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 /** @author shevek */
-@RunWith(JUnit4.class)
-public abstract class AbstractTaskTest {}
+@RunWith(Theories.class)
+public abstract class AbstractTaskTest {
+
+  @Test
+  public void getWrapper_createEnabledAndModeIsAppend_returnsAppendWrapper() throws IOException {
+    TaskRunContext mockContext = mock(TaskRunContext.class);
+    OutputHandle handle = mock(OutputHandle.class);
+    when(mockContext.newOutputFileHandle(anyString())).thenReturn(handle);
+    when(handle.exists()).thenReturn(false);
+
+    SinkWrapper wrapper = testTask(CREATE, APPEND_EXISTING).getWrapper(mockContext);
+
+    verify(handle).asByteSink(any());
+    assertSame(handle, wrapper.handle);
+    assertFalse(wrapper.shouldCommit);
+  }
+
+  @Test
+  public void getWrapper_createEnabledAndModeIsCreate_returnsAppendWrapper() throws IOException {
+    TaskRunContext mockContext = mock(TaskRunContext.class);
+    OutputHandle handle = mock(OutputHandle.class);
+    when(mockContext.newOutputFileHandle(anyString())).thenReturn(handle);
+    when(handle.exists()).thenReturn(false);
+
+    SinkWrapper wrapper = testTask(CREATE, CREATE_TRUNCATE).getWrapper(mockContext);
+
+    verify(handle).asTemporaryByteSink(any());
+    assertSame(handle, wrapper.handle);
+    assertTrue(wrapper.shouldCommit);
+  }
+
+  @Theory
+  public void getWrapper_createEnabledAndHandleExists_returnsSkipWrapper(WriteMode mode)
+      throws IOException {
+    TaskRunContext mockContext = mock(TaskRunContext.class);
+    OutputHandle handle = mock(OutputHandle.class);
+    when(mockContext.newOutputFileHandle(anyString())).thenReturn(handle);
+    when(handle.exists()).thenReturn(true);
+
+    SinkWrapper wrapper = testTask(CREATE, mode).getWrapper(mockContext);
+
+    assertNull(wrapper.sink);
+    assertSame(handle, wrapper.handle);
+    assertFalse(wrapper.shouldCommit);
+  }
+
+  @Theory
+  public void getWrapper_createNotEnabled_returnsDecoyWrapper(WriteMode mode) throws IOException {
+
+    SinkWrapper wrapper = testTask(DO_NOT_CREATE, mode).getWrapper(mock(TaskRunContext.class));
+
+    assertSame(DummyByteSink.INSTANCE, wrapper.sink);
+    assertNull(wrapper.handle);
+    assertFalse(wrapper.shouldCommit);
+  }
+
+  static AbstractTask<?> testTask(TargetInitialization strategy, OutputHandle.WriteMode mode) {
+    TaskOptions options =
+        TaskOptions.builder().setTargetInitialization(strategy).setWriteMode(mode).build();
+    return new JdbcSelectTask("test-file", "SELECT 1", REQUIRED, options);
+  }
+}

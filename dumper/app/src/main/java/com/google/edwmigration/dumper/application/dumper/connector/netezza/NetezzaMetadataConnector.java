@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper.connector.netezza;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -49,7 +48,6 @@ import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -131,24 +129,6 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
         throws SQLException {
       ResultSetExtractor<List<String>> rse = newResultSetExtractor(sink, jdbcHandle);
       return doSelect(connection, rse, sql);
-    }
-
-    @Override
-    public List<String> run(TaskRunContext context) throws Exception {
-      List<String> databaseNames = super.run(context);
-      for (String databaseName :
-          MoreObjects.firstNonNull(databaseNames, Collections.<String>emptyList())) {
-        // TODO:
-        // Construct a filter if --dbs was given on the command line.
-        // For each db in the databaseNames [which passes the filter]
-        // Add a set of tasks hauled up from the down below, and run them.
-        // TODO:
-        // Extract the databaseName from an appropriate SQL query in the ResultSetExtractor above.
-        // TODO:
-        // Use this task to list databases somewhere in the down-below addTasksTo.
-        // context.runChildTask(...);
-      }
-      return databaseNames;
     }
 
     @Override
