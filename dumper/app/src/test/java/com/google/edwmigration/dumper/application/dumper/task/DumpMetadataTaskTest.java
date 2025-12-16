@@ -35,8 +35,7 @@ public class DumpMetadataTaskTest extends AbstractTaskTest {
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     ConnectorArguments arguments = new ConnectorArguments("--connector", "bigquery-logs");
-    new DumpMetadataTask(arguments, "test-format")
-        .doRun(mockContext, sink, HANDLE);
+    new DumpMetadataTask(arguments, "test-format").doRun(mockContext, sink, HANDLE);
   }
 
   @Test

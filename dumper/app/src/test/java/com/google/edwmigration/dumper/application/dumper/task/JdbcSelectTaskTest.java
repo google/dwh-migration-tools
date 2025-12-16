@@ -69,8 +69,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
   public void testResultSetHeader() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-      new JdbcSelectTask("(memory)", QUERY)
-          .doRun(mockContext, sink, handle);
+      new JdbcSelectTask("(memory)", QUERY).doRun(mockContext, sink, handle);
     }
     String actualOutput = sink.openStream().toString();
     assertEquals("a,b,c\n1,2,3\n", actualOutput);
