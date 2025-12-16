@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.MemoryByteSink;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import java.io.File;
@@ -38,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 /** @author matt */
 @RunWith(JUnit4.class)
-public class JdbcSelectTaskTest extends AbstractTaskTest {
+public class JdbcSelectTaskTest {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
 

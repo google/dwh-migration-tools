@@ -16,28 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
-import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /** @author shevek */
-public abstract class AbstractTaskTest {
-
-  static final Handle HANDLE = () -> {};
-
-  public static class MemoryByteSink extends ByteSink {
-
-    private final ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-    @Override
-    public OutputStream openStream() throws IOException {
-      return out;
-    }
-
-    public String getContent() {
-      return out.toString();
-    }
-  }
-}
+@RunWith(JUnit4.class)
+public abstract class AbstractTaskTest {}

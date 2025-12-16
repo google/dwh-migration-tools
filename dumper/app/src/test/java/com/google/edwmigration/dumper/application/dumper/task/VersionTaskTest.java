@@ -19,19 +19,20 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.MemoryByteSink;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** @author shevek */
 @RunWith(JUnit4.class)
-public class VersionTaskTest extends AbstractTaskTest {
+public class VersionTaskTest {
 
   @Test
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     TaskRunContext mockContext = mock(TaskRunContext.class);
-    new VersionTask().doRun(mockContext, sink, HANDLE);
+    new VersionTask().doRun(mockContext, sink, () -> {});
   }
 
   @Test
