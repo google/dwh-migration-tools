@@ -18,26 +18,29 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.DEF_LOG_TABLE;
+import static com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.DEF_SQL_TABLE;
 import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
+import static java.nio.file.FileSystems.newFileSystem;
 import static java.time.ZoneOffset.UTC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
+import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.*;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -52,6 +55,8 @@ import org.junit.runners.JUnit4;
 /** @author shevek */
 @RunWith(JUnit4.class)
 public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
+
+  final TaskRunContextOps mockOptions = mock(TaskRunContextOps.class);
 
   private final TeradataLogsConnector connector = new TeradataLogsConnector();
 
@@ -223,34 +228,27 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
 
   @Test
   public void addTasksTo_executeQuery_success() throws Exception {
-    String name = getClass().getSimpleName();
-    File dbFile = DumperTestUtils.newJdbcFile(name);
-    File zipFile = DumperTestUtils.newZipFile(name);
+    File dbFile = DumperTestUtils.newJdbcFile(getClass().getSimpleName());
+    File zipFile = DumperTestUtils.newZipFile(getClass().getSimpleName());
 
     dbFile.delete();
     zipFile.delete();
 
     URI outputUri = URI.create("jar:" + zipFile.toURI());
-
+    ImmutableList<String> scripts =
+        ImmutableList.of(
+            "attach ':memory:' as dbc",
+            String.format(
+                "create table %s (UserName varchar, errorcode int, StartTime int)", DEF_LOG_TABLE),
+            String.format("create table %s (QueryID int)", DEF_SQL_TABLE));
     // This isn't great because all the column-validity queries fail.
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(dbFile);
-        FileSystem fileSystem =
-            FileSystems.newFileSystem(outputUri, ImmutableMap.of("create", "true"))) {
-      OutputHandleFactory sinkFactory = new FileSystemOutputHandleFactory(fileSystem, "/");
-      handle.getJdbcTemplate().execute("attach ':memory:' as dbc");
-      handle
-          .getJdbcTemplate()
-          .execute(
-              "create table "
-                  + TeradataLogsConnector.DEF_LOG_TABLE
-                  + " (UserName varchar, errorcode int, StartTime int)");
-      handle
-          .getJdbcTemplate()
-          .execute("create table " + TeradataLogsConnector.DEF_SQL_TABLE + " (QueryID int)");
-
+        FileSystem fileSystem = newFileSystem(outputUri, ImmutableMap.of("create", "true"))) {
+      scripts.forEach(handle.getJdbcTemplate()::execute);
       ConnectorArguments arguments =
-          new ConnectorArguments("--connector", connector.getName(), "--query-log-days", "1");
-      TaskRunContext runContext = DummyTaskRunContextFactory.create(sinkFactory, handle, arguments);
+          ConnectorArguments.create(
+              ImmutableList.of("--connector", "teradata-logs", "--query-log-days", "1"));
+      TaskRunContext runContext = testContext(fileSystem, handle, mockOptions, arguments);
       List<Task<?>> tasks = new ArrayList<>();
       connector.addTasksTo(tasks, arguments);
       for (Task<?> task : tasks) {
@@ -451,5 +449,14 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
         TeradataLogsDumpFormat.HeaderLog.values(),
         Teradata14LogsConnector.EXPRESSIONS_LOG_TBL.toArray(
             new String[Teradata14LogsConnector.EXPRESSIONS_LOG_TBL.size()]));
+  }
+
+  static TaskRunContext testContext(
+      FileSystem fileSystem,
+      Handle handle,
+      TaskRunContextOps options,
+      ConnectorArguments arguments) {
+    OutputHandleFactory sinkFactory = new FileSystemOutputHandleFactory(fileSystem, "/");
+    return new TaskRunContext(sinkFactory, handle, 10, options, arguments);
   }
 }

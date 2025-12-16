@@ -17,9 +17,9 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,12 +29,13 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class DumpMetadataTaskTest extends AbstractTaskTest {
 
+  final TaskRunContext mockContext = mock(TaskRunContext.class);
+
   @Test
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     ConnectorArguments arguments = new ConnectorArguments("--connector", "bigquery-logs");
-    new DumpMetadataTask(arguments, "test-format")
-        .doRun(DummyTaskRunContextFactory.create(HANDLE), sink, HANDLE);
+    new DumpMetadataTask(arguments, "test-format").doRun(mockContext, sink, HANDLE);
   }
 
   @Test

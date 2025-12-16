@@ -18,11 +18,11 @@ package com.google.edwmigration.dumper.application.dumper.task;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import java.io.File;
 import java.sql.ResultSet;
@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 @RunWith(JUnit4.class)
 public class JdbcSelectTaskTest extends AbstractTaskTest {
 
-  @SuppressWarnings("UnusedVariable")
   private static final Logger logger = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
 
   private static final String NAME = JdbcSelectTaskTest.class.getSimpleName();
@@ -52,6 +51,8 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
     Bar,
     Baz
   }
+
+  final TaskRunContext mockContext = mock(TaskRunContext.class);
 
   @BeforeClass
   public static void setUpClass() throws Exception {
@@ -68,8 +69,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
   public void testResultSetHeader() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-      new JdbcSelectTask("(memory)", QUERY)
-          .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+      new JdbcSelectTask("(memory)", QUERY).doRun(mockContext, sink, handle);
     }
     String actualOutput = sink.openStream().toString();
     assertEquals("a,b,c\n1,2,3\n", actualOutput);
@@ -81,7 +81,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
       new JdbcSelectTask("(memory)", QUERY)
           .withHeaderClass(Header.class)
-          .doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+          .doRun(mockContext, sink, handle);
     }
     String actualOutput = sink.openStream().toString();
     assertEquals("Foo,Bar,Baz\n1,2,3\n", actualOutput);
@@ -102,7 +102,7 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
               return format;
             }
           }.withHeaderClass(Header.class);
-      task.doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+      task.doRun(mockContext, sink, handle);
     }
     String actualOutput = sink.openStream().toString();
     assertEquals("Foo,Bar,Baz\n,14,3\n", actualOutput);
@@ -130,7 +130,6 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
     String secondSql = "select null, 15, b FROM foo";
 
     MemoryByteSink sink = new MemoryByteSink();
-    final MutableObject<CSVFormat> formatHolder = new MutableObject<>();
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
       AbstractTask<Summary> first =
           new JdbcSelectTask("(memory)", firstSql).withHeaderClass(Header.class);
@@ -141,8 +140,8 @@ public class JdbcSelectTaskTest extends AbstractTaskTest {
                   TaskCategory.REQUIRED,
                   TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING))
               .withHeaderClass(Header.class);
-      first.doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
-      second.doRun(DummyTaskRunContextFactory.create(handle), sink, handle);
+      first.doRun(mockContext, sink, handle);
+      second.doRun(mockContext, sink, handle);
     }
     String actualOutput = sink.openStream().toString();
     assertEquals("Foo,Bar,Baz\n,14,3\n,15,2\n", actualOutput);
