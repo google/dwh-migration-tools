@@ -17,8 +17,8 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,7 +30,8 @@ public class VersionTaskTest extends AbstractTaskTest {
   @Test
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
-    new VersionTask().doRun(DummyTaskRunContextFactory.create(HANDLE), sink, HANDLE);
+    TaskRunContext mockContext = mock(TaskRunContext.class);
+    new VersionTask().doRun(mockContext, sink, HANDLE);
   }
 
   @Test

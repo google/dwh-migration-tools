@@ -22,6 +22,7 @@ import static com.google.edwmigration.dumper.application.dumper.test.DumperTestU
 import static java.time.ZoneOffset.UTC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +32,6 @@ import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.*;
-import com.google.edwmigration.dumper.application.dumper.test.DummyTaskRunContextFactory;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpFormat;
 import java.io.File;
@@ -53,6 +53,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
 
+  final TaskRunContext mockContext = mock(TaskRunContext.class);
   private final TeradataLogsConnector connector = new TeradataLogsConnector();
 
   @Test
@@ -250,11 +251,10 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
 
       ConnectorArguments arguments =
           new ConnectorArguments("--connector", connector.getName(), "--query-log-days", "1");
-      TaskRunContext runContext = DummyTaskRunContextFactory.create(sinkFactory, handle, arguments);
       List<Task<?>> tasks = new ArrayList<>();
       connector.addTasksTo(tasks, arguments);
       for (Task<?> task : tasks) {
-        task.run(runContext);
+        task.run(mockContext);
       }
     }
   }
