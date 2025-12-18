@@ -61,10 +61,15 @@ public class MetadataDumper {
   private static final Pattern GCS_PATH_PATTERN =
       Pattern.compile("gs://(?<bucket>[^/]+)/(?<path>.*)");
 
-  private TelemetryProcessor telemetryProcessor;
-  private ConnectorArguments connectorArguments;
+  private final TelemetryProcessor telemetryProcessor;
+  private final ConnectorArguments connectorArguments;
+  private final ShutdownHook shutdownHook;
 
   public MetadataDumper(String... args) throws Exception {
+    this((zipPath) -> {}, args);
+  }
+
+  public MetadataDumper(ShutdownHook shutdownHook, String... args) throws Exception {
     this.connectorArguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
     telemetryProcessor =
         new TelemetryProcessor(
@@ -72,6 +77,8 @@ public class MetadataDumper {
     if (connectorArguments.saveResponseFile()) {
       JsonResponseFile.save(connectorArguments);
     }
+
+    this.shutdownHook = shutdownHook;
   }
 
   public boolean run() throws Exception {
@@ -158,6 +165,8 @@ public class MetadataDumper {
           connectorArguments, state, stopwatch, requiredTaskSucceeded);
       telemetryProcessor.processTelemetry(fileSystem);
     } finally {
+      shutdownHook.shutdown(outputFileLocation);
+
       // We must do this in finally after the ZipFileSystem has been closed.
       File outputFile = new File(outputFileLocation);
       if (outputFile.isFile()) {
@@ -300,5 +309,10 @@ public class MetadataDumper {
           String stateToPrint = requiredTaskSucceeded ? "SUCCEEDED" : "FAILED";
           linePrinter.println("Dumper execution: " + stateToPrint);
         });
+  }
+
+  @FunctionalInterface
+  public interface ShutdownHook {
+    void shutdown(String outputzip);
   }
 }

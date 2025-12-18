@@ -20,7 +20,14 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.*;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
+import one.profiler.AsyncProfiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,13 +58,21 @@ public class Main {
 
   public static void main(String... args) throws Exception {
     try {
+      AsyncProfiler asyncProfiler = AsyncProfiler.getInstance();
+      asyncProfiler.execute("start,event=cpu,interval=10ms");
+
       StartUpMetaInfoProcessor.printMetaInfo();
 
       if (args.length == 0) {
         args = new String[] {"--help"};
       }
 
-      MetadataDumper metadataDumper = new MetadataDumper(args);
+      MetadataDumper metadataDumper =
+          new MetadataDumper(
+              (outputFileLocation) -> {
+                stopProfileAndAppendToZip(asyncProfiler, outputFileLocation);
+              },
+              args);
 
       if (!metadataDumper.run()) {
         System.exit(1);
@@ -72,6 +87,31 @@ public class Main {
       e.printStackTrace();
       printErrorMessages(e);
       System.exit(1);
+    }
+  }
+
+  private static void stopProfileAndAppendToZip(
+      AsyncProfiler asyncProfiler, String outputFileLocation) {
+    try {
+      File tempFlameGraph = File.createTempFile("flamegraph", ".html");
+      String stopCommand = "stop,output=flamegraph,file=" + tempFlameGraph.getAbsolutePath();
+      asyncProfiler.execute(stopCommand);
+
+      moveFileToZip(outputFileLocation, tempFlameGraph, "flamegraph.html");
+    } catch (Exception ignored) {
+    }
+  }
+
+  private static void moveFileToZip(String zipFile, File file, String entryName)
+      throws IOException {
+    Map<String, String> env = Collections.singletonMap("create", "false");
+    URI zipUri = URI.create("jar:" + Paths.get(zipFile).toUri());
+
+    try (FileSystem zipFs = FileSystems.newFileSystem(zipUri, env)) {
+      Path pathInZip = zipFs.getPath(entryName);
+
+      Files.copy(file.toPath(), pathInZip, StandardCopyOption.REPLACE_EXISTING);
+      Files.deleteIfExists(file.toPath());
     }
   }
 }
