@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
@@ -38,9 +39,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assume;
@@ -57,6 +60,12 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   @SuppressWarnings("UnusedVariable")
   private static final Logger logger =
       LoggerFactory.getLogger(SnowflakeMetadataConnectorTest.class);
+
+  private static final String FEATURES_CSV = "features.csv";
+  private static final String ACCOUNT_USAGE_SIMPLE_FILE = "account-usage-simple.sql";
+  private static final String ACCOUNT_USAGE_COMPLEX_FILE = "account-usage-complex.sql";
+  private static final String SHOW_BASED_FILE = "show-based.sql";
+  private static final String SNOWFLAKE_FEATURES_PREFIX = "snowflake-features/";
 
   private final MetadataConnector connector = new SnowflakeMetadataConnector();
 
@@ -155,11 +164,23 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
                 StandardCharsets.UTF_8),
             TaskSqlMap.class);
 
-    assertEquals(expectedSqls.size(), actualSqls.size());
-    assertEquals(expectedSqls.keySet(), actualSqls.keySet());
+    // ignore feature.csv, it will be tested in separate test because the query is too complex
+    int actualSizeWithoutFeatures = actualSqls.size() - 1;
+    Set<String> actualFileNamesWithoutFeatures = new HashSet<>(actualSqls.keySet());
+    actualFileNamesWithoutFeatures.remove(FEATURES_CSV);
+
+    assertEquals(expectedSqls.size(), actualSizeWithoutFeatures);
+    assertEquals(expectedSqls.keySet(), actualFileNamesWithoutFeatures);
     for (String name : expectedSqls.keySet()) {
       assertEquals(expectedSqls.get(name), actualSqls.get(name));
     }
+  }
+
+  @Test
+  public void connector_checkExpectedFeaturesQueryFilesExist() {
+    loadFile(SNOWFLAKE_FEATURES_PREFIX + ACCOUNT_USAGE_SIMPLE_FILE);
+    loadFile(SNOWFLAKE_FEATURES_PREFIX + ACCOUNT_USAGE_COMPLEX_FILE);
+    loadFile(SNOWFLAKE_FEATURES_PREFIX + SHOW_BASED_FILE);
   }
 
   @Test
@@ -265,8 +286,18 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   private static ImmutableMap<String, String> collectSqlStatements(String... extraArgs)
       throws IOException {
     return collectSqlStatementsAsMultimap(extraArgs).entries().stream()
-        .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
+        .collect(
+            ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue, (first, dup) -> first));
   }
 
   static class TaskSqlMap extends HashMap<String, String> {}
+
+  private void loadFile(String path) {
+    try {
+      Resources.toString(Resources.getResource(path), UTF_8);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(
+          String.format("An invalid file was provided: '%s'.", path), e);
+    }
+  }
 }

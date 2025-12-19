@@ -169,4 +169,16 @@ public interface SnowflakeMetadataDumpFormat {
       OwnerRoleType
     }
   }
+
+  interface FeaturesFormat {
+
+    String IS_ZIP_ENTRY_NAME = "features.csv";
+
+    enum Header {
+      FeatureType,
+      FeatureName,
+      Count,
+      Description
+    }
+  }
 }
