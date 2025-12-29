@@ -165,4 +165,12 @@ WITH
   SELECT 'sql', 'get_ddl_last_30_days', COUNT(*), ''
   FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
   WHERE START_TIME >= DATEADD(day, -30, CURRENT_TIMESTAMP())
-    AND QUERY_TEXT ILIKE '%GET_DDL(%';
+    AND QUERY_TEXT ILIKE '%GET_DDL(%'
+
+  UNION ALL
+  -- dynamic pivot clause
+  SELECT 'sql', 'dynamic_pivot_clause_last_30_days', COUNT(*), ''
+  FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+  WHERE START_TIME >= DATEADD(day, -30, CURRENT_TIMESTAMP())
+    AND QUERY_TEXT ILIKE '%PIVOT%'
+    AND REGEXP_LIKE(QUERY_TEXT, $$.*\bIN\b\s*\(\s*\bANY\b.*$$, 'is');
