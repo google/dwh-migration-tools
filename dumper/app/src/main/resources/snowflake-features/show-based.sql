@@ -22,6 +22,7 @@ DECLARE
   show_app_packages_query_id VARCHAR;
   show_notebooks_query_id VARCHAR;
   show_cortex_query_id VARCHAR;
+  show_integrations_query_id VARCHAR;
   final_result RESULTSET;
 BEGIN
   -- contains search optimization info
@@ -125,6 +126,14 @@ BEGIN
 
   show_cortex_query_id := LAST_QUERY_ID();
 
+  -- Contains catalog integrations
+  SHOW CATALOG INTEGRATIONS;
+
+  SELECT 'app', 'open-catalog', COUNT(*), 'INTEGRATIONS'
+    FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+  show_show_integrations_query_id := LAST_QUERY_ID();
+
   final_result := (
     SELECT * FROM TABLE(RESULT_SCAN(:show_tables_query_id))
     UNION ALL
@@ -143,6 +152,8 @@ BEGIN
     SELECT * FROM TABLE(RESULT_SCAN(:show_notebooks_query_id))
     UNION ALL
     SELECT * FROM TABLE(RESULT_SCAN(:show_cortex_query_id))
+    UNION ALL
+    SELECT * FROM TABLE(RESULT_SCAN(:show_show_integrations_query_id))
   );
 
   RETURN TABLE(final_result);
