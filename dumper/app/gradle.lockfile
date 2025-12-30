@@ -4,6 +4,7 @@
 ch.qos.logback:logback-classic:1.3.16=compileClasspath,runtimeClasspath,sources,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 ch.qos.logback:logback-core:1.3.16=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.amazon.redshift:redshift-jdbc42:2.1.0.32=runtimeClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
+tools.profiler:async-profiler:4.2=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.amazonaws:aws-java-sdk-cloudwatch:1.12.791=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.amazonaws:aws-java-sdk-core:1.12.791=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.amazonaws:aws-java-sdk-redshift:1.12.791=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
