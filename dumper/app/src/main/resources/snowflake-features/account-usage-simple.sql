@@ -173,4 +173,53 @@ WITH
   FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
   WHERE START_TIME >= DATEADD(day, -30, CURRENT_TIMESTAMP())
     AND QUERY_TEXT ILIKE '%PIVOT%'
-    AND REGEXP_LIKE(QUERY_TEXT, $$.*\bIN\b\s*\(\s*\bANY\b.*$$, 'is');
+    AND REGEXP_LIKE(QUERY_TEXT, $$.*\bIN\b\s*\(\s*\bANY\b.*$$, 'is')
+
+  UNION ALL
+  -- Horizon - Tags exist (catalog metadata is being used)
+  SELECT 'governance', 'horizon_tags_defined', COUNT(*), ''
+  FROM SNOWFLAKE.ACCOUNT_USAGE.TAGS
+  WHERE DELETED IS NULL
+
+  UNION ALL
+  -- Horizon - Tag assignments exist
+  SELECT 'governance', 'horizon_tag_assignments', COUNT(*), ''
+  FROM SNOWFLAKE.ACCOUNT_USAGE.TAG_REFERENCES
+  WHERE OBJECT_DELETED IS NULL
+
+  UNION ALL
+  -- Horizon - Sensitive data classification was run
+  SELECT 'governance', 'horizon_sensitive_data_classification_tables', COUNT(*), ''
+  FROM SNOWFLAKE.ACCOUNT_USAGE.DATA_CLASSIFICATION_LATEST
+
+  UNION ALL
+  -- Snowpark container services - compute pools
+  SELECT 'service', 'snowpark_container_services_compute_pools', COUNT(*), ''
+  FROM SNOWFLAKE.ACCOUNT_USAGE.COMPUTE_POOLS
+  WHERE DELETED IS NULL
+
+  UNION ALL
+  -- Snowpark container services - services
+  SELECT 'service', 'snowpark_container_services_services', COUNT(*), ''
+  FROM SNOWFLAKE.ACCOUNT_USAGE.SERVICES
+  WHERE DELETED IS NULL
+
+  UNION ALL
+  -- BI - Tableau heuristics
+  SELECT 'bi', 'tableau_query_tagged_queries_30d', COUNT(*), ''
+  FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+  WHERE START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+    AND QUERY_TAG IS NOT NULL
+    AND (
+         QUERY_TAG ILIKE '%tableau%'
+         OR QUERY_TAG ILIKE '%workbook%'
+         OR QUERY_TAG ILIKE '%sheet%'
+    )
+
+  UNION ALL
+  -- BI - Sigma heuristics
+  SELECT 'bi', 'sigma_query_tagged_queries_30d', COUNT(*), ''
+  FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+  WHERE START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+    AND QUERY_TAG IS NOT NULL
+    AND QUERY_TAG ILIKE '%sigma%';

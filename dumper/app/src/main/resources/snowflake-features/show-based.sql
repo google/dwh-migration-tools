@@ -22,6 +22,7 @@ DECLARE
   show_app_packages_query_id VARCHAR;
   show_notebooks_query_id VARCHAR;
   show_cortex_query_id VARCHAR;
+  show_integrations_query_id VARCHAR;
   final_result RESULTSET;
 BEGIN
   -- contains search optimization info
@@ -113,7 +114,7 @@ BEGIN
   SHOW NOTEBOOKS IN ACCOUNT;
 
   SELECT 'app', 'notebooks', COUNT(*), 'NOTEBOOKS'
-    FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+  FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 
   show_notebooks_query_id := LAST_QUERY_ID();
 
@@ -121,9 +122,17 @@ BEGIN
   SHOW CORTEX SEARCH SERVICES IN ACCOUNT;
 
   SELECT 'app', 'cortex-ai', COUNT(*), 'SERVICES'
-      FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+  FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
 
   show_cortex_query_id := LAST_QUERY_ID();
+
+  -- Contains catalog integrations
+  SHOW CATALOG INTEGRATIONS;
+
+  SELECT 'app', 'open-catalog', COUNT(*), 'INTEGRATIONS'
+  FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));
+
+  show_integrations_query_id := LAST_QUERY_ID();
 
   final_result := (
     SELECT * FROM TABLE(RESULT_SCAN(:show_tables_query_id))
