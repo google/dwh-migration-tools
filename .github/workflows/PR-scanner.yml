@@ -16,6 +16,7 @@ jobs:
       # Optional: Scan arguments
       scan-args: |-
         --recursive
+        ./dumper
 
   # JOB 2: (Optional) Your other steps run in a separate job
   build-application:
