@@ -4,32 +4,23 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
+  # JOB 1: The Scanner (Note: No "steps" here, just "uses")
   osv-scan:
-    name: Scan for New Vulnerabilities
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.1
+    with:
+      # Optional: Scan arguments
+      scan-args: |-
+        --recursive
+
+  # JOB 2: (Optional) Your other steps run in a separate job
+  build-application:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      security-events: write # Required to upload results to GitHub Security tab
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Important: Fetch full history for diff comparison
-
-      - name: Run OSV-Scanner
-        uses: google/osv-scanner-action@v2.3.1
-        with:
-          scan-args: |-
-            --recursive
-            --format=sarif
-            --output=results.sarif 
-          fail-on-vuln: true 
-          
-      - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always() # Upload results even if the scan fails
-        with:
-          sarif_file: results.sarif
+      - uses: actions/checkout@v4
+      - name: Build
+        run: ./gradlew build
