@@ -17,6 +17,7 @@ jobs:
       scan-args: |-
         --recursive
         ./
+      fail-on-vuln: true
 
   # JOB 2: (Optional) Your other steps run in a separate job
   build-application:
