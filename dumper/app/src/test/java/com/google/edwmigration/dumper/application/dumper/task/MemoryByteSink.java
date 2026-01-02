@@ -28,8 +28,4 @@ public final class MemoryByteSink extends ByteSink {
   public OutputStream openStream() {
     return out;
   }
-
-  public String getContent() {
-    return out.toString();
-  }
 }
