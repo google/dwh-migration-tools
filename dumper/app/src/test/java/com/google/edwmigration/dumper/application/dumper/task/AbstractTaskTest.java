@@ -21,6 +21,7 @@ import static com.google.edwmigration.dumper.application.dumper.io.OutputHandle.
 import static com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TargetInitialization.CREATE;
 import static com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TargetInitialization.DO_NOT_CREATE;
 import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.REQUIRED;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -31,17 +32,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.DummyByteSink;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.SinkWrapper;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TargetInitialization;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
@@ -57,8 +54,9 @@ public abstract class AbstractTaskTest {
     OutputHandle handle = mock(OutputHandle.class);
     when(mockContext.newOutputFileHandle(anyString())).thenReturn(handle);
     when(handle.exists()).thenReturn(false);
+    AbstractTask<?> task = testTask(CREATE, APPEND_EXISTING);
 
-    SinkWrapper wrapper = testTask(CREATE, APPEND_EXISTING).getWrapper(mockContext);
+    SinkWrapper wrapper = task.getWrapper(mockContext);
 
     verify(handle).asByteSink(any());
     assertSame(handle, wrapper.handle);
@@ -71,8 +69,9 @@ public abstract class AbstractTaskTest {
     OutputHandle handle = mock(OutputHandle.class);
     when(mockContext.newOutputFileHandle(anyString())).thenReturn(handle);
     when(handle.exists()).thenReturn(false);
+    AbstractTask<?> task = testTask(CREATE, CREATE_TRUNCATE);
 
-    SinkWrapper wrapper = testTask(CREATE, CREATE_TRUNCATE).getWrapper(mockContext);
+    SinkWrapper wrapper = task.getWrapper(mockContext);
 
     verify(handle).asTemporaryByteSink(any());
     assertSame(handle, wrapper.handle);
@@ -86,8 +85,9 @@ public abstract class AbstractTaskTest {
     OutputHandle handle = mock(OutputHandle.class);
     when(mockContext.newOutputFileHandle(anyString())).thenReturn(handle);
     when(handle.exists()).thenReturn(true);
+    AbstractTask<?> task = testTask(CREATE, mode);
 
-    SinkWrapper wrapper = testTask(CREATE, mode).getWrapper(mockContext);
+    SinkWrapper wrapper = task.getWrapper(mockContext);
 
     assertNull(wrapper.sink);
     assertSame(handle, wrapper.handle);
@@ -96,10 +96,11 @@ public abstract class AbstractTaskTest {
 
   @Theory
   public void getWrapper_createNotEnabled_returnsDecoyWrapper(WriteMode mode) throws IOException {
+    AbstractTask<?> task = testTask(DO_NOT_CREATE, mode);
 
-    SinkWrapper wrapper = testTask(DO_NOT_CREATE, mode).getWrapper(mock(TaskRunContext.class));
+    SinkWrapper wrapper = task.getWrapper(mock(TaskRunContext.class));
 
-    assertSame(DummyByteSink.INSTANCE, wrapper.sink);
+    assertEquals(DummyByteSink.INSTANCE, wrapper);
     assertNull(wrapper.handle);
     assertFalse(wrapper.shouldCommit);
   }
