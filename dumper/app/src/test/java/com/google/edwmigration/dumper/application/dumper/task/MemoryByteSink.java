@@ -16,9 +16,16 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import com.google.common.io.ByteSink;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 
-/** @author shevek */
-@RunWith(JUnit4.class)
-public abstract class AbstractTaskTest {}
+public final class MemoryByteSink extends ByteSink {
+
+  private final ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+  @Override
+  public OutputStream openStream() {
+    return out;
+  }
+}

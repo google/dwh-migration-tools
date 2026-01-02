@@ -34,7 +34,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.redshift.Reds
 import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
 import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
 import com.google.edwmigration.dumper.application.dumper.handle.RedshiftHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
+import com.google.edwmigration.dumper.application.dumper.task.MemoryByteSink;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -49,7 +49,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @RunWith(JUnit4.class)
-public class RedshiftClusterUsageMetricsTaskTest extends AbstractTaskTest {
+public class RedshiftClusterUsageMetricsTaskTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 

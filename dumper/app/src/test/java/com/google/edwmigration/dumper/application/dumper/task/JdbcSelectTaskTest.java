@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /** @author matt */
 @RunWith(JUnit4.class)
-public class JdbcSelectTaskTest extends AbstractTaskTest {
+public class JdbcSelectTaskTest {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcSelectTaskTest.class);
 
