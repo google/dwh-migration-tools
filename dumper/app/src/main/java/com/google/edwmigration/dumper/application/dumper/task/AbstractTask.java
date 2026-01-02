@@ -120,12 +120,18 @@ public abstract class AbstractTask<T> implements Task<T> {
     }
 
     OutputHandle sink = context.newOutputFileHandle(getTargetPath());
-    if (sink.exists()) {
+    if (sink.exists() && options.writeMode() != WriteMode.APPEND_EXISTING) {
       logger.info("Skipping {}: {} already exists.", getName(), sink);
       return null;
     }
-    T result = doRun(context, sink.asTemporaryByteSink(options.writeMode()), context.getHandle());
-    sink.commit();
+
+    T result;
+    if (options.writeMode() == WriteMode.APPEND_EXISTING) {
+      result = doRun(context, sink.asByteSink(options.writeMode()), context.getHandle());
+    } else {
+      result = doRun(context, sink.asTemporaryByteSink(options.writeMode()), context.getHandle());
+      sink.commit();
+    }
     return result;
   }
 
