@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerClient.ConnectionWrapper;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.MemoryByteSink;
+import com.google.edwmigration.dumper.application.dumper.task.MemoryByteSink;
 import java.io.IOException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

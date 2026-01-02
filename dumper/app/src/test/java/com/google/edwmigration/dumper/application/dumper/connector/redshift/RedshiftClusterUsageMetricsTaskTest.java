@@ -34,7 +34,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.redshift.Reds
 import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricName;
 import com.google.edwmigration.dumper.application.dumper.connector.redshift.RedshiftClusterUsageMetricsTask.MetricType;
 import com.google.edwmigration.dumper.application.dumper.handle.RedshiftHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.MemoryByteSink;
+import com.google.edwmigration.dumper.application.dumper.task.MemoryByteSink;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

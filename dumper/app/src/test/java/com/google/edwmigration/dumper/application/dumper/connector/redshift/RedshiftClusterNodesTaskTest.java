@@ -26,7 +26,7 @@ import com.amazonaws.services.redshift.model.DescribeClustersResult;
 import com.amazonaws.services.redshift.model.Endpoint;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.handle.RedshiftHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.MemoryByteSink;
+import com.google.edwmigration.dumper.application.dumper.task.MemoryByteSink;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;

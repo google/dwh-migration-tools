@@ -28,7 +28,6 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.errorprone.annotations.ForOverride;
 import java.beans.PropertyDescriptor;
-import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -184,28 +183,6 @@ public abstract class AbstractTask<T> implements Task<T> {
     @Override
     public OutputStream openStream() {
       throw new UnsupportedOperationException("Opening stream for DummyByteSink is not supported.");
-    }
-  }
-
-  public static final class MemoryByteSink extends ByteSink {
-
-    private final ByteArrayOutputStream out;
-
-    public MemoryByteSink() {
-      this(new ByteArrayOutputStream());
-    }
-
-    private MemoryByteSink(ByteArrayOutputStream out) {
-      this.out = out;
-    }
-
-    @Override
-    public OutputStream openStream() {
-      return out;
-    }
-
-    public String getContent() {
-      return out.toString();
     }
   }
 

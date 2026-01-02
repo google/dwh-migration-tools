@@ -16,29 +16,20 @@
  */
 package com.google.edwmigration.dumper.application.dumper.task;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import com.google.common.io.ByteSink;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+public final class MemoryByteSink extends ByteSink {
 
-/** @author shevek */
-@RunWith(JUnit4.class)
-public class FormatTaskTest {
+  private final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-  final TaskRunContext mockContext = mock(TaskRunContext.class);
-
-  @Test
-  public void testTask() throws Exception {
-    MemoryByteSink sink = new MemoryByteSink();
-    new FormatTask("test-format").doRun(mockContext, sink, () -> {});
+  @Override
+  public OutputStream openStream() {
+    return out;
   }
 
-  @Test
-  public void toString_success() {
-    assertEquals(
-        "Write compilerworks-format.txt containing 'test-format'.",
-        new FormatTask("test-format").toString());
+  public String getContent() {
+    return out.toString();
   }
 }

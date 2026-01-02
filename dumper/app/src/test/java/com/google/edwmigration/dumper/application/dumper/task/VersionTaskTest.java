@@ -19,7 +19,6 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.MemoryByteSink;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

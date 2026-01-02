@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.MemoryByteSink;
 import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
