@@ -20,15 +20,12 @@ jobs:
           fetch-depth: 0 # Important: Fetch full history for diff comparison
 
       - name: Run OSV-Scanner
-        uses: google/osv-scanner-action@v1
+        uses: google/osv-scanner-action@v2.3.1
         with:
-          # This specific config enables the "Diff" logic from your diagram
           scan-args: |-
             --recursive
             --format=sarif
-            --output=results.sarif
-          
-          # Optional: If you want to block the PR on new findings
+            --output=results.sarif 
           fail-on-vuln: true 
           
       - name: Upload SARIF results
