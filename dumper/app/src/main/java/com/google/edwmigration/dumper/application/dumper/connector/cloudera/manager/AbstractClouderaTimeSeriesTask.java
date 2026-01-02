@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.net.URI;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,12 +34,14 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
   private final ZonedDateTime startDate;
   private final ZonedDateTime endDate;
   private final TimeSeriesAggregation tsAggregation;
+  private final TaskCategory taskCategory;
 
   public AbstractClouderaTimeSeriesTask(
       @Nonnull String targetPath,
       @Nonnull ZonedDateTime startDate,
       @Nonnull ZonedDateTime endDate,
-      @Nonnull TimeSeriesAggregation tsAggregation) {
+      @Nonnull TimeSeriesAggregation tsAggregation,
+      @Nonnull TaskCategory taskCategory) {
     super(targetPath);
     Preconditions.checkNotNull(targetPath, "Target path must be not null.");
     Preconditions.checkState(!targetPath.isEmpty(), "Target file path must be not empty.");
@@ -50,6 +53,13 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     this.startDate = startDate;
     this.endDate = endDate;
     this.tsAggregation = tsAggregation;
+    this.taskCategory = taskCategory;
+  }
+
+  @Nonnull
+  @Override
+  public TaskCategory getCategory() {
+    return taskCategory;
   }
 
   protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query)

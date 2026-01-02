@@ -1,0 +1,1192 @@
+{
+  "items": [
+    {
+      "timeSeries": [
+        {
+          "metadata": {
+            "metricName": "mem_rss",
+            "entityName": "Impala Catalog Server (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "IMPALA",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Impala",
+              "serviceName": "impala",
+              "roleType": "CATALOGSERVER",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "Impala Catalog Server Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "bytes"
+            ],
+            "unitDenominators": [],
+            "expression": "SELECT mem_rss WHERE entityName = \"impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 583757824,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:33.000Z",
+                "sampleValue": 583757824,
+                "count": 10,
+                "min": 583757824,
+                "minTime": "2025-10-30T08:20:32.000Z",
+                "max": 583757824,
+                "maxTime": "2025-10-30T08:20:32.000Z",
+                "mean": 583757824,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 583757824,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:33.000Z",
+                "sampleValue": 583757824,
+                "count": 10,
+                "min": 583757824,
+                "minTime": "2025-10-30T08:30:33.000Z",
+                "max": 583757824,
+                "maxTime": "2025-10-30T08:30:33.000Z",
+                "mean": 583757824,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 583757824,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:32.000Z",
+                "sampleValue": 583757824,
+                "count": 10,
+                "min": 583757824,
+                "minTime": "2025-10-30T08:40:33.000Z",
+                "max": 583757824,
+                "maxTime": "2025-10-30T08:40:33.000Z",
+                "mean": 583757824,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 583757824,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:32.000Z",
+                "sampleValue": 583757824,
+                "count": 10,
+                "min": 583757824,
+                "minTime": "2025-10-30T08:50:32.000Z",
+                "max": 583757824,
+                "maxTime": "2025-10-30T08:50:32.000Z",
+                "mean": 583757824,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 583757824,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:32.000Z",
+                "sampleValue": 583757824,
+                "count": 10,
+                "min": 583757824,
+                "minTime": "2025-10-30T09:00:32.000Z",
+                "max": 583757824,
+                "maxTime": "2025-10-30T09:00:32.000Z",
+                "mean": 583757824,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 583757824,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:31.000Z",
+                "sampleValue": 583757824,
+                "count": 10,
+                "min": 583757824,
+                "minTime": "2025-10-30T09:10:32.000Z",
+                "max": 583757824,
+                "maxTime": "2025-10-30T09:10:32.000Z",
+                "mean": 583757824,
+                "stdDev": 0.0
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "mem_rss",
+            "entityName": "Impala StateStore (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "IMPALA",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Impala",
+              "serviceName": "impala",
+              "roleType": "STATESTORE",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "Impala StateStore Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "bytes"
+            ],
+            "unitDenominators": [],
+            "expression": "SELECT mem_rss WHERE entityName = \"impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 3.633152E+7,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:53.000Z",
+                "sampleValue": 3.633152E+7,
+                "count": 10,
+                "min": 3.633152E+7,
+                "minTime": "2025-10-30T08:20:53.000Z",
+                "max": 3.633152E+7,
+                "maxTime": "2025-10-30T08:20:53.000Z",
+                "mean": 3.633152E+7,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 3.633152E+7,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:53.000Z",
+                "sampleValue": 3.633152E+7,
+                "count": 10,
+                "min": 3.633152E+7,
+                "minTime": "2025-10-30T08:30:53.000Z",
+                "max": 3.633152E+7,
+                "maxTime": "2025-10-30T08:30:53.000Z",
+                "mean": 3.633152E+7,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 3.633152E+7,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:53.000Z",
+                "sampleValue": 3.633152E+7,
+                "count": 10,
+                "min": 3.633152E+7,
+                "minTime": "2025-10-30T08:40:53.000Z",
+                "max": 3.633152E+7,
+                "maxTime": "2025-10-30T08:40:53.000Z",
+                "mean": 3.633152E+7,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 3.633152E+7,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:53.000Z",
+                "sampleValue": 3.633152E+7,
+                "count": 10,
+                "min": 3.633152E+7,
+                "minTime": "2025-10-30T08:50:53.000Z",
+                "max": 3.633152E+7,
+                "maxTime": "2025-10-30T08:50:53.000Z",
+                "mean": 3.633152E+7,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 3.633152E+7,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:53.000Z",
+                "sampleValue": 3.633152E+7,
+                "count": 10,
+                "min": 3.633152E+7,
+                "minTime": "2025-10-30T09:00:53.000Z",
+                "max": 3.633152E+7,
+                "maxTime": "2025-10-30T09:00:53.000Z",
+                "mean": 3.633152E+7,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 3.633152E+7,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:53.000Z",
+                "sampleValue": 3.633152E+7,
+                "count": 10,
+                "min": 3.633152E+7,
+                "minTime": "2025-10-30T09:10:53.000Z",
+                "max": 3.633152E+7,
+                "maxTime": "2025-10-30T09:10:53.000Z",
+                "mean": 3.633152E+7,
+                "stdDev": 0.0
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "mem_rss",
+            "entityName": "LIVY_SERVER_FOR_SPARK3 (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "LIVY_FOR_SPARK3",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "livy_for_spark3",
+              "serviceName": "livy_for_spark3",
+              "roleType": "LIVY_SERVER_FOR_SPARK3",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439",
+              "roleConfigGroup": "Livy Server for Spark 3 Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "bytes"
+            ],
+            "unitDenominators": [],
+            "expression": "SELECT mem_rss WHERE entityName = \"livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 2.338816E+8,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:22.000Z",
+                "sampleValue": 2.338816E+8,
+                "count": 10,
+                "min": 2.338816E+8,
+                "minTime": "2025-10-30T08:20:22.000Z",
+                "max": 2.338816E+8,
+                "maxTime": "2025-10-30T08:20:22.000Z",
+                "mean": 2.338816E+8,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 2.338816E+8,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:23.000Z",
+                "sampleValue": 2.338816E+8,
+                "count": 10,
+                "min": 2.338816E+8,
+                "minTime": "2025-10-30T08:30:22.000Z",
+                "max": 2.338816E+8,
+                "maxTime": "2025-10-30T08:30:22.000Z",
+                "mean": 2.338816E+8,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 2.338816E+8,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:22.000Z",
+                "sampleValue": 2.338816E+8,
+                "count": 10,
+                "min": 2.338816E+8,
+                "minTime": "2025-10-30T08:40:22.000Z",
+                "max": 2.338816E+8,
+                "maxTime": "2025-10-30T08:40:22.000Z",
+                "mean": 2.338816E+8,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 2.338816E+8,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:22.000Z",
+                "sampleValue": 2.338816E+8,
+                "count": 10,
+                "min": 2.338816E+8,
+                "minTime": "2025-10-30T08:50:22.000Z",
+                "max": 2.338816E+8,
+                "maxTime": "2025-10-30T08:50:22.000Z",
+                "mean": 2.338816E+8,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 2.338816E+8,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:22.000Z",
+                "sampleValue": 2.338816E+8,
+                "count": 10,
+                "min": 2.338816E+8,
+                "minTime": "2025-10-30T09:00:22.000Z",
+                "max": 2.338816E+8,
+                "maxTime": "2025-10-30T09:00:22.000Z",
+                "mean": 2.338816E+8,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 2.338816E+8,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:21.000Z",
+                "sampleValue": 2.338816E+8,
+                "count": 10,
+                "min": 2.338816E+8,
+                "minTime": "2025-10-30T09:10:22.000Z",
+                "max": 2.338816E+8,
+                "maxTime": "2025-10-30T09:10:22.000Z",
+                "mean": 2.338816E+8,
+                "stdDev": 0.0
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "cpu_user_rate",
+            "entityName": "Impala Catalog Server (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "IMPALA",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Impala",
+              "serviceName": "impala",
+              "roleType": "CATALOGSERVER",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "Impala Catalog Server Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "seconds"
+            ],
+            "unitDenominators": [
+              "seconds"
+            ],
+            "expression": "SELECT cpu_user_rate WHERE entityName = \"impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 0.000682378020178791,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:33.000Z",
+                "sampleValue": 0.0004838709677414954,
+                "count": 10,
+                "min": 0.0004838709677414954,
+                "minTime": "2025-10-30T08:29:33.000Z",
+                "max": 0.0008474576271188367,
+                "maxTime": "2025-10-30T08:26:31.000Z",
+                "mean": 0.000682378020178791,
+                "stdDev": 0.0001227485829983224
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 0.0007165528100079016,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:33.000Z",
+                "sampleValue": 0.0008196721311477274,
+                "count": 10,
+                "min": 0.0006557377049174364,
+                "minTime": "2025-10-30T08:37:33.000Z",
+                "max": 0.0008474576271188367,
+                "maxTime": "2025-10-30T08:38:32.000Z",
+                "mean": 0.0007165528100079016,
+                "stdDev": 0.00007836407647083641
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 0.0007183986292488786,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:32.000Z",
+                "sampleValue": 0.0006666666666670077,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T08:40:33.000Z",
+                "max": 0.0008474576271188367,
+                "maxTime": "2025-10-30T08:42:32.000Z",
+                "mean": 0.0007183986292488786,
+                "stdDev": 0.00011645769798271054
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 0.0006830273683528945,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:32.000Z",
+                "sampleValue": 0.0004999999999995453,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T08:50:32.000Z",
+                "max": 0.0008474576271188367,
+                "maxTime": "2025-10-30T08:58:32.000Z",
+                "mean": 0.0006830273683528945,
+                "stdDev": 0.00014331234384495252
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 0.0007167870704825545,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:32.000Z",
+                "sampleValue": 0.0006779661016942986,
+                "count": 10,
+                "min": 0.0005000000000004927,
+                "minTime": "2025-10-30T09:01:32.000Z",
+                "max": 0.0008474576271188367,
+                "maxTime": "2025-10-30T09:03:32.000Z",
+                "mean": 0.0007167870704825545,
+                "stdDev": 0.00011294200427276238
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 0.0007012503473187268,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:31.000Z",
+                "sampleValue": 0.0006779661016952621,
+                "count": 10,
+                "min": 0.0006557377049174364,
+                "minTime": "2025-10-30T09:15:32.000Z",
+                "max": 0.0008474576271188367,
+                "maxTime": "2025-10-30T09:14:31.000Z",
+                "mean": 0.0007012503473187268,
+                "stdDev": 0.00007052001289904478
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "cpu_user_rate",
+            "entityName": "Impala StateStore (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "IMPALA",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Impala",
+              "serviceName": "impala",
+              "roleType": "STATESTORE",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "Impala StateStore Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "seconds"
+            ],
+            "unitDenominators": [
+              "seconds"
+            ],
+            "expression": "SELECT cpu_user_rate WHERE entityName = \"impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 0.0006166666666666742,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:53.000Z",
+                "sampleValue": 0.0006666666666670077,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T08:25:53.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T08:22:53.000Z",
+                "mean": 0.0006166666666666742,
+                "stdDev": 0.00008050764858982454
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 0.0006166666666666743,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:53.000Z",
+                "sampleValue": 0.0006666666666670077,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T08:31:53.000Z",
+                "max": 0.0008333333333335228,
+                "maxTime": "2025-10-30T08:30:53.000Z",
+                "mean": 0.0006166666666666743,
+                "stdDev": 0.00011249142628511458
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 0.0006166666666666743,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:53.000Z",
+                "sampleValue": 0.0008333333333335228,
+                "count": 10,
+                "min": 0.0003333333333330302,
+                "minTime": "2025-10-30T08:45:53.000Z",
+                "max": 0.0008333333333335228,
+                "maxTime": "2025-10-30T08:41:53.000Z",
+                "mean": 0.0006166666666666743,
+                "stdDev": 0.00019325030145454037
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 0.0005999999999999281,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:53.000Z",
+                "sampleValue": 0.0006666666666660604,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T08:50:53.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T08:53:53.000Z",
+                "mean": 0.0005999999999999281,
+                "stdDev": 0.00008606629658230875
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 0.0006166666666666742,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:53.000Z",
+                "sampleValue": 0.0006666666666660604,
+                "count": 10,
+                "min": 0.0005000000000004927,
+                "minTime": "2025-10-30T09:00:53.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T09:02:53.000Z",
+                "mean": 0.0006166666666666742,
+                "stdDev": 0.00008050764858960659
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 0.0006333333333333258,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:53.000Z",
+                "sampleValue": 0.0006666666666660604,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T09:12:53.000Z",
+                "max": 0.0008333333333335228,
+                "maxTime": "2025-10-30T09:13:53.000Z",
+                "mean": 0.0006333333333333258,
+                "stdDev": 0.00010540925533921625
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "cpu_user_rate",
+            "entityName": "LIVY_SERVER_FOR_SPARK3 (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "LIVY_FOR_SPARK3",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "livy_for_spark3",
+              "serviceName": "livy_for_spark3",
+              "roleType": "LIVY_SERVER_FOR_SPARK3",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439",
+              "roleConfigGroup": "Livy Server for Spark 3 Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "seconds"
+            ],
+            "unitDenominators": [
+              "seconds"
+            ],
+            "expression": "SELECT cpu_user_rate WHERE entityName = \"livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 0.00013336993250813114,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:22.000Z",
+                "sampleValue": 0.00016666666666675193,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T08:22:23.000Z",
+                "max": 0.00016949152542381553,
+                "maxTime": "2025-10-30T08:21:21.000Z",
+                "mean": 0.00013336993250813114,
+                "stdDev": 0.00007033976289240952
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 0.00014948088925538397,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:23.000Z",
+                "sampleValue": 0.00016129032258072767,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T08:35:22.000Z",
+                "max": 0.000333333333333267,
+                "maxTime": "2025-10-30T08:36:22.000Z",
+                "mean": 0.00014948088925538397,
+                "stdDev": 0.00009453959716339184
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 0.00015028248587568795,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:22.000Z",
+                "sampleValue": 0.0001666666666665151,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T08:46:22.000Z",
+                "max": 0.00016949152542357465,
+                "maxTime": "2025-10-30T08:40:22.000Z",
+                "mean": 0.00015028248587568795,
+                "stdDev": 0.000052811345375001784
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 0.00014973603778827964,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:22.000Z",
+                "sampleValue": 0.0001666666666665151,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T08:52:21.000Z",
+                "max": 0.00016949152542357465,
+                "maxTime": "2025-10-30T08:56:22.000Z",
+                "mean": 0.00014973603778827964,
+                "stdDev": 0.00005263525005820667
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 0.00013334259516532083,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:22.000Z",
+                "sampleValue": 0.0,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T09:03:22.000Z",
+                "max": 0.00016949152542381553,
+                "maxTime": "2025-10-30T09:07:22.000Z",
+                "mean": 0.00013334259516532083,
+                "stdDev": 0.00007028992586747114
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 0.00015029174770770284,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:21.000Z",
+                "sampleValue": 0.00016949152542381553,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T09:18:22.000Z",
+                "max": 0.00016949152542381553,
+                "maxTime": "2025-10-30T09:14:21.000Z",
+                "mean": 0.00015029174770770284,
+                "stdDev": 0.00005283078107447756
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "cpu_system_rate",
+            "entityName": "Impala Catalog Server (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "IMPALA",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Impala",
+              "serviceName": "impala",
+              "roleType": "CATALOGSERVER",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "Impala Catalog Server Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "seconds"
+            ],
+            "unitDenominators": [
+              "seconds"
+            ],
+            "expression": "SELECT cpu_system_rate WHERE entityName = \"impala-CATALOGSERVER-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 0.000532085824317977,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:33.000Z",
+                "sampleValue": 0.0006451612903219939,
+                "count": 10,
+                "min": 0.0004918032786880772,
+                "minTime": "2025-10-30T08:27:32.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T08:24:33.000Z",
+                "mean": 0.000532085824317977,
+                "stdDev": 0.00006574733165151588
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 0.0004995568692453127,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:33.000Z",
+                "sampleValue": 0.0004918032786880772,
+                "count": 10,
+                "min": 0.0003389830508481128,
+                "minTime": "2025-10-30T08:38:32.000Z",
+                "max": 0.0006557377049174364,
+                "maxTime": "2025-10-30T08:37:33.000Z",
+                "mean": 0.0004995568692453127,
+                "stdDev": 0.00007498915820862658
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 0.0005169861998703364,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:32.000Z",
+                "sampleValue": 0.0006666666666670077,
+                "count": 10,
+                "min": 0.0003333333333330302,
+                "minTime": "2025-10-30T08:41:33.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T08:40:33.000Z",
+                "mean": 0.0005169861998703364,
+                "stdDev": 0.00012050842873426478
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 0.0005498935816534313,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:32.000Z",
+                "sampleValue": 0.0004999999999995453,
+                "count": 10,
+                "min": 0.00048387096774241226,
+                "minTime": "2025-10-30T08:54:33.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T08:50:32.000Z",
+                "mean": 0.0005498935816534313,
+                "stdDev": 0.00007865842284112788
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 0.0005503658423636874,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:32.000Z",
+                "sampleValue": 0.0006779661016952621,
+                "count": 10,
+                "min": 0.0003333333333330302,
+                "minTime": "2025-10-30T09:04:32.000Z",
+                "max": 0.0006779661016952621,
+                "maxTime": "2025-10-30T09:09:32.000Z",
+                "mean": 0.0005503658423636874,
+                "stdDev": 0.00011438777095696416
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 0.0005173242567379876,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:31.000Z",
+                "sampleValue": 0.0005084745762716875,
+                "count": 10,
+                "min": 0.0004918032786880772,
+                "minTime": "2025-10-30T09:15:32.000Z",
+                "max": 0.0006557377049183682,
+                "maxTime": "2025-10-30T09:16:33.000Z",
+                "mean": 0.0005173242567379876,
+                "stdDev": 0.000049074297720045846
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "cpu_system_rate",
+            "entityName": "Impala StateStore (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "IMPALA",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "Impala",
+              "serviceName": "impala",
+              "roleType": "STATESTORE",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09",
+              "roleConfigGroup": "Impala StateStore Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "seconds"
+            ],
+            "unitDenominators": [
+              "seconds"
+            ],
+            "expression": "SELECT cpu_system_rate WHERE entityName = \"impala-STATESTORE-9391f56d8aaa03e550a59fa59439aa09\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 0.0006166666666666742,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:53.000Z",
+                "sampleValue": 0.0005000000000004927,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T08:26:53.000Z",
+                "max": 0.0008333333333335228,
+                "maxTime": "2025-10-30T08:25:53.000Z",
+                "mean": 0.0006166666666666742,
+                "stdDev": 0.0001124914262851146
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 0.0006333333333333257,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:53.000Z",
+                "sampleValue": 0.0006666666666670077,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T08:30:53.000Z",
+                "max": 0.0008333333333335228,
+                "maxTime": "2025-10-30T08:31:53.000Z",
+                "mean": 0.0006333333333333257,
+                "stdDev": 0.00013146843962434301
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 0.0006666666666666288,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:53.000Z",
+                "sampleValue": 0.0006666666666660604,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T08:41:53.000Z",
+                "max": 0.0008333333333335228,
+                "maxTime": "2025-10-30T08:44:53.000Z",
+                "mean": 0.0006666666666666288,
+                "stdDev": 0.00015713484026386924
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 0.0006500000000000721,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:53.000Z",
+                "sampleValue": 0.0006666666666670077,
+                "count": 10,
+                "min": 0.0005000000000004927,
+                "minTime": "2025-10-30T08:56:53.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T08:50:53.000Z",
+                "mean": 0.0006500000000000721,
+                "stdDev": 0.00005270462766932517
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 0.0006333333333333258,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:53.000Z",
+                "sampleValue": 0.0006666666666670077,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T09:05:53.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T09:01:53.000Z",
+                "mean": 0.0006333333333333258,
+                "stdDev": 0.00007027283689261668
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 0.0006166666666666743,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:53.000Z",
+                "sampleValue": 0.0006666666666670077,
+                "count": 10,
+                "min": 0.0004999999999995453,
+                "minTime": "2025-10-30T09:10:53.000Z",
+                "max": 0.0006666666666670077,
+                "maxTime": "2025-10-30T09:11:53.000Z",
+                "mean": 0.0006166666666666743,
+                "stdDev": 0.00008050764859026035
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "cpu_system_rate",
+            "entityName": "LIVY_SERVER_FOR_SPARK3 (cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site)",
+            "startTime": "2025-10-30T08:21:00.000Z",
+            "endTime": "2025-10-30T09:21:00.000Z",
+            "attributes": {
+              "serviceType": "LIVY_FOR_SPARK3",
+              "clusterDisplayName": "cldr4-data-hub",
+              "hostId": "becfcf668a1861ab926151f1b11a726d",
+              "active": "true",
+              "serviceDisplayName": "livy_for_spark3",
+              "serviceName": "livy_for_spark3",
+              "roleType": "LIVY_SERVER_FOR_SPARK3",
+              "version": "CDH 7.3.1",
+              "hostname": "cldr4-data-hub-master0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+              "entityName": "livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439",
+              "clusterName": "cldr4-data-hub",
+              "roleName": "livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439",
+              "roleConfigGroup": "Livy Server for Spark 3 Default Group",
+              "category": "ROLE",
+              "rackId": "/eu-west-3b"
+            },
+            "unitNumerators": [
+              "seconds"
+            ],
+            "unitDenominators": [
+              "seconds"
+            ],
+            "expression": "SELECT cpu_system_rate WHERE entityName = \"livy446c4191-LIVY_SERVER_FOR_SPARK3-9391f56d8aaa03e550a59fa59439\" AND category = ROLE",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "TEN_MINUTELY"
+          },
+          "data": [
+            {
+              "timestamp": "2025-10-30T08:30:00.000Z",
+              "value": 0.0001503190850505131,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:29:22.000Z",
+                "sampleValue": 0.0001666666666665151,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T08:27:23.000Z",
+                "max": 0.00016949152542381553,
+                "maxTime": "2025-10-30T08:21:21.000Z",
+                "mean": 0.0001503190850505131,
+                "stdDev": 0.000052887336283355536
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:40:00.000Z",
+              "value": 0.00011559184600263572,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:39:23.000Z",
+                "sampleValue": 0.00016129032258072767,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T08:32:22.000Z",
+                "max": 0.00016949152542381553,
+                "maxTime": "2025-10-30T08:34:21.000Z",
+                "mean": 0.00011559184600263572,
+                "stdDev": 0.00007979573964598811
+              }
+            },
+            {
+              "timestamp": "2025-10-30T08:50:00.000Z",
+              "value": 0.00013361581920903645,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:49:22.000Z",
+                "sampleValue": 0.0,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T08:43:22.000Z",
+                "max": 0.00016949152542357465,
+                "maxTime": "2025-10-30T08:40:22.000Z",
+                "mean": 0.00013361581920903645,
+                "stdDev": 0.00007042722816723391
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:00:00.000Z",
+              "value": 0.00015001852366398603,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T08:59:22.000Z",
+                "sampleValue": 0.00016666666666675193,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T08:55:23.000Z",
+                "max": 0.0003278688524591841,
+                "maxTime": "2025-10-30T08:54:22.000Z",
+                "mean": 0.00015001852366398603,
+                "stdDev": 0.00009356284475002657
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:10:00.000Z",
+              "value": 0.00014972677595626602,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:09:22.000Z",
+                "sampleValue": 0.0001666666666665151,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T09:07:22.000Z",
+                "max": 0.00016666666666675193,
+                "maxTime": "2025-10-30T09:01:22.000Z",
+                "mean": 0.00014972677595626602,
+                "stdDev": 0.00005261563344226861
+              }
+            },
+            {
+              "timestamp": "2025-10-30T09:20:00.000Z",
+              "value": 0.0001502917477077028,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2025-10-30T09:19:21.000Z",
+                "sampleValue": 0.00016949152542381553,
+                "count": 10,
+                "min": 0.0,
+                "minTime": "2025-10-30T09:13:22.000Z",
+                "max": 0.00016949152542381553,
+                "maxTime": "2025-10-30T09:14:21.000Z",
+                "mean": 0.0001502917477077028,
+                "stdDev": 0.00005283078107447755
+              }
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "timeSeriesQuery": "SELECT mem_rss, cpu_user_rate, cpu_system_rate, read_bytes_rate, write_bytes_rate WHERE category = \"ROLE\" AND hostId = \"becfcf668a1861ab926151f1b11a726d\""
+    }
+  ]
+}
