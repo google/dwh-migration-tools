@@ -80,7 +80,11 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
         }
       }
-      handle.initHostsIfNull(hosts);
+      if (hosts.isEmpty()) {
+        throw new MetadataDumperUsageException(
+            "No hosts were found in any of the initialized Cloudera clusters.");
+      }
+      handle.initHosts(hosts);
     }
   }
 }
