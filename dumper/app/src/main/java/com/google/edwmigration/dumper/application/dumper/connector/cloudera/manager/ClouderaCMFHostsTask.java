@@ -20,15 +20,11 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.CMFHostListDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -67,7 +63,6 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
     }
 
     final URI baseURI = handle.getBaseURI();
-    List<ClouderaHostDTO> hosts = new ArrayList<>();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
@@ -95,14 +90,7 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
         String stringifiedHosts = hostsJson.toString();
         writer.write(stringifiedHosts);
         writer.write('\n');
-
-        CMFHostListDTO apiHosts = parseJsonStringToObject(stringifiedHosts, CMFHostListDTO.class);
-        for (CMFHostDTO apiHost : apiHosts.getHosts()) {
-          hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
-        }
       }
     }
-
-    handle.initHostsIfNull(hosts);
   }
 }

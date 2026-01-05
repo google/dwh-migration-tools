@@ -19,20 +19,16 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.MockUtils.verifyNoWrites;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.readFileAsString;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.toJsonl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyChar;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.common.collect.ImmutableSet;
@@ -46,10 +42,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -114,7 +107,7 @@ public class ClouderaClusterCPUChartTaskTest {
     task.doRun(context, sink, handle);
 
     // THEN: Task for such clusters should be skipped
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
@@ -134,7 +127,7 @@ public class ClouderaClusterCPUChartTaskTest {
     // THEN: the output should be dumped into the jsonl format for both clusters
     Set<String> fileLines = new HashSet<>(MockUtils.getWrittenJsonLines(writer, 2));
     assertEquals(
-        ImmutableSet.of(tojsonl(firstClusterServicesJson), tojsonl(secondClusterServicesJson)),
+        ImmutableSet.of(toJsonl(firstClusterServicesJson), toJsonl(secondClusterServicesJson)),
         fileLines);
   }
 
@@ -150,7 +143,7 @@ public class ClouderaClusterCPUChartTaskTest {
     // THEN: There is a relevant exception has been raised
     assertEquals(
         "Cloudera clusters must be initialized before CPU charts dumping.", exception.getMessage());
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
@@ -164,7 +157,7 @@ public class ClouderaClusterCPUChartTaskTest {
     // WHEN: Cloudera returns 4xx http status code
     assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
@@ -179,7 +172,7 @@ public class ClouderaClusterCPUChartTaskTest {
     assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
     // THEN: There is a relevant exception has been raised
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
@@ -192,7 +185,7 @@ public class ClouderaClusterCPUChartTaskTest {
     // WHEN: Cloudera returns 4xx http status code
     assertThrows(JsonParseException.class, () -> task.doRun(context, sink, handle));
 
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {
@@ -209,22 +202,6 @@ public class ClouderaClusterCPUChartTaskTest {
     server.stubFor(
         get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", clusterName)))
             .willReturn(okJson(mockedContent).withStatus(statusCode)));
-  }
-
-  private void verifyNoWrites() throws IOException {
-    verify(writer, never()).write(anyChar());
-    verify(writer, never()).write(anyString());
-    verify(writer, never()).write(anyString(), anyInt(), anyInt());
-    verify(writer, never()).write(any(char[].class));
-    verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
-  }
-
-  private String readFileAsString(String fileName) throws IOException, URISyntaxException {
-    return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(fileName).toURI())));
-  }
-
-  private String tojsonl(String json) throws Exception {
-    return new ObjectMapper().readTree(json).toString();
   }
 
   private ZonedDateTime timeTravelDaysAgo(int days) {

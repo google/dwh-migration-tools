@@ -37,6 +37,7 @@ public class ClouderaManagerHandle implements Handle {
 
   private ImmutableList<ClouderaClusterDTO> clusters;
   private ImmutableList<ClouderaHostDTO> hosts;
+  private ImmutableList<ClouderaYarnApplicationDTO> sparkYarnApplications;
 
   public ClouderaManagerHandle(URI apiURI, CloseableHttpClient httpClient) {
     Preconditions.checkNotNull(apiURI, "Cloudera's apiURI can't be null.");
@@ -85,10 +86,8 @@ public class ClouderaManagerHandle implements Handle {
     Preconditions.checkNotNull(clusters, "Clusters can't be initialised to null list.");
     Preconditions.checkArgument(
         !clusters.isEmpty(), "Clusters can't be initialised to empty list.");
+    Preconditions.checkState(this.clusters == null, "The cluster already initialized.");
 
-    if (this.clusters != null) {
-      throw new IllegalStateException("The cluster already initialized!");
-    }
     this.clusters = ImmutableList.copyOf(clusters);
   }
 
@@ -97,14 +96,27 @@ public class ClouderaManagerHandle implements Handle {
     return hosts;
   }
 
-  public synchronized void initHostsIfNull(List<ClouderaHostDTO> hosts) {
-    // Todo
-    // Preconditions.checkNotNull(hosts, "Hosts can't be initialised to null list.");
-    // Preconditions.checkArgument(!hosts.isEmpty(), "Hosts can't be initialised to empty list.");
+  public synchronized void initHosts(List<ClouderaHostDTO> hosts) {
+    Preconditions.checkNotNull(hosts, "Hosts can't be initialised to null list.");
+    Preconditions.checkArgument(!hosts.isEmpty(), "Hosts can't be initialised to empty list.");
+    Preconditions.checkState(this.hosts == null, "Hosts already initialized.");
 
-    if (this.hosts == null) {
-      this.hosts = ImmutableList.copyOf(hosts);
-    }
+    this.hosts = ImmutableList.copyOf(hosts);
+  }
+
+  @CheckForNull
+  public synchronized ImmutableList<ClouderaYarnApplicationDTO> getSparkYarnApplications() {
+    return sparkYarnApplications;
+  }
+
+  public synchronized void initSparkYarnApplications(
+      List<ClouderaYarnApplicationDTO> sparkYarnApplications) {
+    Preconditions.checkNotNull(
+        sparkYarnApplications, "Spark YARN applications can't be initialised to null list.");
+    Preconditions.checkState(
+        this.sparkYarnApplications == null, "Spark YARN applications already initialized.");
+
+    this.sparkYarnApplications = ImmutableList.copyOf(sparkYarnApplications);
   }
 
   @Override
@@ -144,5 +156,18 @@ public class ClouderaManagerHandle implements Handle {
     abstract String getId();
 
     abstract String getName();
+  }
+
+  @AutoValue
+  public abstract static class ClouderaYarnApplicationDTO {
+    public static ClouderaYarnApplicationDTO create(String id, String clusterName) {
+      return new AutoValue_ClouderaManagerHandle_ClouderaYarnApplicationDTO(id, clusterName);
+    }
+
+    @CheckForNull
+    @Nullable
+    abstract String getId();
+
+    abstract String getClusterName();
   }
 }
