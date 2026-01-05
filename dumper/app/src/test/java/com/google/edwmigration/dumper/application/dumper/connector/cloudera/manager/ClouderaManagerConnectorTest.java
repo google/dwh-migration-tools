@@ -19,6 +19,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -27,11 +30,14 @@ import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
+import org.mockito.MockedStatic;
 
 public class ClouderaManagerConnectorTest {
   private static final String clouderaRequiredArgs =
@@ -253,6 +259,73 @@ public class ClouderaManagerConnectorTest {
 
     assertEquals("One DumpMetadataTask is expected", dumpMetadataCount, 1);
     assertEquals("One FormatTask is expected", formatCount, 1);
+  }
+
+  @Test
+  public void open_success() throws Exception {
+    try (MockedStatic<ClouderaManagerLoginHelper> loginHelper =
+            mockStatic(ClouderaManagerLoginHelper.class);
+        MockedStatic<ClouderaConnectorVerifier> connectorVerifier =
+            mockStatic(ClouderaConnectorVerifier.class)) {
+      ConnectorArguments arguments =
+          new ConnectorArguments(
+              "--connector",
+              "cloudera-manager",
+              "--url",
+              "http://localhost",
+              "--user",
+              "user",
+              "--password",
+              "password");
+      ClouderaManagerConnector connector = new ClouderaManagerConnector();
+
+      // Act
+      ClouderaManagerHandle handle = connector.open(arguments);
+
+      // Assert
+      assertNotNull(handle);
+      loginHelper.verify(
+          () ->
+              ClouderaManagerLoginHelper.login(
+                  any(URI.class), any(CloseableHttpClient.class), eq("user"), eq("password")));
+      connectorVerifier.verify(() -> ClouderaConnectorVerifier.verify(any(), any()));
+    }
+  }
+
+  @Test
+  public void open_verifierFails_throwsException() throws Exception {
+    try (MockedStatic<ClouderaManagerLoginHelper> loginHelper =
+            mockStatic(ClouderaManagerLoginHelper.class);
+        MockedStatic<ClouderaConnectorVerifier> connectorVerifier =
+            mockStatic(ClouderaConnectorVerifier.class)) {
+      ConnectorArguments arguments =
+          new ConnectorArguments(
+              "--connector",
+              "cloudera-manager",
+              "--url",
+              "http://localhost",
+              "--user",
+              "user",
+              "--password",
+              "password");
+      ClouderaManagerConnector connector = new ClouderaManagerConnector();
+
+      RuntimeException expectedException = new RuntimeException("Verification failed");
+      connectorVerifier
+          .when(() -> ClouderaConnectorVerifier.verify(any(), any()))
+          .thenThrow(expectedException);
+
+      // Act & Assert
+      RuntimeException actualException =
+          assertThrows(RuntimeException.class, () -> connector.open(arguments));
+      assertEquals(expectedException, actualException);
+
+      loginHelper.verify(
+          () ->
+              ClouderaManagerLoginHelper.login(
+                  any(URI.class), any(CloseableHttpClient.class), eq("user"), eq("password")));
+      connectorVerifier.verify(() -> ClouderaConnectorVerifier.verify(any(), any()));
+    }
   }
 
   private static ConnectorArguments args(String s) throws Exception {
