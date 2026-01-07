@@ -81,6 +81,7 @@ zookeeper = "3.9.4"
 common-configuration2 = "2.12.0"
 
 [libraries]
+async-profiler = {module = "tools.profiler:async-profiler", version="4.2"}
 apache-avro = { module = "org.apache.avro:avro", version.ref = "apache-avro" }
 apache-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-commons-compress" }
 apache-commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "apache-commons-csv" }

@@ -19,38 +19,30 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.MockUtils.getWrittenJsonLines;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.MockUtils.verifyNoWrites;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.readFileAsString;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.toJsonl;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyChar;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import org.apache.http.HttpStatus;
+import java.util.List;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -63,10 +55,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaCMFHostsTaskTest {
 
-  private final ClouderaCMFHostsTask task = new ClouderaCMFHostsTask();
-
-  private ClouderaManagerHandle handle;
   private static WireMockServer server;
+  private final ClouderaCMFHostsTask task = new ClouderaCMFHostsTask();
+  private ClouderaManagerHandle handle;
 
   @Mock private TaskRunContext context;
   @Mock private ByteSink sink;
@@ -99,38 +90,16 @@ public class ClouderaCMFHostsTaskTest {
     initClusters(
         ClouderaClusterDTO.create("id1", "first-cluster"),
         ClouderaClusterDTO.create("id34", "next-cluster"));
-
-    stubCMFHostResponse("id1", "first-cluster", "[]");
-    stubCMFHostResponse("id34", "next-cluster", "[]\n\r");
+    String hostsJson = readFileAsString("/cloudera/manager/cmf-hosts.json");
+    stubCMFHostResponse("id1", hostsJson);
+    stubCMFHostResponse("id34", "{\"hosts\":[]}\n\r");
 
     task.doRun(context, sink, handle);
 
-    // write jsonl. https://jsonlines.org/
-    Set<String> fileLines = getWrittenJsonLines();
+    List<String> fileLines = getWrittenJsonLines(writer, 2);
+    assertEquals(ImmutableList.of(toJsonl(hostsJson), "{\"hosts\":[]}"), fileLines);
     verify(writer, times(2)).write('\n');
-    assertEquals(
-        ImmutableSet.of(
-            "{\"clusterName\":\"first-cluster\",\"hosts\":[]}",
-            "{\"clusterName\":\"next-cluster\",\"hosts\":[]}"),
-        fileLines);
     verify(writer).close();
-  }
-
-  @Test
-  public void doRun_clouderaReturnsNoHostForCluster_throwsWarningException() throws Exception {
-    // GIVEN: The cluster which has no host
-    initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    String mockedResponse = String.format("{\"clusterName\" :\"%s\"}", "first-cluster");
-    server.stubFor(
-        get(urlMatching("/cmf/hardware/hosts/hostsOverview.json\\?clusterId=id1.*"))
-            .willReturn(okJson(mockedResponse).withStatus(HttpStatus.SC_OK)));
-
-    // WHEN: Hosts are requested from the API and no one has been returned
-    MismatchedInputException exception =
-        assertThrows(MismatchedInputException.class, () -> task.doRun(context, sink, handle));
-
-    // THEN: The exception has to be raised
-    assertTrue(exception.getMessage().contains("hosts"));
   }
 
   @Test
@@ -139,7 +108,7 @@ public class ClouderaCMFHostsTaskTest {
 
     task.doRun(context, sink, handle);
 
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
@@ -151,52 +120,28 @@ public class ClouderaCMFHostsTaskTest {
 
     assertEquals(
         "Cloudera clusters must be initialized before hosts dumping.", exception.getMessage());
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
   public void doRun_clouderaReturnsInvalidJson_continueTaskWithoutWriting() throws Exception {
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    stubCMFHostResponse("id1", "first-cluster", "[}");
-    verifyNoWrites();
+    stubCMFHostResponse("id1", "[}");
+
+    task.doRun(context, sink, handle);
+
+    verifyNoWrites(writer);
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {
     handle.initClusters(Arrays.asList(clusters));
   }
 
-  private void stubCMFHostResponse(String clusterId, String clusterName, String jsonHosts) {
-    String cmfResponse =
-        String.format("{\"clusterName\" :\"%s\", \"hosts\": %s}", clusterName, jsonHosts);
+  private void stubCMFHostResponse(String clusterId, String responseJson) {
     server.stubFor(
         get(urlMatching(
                 String.format(
                     "/cmf/hardware/hosts/hostsOverview\\.json\\?clusterId=%s.*", clusterId)))
-            .willReturn(okJson(cmfResponse)));
-  }
-
-  private Set<String> getWrittenJsonLines() throws IOException {
-    // https://jsonlines.org/
-    Set<String> fileLines = new HashSet<>();
-    verify(writer, times(2))
-        .write(
-            (String)
-                argThat(
-                    content -> {
-                      String str = (String) content;
-                      assertFalse(str.contains("\n"));
-                      assertFalse(str.contains("\r"));
-                      fileLines.add(str);
-                      return true;
-                    }));
-    return fileLines;
-  }
-
-  private void verifyNoWrites() throws IOException {
-    verify(writer, never()).write(anyChar());
-    verify(writer, never()).write(anyString());
-    verify(writer, never()).write(anyString(), anyInt(), anyInt());
-    verify(writer, never()).write(any(char[].class));
-    verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
+            .willReturn(okJson(responseJson)));
   }
 }

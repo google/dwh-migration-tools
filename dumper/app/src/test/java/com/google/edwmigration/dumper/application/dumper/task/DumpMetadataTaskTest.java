@@ -27,7 +27,7 @@ import org.junit.runners.JUnit4;
 
 /** @author shevek */
 @RunWith(JUnit4.class)
-public class DumpMetadataTaskTest extends AbstractTaskTest {
+public class DumpMetadataTaskTest {
 
   final TaskRunContext mockContext = mock(TaskRunContext.class);
 
@@ -35,7 +35,7 @@ public class DumpMetadataTaskTest extends AbstractTaskTest {
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
     ConnectorArguments arguments = new ConnectorArguments("--connector", "bigquery-logs");
-    new DumpMetadataTask(arguments, "test-format").doRun(mockContext, sink, HANDLE);
+    new DumpMetadataTask(arguments, "test-format").doRun(mockContext, sink, () -> {});
   }
 
   @Test

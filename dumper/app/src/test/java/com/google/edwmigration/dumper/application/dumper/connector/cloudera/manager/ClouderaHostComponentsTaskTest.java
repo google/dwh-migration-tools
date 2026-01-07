@@ -18,17 +18,13 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.MockUtils.verifyNoWrites;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyChar;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,7 +37,6 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -92,7 +87,7 @@ public class ClouderaHostComponentsTaskTest {
 
   @Test
   public void hostsWereInitialized_writesSuccess() throws Exception {
-    handle.initHostsIfNull(
+    handle.initHosts(
         ImmutableList.of(
             ClouderaHostDTO.create("id1", "host one"), ClouderaHostDTO.create("id2", "host two")));
     server.stubFor(get("/hosts/id1/components").willReturn(okJson("{\"valid\":\n \"json1\"}")));
@@ -136,14 +131,6 @@ public class ClouderaHostComponentsTaskTest {
         "Cloudera hosts must be initialized before Host's components dumping.",
         exception.getMessage());
 
-    verifyNoWrites();
-  }
-
-  private void verifyNoWrites() throws IOException {
-    verify(writer, never()).write(anyChar());
-    verify(writer, never()).write(anyString());
-    verify(writer, never()).write(anyString(), anyInt(), anyInt());
-    verify(writer, never()).write(any(char[].class));
-    verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
+    verifyNoWrites(writer);
   }
 }

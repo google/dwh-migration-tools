@@ -39,8 +39,9 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
+import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest.MemoryByteSink;
+import com.google.edwmigration.dumper.application.dumper.task.MemoryByteSink;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -53,6 +54,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
+import javax.annotation.Nonnull;
 import org.apache.oozie.client.AuthOozieClient;
 import org.apache.oozie.client.WorkflowJob;
 import org.apache.oozie.client.XOozieClient;
@@ -128,7 +130,7 @@ public class OozieWorkflowJobsTaskTest {
     task.doRun(context, sink, new OozieHandle(oozieClient));
 
     // Assert
-    String actual = sink.getContent();
+    String actual = getContent(sink);
     String expected = readFileAsString("/oozie/expected-jobs-all-in-range-byenddate.csv");
     assertEquals(expected, actual);
   }
@@ -188,7 +190,7 @@ public class OozieWorkflowJobsTaskTest {
     task.doRun(context, sink, new OozieHandle(oozieClient));
 
     // Assert
-    String actual = sink.getContent();
+    String actual = getContent(sink);
     String expected =
         readFileAsString("/oozie/expected-jobs-filtered-by-range-sorted-byenddate.csv");
     assertEquals(expected, actual);
@@ -237,7 +239,7 @@ public class OozieWorkflowJobsTaskTest {
     task.doRun(context, sink, new OozieHandle(oozieClient));
 
     // Assert
-    String actual = sink.getContent();
+    String actual = getContent(sink);
     String expected = readFileAsString("/oozie/expected-jobs-one-job-from-template.csv");
     assertEquals(expected, actual);
   }
@@ -329,7 +331,7 @@ public class OozieWorkflowJobsTaskTest {
     task.doRun(context, sink, new OozieHandle(oozieClient));
 
     // Assert
-    String actual = sink.getContent();
+    String actual = getContent(sink);
     String expected = readFileAsString("/oozie/expected-jobs.csv");
     assertEquals(expected, actual);
   }
@@ -438,6 +440,10 @@ public class OozieWorkflowJobsTaskTest {
 
   private String readFileAsString(String fileName) throws IOException, URISyntaxException {
     return new String(Files.readAllBytes(Paths.get(this.getClass().getResource(fileName).toURI())));
+  }
+
+  private static String getContent(@Nonnull ByteSink sink) throws IOException {
+    return sink.openStream().toString();
   }
 
   private static String toISO(ZonedDateTime dateTime) {

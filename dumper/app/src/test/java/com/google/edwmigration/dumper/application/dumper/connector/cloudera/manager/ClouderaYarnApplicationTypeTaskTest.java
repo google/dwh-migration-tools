@@ -31,11 +31,13 @@ import static org.mockito.Mockito.when;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaYarnApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
@@ -209,6 +211,25 @@ public class ClouderaYarnApplicationTypeTaskTest {
     assertTrue(
         fileJsonLines.contains(
             "{\"yarnAppTypes\":[{\"applicationId\":\"oozie\",\"applicationType\":\"Oozie Launcher\",\"clusterName\":\"test-cluster\"}]}"));
+  }
+
+  @Test
+  public void doRun_initializedClusters_cachesSparkYarnApplications() throws Exception {
+    initClusters(
+        ClouderaClusterDTO.create("cluster-1", "first-cluster"),
+        ClouderaClusterDTO.create("cluster-2", "second-cluster"));
+    stubYARNApplicationTypesAPI("first-cluster", "{\"items\":[]}");
+    stubYARNApplicationTypesAPI("second-cluster", "{\"items\":[]}");
+    stubPredefinedApplicationTypes("first-cluster");
+    stubPredefinedApplicationTypes("second-cluster");
+
+    task.doRun(context, sink, handle);
+
+    assertEquals(
+        ImmutableList.of(
+            ClouderaYarnApplicationDTO.create("spark-app", "first-cluster"),
+            ClouderaYarnApplicationDTO.create("spark-app", "second-cluster")),
+        handle.getSparkYarnApplications());
   }
 
   private void initClusters(ClouderaClusterDTO... clusters) {

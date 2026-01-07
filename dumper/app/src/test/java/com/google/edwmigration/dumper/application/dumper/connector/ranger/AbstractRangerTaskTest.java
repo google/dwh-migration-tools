@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerClient.ConnectionWrapper;
 import com.google.edwmigration.dumper.application.dumper.connector.ranger.RangerConnector.RangerClientHandle;
-import com.google.edwmigration.dumper.application.dumper.task.AbstractTaskTest;
+import com.google.edwmigration.dumper.application.dumper.task.MemoryByteSink;
 import java.io.IOException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,7 +30,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 @RunWith(JUnit4.class)
-public abstract class AbstractRangerTaskTest extends AbstractTaskTest {
+public abstract class AbstractRangerTaskTest {
 
   @Mock protected ConnectionWrapper httpClient = mock(ConnectionWrapper.class);
 

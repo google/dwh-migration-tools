@@ -25,14 +25,14 @@ import org.junit.runners.JUnit4;
 
 /** @author shevek */
 @RunWith(JUnit4.class)
-public class FormatTaskTest extends AbstractTaskTest {
+public class FormatTaskTest {
 
   final TaskRunContext mockContext = mock(TaskRunContext.class);
 
   @Test
   public void testTask() throws Exception {
     MemoryByteSink sink = new MemoryByteSink();
-    new FormatTask("test-format").doRun(mockContext, sink, HANDLE);
+    new FormatTask("test-format").doRun(mockContext, sink, () -> {});
   }
 
   @Test

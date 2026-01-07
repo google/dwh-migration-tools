@@ -28,12 +28,15 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.errorprone.annotations.ForOverride;
 import java.beans.PropertyDescriptor;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.QuoteMode;
@@ -114,19 +117,71 @@ public abstract class AbstractTask<T> implements Task<T> {
       throws Exception;
 
   @Override
-  public T run(TaskRunContext context) throws Exception {
+  public final T run(@Nonnull TaskRunContext context) throws Exception {
+    return getWrapper(context).runTask(this, context).orElse(null);
+  }
+
+  SinkWrapper getWrapper(@Nonnull TaskRunContext context) throws IOException {
     if (options.targetInitialization() == TargetInitialization.DO_NOT_CREATE) {
-      return doRun(context, DummyByteSink.INSTANCE, context.getHandle());
+      return SinkWrapper.decoy();
+    }
+    OutputHandle handle = context.newOutputFileHandle(getTargetPath());
+    if (options.writeMode().equals(OutputHandle.WriteMode.APPEND_EXISTING)) {
+      return SinkWrapper.append(handle, options);
+    } else if (handle.exists()) {
+      return SinkWrapper.skip(handle);
+    } else {
+      return SinkWrapper.temporary(handle, options);
+    }
+  }
+
+  static class SinkWrapper {
+    @Nullable final ByteSink sink;
+    @Nullable final OutputHandle handle;
+    final boolean shouldCommit;
+
+    @Nonnull
+    static SinkWrapper decoy() {
+      return new SinkWrapper(DummyByteSink.INSTANCE, null, false);
     }
 
-    OutputHandle sink = context.newOutputFileHandle(getTargetPath());
-    if (sink.exists()) {
-      logger.info("Skipping {}: {} already exists.", getName(), sink);
-      return null;
+    @Nonnull
+    static SinkWrapper append(@Nonnull OutputHandle handle, @Nonnull TaskOptions options)
+        throws IOException {
+      return new SinkWrapper(handle.asByteSink(options.writeMode()), handle, false);
     }
-    T result = doRun(context, sink.asTemporaryByteSink(options.writeMode()), context.getHandle());
-    sink.commit();
-    return result;
+
+    @Nonnull
+    static SinkWrapper skip(@Nonnull OutputHandle handle) {
+      return new SinkWrapper(null, handle, false);
+    }
+
+    @Nonnull
+    static SinkWrapper temporary(@Nonnull OutputHandle handle, @Nonnull TaskOptions options)
+        throws IOException {
+      return new SinkWrapper(handle.asTemporaryByteSink(options.writeMode()), handle, true);
+    }
+
+    SinkWrapper(@Nullable ByteSink sink, @Nullable OutputHandle handle, boolean shouldCommit) {
+      this.sink = sink;
+      this.handle = handle;
+      this.shouldCommit = shouldCommit;
+    }
+
+    @Nonnull
+    <U> Optional<U> runTask(AbstractTask<U> task, TaskRunContext context) throws Exception {
+      ByteSink localSink = sink;
+      if (localSink != null) {
+        U result = task.doRun(context, localSink, context.getHandle());
+        if (handle != null && shouldCommit) {
+          handle.commit();
+        }
+        return Optional.ofNullable(result);
+      } else {
+        logger.info("Skipping {}. Reason: {} already exists.", task.getName(), handle);
+        return Optional.empty();
+      }
+    }
   }
 
   protected static CSVFormat newCsvFormatForClass(Class<?> clazz) {
@@ -176,9 +231,9 @@ public abstract class AbstractTask<T> implements Task<T> {
     DO_NOT_CREATE
   }
 
-  private static class DummyByteSink extends ByteSink {
+  static class DummyByteSink extends ByteSink {
 
-    private static final DummyByteSink INSTANCE = new DummyByteSink();
+    static final DummyByteSink INSTANCE = new DummyByteSink();
 
     @Override
     public OutputStream openStream() {

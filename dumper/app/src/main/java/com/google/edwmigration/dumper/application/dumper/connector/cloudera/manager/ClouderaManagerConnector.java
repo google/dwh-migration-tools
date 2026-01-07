@@ -18,7 +18,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
 import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.DAILY;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation.HOURLY;
 import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.OPTIONAL;
+import static com.google.edwmigration.dumper.application.dumper.task.TaskCategory.REQUIRED;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
@@ -110,8 +112,9 @@ public class ClouderaManagerConnector extends AbstractConnector {
       endDate = arguments.getEndDate();
     }
 
-    out.add(new ClouderaClusterCPUChartTask(startDate, endDate, DAILY));
-    out.add(new ClouderaHostRAMChartTask(startDate, endDate, DAILY));
+    out.add(new ClouderaClusterCPUChartTask(startDate, endDate, DAILY, REQUIRED));
+    out.add(new ClouderaHostRAMChartTask(startDate, endDate, DAILY, REQUIRED));
+    out.add(new ClouderaServiceResourceAllocationChartTask(startDate, endDate, HOURLY, OPTIONAL));
     out.add(new ClouderaYarnApplicationsTask(startDate, endDate, OPTIONAL));
     out.add(new ClouderaYarnApplicationTypeTask(startDate, endDate, OPTIONAL));
   }
@@ -126,6 +129,9 @@ public class ClouderaManagerConnector extends AbstractConnector {
     String user = arguments.getUser();
     String password = arguments.getPasswordOrPrompt();
     doClouderaManagerLogin(handle.getBaseURI(), httpClient, user, password);
+
+    ClouderaConnectorVerifier.verify(handle, arguments);
+
     return handle;
   }
 

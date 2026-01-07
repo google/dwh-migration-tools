@@ -19,15 +19,11 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.MockUtils.verifyNoWrites;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyChar;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,6 +37,7 @@ import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.AbstractClouderaTimeSeriesTask.TimeSeriesAggregation;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.Writer;
@@ -66,7 +63,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ClouderaHostRAMChartTaskTest {
   private final ClouderaHostRAMChartTask task =
       new ClouderaHostRAMChartTask(
-          timeTravelDaysAgo(1), timeTravelDaysAgo(0), TimeSeriesAggregation.HOURLY);
+          timeTravelDaysAgo(1),
+          timeTravelDaysAgo(0),
+          TimeSeriesAggregation.HOURLY,
+          TaskCategory.REQUIRED);
   private ClouderaManagerHandle handle;
   private static WireMockServer server;
 
@@ -122,7 +122,7 @@ public class ClouderaHostRAMChartTaskTest {
     assertEquals(
         "Cloudera hosts must be initialized before RAM charts dumping.", exception.getMessage());
 
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
@@ -132,7 +132,7 @@ public class ClouderaHostRAMChartTaskTest {
 
     assertThrows(JsonParseException.class, () -> task.doRun(context, sink, handle));
 
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
@@ -142,7 +142,7 @@ public class ClouderaHostRAMChartTaskTest {
 
     assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   @Test
@@ -152,11 +152,11 @@ public class ClouderaHostRAMChartTaskTest {
 
     assertThrows(RuntimeException.class, () -> task.doRun(context, sink, handle));
 
-    verifyNoWrites();
+    verifyNoWrites(writer);
   }
 
   private void initHosts(ClouderaHostDTO... hosts) {
-    handle.initHostsIfNull(Arrays.asList(hosts));
+    handle.initHosts(Arrays.asList(hosts));
   }
 
   private void stubHostAPIResponse(String hostId, int statusCode, String responseContent)
@@ -164,14 +164,6 @@ public class ClouderaHostRAMChartTaskTest {
     server.stubFor(
         get(urlMatching(String.format("/api/vTest/timeseries.*%s.*", hostId)))
             .willReturn(okJson(responseContent).withStatus(statusCode)));
-  }
-
-  private void verifyNoWrites() throws IOException {
-    verify(writer, never()).write(anyChar());
-    verify(writer, never()).write(anyString());
-    verify(writer, never()).write(anyString(), anyInt(), anyInt());
-    verify(writer, never()).write(any(char[].class));
-    verify(writer, never()).write(any(char[].class), anyInt(), anyInt());
   }
 
   private ZonedDateTime timeTravelDaysAgo(int days) {

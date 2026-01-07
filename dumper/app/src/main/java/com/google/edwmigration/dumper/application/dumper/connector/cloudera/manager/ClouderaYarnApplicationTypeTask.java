@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Arrays.stream;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -23,7 +26,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaYarnApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.model.YarnApplicationType;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -34,7 +39,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -44,10 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplicationTask {
-  private static final Logger logger = LoggerFactory.getLogger(ClouderaYarnApplicationsTask.class);
-
-  private final ImmutableList<String> predefinedAppTypes =
-      ImmutableList.of("MAPREDUCE", "SPARK", "Oozie Launcher");
+  private static final Logger logger =
+      LoggerFactory.getLogger(ClouderaYarnApplicationTypeTask.class);
 
   public ClouderaYarnApplicationTypeTask(
       ZonedDateTime startDate, ZonedDateTime endDate, TaskCategory taskCategory) {
@@ -72,21 +74,28 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
         new PaginatedClouderaYarnApplicationsLoader(
             handle, context.getArguments().getPaginationPageSize());
 
+    List<ClouderaYarnApplicationDTO> sparkYarnApplications = new ArrayList<>();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
         final String clusterName = cluster.getName();
-        Set<String> yarnAppTypes = new HashSet<>(fetchYARNApplicationTypes(handle, clusterName));
-        yarnAppTypes.addAll(predefinedAppTypes);
-        yarnAppTypes.addAll(context.getArguments().getYarnApplicationTypes());
-        for (String yarnAppType : yarnAppTypes) {
+        for (String yarnAppType : collectYarnApplicationTypes(context, handle, clusterName)) {
           logger.info(
               "Dump YARN applications with {} type from {} cluster", yarnAppType, clusterName);
           int loadedAppsCount =
               appLoader.load(
                   clusterName,
                   yarnAppType,
-                  yarnAppsPage ->
-                      writeYarnAppTypes(writer, yarnAppsPage, yarnAppType, clusterName));
+                  yarnAppsPage -> {
+                    writeYarnAppTypes(writer, yarnAppsPage, yarnAppType, clusterName);
+                    if (yarnAppType.equals(YarnApplicationType.SPARK.getValue())) {
+                      yarnAppsPage.stream()
+                          .map(
+                              yarnApp ->
+                                  ClouderaYarnApplicationDTO.create(
+                                      yarnApp.getApplicationId(), clusterName))
+                          .forEach(sparkYarnApplications::add);
+                    }
+                  });
           logger.info(
               "Dumped {} YARN applications with {} type from {} cluster",
               loadedAppsCount,
@@ -95,6 +104,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
         }
       }
     }
+    handle.initSparkYarnApplications(sparkYarnApplications);
   }
 
   private void writeYarnAppTypes(
@@ -114,22 +124,37 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     }
   }
 
-  private List<String> fetchYARNApplicationTypes(ClouderaManagerHandle handle, String clusterName) {
-    String yarnAppTypesUrl =
+  private Set<String> collectYarnApplicationTypes(
+      TaskRunContext context, ClouderaManagerHandle handle, String clusterName) {
+    Set<String> yarnApplicationTypes = new HashSet<>();
+    ImmutableList<String> predefinedYarnAppTypes =
+        stream(YarnApplicationType.values())
+            .map(YarnApplicationType::getValue)
+            .collect(toImmutableList());
+    yarnApplicationTypes.addAll(predefinedYarnAppTypes);
+    yarnApplicationTypes.addAll(fetchClusterServiceTypes(handle, clusterName));
+    yarnApplicationTypes.addAll(context.getArguments().getYarnApplicationTypes());
+    return yarnApplicationTypes;
+  }
+
+  private ImmutableList<String> fetchClusterServiceTypes(
+      ClouderaManagerHandle handle, String clusterName) {
+    String serviceTypesUrl =
         handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
     CloseableHttpClient httpClient = handle.getHttpClient();
-    try (CloseableHttpResponse appTypesResp = httpClient.execute(new HttpGet(yarnAppTypesUrl))) {
-      int statusCode = appTypesResp.getStatusLine().getStatusCode();
+    try (CloseableHttpResponse serviceTypesResp =
+        httpClient.execute(new HttpGet(serviceTypesUrl))) {
+      int statusCode = serviceTypesResp.getStatusLine().getStatusCode();
       if (!isStatusCodeOK(statusCode)) {
         throw new ClouderaConnectorException(
             String.format(
                 "Cloudera API returned bad http status: %d. Message: %s",
-                statusCode, readFromStream(appTypesResp.getEntity().getContent())));
+                statusCode, readFromStream(serviceTypesResp.getEntity().getContent())));
       }
-      JsonNode appTypesJson = readJsonTree(appTypesResp.getEntity().getContent());
-      return StreamSupport.stream(appTypesJson.get("items").spliterator(), false)
+      JsonNode serviceTypesJson = readJsonTree(serviceTypesResp.getEntity().getContent());
+      return StreamSupport.stream(serviceTypesJson.get("items").spliterator(), false)
           .map(JsonNode::asText)
-          .collect(Collectors.toList());
+          .collect(toImmutableList());
     } catch (IOException ex) {
       throw new ClouderaConnectorException(ex.getMessage(), ex);
     }

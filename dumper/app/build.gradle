@@ -128,6 +128,8 @@ dependencies {
     implementation libs.logback.classic
     implementation libs.jcl.over.slf4j
 
+    implementation libs.async.profiler
+
     runtimeOnly libs.postgresql
     runtimeOnly libs.snowflake.jdbc
     runtimeOnly libs.redshift.jdbc
