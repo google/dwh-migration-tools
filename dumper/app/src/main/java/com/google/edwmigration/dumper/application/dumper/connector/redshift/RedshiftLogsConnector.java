@@ -19,10 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
-import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
+import com.google.edwmigration.dumper.application.dumper.annotations.*;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
@@ -59,6 +56,7 @@ import org.slf4j.LoggerFactory;
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
+@AvoidArgumentAssessment
 public class RedshiftLogsConnector extends AbstractRedshiftConnector
     implements LogsConnector, RedshiftLogsDumpFormat {
 
