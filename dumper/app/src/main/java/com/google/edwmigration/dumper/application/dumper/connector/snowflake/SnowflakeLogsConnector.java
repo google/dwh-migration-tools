@@ -301,15 +301,16 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
     out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
 
     String userDefinedFunctions =
-            "SELECT FUNCTION_SCHEMA, FUNCTION_NAME, FUNCTION_LANGUAGE, ARGUMENT_SIGNATURE, "
-                    + "FUNCTION_OWNER, COMMENT, VOLATILITY, RUNTIME_VERSION, LAST_ALTERED, "
-                    + "PACKAGES, IMPORTS, IS_AGGREGATE, IS_DATA_METRIC, IS_MEMOIZABLE "
-                    + "FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS "
-                    + "WHERE FUNCTION_SCHEMA != 'INFORMATION_SCHEMA' "
-                    + "AND DELETED IS NULL";
+        "SELECT FUNCTION_SCHEMA, FUNCTION_NAME, FUNCTION_LANGUAGE, ARGUMENT_SIGNATURE, "
+            + "FUNCTION_OWNER, COMMENT, VOLATILITY, RUNTIME_VERSION, LAST_ALTERED, "
+            + "PACKAGES, IMPORTS, IS_AGGREGATE, IS_DATA_METRIC, IS_MEMOIZABLE "
+            + "FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS "
+            + "WHERE FUNCTION_SCHEMA != 'INFORMATION_SCHEMA' "
+            + "AND DELETED IS NULL";
     out.add(
-            new JdbcSelectTask("user-defined-functions.csv", userDefinedFunctions, TaskCategory.OPTIONAL)
-                    .withHeaderClass(FunctionsHeader.class));
+        new JdbcSelectTask(
+                "user-defined-functions.csv", userDefinedFunctions, TaskCategory.OPTIONAL)
+            .withHeaderClass(FunctionsHeader.class));
 
     // (24 * 7) -> 7 trailing days == 168 hours
     // Actually, on Snowflake, 7 days ago starts at midnight in an unadvertised time zone. What the
