@@ -310,7 +310,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
               + "AND DELETED IS NULL";
       out.add(
           new JdbcSelectTask(
-                  "user-defined-functions.csv", userDefinedFunctions, TaskCategory.OPTIONAL)
+                  "user_defined_functions.csv", userDefinedFunctions, TaskCategory.OPTIONAL)
               .withHeaderClass(FunctionsHeader.class));
     }
 
