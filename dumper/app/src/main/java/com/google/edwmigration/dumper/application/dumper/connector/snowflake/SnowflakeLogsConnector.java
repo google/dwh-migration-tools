@@ -302,7 +302,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
     if (arguments.isAssessment()) {
       String userDefinedFunctions =
-          "SELECT FUNCTION_SCHEMA, FUNCTION_NAME, FUNCTION_LANGUAGE, ARGUMENT_SIGNATURE, "
+          "SELECT FUNCTION_CATALOG, FUNCTION_SCHEMA, FUNCTION_NAME, FUNCTION_LANGUAGE, ARGUMENT_SIGNATURE, "
               + "FUNCTION_OWNER, COMMENT, VOLATILITY, RUNTIME_VERSION, LAST_ALTERED, "
               + "PACKAGES, IMPORTS, IS_AGGREGATE, IS_DATA_METRIC, IS_MEMOIZABLE "
               + "FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS "
@@ -522,6 +522,7 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
   }
 
   private enum FunctionsHeader {
+    FUNCTION_CATALOG,
     FUNCTION_SCHEMA,
     FUNCTION_NAME,
     FUNCTION_LANGUAGE,
