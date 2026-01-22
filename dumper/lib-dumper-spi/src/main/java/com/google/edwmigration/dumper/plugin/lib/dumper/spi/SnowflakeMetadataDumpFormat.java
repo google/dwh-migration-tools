@@ -107,6 +107,29 @@ public interface SnowflakeMetadataDumpFormat {
     }
   }
 
+  interface UserDefinedFunctionsFormat {
+
+    String IS_ZIP_ENTRY_NAME = "user_defined_functions.csv";
+
+    enum Header {
+      FUNCTION_CATALOG,
+      FUNCTION_SCHEMA,
+      FUNCTION_NAME,
+      FUNCTION_LANGUAGE,
+      ARGUMENT_SIGNATURE,
+      FUNCTION_OWNER,
+      COMMENT,
+      VOLATILITY,
+      RUNTIME_VERSION,
+      LAST_ALTERED,
+      PACKAGES,
+      IMPORTS,
+      IS_AGGREGATE,
+      IS_DATA_METRIC,
+      IS_MEMOIZABLE
+    }
+  }
+
   interface FunctionInfoFormat {
     String AU_ZIP_ENTRY_NAME = "function_info.csv";
   }
