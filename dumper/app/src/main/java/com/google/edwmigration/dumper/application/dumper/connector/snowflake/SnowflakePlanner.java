@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDum
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TableStorageMetricsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.UserDefinedFunctionsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -49,6 +50,7 @@ final class SnowflakePlanner {
     EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
     FUNCTION_INFO(FunctionInfoFormat.AU_ZIP_ENTRY_NAME),
     TABLE_STORAGE_METRICS(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME),
+    USER_DEFINED_FUNCTIONS(UserDefinedFunctionsFormat.IS_ZIP_ENTRY_NAME),
     WAREHOUSES(WarehousesFormat.AU_ZIP_ENTRY_NAME);
 
     private final String value;
@@ -63,6 +65,8 @@ final class SnowflakePlanner {
 
   private final ImmutableList<AssessmentQuery> assessmentQueries =
       ImmutableList.of(
+          AssessmentQuery.createUserDefinedFunctionsSelect(
+              Format.USER_DEFINED_FUNCTIONS, UPPER_UNDERSCORE),
           AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
           AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
           SHOW_EXTERNAL_TABLES,
@@ -140,6 +144,17 @@ final class SnowflakePlanner {
     static AssessmentQuery createMetricsSelect(Format zipFormat, CaseFormat caseFormat) {
       String formatString = "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s";
       return new AssessmentQuery(true, formatString, zipFormat.value, caseFormat);
+    }
+
+    static AssessmentQuery createUserDefinedFunctionsSelect(
+        Format zipFormat, CaseFormat caseFormat) {
+      String formatString =
+          "SELECT FUNCTION_CATALOG, FUNCTION_SCHEMA, FUNCTION_NAME, FUNCTION_LANGUAGE, ARGUMENT_SIGNATURE, "
+              + "FUNCTION_OWNER, COMMENT, VOLATILITY, RUNTIME_VERSION, LAST_ALTERED, "
+              + "PACKAGES, IMPORTS, IS_AGGREGATE, IS_DATA_METRIC, IS_MEMOIZABLE "
+              + "FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS "
+              + "WHERE FUNCTION_SCHEMA != 'INFORMATION_SCHEMA' ";
+      return new AssessmentQuery(false, formatString, zipFormat.value, caseFormat);
     }
 
     static AssessmentQuery createShow(String view, Format zipFormat, CaseFormat caseFormat) {
