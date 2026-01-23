@@ -60,9 +60,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaHostRAMChartTaskTest {
-  private final ClouderaHostRAMChartTask task =
-      new ClouderaHostRAMChartTask(
+public class ClouderaHostRamChartTaskTest {
+  private final ClouderaHostRamChartTask task =
+      new ClouderaHostRamChartTask(
           timeTravelDaysAgo(1),
           timeTravelDaysAgo(0),
           TimeSeriesAggregation.HOURLY,

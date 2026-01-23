@@ -29,7 +29,7 @@ import java.util.List;
  * code is unclear, the own model for public schema used instead of it.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class ApiClusterDTO {
+public final class ApiClusterDto {
   @JsonProperty(required = true)
   private String name;
 

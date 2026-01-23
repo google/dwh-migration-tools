@@ -16,39 +16,32 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * The task collects hosts from Cloudera Manager {@code /cmf/} urls. These API contains
- * well-structured data but is not well documented.
+ * The task dump data from the <a
+ * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/json_ApiHostList.html">Hosts
+ * API</a> which doesn't contain usage and disk data and collected as a fallback.
  */
-public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
+public class ClouderaApiHostsTask extends AbstractClouderaManagerTask {
 
-  private static final Logger logger = LoggerFactory.getLogger(ClouderaCMFHostsTask.class);
-
-  public ClouderaCMFHostsTask() {
-    super("cmf-hosts.jsonl");
-  }
-
-  @Nonnull
-  @Override
-  public TaskCategory getCategory() {
-    return TaskCategory.OPTIONAL;
+  public ClouderaApiHostsTask() {
+    super("api-hosts.jsonl");
   }
 
   @Override
@@ -58,39 +51,40 @@ public class ClouderaCMFHostsTask extends AbstractClouderaManagerTask {
     CloseableHttpClient httpClient = handle.getClouderaManagerHttpClient();
     List<ClouderaClusterDTO> clusters = handle.getClusters();
     if (clusters == null) {
-      throw new IllegalStateException(
+      throw new MetadataDumperUsageException(
           "Cloudera clusters must be initialized before hosts dumping.");
     }
 
-    final URI baseURI = handle.getBaseURI();
+    List<ClouderaHostDTO> hosts = new ArrayList<>();
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
-        if (cluster.getId() == null) {
-          logger.warn(
-              "Cloudera cluster id is null for cluster [{}]. "
-                  + "Skip dumping hosts overview for the cluster.",
-              cluster.getName());
-          continue;
-        }
+        String hostPerClusterUrl = handle.getApiURI() + "/clusters/" + cluster.getName() + "/hosts";
 
-        String hostPerClusterUrl =
-            baseURI + "/cmf/hardware/hosts/hostsOverview.json?clusterId=" + cluster.getId();
-
-        JsonNode hostsJson;
+        JsonNode jsonHosts;
         try (CloseableHttpResponse hostsResponse =
             httpClient.execute(new HttpGet(hostPerClusterUrl))) {
-          try {
-            hostsJson = readJsonTree(hostsResponse.getEntity().getContent());
-          } catch (JsonParseException ex) {
-            logger.warn(
-                "Could not parse json from cloudera hosts response: " + ex.getMessage(), ex);
-            continue;
+          final int statusCode = hostsResponse.getStatusLine().getStatusCode();
+          if (!isStatusCodeOK(statusCode)) {
+            throw new RuntimeException(
+                String.format(
+                    "Cloudera Error: Response status code is %d but 2xx is expected.", statusCode));
           }
+          jsonHosts = readJsonTree(hostsResponse.getEntity().getContent());
         }
-        String stringifiedHosts = hostsJson.toString();
+        String stringifiedHosts = jsonHosts.toString();
         writer.write(stringifiedHosts);
         writer.write('\n');
+
+        ApiHostListDto apiHosts = parseJsonStringToObject(stringifiedHosts, ApiHostListDto.class);
+        for (ApiHostDto apiHost : apiHosts.getHosts()) {
+          hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));
+        }
       }
+      if (hosts.isEmpty()) {
+        throw new MetadataDumperUsageException(
+            "No hosts were found in any of the initialized Cloudera clusters.");
+      }
+      handle.initHosts(hosts);
     }
   }
 }

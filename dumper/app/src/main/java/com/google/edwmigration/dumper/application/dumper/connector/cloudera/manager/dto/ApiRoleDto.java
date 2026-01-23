@@ -19,28 +19,20 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * DTO class for the official Cloudera API <a
- * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/json_ApiHost.html">json</a>
- *
- * <p>Note: The license for <a
- * href="https://mvnrepository.com/artifact/com.cloudera.api.swagger/cloudera-manager-api-swagger/7.11.0">generated</a>
- * code is unclear, the own model for public schema used instead of it.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ApiHostDTO {
+public class ApiRoleDto {
 
-  @JsonProperty(required = true)
-  private String hostname;
+  @JsonProperty("hostRef")
+  private ApiHostRefDto hostRef;
 
-  @JsonProperty(required = true)
-  private String hostId;
+  @JsonProperty("roleConfigGroupRef")
+  private ApiRoleConfigGroupRefDto roleConfigGroupRef;
 
-  public String getName() {
-    return hostname;
+  public ApiHostRefDto getHostRef() {
+    return hostRef;
   }
 
-  public String getId() {
-    return hostId;
+  public ApiRoleConfigGroupRefDto getRoleConfigGroupRef() {
+    return roleConfigGroupRef;
   }
 }

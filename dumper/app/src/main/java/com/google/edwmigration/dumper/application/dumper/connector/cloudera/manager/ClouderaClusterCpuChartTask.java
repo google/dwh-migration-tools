@@ -40,12 +40,12 @@ import org.slf4j.LoggerFactory;
  * href="https://docs.cloudera.com/documentation/enterprise/latest/topics/cm_dg_tsquery.html">tsquery</a>
  * language.
  */
-public class ClouderaClusterCPUChartTask extends AbstractClouderaTimeSeriesTask {
-  private static final Logger logger = LoggerFactory.getLogger(ClouderaClusterCPUChartTask.class);
+public class ClouderaClusterCpuChartTask extends AbstractClouderaTimeSeriesTask {
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaClusterCpuChartTask.class);
   private static final String TS_CPU_QUERY_TEMPLATE =
       "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
-  public ClouderaClusterCPUChartTask(
+  public ClouderaClusterCpuChartTask(
       ZonedDateTime startDate,
       ZonedDateTime endDate,
       TimeSeriesAggregation tsAggregation,

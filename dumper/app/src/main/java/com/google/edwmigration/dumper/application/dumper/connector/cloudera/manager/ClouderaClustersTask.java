@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterListDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
@@ -52,18 +52,18 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
       throws Exception {
     CloseableHttpClient httpClient = handle.getClouderaManagerHttpClient();
 
-    ApiClusterListDTO clusterList;
+    ApiClusterListDto clusterList;
 
     if (context.getArguments().getCluster() != null) {
       final String clusterName = context.getArguments().getCluster();
       try (CloseableHttpResponse clusterResponse =
           httpClient.execute(new HttpGet(handle.getApiURI() + "/clusters/" + clusterName))) {
 
-        ApiClusterDTO cluster =
+        ApiClusterDto cluster =
             parseJsonStringToObject(
-                EntityUtils.toString(clusterResponse.getEntity()), ApiClusterDTO.class);
+                EntityUtils.toString(clusterResponse.getEntity()), ApiClusterDto.class);
 
-        clusterList = new ApiClusterListDTO();
+        clusterList = new ApiClusterListDto();
         clusterList.setClusters(ImmutableList.of(cluster));
       }
     } else {
@@ -74,7 +74,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
       try (CloseableHttpResponse clustersResponse =
           httpClient.execute(new HttpGet(handle.getApiURI() + "/clusters?clusterType=ANY"))) {
         String clustersJson = EntityUtils.toString(clustersResponse.getEntity());
-        clusterList = parseJsonStringToObject(clustersJson, ApiClusterListDTO.class);
+        clusterList = parseJsonStringToObject(clustersJson, ApiClusterListDto.class);
       }
     }
 
@@ -83,7 +83,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
     }
 
     List<ClouderaClusterDTO> clusters = new ArrayList<>();
-    for (ApiClusterDTO item : clusterList.getClusters()) {
+    for (ApiClusterDto item : clusterList.getClusters()) {
       String clusterId = requestClusterIdByName(httpClient, handle.getBaseURI(), item.getName());
       clusters.add(ClouderaClusterDTO.create(clusterId, item.getName()));
     }
