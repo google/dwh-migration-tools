@@ -75,7 +75,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
 
     public PaginatedClouderaYarnApplicationsLoader(ClouderaManagerHandle handle, int limit) {
       this.apiURI = handle.getApiURI();
-      this.httpClient = handle.getHttpClient();
+      this.httpClient = handle.getClouderaManagerHttpClient();
       this.limit = limit;
 
       final DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern(ISO_DATETIME_FORMAT);

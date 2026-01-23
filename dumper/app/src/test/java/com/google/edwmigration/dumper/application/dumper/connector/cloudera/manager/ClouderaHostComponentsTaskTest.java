@@ -79,7 +79,8 @@ public class ClouderaHostComponentsTaskTest {
   public void setUp() throws Exception {
     server.resetAll(); // reset request/response stubs
     URI uri = URI.create(server.baseUrl());
-    handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
+    handle =
+        new ClouderaManagerHandle(uri, HttpClients.createDefault(), HttpClients.createDefault());
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);

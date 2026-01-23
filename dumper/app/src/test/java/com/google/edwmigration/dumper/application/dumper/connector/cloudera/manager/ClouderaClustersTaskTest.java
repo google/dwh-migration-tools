@@ -89,7 +89,7 @@ public class ClouderaClustersTaskTest {
   @Before
   public void setUp() throws Exception {
     server.resetAll(); // reset request/response stubs
-    handle = new ClouderaManagerHandle(URI.create("http://localhost/api"), httpClient);
+    handle = new ClouderaManagerHandle(URI.create("http://localhost/api"), httpClient, httpClient);
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);
@@ -104,7 +104,8 @@ public class ClouderaClustersTaskTest {
   public void doRun_clusterNotProvided_fetchAllClusters() throws Exception {
     when(arguments.getCluster()).thenReturn(null);
     URI apiUrl = URI.create(server.baseUrl() + "/api/vTest/");
-    handle = new ClouderaManagerHandle(apiUrl, HttpClients.createDefault());
+    handle =
+        new ClouderaManagerHandle(apiUrl, HttpClients.createDefault(), HttpClients.createDefault());
 
     server.stubFor(
         get("/api/vTest/clusters?clusterType=ANY").willReturn(okJson(apiClusterListJson)));
@@ -149,7 +150,8 @@ public class ClouderaClustersTaskTest {
   public void doRun_clusterProvided_fetchOnlyProvidedCluster() throws Exception {
     when(arguments.getCluster()).thenReturn("my-cluster");
     URI apiUrl = URI.create(server.baseUrl() + "/api/vTest/");
-    handle = new ClouderaManagerHandle(apiUrl, HttpClients.createDefault());
+    handle =
+        new ClouderaManagerHandle(apiUrl, HttpClients.createDefault(), HttpClients.createDefault());
 
     server.stubFor(get("/api/vTest/clusters/my-cluster").willReturn(okJson(apiClusterJson)));
     server.stubFor(

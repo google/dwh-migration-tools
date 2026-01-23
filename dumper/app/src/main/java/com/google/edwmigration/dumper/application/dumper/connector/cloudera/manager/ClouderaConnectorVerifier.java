@@ -53,7 +53,7 @@ public final class ClouderaConnectorVerifier {
     String endpoint = String.format("%s/clusters/%s", handle.getApiURI(), clusterName);
     HttpGet httpGet = new HttpGet(endpoint);
 
-    try (CloseableHttpResponse response = handle.getHttpClient().execute(httpGet)) {
+    try (CloseableHttpResponse response = handle.getClouderaManagerHttpClient().execute(httpGet)) {
 
       int statusCode = response.getStatusLine().getStatusCode();
 

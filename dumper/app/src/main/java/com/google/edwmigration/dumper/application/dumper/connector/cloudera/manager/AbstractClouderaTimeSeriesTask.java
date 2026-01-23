@@ -74,7 +74,7 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
     uriBuilder.addParameter("to", endDate.format(isoDateTimeFormatter));
     URI tsURI = uriBuilder.build();
 
-    CloseableHttpClient httpClient = handle.getHttpClient();
+    CloseableHttpClient httpClient = handle.getClouderaManagerHttpClient();
     JsonNode chartInJson;
     try (CloseableHttpResponse chart = httpClient.execute(new HttpGet(tsURI))) {
       int statusCode = chart.getStatusLine().getStatusCode();

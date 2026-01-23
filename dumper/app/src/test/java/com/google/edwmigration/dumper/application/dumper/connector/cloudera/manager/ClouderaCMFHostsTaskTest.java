@@ -79,7 +79,8 @@ public class ClouderaCMFHostsTaskTest {
   public void setUp() throws Exception {
     server.resetAll();
     URI uri = URI.create(server.baseUrl() + "/api/vTest");
-    handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
+    handle =
+        new ClouderaManagerHandle(uri, HttpClients.createDefault(), HttpClients.createDefault());
 
     when(sink.asCharSink(eq(StandardCharsets.UTF_8))).thenReturn(charSink);
     when(charSink.openBufferedStream()).thenReturn(writer);

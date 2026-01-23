@@ -33,19 +33,25 @@ import org.apache.http.impl.client.CloseableHttpClient;
 public class ClouderaManagerHandle implements Handle {
 
   private final URI apiURI;
-  private final CloseableHttpClient httpClient;
+  private final CloseableHttpClient clouderaManagerHttpClient;
+  private final CloseableHttpClient basicAuthHttpClient;
 
   private ImmutableList<ClouderaClusterDTO> clusters;
   private ImmutableList<ClouderaHostDTO> hosts;
   private ImmutableList<ClouderaYarnApplicationDTO> sparkYarnApplications;
 
-  public ClouderaManagerHandle(URI apiURI, CloseableHttpClient httpClient) {
+  public ClouderaManagerHandle(
+      URI apiURI,
+      CloseableHttpClient clouderaManagerHttpClient,
+      CloseableHttpClient basicAuthHttpClient) {
     Preconditions.checkNotNull(apiURI, "Cloudera's apiURI can't be null.");
-    Preconditions.checkNotNull(httpClient, "httpClient can't be null.");
+    Preconditions.checkNotNull(clouderaManagerHttpClient, "ClouderaManager client can't be null.");
+    Preconditions.checkNotNull(basicAuthHttpClient, "BasicAuth client can't be null.");
 
     // Always add trailing slash for safety
     this.apiURI = unify(apiURI);
-    this.httpClient = httpClient;
+    this.clouderaManagerHttpClient = clouderaManagerHttpClient;
+    this.basicAuthHttpClient = basicAuthHttpClient;
   }
 
   /** 1. Remove query params and url fragments 2. Add trailing slash for safety */
@@ -73,8 +79,12 @@ public class ClouderaManagerHandle implements Handle {
     return apiURI.resolve("/");
   }
 
-  public CloseableHttpClient getHttpClient() {
-    return httpClient;
+  public CloseableHttpClient getClouderaManagerHttpClient() {
+    return clouderaManagerHttpClient;
+  }
+
+  public CloseableHttpClient getBasicAuthHttpClient() {
+    return basicAuthHttpClient;
   }
 
   @CheckForNull
@@ -121,14 +131,13 @@ public class ClouderaManagerHandle implements Handle {
 
   @Override
   public void close() throws IOException {
-    if (httpClient != null) {
-      try {
-        httpClient.close();
-      } catch (IOException ignore) {
-        // The intention is to do graceful shutdown and try to release the resource.
-        // In case of errors we do not need to interrupt the execution flow
-        // because the e2e use case might be successful
-      }
+    try {
+      clouderaManagerHttpClient.close();
+      basicAuthHttpClient.close();
+    } catch (IOException ignore) {
+      // The intention is to do graceful shutdown and try to release the resource.
+      // In case of errors we do not need to interrupt the execution flow
+      // because the e2e use case might be successful
     }
   }
 
