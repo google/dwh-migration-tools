@@ -35,14 +35,15 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ClouderaManagerHandleTest {
 
-  @Mock private CloseableHttpClient httpClient;
+  @Mock private CloseableHttpClient cmClient;
+  @Mock private CloseableHttpClient basicAuthClient;
   private final URI localhost = URI.create("http://localhost");
 
   @Test
   public void apiUrl_normalized_success() {
     // trailing slash
     URI apiURI = URI.create("https://localhost/some//api/path/with/trailing/slash////");
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, cmClient, basicAuthClient);
 
     assertEquals("https://localhost/", handle.getBaseURI().toString());
     assertEquals(
@@ -53,14 +54,14 @@ public class ClouderaManagerHandleTest {
   public void apiUrl_queryAndFragmentsRemoved_success() {
     // with some path and query params
     URI apiURI = URI.create("https://localhost:1234/x/y/z?q=42");
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, cmClient, basicAuthClient);
 
     assertEquals("https://localhost:1234/", handle.getBaseURI().toString());
     assertEquals("https://localhost:1234/x/y/z/", handle.getApiURI().toString());
 
     // with some path and query params and fragments
     apiURI = URI.create("https://localhost:1234/x/y/z?q=42#some-place");
-    handle = new ClouderaManagerHandle(apiURI, httpClient);
+    handle = new ClouderaManagerHandle(apiURI, cmClient, basicAuthClient);
 
     assertEquals("https://localhost:1234/", handle.getBaseURI().toString());
     assertEquals("https://localhost:1234/x/y/z/", handle.getApiURI().toString());
@@ -70,7 +71,7 @@ public class ClouderaManagerHandleTest {
   public void apiUrl_resolved_success() {
     // host with port
     URI apiURI = URI.create("https://localhost:1234");
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(apiURI, cmClient, basicAuthClient);
 
     assertEquals("https://localhost:1234/", handle.getBaseURI().toString());
     // trailing slash added
@@ -78,7 +79,7 @@ public class ClouderaManagerHandleTest {
 
     // without port
     apiURI = URI.create("https://localhost/some/api/path");
-    handle = new ClouderaManagerHandle(apiURI, httpClient);
+    handle = new ClouderaManagerHandle(apiURI, cmClient, basicAuthClient);
 
     assertEquals("https://localhost/", handle.getBaseURI().toString());
     assertEquals("https://localhost/some/api/path/", handle.getApiURI().toString());
@@ -86,7 +87,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initClusters_success() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
 
     List<ClouderaClusterDTO> dtos = new ArrayList<>();
     dtos.add(ClouderaClusterDTO.create("1", "first"));
@@ -99,7 +100,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initClusterWithEmptyList_throwsException() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
 
     IllegalArgumentException exception =
         assertThrows(IllegalArgumentException.class, () -> handle.initClusters(ImmutableList.of()));
@@ -114,7 +115,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initClustersTwice_throwsException() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
 
     List<ClouderaClusterDTO> first =
         ImmutableList.of(
@@ -135,7 +136,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initHosts_success() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
     List<ClouderaHostDTO> dtos = new ArrayList<>();
     dtos.add(ClouderaHostDTO.create("1", "first"));
     dtos.add(ClouderaHostDTO.create("2", "second"));
@@ -147,7 +148,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initHostsWithNull_throwsException() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
 
     NullPointerException npe =
         assertThrows(NullPointerException.class, () -> handle.initHosts(null));
@@ -157,7 +158,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initHostsWithEmptyList_throwsException() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
 
     IllegalArgumentException exception =
         assertThrows(IllegalArgumentException.class, () -> handle.initHosts(ImmutableList.of()));
@@ -167,7 +168,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initHostsTwice_throwsException() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
     List<ClouderaHostDTO> first = new ArrayList<>();
     first.add(ClouderaHostDTO.create("1", "first"));
     first.add(ClouderaHostDTO.create("2", "second"));
@@ -186,7 +187,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initSparkYarnApplications_success() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
     List<ClouderaYarnApplicationDTO> dtos = new ArrayList<>();
     dtos.add(ClouderaYarnApplicationDTO.create("1", "clusterOne"));
     dtos.add(ClouderaYarnApplicationDTO.create("2", "clusterTwo"));
@@ -198,7 +199,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initSparkYarnApplicationsWithNull_throwsException() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
 
     NullPointerException npe =
         assertThrows(NullPointerException.class, () -> handle.initSparkYarnApplications(null));
@@ -208,7 +209,7 @@ public class ClouderaManagerHandleTest {
 
   @Test
   public void initSparkYarnApplicationsTwice_throwsException() {
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, httpClient);
+    ClouderaManagerHandle handle = new ClouderaManagerHandle(localhost, cmClient, basicAuthClient);
     List<ClouderaYarnApplicationDTO> first = new ArrayList<>();
     first.add(ClouderaYarnApplicationDTO.create("1", "clusterOne"));
     first.add(ClouderaYarnApplicationDTO.create("2", "clusterTwo"));

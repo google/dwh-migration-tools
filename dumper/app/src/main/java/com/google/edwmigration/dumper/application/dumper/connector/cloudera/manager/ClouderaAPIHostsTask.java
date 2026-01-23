@@ -48,7 +48,7 @@ public class ClouderaAPIHostsTask extends AbstractClouderaManagerTask {
   protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
-    CloseableHttpClient httpClient = handle.getHttpClient();
+    CloseableHttpClient httpClient = handle.getClouderaManagerClient();
     List<ClouderaClusterDTO> clusters = handle.getClusters();
     if (clusters == null) {
       throw new MetadataDumperUsageException(

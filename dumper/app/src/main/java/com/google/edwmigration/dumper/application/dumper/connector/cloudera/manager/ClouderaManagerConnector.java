@@ -39,12 +39,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
 
 @AutoService({Connector.class})
 @Description("Dumps metadata from Cloudera Manager.")
@@ -122,13 +117,16 @@ public class ClouderaManagerConnector extends AbstractConnector {
   @Nonnull
   @Override
   public ClouderaManagerHandle open(@Nonnull ConnectorArguments arguments) throws Exception {
-    URI uri = new URI(arguments.getUri());
-    CloseableHttpClient httpClient = disableSSLVerification(HttpClients.custom()).build();
-    ClouderaManagerHandle handle = new ClouderaManagerHandle(uri, httpClient);
-
+    URI apiUri = new URI(arguments.getUri());
     String user = arguments.getUser();
     String password = arguments.getPasswordOrPrompt();
-    doClouderaManagerLogin(handle.getBaseURI(), httpClient, user, password);
+
+    CloseableHttpClient clouderaManagerClient =
+        ClouderaHttpClientFactory.createClouderaManagerClient(apiUri, user, password);
+    CloseableHttpClient basicAuthClient =
+        ClouderaHttpClientFactory.createBasicAuthClient(user, password);
+    ClouderaManagerHandle handle =
+        new ClouderaManagerHandle(apiUri, clouderaManagerClient, basicAuthClient);
 
     ClouderaConnectorVerifier.verify(handle, arguments);
 
@@ -145,20 +143,5 @@ public class ClouderaManagerConnector extends AbstractConnector {
         clouderaUser, "--user is required for Cloudera Manager API connector");
 
     validateDateRange(arguments);
-  }
-
-  private void doClouderaManagerLogin(
-      URI baseURI, CloseableHttpClient httpClient, String user, String password) throws Exception {
-    ClouderaManagerLoginHelper.login(baseURI, httpClient, user, password);
-  }
-
-  private HttpClientBuilder disableSSLVerification(HttpClientBuilder builder) throws Exception {
-    // Cloudera Manager API SSL certificate is not in list of know certificates.
-    // So, switch off SSL certificate validation.
-    // It is  expected that Dumper will work  in internal private network (probably localhost calls)
-    builder.setSSLContext(
-        new SSLContextBuilder().loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build());
-    builder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-    return builder;
   }
 }

@@ -51,7 +51,7 @@ public class ClouderaHostComponentsTask extends AbstractClouderaManagerTask {
   protected void doRun(
       TaskRunContext context, @Nonnull ByteSink sink, @Nonnull ClouderaManagerHandle handle)
       throws Exception {
-    CloseableHttpClient httpClient = handle.getHttpClient();
+    CloseableHttpClient httpClient = handle.getClouderaManagerClient();
     List<ClouderaHostDTO> hosts = handle.getHosts();
     if (hosts == null) {
       throw new IllegalStateException(

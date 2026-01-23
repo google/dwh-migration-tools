@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
 import com.google.common.collect.ImmutableMap;
@@ -263,10 +264,18 @@ public class ClouderaManagerConnectorTest {
 
   @Test
   public void open_success() throws Exception {
-    try (MockedStatic<ClouderaManagerLoginHelper> loginHelper =
-            mockStatic(ClouderaManagerLoginHelper.class);
+    try (MockedStatic<ClouderaHttpClientFactory> httpClientFactory =
+            mockStatic(ClouderaHttpClientFactory.class);
         MockedStatic<ClouderaConnectorVerifier> connectorVerifier =
             mockStatic(ClouderaConnectorVerifier.class)) {
+      CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+      httpClientFactory
+          .when(() -> ClouderaHttpClientFactory.createClouderaManagerClient(any(), any(), any()))
+          .thenReturn(httpClient);
+      httpClientFactory
+          .when(() -> ClouderaHttpClientFactory.createBasicAuthClient(any(), any()))
+          .thenReturn(httpClient);
+
       ConnectorArguments arguments =
           new ConnectorArguments(
               "--connector",
@@ -284,20 +293,30 @@ public class ClouderaManagerConnectorTest {
 
       // Assert
       assertNotNull(handle);
-      loginHelper.verify(
+      httpClientFactory.verify(
           () ->
-              ClouderaManagerLoginHelper.login(
-                  any(URI.class), any(CloseableHttpClient.class), eq("user"), eq("password")));
+              ClouderaHttpClientFactory.createClouderaManagerClient(
+                  any(URI.class), eq("user"), eq("password")));
+      httpClientFactory.verify(
+          () -> ClouderaHttpClientFactory.createBasicAuthClient(eq("user"), eq("password")));
       connectorVerifier.verify(() -> ClouderaConnectorVerifier.verify(any(), any()));
     }
   }
 
   @Test
   public void open_verifierFails_throwsException() throws Exception {
-    try (MockedStatic<ClouderaManagerLoginHelper> loginHelper =
-            mockStatic(ClouderaManagerLoginHelper.class);
+    try (MockedStatic<ClouderaHttpClientFactory> httpClientFactory =
+            mockStatic(ClouderaHttpClientFactory.class);
         MockedStatic<ClouderaConnectorVerifier> connectorVerifier =
             mockStatic(ClouderaConnectorVerifier.class)) {
+      CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+      httpClientFactory
+          .when(() -> ClouderaHttpClientFactory.createClouderaManagerClient(any(), any(), any()))
+          .thenReturn(httpClient);
+      httpClientFactory
+          .when(() -> ClouderaHttpClientFactory.createBasicAuthClient(any(), any()))
+          .thenReturn(httpClient);
+
       ConnectorArguments arguments =
           new ConnectorArguments(
               "--connector",
@@ -320,10 +339,12 @@ public class ClouderaManagerConnectorTest {
           assertThrows(RuntimeException.class, () -> connector.open(arguments));
       assertEquals(expectedException, actualException);
 
-      loginHelper.verify(
+      httpClientFactory.verify(
           () ->
-              ClouderaManagerLoginHelper.login(
-                  any(URI.class), any(CloseableHttpClient.class), eq("user"), eq("password")));
+              ClouderaHttpClientFactory.createClouderaManagerClient(
+                  any(URI.class), eq("user"), eq("password")));
+      httpClientFactory.verify(
+          () -> ClouderaHttpClientFactory.createBasicAuthClient(eq("user"), eq("password")));
       connectorVerifier.verify(() -> ClouderaConnectorVerifier.verify(any(), any()));
     }
   }

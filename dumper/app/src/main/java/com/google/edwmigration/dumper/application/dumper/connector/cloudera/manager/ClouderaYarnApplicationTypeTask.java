@@ -141,7 +141,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
       ClouderaManagerHandle handle, String clusterName) {
     String serviceTypesUrl =
         handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
-    CloseableHttpClient httpClient = handle.getHttpClient();
+    CloseableHttpClient httpClient = handle.getClouderaManagerClient();
     try (CloseableHttpResponse serviceTypesResp =
         httpClient.execute(new HttpGet(serviceTypesUrl))) {
       int statusCode = serviceTypesResp.getStatusLine().getStatusCode();
