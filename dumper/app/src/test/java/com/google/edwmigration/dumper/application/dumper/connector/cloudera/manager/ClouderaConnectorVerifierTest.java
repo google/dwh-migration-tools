@@ -45,7 +45,7 @@ public class ClouderaConnectorVerifierTest {
 
   @Before
   public void setUp() throws URISyntaxException {
-    when(handle.getHttpClient()).thenReturn(httpClient);
+    when(handle.getClouderaManagerHttpClient()).thenReturn(httpClient);
     when(handle.getApiURI()).thenReturn(new URI("http://localhost:7183/api/v57"));
   }
 

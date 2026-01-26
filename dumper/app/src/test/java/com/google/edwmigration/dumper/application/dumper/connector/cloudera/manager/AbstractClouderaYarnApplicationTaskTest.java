@@ -71,7 +71,8 @@ public class AbstractClouderaYarnApplicationTaskTest {
   public void setUp() throws Exception {
     server.resetAll();
     URI uri = URI.create(server.baseUrl() + "/api/vTest");
-    handle = new ClouderaManagerHandle(uri, HttpClients.createDefault());
+    handle =
+        new ClouderaManagerHandle(uri, HttpClients.createDefault(), HttpClients.createDefault());
 
     task = new MockedYarnApplicationTask(timeTravelDaysAgo(10), timeTravelDaysAgo(0));
     loadResponse = new ArrayList<>();
