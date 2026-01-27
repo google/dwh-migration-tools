@@ -26,7 +26,7 @@ jobs:
 
       - name: Process Lockfile Diff and Scan Delta
         run: |
-          # 1. Extract Blessed IDs
+          # 1. Extract Blessed IDs from registry
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
           echo "DEBUG: Ignoring Blessed IDs: $BLESSED_IDS"
 
@@ -36,7 +36,7 @@ jobs:
           comm -13 main_raw.txt pr_raw.txt > delta_lines.txt
 
           if [ ! -s delta_lines.txt ]; then
-            echo "No changes detected."
+            echo "No dependency changes detected."
             exit 0
           fi
 
@@ -51,16 +51,18 @@ jobs:
           # 4. Perform Targeted Scan
           ~/go/bin/osv-scanner scan --format json -r delta-scan/ > scan_results.json || true
 
-          # 5. Filter and Map: Prioritize CVE IDs in logs
+          # 5. Filter and Map: Prioritize CVE IDs and Log URLs
+          # Logic: Matches aliases against blessed list, extracts CVE, and builds the GHSA URL
           DETAILED_REPORT=$(jq -r --arg BLESSED "$BLESSED_IDS" '
             .results[].packages[] | 
             .package as $pkg | 
             .vulnerabilities[]? | 
             ([.id] + (.aliases // [])) as $all_ids |
             select(any($all_ids[]; test($BLESSED)) | not) |
-            # Find the first alias that starts with CVE, otherwise use the primary ID
-            (.aliases // [] | [.[] | select(test("^CVE-"))] | first) // .id as $display_id |
-            (if $pkg.purl then $pkg.purl else "\($pkg.name)@\($pkg.version)" end) + " -> " + $display_id
+            # Prioritize CVE for the display name, but keep the GHSA ID for the URL
+            ((.aliases // [] | [.[] | select(test("^CVE-"))] | first) // .id) as $display_id |
+            "https://github.com/advisories/" + .id as $url |
+            (if $pkg.purl then $pkg.purl else "\($pkg.name)@\($pkg.version)" end) + " -> " + $display_id + " (" + $url + ")"
           ' scan_results.json | sort -u || true)
 
           if [ -n "$DETAILED_REPORT" ]; then
