@@ -18,10 +18,10 @@ jobs:
 
       - name: Run Scan with Suppressions
         run: |
-          # 1. Extract CVE IDs from your YAML file to create a list of ignored IDs
-          # Requires 'yq' (pre-installed on GitHub runners)
+          # 1. Extract CVE IDs from your YAML file [cite: 101, 102]
+          # This creates a string like: --ignore=CVE-1 --ignore=CVE-2
           IGNORED_CVES=$(yq eval '.[].CVE' .security/known_cves.yml | xargs -I {} echo "--ignore={}")
 
-          # 2. Run the scanner recursively across all modules
-          # The scan fails if a NEW (unlisted) vulnerability is found [cite: 64]
-          ~/go/bin/osv-scanner scan -r . $IGNORED_CVES
+          # 2. Run the scanner [cite: 60, 61]
+          # Place the flags BEFORE the directory (represented by '.')
+          ~/go/bin/osv-scanner scan $IGNORED_CVES -r .
