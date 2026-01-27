@@ -23,57 +23,52 @@ jobs:
       - name: Install OSV-Scanner
         run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
 
-     - name: Process Lockfile Diff and Scan
+      - name: Process Lockfile Diff and Scan
         run: |
-          # 1. Extract Blessed CVE IDs
+          # 1. Extract Blessed CVE IDs from the registry
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
-          echo "DEBUG: Blessed IDs being ignored: $BLESSED_IDS"
+          echo "DEBUG: Blessed IDs from known_cves.yml: $BLESSED_IDS"
 
-          # 2. Process Lockfile Diff
+          # 2. Process Lockfile Diff: Artifact:Version
+          # We clean the lines to ensure a perfect match for any dependency
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > pr_deps.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > main_deps.txt
+          
+          # Isolate only the changed artifact line (e.g., net.snowflake:snowflake-jdbc:3.21.0)
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           echo "DEBUG: Detected Delta Dependencies (PR vs Main):"
           cat delta_deps.txt
 
           if [ ! -s delta_deps.txt ]; then
-            echo "No new dependency versions found. Skipping further checks."
+            echo "No new dependency versions found. Skipping scan."
             exit 0
           fi
 
-          # 3. Google OSV Scan
+          # 3. Google OSV Scan of the PR folder
           ~/go/bin/osv-scanner scan --format json -r pr-repo > pr_results.json || true
           
-          # Debug: Show how many vulnerabilities were found in total before filtering
-          TOTAL_FOUND=$(jq '.results[].vulnerabilities | length' pr_results.json | awk '{s+=$1} END {print s}')
-          echo "DEBUG: Total vulnerabilities found by OSV-Scanner (unfiltered): $TOTAL_FOUND"
+          echo "DEBUG: Raw OSV-Scanner JSON generated."
 
-          # 4. Robust Filter Logic with Debugging
+          # 4. Filter Logic: Match vulnerabilities against the CHANGED packages
           NEW_UNHANDLED_VULNS=""
           while read -r dep; do
+            # Extract just the group and artifact (e.g., net.snowflake:snowflake-jdbc)
             pkg_name=$(echo "$dep" | cut -d':' -f1,2)
-            echo "DEBUG: Checking for vulnerabilities in changed package: $pkg_name"
+            echo "DEBUG: Searching for vulnerabilities for: $pkg_name"
             
-            # This captures the raw match from OSV to see if naming convention is the issue
-            RAW_MATCH=$(jq -c --arg PKG "$pkg_name" '
+            # Use jq to check for the package name anywhere in the results
+            # We use 'contains' to handle ecosystem prefixes like 'pkg:maven/'
+            found=$(jq -r --arg PKG "$pkg_name" '
               .results[].vulnerabilities[]? | 
-              select(.package.name | contains($PKG))' pr_results.json || echo "")
+              select(.package.name | contains($PKG)) | .id' pr_results.json | \
+              grep -Ev "$BLESSED_IDS" || true)
             
-            if [ -n "$RAW_MATCH" ]; then
-              echo "DEBUG: Match found for $pkg_name: $RAW_MATCH"
-              
-              # Now filter out the Blessed IDs
-              found=$(echo "$RAW_MATCH" | jq -r '.id' | grep -Ev "$BLESSED_IDS" || true)
-              
-              if [ -n "$found" ]; then
-                echo "DEBUG: Vulnerability $found is NOT blessed. Failing build."
-                NEW_UNHANDLED_VULNS="$NEW_UNHANDLED_VULNS $found"
-              else
-                echo "DEBUG: Vulnerability in $pkg_name is already in known_cves.yml. Skipping."
-              fi
+            if [ -n "$found" ]; then
+              echo "DEBUG: Found NEW vulnerability: $found"
+              NEW_UNHANDLED_VULNS="$NEW_UNHANDLED_VULNS $found"
             else
-              echo "DEBUG: No vulnerability found in OSV results for $pkg_name."
+              echo "DEBUG: No new unhandled vulnerabilities for $pkg_name."
             fi
           done < delta_deps.txt
 
