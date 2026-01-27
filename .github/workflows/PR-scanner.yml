@@ -26,7 +26,7 @@ jobs:
 
       - name: Process Lockfile Diff and Scan Delta
         run: |
-          # 1. Extract Blessed IDs (Handles both CVE and GHSA formats)
+          # 1. Extract Blessed IDs
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
           echo "DEBUG: Ignoring Blessed IDs: $BLESSED_IDS"
 
@@ -51,18 +51,16 @@ jobs:
           # 4. Perform Targeted Scan
           ~/go/bin/osv-scanner scan --format json -r delta-scan/ > scan_results.json || true
 
-          # 5. Filter Logic: Check Primary ID and all Aliases
-          # This JQ script finds the ID, looks at the "aliases" array, 
-          # and only keeps vulnerabilities where NONE of those IDs are blessed.
+          # 5. Filter and Map: Prioritize CVE IDs in logs
           DETAILED_REPORT=$(jq -r --arg BLESSED "$BLESSED_IDS" '
             .results[].packages[] | 
             .package as $pkg | 
             .vulnerabilities[]? | 
-            # Create a list of all IDs for this vuln (Primary + Aliases)
             ([.id] + (.aliases // [])) as $all_ids |
-            # Select if NONE of those IDs match our blessed list
             select(any($all_ids[]; test($BLESSED)) | not) |
-            (if $pkg.purl then $pkg.purl else "\($pkg.name)@\($pkg.version)" end) + " -> " + .id
+            # Find the first alias that starts with CVE, otherwise use the primary ID
+            (.aliases // [] | [.[] | select(test("^CVE-"))] | first) // .id as $display_id |
+            (if $pkg.purl then $pkg.purl else "\($pkg.name)@\($pkg.version)" end) + " -> " + $display_id
           ' scan_results.json | sort -u || true)
 
           if [ -n "$DETAILED_REPORT" ]; then
@@ -75,5 +73,3 @@ jobs:
           fi
 
           echo "Build PASS: All detected vulnerabilities are blessed or resolved."
-
-          echo "Build PASS: No new unhandled vulnerabilities introduced."
