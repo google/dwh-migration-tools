@@ -3,7 +3,7 @@ name: PR Dependency Scan
 on:
   pull_request:
     paths:
-      - [cite_start]'**/gradle.lockfile' # Focus strictly on Java/Gradle modules [cite: 17, 18]
+      - '**/gradle.lockfile' # Focus strictly on Java/Gradle modules
       - '.security/known_cves.yml'
 
 jobs:
