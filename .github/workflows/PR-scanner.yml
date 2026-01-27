@@ -26,14 +26,15 @@ jobs:
       - name: Process Lockfile Diff and Scan New Deps
         run: |
           # 1. Extract Blessed CVEs from your YAML [cite: 101, 102]
+          # We extract IDs like CVE-2025-52999 from the registry [cite: 103, 105]
           BLESSED_IDS=$(yq eval '.[].CVE' pr/.security/known_cves.yml | paste -sd "|" -)
 
-          # 2. Process Lockfile Diff: Find lines added in PR that weren't in Main
-          # This extracts the package:version strings from gradle.lockfiles
-          grep -hve "^#" -ve "^$" pr/**/gradle.lockfile | sort > pr_deps.txt
-          grep -hve "^#" -ve "^$" main/**/gradle.lockfile | sort > main_deps.txt
+          # 2. Process Lockfile Diff: Use find to gather all lockfile lines 
+          # We strip comments and empty lines to compare actual artifacts [cite: 17, 18]
+          find pr -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort > pr_deps.txt
+          find main -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort > main_deps.txt
           
-          # Only packages that are NEW or have UPDATED versions
+          # This identifies the specific snowflake-jdbc:3.21.0 change 
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           if [ ! -s delta_deps.txt ]; then
@@ -41,20 +42,34 @@ jobs:
             exit 0
           fi
 
-          # 3. Scan only the Delta Packages
-          # We convert the delta list into a format OSV-Scanner can check individually
-          echo "Scanning new dependencies..."
+          # 3. Scan the PR branch for vulnerabilities 
+          # This uses the Google OSV scanner to check for known vulnerabilities [cite: 60, 91]
           ~/go/bin/osv-scanner scan -r pr --format json > pr_results.json || true
 
-          # 4. Filter: Only fail if a vulnerability ID is in the NEW deps AND not BLESSED
-          # We use jq to cross-reference the scan results with our delta_deps.txt
-          NEW_VULNS=$(jq -r '.results[].vulnerabilities[] | .id' pr_results.json 2>/dev/null | \
-            grep -Ev "$BLESSED_IDS" | sort -u)
+          # 4. Filter Logic: Match vulnerabilities against the CHANGED packages 
+          # This filters out Zero-Days that existed in Main but weren't touched [cite: 54, 55]
+          # It also excludes vulnerabilities already in known_cves.yml 
+          
+          # We check if the package name in the vulnerability report exists in our delta_deps.txt
+          NEW_UNHANDLED_VULNS=""
+          while read -r dep; do
+            # Extract package name (e.g., net.snowflake:snowflake-jdbc)
+            pkg_name=$(echo "$dep" | cut -d':' -f1,2)
+            
+            # Find vulnerabilities for this specific package that are NOT blessed
+            found=$(jq -r --arg PKG "$pkg_name" '
+              .results[].vulnerabilities[]? | 
+              select(.package.name == $PKG) | .id' pr_results.json | \
+              grep -Ev "$BLESSED_IDS" || true)
+            
+            if [ -n "$found" ]; then
+              NEW_UNHANDLED_VULNS="$NEW_UNHANDLED_VULNS $found"
+            fi
+          done < delta_deps.txt
 
-          # Logic check: If NEW_VULNS exists, we verify if they belong to the changed packages
-          if [ -n "$NEW_VULNS" ]; then
-            echo "FAIL: New vulnerabilities detected in updated dependencies: $NEW_VULNS"
+          if [ -n "$NEW_UNHANDLED_VULNS" ]; then
+            [cite_start]echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS" [cite: 64]
             exit 1
           else
-            echo "SUCCESS: No new unhandled vulnerabilities introduced by your lockfile changes."
+            [cite_start]echo "Build PASS: Changes are secure or blessed." [cite: 59]
           fi
