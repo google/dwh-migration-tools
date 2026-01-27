@@ -25,15 +25,15 @@ jobs:
 
       - name: Process Lockfile Diff and Scan New Deps
         run: |
-          # 1. Extract Blessed CVE IDs (Strategy N2) [cite: 60, 102]
+          # 1. Extract Blessed CVE IDs (Strategy N2)
           BLESSED_IDS=$(yq eval '.[].CVE' pr/.security/known_cves.yml | paste -sd "|" -)
 
-          # 2. Process Lockfile Diff 
-          # We isolate the specific line for snowflake-jdbc:3.21.0
+          # 2. Process Lockfile Diff
+          # Finds all lockfiles and isolates lines added/changed in this PR
           find pr -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort > pr_deps.txt
           find main -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort > main_deps.txt
           
-          # This captures the exact version change 
+          # This captures ANY version change (like your Snowflake downgrade)
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           if [ ! -s delta_deps.txt ]; then
@@ -41,18 +41,17 @@ jobs:
             exit 0
           fi
 
-          # 3. Google OSV Scan (Strategy N2) [cite: 60, 93]
+          # 3. Google OSV Scan (Strategy N2)
           ~/go/bin/osv-scanner scan --format json -r pr > pr_results.json || true
 
-          # 4. Refined Filter Logic [cite: 59, 61]
-          # We check if any package name from our delta exists in the vulnerability list
+          # 4. Filter Logic: Match vulnerabilities against the CHANGED packages
+          # This specifically prevents "Zero-Day" issues in Main from blocking you
           NEW_UNHANDLED_VULNS=""
           while read -r dep; do
-            # Extract just the package part (net.snowflake:snowflake-jdbc) [cite: 76]
+            # Extract package name (e.g., net.snowflake:snowflake-jdbc)
             pkg_name=$(echo "$dep" | cut -d':' -f1,2)
             
-            # Match against the scanner results 
-            # select(...) matches the specific package updated in your PR 
+            # Match against scanner results and filter out blessed IDs
             found=$(jq -r --arg PKG "$pkg_name" '
               .results[].vulnerabilities[]? | 
               select(.package.name == $PKG) | .id' pr_results.json | \
@@ -64,8 +63,8 @@ jobs:
           done < delta_deps.txt
 
           if [ -n "$NEW_UNHANDLED_VULNS" ]; then
-            [cite_start]echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS" [cite: 64]
+            echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS"
             exit 1
           else
-            [cite_start]echo "Build PASS: Changes are secure or blessed." [cite: 63]
+            echo "Build PASS: Changes are secure or blessed."
           fi
