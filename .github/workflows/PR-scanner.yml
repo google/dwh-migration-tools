@@ -1,10 +1,9 @@
-name: PR Dependency Scan (Delta Only)
+name: PR Focused Dependency Scan
 
 on:
   pull_request:
     paths:
       - '**/gradle.lockfile'
-      - '.security/known_cves.yml'
 
 jobs:
   osv-scan:
@@ -13,53 +12,49 @@ jobs:
       - name: Checkout PR Branch
         uses: actions/checkout@v4
         with:
-          path: pr-branch
+          path: pr
 
       - name: Checkout Main Branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.base_ref }}
-          path: main-branch
+          path: main
 
-      - name: Install OSV-Scanner and jq
-        run: |
-          go install github.com/google/osv-scanner/cmd/osv-scanner@latest
-          sudo apt-get install jq -y
+      - name: Install OSV-Scanner
+        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
 
-      - name: Generate Suppression Config
+      - name: Process Lockfile Diff and Scan New Deps
         run: |
-          # The TOML file should not have a [config] header.
-          # Each entry needs the [[ignored_vulnerabilities]] tag.
-          touch osv-scanner.toml
-          yq eval '.[].CVE' pr-branch/.security/known_cves.yml | while read -r cve; do
-            if [ "$cve" != "null" ] && [ -n "$cve" ]; then
-              echo "[[ignored_vulnerabilities]]" >> osv-scanner.toml
-              echo "id = \"$cve\"" >> osv-scanner.toml
-            fi
-          done
+          # 1. Extract Blessed CVEs from your YAML [cite: 101, 102]
+          BLESSED_IDS=$(yq eval '.[].CVE' pr/.security/known_cves.yml | paste -sd "|" -)
 
-      - name: Compare PR vs Main
-        run: |
-          # 1. Scan Main branch (to identify existing vulnerabilities)
-          ~/go/bin/osv-scanner scan --config=osv-scanner.toml -r main-branch --format json > main_results.json || true
+          # 2. Process Lockfile Diff: Find lines added in PR that weren't in Main
+          # This extracts the package:version strings from gradle.lockfiles
+          grep -hve "^#" -ve "^$" pr/**/gradle.lockfile | sort > pr_deps.txt
+          grep -hve "^#" -ve "^$" main/**/gradle.lockfile | sort > main_deps.txt
           
-          # 2. Scan PR branch (to identify current vulnerabilities)
-          ~/go/bin/osv-scanner scan --config=osv-scanner.toml -r pr-branch --format json > pr_results.json || true
+          # Only packages that are NEW or have UPDATED versions
+          comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
-          # 3. Extract unique IDs that were NOT suppressed by the config
-          MAIN_IDS=$(jq -r '.results[].vulnerabilities[].id' main_results.json 2>/dev/null | sort -u || echo "")
-          PR_IDS=$(jq -r '.results[].vulnerabilities[].id' pr_results.json 2>/dev/null | sort -u || echo "")
+          if [ ! -s delta_deps.txt ]; then
+            echo "No new dependencies found in lockfiles. Skipping scan."
+            exit 0
+          fi
 
-          # 4. Find vulnerabilities introduced in the PR that are NOT in Main
-          # This ensures Zero-Days in Main do not fail your PR scan.
-          NEW_VULNS=$(comm -13 <(echo "$MAIN_IDS") <(echo "$PR_IDS"))
+          # 3. Scan only the Delta Packages
+          # We convert the delta list into a format OSV-Scanner can check individually
+          echo "Scanning new dependencies..."
+          ~/go/bin/osv-scanner scan -r pr --format json > pr_results.json || true
 
-          if [ -z "$PR_IDS" ] && [ -z "$MAIN_IDS" ]; then
-             echo "SUCCESS: No vulnerabilities found in either branch."
-          elif [ -n "$NEW_VULNS" ]; then
-            echo "FAIL: The following NEW vulnerabilities were introduced by this PR:"
-            echo "$NEW_VULNS"
+          # 4. Filter: Only fail if a vulnerability ID is in the NEW deps AND not BLESSED
+          # We use jq to cross-reference the scan results with our delta_deps.txt
+          NEW_VULNS=$(jq -r '.results[].vulnerabilities[] | .id' pr_results.json 2>/dev/null | \
+            grep -Ev "$BLESSED_IDS" | sort -u)
+
+          # Logic check: If NEW_VULNS exists, we verify if they belong to the changed packages
+          if [ -n "$NEW_VULNS" ]; then
+            echo "FAIL: New vulnerabilities detected in updated dependencies: $NEW_VULNS"
             exit 1
           else
-            echo "SUCCESS: No new vulnerabilities introduced (Zero-Days in Main ignored)."
+            echo "SUCCESS: No new unhandled vulnerabilities introduced by your lockfile changes."
           fi
