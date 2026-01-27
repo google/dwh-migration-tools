@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '**/gradle.lockfile'
+      - '.security/known_cves.yml'
 
 jobs:
   osv-scan:
@@ -11,22 +12,16 @@ jobs:
     steps:
       - name: Checkout PR Branch
         uses: actions/checkout@v4
-        with:
-          path: pr-branch
-
-      - name: Checkout Main Branch (for suppressions)
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: main-branch
 
       - name: Install OSV-Scanner
-        run: |
-          go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
 
-      - name: Scan All Lockfiles
+      - name: Run Scan with Suppressions
         run: |
-          # Finds every lockfile in the PR branch and runs the scanner on each
-          find pr-branch -name "gradle.lockfile" -exec ~/go/bin/osv-scanner \
-            --lockfile={} \
-            --suppressions=main-branch/suppression.xml \;
+          # 1. Extract CVE IDs from your YAML file to create a list of ignored IDs
+          # Requires 'yq' (pre-installed on GitHub runners)
+          IGNORED_CVES=$(yq eval '.[].CVE' .security/known_cves.yml | xargs -I {} echo "--ignore={}")
+
+          # 2. Run the scanner recursively across all modules
+          # The scan fails if a NEW (unlisted) vulnerability is found [cite: 64]
+          ~/go/bin/osv-scanner scan -r . $IGNORED_CVES
