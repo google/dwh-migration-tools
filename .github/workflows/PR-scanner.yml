@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - '**/gradle.lockfile'
-      - '.security/known_cves.yml'
 
 jobs:
   osv-scan:
@@ -12,19 +11,34 @@ jobs:
     steps:
       - name: Checkout PR Branch
         uses: actions/checkout@v4
+        with:
+          path: pr
+
+      - name: Checkout Main Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: main
 
       - name: Install OSV-Scanner
         run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
 
-      - name: Generate OSV Config and Scan
+      - name: Compare and Scan
         run: |
-          # 1. Properly format the TOML file
-          # Each entry must be under its own [[ignored_vulnerabilities]] header
-          yq eval '.[].CVE' .security/known_cves.yml | while read -r cve; do
-            echo "[[ignored_vulnerabilities]]" >> osv-scanner.toml
-            echo "id = \"$cve\"" >> osv-scanner.toml
-          done
+          # 1. Scan Main to see what's already there
+          ~/go/bin/osv-scanner scan -r main --format json > main_results.json || true
+          
+          # 2. Scan PR to see the current state
+          ~/go/bin/osv-scanner scan -r pr --format json > pr_results.json || true
 
-          # 2. Scan only Dumper Gradle lockfiles to avoid deprecated dev dependencies
-          # Using find to pass each production lockfile specifically
-          find . -name "gradle.lockfile" | xargs -I {} ~/go/bin/osv-scanner scan --lockfile={}
+          # 3. Logic to check if NEW vulnerabilities were added
+          # If the number of vulnerabilities in PR is greater than Main, FAIL the build.
+          PR_COUNT=$(jq '.results[].vulnerabilities | length' pr_results.json | awk '{s+=$1} END {print s}')
+          MAIN_COUNT=$(jq '.results[].vulnerabilities | length' main_results.json | awk '{s+=$1} END {print s}')
+          
+          if [ "$PR_COUNT" -gt "$MAIN_COUNT" ]; then
+            echo "New vulnerabilities detected! PR Count: $PR_COUNT, Main Count: $MAIN_COUNT"
+            exit 1
+          else
+            echo "No new vulnerabilities introduced by this PR."
+          fi
