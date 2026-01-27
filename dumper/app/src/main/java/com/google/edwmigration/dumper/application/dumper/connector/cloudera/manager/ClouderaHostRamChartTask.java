@@ -39,14 +39,14 @@ import org.slf4j.LoggerFactory;
  * href="https://docs.cloudera.com/documentation/enterprise/latest/topics/cm_dg_tsquery.html">tsquery</a>
  * language.
  */
-public class ClouderaHostRAMChartTask extends AbstractClouderaTimeSeriesTask {
+public class ClouderaHostRamChartTask extends AbstractClouderaTimeSeriesTask {
 
-  private static final Logger logger = LoggerFactory.getLogger(ClouderaHostRAMChartTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClouderaHostRamChartTask.class);
 
   private static final String TS_RAM_QUERY_TEMPLATE =
       "select swap_used, physical_memory_used, physical_memory_total, physical_memory_cached, physical_memory_buffers where entityName = \"%s\"";
 
-  public ClouderaHostRAMChartTask(
+  public ClouderaHostRamChartTask(
       ZonedDateTime startDate,
       ZonedDateTime endDate,
       TimeSeriesAggregation tsAggregation,

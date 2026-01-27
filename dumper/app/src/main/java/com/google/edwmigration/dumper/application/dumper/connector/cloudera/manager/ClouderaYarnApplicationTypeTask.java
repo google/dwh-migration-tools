@@ -27,7 +27,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaYarnApplicationDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYarnApplicationDto;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.model.YarnApplicationType;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
@@ -108,9 +108,9 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   }
 
   private void writeYarnAppTypes(
-      Writer writer, List<ApiYARNApplicationDTO> yarnApps, String appType, String clusterName) {
+      Writer writer, List<ApiYarnApplicationDto> yarnApps, String appType, String clusterName) {
     List<ApplicationTypeToYarnApplication> yarnAppTypeMappings = new ArrayList<>();
-    for (ApiYARNApplicationDTO yarnApp : yarnApps) {
+    for (ApiYarnApplicationDto yarnApp : yarnApps) {
       yarnAppTypeMappings.add(
           new ApplicationTypeToYarnApplication(yarnApp.getApplicationId(), appType, clusterName));
     }

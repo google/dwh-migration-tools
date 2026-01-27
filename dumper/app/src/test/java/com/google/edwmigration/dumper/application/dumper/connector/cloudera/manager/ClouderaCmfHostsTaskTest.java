@@ -53,10 +53,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaCMFHostsTaskTest {
+public class ClouderaCmfHostsTaskTest {
 
   private static WireMockServer server;
-  private final ClouderaCMFHostsTask task = new ClouderaCMFHostsTask();
+  private final ClouderaCmfHostsTask task = new ClouderaCmfHostsTask();
   private ClouderaManagerHandle handle;
 
   @Mock private TaskRunContext context;

@@ -26,7 +26,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.google.common.io.ByteSink;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYarnApplicationDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -54,7 +54,7 @@ public class AbstractClouderaYarnApplicationTaskTest {
   private static WireMockServer server;
   private MockedYarnApplicationTask task;
   private ClouderaManagerHandle handle;
-  private List<ApiYARNApplicationDTO> loadResponse;
+  private List<ApiYarnApplicationDto> loadResponse;
 
   @BeforeClass
   public static void beforeClass() {

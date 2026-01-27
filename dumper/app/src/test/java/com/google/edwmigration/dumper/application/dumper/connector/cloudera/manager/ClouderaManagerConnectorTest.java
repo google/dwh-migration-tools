@@ -87,14 +87,14 @@ public class ClouderaManagerConnectorTest {
                     "compilerworks-metadata.yaml", DumpMetadataTask.class,
                     "compilerworks-format.txt", FormatTask.class,
                     "clusters.json", ClouderaClustersTask.class,
-                    "cmf-hosts.jsonl", ClouderaCMFHostsTask.class,
-                    "api-hosts.jsonl", ClouderaAPIHostsTask.class,
+                    "cmf-hosts.jsonl", ClouderaCmfHostsTask.class,
+                    "api-hosts.jsonl", ClouderaApiHostsTask.class,
                     "services.jsonl", ClouderaServicesTask.class))
             .putAll(
                 ImmutableMap.of(
                     "host-components.jsonl", ClouderaHostComponentsTask.class,
-                    "cluster-cpu.jsonl", ClouderaClusterCPUChartTask.class,
-                    "host-ram.jsonl", ClouderaHostRAMChartTask.class,
+                    "cluster-cpu.jsonl", ClouderaClusterCpuChartTask.class,
+                    "host-ram.jsonl", ClouderaHostRamChartTask.class,
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,
@@ -172,14 +172,14 @@ public class ClouderaManagerConnectorTest {
                     "compilerworks-metadata.yaml", DumpMetadataTask.class,
                     "compilerworks-format.txt", FormatTask.class,
                     "clusters.json", ClouderaClustersTask.class,
-                    "cmf-hosts.jsonl", ClouderaCMFHostsTask.class,
-                    "api-hosts.jsonl", ClouderaAPIHostsTask.class,
+                    "cmf-hosts.jsonl", ClouderaCmfHostsTask.class,
+                    "api-hosts.jsonl", ClouderaApiHostsTask.class,
                     "services.jsonl", ClouderaServicesTask.class,
                     "host-components.jsonl", ClouderaHostComponentsTask.class))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-cpu.jsonl", ClouderaClusterCPUChartTask.class,
-                    "host-ram.jsonl", ClouderaHostRAMChartTask.class,
+                    "cluster-cpu.jsonl", ClouderaClusterCpuChartTask.class,
+                    "host-ram.jsonl", ClouderaHostRamChartTask.class,
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,

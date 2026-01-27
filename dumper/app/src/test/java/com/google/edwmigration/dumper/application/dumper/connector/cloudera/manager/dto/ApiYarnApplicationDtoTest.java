@@ -27,14 +27,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class ApiYARNApplicationDTOTest {
+public class ApiYarnApplicationDtoTest {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   @Test
   public void applicationIdExists() throws Exception {
     JsonNode jsonNode =
         objectMapper.readTree(readString("/cloudera/manager/dto/ApiYARNApplicationDTO.json"));
-    ApiYARNApplicationDTO dto = new ApiYARNApplicationDTO(jsonNode);
+    ApiYarnApplicationDto dto = new ApiYarnApplicationDto(jsonNode);
 
     assertEquals("job_1741847944157_0018", dto.getApplicationId());
   }
@@ -42,14 +42,14 @@ public class ApiYARNApplicationDTOTest {
   @Test
   public void applicationIdDoesNotExist() throws Exception {
     JsonNode jsonNode = objectMapper.readTree("{ \"prop\": \"val\"}");
-    ApiYARNApplicationDTO dto = new ApiYARNApplicationDTO(jsonNode);
+    ApiYarnApplicationDto dto = new ApiYarnApplicationDto(jsonNode);
 
     assertNull("ApplicationId must be null if doesn't exist", dto.getApplicationId());
   }
 
   @Test
   public void nullJsonFieldHandled() {
-    ApiYARNApplicationDTO dto = new ApiYARNApplicationDTO(null);
+    ApiYarnApplicationDto dto = new ApiYarnApplicationDto(null);
 
     assertNull("ApplicationId must be null for null json", dto.getApplicationId());
   }
@@ -57,7 +57,7 @@ public class ApiYARNApplicationDTOTest {
   @Test
   public void jsonSerialization() throws Exception {
     JsonNode yarnApp = objectMapper.readTree("{ \"prop\": \"val\"}");
-    ApiYARNApplicationDTO dto = new ApiYARNApplicationDTO(yarnApp);
+    ApiYarnApplicationDto dto = new ApiYarnApplicationDto(yarnApp);
 
     JsonNode outputJsonl = objectMapper.convertValue(dto, JsonNode.class);
 

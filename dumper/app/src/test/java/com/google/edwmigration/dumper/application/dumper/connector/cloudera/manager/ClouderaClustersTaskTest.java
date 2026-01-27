@@ -39,7 +39,7 @@ import com.google.common.io.ByteSink;
 import com.google.common.io.CharSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterListDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.Writer;
 import java.net.URI;
@@ -128,8 +128,8 @@ public class ClouderaClustersTaskTest {
                 argThat(
                     content -> {
                       try {
-                        ApiClusterListDTO listDto =
-                            objectMapper.readValue((String) content, ApiClusterListDTO.class);
+                        ApiClusterListDto listDto =
+                            objectMapper.readValue((String) content, ApiClusterListDto.class);
                         assertNotNull(listDto.getClusters());
                       } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
@@ -170,8 +170,8 @@ public class ClouderaClustersTaskTest {
                 argThat(
                     content -> {
                       try {
-                        ApiClusterListDTO listDto =
-                            objectMapper.readValue((String) content, ApiClusterListDTO.class);
+                        ApiClusterListDto listDto =
+                            objectMapper.readValue((String) content, ApiClusterListDto.class);
                         assertNotNull(listDto.getClusters());
                       } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);

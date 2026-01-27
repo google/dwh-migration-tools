@@ -20,25 +20,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
-/**
- * DTO class for the official Cloudera API <a
- * href="https://archive.cloudera.com/cm7/7.11.3.0/generic/jar/cm_api/apidocs/json_ApiClusterList.html">json</a>
- *
- * <p>Note: The license for <a
- * href="https://mvnrepository.com/artifact/com.cloudera.api.swagger/cloudera-manager-api-swagger/7.11.0">generated</a>
- * code is unclear, the own model for public schema used instead of it.
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class ApiClusterListDTO {
+public class ApiRoleListDto {
 
-  @JsonProperty(required = true)
-  private List<ApiClusterDTO> items;
+  @JsonProperty("items")
+  private List<ApiRoleDto> items;
 
-  public List<ApiClusterDTO> getClusters() {
+  public List<ApiRoleDto> getItems() {
     return items;
-  }
-
-  public void setClusters(List<ApiClusterDTO> items) {
-    this.items = items;
   }
 }

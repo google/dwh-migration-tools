@@ -60,9 +60,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaClusterCPUChartTaskTest {
-  private final ClouderaClusterCPUChartTask task =
-      new ClouderaClusterCPUChartTask(
+public class ClouderaClusterCpuChartTaskTest {
+  private final ClouderaClusterCpuChartTask task =
+      new ClouderaClusterCpuChartTask(
           timeTravelDaysAgo(30),
           timeTravelDaysAgo(0),
           TimeSeriesAggregation.HOURLY,

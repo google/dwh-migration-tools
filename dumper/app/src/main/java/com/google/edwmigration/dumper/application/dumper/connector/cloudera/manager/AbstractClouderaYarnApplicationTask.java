@@ -19,7 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Preconditions;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYarnApplicationDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
 import java.net.URI;
@@ -83,20 +83,20 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
       toAppCreationDate = toDate.format(dtFormatter);
     }
 
-    public int load(String clusterName, Consumer<List<ApiYARNApplicationDTO>> onPageLoad) {
+    public int load(String clusterName, Consumer<List<ApiYarnApplicationDto>> onPageLoad) {
       return load(clusterName, null, onPageLoad);
     }
 
     public int load(
         String clusterName,
         @Nullable String appType,
-        Consumer<List<ApiYARNApplicationDTO>> onPageLoad) {
+        Consumer<List<ApiYarnApplicationDto>> onPageLoad) {
       offset = 0;
       boolean fetchedNewApps;
       do {
         fetchedNewApps = false;
         URI yarnAppsURI = buildNextYARNApplicationPageURI(clusterName, appType);
-        List<ApiYARNApplicationDTO> newLoad = load(yarnAppsURI);
+        List<ApiYarnApplicationDto> newLoad = load(yarnAppsURI);
         if (!newLoad.isEmpty()) {
           onPageLoad.accept(newLoad);
           offset += newLoad.size();
@@ -106,7 +106,7 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
       return offset;
     }
 
-    private List<ApiYARNApplicationDTO> load(URI yarnAppURI) {
+    private List<ApiYarnApplicationDto> load(URI yarnAppURI) {
       try (CloseableHttpResponse resp = httpClient.execute(new HttpGet(yarnAppURI))) {
         int statusCode = resp.getStatusLine().getStatusCode();
         if (!isStatusCodeOK(statusCode)) {
@@ -130,10 +130,10 @@ public abstract class AbstractClouderaYarnApplicationTask extends AbstractCloude
       }
     }
 
-    private List<ApiYARNApplicationDTO> toDTOs(ArrayNode applicationsArray) {
-      List<ApiYARNApplicationDTO> yarnApplicationDTOs = new ArrayList<>();
+    private List<ApiYarnApplicationDto> toDTOs(ArrayNode applicationsArray) {
+      List<ApiYarnApplicationDto> yarnApplicationDTOs = new ArrayList<>();
       for (JsonNode application : applicationsArray) {
-        yarnApplicationDTOs.add(new ApiYARNApplicationDTO(application));
+        yarnApplicationDTOs.add(new ApiYarnApplicationDto(application));
       }
 
       return yarnApplicationDTOs;

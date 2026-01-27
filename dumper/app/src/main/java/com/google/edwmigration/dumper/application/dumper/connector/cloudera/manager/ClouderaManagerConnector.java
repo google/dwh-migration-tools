@@ -91,8 +91,8 @@ public class ClouderaManagerConnector extends AbstractConnector {
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.add(new ClouderaClustersTask());
-    out.add(new ClouderaCMFHostsTask());
-    out.add(new ClouderaAPIHostsTask());
+    out.add(new ClouderaCmfHostsTask());
+    out.add(new ClouderaApiHostsTask());
     out.add(new ClouderaServicesTask());
     out.add(new ClouderaHostComponentsTask());
 
@@ -107,8 +107,8 @@ public class ClouderaManagerConnector extends AbstractConnector {
       endDate = arguments.getEndDate();
     }
 
-    out.add(new ClouderaClusterCPUChartTask(startDate, endDate, DAILY, REQUIRED));
-    out.add(new ClouderaHostRAMChartTask(startDate, endDate, DAILY, REQUIRED));
+    out.add(new ClouderaClusterCpuChartTask(startDate, endDate, DAILY, REQUIRED));
+    out.add(new ClouderaHostRamChartTask(startDate, endDate, DAILY, REQUIRED));
     out.add(new ClouderaServiceResourceAllocationChartTask(startDate, endDate, HOURLY, OPTIONAL));
     out.add(new ClouderaYarnApplicationsTask(startDate, endDate, OPTIONAL));
     out.add(new ClouderaYarnApplicationTypeTask(startDate, endDate, OPTIONAL));

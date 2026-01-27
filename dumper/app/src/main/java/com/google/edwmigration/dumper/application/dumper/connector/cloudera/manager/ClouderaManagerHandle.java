@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Closer;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import java.io.IOException;
 import java.net.URI;
@@ -35,6 +36,7 @@ public class ClouderaManagerHandle implements Handle {
   private final URI apiURI;
   private final CloseableHttpClient clouderaManagerHttpClient;
   private final CloseableHttpClient basicAuthHttpClient;
+  private final Closer closer;
 
   private ImmutableList<ClouderaClusterDTO> clusters;
   private ImmutableList<ClouderaHostDTO> hosts;
@@ -52,6 +54,9 @@ public class ClouderaManagerHandle implements Handle {
     this.apiURI = unify(apiURI);
     this.clouderaManagerHttpClient = clouderaManagerHttpClient;
     this.basicAuthHttpClient = basicAuthHttpClient;
+    this.closer = Closer.create();
+    closer.register(this.clouderaManagerHttpClient);
+    closer.register(this.basicAuthHttpClient);
   }
 
   /** 1. Remove query params and url fragments 2. Add trailing slash for safety */
@@ -130,10 +135,9 @@ public class ClouderaManagerHandle implements Handle {
   }
 
   @Override
-  public void close() throws IOException {
+  public synchronized void close() throws IOException {
     try {
-      clouderaManagerHttpClient.close();
-      basicAuthHttpClient.close();
+      closer.close();
     } catch (IOException ignore) {
       // The intention is to do graceful shutdown and try to release the resource.
       // In case of errors we do not need to interrupt the execution flow

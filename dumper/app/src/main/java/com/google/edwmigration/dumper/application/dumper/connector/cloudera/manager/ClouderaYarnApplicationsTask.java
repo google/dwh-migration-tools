@@ -20,7 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
-import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYARNApplicationDTO;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYarnApplicationDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -67,8 +67,8 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
   }
 
   private void writeYarnApplications(
-      Writer writer, List<ApiYARNApplicationDTO> yarnApps, String clusterName) {
-    for (ApiYARNApplicationDTO yarnApp : yarnApps) {
+      Writer writer, List<ApiYarnApplicationDto> yarnApps, String clusterName) {
+    for (ApiYarnApplicationDto yarnApp : yarnApps) {
       yarnApp.setClusterName(clusterName);
     }
     try {

@@ -28,7 +28,7 @@ import org.springframework.util.StringUtils;
  * with additional information about cluster.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ApiYARNApplicationDTO {
+public class ApiYarnApplicationDto {
 
   @JsonProperty(required = true)
   private String clusterName;
@@ -40,7 +40,7 @@ public class ApiYARNApplicationDTO {
    */
   private final JsonNode apiYarnApplication;
 
-  public ApiYARNApplicationDTO(JsonNode apiYarnApplication) {
+  public ApiYarnApplicationDto(JsonNode apiYarnApplication) {
     this.apiYarnApplication = apiYarnApplication;
   }
 
