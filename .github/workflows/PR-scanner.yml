@@ -30,11 +30,10 @@ jobs:
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
           echo "DEBUG: Blessed IDs being ignored: $BLESSED_IDS"
 
-          # 2. Process Lockfile Diff
+          # 2. Process Lockfile Diff to find the "Delta"
+          # We clean the group:artifact:version for comparison
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > pr_deps.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > main_deps.txt
-          
-          # Isolate only the specific version changes (the Delta)
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           if [ ! -s delta_deps.txt ]; then
@@ -42,35 +41,28 @@ jobs:
             exit 0
           fi
 
-          # 3. Targeted Scan of the Delta
-          NEW_UNHANDLED_VULNS=""
-          while read -r dep; do
-            GROUP=$(echo "$dep" | cut -d':' -f1)
-            ARTIFACT=$(echo "$dep" | cut -d':' -f2)
-            VERSION=$(echo "$dep" | cut -d':' -f3)
+          echo "DEBUG: Changes detected in: $(cat delta_deps.txt)"
 
-            echo "Scanning $GROUP:$ARTIFACT at version $VERSION..."
+          # 3. Create a temporary 'delta' lockfile for OSV-Scanner
+          # This forces the scanner to only look at the changed packages
+          echo "# PURE DELTA LOCKFILE" > delta.lockfile
+          cat delta_deps.txt >> delta.lockfile
+
+          # 4. Scan the delta lockfile using the standard 'scan' command
+          # This avoids the undefined --package flag while remaining targeted
+          SCAN_OUT=$(~/go/bin/osv-scanner scan --format json --lockfile=delta.lockfile || true)
+
+          # 5. Extract and Filter Vulnerabilities
+          if echo "$SCAN_OUT" | jq -e . >/dev/null 2>&1; then
+            NEW_UNHANDLED_VULNS=$(echo "$SCAN_OUT" | jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
             
-            # Run scan and capture output
-            SCAN_OUT=$(~/go/bin/osv-scanner scan --format json --package "pkg:maven/$GROUP/$ARTIFACT@$VERSION" || true)
-            
-            # Check if SCAN_OUT is valid JSON and contains results
-            if echo "$SCAN_OUT" | jq -e . >/dev/null 2>&1; then
-              found=$(echo "$SCAN_OUT" | jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
-              
-              if [ -n "$found" ]; then
-                echo "DEBUG: Found NEW unhandled vulnerability for $ARTIFACT: $found"
-                NEW_UNHANDLED_VULNS="$NEW_UNHANDLED_VULNS $found"
-              fi
+            if [ -n "$NEW_UNHANDLED_VULNS" ]; then
+              echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS"
+              exit 1
             else
-              echo "DEBUG: No vulnerabilities found (or scanner returned non-JSON) for $ARTIFACT."
+              echo "Build PASS: No new unhandled vulnerabilities introduced."
             fi
-          done < delta_deps.txt
-
-          # 4. Final Decision
-          if [ -n "$NEW_UNHANDLED_VULNS" ]; then
-            echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS"
-            exit 1
           else
-            echo "Build PASS: No new unhandled vulnerabilities introduced by this PR."
+            echo "DEBUG: No vulnerabilities found in the delta packages."
+            echo "Build PASS: No new unhandled vulnerabilities introduced."
           fi
