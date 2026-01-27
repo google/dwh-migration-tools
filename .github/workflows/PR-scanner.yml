@@ -1,64 +1,46 @@
-name: PR Focused Dependency Scan
-
-on:
-  pull_request:
-    paths:
-      - '**/gradle.lockfile'
-      - '.security/known_cves.yml'
-
-jobs:
-  osv-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout PR Branch
-        uses: actions/checkout@v4
-        with:
-          path: pr-repo
-
-      - name: Checkout Main Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.base_ref }}
-          path: main-repo
-
-      - name: Install OSV-Scanner
-        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
-
-      - name: Process Lockfile Diff and Scan Delta
+- name: Process Lockfile Diff and Scan Delta
         run: |
           # 1. Extract Blessed CVE IDs
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
+          echo "DEBUG: Ignoring Blessed IDs: $BLESSED_IDS"
 
           # 2. Process Lockfile Diff
+          # We need the full line including '=runtimeClasspath' for the scanner to be happy
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort -u > pr_raw.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort -u > main_raw.txt
           
-          # Isolate the delta lines including the Gradle metadata (=runtimeClasspath, etc.)
+          # Isolate the Delta (the changed/new lines)
           comm -13 main_raw.txt pr_raw.txt > delta_lines.txt
 
           if [ ! -s delta_lines.txt ]; then
-            echo "No new dependency versions found."
+            echo "No dependency changes detected."
             exit 0
           fi
 
-          # 3. Create a VALID temporary Gradle lockfile
-          # OSV-Scanner requires these headers to trigger the Gradle extractor
-          echo "# This is a Gradle generated file for dependency locking." > delta.lockfile
-          echo "# Manual edits can break the build and are not recommended." >> delta.lockfile
-          echo "# This file is expected to be part of source control." >> delta.lockfile
-          cat delta_lines.txt >> delta.lockfile
-          echo "empty=" >> delta.lockfile # Adding a trailing entry to ensure valid structure
+          # 3. Create a VALID Temporary Gradle Lockfile
+          # OSV-Scanner fingerprints files. It MUST be named gradle.lockfile and have headers.
+          mkdir -p delta-scan
+          {
+            echo "# This is a Gradle generated file for dependency locking."
+            echo "# Manual edits can break the build and are not recommended."
+            echo "# This file is expected to be part of source control."
+            cat delta_lines.txt
+            echo "empty=" 
+          } > delta-scan/gradle.lockfile
 
-          # 4. Scan the temporary lockfile
-          # We explicitly point the scanner to this file
-          SCAN_OUT=$(~/go/bin/osv-scanner scan --format json --lockfile=delta.lockfile || true)
+          echo "DEBUG: Delta Lockfile Content:"
+          cat delta-scan/gradle.lockfile
+
+          # 4. Targeted Scan of the Delta
+          # Point the scanner to the directory containing our fake lockfile
+          SCAN_OUT=$(~/go/bin/osv-scanner scan --format json -r delta-scan/ || true)
 
           # 5. Filter and Final Decision
           if echo "$SCAN_OUT" | jq -e '.results != null' >/dev/null 2>&1; then
             NEW_VULNS=$(echo "$SCAN_OUT" | jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
             
             if [ -n "$NEW_VULNS" ]; then
-              echo "Build FAIL: New vulnerabilities detected: $NEW_VULNS"
+              echo "Build FAIL: New vulnerabilities detected in your changes: $NEW_VULNS"
               exit 1
             fi
           fi
