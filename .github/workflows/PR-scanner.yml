@@ -25,37 +25,39 @@ jobs:
 
       - name: Process Lockfile Diff and Scan
         run: |
-          # 1. Extract Blessed CVE IDs (Strategy N2)
-          # These are vulnerabilities intentionally accepted with justification [cite: 102]
-          BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" -)
+          # 1. Extract Blessed CVE IDs [cite: 102]
+          BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
 
-          # 2. Process Lockfile Diff
-          # Isolate unique lines added/changed in this PR 
-          find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/pr-repo\///' | sort > pr_deps.txt
-          find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/main-repo\///' | sort > main_deps.txt
+          # 2. Process Lockfile Diff [cite: 61]
+          # Clean lines to get only 'group:artifact:version'
+          find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > pr_deps.txt
+          find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > main_deps.txt
           
-          # comm -13 identifies lines present ONLY in PR (newly added or version changed) 
+          # Isolate only NEWLY added or CHANGED artifacts [cite: 59]
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
+          echo "--- DEBUG: DELTA DEPENDENCIES DETECTED ---"
+          cat delta_deps.txt
+          echo "------------------------------------------"
+
           if [ ! -s delta_deps.txt ]; then
-            echo "No changes detected in dependency versions."
+            echo "No new dependency versions found."
             exit 0
           fi
 
-          # 3. Google OSV Scan of the PR folder 
+          # 3. Google OSV Scan [cite: 60, 93]
           ~/go/bin/osv-scanner scan --format json -r pr-repo > pr_results.json || true
 
-          # 4. Filter Logic: Identify vulnerabilities in CHANGED packages
-          # This prevents "Zero-Day" issues in Main from blocking the PR [cite: 54, 55]
+          # 4. Filter Logic [cite: 55, 59]
           NEW_UNHANDLED_VULNS=""
           while read -r dep; do
-            # Extract package name (e.g., net.snowflake:snowflake-jdbc)
+            # Extract package name (net.snowflake:snowflake-jdbc)
             pkg_name=$(echo "$dep" | cut -d':' -f1,2)
             
-            # Match package against results and filter out blessed IDs [cite: 102]
+            # Find any vulnerability matching this package that isn't BLESSED [cite: 102]
             found=$(jq -r --arg PKG "$pkg_name" '
               .results[].vulnerabilities[]? | 
-              select(.package.name == $PKG) | .id' pr_results.json | \
+              select(.package.name == $PKG or .affected[].package.name == $PKG) | .id' pr_results.json | \
               grep -Ev "$BLESSED_IDS" || true)
             
             if [ -n "$found" ]; then
