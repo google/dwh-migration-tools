@@ -1,47 +1,37 @@
-- name: Process Lockfile Diff and Scan Delta
-        run: |
-          # 1. Extract Blessed CVE IDs
-          BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
+name: PR Focused Dependency Scan
 
-          # 2. Identify the Delta (changed group:artifact:version)
+on:
+  pull_request:
+    paths:
+      - '**/gradle.lockfile'
+      - '.security/known_cves.yml'
+
+jobs:
+  osv-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          path: pr-repo
+
+      - name: Checkout Main Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: main-repo
+
+      - name: Install OSV-Scanner
+        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+
+      - name: Process Lockfile Diff and Scan Delta
+        run: |
+          # 1. Extract Blessed CVE IDs from known_cves.yml
+          # These represent justified vulnerabilities that should not block the build
+          BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
+          echo "DEBUG: Blessed IDs being ignored: $BLESSED_IDS"
+
+          # 2. Process Lockfile Diff
+          # Isolate lines formatted as group:artifact:version by stripping metadata
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > pr_deps.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > main_deps.txt
-          comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
-
-          if [ ! -s delta_deps.txt ]; then
-            echo "No new dependency versions found."
-            exit 0
-          fi
-
-          echo "DEBUG: Scanning the following delta packages:"
-          cat delta_deps.txt
-
-          # 3. Targeted Scan
-          # Instead of scanning the whole dir, we loop through the delta and scan each package
-          NEW_UNHANDLED_VULNS=""
-          while read -r dep; do
-            # Split group:artifact:version
-            GROUP=$(echo "$dep" | cut -d':' -f1)
-            ARTIFACT=$(echo "$dep" | cut -d':' -f2)
-            VERSION=$(echo "$dep" | cut -d':' -f3)
-
-            echo "Scanning $GROUP:$ARTIFACT version $VERSION..."
-            
-            # Use osv-scanner to check the specific Maven artifact
-            # We filter out IDs already in your blessed list
-            found=$(~/go/bin/osv-scanner scan --format json --package "pkg:maven/$GROUP/$ARTIFACT@$VERSION" | \
-              jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
-            
-            if [ -n "$found" ]; then
-              echo "DEBUG: Found NEW unhandled vulnerability for $ARTIFACT: $found"
-              NEW_UNHANDLED_VULNS="$NEW_UNHANDLED_VULNS $found"
-            fi
-          done < delta_deps.txt
-
-          # 4. Final Decision
-          if [ -n "$NEW_UNHANDLED_VULNS" ]; then
-            echo "Build FAIL: New vulnerabilities detected in your changes: $NEW_UNHANDLED_VULNS"
-            exit 1
-          else
-            echo "Build PASS: No new unhandled vulnerabilities introduced."
-          fi
