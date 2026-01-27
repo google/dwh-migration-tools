@@ -26,17 +26,16 @@ jobs:
 
       - name: Process Lockfile Diff and Scan Delta
         run: |
-          # 1. Extract Blessed CVE IDs from known_cves.yml
-          # These are justified vulnerabilities approved by engineering and tech writers
+          # 1. Extract Blessed CVE IDs
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
           echo "DEBUG: Ignoring Blessed IDs: $BLESSED_IDS"
 
           # 2. Process Lockfile Diff
-          # Extract all unique dependency lines from both branches
+          # We grab the full line (e.g. net.snowflake:snowflake-jdbc:3.21.0=runtimeClasspath)
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort -u > pr_raw.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort -u > main_raw.txt
           
-          # Isolate the Delta (lines added or version-changed in the PR)
+          # Isolate lines in PR that are NOT in Main (The Delta)
           comm -13 main_raw.txt pr_raw.txt > delta_lines.txt
 
           if [ ! -s delta_lines.txt ]; then
@@ -45,3 +44,34 @@ jobs:
           fi
 
           # 3. Create a VALID Temporary Gradle Lockfile
+          mkdir -p delta-scan
+          {
+            echo "# This is a Gradle generated file for dependency locking."
+            echo "# Manual edits can break the build and are not recommended."
+            echo "# This file is expected to be part of source control."
+            cat delta_lines.txt
+            echo "empty=" 
+          } > delta-scan/gradle.lockfile
+
+          echo "DEBUG: Delta Lockfile created with $(wc -l < delta_lines.txt) changes."
+
+          # 4. Targeted Scan of the Delta
+          # Using -r to recursively find the gradle.lockfile we just made
+          SCAN_OUT=$(~/go/bin/osv-scanner scan --format json -r delta-scan/ || true)
+
+          # 5. Filter Results and Final Decision
+          # Use jq to find unhandled vulnerabilities
+          if echo "$SCAN_OUT" | jq -e '.results != null' >/dev/null 2>&1; then
+            NEW_VULNS=$(echo "$SCAN_OUT" | jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
+            
+            if [ -n "$NEW_VULNS" ]; then
+              echo "--- VULNERABILITIES DETECTED ---"
+              echo "$NEW_VULNS"
+              echo "Build FAIL: New vulnerabilities detected in your changes."
+              exit 1
+            fi
+          fi
+          
+          echo "DEBUG: Full Scan Output (Truncated):"
+          echo "$SCAN_OUT" | jq -c '.results[]?.packages[]? | {name: .package.name, version: .package.version}' || echo "No packages scanned."
+          echo "Build PASS: No new unhandled vulnerabilities introduced."
