@@ -28,34 +28,38 @@ jobs:
 
       - name: Generate Suppression Config
         run: |
-          # 1. Create a valid TOML config in the root workspace
-          echo "[config]" > osv-scanner.toml
+          # The TOML file should not have a [config] header.
+          # Each entry needs the [[ignored_vulnerabilities]] tag.
+          touch osv-scanner.toml
           yq eval '.[].CVE' pr-branch/.security/known_cves.yml | while read -r cve; do
-            if [ "$cve" != "null" ]; then
+            if [ "$cve" != "null" ] && [ -n "$cve" ]; then
               echo "[[ignored_vulnerabilities]]" >> osv-scanner.toml
               echo "id = \"$cve\"" >> osv-scanner.toml
             fi
           done
 
-      - name: Compare PR vs Main (Excluding Suppressions)
+      - name: Compare PR vs Main
         run: |
-          # 2. Scan Main branch (Flag BEFORE path)
+          # 1. Scan Main branch (to identify existing vulnerabilities)
           ~/go/bin/osv-scanner scan --config=osv-scanner.toml -r main-branch --format json > main_results.json || true
           
-          # 3. Scan PR branch (Flag BEFORE path)
+          # 2. Scan PR branch (to identify current vulnerabilities)
           ~/go/bin/osv-scanner scan --config=osv-scanner.toml -r pr-branch --format json > pr_results.json || true
 
-          # 4. Extract IDs (Strictly IDs that are NOT in the known_cves.yml)
-          MAIN_IDS=$(jq -r '.results[].vulnerabilities[].id' main_results.json 2>/dev/null | sort -u)
-          PR_IDS=$(jq -r '.results[].vulnerabilities[].id' pr_results.json 2>/dev/null | sort -u)
+          # 3. Extract unique IDs that were NOT suppressed by the config
+          MAIN_IDS=$(jq -r '.results[].vulnerabilities[].id' main_results.json 2>/dev/null | sort -u || echo "")
+          PR_IDS=$(jq -r '.results[].vulnerabilities[].id' pr_results.json 2>/dev/null | sort -u || echo "")
 
-          # 5. Delta: Vulnerabilities in PR that do NOT exist in Main
+          # 4. Find vulnerabilities introduced in the PR that are NOT in Main
+          # This ensures Zero-Days in Main do not fail your PR scan.
           NEW_VULNS=$(comm -13 <(echo "$MAIN_IDS") <(echo "$PR_IDS"))
 
-          if [ -n "$NEW_VULNS" ]; then
+          if [ -z "$PR_IDS" ] && [ -z "$MAIN_IDS" ]; then
+             echo "SUCCESS: No vulnerabilities found in either branch."
+          elif [ -n "$NEW_VULNS" ]; then
             echo "FAIL: The following NEW vulnerabilities were introduced by this PR:"
             echo "$NEW_VULNS"
             exit 1
           else
-            echo "SUCCESS: No new vulnerabilities introduced."
+            echo "SUCCESS: No new vulnerabilities introduced (Zero-Days in Main ignored)."
           fi
