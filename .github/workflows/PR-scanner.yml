@@ -1,78 +1,47 @@
-name: PR Focused Dependency Scan
-
-on:
-  pull_request:
-    paths:
-      - '**/gradle.lockfile'
-
-jobs:
-  osv-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout PR Branch
-        uses: actions/checkout@v4
-        with:
-          path: pr-repo
-
-      - name: Checkout Main Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.base_ref }}
-          path: main-repo
-
-      - name: Install OSV-Scanner
-        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
-
-      - name: Process Lockfile Diff and Scan
+- name: Process Lockfile Diff and Scan Delta
         run: |
-          # 1. Extract Blessed CVE IDs from the registry
+          # 1. Extract Blessed CVE IDs
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
-          echo "DEBUG: Blessed IDs from known_cves.yml: $BLESSED_IDS"
 
-          # 2. Process Lockfile Diff: Artifact:Version
-          # We clean the lines to ensure a perfect match for any dependency
+          # 2. Identify the Delta (changed group:artifact:version)
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > pr_deps.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > main_deps.txt
-          
-          # Isolate only the changed artifact line (e.g., net.snowflake:snowflake-jdbc:3.21.0)
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
-          echo "DEBUG: Detected Delta Dependencies (PR vs Main):"
-          cat delta_deps.txt
-
           if [ ! -s delta_deps.txt ]; then
-            echo "No new dependency versions found. Skipping scan."
+            echo "No new dependency versions found."
             exit 0
           fi
 
-          # 3. Google OSV Scan of the PR folder
-          ~/go/bin/osv-scanner scan --format json -r pr-repo > pr_results.json || true
-          
-          echo "DEBUG: Raw OSV-Scanner JSON generated."
+          echo "DEBUG: Scanning the following delta packages:"
+          cat delta_deps.txt
 
-          # 4. Filter Logic: Match vulnerabilities against the CHANGED packages
+          # 3. Targeted Scan
+          # Instead of scanning the whole dir, we loop through the delta and scan each package
           NEW_UNHANDLED_VULNS=""
           while read -r dep; do
-            # Extract full name (net.snowflake:snowflake-jdbc) and artifact ID (snowflake-jdbc)
-            pkg_full=$(echo "$dep" | cut -d':' -f1,2)
-            pkg_artifact=$(echo "$dep" | cut -d':' -f2)
+            # Split group:artifact:version
+            GROUP=$(echo "$dep" | cut -d':' -f1)
+            ARTIFACT=$(echo "$dep" | cut -d':' -f2)
+            VERSION=$(echo "$dep" | cut -d':' -f3)
+
+            echo "Scanning $GROUP:$ARTIFACT version $VERSION..."
             
-            echo "DEBUG: Searching OSV results for $pkg_full OR $pkg_artifact"
-            
-            # 5. Extract ANY vulnerability matching either name
-            # We use 'contains' and 'index' to find the package in Maven ecosystem strings
-            found=$(jq -r --arg FULL "$pkg_full" --arg ART "$pkg_artifact" '
-              .results[].vulnerabilities[]? | 
-              select(
-                (.package.name | contains($FULL)) or 
-                (.package.name | contains($ART)) or
-                (.affected[]?.package.name | contains($ART))
-              ) | .id' pr_results.json | grep -Ev "$BLESSED_IDS" | sort -u || true)
+            # Use osv-scanner to check the specific Maven artifact
+            # We filter out IDs already in your blessed list
+            found=$(~/go/bin/osv-scanner scan --format json --package "pkg:maven/$GROUP/$ARTIFACT@$VERSION" | \
+              jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
             
             if [ -n "$found" ]; then
-              echo "DEBUG: Found NEW unhandled vulnerability: $found"
+              echo "DEBUG: Found NEW unhandled vulnerability for $ARTIFACT: $found"
               NEW_UNHANDLED_VULNS="$NEW_UNHANDLED_VULNS $found"
-            else
-              echo "DEBUG: No vulnerabilities found in OSV for $pkg_artifact."
             fi
           done < delta_deps.txt
+
+          # 4. Final Decision
+          if [ -n "$NEW_UNHANDLED_VULNS" ]; then
+            echo "Build FAIL: New vulnerabilities detected in your changes: $NEW_UNHANDLED_VULNS"
+            exit 1
+          else
+            echo "Build PASS: No new unhandled vulnerabilities introduced."
+          fi
