@@ -1,9 +1,10 @@
-name: PR Dependency Scan
+name: PR Dependency Scan (Delta Only)
 
 on:
   pull_request:
     paths:
       - '**/gradle.lockfile'
+      - '.security/known_cves.yml'
 
 jobs:
   osv-scan:
@@ -12,33 +13,49 @@ jobs:
       - name: Checkout PR Branch
         uses: actions/checkout@v4
         with:
-          path: pr
+          path: pr-branch
 
       - name: Checkout Main Branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.base_ref }}
-          path: main
+          path: main-branch
 
-      - name: Install OSV-Scanner
-        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
-
-      - name: Compare and Scan
+      - name: Install OSV-Scanner and jq
         run: |
-          # 1. Scan Main to see what's already there
-          ~/go/bin/osv-scanner scan -r main --format json > main_results.json || true
-          
-          # 2. Scan PR to see the current state
-          ~/go/bin/osv-scanner scan -r pr --format json > pr_results.json || true
+          go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+          sudo apt-get install jq -y
 
-          # 3. Logic to check if NEW vulnerabilities were added
-          # If the number of vulnerabilities in PR is greater than Main, FAIL the build.
-          PR_COUNT=$(jq '.results[].vulnerabilities | length' pr_results.json | awk '{s+=$1} END {print s}')
-          MAIN_COUNT=$(jq '.results[].vulnerabilities | length' main_results.json | awk '{s+=$1} END {print s}')
+      - name: Generate Suppression Config
+        run: |
+          # Create a TOML config from your YAML known_cves.yml
+          echo "[config]" > osv-scanner.toml
+          yq eval '.[].CVE' pr-branch/.security/known_cves.yml | while read -r cve; do
+            if [ "$cve" != "null" ]; then
+              echo "[[ignored_vulnerabilities]]" >> osv-scanner.toml
+              echo "id = \"$cve\"" >> osv-scanner.toml
+            fi
+          done
+
+      - name: Compare PR vs Main (Excluding Suppressions)
+        run: |
+          # 1. Scan Main branch (with suppressions)
+          ~/go/bin/osv-scanner scan -r main-branch --config=osv-scanner.toml --format json > main_results.json || true
           
-          if [ "$PR_COUNT" -gt "$MAIN_COUNT" ]; then
-            echo "New vulnerabilities detected! PR Count: $PR_COUNT, Main Count: $MAIN_COUNT"
+          # 2. Scan PR branch (with suppressions)
+          ~/go/bin/osv-scanner scan -r pr-branch --config=osv-scanner.toml --format json > pr_results.json || true
+
+          # 3. Extract IDs of vulnerabilities that are NOT suppressed
+          MAIN_IDS=$(jq -r '.results[].vulnerabilities[].id' main_results.json 2>/dev/null | sort -u)
+          PR_IDS=$(jq -r '.results[].vulnerabilities[].id' pr_results.json 2>/dev/null | sort -u)
+
+          # 4. Find vulnerabilities in PR that do NOT exist in Main
+          NEW_VULNS=$(comm -13 <(echo "$MAIN_IDS") <(echo "$PR_IDS"))
+
+          if [ -n "$NEW_VULNS" ]; then
+            echo "FAIL: The following NEW vulnerabilities were introduced by this PR:"
+            echo "$NEW_VULNS"
             exit 1
           else
-            echo "No new vulnerabilities introduced by this PR."
+            echo "SUCCESS: No new vulnerabilities introduced (Zero-Day vulnerabilities in Main are ignored)."
           fi
