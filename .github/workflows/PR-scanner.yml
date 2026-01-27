@@ -16,12 +16,12 @@ jobs:
       - name: Install OSV-Scanner
         run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
 
-      - name: Run Scan with Suppressions
+      - name: Generate OSV Config and Scan
         run: |
-          # 1. Extract CVE IDs from your YAML file [cite: 101, 102]
-          # This creates a string like: --ignore=CVE-1 --ignore=CVE-2
-          IGNORED_CVES=$(yq eval '.[].CVE' .security/known_cves.yml | xargs -I {} echo "--ignore={}")
+          # 1. Generate the TOML config file using your YAML blessed list 
+          echo "[[ignored_vulnerabilities]]" > osv-scanner.toml
+          yq eval '.[].CVE' .security/known_cves.yml | sed 's/^/id = "/;s/$/"/' >> osv-scanner.toml
 
-          # 2. Run the scanner [cite: 60, 61]
-          # Place the flags BEFORE the directory (represented by '.')
-          ~/go/bin/osv-scanner scan $IGNORED_CVES -r .
+          # 2. Run the scanner recursively [cite: 61]
+          # The scanner automatically picks up osv-scanner.toml in the root
+          ~/go/bin/osv-scanner scan -r .
