@@ -25,15 +25,16 @@ jobs:
 
       - name: Process Lockfile Diff and Scan
         run: |
-          # 1. Extract Blessed CVE IDs (Strategy N2) [cite: 60, 102]
+          # 1. Extract Blessed CVE IDs (Strategy N2)
+          # These are vulnerabilities intentionally accepted with justification [cite: 102]
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" -)
 
-          # 2. Process Lockfile Diff 
-          # We search all subdirectories for lockfiles and isolate the artifact lines
+          # 2. Process Lockfile Diff
+          # Isolate unique lines added/changed in this PR 
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/pr-repo\///' | sort > pr_deps.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/main-repo\///' | sort > main_deps.txt
           
-          # comm -13 finds lines unique to the PR (newly added or changed versions) 
+          # comm -13 identifies lines present ONLY in PR (newly added or version changed) 
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           if [ ! -s delta_deps.txt ]; then
@@ -41,17 +42,17 @@ jobs:
             exit 0
           fi
 
-          # 3. Google OSV Scan of the PR folder [cite: 60, 61]
+          # 3. Google OSV Scan of the PR folder 
           ~/go/bin/osv-scanner scan --format json -r pr-repo > pr_results.json || true
 
-          # 4. Filter Logic: Match vulnerabilities only to CHANGED packages 
+          # 4. Filter Logic: Identify vulnerabilities in CHANGED packages
           # This prevents "Zero-Day" issues in Main from blocking the PR [cite: 54, 55]
           NEW_UNHANDLED_VULNS=""
           while read -r dep; do
             # Extract package name (e.g., net.snowflake:snowflake-jdbc)
             pkg_name=$(echo "$dep" | cut -d':' -f1,2)
             
-            # Select vulnerabilities for THIS specific package that are NOT in the blessed list [cite: 44]
+            # Match package against results and filter out blessed IDs [cite: 102]
             found=$(jq -r --arg PKG "$pkg_name" '
               .results[].vulnerabilities[]? | 
               select(.package.name == $PKG) | .id' pr_results.json | \
@@ -63,9 +64,8 @@ jobs:
           done < delta_deps.txt
 
           if [ -n "$NEW_UNHANDLED_VULNS" ]; then
-            [cite_start]echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS" [cite: 61]
+            echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS"
             exit 1
           else
-            [cite_start]echo "Build PASS: No new unhandled vulnerabilities introduced." [cite: 61]
+            echo "Build PASS: No new unhandled vulnerabilities introduced."
           fi
-          
