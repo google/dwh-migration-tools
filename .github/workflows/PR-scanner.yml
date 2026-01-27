@@ -49,33 +49,27 @@ jobs:
           } > delta-scan/gradle.lockfile
 
           # 4. Perform Targeted Scan
-          # We run the scan and save the output. 
-          # We use --format json to ensure we get parsable data.
           ~/go/bin/osv-scanner scan --format json -r delta-scan/ > scan_results.json || true
 
-          # 5. Filter and Decision Logic
-          # Aggressive JQ search: find EVERY 'id' field in the whole document
-          ALL_VULNS=$(jq -r '.. | .id? // empty' scan_results.json | grep -E "^(GHSA|CVE)-" | sort -u || true)
-          
-          # Filter out the blessed ones
-          NEW_VULNS=$(echo "$ALL_VULNS" | grep -Ev "$BLESSED_IDS" || true)
-          
-          if [ -n "$NEW_VULNS" ]; then
+          # 5. Map Vulnerabilities to PURLs
+          # This JQ filter creates a clean list: "PURL -> CVE_ID"
+          DETAILED_REPORT=$(jq -r --arg BLESSED "$BLESSED_IDS" '
+            .results[].packages[] | 
+            .package as $pkg | 
+            .vulnerabilities[]? | 
+            select(.id | test($BLESSED) | not) | 
+            "\($pkg.purl) -> \(.id)"
+          ' scan_results.json | sort -u || true)
+
+          if [ -n "$DETAILED_REPORT" ]; then
             echo "-------------------------------------------------------"
             echo "CRITICAL: NEW UNHANDLED VULNERABILITIES FOUND!"
-            echo "$NEW_VULNS"
             echo "-------------------------------------------------------"
+            echo "$DETAILED_REPORT"
+            echo "-------------------------------------------------------"
+            echo "ACTION REQUIRED: Upgrade the versions above or add them"
+            echo "to .security/known_cves.yml with technical justification."
             exit 1
-          fi
-          
-          # IF IT PASSES, PRINT THE JSON FOR AUDIT
-          echo "DEBUG: No unhandled vulnerabilities found. Verified packages:"
-          jq -c '.results[].packages[]?.package | {name, version}' scan_results.json || echo "No packages found in JSON."
-          
-          # If Log4j is present but no vulnerabilities show up, we print the raw JSON to see why
-          if grep -q "log4j" delta-lines.txt; then
-             echo "DEBUG: Log4j was in delta but no vulnerability triggered. Raw JSON below:"
-             cat scan_results.json
           fi
 
           echo "Build PASS: No new unhandled vulnerabilities introduced."
