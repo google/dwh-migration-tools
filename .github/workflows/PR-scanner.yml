@@ -1,4 +1,29 @@
-- name: Process Lockfile Diff and Scan
+name: PR Focused Dependency Scan
+
+on:
+  pull_request:
+    paths:
+      - '**/gradle.lockfile'
+
+jobs:
+  osv-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          path: pr-repo
+
+      - name: Checkout Main Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: main-repo
+
+      - name: Install OSV-Scanner
+        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+
+     - name: Process Lockfile Diff and Scan
         run: |
           # 1. Extract Blessed CVE IDs
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
