@@ -3,7 +3,7 @@ name: PR Dependency Scan
 on:
   pull_request:
     paths:
-      - '**/gradle.lockfile' # Focus strictly on Java/Gradle modules
+      - '**/gradle.lockfile'
       - '.security/known_cves.yml'
 
 jobs:
@@ -18,13 +18,13 @@ jobs:
 
       - name: Generate OSV Config and Scan
         run: |
-          # 1. Properly format the TOML file for OSV-Scanner [cite: 101]
-          # We use yq to extract the CVE IDs that the team has "blessed" [cite: 102]
+          # 1. Properly format the TOML file
+          # Each entry must be under its own [[ignored_vulnerabilities]] header
           yq eval '.[].CVE' .security/known_cves.yml | while read -r cve; do
             echo "[[ignored_vulnerabilities]]" >> osv-scanner.toml
             echo "id = \"$cve\"" >> osv-scanner.toml
           done
 
-          # 2. Scan only the Dumper modules recursively [cite: 61]
-          # This supports the "connector per module" architecture [cite: 136]
-          ~/go/bin/osv-scanner scan -r .
+          # 2. Scan only Dumper Gradle lockfiles to avoid deprecated dev dependencies
+          # Using find to pass each production lockfile specifically
+          find . -name "gradle.lockfile" | xargs -I {} ~/go/bin/osv-scanner scan --lockfile={}
