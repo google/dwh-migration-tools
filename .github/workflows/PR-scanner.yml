@@ -25,39 +25,40 @@ jobs:
 
       - name: Process Lockfile Diff and Scan
         run: |
-          # 1. Extract Blessed CVE IDs [cite: 102]
+          # 1. Extract Blessed CVE IDs
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
 
-          # 2. Process Lockfile Diff [cite: 61]
-          # Clean lines to get only 'group:artifact:version'
+          # 2. Process Lockfile Diff
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > pr_deps.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > main_deps.txt
           
-          # Isolate only NEWLY added or CHANGED artifacts [cite: 59]
+          # Isolate only the changed artifact line (e.g., net.snowflake:snowflake-jdbc:3.21.0)
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           echo "--- DEBUG: DELTA DEPENDENCIES DETECTED ---"
           cat delta_deps.txt
           echo "------------------------------------------"
-
+          
           if [ ! -s delta_deps.txt ]; then
             echo "No new dependency versions found."
             exit 0
           fi
 
-          # 3. Google OSV Scan [cite: 60, 93]
+          # 3. Google OSV Scan
           ~/go/bin/osv-scanner scan --format json -r pr-repo > pr_results.json || true
 
-          # 4. Filter Logic [cite: 55, 59]
+          # 4. Filter Logic: Identify vulnerabilities specifically for the changed package
           NEW_UNHANDLED_VULNS=""
           while read -r dep; do
-            # Extract package name (net.snowflake:snowflake-jdbc)
-            pkg_name=$(echo "$dep" | cut -d':' -f1,2)
+            # Extract artifact ID (e.g., snowflake-jdbc)
+            artifact_id=$(echo "$dep" | awk -F':' '{print $2}')
+            # Extract full group:artifact (e.g., net.snowflake:snowflake-jdbc)
+            full_name=$(echo "$dep" | cut -d':' -f1,2)
             
-            # Find any vulnerability matching this package that isn't BLESSED [cite: 102]
-            found=$(jq -r --arg PKG "$pkg_name" '
+            # Match vulnerabilities by full name OR artifact ID to be robust
+            found=$(jq -r --arg FULL "$full_name" --arg ART "$artifact_id" '
               .results[].vulnerabilities[]? | 
-              select(.package.name == $PKG or .affected[].package.name == $PKG) | .id' pr_results.json | \
+              select(.package.name == $FULL or .package.name == $ART or .affected[].package.name == $FULL) | .id' pr_results.json | \
               grep -Ev "$BLESSED_IDS" || true)
             
             if [ -n "$found" ]; then
