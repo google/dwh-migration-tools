@@ -26,7 +26,7 @@ jobs:
 
       - name: Process Lockfile Diff and Scan Delta
         run: |
-          # 1. Extract Blessed IDs
+          # 1. Extract Blessed IDs (Handles both CVE and GHSA formats)
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
           echo "DEBUG: Ignoring Blessed IDs: $BLESSED_IDS"
 
@@ -51,13 +51,17 @@ jobs:
           # 4. Perform Targeted Scan
           ~/go/bin/osv-scanner scan --format json -r delta-scan/ > scan_results.json || true
 
-          # 5. Map Vulnerabilities to Package Info (Name@Version)
-          # We use a conditional to prefer PURL, then fall back to name@version
+          # 5. Filter Logic: Check Primary ID and all Aliases
+          # This JQ script finds the ID, looks at the "aliases" array, 
+          # and only keeps vulnerabilities where NONE of those IDs are blessed.
           DETAILED_REPORT=$(jq -r --arg BLESSED "$BLESSED_IDS" '
             .results[].packages[] | 
             .package as $pkg | 
             .vulnerabilities[]? | 
-            select(.id | test($BLESSED) | not) | 
+            # Create a list of all IDs for this vuln (Primary + Aliases)
+            ([.id] + (.aliases // [])) as $all_ids |
+            # Select if NONE of those IDs match our blessed list
+            select(any($all_ids[]; test($BLESSED)) | not) |
             (if $pkg.purl then $pkg.purl else "\($pkg.name)@\($pkg.version)" end) + " -> " + .id
           ' scan_results.json | sort -u || true)
 
@@ -67,9 +71,9 @@ jobs:
             echo "-------------------------------------------------------"
             echo "$DETAILED_REPORT"
             echo "-------------------------------------------------------"
-            echo "ACTION REQUIRED: Upgrade the versions above or add them"
-            echo "to .security/known_cves.yml with technical justification."
             exit 1
           fi
+
+          echo "Build PASS: All detected vulnerabilities are blessed or resolved."
 
           echo "Build PASS: No new unhandled vulnerabilities introduced."
