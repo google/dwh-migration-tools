@@ -12,46 +12,46 @@ jobs:
       - name: Checkout PR Branch
         uses: actions/checkout@v4
         with:
-          path: pr
+          path: pr-repo
 
       - name: Checkout Main Branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.base_ref }}
-          path: main
+          path: main-repo
 
       - name: Install OSV-Scanner
         run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
 
-      - name: Process Lockfile Diff and Scan New Deps
+      - name: Process Lockfile Diff and Scan
         run: |
-          # 1. Extract Blessed CVE IDs (Strategy N2)
-          BLESSED_IDS=$(yq eval '.[].CVE' pr/.security/known_cves.yml | paste -sd "|" -)
+          # 1. Extract Blessed CVE IDs (Strategy N2) [cite: 60, 102]
+          BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" -)
 
-          # 2. Process Lockfile Diff
-          # Finds all lockfiles and isolates lines added/changed in this PR
-          find pr -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort > pr_deps.txt
-          find main -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort > main_deps.txt
+          # 2. Process Lockfile Diff 
+          # We search all subdirectories for lockfiles and isolate the artifact lines
+          find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/pr-repo\///' | sort > pr_deps.txt
+          find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/main-repo\///' | sort > main_deps.txt
           
-          # This captures ANY version change (like your Snowflake downgrade)
+          # comm -13 finds lines unique to the PR (newly added or changed versions) 
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           if [ ! -s delta_deps.txt ]; then
-            echo "No new dependencies found in lockfiles. Skipping scan."
+            echo "No changes detected in dependency versions."
             exit 0
           fi
 
-          # 3. Google OSV Scan (Strategy N2)
-          ~/go/bin/osv-scanner scan --format json -r pr > pr_results.json || true
+          # 3. Google OSV Scan of the PR folder [cite: 60, 61]
+          ~/go/bin/osv-scanner scan --format json -r pr-repo > pr_results.json || true
 
-          # 4. Filter Logic: Match vulnerabilities against the CHANGED packages
-          # This specifically prevents "Zero-Day" issues in Main from blocking you
+          # 4. Filter Logic: Match vulnerabilities only to CHANGED packages 
+          # This prevents "Zero-Day" issues in Main from blocking the PR [cite: 54, 55]
           NEW_UNHANDLED_VULNS=""
           while read -r dep; do
             # Extract package name (e.g., net.snowflake:snowflake-jdbc)
             pkg_name=$(echo "$dep" | cut -d':' -f1,2)
             
-            # Match against scanner results and filter out blessed IDs
+            # Select vulnerabilities for THIS specific package that are NOT in the blessed list [cite: 44]
             found=$(jq -r --arg PKG "$pkg_name" '
               .results[].vulnerabilities[]? | 
               select(.package.name == $PKG) | .id' pr_results.json | \
@@ -63,8 +63,9 @@ jobs:
           done < delta_deps.txt
 
           if [ -n "$NEW_UNHANDLED_VULNS" ]; then
-            echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS"
+            [cite_start]echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS" [cite: 61]
             exit 1
           else
-            echo "Build PASS: Changes are secure or blessed."
+            [cite_start]echo "Build PASS: No new unhandled vulnerabilities introduced." [cite: 61]
           fi
+          
