@@ -31,19 +31,14 @@ jobs:
           echo "DEBUG: Blessed IDs being ignored: $BLESSED_IDS"
 
           # 2. Process Lockfile Diff
-          # Clean lines (group:artifact:version) for comparison
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > pr_deps.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > main_deps.txt
-          
-          # Find the Delta (dependencies added or version-changed)
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           if [ ! -s delta_deps.txt ]; then
             echo "No new dependency versions found. Skipping scan."
             exit 0
           fi
-
-          echo "DEBUG: Changes detected in: $(cat delta_deps.txt)"
 
           # 3. Targeted PURL Scan
           NEW_UNHANDLED_VULNS=""
@@ -52,12 +47,14 @@ jobs:
             ARTIFACT=$(echo "$dep" | cut -d':' -f2)
             VERSION=$(echo "$dep" | cut -d':' -f3)
 
-            echo "Scanning pkg:maven/$GROUP/$ARTIFACT@$VERSION..."
+            # Construct the PURL string
+            PURL="pkg:maven/$GROUP/$ARTIFACT@$VERSION"
+            echo "Scanning $PURL..."
             
-            # Using --experimental-purl to pinpoint the specific Maven coordinate
-            SCAN_OUT=$(~/go/bin/osv-scanner scan --format json --experimental-purl "pkg:maven/$GROUP/$ARTIFACT@$VERSION" || true)
+            # Pass the PURL directly as an argument to the scan command
+            SCAN_OUT=$(~/go/bin/osv-scanner scan --format json "$PURL" || true)
             
-            # Filter results by subtracting Blessed IDs
+            # 4. Filter Results
             if echo "$SCAN_OUT" | jq -e '.results != null' >/dev/null 2>&1; then
               found=$(echo "$SCAN_OUT" | jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
               
@@ -68,7 +65,7 @@ jobs:
             fi
           done < delta_deps.txt
 
-          # 4. Final Decision
+          # 5. Final Decision
           if [ -n "$NEW_UNHANDLED_VULNS" ]; then
             echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS"
             exit 1
