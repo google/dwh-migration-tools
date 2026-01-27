@@ -25,16 +25,15 @@ jobs:
 
       - name: Process Lockfile Diff and Scan New Deps
         run: |
-          # 1. Extract Blessed CVEs from your YAML [cite: 101, 102]
-          # We extract IDs like CVE-2025-52999 from the registry [cite: 103, 105]
+          # 1. Extract Blessed CVE IDs from your YAML [cite: 101, 102]
           BLESSED_IDS=$(yq eval '.[].CVE' pr/.security/known_cves.yml | paste -sd "|" -)
 
-          # 2. Process Lockfile Diff: Use find to gather all lockfile lines 
-          # We strip comments and empty lines to compare actual artifacts [cite: 17, 18]
+          # 2. Process Lockfile Diff 
+          # Find all unique lines added in PR that weren't in Main
           find pr -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort > pr_deps.txt
           find main -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort > main_deps.txt
           
-          # This identifies the specific snowflake-jdbc:3.21.0 change 
+          # Isolate only new or changed package lines (e.g., snowflake-jdbc:3.21.0)
           comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
 
           if [ ! -s delta_deps.txt ]; then
@@ -42,21 +41,18 @@ jobs:
             exit 0
           fi
 
-          # 3. Scan the PR branch for vulnerabilities 
-          # This uses the Google OSV scanner to check for known vulnerabilities [cite: 60, 91]
-          ~/go/bin/osv-scanner scan -r pr --format json > pr_results.json || true
+          # 3. Google OSV Scan [cite: 60, 61]
+          # Flags must come BEFORE the path [cite: 92, 93]
+          ~/go/bin/osv-scanner scan --format json -r pr > pr_results.json || true
 
-          # 4. Filter Logic: Match vulnerabilities against the CHANGED packages 
-          # This filters out Zero-Days that existed in Main but weren't touched [cite: 54, 55]
-          # It also excludes vulnerabilities already in known_cves.yml 
-          
-          # We check if the package name in the vulnerability report exists in our delta_deps.txt
+          # 4. Filter Logic
+          # Only fail if a vulnerability ID matches a CHANGED package and is NOT BLESSED
           NEW_UNHANDLED_VULNS=""
           while read -r dep; do
             # Extract package name (e.g., net.snowflake:snowflake-jdbc)
             pkg_name=$(echo "$dep" | cut -d':' -f1,2)
             
-            # Find vulnerabilities for this specific package that are NOT blessed
+            # Match package name against scan results and filter out blessed IDs [cite: 44]
             found=$(jq -r --arg PKG "$pkg_name" '
               .results[].vulnerabilities[]? | 
               select(.package.name == $PKG) | .id' pr_results.json | \
@@ -68,8 +64,8 @@ jobs:
           done < delta_deps.txt
 
           if [ -n "$NEW_UNHANDLED_VULNS" ]; then
-            [cite_start]echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS" [cite: 64]
+            echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS"
             exit 1
           else
-            [cite_start]echo "Build PASS: Changes are secure or blessed." [cite: 59]
+            echo "Build PASS: Changes are secure or blessed."
           fi
