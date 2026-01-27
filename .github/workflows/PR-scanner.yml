@@ -26,52 +26,56 @@ jobs:
 
       - name: Process Lockfile Diff and Scan Delta
         run: |
-          # 1. Extract Blessed CVE IDs
+          # 1. Extract Blessed IDs
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
           echo "DEBUG: Ignoring Blessed IDs: $BLESSED_IDS"
 
           # 2. Process Lockfile Diff
-          # We grab the full line (e.g. net.snowflake:snowflake-jdbc:3.21.0=runtimeClasspath)
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort -u > pr_raw.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sort -u > main_raw.txt
-          
-          # Isolate lines in PR that are NOT in Main (The Delta)
           comm -13 main_raw.txt pr_raw.txt > delta_lines.txt
 
           if [ ! -s delta_lines.txt ]; then
-            echo "No dependency changes detected. Skipping scan."
+            echo "No changes detected."
             exit 0
           fi
 
-          # 3. Create a VALID Temporary Gradle Lockfile
+          # 3. Create Valid Temporary Environment
           mkdir -p delta-scan
           {
             echo "# This is a Gradle generated file for dependency locking."
-            echo "# Manual edits can break the build and are not recommended."
-            echo "# This file is expected to be part of source control."
             cat delta_lines.txt
             echo "empty=" 
           } > delta-scan/gradle.lockfile
 
-          echo "DEBUG: Delta Lockfile created with $(wc -l < delta_lines.txt) changes."
+          # 4. Perform Targeted Scan
+          # We run the scan and save the output. 
+          # We use --format json to ensure we get parsable data.
+          ~/go/bin/osv-scanner scan --format json -r delta-scan/ > scan_results.json || true
 
-          # 4. Targeted Scan of the Delta
-          # Using -r to recursively find the gradle.lockfile we just made
-          SCAN_OUT=$(~/go/bin/osv-scanner scan --format json -r delta-scan/ || true)
-
-          # 5. Filter Results and Final Decision
-          # Use jq to find unhandled vulnerabilities
-          if echo "$SCAN_OUT" | jq -e '.results != null' >/dev/null 2>&1; then
-            NEW_VULNS=$(echo "$SCAN_OUT" | jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
-            
-            if [ -n "$NEW_VULNS" ]; then
-              echo "--- VULNERABILITIES DETECTED ---"
-              echo "$NEW_VULNS"
-              echo "Build FAIL: New vulnerabilities detected in your changes."
-              exit 1
-            fi
+          # 5. Filter and Decision Logic
+          # Aggressive JQ search: find EVERY 'id' field in the whole document
+          ALL_VULNS=$(jq -r '.. | .id? // empty' scan_results.json | grep -E "^(GHSA|CVE)-" | sort -u || true)
+          
+          # Filter out the blessed ones
+          NEW_VULNS=$(echo "$ALL_VULNS" | grep -Ev "$BLESSED_IDS" || true)
+          
+          if [ -n "$NEW_VULNS" ]; then
+            echo "-------------------------------------------------------"
+            echo "CRITICAL: NEW UNHANDLED VULNERABILITIES FOUND!"
+            echo "$NEW_VULNS"
+            echo "-------------------------------------------------------"
+            exit 1
           fi
           
-          echo "DEBUG: Full Scan Output (Truncated):"
-          echo "$SCAN_OUT" | jq -c '.results[]?.packages[]? | {name: .package.name, version: .package.version}' || echo "No packages scanned."
+          # IF IT PASSES, PRINT THE JSON FOR AUDIT
+          echo "DEBUG: No unhandled vulnerabilities found. Verified packages:"
+          jq -c '.results[].packages[]?.package | {name, version}' scan_results.json || echo "No packages found in JSON."
+          
+          # If Log4j is present but no vulnerabilities show up, we print the raw JSON to see why
+          if grep -q "log4j" delta-lines.txt; then
+             echo "DEBUG: Log4j was in delta but no vulnerability triggered. Raw JSON below:"
+             cat scan_results.json
+          fi
+
           echo "Build PASS: No new unhandled vulnerabilities introduced."
