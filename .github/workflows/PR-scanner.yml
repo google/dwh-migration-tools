@@ -28,7 +28,7 @@ jobs:
 
       - name: Generate Suppression Config
         run: |
-          # Create a TOML config from your YAML known_cves.yml
+          # 1. Create a valid TOML config in the root workspace
           echo "[config]" > osv-scanner.toml
           yq eval '.[].CVE' pr-branch/.security/known_cves.yml | while read -r cve; do
             if [ "$cve" != "null" ]; then
@@ -39,17 +39,17 @@ jobs:
 
       - name: Compare PR vs Main (Excluding Suppressions)
         run: |
-          # 1. Scan Main branch (with suppressions)
-          ~/go/bin/osv-scanner scan -r main-branch --config=osv-scanner.toml --format json > main_results.json || true
+          # 2. Scan Main branch (Flag BEFORE path)
+          ~/go/bin/osv-scanner scan --config=osv-scanner.toml -r main-branch --format json > main_results.json || true
           
-          # 2. Scan PR branch (with suppressions)
-          ~/go/bin/osv-scanner scan -r pr-branch --config=osv-scanner.toml --format json > pr_results.json || true
+          # 3. Scan PR branch (Flag BEFORE path)
+          ~/go/bin/osv-scanner scan --config=osv-scanner.toml -r pr-branch --format json > pr_results.json || true
 
-          # 3. Extract IDs of vulnerabilities that are NOT suppressed
+          # 4. Extract IDs (Strictly IDs that are NOT in the known_cves.yml)
           MAIN_IDS=$(jq -r '.results[].vulnerabilities[].id' main_results.json 2>/dev/null | sort -u)
           PR_IDS=$(jq -r '.results[].vulnerabilities[].id' pr_results.json 2>/dev/null | sort -u)
 
-          # 4. Find vulnerabilities in PR that do NOT exist in Main
+          # 5. Delta: Vulnerabilities in PR that do NOT exist in Main
           NEW_VULNS=$(comm -13 <(echo "$MAIN_IDS") <(echo "$PR_IDS"))
 
           if [ -n "$NEW_VULNS" ]; then
@@ -57,5 +57,5 @@ jobs:
             echo "$NEW_VULNS"
             exit 1
           else
-            echo "SUCCESS: No new vulnerabilities introduced (Zero-Day vulnerabilities in Main are ignored)."
+            echo "SUCCESS: No new vulnerabilities introduced."
           fi
