@@ -107,7 +107,7 @@ public class RedshiftMetadataConnector extends AbstractRedshiftConnector
 
     selStar(parallelTask, "SVV_EXTERNAL_COLUMNS");
     selStar(parallelTask, "SVV_EXTERNAL_DATABASES");
-    selStar(parallelTask, "SVV_EXTERNAL_PARTITIONS");
+//    selStar(parallelTask, "SVV_EXTERNAL_PARTITIONS");
     selStar(parallelTask, "SVV_EXTERNAL_SCHEMAS");
     selStar(parallelTask, "SVV_EXTERNAL_TABLES");
 
