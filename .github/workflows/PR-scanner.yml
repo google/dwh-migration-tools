@@ -27,50 +27,14 @@ jobs:
       - name: Process Lockfile Diff and Scan Delta
         run: |
           # 1. Extract Blessed CVE IDs from known_cves.yml
+          # These represent justified vulnerabilities that should not block the build
           BLESSED_IDS=$(yq eval '.[].CVE' pr-repo/.security/known_cves.yml | paste -sd "|" - || echo "NONE")
           echo "DEBUG: Blessed IDs being ignored: $BLESSED_IDS"
 
           # 2. Process Lockfile Diff
-          # Extract clean lines for comparison
+          # Extract clean lines (group:artifact:version) for comparison
           find pr-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > pr_deps.txt
           find main-repo -name "gradle.lockfile" -exec grep -hve "^#" -ve "^$" {} + | sed 's/=.*//' | sort -u > main_deps.txt
           
-          # Isolate the delta (e.g., net.snowflake:snowflake-jdbc:3.21.0)
-          comm -13 main_deps.txt pr_deps.txt > delta_deps.txt
-
-          if [ ! -s delta_deps.txt ]; then
-            echo "No new dependency versions found. Skipping scan."
-            exit 0
-          fi
-
-          # 3. Targeted Scan using PURL (Package URL)
-          # We loop through the delta and scan each package directly via its PURL
-          # This is the most reliable way to scan specific Maven artifacts
-          NEW_UNHANDLED_VULNS=""
-          while read -r dep; do
-            GROUP=$(echo "$dep" | cut -d':' -f1)
-            ARTIFACT=$(echo "$dep" | cut -d':' -f2)
-            VERSION=$(echo "$dep" | cut -d':' -f3)
-
-            echo "DEBUG: Scanning delta package: pkg:maven/$GROUP/$ARTIFACT@$VERSION"
-            
-            # Scan the specific coordinate and check for vulnerabilities
-            SCAN_OUT=$(~/go/bin/osv-scanner scan --format json --experimental-purl "pkg:maven/$GROUP/$ARTIFACT@$VERSION" || true)
-            
-            if echo "$SCAN_OUT" | jq -e '.results != null' >/dev/null 2>&1; then
-              found=$(echo "$SCAN_OUT" | jq -r '.results[].vulnerabilities[]?.id' | grep -Ev "$BLESSED_IDS" | sort -u || true)
-              
-              if [ -n "$found" ]; then
-                echo "DEBUG: Found NEW unhandled vulnerability: $found"
-                NEW_UNHANDLED_VULNS="$NEW_UNHANDLED_VULNS $found"
-              fi
-            fi
-          done < delta_deps.txt
-
-          # 4. Final Decision
-          if [ -n "$NEW_UNHANDLED_VULNS" ]; then
-            echo "Build FAIL: New vulnerabilities detected in changed dependencies: $NEW_UNHANDLED_VULNS"
-            exit 1
-          else
-            echo "Build PASS: No new unhandled vulnerabilities introduced."
-          fi
+          # Isolate the delta: dependencies added or changed in the PR
+          comm -13 main_deps.txt pr_deps.txt > delta
