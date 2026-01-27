@@ -51,14 +51,14 @@ jobs:
           # 4. Perform Targeted Scan
           ~/go/bin/osv-scanner scan --format json -r delta-scan/ > scan_results.json || true
 
-          # 5. Map Vulnerabilities to PURLs
-          # This JQ filter creates a clean list: "PURL -> CVE_ID"
+          # 5. Map Vulnerabilities to Package Info (Name@Version)
+          # We use a conditional to prefer PURL, then fall back to name@version
           DETAILED_REPORT=$(jq -r --arg BLESSED "$BLESSED_IDS" '
             .results[].packages[] | 
             .package as $pkg | 
             .vulnerabilities[]? | 
             select(.id | test($BLESSED) | not) | 
-            "\($pkg.purl) -> \(.id)"
+            (if $pkg.purl then $pkg.purl else "\($pkg.name)@\($pkg.version)" end) + " -> " + .id
           ' scan_results.json | sort -u || true)
 
           if [ -n "$DETAILED_REPORT" ]; then
