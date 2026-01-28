@@ -30,30 +30,3 @@
     external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
     a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
 
-- CVE: CVE-2023-30535
-  artifact: net.snowflake:snowflake-jdbc:3.13.22
-  justification: >
-    The Dumper is a CLI app, not a public-facing web server. It does not accept or process arbitrary URIs from untrusted
-    external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
-    a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
-
-- CVE: CVE-2025-24789
-  artifact: net.snowflake:snowflake-jdbc:3.13.22
-  justification: >
-    The Dumper is a CLI app, not a public-facing web server. It does not accept or process arbitrary URIs from untrusted
-    external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
-    a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
-
-- CVE: CVE-2024-43382
-  artifact: net.snowflake:snowflake-jdbc:3.13.22
-  justification: >
-    The Dumper is a CLI app, not a public-facing web server. It does not accept or process arbitrary URIs from untrusted
-    external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
-    a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
- 
-- CVE: CVE-2025-27496
-  artifact: net.snowflake:snowflake-jdbc:3.13.22
-  justification: >
-    The Dumper is a CLI app, not a public-facing web server. It does not accept or process arbitrary URIs from untrusted
-    external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
-    a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
