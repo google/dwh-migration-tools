@@ -1,4 +1,4 @@
-name: PR Focused Dependency Scan
+name: PR - New Dependency Scan
 
 on:
   pull_request:
@@ -40,7 +40,7 @@ jobs:
             exit 0
           fi
 
-          # 3. Create Valid Temporary Environment
+          # 3. Create Valid Temporary Gradle File
           mkdir -p delta-scan
           {
             echo "# This is a Gradle generated file for dependency locking."
@@ -51,7 +51,7 @@ jobs:
           # 4. Perform Targeted Scan
           ~/go/bin/osv-scanner scan --format json -r delta-scan/ > scan_results.json || true
 
-          # 5. Filter and Map: Prioritize CVE IDs and Log URLs
+          # 5. Filter and Map OSV Results
           # Logic: Matches aliases against blessed list, extracts CVE, and builds the GHSA URL
           DETAILED_REPORT=$(jq -r --arg BLESSED "$BLESSED_IDS" '
             .results[].packages[] | 
