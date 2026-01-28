@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.AvoidArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -61,6 +62,7 @@ import org.slf4j.LoggerFactory;
     defaultValue = ConnectorArguments.OPT_RANGER_PORT_DEFAULT)
 @AutoService({Connector.class})
 @Description("Dumps services and policies from Apache Ranger.")
+@AvoidArgumentAssessment
 public class RangerConnector extends AbstractConnector {
 
   @SuppressWarnings("UnusedVariable")

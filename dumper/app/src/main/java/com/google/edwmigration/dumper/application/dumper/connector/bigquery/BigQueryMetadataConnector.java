@@ -37,6 +37,7 @@ import com.google.cloud.bigquery.ViewDefinition;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.AvoidArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
@@ -77,6 +78,7 @@ import org.slf4j.LoggerFactory;
     order = 2000,
     arg = ConnectorArguments.OPT_SCHEMA,
     description = "The list of datasets to dump, separated by commas.")
+@AvoidArgumentAssessment
 public class BigQueryMetadataConnector extends AbstractBigQueryConnector
     implements BigQueryMetadataDumpFormat, MetadataConnector {
 

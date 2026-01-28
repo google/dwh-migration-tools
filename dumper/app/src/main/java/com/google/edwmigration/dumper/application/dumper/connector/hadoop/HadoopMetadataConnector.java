@@ -24,6 +24,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
@@ -41,6 +42,7 @@ import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hadoop cluster via bash commands.")
+@RespectsArgumentAssessment
 public class HadoopMetadataConnector implements MetadataConnector {
 
   @VisibleForTesting

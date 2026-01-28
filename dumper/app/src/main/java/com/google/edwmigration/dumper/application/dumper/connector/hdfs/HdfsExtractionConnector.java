@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hdfs;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -48,6 +49,7 @@ import javax.annotation.Nonnull;
     description = "The size of the thread pool to use when extracting hdfs filesystem.")
 @AutoService({Connector.class})
 @Description("Dumps files and directories from the HDFS.")
+@RespectsArgumentAssessment
 public class HdfsExtractionConnector extends AbstractConnector implements HdfsExtractionDumpFormat {
 
   public HdfsExtractionConnector() {

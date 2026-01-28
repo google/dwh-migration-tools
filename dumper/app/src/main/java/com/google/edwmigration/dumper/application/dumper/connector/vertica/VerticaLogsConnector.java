@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.vertica;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.AvoidArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -32,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Vertica.")
+@AvoidArgumentAssessment
 public class VerticaLogsConnector extends AbstractVerticaConnector
     implements LogsConnector, VerticaLogsDumpFormat {
 

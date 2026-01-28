@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.test;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.AvoidArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
@@ -28,6 +29,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 @AutoService({Connector.class, MetadataConnector.class})
+@AvoidArgumentAssessment
 public class TestConnector extends AbstractConnector implements MetadataConnector {
   private static final Handle DUMMY_HANDLE = () -> {};
 

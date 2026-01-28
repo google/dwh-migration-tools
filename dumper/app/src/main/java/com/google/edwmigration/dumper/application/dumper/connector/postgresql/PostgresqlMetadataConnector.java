@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.postgresql;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
@@ -40,6 +41,7 @@ import java.util.List;
     required = ConnectorArguments.OPT_REQUIRED_IF_NOT_URL,
     defaultValue = "" + PostgresqlMetadataConnector.OPT_PORT_DEFAULT)
 @RespectsArgumentDatabaseForConnection
+@RespectsArgumentAssessment
 public class PostgresqlMetadataConnector extends AbstractPostgresqlConnector
     implements MetadataConnector, PostgresqlMetadataDumpFormat {
 

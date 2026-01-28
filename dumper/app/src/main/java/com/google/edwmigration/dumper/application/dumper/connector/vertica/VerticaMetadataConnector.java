@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.vertica;
 
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
@@ -31,6 +32,7 @@ import java.util.List;
 /** */
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from Vertica.")
+@RespectsArgumentAssessment
 public class VerticaMetadataConnector extends AbstractVerticaConnector
     implements MetadataConnector, VerticaMetadataDumpFormat {
 
