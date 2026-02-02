@@ -14,15 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
+package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception;
 
-public class ClouderaConnectorException extends RuntimeException {
-
-  public ClouderaConnectorException(String message) {
+public abstract class SparkMetadataException extends Exception {
+  public SparkMetadataException(String message) {
     super(message);
   }
 
-  public ClouderaConnectorException(String message, Throwable cause) {
+  public SparkMetadataException(String message, Throwable cause) {
     super(message, cause);
   }
 }

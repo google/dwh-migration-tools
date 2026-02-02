@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Preconditions;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYarnApplicationDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.ClouderaConnectorException;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.io.IOException;
 import java.net.URI;
