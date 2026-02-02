@@ -18,10 +18,13 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.MetadataView.TABLE_STORAGE_METRICS;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.stream;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -40,6 +43,8 @@ import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
+import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -59,6 +64,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   private static final String ACCOUNT_USAGE_SCHEMA_NAME = "SNOWFLAKE.ACCOUNT_USAGE";
   private static final String ACCOUNT_USAGE_WHERE_CONDITION = "DELETED IS NULL";
   private static final String EMPTY_WHERE_CONDITION = "";
+  private static final String ACCOUNT_USAGE_SIMPLE_FILE = "account-usage-simple.sql";
+  private static final String ACCOUNT_USAGE_COMPLEX_FILE = "account-usage-complex.sql";
+  private static final String SHOW_BASED_FILE = "show-based.sql";
+  private static final String SNOWFLAKE_FEATURES_PREFIX = "snowflake-features/";
 
   private enum PropertyAction {
     QUERY("query", "query"),
@@ -284,6 +293,22 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         isAssessment,
         getInformationSchemaWhereCondition("function_catalog", arguments.getDatabases()));
 
+    stream(FeaturesQueryPath.values())
+        .forEach(
+            path -> {
+              TaskOptions taskOptions =
+                  path.value.contains(ACCOUNT_USAGE_SIMPLE_FILE)
+                      ? TaskOptions.DEFAULT
+                      : TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING);
+              out.add(
+                  new JdbcSelectTask(
+                          FeaturesFormat.IS_ZIP_ENTRY_NAME,
+                          loadFile(path.value),
+                          TaskCategory.OPTIONAL, // TODO: Change to REQUIRED after implementation
+                          taskOptions)
+                      .withHeaderClass(FeaturesFormat.Header.class));
+            });
+
     if (isAssessment) {
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
         String query = queryForAssessment(item, arguments);
@@ -315,6 +340,18 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       out.add(task);
       // Next tasks will append to the same file.
       taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
+    }
+  }
+
+  enum FeaturesQueryPath {
+    SIMPLE(SNOWFLAKE_FEATURES_PREFIX + ACCOUNT_USAGE_SIMPLE_FILE),
+    COMPLEX(SNOWFLAKE_FEATURES_PREFIX + ACCOUNT_USAGE_COMPLEX_FILE),
+    SHOW_BASED(SNOWFLAKE_FEATURES_PREFIX + SHOW_BASED_FILE);
+
+    final String value;
+
+    FeaturesQueryPath(String value) {
+      this.value = value;
     }
   }
 
@@ -418,5 +455,15 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
     databaseName = databaseName.replace("\"", "\"\"");
     return String.format("\"%s\"", databaseName);
+  }
+
+  private static String loadFile(String path) {
+    try {
+      URL queryUrl = Resources.getResource(path);
+      return Resources.toString(queryUrl, UTF_8);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(
+          String.format("An invalid file was provided: '%s'.", path), e);
+    }
   }
 }
