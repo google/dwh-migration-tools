@@ -1,0 +1,250 @@
+{
+  "items": [
+    {
+      "timeSeries": [
+        {
+          "metadata": {
+            "metricName": "cpu_percent_across_hosts",
+            "entityName": "cldr4-data-hub",
+            "startTime": "2026-02-01T00:00:00.000Z",
+            "endTime": "2026-02-03T00:00:00.000Z",
+            "attributes": {
+              "active": "true",
+              "clusterDisplayName": "cldr4-data-hub",
+              "category": "CLUSTER",
+              "version": "CDH 7.3.1",
+              "entityName": "1546336197",
+              "clusterName": "cldr4-data-hub"
+            },
+            "unitNumerators": [
+              "percent"
+            ],
+            "unitDenominators": [],
+            "expression": "SELECT cpu_percent_across_hosts WHERE entityName = \"1546336197\" AND category = CLUSTER",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "DAILY"
+          },
+          "data": [
+            {
+              "timestamp": "2026-02-01T00:00:00.000Z",
+              "value": 4.191166666666667,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-01-31T18:11:13.000Z",
+                "sampleValue": 50.0,
+                "count": 7200,
+                "min": 0.8,
+                "minTime": "2026-01-31T00:14:09.000Z",
+                "max": 50.0,
+                "maxTime": "2026-01-31T18:11:13.000Z",
+                "mean": 4.191166666666667,
+                "stdDev": 8.048040903453733,
+                "crossEntityMetadata": {
+                  "maxEntityDisplayName": "cldr4-data-hub-worker2.cldr4-cd.svye-dcxb.a5.cloudera.site",
+                  "maxEntityName": "6a2525cd02ec320311b876103e606d56",
+                  "minEntityDisplayName": "cldr4-data-hub-compute0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+                  "minEntityName": "c7b6b7c125a503cf4b1440f4bdcf557b",
+                  "numEntities": 5.0
+                }
+              }
+            },
+            {
+              "timestamp": "2026-02-02T00:00:00.000Z",
+              "value": 4.218555555555556,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-02-01T06:21:13.000Z",
+                "sampleValue": 50.0,
+                "count": 7200,
+                "min": 0.8,
+                "minTime": "2026-02-01T01:57:09.000Z",
+                "max": 50.0,
+                "maxTime": "2026-02-01T06:21:13.000Z",
+                "mean": 4.218555555555556,
+                "stdDev": 8.066629403217192,
+                "crossEntityMetadata": {
+                  "maxEntityDisplayName": "cldr4-data-hub-worker2.cldr4-cd.svye-dcxb.a5.cloudera.site",
+                  "maxEntityName": "6a2525cd02ec320311b876103e606d56",
+                  "minEntityDisplayName": "cldr4-data-hub-compute0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+                  "minEntityName": "c7b6b7c125a503cf4b1440f4bdcf557b",
+                  "numEntities": 5.0
+                }
+              }
+            },
+            {
+              "timestamp": "2026-02-03T00:00:00.000Z",
+              "value": 4.221263888888888,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-02-02T22:41:14.000Z",
+                "sampleValue": 48.8,
+                "count": 7200,
+                "min": 0.8,
+                "minTime": "2026-02-02T00:58:09.000Z",
+                "max": 48.8,
+                "maxTime": "2026-02-02T22:41:14.000Z",
+                "mean": 4.221263888888888,
+                "stdDev": 8.007719175765214,
+                "crossEntityMetadata": {
+                  "maxEntityDisplayName": "cldr4-data-hub-worker1.cldr4-cd.svye-dcxb.a5.cloudera.site",
+                  "maxEntityName": "fa0a38f9784d66a9d6fc1866b3c241b1",
+                  "minEntityDisplayName": "cldr4-data-hub-compute0.cldr4-cd.svye-dcxb.a5.cloudera.site",
+                  "minEntityName": "c7b6b7c125a503cf4b1440f4bdcf557b",
+                  "numEntities": 5.0
+                }
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "total_physical_memory_used_across_hosts",
+            "entityName": "cldr4-data-hub",
+            "startTime": "2026-02-01T00:00:00.000Z",
+            "endTime": "2026-02-03T00:00:00.000Z",
+            "attributes": {
+              "active": "true",
+              "clusterDisplayName": "cldr4-data-hub",
+              "category": "CLUSTER",
+              "version": "CDH 7.3.1",
+              "entityName": "1546336197",
+              "clusterName": "cldr4-data-hub"
+            },
+            "unitNumerators": [
+              "bytes"
+            ],
+            "unitDenominators": [],
+            "expression": "SELECT total_physical_memory_used_across_hosts WHERE entityName = \"1546336197\" AND category = CLUSTER",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "DAILY"
+          },
+          "data": [
+            {
+              "timestamp": "2026-02-01T00:00:00.000Z",
+              "value": 73106474874.31111,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-01-31T23:59:40.022Z",
+                "sampleValue": 72491966464,
+                "count": 1440,
+                "min": 72303181824,
+                "minTime": "2026-01-31T04:08:39.933Z",
+                "max": 74407858176,
+                "maxTime": "2026-01-31T23:32:40.018Z",
+                "mean": 73106474874.31111,
+                "stdDev": 509828191.3148079
+              }
+            },
+            {
+              "timestamp": "2026-02-02T00:00:00.000Z",
+              "value": 73276849570.13333,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-02-01T23:59:40.112Z",
+                "sampleValue": 72633274368,
+                "count": 1440,
+                "min": 72465887232,
+                "minTime": "2026-02-01T00:18:40.022Z",
+                "max": 74843877376,
+                "maxTime": "2026-02-01T01:02:40.023Z",
+                "mean": 73276849570.13333,
+                "stdDev": 521101636.4022061
+              }
+            },
+            {
+              "timestamp": "2026-02-03T00:00:00.000Z",
+              "value": 73434436568.17778,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-02-02T23:59:40.230Z",
+                "sampleValue": 72821444608,
+                "count": 1440,
+                "min": 7.262953472E+10,
+                "minTime": "2026-02-02T01:59:40.121Z",
+                "max": 74994089984,
+                "maxTime": "2026-02-02T18:41:40.205Z",
+                "mean": 73434436568.17778,
+                "stdDev": 516835253.24935496
+              }
+            }
+          ]
+        },
+        {
+          "metadata": {
+            "metricName": "total_physical_memory_total_across_hosts",
+            "entityName": "cldr4-data-hub",
+            "startTime": "2026-02-01T00:00:00.000Z",
+            "endTime": "2026-02-03T00:00:00.000Z",
+            "attributes": {
+              "active": "true",
+              "clusterDisplayName": "cldr4-data-hub",
+              "category": "CLUSTER",
+              "version": "CDH 7.3.1",
+              "entityName": "1546336197",
+              "clusterName": "cldr4-data-hub"
+            },
+            "unitNumerators": [
+              "bytes"
+            ],
+            "unitDenominators": [],
+            "expression": "SELECT total_physical_memory_total_across_hosts WHERE entityName = \"1546336197\" AND category = CLUSTER",
+            "metricCollectionFrequencyMs": 60000,
+            "rollupUsed": "DAILY"
+          },
+          "data": [
+            {
+              "timestamp": "2026-02-01T00:00:00.000Z",
+              "value": 197994971136,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-01-31T23:59:40.022Z",
+                "sampleValue": 197994971136,
+                "count": 1440,
+                "min": 197994971136,
+                "minTime": "2026-01-31T00:00:39.919Z",
+                "max": 197994971136,
+                "maxTime": "2026-01-31T00:00:39.919Z",
+                "mean": 197994971136,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2026-02-02T00:00:00.000Z",
+              "value": 197994971136,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-02-01T23:59:40.112Z",
+                "sampleValue": 197994971136,
+                "count": 1440,
+                "min": 197994971136,
+                "minTime": "2026-02-01T00:00:40.022Z",
+                "max": 197994971136,
+                "maxTime": "2026-02-01T00:00:40.022Z",
+                "mean": 197994971136,
+                "stdDev": 0.0
+              }
+            },
+            {
+              "timestamp": "2026-02-03T00:00:00.000Z",
+              "value": 197994971136,
+              "type": "SAMPLE",
+              "aggregateStatistics": {
+                "sampleTime": "2026-02-02T23:59:40.230Z",
+                "sampleValue": 197994971136,
+                "count": 1440,
+                "min": 197994971136,
+                "minTime": "2026-02-02T00:00:40.112Z",
+                "max": 197994971136,
+                "maxTime": "2026-02-02T00:00:40.112Z",
+                "mean": 197994971136,
+                "stdDev": 0.0
+              }
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "timeSeriesQuery": "SELECT cpu_percent_across_hosts, total_physical_memory_used_across_hosts, total_physical_memory_total_across_hosts WHERE entityName = \"1546336197\" AND category = \"CLUSTER\""
+    }
+  ]
+}
