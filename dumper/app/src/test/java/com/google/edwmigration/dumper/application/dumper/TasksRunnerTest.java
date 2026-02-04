@@ -53,12 +53,7 @@ public class TasksRunnerTest {
     TaskSetState.Impl mockState = mock(TaskSetState.Impl.class);
     ConnectorArguments arguments = new ConnectorArguments("--connector", "test");
     TasksRunner runner =
-        new TasksRunner(
-            mockSinkFactory,
-            mockHandle,
-            mockState,
-            Collections.emptyList(),
-            arguments);
+        new TasksRunner(mockSinkFactory, mockHandle, mockState, Collections.emptyList(), arguments);
 
     try {
       java.lang.reflect.Method method =

@@ -161,5 +161,6 @@ public interface TaskSetState {
 
   <T> void setTaskResult(@Nonnull Task<T> task, @Nonnull TaskState state, @CheckForNull T value);
 
-  void setTaskException(@Nonnull Task<?> task, @Nonnull TaskState state, @CheckForNull Exception exception);
+  void setTaskException(
+      @Nonnull Task<?> task, @Nonnull TaskState state, @CheckForNull Exception exception);
 }

@@ -150,13 +150,7 @@ public class MetadataDumper {
 
       Handle handle = closer.register(connector.open(connectorArguments));
 
-      new TasksRunner(
-              sinkFactory,
-              handle,
-              state,
-              tasks,
-              connectorArguments)
-          .run();
+      new TasksRunner(sinkFactory, handle, state, tasks, connectorArguments).run();
 
       requiredTaskSucceeded = checkRequiredTaskSuccess(summaryPrinter, state, outputFileLocation);
 
