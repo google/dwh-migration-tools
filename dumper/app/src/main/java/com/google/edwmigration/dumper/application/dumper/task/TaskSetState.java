@@ -38,7 +38,7 @@ public interface TaskSetState {
 
   @AutoValue
   @ParametersAreNonnullByDefault
-  abstract static class TaskResultSummary {
+  abstract class TaskResultSummary {
     abstract Optional<Throwable> throwable();
 
     abstract Task<?> task();
@@ -77,7 +77,7 @@ public interface TaskSetState {
 
   @AutoValue
   @ParametersAreNonnullByDefault
-  abstract static class TasksReport {
+  abstract class TasksReport {
 
     public abstract long count();
 
@@ -89,7 +89,7 @@ public interface TaskSetState {
   }
 
   @ThreadSafe
-  static class Impl implements TaskSetState {
+  class Impl implements TaskSetState {
 
     // The map is used for user-visible reporting, using an insertion-ordered map will make
     // reporting consistent.
@@ -158,4 +158,8 @@ public interface TaskSetState {
 
   @Nonnull
   TaskState getTaskState(@Nonnull Task<?> task);
+
+  <T> void setTaskResult(@Nonnull Task<T> task, @Nonnull TaskState state, @CheckForNull T value);
+
+  void setTaskException(@Nonnull Task<?> task, @Nonnull TaskState state, @CheckForNull Exception exception);
 }

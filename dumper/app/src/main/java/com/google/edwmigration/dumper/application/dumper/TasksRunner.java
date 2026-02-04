@@ -44,7 +44,7 @@ public class TasksRunner implements TaskRunContextOps {
   public static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
   private final TaskRunContext context;
-  private final TaskSetState.Impl state;
+  private final TaskSetState state;
   private final List<Task<?>> tasks;
 
   private final TaskLoggingUtil taskLoggingUtil;
@@ -52,11 +52,10 @@ public class TasksRunner implements TaskRunContextOps {
   public TasksRunner(
       OutputHandleFactory sinkFactory,
       Handle handle,
-      int threadPoolSize,
-      @Nonnull TaskSetState.Impl state,
+      @Nonnull TaskSetState state,
       List<Task<?>> tasks,
       ConnectorArguments arguments) {
-    context = createContext(sinkFactory, handle, threadPoolSize, arguments);
+    context = createContext(sinkFactory, handle, arguments.getThreadPoolSize(), arguments);
     this.state = state;
     this.tasks = tasks;
     this.taskLoggingUtil = new TaskLoggingUtil(countTasks(tasks));

@@ -56,7 +56,6 @@ public class TasksRunnerTest {
         new TasksRunner(
             mockSinkFactory,
             mockHandle,
-            threadPoolSize,
             mockState,
             Collections.emptyList(),
             arguments);

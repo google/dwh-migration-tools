@@ -126,7 +126,7 @@ public class MetadataDumper {
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     long outputFileLength = 0;
-    TaskSetState.Impl state = new TaskSetState.Impl();
+    TaskSetState state = new TaskSetState.Impl();
 
     logger.info("Using connector: [{}]", connector);
     SummaryPrinter summaryPrinter = new SummaryPrinter();
@@ -153,7 +153,6 @@ public class MetadataDumper {
       new TasksRunner(
               sinkFactory,
               handle,
-              connectorArguments.getThreadPoolSize(),
               state,
               tasks,
               connectorArguments)
