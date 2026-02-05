@@ -25,7 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContextOps;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetStateCollector;
 import com.google.edwmigration.dumper.application.dumper.task.TaskState;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +44,7 @@ public class TasksRunner implements TaskRunContextOps {
   public static final Logger PROGRESS_LOG = LoggerFactory.getLogger("progress-logger");
 
   private final TaskRunContext context;
-  private final TaskSetState.Impl state;
+  private final TaskSetStateCollector state;
   private final List<Task<?>> tasks;
 
   private final TaskLoggingUtil taskLoggingUtil;
@@ -52,11 +52,10 @@ public class TasksRunner implements TaskRunContextOps {
   public TasksRunner(
       OutputHandleFactory sinkFactory,
       Handle handle,
-      int threadPoolSize,
-      @Nonnull TaskSetState.Impl state,
+      @Nonnull TaskSetStateCollector state,
       List<Task<?>> tasks,
       ConnectorArguments arguments) {
-    context = createContext(sinkFactory, handle, threadPoolSize, arguments);
+    context = createContext(sinkFactory, handle, arguments.getThreadPoolSize(), arguments);
     this.state = state;
     this.tasks = tasks;
     this.taskLoggingUtil = new TaskLoggingUtil(countTasks(tasks));
