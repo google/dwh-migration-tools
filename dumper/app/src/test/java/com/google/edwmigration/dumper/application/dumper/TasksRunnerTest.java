@@ -25,7 +25,8 @@ import static org.mockito.Mockito.*;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandleFactory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetStateCollector;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetStateImpl;
 import java.io.IOException;
 import java.util.Collections;
 import org.junit.Before;
@@ -50,7 +51,7 @@ public class TasksRunnerTest {
     OutputHandleFactory mockSinkFactory = mock(OutputHandleFactory.class);
     Handle mockHandle = mock(Handle.class);
     int threadPoolSize = 2;
-    TaskSetState.Impl mockState = mock(TaskSetState.Impl.class);
+    TaskSetStateCollector mockState = mock(TaskSetStateImpl.class);
     ConnectorArguments arguments = new ConnectorArguments("--connector", "test");
     TasksRunner runner =
         new TasksRunner(mockSinkFactory, mockHandle, mockState, Collections.emptyList(), arguments);

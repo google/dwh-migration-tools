@@ -34,6 +34,8 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState;
 import com.google.edwmigration.dumper.application.dumper.task.TaskSetState.TaskResultSummary;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetStateCollector;
+import com.google.edwmigration.dumper.application.dumper.task.TaskSetStateImpl;
 import com.google.edwmigration.dumper.application.dumper.task.VersionTask;
 import java.io.File;
 import java.io.IOException;
@@ -126,7 +128,7 @@ public class MetadataDumper {
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     long outputFileLength = 0;
-    TaskSetState state = new TaskSetState.Impl();
+    TaskSetStateCollector state = new TaskSetStateImpl();
 
     logger.info("Using connector: [{}]", connector);
     SummaryPrinter summaryPrinter = new SummaryPrinter();
