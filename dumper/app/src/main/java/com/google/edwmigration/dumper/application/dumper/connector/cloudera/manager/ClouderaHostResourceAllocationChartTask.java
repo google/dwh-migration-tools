@@ -22,8 +22,6 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -65,7 +63,7 @@ public class ClouderaHostResourceAllocationChartTask extends AbstractClouderaTim
           "Cloudera hosts must be initialized before host resource allocation charts dumping.");
     }
 
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaHostDTO host : handle.getHosts()) {
         String queryPerHost = String.format(TS_QUERY_TEMPLATE, host.getId());
         logger.debug(
@@ -74,9 +72,7 @@ public class ClouderaHostResourceAllocationChartTask extends AbstractClouderaTim
             host.getName());
 
         JsonNode chartInJson = requestTimeSeriesChart(handle, queryPerHost);
-
-        writer.write(chartInJson.toString());
-        writer.write('\n');
+        writer.writeLine(chartInJson);
       }
     }
   }

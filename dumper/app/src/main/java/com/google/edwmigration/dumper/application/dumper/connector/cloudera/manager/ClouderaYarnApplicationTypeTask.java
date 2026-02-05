@@ -32,8 +32,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -75,7 +73,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
             handle, context.getArguments().getPaginationPageSize());
 
     List<ClouderaYarnApplicationDTO> sparkYarnApplications = new ArrayList<>();
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
         final String clusterName = cluster.getName();
         for (String yarnAppType : collectYarnApplicationTypes(context, handle, clusterName)) {
@@ -108,7 +106,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   }
 
   private void writeYarnAppTypes(
-      Writer writer, List<ApiYarnApplicationDto> yarnApps, String appType, String clusterName) {
+      JsonWriter writer, List<ApiYarnApplicationDto> yarnApps, String appType, String clusterName) {
     List<ApplicationTypeToYarnApplication> yarnAppTypeMappings = new ArrayList<>();
     for (ApiYarnApplicationDto yarnApp : yarnApps) {
       yarnAppTypeMappings.add(
@@ -117,8 +115,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     try {
       String yarnAppTypeMappingsInJson =
           serializeObjectToJsonString(ImmutableMap.of("yarnAppTypes", yarnAppTypeMappings));
-      writer.write(yarnAppTypeMappingsInJson);
-      writer.write('\n');
+      writer.writeLine(yarnAppTypeMappingsInJson);
     } catch (IOException ex) {
       throw new ClouderaConnectorException("Can't write YARN application types", ex);
     }

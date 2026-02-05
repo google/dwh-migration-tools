@@ -22,8 +22,6 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +58,7 @@ public class ClouderaClusterResourceAllocationChartTask extends AbstractCloudera
       throws Exception {
     List<ClouderaClusterDTO> clusters = getClustersFromHandle(handle);
 
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
         String queryPerCluster = String.format(TS_QUERY_TEMPLATE, cluster.getId());
         logger.debug(
@@ -69,8 +67,7 @@ public class ClouderaClusterResourceAllocationChartTask extends AbstractCloudera
             cluster.getName());
 
         JsonNode chartInJson = requestTimeSeriesChart(handle, queryPerCluster);
-        writer.write(chartInJson.toString());
-        writer.write('\n');
+        writer.writeLine(chartInJson);
       }
     }
   }

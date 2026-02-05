@@ -23,9 +23,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterDto;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiClusterListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.Writer;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,7 +76,7 @@ public class ClouderaClustersTask extends AbstractClouderaManagerTask {
       }
     }
 
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       writer.write(serializeObjectToJsonString(clusterList));
     }
 
