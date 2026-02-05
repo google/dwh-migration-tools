@@ -37,8 +37,7 @@ public class JsonWriter implements Closeable {
   }
 
   public void writeLine(JsonNode json) throws IOException {
-    writer.write(json.toString());
-    writer.write('\n');
+    writeLine(json.toString());
   }
 
   public void writeLine(String json) throws IOException {
