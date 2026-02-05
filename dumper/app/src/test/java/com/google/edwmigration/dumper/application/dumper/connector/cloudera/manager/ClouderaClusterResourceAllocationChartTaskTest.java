@@ -60,15 +60,15 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaClusterCpuChartTaskTest {
-  private final ClouderaClusterCpuChartTask task =
-      new ClouderaClusterCpuChartTask(
+public class ClouderaClusterResourceAllocationChartTaskTest {
+  private final ClouderaClusterResourceAllocationChartTask task =
+      new ClouderaClusterResourceAllocationChartTask(
           timeTravelDaysAgo(30),
           timeTravelDaysAgo(0),
           TimeSeriesAggregation.HOURLY,
           TaskCategory.REQUIRED);
   private ClouderaManagerHandle handle;
-  private String servicesJson;
+  private String resourceAllocationJson;
   private static WireMockServer server;
 
   @Mock private TaskRunContext context;
@@ -90,7 +90,7 @@ public class ClouderaClusterCpuChartTaskTest {
   @Before
   public void setUp() throws Exception {
     server.resetAll();
-    servicesJson = readFileAsString("/cloudera/manager/cluster-cpu-status.json");
+    resourceAllocationJson = readFileAsString("/cloudera/manager/cluster-resource-allocation.json");
     URI uri = URI.create(server.baseUrl() + "/api/vTest");
     handle =
         new ClouderaManagerHandle(uri, HttpClients.createDefault(), HttpClients.createDefault());
@@ -117,8 +117,8 @@ public class ClouderaClusterCpuChartTaskTest {
     initClusters(
         ClouderaClusterDTO.create("id1", "first-cluster"),
         ClouderaClusterDTO.create("id2", "second-cluster"));
-    String firstClusterServicesJson = servicesJson;
-    String secondClusterServicesJson = "{\"key\":" + servicesJson + "}";
+    String firstClusterServicesJson = resourceAllocationJson;
+    String secondClusterServicesJson = "{\"key\":" + resourceAllocationJson + "}";
     stubHttpRequestToFetchClusterCPUChart("id1", firstClusterServicesJson);
     stubHttpRequestToFetchClusterCPUChart("id2", secondClusterServicesJson);
 
@@ -143,7 +143,8 @@ public class ClouderaClusterCpuChartTaskTest {
 
     // THEN: There is a relevant exception has been raised
     assertEquals(
-        "Cloudera clusters must be initialized before CPU charts dumping.", exception.getMessage());
+        "Cloudera clusters must be initialized before cluster resource allocation charts dumping.",
+        exception.getMessage());
     verifyNoWrites(writer);
   }
 
@@ -151,7 +152,7 @@ public class ClouderaClusterCpuChartTaskTest {
   public void doRun_clouderaReturns4xx_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    String firstClusterServicesJson = servicesJson;
+    String firstClusterServicesJson = resourceAllocationJson;
     stubHttpRequestToFetchClusterCPUChart(
         "id1", firstClusterServicesJson, HttpStatus.SC_BAD_REQUEST);
 
@@ -165,7 +166,7 @@ public class ClouderaClusterCpuChartTaskTest {
   public void doRun_clouderaReturns5xx_throwsException() throws Exception {
     // GIVEN: There is a valid cluster
     initClusters(ClouderaClusterDTO.create("id1", "first-cluster"));
-    String firstClusterServicesJson = servicesJson;
+    String firstClusterServicesJson = resourceAllocationJson;
     stubHttpRequestToFetchClusterCPUChart(
         "id1", firstClusterServicesJson, HttpStatus.SC_INTERNAL_SERVER_ERROR);
 

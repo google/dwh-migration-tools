@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The task collects CPU usage per cluster from Cloudera Manager <a
+ * The task collects resource allocation (CPU and RAM) usage per cluster from Cloudera Manager <a
  * href="https://cldr2-aw-dl-gateway.cldr2-cd.svye-dcxb.a5.cloudera.site/static/apidocs/resource_TimeSeriesResource.html">TimeSeries
  * API</a> The chart is for whole cluster is available on {@code /cmf/home/} and {@code
  * cmf/clusters/{clusterId}/status} pages in Cloudera Manager UI. <b/> The query to chart is written
@@ -40,17 +40,18 @@ import org.slf4j.LoggerFactory;
  * href="https://docs.cloudera.com/documentation/enterprise/latest/topics/cm_dg_tsquery.html">tsquery</a>
  * language.
  */
-public class ClouderaClusterCpuChartTask extends AbstractClouderaTimeSeriesTask {
-  private static final Logger logger = LoggerFactory.getLogger(ClouderaClusterCpuChartTask.class);
-  private static final String TS_CPU_QUERY_TEMPLATE =
-      "SELECT cpu_percent_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
+public class ClouderaClusterResourceAllocationChartTask extends AbstractClouderaTimeSeriesTask {
+  private static final Logger logger =
+      LoggerFactory.getLogger(ClouderaClusterResourceAllocationChartTask.class);
+  private static final String TS_QUERY_TEMPLATE =
+      "SELECT cpu_percent_across_hosts, total_physical_memory_used_across_hosts, total_physical_memory_total_across_hosts WHERE entityName = \"%s\" AND category = CLUSTER";
 
-  public ClouderaClusterCpuChartTask(
+  public ClouderaClusterResourceAllocationChartTask(
       ZonedDateTime startDate,
       ZonedDateTime endDate,
       TimeSeriesAggregation tsAggregation,
       TaskCategory taskCategory) {
-    super("cluster-cpu.jsonl", startDate, endDate, tsAggregation, taskCategory);
+    super("cluster-resource-allocation.jsonl", startDate, endDate, tsAggregation, taskCategory);
   }
 
   @Override
@@ -61,13 +62,13 @@ public class ClouderaClusterCpuChartTask extends AbstractClouderaTimeSeriesTask 
 
     try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
       for (ClouderaClusterDTO cluster : clusters) {
-        String cpuPerClusterQuery = String.format(TS_CPU_QUERY_TEMPLATE, cluster.getId());
+        String queryPerCluster = String.format(TS_QUERY_TEMPLATE, cluster.getId());
         logger.debug(
             "Execute charts query: [{}] for the cluster: [{}].",
-            cpuPerClusterQuery,
+            queryPerCluster,
             cluster.getName());
 
-        JsonNode chartInJson = requestTimeSeriesChart(handle, cpuPerClusterQuery);
+        JsonNode chartInJson = requestTimeSeriesChart(handle, queryPerCluster);
         writer.write(chartInJson.toString());
         writer.write('\n');
       }
@@ -78,13 +79,13 @@ public class ClouderaClusterCpuChartTask extends AbstractClouderaTimeSeriesTask 
     List<ClouderaClusterDTO> clusters = handle.getClusters();
     if (clusters == null) {
       throw new MetadataDumperUsageException(
-          "Cloudera clusters must be initialized before CPU charts dumping.");
+          "Cloudera clusters must be initialized before cluster resource allocation charts dumping.");
     }
     List<ClouderaClusterDTO> cpuClusters = new ArrayList<>();
     for (ClouderaClusterDTO cluster : clusters) {
       if (cluster.getId() == null) {
         logger.warn(
-            "Cloudera cluster id is null for cluster [{}]. Skip CPU metrics for the cluster.",
+            "Cloudera cluster id is null for cluster [{}]. Skip resource allocation metrics for the cluster.",
             cluster.getName());
       } else {
         cpuClusters.add(cluster);

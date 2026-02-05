@@ -107,7 +107,7 @@ public class ClouderaManagerConnector extends AbstractConnector {
       endDate = arguments.getEndDate();
     }
 
-    out.add(new ClouderaClusterCpuChartTask(startDate, endDate, DAILY, REQUIRED));
+    out.add(new ClouderaClusterResourceAllocationChartTask(startDate, endDate, DAILY, REQUIRED));
     out.add(new ClouderaHostRamChartTask(startDate, endDate, DAILY, REQUIRED));
     out.add(new ClouderaServiceResourceAllocationChartTask(startDate, endDate, HOURLY, OPTIONAL));
     out.add(new ClouderaYarnApplicationsTask(startDate, endDate, OPTIONAL));

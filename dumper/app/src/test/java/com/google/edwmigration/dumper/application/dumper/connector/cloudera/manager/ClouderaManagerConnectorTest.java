@@ -60,7 +60,7 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", TaskCategory.OPTIONAL))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-cpu.jsonl", TaskCategory.REQUIRED,
+                    "cluster-resource-allocation.jsonl", TaskCategory.REQUIRED,
                     "host-ram.jsonl", TaskCategory.REQUIRED,
                     "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
@@ -93,7 +93,8 @@ public class ClouderaManagerConnectorTest {
             .putAll(
                 ImmutableMap.of(
                     "host-components.jsonl", ClouderaHostComponentsTask.class,
-                    "cluster-cpu.jsonl", ClouderaClusterCpuChartTask.class,
+                    "cluster-resource-allocation.jsonl",
+                        ClouderaClusterResourceAllocationChartTask.class,
                     "host-ram.jsonl", ClouderaHostRamChartTask.class,
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
@@ -136,7 +137,7 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", TaskCategory.OPTIONAL))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-cpu.jsonl", TaskCategory.REQUIRED,
+                    "cluster-resource-allocation.jsonl", TaskCategory.REQUIRED,
                     "host-ram.jsonl", TaskCategory.REQUIRED,
                     "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
@@ -178,7 +179,8 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", ClouderaHostComponentsTask.class))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-cpu.jsonl", ClouderaClusterCpuChartTask.class,
+                    "cluster-resource-allocation.jsonl",
+                        ClouderaClusterResourceAllocationChartTask.class,
                     "host-ram.jsonl", ClouderaHostRamChartTask.class,
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
