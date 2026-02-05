@@ -20,6 +20,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.MockUtils.verifyNoWrites;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.readFileAsString;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.TestUtils.toJsonl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
@@ -60,9 +62,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClouderaHostRamChartTaskTest {
-  private final ClouderaHostRamChartTask task =
-      new ClouderaHostRamChartTask(
+public class ClouderaHostResourceAllocationChartTaskTest {
+  private final ClouderaHostResourceAllocationChartTask task =
+      new ClouderaHostResourceAllocationChartTask(
           timeTravelDaysAgo(1),
           timeTravelDaysAgo(0),
           TimeSeriesAggregation.HOURLY,
@@ -114,6 +116,30 @@ public class ClouderaHostRamChartTaskTest {
   }
 
   @Test
+  public void doRun_clouderaReturnsValidJson_writeJsonLines() throws Exception {
+    String firstHostId = "c7b6b7c125a503cf4b1440f4bdcf557b";
+    String secondHostId = "fa0a38f9784d66a9d6fc1866b3c241b1";
+    initHosts(
+        ClouderaHostDTO.create(firstHostId, firstHostId),
+        ClouderaHostDTO.create(secondHostId, secondHostId));
+    String firstHostServicesResourceAllocationJson =
+        readFileAsString("/cloudera/manager/host-resource-allocation-1.json");
+    String secondHostServicesResourceAllocationJson =
+        readFileAsString("/cloudera/manager/host-resource-allocation-2.json");
+    stubHostAPIResponse(firstHostId, HttpStatus.SC_OK, firstHostServicesResourceAllocationJson);
+    stubHostAPIResponse(secondHostId, HttpStatus.SC_OK, secondHostServicesResourceAllocationJson);
+
+    task.doRun(context, sink, handle);
+
+    Set<String> fileLines = new HashSet<>(MockUtils.getWrittenJsonLines(writer, 2));
+    assertEquals(
+        ImmutableSet.of(
+            toJsonl(firstHostServicesResourceAllocationJson),
+            toJsonl(secondHostServicesResourceAllocationJson)),
+        fileLines);
+  }
+
+  @Test
   public void doRun_clustersWereNotInitialized_throwsCriticalException() throws Exception {
     assertNull(handle.getClusters());
 
@@ -121,7 +147,8 @@ public class ClouderaHostRamChartTaskTest {
         assertThrows(MetadataDumperUsageException.class, () -> task.doRun(context, sink, handle));
 
     assertEquals(
-        "Cloudera hosts must be initialized before RAM charts dumping.", exception.getMessage());
+        "Cloudera hosts must be initialized before host resource allocation charts dumping.",
+        exception.getMessage());
 
     verifyNoWrites(writer);
   }
