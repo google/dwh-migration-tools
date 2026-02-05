@@ -24,8 +24,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostDto;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -56,7 +54,7 @@ public class ClouderaApiHostsTask extends AbstractClouderaManagerTask {
     }
 
     List<ClouderaHostDTO> hosts = new ArrayList<>();
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
         String hostPerClusterUrl = handle.getApiURI() + "/clusters/" + cluster.getName() + "/hosts";
 
@@ -71,10 +69,9 @@ public class ClouderaApiHostsTask extends AbstractClouderaManagerTask {
           }
           jsonHosts = readJsonTree(hostsResponse.getEntity().getContent());
         }
-        String stringifiedHosts = jsonHosts.toString();
-        writer.write(stringifiedHosts);
-        writer.write('\n');
+        writer.writeLine(jsonHosts);
 
+        String stringifiedHosts = jsonHosts.toString();
         ApiHostListDto apiHosts = parseJsonStringToObject(stringifiedHosts, ApiHostListDto.class);
         for (ApiHostDto apiHost : apiHosts.getHosts()) {
           hosts.add(ClouderaHostDTO.create(apiHost.getId(), apiHost.getName()));

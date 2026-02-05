@@ -22,9 +22,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.Writer;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -63,7 +61,7 @@ public class ClouderaCmfHostsTask extends AbstractClouderaManagerTask {
     }
 
     final URI baseURI = handle.getBaseURI();
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
         if (cluster.getId() == null) {
           logger.warn(
@@ -87,9 +85,7 @@ public class ClouderaCmfHostsTask extends AbstractClouderaManagerTask {
             continue;
           }
         }
-        String stringifiedHosts = hostsJson.toString();
-        writer.write(stringifiedHosts);
-        writer.write('\n');
+        writer.writeLine(hostsJson);
       }
     }
   }

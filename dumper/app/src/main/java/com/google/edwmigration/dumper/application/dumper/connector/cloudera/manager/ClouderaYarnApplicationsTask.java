@@ -53,7 +53,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
         new PaginatedClouderaYarnApplicationsLoader(
             handle, context.getArguments().getPaginationPageSize());
 
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
         String clusterName = cluster.getName();
         logger.info("Dump YARN applications from {} cluster", clusterName);
@@ -67,14 +67,13 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
   }
 
   private void writeYarnApplications(
-      Writer writer, List<ApiYarnApplicationDto> yarnApps, String clusterName) {
+      JsonWriter writer, List<ApiYarnApplicationDto> yarnApps, String clusterName) {
     for (ApiYarnApplicationDto yarnApp : yarnApps) {
       yarnApp.setClusterName(clusterName);
     }
     try {
       String yarnAppsJson = serializeObjectToJsonString(ImmutableMap.of("yarnApps", yarnApps));
-      writer.write(yarnAppsJson);
-      writer.write('\n');
+      writer.writeLine(yarnAppsJson);
     } catch (IOException ex) {
       throw new ClouderaConnectorException("Can't dump YARN applications.", ex);
     }

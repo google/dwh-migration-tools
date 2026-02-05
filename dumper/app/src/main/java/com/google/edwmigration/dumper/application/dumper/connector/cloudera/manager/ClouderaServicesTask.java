@@ -46,15 +46,14 @@ public class ClouderaServicesTask extends AbstractClouderaManagerTask {
           "Cloudera clusters must be initialized before services dumping.");
     }
 
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
         String servicesPerCluster =
             handle.getApiURI() + "/clusters/" + cluster.getName() + "/services";
 
         try (CloseableHttpResponse services = httpClient.execute(new HttpGet(servicesPerCluster))) {
           JsonNode jsonNode = readJsonTree(services.getEntity().getContent());
-          writer.write(jsonNode.toString());
-          writer.write('\n');
+          writer.writeLine(jsonNode);
         }
       }
     }
