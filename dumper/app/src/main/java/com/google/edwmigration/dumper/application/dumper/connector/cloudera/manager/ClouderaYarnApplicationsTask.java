@@ -24,8 +24,6 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;

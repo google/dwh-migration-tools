@@ -21,8 +21,6 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;
