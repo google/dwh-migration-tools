@@ -957,6 +957,10 @@ class OverridesUtil {
             ],
             "tools.profiler:async-profiler": [
                 licenseUrl: "https://github.com/async-profiler/async-profiler/blob/master/LICENSE",
+            ],
+            "org.bouncycastle:bcprov-jdk18on": [
+                projectUrl: "https://github.com/bcgit/bc-java",
+                licenseUrl: "https://raw.githubusercontent.com/bcgit/bc-java/main/LICENSE.html",
             ]
         ]
     }
