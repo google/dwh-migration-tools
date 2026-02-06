@@ -112,6 +112,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   // Cloudera
   public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
+  public static final String OPT_SPARK_HISTORY_SERVICE_NAMES = "spark-history-service-names";
   public static final String OPT_PAGINATION_PAGE_SIZE = "pagination-page-size";
 
   // redshift.
@@ -561,6 +562,17 @@ public class ConnectorArguments extends DefaultArguments {
           .withOptionalArg()
           .ofType(String.class)
           .defaultsTo("");
+  private final OptionSpec<String> optionSparkHistoryServiceNames =
+      parser
+          .accepts(
+              OPT_SPARK_HISTORY_SERVICE_NAMES,
+              "Custom list of service names for Spark History Server, used to query "
+                  + "Spark event logs through Apache Knox for application metadata extraction. "
+                  + "Has to be comma separated. For example: spark3history,sparkhistory")
+          .withOptionalArg()
+          .ofType(String.class)
+          .withValuesSeparatedBy(',')
+          .describedAs("name1,name2,...");
   private final OptionSpec<Integer> optionPaginationPageSize =
       parser
           .accepts(OPT_PAGINATION_PAGE_SIZE, "Set page size for API requests.")
@@ -1117,6 +1129,10 @@ public class ConnectorArguments extends DefaultArguments {
             .collect(Collectors.toList()));
   }
 
+  public List<String> getSparkHistoryServiceNames() {
+    return ImmutableList.copyOf(getOptions().valuesOf(optionSparkHistoryServiceNames));
+  }
+
   /** Checks if the property was specified on the command-line. */
   public boolean isDefinitionSpecified(@Nonnull ConnectorProperty property) {
     return getConnectorProperties().isSpecified(property);
@@ -1151,6 +1167,7 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_QUERY_LOG_START, getQueryLogStart())
             .add(OPT_QUERY_LOG_END, getQueryLogEnd())
             .add(OPT_QUERY_LOG_ALTERNATES, getQueryLogAlternates())
+            .add(OPT_SPARK_HISTORY_SERVICE_NAMES, getSparkHistoryServiceNames())
             .add(OPT_ASSESSMENT, isAssessment())
             .add(OPT_TELEMETRY, isTelemetryOn());
     getConnectorProperties().getDefinitionMap().forEach(toStringHelper::add);

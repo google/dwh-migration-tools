@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.ClouderaConnectorException;
 import java.io.IOException;
 import javax.annotation.Nonnull;
 import org.apache.http.client.methods.CloseableHttpResponse;

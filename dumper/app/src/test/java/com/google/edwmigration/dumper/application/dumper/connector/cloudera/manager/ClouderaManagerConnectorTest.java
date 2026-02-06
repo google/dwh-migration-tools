@@ -64,7 +64,8 @@ public class ClouderaManagerConnectorTest {
                     "host-resource-allocation.jsonl", TaskCategory.REQUIRED,
                     "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
-                    "yarn-application-types.jsonl", TaskCategory.OPTIONAL))
+                    "yarn-application-types.jsonl", TaskCategory.OPTIONAL,
+                    "yarn-application-spark-metadata.jsonl", TaskCategory.OPTIONAL))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -99,7 +100,9 @@ public class ClouderaManagerConnectorTest {
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,
-                    "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class))
+                    "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class,
+                    "yarn-application-spark-metadata.jsonl",
+                        ClouderaSparkYarnApplicationMetadataTask.class))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -141,7 +144,8 @@ public class ClouderaManagerConnectorTest {
                     "host-resource-allocation.jsonl", TaskCategory.REQUIRED,
                     "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
-                    "yarn-application-types.jsonl", TaskCategory.OPTIONAL))
+                    "yarn-application-types.jsonl", TaskCategory.OPTIONAL,
+                    "yarn-application-spark-metadata.jsonl", TaskCategory.OPTIONAL))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -185,7 +189,9 @@ public class ClouderaManagerConnectorTest {
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,
-                    "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class))
+                    "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class,
+                    "yarn-application-spark-metadata.jsonl",
+                        ClouderaSparkYarnApplicationMetadataTask.class))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
