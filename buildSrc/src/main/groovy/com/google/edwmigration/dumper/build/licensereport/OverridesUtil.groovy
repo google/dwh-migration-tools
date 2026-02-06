@@ -926,6 +926,38 @@ class OverridesUtil {
                 projectUrl: "https://github.com/harawata/appdirs",
                 licenseUrl: "https://raw.githubusercontent.com/harawata/appdirs/refs/heads/master/LICENSE.txt"
             ],
+            "com.amazonaws:aws-java-sdk-redshiftserverless": [
+                licenseUrl: "https://raw.githubusercontent.com/aws/aws-sdk-java/master/LICENSE.txt"
+            ],
+            "com.google.api.grpc:proto-google-cloud-bigquerystorage-v1beta": [
+                projectUrl: "https://github.com/googleapis/googleapis",
+                licenseUrl: "https://raw.githubusercontent.com/googleapis/googleapis/master/LICENSE",
+            ],
+            "io.grpc:grpc-bom": [
+                licenseUrl: "https://raw.githubusercontent.com/grpc/grpc-java/master/LICENSE",
+            ],
+            "io.netty:netty-tcnative-boringssl-static": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "io.netty:netty-tcnative-classes": [
+                projectUrl: "https://github.com/netty/netty",
+                licenseUrl: "https://raw.githubusercontent.com/netty/netty/4.1/LICENSE.txt",
+            ],
+            "org.apache.arrow:arrow-memory-netty-buffer-patch": [
+                projectUrl: "https://github.com/apache/arrow",
+                licenseUrl: "https://raw.githubusercontent.com/apache/arrow/main/LICENSE.txt",
+            ],
+            "org.apache.commons:commons-collections4": [
+                licenseUrl: "https://raw.githubusercontent.com/apache/commons-collections/master/LICENSE.txt",
+            ],
+            "org.apache.hadoop.thirdparty:hadoop-shaded-protobuf_3_25": [
+                projectUrl: "https://github.com/apache/hadoop-thirdparty",
+                licenseUrl: "https://raw.githubusercontent.com/apache/hadoop-thirdparty/trunk/LICENSE.txt",
+            ],
+            "tools.profiler:async-profiler": [
+                licenseUrl: "https://github.com/async-profiler/async-profiler/blob/master/LICENSE",
+            ]
         ]
     }
 }
