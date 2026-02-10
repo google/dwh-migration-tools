@@ -49,7 +49,8 @@ public class ClouderaClusterResourceAllocationChartTask extends AbstractCloudera
       ZonedDateTime endDate,
       TimeSeriesAggregation tsAggregation,
       TaskCategory taskCategory) {
-    super("cluster-resource-allocation.jsonl", startDate, endDate, tsAggregation, taskCategory);
+    // TODO(b/483215016): rename to 'cluster-resource-allocation.jsonl'
+    super("cluster-cpu.jsonl", startDate, endDate, tsAggregation, taskCategory);
   }
 
   @Override
