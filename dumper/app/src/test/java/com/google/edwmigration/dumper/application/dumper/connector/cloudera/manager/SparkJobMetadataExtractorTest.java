@@ -220,7 +220,7 @@ public class SparkJobMetadataExtractorTest {
     // Arrange
     String logContent =
         "{\"Event\": \"SparkListenerLogStart\", \"Spark Version\": \"3.2.0\"}\n"
-            + "{\"Event\": \"SparkListenerEnvironmentUpdate\", \"Spark Properties\": {\"sun.java.command\": \"com.example.MyApp --jar myapp.jar\"}}\n";
+            + "{\"Event\": \"SparkListenerEnvironmentUpdate\", \"System Properties\": {\"sun.java.command\": \"com.example.MyApp --jar myapp.jar\"}}\n";
     byte[] zipData = createZipWithLog(logContent);
 
     mockResponse(zipData);

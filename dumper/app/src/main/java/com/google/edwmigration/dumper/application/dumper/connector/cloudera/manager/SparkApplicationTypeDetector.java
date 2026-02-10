@@ -25,6 +25,7 @@ import static com.google.edwmigration.dumper.application.dumper.connector.cloude
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.model.SparkApplicationType;
+import javax.annotation.Nullable;
 
 public class SparkApplicationTypeDetector {
 
@@ -32,9 +33,12 @@ public class SparkApplicationTypeDetector {
 
   public static SparkApplicationType detect(JsonNode rootNode) {
     JsonNode sparkProps = rootNode.get("Spark Properties");
-    if (sparkProps == null) return UNKNOWN;
+    JsonNode systemProps = rootNode.get("System Properties");
+    if (sparkProps == null && systemProps == null) {
+      return UNKNOWN;
+    }
 
-    String javaCmd = getProp(sparkProps, "sun.java.command");
+    String javaCmd = getProp(systemProps, "sun.java.command");
     String appName = getProp(sparkProps, "spark.app.name");
     String primaryResource = getProp(sparkProps, "spark.yarn.primary.py.file");
     String pythonPath = getProp(sparkProps, "spark.executorEnv.PYTHONPATH");
@@ -60,14 +64,17 @@ public class SparkApplicationTypeDetector {
       return PYSPARK;
     }
 
-    if (javaCmd.contains(".jar") || sparkProps.has("spark.jars")) {
+    if (javaCmd.contains(".jar") || (sparkProps != null && sparkProps.has("spark.jars"))) {
       return SCALA_JAVA;
     }
 
     return UNKNOWN;
   }
 
-  private static String getProp(JsonNode props, String key) {
-    return props.has(key) ? props.get(key).asText() : "";
+  private static String getProp(@Nullable JsonNode props, String key) {
+    if (props == null || !props.has(key)) {
+      return "";
+    }
+    return props.get(key).asText();
   }
 }
