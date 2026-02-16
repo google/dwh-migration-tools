@@ -50,6 +50,7 @@ final class SnowflakePlanner {
     EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
     FUNCTION_INFO(FunctionInfoFormat.AU_ZIP_ENTRY_NAME),
     HYBRID_TABLE_USAGE("hybrid_table_usage-au.csv"),
+    SEARCH_OPTIMIZATION("search_optimization-au.csv"),
     SNOWPIPE_STREAMING("snowpipe_streaming-au.csv"),
     STAGE_STORAGE_USAGE("stage_storage_usage-au.csv"),
     TABLE_STORAGE_METRICS(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME),
@@ -70,6 +71,7 @@ final class SnowflakePlanner {
   private final ImmutableList<AssessmentQuery> assessmentQueries =
       ImmutableList.of(
           AssessmentQuery.createHybridTableSelect(),
+          AssessmentQuery.createSearchOptimizationSelect(),
           AssessmentQuery.createSnowpipeSelect(),
           AssessmentQuery.createStageStorageSelect(),
           AssessmentQuery.createUserDefinedFunctionsSelect(),
@@ -167,6 +169,13 @@ final class SnowflakePlanner {
     static AssessmentQuery createMetricsSelect(Format zipFormat) {
       String formatString = "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s";
       return new AssessmentQuery(true, formatString, zipFormat.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createSearchOptimizationSelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.SEARCH_OPTIMIZATION_HISTORY";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String query = String.format("SELECT * FROM %s WHERE start_time > %s", view, startTime);
+      return new AssessmentQuery(false, query, Format.SNOWPIPE_STREAMING.value, UPPER_UNDERSCORE);
     }
 
     static AssessmentQuery createSnowpipeSelect() {
