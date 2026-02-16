@@ -49,6 +49,7 @@ final class SnowflakePlanner {
   private enum Format {
     EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
     FUNCTION_INFO(FunctionInfoFormat.AU_ZIP_ENTRY_NAME),
+    HYBRID_TABLE_USAGE("hybrid_table_usage-au.csv"),
     STAGE_STORAGE_USAGE("stage_storage_usage.csv"),
     TABLE_STORAGE_METRICS(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME),
     USER_DEFINED_FUNCTIONS(UserDefinedFunctionsFormat.IS_ZIP_ENTRY_NAME),
@@ -66,6 +67,7 @@ final class SnowflakePlanner {
 
   private final ImmutableList<AssessmentQuery> assessmentQueries =
       ImmutableList.of(
+          AssessmentQuery.createHybridTableSelect(),
           AssessmentQuery.createStageStorageSelect(),
           AssessmentQuery.createUserDefinedFunctionsSelect(),
           AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
@@ -142,6 +144,15 @@ final class SnowflakePlanner {
       this.formatString = formatString;
       this.zipEntryName = zipEntryName;
       this.caseFormat = caseFormat;
+    }
+
+    static AssessmentQuery createHybridTableSelect() {
+      String prefix = "SNOWFLAKE.ACCOUNT_USAGE";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String filter = String.format("WHERE start_time > %s", startTime);
+      String query =
+          String.format("SELECT * FROM %s.HYBRID_TABLE_USAGE_HISTORY %s", prefix, filter);
+      return new AssessmentQuery(false, query, Format.HYBRID_TABLE_USAGE.value, UPPER_UNDERSCORE);
     }
 
     static AssessmentQuery createMetricsSelect(Format zipFormat, CaseFormat caseFormat) {
