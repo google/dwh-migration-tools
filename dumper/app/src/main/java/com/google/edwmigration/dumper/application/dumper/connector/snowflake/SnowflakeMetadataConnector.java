@@ -332,10 +332,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     for (String item : databases) {
       String quotedName = databaseNameQuoted(item);
-      AssessmentQuery baseQuery = SnowflakePlanner.SHOW_EXTERNAL_TABLES;
-
-      String formatString = String.format("%s IN DATABASE %s", baseQuery.formatString, quotedName);
-      AssessmentQuery query = baseQuery.withFormatString(formatString);
+      AssessmentQuery query = SnowflakePlanner.SHOW_EXTERNAL_TABLES.inDatabase(quotedName);
       Task<?> task = convertAssessmentQuery(query, arguments, taskOptions);
       out.add(task);
       // Next tasks will append to the same file.

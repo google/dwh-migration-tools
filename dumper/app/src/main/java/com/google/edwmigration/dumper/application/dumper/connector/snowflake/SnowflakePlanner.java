@@ -44,11 +44,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 final class SnowflakePlanner {
 
   public static final AssessmentQuery SHOW_EXTERNAL_TABLES =
-      AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES, LOWER_UNDERSCORE);
+      AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES);
 
   private enum Format {
     EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
     FUNCTION_INFO(FunctionInfoFormat.AU_ZIP_ENTRY_NAME),
+    STAGE_STORAGE_USAGE("stage_storage_usage.csv"),
     TABLE_STORAGE_METRICS(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME),
     USER_DEFINED_FUNCTIONS(UserDefinedFunctionsFormat.IS_ZIP_ENTRY_NAME),
     WAREHOUSES(WarehousesFormat.AU_ZIP_ENTRY_NAME);
@@ -65,18 +66,18 @@ final class SnowflakePlanner {
 
   private final ImmutableList<AssessmentQuery> assessmentQueries =
       ImmutableList.of(
-          AssessmentQuery.createUserDefinedFunctionsSelect(
-              Format.USER_DEFINED_FUNCTIONS, UPPER_UNDERSCORE),
+          AssessmentQuery.createStageStorageSelect(),
+          AssessmentQuery.createUserDefinedFunctionsSelect(),
           AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS, UPPER_UNDERSCORE),
-          AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
+          AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES),
           SHOW_EXTERNAL_TABLES,
-          AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+          AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO));
 
   private final ImmutableList<AssessmentQuery> liteAssessmentQueries =
       ImmutableList.of(
-          AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES, LOWER_UNDERSCORE),
-          AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES, LOWER_UNDERSCORE),
-          AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO, LOWER_UNDERSCORE));
+          AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES),
+          AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES),
+          AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO));
 
   ImmutableList<AssessmentQuery> generateAssessmentQueries() {
     return assessmentQueries;
@@ -137,8 +138,9 @@ final class SnowflakePlanner {
       this.caseFormat = caseFormat;
     }
 
-    AssessmentQuery withFormatString(String formatString) {
-      return new AssessmentQuery(needsOverride, formatString, zipEntryName, caseFormat);
+    AssessmentQuery inDatabase(String quotedDatabaseName) {
+      String newFormat = String.format("%s IN DATABASE %s", formatString, quotedDatabaseName);
+      return new AssessmentQuery(needsOverride, newFormat, zipEntryName, caseFormat);
     }
 
     static AssessmentQuery createMetricsSelect(Format zipFormat, CaseFormat caseFormat) {
@@ -146,20 +148,28 @@ final class SnowflakePlanner {
       return new AssessmentQuery(true, formatString, zipFormat.value, caseFormat);
     }
 
-    static AssessmentQuery createUserDefinedFunctionsSelect(
-        Format zipFormat, CaseFormat caseFormat) {
+    static AssessmentQuery createStageStorageSelect() {
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String functionPrefix = "SNOWFLAKE.INFORMATION_SCHEMA";
+      String functionCall = String.format("%s.STAGE_STORAGE_USAGE_HISTORY(%s)", functionPrefix, startTime);
+      String query = String.format("SELECT usage_date, storage_bytes FROM %s", functionCall);
+      return new AssessmentQuery(false, query, Format.STAGE_STORAGE_USAGE.value, LOWER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createUserDefinedFunctionsSelect() {
+      String formatValue = Format.USER_DEFINED_FUNCTIONS.value;
       String formatString =
           "SELECT FUNCTION_CATALOG, FUNCTION_SCHEMA, FUNCTION_NAME, FUNCTION_LANGUAGE, ARGUMENT_SIGNATURE, "
               + "FUNCTION_OWNER, COMMENT, VOLATILITY, RUNTIME_VERSION, LAST_ALTERED, "
               + "PACKAGES, IMPORTS, FUNCTION_DEFINITION, IS_AGGREGATE, IS_DATA_METRIC, IS_MEMOIZABLE "
               + "FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS "
               + "WHERE FUNCTION_SCHEMA != 'INFORMATION_SCHEMA' ";
-      return new AssessmentQuery(false, formatString, zipFormat.value, caseFormat);
+      return new AssessmentQuery(false, formatString, formatValue, UPPER_UNDERSCORE);
     }
 
-    static AssessmentQuery createShow(String view, Format zipFormat, CaseFormat caseFormat) {
+    static AssessmentQuery createShow(String view, Format zipFormat) {
       String queryString = String.format("SHOW %s", view);
-      return new AssessmentQuery(false, queryString, zipFormat.value, caseFormat);
+      return new AssessmentQuery(false, queryString, zipFormat.value, LOWER_UNDERSCORE);
     }
 
     ResultSetTransformer<String[]> transformer() {
