@@ -79,6 +79,12 @@ final class SnowflakePlanner {
           AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES),
           AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO));
 
+  AssessmentQuery externalTablesInDatabase(String quotedDatabaseName) {
+    String query = String.format("SHOW EXTERNAL TABLES IN DATABASE %s", quotedDatabaseName);
+    String zipEntryName = Format.EXTERNAL_TABLES.value;
+    return new AssessmentQuery(false, query, zipEntryName, LOWER_UNDERSCORE);
+  }
+
   ImmutableList<AssessmentQuery> generateAssessmentQueries() {
     return assessmentQueries;
   }
@@ -138,11 +144,6 @@ final class SnowflakePlanner {
       this.caseFormat = caseFormat;
     }
 
-    AssessmentQuery inDatabase(String quotedDatabaseName) {
-      String newFormat = String.format("%s IN DATABASE %s", formatString, quotedDatabaseName);
-      return new AssessmentQuery(needsOverride, newFormat, zipEntryName, caseFormat);
-    }
-
     static AssessmentQuery createMetricsSelect(Format zipFormat, CaseFormat caseFormat) {
       String formatString = "SELECT * FROM %1$s.TABLE_STORAGE_METRICS%2$s";
       return new AssessmentQuery(true, formatString, zipFormat.value, caseFormat);
@@ -151,7 +152,8 @@ final class SnowflakePlanner {
     static AssessmentQuery createStageStorageSelect() {
       String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
       String functionPrefix = "SNOWFLAKE.INFORMATION_SCHEMA";
-      String functionCall = String.format("%s.STAGE_STORAGE_USAGE_HISTORY(%s)", functionPrefix, startTime);
+      String functionCall =
+          String.format("%s.STAGE_STORAGE_USAGE_HISTORY(%s)", functionPrefix, startTime);
       String query = String.format("SELECT usage_date, storage_bytes FROM %s", functionCall);
       return new AssessmentQuery(false, query, Format.STAGE_STORAGE_USAGE.value, LOWER_UNDERSCORE);
     }
