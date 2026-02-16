@@ -150,7 +150,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull String informationSchemaFileName,
       @Nonnull String informationSchemaName,
       @Nonnull String accountUsageFileName,
-      @Nonnull String accountUsageSchemaName,
       @Nonnull String accountUsageWhereCondition,
       boolean isAssessment,
       @Nonnull String databaseFilter) {
@@ -164,7 +163,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     AbstractJdbcTask<Summary> usageTask =
         SnowflakeTaskUtil.withFilter(
             format,
-            accountUsageSchemaName,
+            ACCOUNT_USAGE_SCHEMA_NAME,
             accountUsageFileName,
             ImmutableList.of(accountUsageWhereCondition, databaseFilter),
             header);
@@ -182,20 +181,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     out.add(new FormatTask(FORMAT_NAME));
     out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
 
-    boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
-    // INFORMATION_SCHEMA queries must be qualified with a database
-    // name or that a "USE DATABASE" command has previously been run
-    // in the same session. Qualify the name to avoid this dependency.
-    final String databaseName = arguments.getDatabaseSingleName();
-    final String IS;
-    if (INJECT_IS_FAULT) {
-      IS = "__NONEXISTENT__";
-    } else if (databaseName == null) {
-      IS = "INFORMATION_SCHEMA";
-    } else {
-      IS = sanitizeDatabaseName(databaseName) + ".INFORMATION_SCHEMA";
-    }
-
+    String schemaPrefix = getQualifierPrefix(arguments);
     boolean isAssessment = arguments.isAssessment();
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -205,9 +191,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
             MetadataView.DATABASES),
         DatabasesFormat.IS_ZIP_ENTRY_NAME,
-        IS,
+        schemaPrefix,
         DatabasesFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition("database_name", arguments.getDatabases()));
@@ -220,9 +205,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
             MetadataView.SCHEMATA),
         SchemataFormat.IS_ZIP_ENTRY_NAME,
-        IS,
+        schemaPrefix,
         SchemataFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition("catalog_name", arguments.getDatabases()));
@@ -236,9 +220,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 + " clustering_key FROM %1$s.TABLES%2$s",
             MetadataView.TABLES),
         TablesFormat.IS_ZIP_ENTRY_NAME,
-        IS,
+        schemaPrefix,
         TablesFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition(
@@ -254,9 +237,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 + " numeric_precision, numeric_scale, datetime_precision, comment FROM %1$s.COLUMNS%2$s",
             MetadataView.COLUMNS),
         ColumnsFormat.IS_ZIP_ENTRY_NAME,
-        IS,
+        schemaPrefix,
         ColumnsFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition(
@@ -270,9 +252,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT table_catalog, table_schema, table_name, view_definition FROM %1$s.VIEWS%2$s",
             MetadataView.VIEWS),
         ViewsFormat.IS_ZIP_ENTRY_NAME,
-        IS,
+        schemaPrefix,
         ViewsFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition("table_catalog", arguments.getDatabases()));
@@ -286,9 +267,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 + " %1$s.FUNCTIONS%2$s",
             MetadataView.FUNCTIONS),
         FunctionsFormat.IS_ZIP_ENTRY_NAME,
-        IS,
+        schemaPrefix,
         FunctionsFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
         isAssessment,
         getInformationSchemaWhereCondition("function_catalog", arguments.getDatabases()));
@@ -352,6 +332,20 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     FeaturesQueryPath(String value) {
       this.value = value;
+    }
+  }
+
+  // INFORMATION_SCHEMA queries must be qualified with a database
+  // name or that a "USE DATABASE" command has previously been run
+  // in the same session. Qualify the name to avoid this dependency.
+  @Nonnull
+  private static String getQualifierPrefix(@Nonnull ConnectorArguments arguments) {
+    String informationSchema = "INFORMATION_SCHEMA";
+    String databaseName = arguments.getDatabaseSingleName().orElse(null);
+    if (databaseName == null) {
+      return informationSchema;
+    } else {
+      return sanitizeDatabaseName(databaseName) + "." + informationSchema;
     }
   }
 
