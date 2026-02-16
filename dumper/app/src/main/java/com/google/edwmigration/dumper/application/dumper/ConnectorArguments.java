@@ -755,17 +755,13 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   /** Returns the name of the single database specified, if exactly one database was specified. */
-  // This can be used to generate an output filename, but it makes 1 be a special
-  // case
-  // that I find a little uncomfortable from the Unix philosophy:
-  // "Sometimes the output filename is different" is hard to automate around.
-  @CheckForNull
-  public String getDatabaseSingleName() {
+  @Nonnull
+  public Optional<String> getDatabaseSingleName() {
     List<String> databases = getDatabases();
     if (databases.size() == 1) {
-      return databases.get(0);
+      return Optional.of(databases.get(0));
     } else {
-      return null;
+      return Optional.empty();
     }
   }
 
