@@ -50,6 +50,8 @@ final class SnowflakePlanner {
     CORTEX_AI_SEARCH("cortex_ai_search-au.csv"),
     CORTEX_AI_SQL("cortex_ai_sql-au.csv"),
     CORTEX_ANALYST("cortex_analyst-au.csv"),
+    CORTEX_FUNCTIONS("cortex_functions-au.csv"),
+    CORTEX_QUERY("cortex_query-au.csv"),
     DATA_TRANSFER("data_transfer-au.csv"),
     DOCUMENT_AI("document_ai-au.csv"),
     EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
@@ -77,7 +79,9 @@ final class SnowflakePlanner {
       ImmutableList.of(
           AssessmentQuery.createCortexAiSearchSelect(),
           AssessmentQuery.createCortexAiSqlSelect(),
-          AssessmentQuery.createCortexAnalyst(),
+          AssessmentQuery.createCortexAnalystSelect(),
+          AssessmentQuery.createCortexFunctionsSelect(),
+          AssessmentQuery.createCortexQuerySelect(),
           AssessmentQuery.createDataTransferSelect(),
           AssessmentQuery.createDocumentAiSelect(),
           AssessmentQuery.createHybridTableSelect(),
@@ -176,11 +180,24 @@ final class SnowflakePlanner {
       return new AssessmentQuery(false, query, Format.CORTEX_AI_SQL.value, UPPER_UNDERSCORE);
     }
 
-    static AssessmentQuery createCortexAnalyst() {
+    static AssessmentQuery createCortexAnalystSelect() {
       String view = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_ANALYST_USAGE_HISTORY";
       String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
       String query = String.format("SELECT * FROM %s WHERE start_time > %s", view, startTime);
       return new AssessmentQuery(false, query, Format.CORTEX_ANALYST.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createCortexFunctionsSelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_USAGE_HISTORY";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String query = String.format("SELECT * FROM %s WHERE start_time > %s", view, startTime);
+      return new AssessmentQuery(false, query, Format.CORTEX_FUNCTIONS.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createCortexQuerySelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_QUERY_USAGE_HISTORY";
+      String query = String.format("SELECT * FROM %s", view);
+      return new AssessmentQuery(false, query, Format.CORTEX_QUERY.value, UPPER_UNDERSCORE);
     }
 
     static AssessmentQuery createDataTransferSelect() {
