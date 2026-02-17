@@ -47,6 +47,13 @@ final class SnowflakePlanner {
       AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES);
 
   private enum Format {
+    CORTEX_AI_SEARCH("cortex_ai_search-au.csv"),
+    CORTEX_AI_SQL("cortex_ai_sql-au.csv"),
+    CORTEX_ANALYST("cortex_analyst-au.csv"),
+    CORTEX_FUNCTIONS("cortex_functions-au.csv"),
+    CORTEX_QUERY("cortex_query-au.csv"),
+    DATA_TRANSFER("data_transfer-au.csv"),
+    DOCUMENT_AI("document_ai-au.csv"),
     EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
     FUNCTION_INFO(FunctionInfoFormat.AU_ZIP_ENTRY_NAME),
     HYBRID_TABLE_USAGE("hybrid_table_usage-au.csv"),
@@ -70,16 +77,23 @@ final class SnowflakePlanner {
 
   private final ImmutableList<AssessmentQuery> assessmentQueries =
       ImmutableList.of(
+          AssessmentQuery.createCortexAiSearchSelect(),
+          AssessmentQuery.createCortexAiSqlSelect(),
+          AssessmentQuery.createCortexAnalystSelect(),
+          AssessmentQuery.createCortexFunctionsSelect(),
+          AssessmentQuery.createCortexQuerySelect(),
+          AssessmentQuery.createDataTransferSelect(),
+          AssessmentQuery.createDocumentAiSelect(),
           AssessmentQuery.createHybridTableSelect(),
+          AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS),
           AssessmentQuery.createSearchOptimizationSelect(),
+          AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO),
+          AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES),
           AssessmentQuery.createSnowpipeSelect(),
           AssessmentQuery.createStageStorageSelect(),
           AssessmentQuery.createUserDefinedFunctionsSelect(),
           AssessmentQuery.createViewRefreshSelect(),
-          AssessmentQuery.createMetricsSelect(Format.TABLE_STORAGE_METRICS),
-          AssessmentQuery.createShow("WAREHOUSES", Format.WAREHOUSES),
-          SHOW_EXTERNAL_TABLES,
-          AssessmentQuery.createShow("FUNCTIONS", Format.FUNCTION_INFO));
+          SHOW_EXTERNAL_TABLES);
 
   private final ImmutableList<AssessmentQuery> liteAssessmentQueries =
       ImmutableList.of(
@@ -150,6 +164,54 @@ final class SnowflakePlanner {
       this.formatString = formatString;
       this.zipEntryName = zipEntryName;
       this.caseFormat = caseFormat;
+    }
+
+    static AssessmentQuery createCortexAiSearchSelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_SEARCH_DAILY_USAGE_HISTORY";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String query = String.format("SELECT * FROM %s WHERE usage_date > %s", view, startTime);
+      return new AssessmentQuery(false, query, Format.CORTEX_AI_SEARCH.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createCortexAiSqlSelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AISQL_USAGE_HISTORY";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String query = String.format("SELECT * FROM %s WHERE usage_time > %s", view, startTime);
+      return new AssessmentQuery(false, query, Format.CORTEX_AI_SQL.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createCortexAnalystSelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_ANALYST_USAGE_HISTORY";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String query = String.format("SELECT * FROM %s WHERE start_time > %s", view, startTime);
+      return new AssessmentQuery(false, query, Format.CORTEX_ANALYST.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createCortexFunctionsSelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_USAGE_HISTORY";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String query = String.format("SELECT * FROM %s WHERE start_time > %s", view, startTime);
+      return new AssessmentQuery(false, query, Format.CORTEX_FUNCTIONS.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createCortexQuerySelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_QUERY_USAGE_HISTORY";
+      String query = String.format("SELECT * FROM %s", view);
+      return new AssessmentQuery(false, query, Format.CORTEX_QUERY.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createDataTransferSelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.DATA_TRANSFER_HISTORY";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String query = String.format("SELECT * FROM %s WHERE start_time > %s", view, startTime);
+      return new AssessmentQuery(false, query, Format.DATA_TRANSFER.value, UPPER_UNDERSCORE);
+    }
+
+    static AssessmentQuery createDocumentAiSelect() {
+      String view = "SNOWFLAKE.ACCOUNT_USAGE.DOCUMENT_AI_USAGE_HISTORY";
+      String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
+      String query = String.format("SELECT * FROM %s WHERE start_time > %s", view, startTime);
+      return new AssessmentQuery(false, query, Format.DOCUMENT_AI.value, UPPER_UNDERSCORE);
     }
 
     static AssessmentQuery createHybridTableSelect() {
