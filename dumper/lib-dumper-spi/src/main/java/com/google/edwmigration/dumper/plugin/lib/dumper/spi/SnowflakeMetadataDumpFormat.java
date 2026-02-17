@@ -112,6 +112,7 @@ public interface SnowflakeMetadataDumpFormat {
     String IS_ZIP_ENTRY_NAME = "user_defined_functions.csv";
 
     enum Header {
+      FUNCTION_ID,
       FUNCTION_CATALOG,
       FUNCTION_SCHEMA,
       FUNCTION_NAME,
