@@ -188,7 +188,7 @@ final class SnowflakePlanner {
     static AssessmentQuery createStageStorageSelect() {
       String view = "SNOWFLAKE.ACCOUNT_USAGE.STAGE_STORAGE_USAGE_HISTORY";
       String startTime = "CURRENT_TIMESTAMP(0) - INTERVAL '30 days'";
-      String query = String.format("SELECT * FROM %s WHERE start_time > %s", view, startTime);
+      String query = String.format("SELECT * FROM %s WHERE usage_date > %s", view, startTime);
       return new AssessmentQuery(false, query, Format.STAGE_STORAGE_USAGE.value, UPPER_UNDERSCORE);
     }
 
