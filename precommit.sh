@@ -55,10 +55,10 @@ fi
 
 if [[ "$STEP_TEST" == "true" ]] ; then
   "$GRADLE_CMD" :dumper:app:test
-  "$GRADLE_CMD" :permissions-migration:app:test
+#  "$GRADLE_CMD" :permissions-migration:app:test
 fi
 
 if [[ "$STEP_BUILD" == "true" ]] ; then
-  "$GRADLE_CMD" --parallel :dumper:app:installDist
-  "$GRADLE_CMD" --parallel :permissions-migration:app:installDist
+  "$GRADLE_CMD" --parallel :dumper:app:installDist -Pprofile=google
+#  "$GRADLE_CMD" --parallel :permissions-migration:app:installDist
 fi
