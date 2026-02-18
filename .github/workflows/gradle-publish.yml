@@ -36,12 +36,12 @@ jobs:
         run: ./gradlew -Pci :dumper:app:test
 
       - name: Build final artifact with Gradle
-        run: ./gradlew -Pci :dumper:app:publishedDistZip -Pversion="${{ github.ref_name }}"
+        run: ./gradlew -Pci :dumper:app:publishedDistZip -Pversion="${GITHUB_REF_NAME}"
 
       - name: Calculate artifact checksum
         run: |
-          cd ${{ env.RELEASE_ARTIFACT_DIR }}
-          sha256sum "${{ env.ARTIFACT_NAME }}-${{ github.ref_name }}.zip" > SHA256SUMS.txt
+          cd ${RELEASE_ARTIFACT_DIR}
+          sha256sum "${ARTIFACT_NAME}-${GITHUB_REF_NAME}.zip" > SHA256SUMS.txt
 
       # This single action replaces all the curl/jq/git commands for publishing
       - name: Create GitHub Release and Upload Assets
