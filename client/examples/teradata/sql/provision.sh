@@ -94,12 +94,12 @@ log_exec "Enabling service: bigquerymigration.googleapis.com." \
 # Create the GCS bucket for BQMS input/output.
 log_exec "Creating bucket: ${BQMS_GCS_BUCKET}." \
     "Could not create bucket: ${BQMS_GCS_BUCKET}." \
-    gsutil mb -l "${BQMS_GCS_BUCKET_LOCATION}" "gs://${BQMS_GCS_BUCKET}"
+    gcloud storage buckets create --location "${BQMS_GCS_BUCKET_LOCATION}" "gs://${BQMS_GCS_BUCKET}"
 
 # Ensure the BQMS developer has admin rights to objects in GCS bucket.
 log_exec "Granting storage.objectAdmin role to ${BQMS_DEVELOPER_EMAIL} on ${BQMS_GCS_BUCKET} bucket." \
     "Could not grant storage.objectAdmin role to ${BQMS_DEVELOPER_EMAIL} on ${BQMS_GCS_BUCKET} bucket." \
-    gsutil iam ch "user:${BQMS_DEVELOPER_EMAIL}:objectAdmin" "gs://${BQMS_GCS_BUCKET}"
+    gcloud storage buckets add-iam-policy-binding "gs://${BQMS_GCS_BUCKET}" --member="user:${BQMS_DEVELOPER_EMAIL}" --role="roles/storage.objectAdmin"
 
 # Ensure the BQMS developer can view logs in the BQMS project.
 log_exec "Granting logging.viewer role to ${BQMS_DEVELOPER_EMAIL}." \
@@ -146,7 +146,7 @@ then
     # Ensure the Cloud Run service account has admin rights to objects in GCS bucket.
     log_exec "Granting storage.objectAdmin role to ${BQMS_CLOUD_RUN_SERVICE_ACCOUNT} on ${BQMS_GCS_BUCKET}." \
         "Could not grant storage.objectAdmin role to ${BQMS_CLOUD_RUN_SERVICE_ACCOUNT} on ${BQMS_GCS_BUCKET}." \
-        gsutil iam ch "serviceAccount:${BQMS_CLOUD_RUN_SERVICE_ACCOUNT}:objectAdmin" "gs://${BQMS_GCS_BUCKET}"
+        gcloud storage buckets add-iam-policy-binding "gs://${BQMS_GCS_BUCKET}" --member="serviceAccount:${BQMS_CLOUD_RUN_SERVICE_ACCOUNT}" --role="roles/storage.objectAdmin"
 
     # Ensure the Cloud Run service account can create BQMS jobs.
     log_exec "Granting bigquerymigration.editor role to ${BQMS_CLOUD_RUN_SERVICE_ACCOUNT}." \
