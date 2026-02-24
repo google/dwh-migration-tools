@@ -18,6 +18,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -31,5 +34,22 @@ public interface GroupTask extends Task<Summary> {
   @Nonnull
   static GroupTask createSelect(String file, String selectQuery) {
     return new SelectTask(file, selectQuery);
+  }
+
+  @Nonnull
+  static GroupTask createSelect(String file, String selectQuery, String where) {
+    checkArgument(where.startsWith(" "));
+    return new SelectTask(file, selectQuery + where);
+  }
+
+  @Nonnull
+  static GroupTask createSelectStar(String file, String table) {
+    return new SelectTask(file, "SELECT * FROM " + table);
+  }
+
+  @Nonnull
+  static GroupTask createSelectStar(String file, String table, String where) {
+    checkArgument(where.startsWith(" "));
+    return new SelectTask(file, "SELECT * FROM " + table + where);
   }
 }

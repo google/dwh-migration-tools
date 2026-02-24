@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
@@ -31,6 +32,8 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
+
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -58,8 +61,11 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   @Nonnull
   private static GroupTask newSelectStarTask(
       @Nonnull String file, @Nonnull String table, @Nonnull String where) {
-    checkArgument(table.endsWith(" ") || where.startsWith(" ") || where.isEmpty());
-    return GroupTask.createSelect(file, "SELECT * FROM " + table + where);
+    if (where.isEmpty()) {
+        return GroupTask.createSelectStar(file, table);
+    } else {
+        return GroupTask.createSelectStar(file, table, where);
+    }
   }
 
   private static void buildSelectStarTask(
@@ -81,11 +87,14 @@ public class OracleMetadataConnector extends AbstractOracleConnector
       @Nonnull String ownerColumn,
       @Nonnull String nameColumn,
       @Nonnull String where) {
-    return GroupTask.createSelect(
-        file,
-        String.format(
-            "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s%s",
-            ownerColumn, nameColumn, objectType, nameColumn, ownerColumn, table, where));
+    String query = String.format(
+            "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s",
+            ownerColumn, nameColumn, objectType, nameColumn, ownerColumn, table);
+    if (where.isEmpty()) {
+        return GroupTask.createSelect(file, query);
+    } else {
+        return GroupTask.createSelect(file, query, where);
+    }
   }
 
   private static void buildSelectXmlTask(
@@ -113,8 +122,14 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   }
 
   @Override
-  public void addTasksTo(@Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments)
-      throws Exception {
+  public void addTasksTo(
+      @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    out.addAll(generateTasks(arguments));
+  }
+
+  @Nonnull
+  ImmutableList<Task<?>> generateTasks(@Nonnull ConnectorArguments arguments) {
+    ArrayList<Task<?>> out = new ArrayList<>();
     out.add(new DumpMetadataTask(arguments, getFormatName()));
     out.add(new FormatTask(getFormatName()));
 
@@ -327,7 +342,7 @@ public class OracleMetadataConnector extends AbstractOracleConnector
         "OWNER",
         "SYNONYM_NAME",
         whereCondOwner);
-
     // Todo: procedures, database links, triggers, packages
+    return ImmutableList.copyOf(out);
   }
 }
