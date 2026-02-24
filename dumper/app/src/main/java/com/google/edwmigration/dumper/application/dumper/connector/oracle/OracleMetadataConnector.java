@@ -16,8 +16,6 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +30,6 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.OracleMetadataDumpFormat;
-
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.CheckForNull;
@@ -62,9 +59,9 @@ public class OracleMetadataConnector extends AbstractOracleConnector
   private static GroupTask newSelectStarTask(
       @Nonnull String file, @Nonnull String table, @Nonnull String where) {
     if (where.isEmpty()) {
-        return GroupTask.createSelectStar(file, table);
+      return GroupTask.createSelectStar(file, table);
     } else {
-        return GroupTask.createSelectStar(file, table, where);
+      return GroupTask.createSelectStar(file, table, where);
     }
   }
 
@@ -87,13 +84,14 @@ public class OracleMetadataConnector extends AbstractOracleConnector
       @Nonnull String ownerColumn,
       @Nonnull String nameColumn,
       @Nonnull String where) {
-    String query = String.format(
+    String query =
+        String.format(
             "SELECT %s, %s, DBMS_METADATA.GET_XML('%s', %s, %s) FROM %s",
             ownerColumn, nameColumn, objectType, nameColumn, ownerColumn, table);
     if (where.isEmpty()) {
-        return GroupTask.createSelect(file, query);
+      return GroupTask.createSelect(file, query);
     } else {
-        return GroupTask.createSelect(file, query, where);
+      return GroupTask.createSelect(file, query, where);
     }
   }
 

@@ -16,11 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.oracle.task;
 
-import com.google.edwmigration.dumper.application.dumper.task.Summary;
-import com.google.edwmigration.dumper.application.dumper.task.Task;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.edwmigration.dumper.application.dumper.task.Summary;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
