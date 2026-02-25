@@ -101,7 +101,7 @@ public class Main {
       AsyncProfiler asyncProfiler = AsyncProfiler.getInstance();
       asyncProfiler.execute("start,event=cpu,interval=10ms");
       return asyncProfiler;
-    } catch (IOException ignore) {
+    } catch (Exception ignore) {
       logger.info(
           "Async profiler was not inited for the execution. The root cause: "
               + ignore.getMessage());
