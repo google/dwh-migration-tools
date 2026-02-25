@@ -16,13 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import one.profiler.AsyncProfiler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -30,8 +27,10 @@ import java.nio.file.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-
-import static com.google.common.collect.ImmutableList.toImmutableList;
+import javax.annotation.Nullable;
+import one.profiler.AsyncProfiler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** @author miguel */
 public class Main {
@@ -93,6 +92,7 @@ public class Main {
 
   /**
    * AsyncProfiler doesn't support all the OSs, so the usage is optional.
+   *
    * @return AsyncProfiler instance or {@code null} if OS is not supported.
    */
   @Nullable
@@ -102,13 +102,15 @@ public class Main {
       asyncProfiler.execute("start,event=cpu,interval=10ms");
       return asyncProfiler;
     } catch (IOException ignore) {
-      logger.info("Async profiler was not inited for the execution. The root cause: " + ignore.getMessage());
+      logger.info(
+          "Async profiler was not inited for the execution. The root cause: "
+              + ignore.getMessage());
     }
     return null;
   }
 
   private static void moveFileToZip(String zipFile, File file, String entryName)
-          throws IOException {
+      throws IOException {
     Map<String, String> env = Collections.singletonMap("create", "false");
     URI zipUri = URI.create("jar:" + Paths.get(zipFile).toUri());
 
