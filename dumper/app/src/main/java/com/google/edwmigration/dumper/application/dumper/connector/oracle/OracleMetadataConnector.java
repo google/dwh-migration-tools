@@ -125,6 +125,12 @@ public class OracleMetadataConnector extends AbstractOracleConnector
     out.addAll(generateTasks(arguments));
   }
 
+  /**
+   * Get the tasks that this connector adds for the specified arguments.
+   *
+   * <p>This is a version of {@link OracleMetadataConnector#addTasksTo} which works by returning a
+   * result rather than side effects.
+   */
   @Nonnull
   ImmutableList<Task<?>> generateTasks(@Nonnull ConnectorArguments arguments) {
     ArrayList<Task<?>> out = new ArrayList<>();

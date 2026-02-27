@@ -30,25 +30,33 @@ public interface GroupTask extends Task<Summary> {
   @CheckForNull
   public Exception getException();
 
+  /**
+   * Create a task running a "SELECT" query.
+   *
+   * <p>The query is a simple select with no filtering.
+   */
   @Nonnull
-  static GroupTask createSelect(String file, String selectQuery) {
-    return new SelectTask(file, selectQuery);
+  static GroupTask createSelect(String outputFile, String selectQuery) {
+    return new SelectTask(outputFile, selectQuery);
   }
 
+  /** Create a task running a "SELECT" query with filtering. */
   @Nonnull
-  static GroupTask createSelect(String file, String selectQuery, String where) {
+  static GroupTask createSelect(String outputFile, String selectQuery, String where) {
     checkArgument(where.startsWith(" "));
-    return new SelectTask(file, selectQuery + where);
+    return new SelectTask(outputFile, selectQuery + where);
   }
 
+  /** Create a task running "SELECT *" on the specified table. */
   @Nonnull
-  static GroupTask createSelectStar(String file, String table) {
-    return new SelectTask(file, "SELECT * FROM " + table);
+  static GroupTask createSelectStar(String outputFile, String table) {
+    return new SelectTask(outputFile, "SELECT * FROM " + table);
   }
 
+  /** Create a task running "SELECT *" on the specified table with filtering. */
   @Nonnull
-  static GroupTask createSelectStar(String file, String table, String where) {
+  static GroupTask createSelectStar(String outputFile, String table, String where) {
     checkArgument(where.startsWith(" "));
-    return new SelectTask(file, "SELECT * FROM " + table + where);
+    return new SelectTask(outputFile, "SELECT * FROM " + table + where);
   }
 }
