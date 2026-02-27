@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.task.TaskTestUtil;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,11 +36,11 @@ public class OracleMetadataConnectorTest {
   @Test
   public void addTasksTo_generatesMetadataSelectTasks() throws Exception {
     OracleMetadataConnector connector = new OracleMetadataConnector();
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "oracle");
     ImmutableList<String> expected = expectedSql();
-    List<Task<?>> tasks = new ArrayList<>();
 
     // Act
-    connector.addTasksTo(tasks, new ConnectorArguments("--connector", connector.getName()));
+    List<Task<?>> tasks = connector.generateTasks(arguments);
 
     // Assert
     ImmutableList<String> selectSqls =
