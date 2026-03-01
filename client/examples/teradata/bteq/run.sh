@@ -101,8 +101,8 @@ then
     # Sync config files and input files to GCS to be processed by Cloud Run job.
     log_exec "Syncing ${SCRIPT_DIR} to gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}." \
         "Could not sync ${SCRIPT_DIR} to gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}." \
-            gsutil ${MULTITHREADED:+ -m} \
-                rsync -r -d "${SCRIPT_DIR}" "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}"
+            gcloud storage \
+                rsync --recursive --delete-unmatched-destination-objects "${SCRIPT_DIR}" "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}"
 
     # Build and export path env vars that the Cloud Run Python tool will use.
     export BQMS_INPUT_PATH="gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}/input"
@@ -191,8 +191,8 @@ then
         # Sync the translated BQMS output locally so it can be inspected if need be.
         log_exec "Syncing gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX} to ${SCRIPT_DIR}." \
             "Could not sync gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX} to ${SCRIPT_DIR}." \
-                gsutil ${MULTITHREADED:+ -m} \
-                    rsync -r -d "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}" "${SCRIPT_DIR}"
+                gcloud storage \
+                rsync --recursive --delete-unmatched-destination-objects "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}" "${SCRIPT_DIR}"
     fi
 # Execute Python tool locally.
 else
@@ -238,7 +238,7 @@ else
         mkdir -p "${BQMS_LOCAL_PREPROCESSED_PATH}"
         log_exec "Syncing ${BQMS_PREPROCESSED_PATH} to ${BQMS_LOCAL_PREPROCESSED_PATH}." \
             "Could not sync ${BQMS_PREPROCESSED_PATH} to ${BQMS_LOCAL_PREPROCESSED_PATH}." \
-                gsutil ${MULTITHREADED:+ -m} rsync -r -d "${BQMS_PREPROCESSED_PATH}" \
+                gcloud storage rsync --recursive --delete-unmatched-destination-objects "${BQMS_PREPROCESSED_PATH}" \
                     "${BQMS_LOCAL_PREPROCESSED_PATH}"
 
         # Sync the translated BQMS output locally so it can be inspected if need be.
@@ -246,7 +246,7 @@ else
         mkdir -p "${BQMS_LOCAL_TRANSLATED_PATH}"
         log_exec "Syncing ${BQMS_TRANSLATED_PATH} to ${BQMS_LOCAL_TRANSLATED_PATH}." \
             "Could not sync ${BQMS_TRANSLATED_PATH} to ${BQMS_LOCAL_TRANSLATED_PATH}." \
-                gsutil ${MULTITHREADED:+ -m} rsync -r -d "${BQMS_TRANSLATED_PATH}" \
+                gcloud storage rsync --recursive --delete-unmatched-destination-objects "${BQMS_TRANSLATED_PATH}" \
                     "${BQMS_LOCAL_TRANSLATED_PATH}"
     fi
 fi
@@ -255,6 +255,6 @@ if [[ -n "${BQMS_CLEANUP_FILES}" ]]
 then
     log_exec "Cleaining gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}." \
             "Could not clean gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}." \
-                gsutil ${MULTITHREADED:+ -m} rm -rf "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}"
+                gcloud storage rm -rf "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}"
 fi
 log_info "Preprocessing, translation and postprocessing has completed successfully."

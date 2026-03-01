@@ -68,7 +68,7 @@ python3 ./generate_principal_ruleset.py $num_users $num_groups $num_roles
 #echo "Generating table files"
 #python3 ./generate_tables.py $num_tables
 #echo "Uploading table files to gcs"
-#gsutil -m cp -r ./tables/** gs://$table_bucket/$table_gcs_prefix/tables &> upload.log
+#gcloud storage cp --recursive ./tables/** gs://$table_bucket/$table_gcs_prefix/tables &> upload.log
 
 #deactivate the python venv
 deactivate
@@ -139,7 +139,5 @@ echo "Number of GCS permissions in the output (expecting $((4*num_tables))):"
 cat ./permissions_output.yaml | grep 'resourceType: "GCS_MANAGED_FOLDER"' | wc -l
 echo "Number of BQ permissions in the output (expecting $((4*num_tables))):"
 cat ./permissions_output.yaml | grep 'resourceType: "BQ_TABLE"' | wc -l
-
-
 
 
