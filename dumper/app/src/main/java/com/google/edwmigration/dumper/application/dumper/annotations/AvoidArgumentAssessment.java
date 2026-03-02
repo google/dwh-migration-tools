@@ -16,37 +16,17 @@
  */
 package com.google.edwmigration.dumper.application.dumper.annotations;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import javax.annotation.Nonnull;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import java.lang.annotation.*;
 
-/** @author shevek */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Repeatable(RespectsInputs.class)
-public @interface RespectsInput {
+@AvoidInput(
+    arg = ConnectorArguments.OPT_ASSESSMENT,
+    description = AvoidArgumentAssessment.DESCRIPTION)
+public @interface AvoidArgumentAssessment {
 
-  @Nonnull
-  String arg() default "";
-
-  @Nonnull
-  String env() default "";
-
-  @Nonnull
-  String description();
-
-  @Nonnull
-  String defaultValue() default "";
-
-  int order() default Integer.MAX_VALUE;
-
-  @Nonnull
-  String required() default "";
+  String DESCRIPTION = "The argument must not be used with this connector.";
 }
