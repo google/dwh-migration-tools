@@ -25,6 +25,7 @@ buildscript {
 plugins {
     id 'dwh-migration-dumper.java-application-conventions'
     id 'jacoco'
+    id 'org.cyclonedx.bom' version '1.8.2'
 }
 
 apply plugin: 'com.github.jk1.dependency-license-report'
@@ -156,8 +157,8 @@ dependencies {
     testRuntimeOnly libs.datanucleus.javax.jdo
     testRuntimeOnly libs.datanucleus.rdbms
 
-    sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}@sources"
-    sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
+    sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}:sources"
+    sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}:sources"
 }
 
 dependencyLocking {
@@ -230,6 +231,16 @@ licenseReport {
     allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
 }
 
+cyclonedxBom {
+    includeConfigs = ["runtimeClasspath"]
+    skipConfigs = ["compileClasspath", "testCompileClasspath"]
+    projectType = "application"
+    schemaVersion = "1.5"
+    destination = file("build/reports/bom")
+    outputFormat = "json"
+    outputName = "bom"
+}
+
 tasks.named('check') {
     dependsOn 'checkLicense', 'printBanner'
 }
@@ -300,6 +311,9 @@ distributions {
             }
             from(generateSourceMirror) {
                 into "docs/sources"
+            }
+            from(cyclonedxBom) {
+                into "docs/bom"
             }
         }
     }
