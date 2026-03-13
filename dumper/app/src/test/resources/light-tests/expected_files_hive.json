@@ -1,0 +1,26 @@
+{
+  "metadata": [
+    "catalogs.jsonl",
+    "compilerworks-arguments.txt",
+    "compilerworks-format.txt",
+    "compilerworks-metadata.yaml",
+    "compilerworks-version.txt",
+    "databases.csv",
+    "databases.jsonl",
+    "delegation-tokens.jsonl",
+    "functions.csv",
+    "functions.jsonl",
+    "master-keys.jsonl",
+    "partitions-default-sample.jsonl",
+    "partitions-devtest-bucketed_table.jsonl",
+    "partitions-devtest-employee.jsonl",
+    "partitions-devtest-employee_view.jsonl",
+    "partitions-devtest-external_employee.jsonl",
+    "partitions-devtest-sales.jsonl",
+    "resource-plans.jsonl",
+    "schemata.csv",
+    "tables-raw.jsonl",
+    "tables.jsonl"
+  ],
+  "logs": []
+}

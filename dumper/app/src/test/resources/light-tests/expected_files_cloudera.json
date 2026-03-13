@@ -1,0 +1,25 @@
+{
+  "metadata": [
+    "api-hosts.jsonl",
+    "cluster-cpu.jsonl",
+    "clusters.json",
+    "cmf-hosts.jsonl",
+    "compilerworks-arguments.txt",
+    "compilerworks-format.txt",
+    "compilerworks-metadata.yaml",
+    "compilerworks-version.txt",
+    "host-components.jsonl",
+    "host-ram.jsonl",
+    "service-resource-allocation.jsonl",
+    "services.jsonl",
+    "yarn-application-spark-metadata.jsonl",
+    "yarn-application-types.jsonl",
+    "yarn-applications.jsonl"
+  ],
+  "logs": [
+    "oozie_coord_jobs.csv",
+    "oozie_info.csv",
+    "oozie_servers.csv",
+    "oozie_workflow_jobs.csv"
+  ]
+}
