@@ -23,3 +23,8 @@
     external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
     a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
     
+- CVE: CVE-2025-0982
+  artifact: cpe:2.3:a:google:application_integration:8.2.1
+  justification: >
+    False positive; this artifact is incorrectly identified by the OWASP scanner. 
+    It is not a direct or transitive dependency of dwh-migration-tools:dumper.
