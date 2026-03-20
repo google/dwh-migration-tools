@@ -26,11 +26,13 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiServiceListDto;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -61,7 +63,8 @@ public class SparkHistoryDiscoveryService {
    * any custom paths, against the discovered Knox Gateway instance.
    */
   public List<String> resolveUrl(
-      String clusterName, CloseableHttpClient knoxClient, List<String> customCandidatePaths) {
+      String clusterName, CloseableHttpClient knoxClient, List<String> customCandidatePaths)
+      throws URISyntaxException {
     Set<String> reachableUrls = new LinkedHashSet<>();
     try {
       Optional<KnoxGatewayInfo> knoxInfo = getKnoxGatewayInfo(clusterName);
@@ -77,14 +80,19 @@ public class SparkHistoryDiscoveryService {
       allCandidates.addAll(DEFAULT_CANDIDATE_PATHS);
 
       for (String context : allCandidates) {
-        String candidateUrl =
-            String.format(
-                "https://%s/%s/%s/%s/api/v1",
-                info.hostname, info.gatewayPath, info.topologyName, context);
+        URI candidateUrl =
+            new URIBuilder()
+                .setScheme("https")
+                .setHost(info.hostname)
+                .appendPath(info.gatewayPath)
+                .appendPath(info.topologyName)
+                .appendPath(context)
+                .appendPath("api/v1")
+                .build();
 
         if (isReachable(candidateUrl, knoxClient)) {
           logger.info("Found active Spark History Server at: {}", candidateUrl);
-          reachableUrls.add(candidateUrl);
+          reachableUrls.add(candidateUrl.toString());
         }
       }
 
@@ -102,7 +110,7 @@ public class SparkHistoryDiscoveryService {
     return new ArrayList<>(reachableUrls);
   }
 
-  private boolean isReachable(String url, CloseableHttpClient knoxHttpClient) {
+  private boolean isReachable(URI url, CloseableHttpClient knoxHttpClient) {
     String probeUrl = url + "/applications?limit=1";
 
     try (CloseableHttpResponse response = knoxHttpClient.execute(new HttpGet(probeUrl))) {
