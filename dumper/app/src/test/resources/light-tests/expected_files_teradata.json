@@ -1,0 +1,30 @@
+{
+  "metadata": [
+    "compilerworks-arguments.txt",
+    "compilerworks-format.txt",
+    "compilerworks-metadata.yaml",
+    "compilerworks-version.txt",
+    "dbc.AllTempTablesVX.csv",
+    "dbc.All_RI_ChildrenV.csv",
+    "dbc.All_RI_ParentsV.csv",
+    "dbc.ColumnsV.csv",
+    "dbc.DatabasesV.csv",
+    "dbc.DiskSpaceV.csv",
+    "dbc.FunctionsV.csv",
+    "dbc.IndicesV.csv",
+    "dbc.PartitioningConstraintsV.csv",
+    "dbc.RoleMembersV.csv",
+    "dbc.StatsV.csv",
+    "dbc.TableSizeV.csv",
+    "dbc.TablesV.csv",
+    "dbc.TableTextV.csv",
+    "version.csv"
+  ],
+  "logs": [
+    "dbc.ResUsageScpu.csv",
+    "dbc.ResUsageSpma.csv",
+    "queryLogsFirstAndLastEntry.csv",
+    "query_history.csv",
+    "utility_logs.csv"
+  ]
+}

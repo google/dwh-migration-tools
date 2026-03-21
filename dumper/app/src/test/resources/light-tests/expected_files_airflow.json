@@ -1,0 +1,14 @@
+{
+  "metadata": [
+    "compilerworks-arguments.txt",
+    "compilerworks-format.txt",
+    "compilerworks-metadata.yaml",
+    "compilerworks-version.txt",
+    "dag.csv",
+    "dag_code.csv",
+    "dag_run.csv",
+    "serialized_dag.csv",
+    "task_instance.csv"
+  ],
+  "logs": []
+}
