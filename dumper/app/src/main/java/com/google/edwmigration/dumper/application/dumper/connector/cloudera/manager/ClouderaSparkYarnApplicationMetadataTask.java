@@ -30,6 +30,8 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.apache.hc.core5.net.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +100,8 @@ public class ClouderaSparkYarnApplicationMetadataTask extends AbstractClouderaMa
       ClouderaClusterDTO cluster,
       List<String> appIds,
       JsonWriter writer,
-      ClouderaManagerHandle handle) {
+      ClouderaManagerHandle handle)
+      throws URISyntaxException {
 
     String clusterName = cluster.getName();
     if (appIds == null || appIds.isEmpty()) return;
@@ -143,8 +147,12 @@ public class ClouderaSparkYarnApplicationMetadataTask extends AbstractClouderaMa
       tasks.add(
           CompletableFuture.supplyAsync(
               () -> {
-                ExtractionResult result =
-                    processApplication(extractor, writer, historyUrls, clusterName, appId);
+                ExtractionResult result;
+                try {
+                  result = processApplication(extractor, writer, historyUrls, clusterName, appId);
+                } catch (URISyntaxException e) {
+                  throw new RuntimeException(e);
+                }
                 trackProgress(processedCount, totalApps, logThreshold, clusterName);
                 return result;
               },
@@ -158,10 +166,16 @@ public class ClouderaSparkYarnApplicationMetadataTask extends AbstractClouderaMa
       JsonWriter writer,
       List<String> baseUrls,
       String clusterName,
-      String appId) {
+      String appId)
+      throws URISyntaxException {
     for (String baseUrl : baseUrls) {
       try {
-        String logUrl = String.format("%s/applications/%s/logs", baseUrl, appId);
+        URI logUrl =
+            new URIBuilder(baseUrl)
+                .appendPath("applications")
+                .appendPath(appId)
+                .appendPath("logs")
+                .build();
         Optional<SparkYarnApplicationMetadata> metadata =
             extractor.extract(logUrl, clusterName, appId);
         if (metadata.isPresent()) {

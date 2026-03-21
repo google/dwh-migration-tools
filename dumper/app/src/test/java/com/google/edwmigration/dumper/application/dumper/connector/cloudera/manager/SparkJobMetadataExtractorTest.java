@@ -31,6 +31,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -69,7 +70,7 @@ public class SparkJobMetadataExtractorTest {
 
     // Act
     Optional<SparkYarnApplicationMetadata> result =
-        extractor.extract("http://log-url", "test-cluster", "app-id");
+        extractor.extract(toUri("http://log-url"), "test-cluster", "app-id");
 
     // Assert
     assertFalse(result.isPresent());
@@ -87,7 +88,7 @@ public class SparkJobMetadataExtractorTest {
     // Act
     assertThrows(
         SparkHistoryConnectionException.class,
-        () -> extractor.extract("http://log-url", "test-cluster", "app-id"));
+        () -> extractor.extract(toUri("http://log-url"), "test-cluster", "app-id"));
   }
 
   @Test
@@ -106,7 +107,7 @@ public class SparkJobMetadataExtractorTest {
 
     // Act
     Optional<SparkYarnApplicationMetadata> result =
-        extractor.extract("http://log-url", "test-cluster", "app-id");
+        extractor.extract(toUri("http://log-url"), "test-cluster", "app-id");
 
     // Assert
     assertFalse(result.isPresent());
@@ -130,7 +131,7 @@ public class SparkJobMetadataExtractorTest {
     // Act
     assertThrows(
         SparkLogFormatException.class,
-        () -> extractor.extract("http://log-url", "test-cluster", "app-id"));
+        () -> extractor.extract(toUri("http://log-url"), "test-cluster", "app-id"));
   }
 
   @Test
@@ -155,7 +156,7 @@ public class SparkJobMetadataExtractorTest {
 
     // Act
     Optional<SparkYarnApplicationMetadata> result =
-        extractor.extract("http://log-url", "test-cluster", "app-id");
+        extractor.extract(toUri("http://log-url"), "test-cluster", "app-id");
 
     // Assert
     assertTrue(result.isPresent());
@@ -185,7 +186,7 @@ public class SparkJobMetadataExtractorTest {
 
     // Act
     Optional<SparkYarnApplicationMetadata> result =
-        extractor.extract("http://log-url", "test-cluster", "app-id");
+        extractor.extract(toUri("http://log-url"), "test-cluster", "app-id");
 
     // Assert
     assertTrue(result.isPresent());
@@ -207,7 +208,7 @@ public class SparkJobMetadataExtractorTest {
 
     // Act
     Optional<SparkYarnApplicationMetadata> result =
-        extractor.extract("http://log-url", "test-cluster", "app-id");
+        extractor.extract(toUri("http://log-url"), "test-cluster", "app-id");
 
     // Assert
     assertTrue(result.isPresent());
@@ -227,7 +228,7 @@ public class SparkJobMetadataExtractorTest {
 
     // Act
     Optional<SparkYarnApplicationMetadata> result =
-        extractor.extract("http://log-url", "test-cluster", "app-id");
+        extractor.extract(toUri("http://log-url"), "test-cluster", "app-id");
 
     // Assert
     assertTrue(result.isPresent());
@@ -246,7 +247,7 @@ public class SparkJobMetadataExtractorTest {
 
     // Act
     Optional<SparkYarnApplicationMetadata> result =
-        extractor.extract("http://log-url", "test-cluster", "app-id");
+        extractor.extract(toUri("http://log-url"), "test-cluster", "app-id");
 
     // Assert
     assertTrue(result.isPresent());
@@ -268,7 +269,7 @@ public class SparkJobMetadataExtractorTest {
 
     // Act
     Optional<SparkYarnApplicationMetadata> result =
-        extractor.extract("http://log-url", "test-cluster", "app-id");
+        extractor.extract(toUri("http://log-url"), "test-cluster", "app-id");
 
     // Assert
     // It should not find SparkListenerLogStart because it's after 50 lines
@@ -298,5 +299,9 @@ public class SparkJobMetadataExtractorTest {
       zos.closeEntry();
     }
     return baos.toByteArray();
+  }
+
+  private static URI toUri(String s) {
+    return URI.create(s);
   }
 }

@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -53,7 +54,7 @@ public class SparkJobMetadataExtractor {
   }
 
   public Optional<SparkYarnApplicationMetadata> extract(
-      String logUrl, String clusterName, String applicationId)
+      URI logUrl, String clusterName, String applicationId)
       throws SparkHistoryConnectionException, SparkLogFormatException {
 
     HttpGet request = new HttpGet(logUrl);

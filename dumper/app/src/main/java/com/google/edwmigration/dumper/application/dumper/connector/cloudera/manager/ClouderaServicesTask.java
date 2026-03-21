@@ -21,8 +21,10 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.net.URI;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -46,8 +48,12 @@ public class ClouderaServicesTask extends AbstractClouderaManagerTask {
 
     try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
-        String servicesPerCluster =
-            handle.getApiURI() + "/clusters/" + cluster.getName() + "/services";
+        URI servicesPerCluster =
+            new URIBuilder(handle.getApiURI())
+                .appendPath("clusters")
+                .appendPath(cluster.getName())
+                .appendPath("services")
+                .build();
 
         try (CloseableHttpResponse services = httpClient.execute(new HttpGet(servicesPerCluster))) {
           JsonNode jsonNode = readJsonTree(services.getEntity().getContent());

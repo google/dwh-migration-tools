@@ -64,9 +64,8 @@ abstract class AbstractClouderaTimeSeriesTask extends AbstractClouderaManagerTas
 
   protected JsonNode requestTimeSeriesChart(ClouderaManagerHandle handle, String query)
       throws Exception {
-    String timeSeriesUrl = handle.getApiURI().toString() + "/timeseries";
-
-    URIBuilder uriBuilder = new URIBuilder(timeSeriesUrl);
+    URIBuilder uriBuilder = new URIBuilder(handle.getApiURI().toString());
+    uriBuilder.appendPath("timeseries");
     uriBuilder.addParameter("query", query);
     uriBuilder.addParameter("desiredRollup", tsAggregation.toString());
     uriBuilder.addParameter("mustUseDesiredRollup", "true");

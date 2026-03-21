@@ -24,9 +24,11 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostDto;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiHostListDto;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -56,7 +58,12 @@ public class ClouderaApiHostsTask extends AbstractClouderaManagerTask {
     List<ClouderaHostDTO> hosts = new ArrayList<>();
     try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
-        String hostPerClusterUrl = handle.getApiURI() + "/clusters/" + cluster.getName() + "/hosts";
+        URI hostPerClusterUrl =
+            new URIBuilder(handle.getApiURI())
+                .appendPath("clusters")
+                .appendPath(cluster.getName())
+                .appendPath("hosts")
+                .build();
 
         JsonNode jsonHosts;
         try (CloseableHttpResponse hostsResponse =
