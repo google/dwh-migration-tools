@@ -122,7 +122,8 @@ public class SparkHistoryDiscoveryService {
     }
   }
 
-  private Optional<KnoxGatewayInfo> getKnoxGatewayInfo(String clusterName) throws IOException {
+  private Optional<KnoxGatewayInfo> getKnoxGatewayInfo(String clusterName)
+      throws IOException, URISyntaxException {
     Optional<String> knoxServiceName = getKnoxServiceName(clusterName);
     if (!knoxServiceName.isPresent()) {
       return Optional.empty();
@@ -153,9 +154,15 @@ public class SparkHistoryDiscoveryService {
     return Optional.of(new KnoxGatewayInfo(hostname, gatewayPath, topologyName));
   }
 
-  private Optional<String> getKnoxServiceName(String clusterName) throws IOException {
-    String path = String.format("clusters/%s/services", clusterName);
-    Optional<ApiServiceListDto> serviceList = get(path, ApiServiceListDto.class);
+  private Optional<String> getKnoxServiceName(String clusterName)
+      throws IOException, URISyntaxException {
+    URI requestUri =
+        new URIBuilder(apiURI)
+            .appendPath("clusters")
+            .appendPath(clusterName)
+            .appendPath("services")
+            .build();
+    Optional<ApiServiceListDto> serviceList = get(requestUri, ApiServiceListDto.class);
     return serviceList.flatMap(
         list ->
             list.getItems().stream()
@@ -165,20 +172,30 @@ public class SparkHistoryDiscoveryService {
   }
 
   private Optional<ApiRoleDto> getKnoxRole(String clusterName, String knoxServiceName)
-      throws IOException {
-    String path = String.format("clusters/%s/services/%s/roles", clusterName, knoxServiceName);
-    Optional<ApiRoleListDto> roleList = get(path, ApiRoleListDto.class);
+      throws IOException, URISyntaxException {
+    URI requestUri =
+        new URIBuilder(apiURI)
+            .appendPath("clusters")
+            .appendPath(clusterName)
+            .appendPath("services")
+            .appendPath(knoxServiceName)
+            .appendPath("roles")
+            .build();
+
+    Optional<ApiRoleListDto> roleList = get(requestUri, ApiRoleListDto.class);
     return roleList.flatMap(list -> list.getItems().stream().findFirst());
   }
 
   private String getGatewayPath(
-      String clusterName, String knoxServiceName, String roleConfigGroupName) throws IOException {
+      String clusterName, String knoxServiceName, String roleConfigGroupName)
+      throws IOException, URISyntaxException {
     return getConfigValue(clusterName, knoxServiceName, roleConfigGroupName, "gateway_path")
         .orElse(clusterName);
   }
 
   private String getTopologyName(
-      String clusterName, String knoxServiceName, String roleConfigGroupName) throws IOException {
+      String clusterName, String knoxServiceName, String roleConfigGroupName)
+      throws IOException, URISyntaxException {
     return getConfigValue(
             clusterName, knoxServiceName, roleConfigGroupName, "gateway_default_api_topology_name")
         .orElse("cdp-proxy-api");
@@ -186,12 +203,18 @@ public class SparkHistoryDiscoveryService {
 
   private Optional<String> getConfigValue(
       String clusterName, String knoxServiceName, String roleConfigGroupName, String configName)
-      throws IOException {
-    String path =
-        String.format(
-            "clusters/%s/services/%s/roleConfigGroups/%s/config",
-            clusterName, knoxServiceName, roleConfigGroupName);
-    Optional<ApiConfigListDTO> configList = get(path, ApiConfigListDTO.class);
+      throws IOException, URISyntaxException {
+    URI requestUri =
+        new URIBuilder(apiURI)
+            .appendPath("clusters")
+            .appendPath(clusterName)
+            .appendPath("services")
+            .appendPath(knoxServiceName)
+            .appendPath("roleConfigGroups")
+            .appendPath(roleConfigGroupName)
+            .appendPath("config")
+            .build();
+    Optional<ApiConfigListDTO> configList = get(requestUri, ApiConfigListDTO.class);
     return configList.flatMap(
         list ->
             list.getItems().stream()
@@ -200,8 +223,7 @@ public class SparkHistoryDiscoveryService {
                 .findFirst());
   }
 
-  private <T> Optional<T> get(String path, Class<T> responseType) throws IOException {
-    URI requestUri = apiURI.resolve(path);
+  private <T> Optional<T> get(URI requestUri, Class<T> responseType) throws IOException {
     try (CloseableHttpResponse response =
         clouderaManagerHttpClient.execute(new HttpGet(requestUri))) {
       if (response.getStatusLine().getStatusCode() != 200) {
