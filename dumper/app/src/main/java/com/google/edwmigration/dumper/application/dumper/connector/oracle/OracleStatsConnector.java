@@ -22,6 +22,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.collect.Range;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
@@ -32,6 +33,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @AutoService(Connector.class)
 @Description("Dumps aggregated statistics from Oracle")
 @ParametersAreNonnullByDefault
+@RespectsArgumentAssessment
 public class OracleStatsConnector extends AbstractOracleConnector {
 
   static final Duration DEFAULT_DURATION = ofDays(30);

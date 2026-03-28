@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.generic;
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.annotations.AvoidArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.LogsConnector;
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
  * generates multiple queries and is like 'logs' mode.
  */
 @AutoService({Connector.class, LogsConnector.class})
+@AvoidArgumentAssessment
 public class GenericConnector extends AbstractJdbcConnector implements LogsConnector {
 
   private static final Logger logger = LoggerFactory.getLogger(GenericConnector.class);

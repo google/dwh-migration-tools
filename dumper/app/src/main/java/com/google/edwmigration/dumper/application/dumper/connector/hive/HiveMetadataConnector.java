@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.common.net.PercentEscaper;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
@@ -73,6 +74,7 @@ import org.slf4j.LoggerFactory;
 @RespectsArgumentDatabasePredicate
 @AutoService({Connector.class, MetadataConnector.class})
 @Description("Dumps metadata from the Hive metastore via Thrift.")
+@RespectsArgumentAssessment
 public class HiveMetadataConnector extends AbstractHiveConnector
     implements HiveMetadataDumpFormat, MetadataConnector {
 
