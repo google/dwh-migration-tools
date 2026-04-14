@@ -20,28 +20,12 @@ distributions {
         distributionBaseName = "dwh-migration-tools"
         contents {
             duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-            from("client") {
-                exclude "**/__pycache__"
-                into "client"
-            }
 
             def dumperProject = project(':dumper:app')
-            def permissionsProject = project(':permissions-migration:app')
-            def dtsTransferProject = project(':dts-transfer-status:app')
 
             dumperProject.afterEvaluate {
                 into("dumper") {
                     from dumperProject.tasks.installPublishedDist
-                }
-            }
-            permissionsProject.afterEvaluate {
-                into("permissions-migration") {
-                    from permissionsProject.tasks.installPublishedDist
-                }
-            }
-            dtsTransferProject.afterEvaluate {
-                into("dts-transfer-status") {
-                    from dtsTransferProject.tasks.installPublishedDist
                 }
             }
         }
