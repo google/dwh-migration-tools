@@ -67,6 +67,15 @@ public class OozieBundleJobsTaskTest {
   }
 
   @Test
+  public void isInDateRange_bothDatesNull_noExceptionThrownAndReturnsFalse() {
+    BundleJob job = mock(BundleJob.class);
+
+    boolean result = task.isInDateRange(job, 0, 1 << 42);
+
+    assertFalse("a job where both dates are missing must not be included", result);
+  }
+
+  @Test
   public void isInDateRange_endDateIsExcluded() {
     BundleJob job = mock(BundleJob.class);
 
