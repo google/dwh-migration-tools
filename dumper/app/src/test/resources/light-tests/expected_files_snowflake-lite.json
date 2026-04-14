@@ -1,0 +1,22 @@
+{
+  "metadata": [
+    "compilerworks-arguments.txt",
+    "compilerworks-format.txt",
+    "compilerworks-metadata.yaml",
+    "compilerworks-version.txt",
+    "databases-au.csv",
+    "event_state.csv",
+    "external_tables.csv",
+    "function_info.csv",
+    "procedures.csv",
+    "report_date_range.csv",
+    "schemata-au.csv",
+    "snowflake.yaml",
+    "tables-au.csv",
+    "table_storage_metrics-au.csv",
+    "warehouses.csv",
+    "warehouse_events_lite.csv",
+    "warehouse_metering_lite.csv"
+  ],
+  "logs": []
+}
