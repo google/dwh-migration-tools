@@ -101,14 +101,14 @@ application {
 licenseReport {
     // onlyIf { ! gradle.startParameter.offline }
     filters = [
-        new LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
+        new LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/licenses/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
     ]
     renderers = [
         new CsvReportRenderer(),
         new JsonReportRenderer('index.json', false),
         new InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
     ]
-    allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
+    allowedLicensesFile = rootProject.file("gradle/licenses/license-allowed.json")
 }
 
 tasks.named('check') {
