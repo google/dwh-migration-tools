@@ -19,7 +19,7 @@
 
 # DWH Migration tools — Agent Instructions
 
-The repository contains tools, where the main one is *Dumper*. The tools expected to be executed as CLI utilities on client side to read *metadata* and *logs* from Datawarehouse systems as *PostgreSql*, *Snowflake*, *Oracle*, *Hadoop/Cloudera* and so on. The result of the execution stored in a *zip* file.  
+The repository contains CLI tools used for data migrations, where the main one is *Dumper*. The tools expected to be executed as CLI utilities on client side to read *metadata* and *logs* from Datawarehouse systems as *PostgreSql*, *Snowflake*, *Oracle*, *Hadoop/Cloudera* and so on. The result of the execution stored in a *zip* file.  
 
 ## Architecture
 
@@ -57,8 +57,9 @@ TBD
 - **`CSV`** is preferable to use for flat outputs like SQL tables.
 - **`JSONL` and `JSON`** are preferable to use rather than YAML for hierarchical data.
 - **Always** use Jackson or Commons-CSV to write the data.
-- Each task succeeds or fails independently. The task is our failure boundary.
-- TBD
+- Each task succeeds or fails independently. The task is our failure boundary. 
+
+TBD
 
 ## Configuration
 
@@ -112,7 +113,6 @@ TBD
 - Write the most direct test for the bug. Parameterized tests for type variations.
 - Use JUnit 4 for unit-tests.
 - `WireMockServer` is preferable to use for test scenarios with Http requests instead of Http requests mocking.
-
 
 ## Commands
 
