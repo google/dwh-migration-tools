@@ -79,8 +79,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
   @Nonnull
   @Override
-  public final Handle open(@Nonnull ConnectorArguments arguments)
-      throws MetadataDumperUsageException, SQLException {
+  public final Handle open(@Nonnull ConnectorArguments arguments) throws SQLException {
     Properties properties = dataSourceProperties(arguments);
     String url = getUrlFromArguments(arguments);
     DataSource dataSource = new SimpleDriverDataSource(newDriver(arguments), url, properties);
@@ -208,7 +207,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     return new MetadataDumperUsageException(message);
   }
 
-  String sanitizeDatabaseName(@Nonnull String databaseName) throws MetadataDumperUsageException {
+  @Nonnull
+  static String sanitizeDatabaseName(@Nonnull String databaseName) {
     int lengthWithQuotes = databaseName.length() + 2;
     int maxLength = 255;
     if (lengthWithQuotes > maxLength) {

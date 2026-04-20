@@ -64,7 +64,8 @@ public class ClouderaManagerConnectorTest {
                     "host-ram.jsonl", TaskCategory.REQUIRED,
                     "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
-                    "yarn-application-types.jsonl", TaskCategory.OPTIONAL))
+                    "yarn-application-types.jsonl", TaskCategory.OPTIONAL,
+                    "yarn-application-spark-metadata.jsonl", TaskCategory.OPTIONAL))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -93,12 +94,14 @@ public class ClouderaManagerConnectorTest {
             .putAll(
                 ImmutableMap.of(
                     "host-components.jsonl", ClouderaHostComponentsTask.class,
-                    "cluster-cpu.jsonl", ClouderaClusterCpuChartTask.class,
-                    "host-ram.jsonl", ClouderaHostRamChartTask.class,
+                    "cluster-cpu.jsonl", ClouderaClusterResourceAllocationChartTask.class,
+                    "host-ram.jsonl", ClouderaHostResourceAllocationChartTask.class,
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,
-                    "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class))
+                    "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class,
+                    "yarn-application-spark-metadata.jsonl",
+                        ClouderaSparkYarnApplicationMetadataTask.class))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -140,7 +143,8 @@ public class ClouderaManagerConnectorTest {
                     "host-ram.jsonl", TaskCategory.REQUIRED,
                     "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
-                    "yarn-application-types.jsonl", TaskCategory.OPTIONAL))
+                    "yarn-application-types.jsonl", TaskCategory.OPTIONAL,
+                    "yarn-application-spark-metadata.jsonl", TaskCategory.OPTIONAL))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 
@@ -178,12 +182,14 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", ClouderaHostComponentsTask.class))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-cpu.jsonl", ClouderaClusterCpuChartTask.class,
-                    "host-ram.jsonl", ClouderaHostRamChartTask.class,
+                    "cluster-cpu.jsonl", ClouderaClusterResourceAllocationChartTask.class,
+                    "host-ram.jsonl", ClouderaHostResourceAllocationChartTask.class,
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,
-                    "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class))
+                    "yarn-application-types.jsonl", ClouderaYarnApplicationTypeTask.class,
+                    "yarn-application-spark-metadata.jsonl",
+                        ClouderaSparkYarnApplicationMetadataTask.class))
             .build();
     List<Task<?>> tasks = new ArrayList<>();
 

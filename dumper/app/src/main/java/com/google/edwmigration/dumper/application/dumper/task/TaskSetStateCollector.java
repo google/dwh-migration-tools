@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
+package com.google.edwmigration.dumper.application.dumper.task;
 
-public class ClouderaConnectorException extends RuntimeException {
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
-  public ClouderaConnectorException(String message) {
-    super(message);
-  }
+public interface TaskSetStateCollector extends TaskSetState {
 
-  public ClouderaConnectorException(String message, Throwable cause) {
-    super(message, cause);
-  }
+  <T> void setTaskResult(@Nonnull Task<T> task, @Nonnull TaskState state, @CheckForNull T value);
+
+  void setTaskException(
+      @Nonnull Task<?> task, @Nonnull TaskState state, @CheckForNull Exception exception);
 }

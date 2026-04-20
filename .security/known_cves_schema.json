@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Know vulnerabilities exceptions report",
+  "title": "Known vulnerabilities exceptions report",
   "type": "array",
   "items": {
     "type": "object",

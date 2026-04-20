@@ -16,38 +16,39 @@
  */
 package com.google.edwmigration.dumper.plugin.ext.jdk.progress;
 
+import java.io.Closeable;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
-public interface ProgressMonitor extends AutoCloseable {
+public interface ProgressMonitor extends Closeable {
 
   /** The divisor for memory measurements: 1 Mb. */
-  public static final int MEMDIV = 1024 * 1024;
+  int MEMDIV = 1024 * 1024;
 
   @Nonnull
-  public default BlockProgressMonitor withBlockSize(@Nonnegative int blockSize) {
+  default BlockProgressMonitor withBlockSize(@Nonnegative int blockSize) {
     return new BlockProgressMonitor(this, blockSize);
   }
 
   /** Returns the time elapsed since creation of this ProgressMonitor */
-  public long timeElapsed(TimeUnit desiredUnit);
+  long timeElapsed(TimeUnit desiredUnit);
 
   /** Returns the current count. */
   @Nonnegative
-  public default long getCount() {
+  default long getCount() {
     return count(0);
   }
 
   /** Adds delta to the current count. Returns the number counted so far, including this count. */
-  public long count(@Nonnegative int delta);
+  long count(@Nonnegative int delta);
 
   /** Adds 1 to the current count. Returns the number counted so far, including this count. */
-  public default long count() {
+  default long count() {
     return count(1);
   }
 
   @Override
-  public void close();
+  void close();
 }

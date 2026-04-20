@@ -31,7 +31,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
-  private final ObjectMapper objectMapper =
+  protected final ObjectMapper objectMapper =
       new ObjectMapper()
           .configure(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES, true)
           .configure(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, true);

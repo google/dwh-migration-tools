@@ -28,12 +28,13 @@ import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageExce
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaYarnApplicationDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYarnApplicationDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.ClouderaConnectorException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.model.YarnApplicationType;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -75,7 +77,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
             handle, context.getArguments().getPaginationPageSize());
 
     List<ClouderaYarnApplicationDTO> sparkYarnApplications = new ArrayList<>();
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
         final String clusterName = cluster.getName();
         for (String yarnAppType : collectYarnApplicationTypes(context, handle, clusterName)) {
@@ -108,7 +110,7 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   }
 
   private void writeYarnAppTypes(
-      Writer writer, List<ApiYarnApplicationDto> yarnApps, String appType, String clusterName) {
+      JsonWriter writer, List<ApiYarnApplicationDto> yarnApps, String appType, String clusterName) {
     List<ApplicationTypeToYarnApplication> yarnAppTypeMappings = new ArrayList<>();
     for (ApiYarnApplicationDto yarnApp : yarnApps) {
       yarnAppTypeMappings.add(
@@ -117,15 +119,15 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
     try {
       String yarnAppTypeMappingsInJson =
           serializeObjectToJsonString(ImmutableMap.of("yarnAppTypes", yarnAppTypeMappings));
-      writer.write(yarnAppTypeMappingsInJson);
-      writer.write('\n');
+      writer.writeLine(yarnAppTypeMappingsInJson);
     } catch (IOException ex) {
       throw new ClouderaConnectorException("Can't write YARN application types", ex);
     }
   }
 
   private Set<String> collectYarnApplicationTypes(
-      TaskRunContext context, ClouderaManagerHandle handle, String clusterName) {
+      TaskRunContext context, ClouderaManagerHandle handle, String clusterName)
+      throws URISyntaxException {
     Set<String> yarnApplicationTypes = new HashSet<>();
     ImmutableList<String> predefinedYarnAppTypes =
         stream(YarnApplicationType.values())
@@ -138,9 +140,13 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   }
 
   private ImmutableList<String> fetchClusterServiceTypes(
-      ClouderaManagerHandle handle, String clusterName) {
-    String serviceTypesUrl =
-        handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
+      ClouderaManagerHandle handle, String clusterName) throws URISyntaxException {
+    URI serviceTypesUrl =
+        new URIBuilder(handle.getApiURI())
+            .appendPath("clusters")
+            .appendPath(clusterName)
+            .appendPath("serviceTypes")
+            .build();
     CloseableHttpClient httpClient = handle.getClouderaManagerHttpClient();
     try (CloseableHttpResponse serviceTypesResp =
         httpClient.execute(new HttpGet(serviceTypesUrl))) {

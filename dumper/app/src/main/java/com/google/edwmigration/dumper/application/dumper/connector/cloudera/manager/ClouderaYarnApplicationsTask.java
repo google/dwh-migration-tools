@@ -21,11 +21,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaClusterDTO;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiYarnApplicationDto;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.ClouderaConnectorException;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -53,7 +52,7 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
         new PaginatedClouderaYarnApplicationsLoader(
             handle, context.getArguments().getPaginationPageSize());
 
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaClusterDTO cluster : clusters) {
         String clusterName = cluster.getName();
         logger.info("Dump YARN applications from {} cluster", clusterName);
@@ -67,14 +66,13 @@ public class ClouderaYarnApplicationsTask extends AbstractClouderaYarnApplicatio
   }
 
   private void writeYarnApplications(
-      Writer writer, List<ApiYarnApplicationDto> yarnApps, String clusterName) {
+      JsonWriter writer, List<ApiYarnApplicationDto> yarnApps, String clusterName) {
     for (ApiYarnApplicationDto yarnApp : yarnApps) {
       yarnApp.setClusterName(clusterName);
     }
     try {
       String yarnAppsJson = serializeObjectToJsonString(ImmutableMap.of("yarnApps", yarnApps));
-      writer.write(yarnAppsJson);
-      writer.write('\n');
+      writer.writeLine(yarnAppsJson);
     } catch (IOException ex) {
       throw new ClouderaConnectorException("Can't dump YARN applications.", ex);
     }

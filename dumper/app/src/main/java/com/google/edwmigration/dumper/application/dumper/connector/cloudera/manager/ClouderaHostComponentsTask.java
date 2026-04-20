@@ -22,10 +22,10 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.ClouderaManagerHandle.ClouderaHostDTO;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -58,14 +58,18 @@ public class ClouderaHostComponentsTask extends AbstractClouderaManagerTask {
           "Cloudera hosts must be initialized before Host's components dumping.");
     }
 
-    try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream()) {
+    try (JsonWriter writer = new JsonWriter(sink)) {
       for (ClouderaHostDTO host : hosts) {
-        String hostsComponentsUrl = handle.getApiURI() + "/hosts/" + host.getId() + "/components";
+        URI hostsComponentsUrl =
+            new URIBuilder(handle.getApiURI())
+                .appendPath("hosts")
+                .appendPath(host.getId())
+                .appendPath("components")
+                .build();
 
         try (CloseableHttpResponse response = httpClient.execute(new HttpGet(hostsComponentsUrl))) {
           JsonNode json = readJsonTree(response.getEntity().getContent());
-          writer.write(wrapResponseWithHostId(host.getId(), json));
-          writer.write('\n');
+          writer.writeLine(wrapResponseWithHostId(host.getId(), json));
         }
       }
     }

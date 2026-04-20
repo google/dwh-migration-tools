@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.ClouderaConnectorException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
