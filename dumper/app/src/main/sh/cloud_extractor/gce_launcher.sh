@@ -68,7 +68,7 @@ download() {
   log INFO "Downloading '${url}' to '${target}."
   if [[ ! -e "${target}" ]]; then
     if [[ "${url}" = gs://* ]]; then
-      gsutil cp "${url}" "${target}"
+      gcloud storage cp "${url}" "${target}"
     else
       curl -L "${url}" -o "${target}"
     fi
