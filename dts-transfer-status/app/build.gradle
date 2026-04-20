@@ -113,7 +113,9 @@ tasks.register('generateSourceMirror', Copy) {
         dependencies.createArtifactResolutionQuery()
                 .forComponents(
                         configurations.runtimeClasspath.incoming.resolutionResult
-                                .allDependencies.collect { it.selected.id }
+                                .allDependencies
+                                .findAll { it instanceof ResolvedDependencyResult }
+                                .collect { it.selected.id }
                 )
                 .withArtifacts(JvmLibrary, SourcesArtifact)
                 .execute()
