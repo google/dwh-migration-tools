@@ -41,8 +41,7 @@ The repository contains CLI tools used for data migrations, where the main one i
 - **`ConnectorArguments`**: CLI parameters for Dumper execution. User facing API.
 - **`Connector`**: Primary executable unit per Dumper run, contains multiple required and optional tasks.
 - **`ConnectorRepository`**: Contains all known connectors for dumper. Connectors are accessible by unique names `String getName()`.
-
-TBD
+- **`Handle`**: Thread-safe object shared between tasks in the scope of single connector.
 
 ## Design Patterns
 
@@ -57,9 +56,7 @@ TBD
 - **`CSV`** is preferable to use for flat outputs like SQL tables.
 - **`JSONL` and `JSON`** are preferable to use rather than YAML for hierarchical data.
 - **Always** use Jackson or Commons-CSV to write the data.
-- Each task succeeds or fails independently. The task is our failure boundary. 
-
-TBD
+- Each task succeeds or fails independently. The task is our failure boundary.
 
 ## Configuration
 
