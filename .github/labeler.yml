@@ -1,0 +1,79 @@
+BUILD:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**/*'
+          - 'gradle/**/*'
+          - 'buildSrc/**/*'
+          - 'build.gradle'
+          - 'settings.gradle'
+          - 'gradle.properties'
+          - 'gradlew'
+          - 'gradlew.bat'
+
+ROOT:
+  - changed-files:
+      - any-glob-to-any-file: '*'
+
+SECURITY:
+  - changed-files:
+      - any-glob-to-any-file: '.security/**/*'
+
+DOCS:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/**/*'
+          - '**/*.md'
+
+Client:
+  - changed-files:
+      - any-glob-to-any-file: 'client/**/*'
+Dumper:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/**/*'
+
+Dumper CORE:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'dumper/**/*.java'
+          - '!dumper/app/src/*/java/com/google/edwmigration/dumper/application/dumper/connector/*/**/*'
+          - '!dumper/lib-ext-*/**/*.java'
+
+AIRFLOW:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/airflow/**/*'
+
+CLOUDERA:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/cloudera/**/*'
+
+HIVE:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/hive/**/*'
+
+ORACLE:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/oracle/**/*'
+
+REDSHIFT:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/redshift/**/*'
+
+SNOWFLAKE:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/snowflake/**/*'
+
+TERADATA:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/teradata/**/*'
+
+HADOOP:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/hadoop/**/*'
+
+OOZIE:
+  - changed-files:
+    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/hadoop/oozie/**/*'
+
+SCRIPTS:
+  - changed-files:
+    - any-glob-to-any-file: 'migration-discovery-scripts/**/*'
