@@ -31,6 +31,13 @@ Dumper:
   - changed-files:
     - any-glob-to-any-file: 'dumper/**/*'
 
+Dumper CORE:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'dumper/**/*.java'
+          - '!dumper/app/src/*/java/com/google/edwmigration/dumper/application/dumper/connector/*/**/*'
+          - '!dumper/lib-ext-*/**/*.java'
+
 AIRFLOW:
   - changed-files:
     - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/airflow/**/*'
