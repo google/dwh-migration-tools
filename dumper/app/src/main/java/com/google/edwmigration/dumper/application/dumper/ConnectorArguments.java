@@ -49,6 +49,8 @@ import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.BooleanUtils;
@@ -754,14 +756,14 @@ public class ConnectorArguments extends DefaultArguments {
     return toPredicate(getDatabases());
   }
 
-  /** Returns the name of the single database specified, if exactly one database was specified. */
-  @Nonnull
-  public Optional<String> getDatabaseSingleName() {
+  /** Returns the name of the single database specified, if exactly one database was specified or {@code null} otherwise. */
+  @Nullable
+  public String getDatabaseSingleName() {
     List<String> databases = getDatabases();
     if (databases.size() == 1) {
-      return Optional.of(databases.get(0));
+      return databases.get(0);
     } else {
-      return Optional.empty();
+      return null;
     }
   }
 

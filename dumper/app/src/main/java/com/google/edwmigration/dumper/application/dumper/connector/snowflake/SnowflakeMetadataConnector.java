@@ -341,7 +341,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Nonnull
   private static String getQualifierPrefix(@Nonnull ConnectorArguments arguments) {
     String informationSchema = "INFORMATION_SCHEMA";
-    String databaseName = arguments.getDatabaseSingleName().orElse(null);
+    String databaseName = arguments.getDatabaseSingleName();
     if (databaseName == null) {
       return informationSchema;
     } else {
