@@ -1,0 +1,55 @@
+name: DWH Dumper Create Release
+
+# Trigger the workflow when a new tag is pushed (e.g., v1.2.3)
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    # Grant permissions for the GITHUB_TOKEN to create releases
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      # This step replaces the initial if/else block in the script
+      - name: Determine Artifact Details
+        id: artifact_details
+        run: |
+          echo "RELEASE_ARTIFACT_DIR=dumper/app/build/distributions" >> $GITHUB_ENV
+          echo "ARTIFACT_NAME=dwh-migration-dumper" >> $GITHUB_ENV
+
+      - name: Run tests with Gradle
+        run: ./gradlew -Pci :dumper:app:test
+
+      - name: Build final artifact with Gradle
+        run: ./gradlew -Pci :dumper:app:publishedDistZip -Pversion="${GITHUB_REF_NAME}"
+
+      - name: Calculate artifact checksum
+        run: |
+          cd ${RELEASE_ARTIFACT_DIR}
+          sha256sum "${ARTIFACT_NAME}-${GITHUB_REF_NAME}.zip" > SHA256SUMS.txt
+
+      # This single action replaces all the curl/jq/git commands for publishing
+      - name: Create GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          # Automatically generate release notes from commits since the last tag
+          generate_release_notes: true
+          # The files to upload as release assets
+          files: |
+            ${{ env.RELEASE_ARTIFACT_DIR }}/${{ env.ARTIFACT_NAME }}-${{ github.ref_name }}.zip
+            ${{ env.RELEASE_ARTIFACT_DIR }}/SHA256SUMS.txt
