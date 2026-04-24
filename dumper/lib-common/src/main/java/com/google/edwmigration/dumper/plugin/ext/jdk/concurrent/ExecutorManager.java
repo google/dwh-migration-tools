@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 public class ExecutorManager implements AutoCloseable, Executor {
 
   private static final Logger logger = LoggerFactory.getLogger(ExecutorManager.class);
-  private static final boolean DEBUG = false;
+  private static final boolean DEBUG = Boolean.getBoolean("test.debug");
 
   @Nonnull
   public static ExecutorService newExecutorServiceWithBackpressure(

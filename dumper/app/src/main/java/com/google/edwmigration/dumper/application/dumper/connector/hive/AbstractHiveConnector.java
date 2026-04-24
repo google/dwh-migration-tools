@@ -36,6 +36,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnegative;
@@ -86,7 +87,7 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
    * simultaneously, by keeping each client thread-local we avoid concurrent use.
    */
   @ThreadSafe
-  public static class ThriftClientPool implements AutoCloseable {
+  public static class ThriftClientPool implements AutoCloseable, Executor {
 
     public interface ThriftClientConsumer {
       void accept(HiveMetastoreThriftClient thriftClient) throws Exception;
@@ -139,8 +140,21 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
               });
     }
 
-    public void execute(ThriftClientConsumer consumer) {
+    @Override
+    public void execute(@Nonnull Runnable command) {
       executorManager.execute(
+          () -> {
+            command.run();
+            return null;
+          });
+    }
+
+    public void execute(ThriftClientConsumer consumer) {
+      execute(consumer, executorManager);
+    }
+
+    public void execute(ThriftClientConsumer consumer, ExecutorManager manager) {
+      manager.execute(
           () -> {
             consumer.accept(getThreadLocalThriftClient().get());
             return null;
