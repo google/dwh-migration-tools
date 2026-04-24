@@ -48,8 +48,10 @@ CLOUDERA:
     - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/cloudera/**/*'
 
 HIVE:
-  - changed-files:
-    - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/hive/**/*'
+  - any:
+    - changed-files:
+      - any-glob-to-any-file: 'dumper/app/src/main/java/com/google/edwmigration/dumper/application/dumper/connector/hive/**/*'
+      - any-glob-to-any-file: 'dumper/lib-ext-hive-metastore/src/main/**/*'
 
 ORACLE:
   - changed-files:
