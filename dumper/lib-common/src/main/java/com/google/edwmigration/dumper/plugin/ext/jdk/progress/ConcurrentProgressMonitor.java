@@ -29,24 +29,24 @@ import javax.annotation.Nonnull;
 public interface ConcurrentProgressMonitor extends AutoCloseable {
 
   /** The divisor for memory measurements: 1 Mb. */
-  public static final int MEMDIV = 1024 * 1024;
+  int MEMDIV = 1024 * 1024;
 
   @Nonnull
-  public default ConcurrentProgressMonitor withBlockSize(@Nonnegative int blockSize) {
+  default ConcurrentProgressMonitor withBlockSize(@Nonnegative int blockSize) {
     return this;
   }
 
   /** Returns the current count. This may be a relatively slow operation. */
   @Nonnegative
-  public long getCount();
+  long getCount();
 
-  public void count(@Nonnegative int delta);
+  void count(@Nonnegative int delta);
 
   /** Counts 1. */
-  public default void count() {
+  default void count() {
     count(1);
   }
 
   @Override
-  public void close();
+  void close();
 }

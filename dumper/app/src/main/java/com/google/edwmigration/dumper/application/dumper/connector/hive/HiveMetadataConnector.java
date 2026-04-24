@@ -52,6 +52,7 @@ import com.google.edwmigration.dumper.ext.hive.metastore.Partition;
 import com.google.edwmigration.dumper.ext.hive.metastore.PartitionKey;
 import com.google.edwmigration.dumper.ext.hive.metastore.Table;
 import com.google.edwmigration.dumper.plugin.ext.jdk.annotation.Description;
+import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ConcurrentRecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
@@ -201,9 +202,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   try (ConcurrentProgressMonitor monitor =
                       new ConcurrentRecordProgressMonitor(
                           "Writing tables in database '" + databaseName + "' to " + getTargetPath(),
-                          allTables.size())) {
+                          allTables.size());
+                       ExecutorManager manager = new ExecutorManager(clientPool)) {
                     for (String tableName : allTables) {
-                      dumpTable(monitor, writer, clientPool, databaseName, tableName);
+                      dumpTable(monitor, writer, clientPool, manager, databaseName, tableName);
                     }
                   }
                 }
@@ -216,12 +218,12 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         @Nonnull ConcurrentProgressMonitor monitor,
         @Nonnull Writer writer,
         @Nonnull ThriftClientPool clientPool,
+        @Nonnull ExecutorManager manager,
         @Nonnull String databaseName,
         @Nonnull String tableName) {
       clientPool.execute(
           (thriftClient) -> {
             try {
-              monitor.count();
               Table table = thriftClient.getTable(databaseName, tableName);
               TableMetadata outTable = new TableMetadata();
               outTable.schemaName = table.getDatabaseName();
@@ -287,6 +289,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                 writer.write(metadataText);
                 writer.write('\n');
               }
+              monitor.count();
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
@@ -296,7 +299,8 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   tableName,
                   e);
             }
-          });
+          },
+          manager);
     }
 
     @Override
@@ -327,9 +331,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   try (ConcurrentProgressMonitor monitor =
                       new ConcurrentRecordProgressMonitor(
                           "Writing tables in database '" + databaseName + "' to " + getTargetPath(),
-                          allTables.size())) {
+                          allTables.size());
+                       ExecutorManager manager = new ExecutorManager(clientPool)) {
                     for (String tableName : allTables) {
-                      dumpTable(monitor, writer, clientPool, databaseName, tableName);
+                      dumpTable(monitor, writer, clientPool, manager, databaseName, tableName);
                     }
                   }
                 }
@@ -342,6 +347,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         @Nonnull ConcurrentProgressMonitor monitor,
         @Nonnull Writer writer,
         @Nonnull ThriftClientPool clientPool,
+        @Nonnull ExecutorManager manager,
         @Nonnull String databaseName,
         @Nonnull String tableName) {
       clientPool.execute(
@@ -383,7 +389,8 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   tableName,
                   e);
             }
-          });
+          },
+          manager);
     }
 
     @Override
@@ -396,11 +403,13 @@ public class HiveMetadataConnector extends AbstractHiveConnector
   private static class PartitionsJsonlTask extends AbstractTask<Void> {
     private final PercentEscaper percentEscaper =
         new PercentEscaper("._,@=", /* plusForSpace= */ false);
+    private final Predicate<String> databasePredicate;
 
-    private PartitionsJsonlTask() {
+    private PartitionsJsonlTask(Predicate<String> databasePredicate) {
       super(
           "partitions.jsonl",
           TaskOptions.DEFAULT.withTargetInitialization(TargetInitialization.DO_NOT_CREATE));
+      this.databasePredicate = databasePredicate;
     }
 
     @Override
@@ -414,14 +423,18 @@ public class HiveMetadataConnector extends AbstractHiveConnector
             thriftClient -> {
               ImmutableList<String> allDatabases = thriftClient.getAllDatabaseNames();
               for (String databaseName : allDatabases) {
-                ImmutableList<String> allTables =
-                    thriftClient.getAllTableNamesInDatabase(databaseName);
-                try (ConcurrentProgressMonitor monitor =
-                    new ConcurrentRecordProgressMonitor(
-                        "Writing partitions of tables in database '" + databaseName + "'",
-                        allTables.size())) {
-                  for (String tableName : allTables) {
-                    dumpPartitions(context, monitor, clientPool, databaseName, tableName);
+                if (databasePredicate.test(databaseName)) {
+                  ImmutableList<String> allTables =
+                      thriftClient.getAllTableNamesInDatabase(databaseName);
+                  try (ConcurrentProgressMonitor monitor =
+                          new ConcurrentRecordProgressMonitor(
+                              "Writing partitions of tables in database '" + databaseName + "'",
+                              allTables.size());
+                      ExecutorManager manager = new ExecutorManager(clientPool)) {
+                    for (String tableName : allTables) {
+                      dumpPartitions(
+                          context, monitor, clientPool, manager, databaseName, tableName);
+                    }
                   }
                 }
               }
@@ -434,12 +447,12 @@ public class HiveMetadataConnector extends AbstractHiveConnector
         TaskRunContext context,
         ConcurrentProgressMonitor monitor,
         ThriftClientPool clientPool,
+        ExecutorManager manager,
         String databaseName,
         String tableName) {
       clientPool.execute(
           (thriftClient) -> {
             try {
-              monitor.count();
               ImmutableList<? extends TBase<?, ?>> partitions =
                   thriftClient.getTable(databaseName, tableName).getRawPartitions();
               ThriftJsonSerializer jsonSerializer = new ThriftJsonSerializer();
@@ -452,10 +465,10 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                       + ".jsonl";
               OutputHandle sink = context.newOutputFileHandle(targetPath);
               if (sink.exists()) {
-                logger.info("Skipping " + getName() + ": " + sink + " already exists.");
+                logger.info("Skipping {}: {} already exists.", getName(), sink);
                 return;
               }
-              logger.info("Writing to " + targetPath + " -> " + sink);
+              logger.info("Writing to {} -> {}", targetPath, sink);
 
               try (Writer writer =
                   sink.asTemporaryByteSink()
@@ -467,6 +480,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                 }
               }
               sink.commit();
+              monitor.count();
             } catch (Exception e) {
               // Failure to dump a single table should not prevent the rest of the tables from being
               // dumped.
@@ -476,7 +490,8 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   tableName,
                   e);
             }
-          });
+          },
+          manager);
     }
 
     @Override
@@ -709,7 +724,7 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     out.add(new FunctionsJsonlTask());
     out.add(new ResourcePlansJsonlTask());
     out.add(new TablesRawJsonlTask(databasePredicate));
-    out.add(new PartitionsJsonlTask());
+    out.add(new PartitionsJsonlTask(databasePredicate));
     out.add(new TablesJsonTask(databasePredicate, shouldDumpPartitions));
 
     if (arguments.isAssessment()) {
