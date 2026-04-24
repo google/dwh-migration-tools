@@ -164,7 +164,7 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
 
       if (urlParts.length != 2) {
         throw new IllegalArgumentException(
-            "Please provide an URL in the format of `principal/cluster`");
+            "Please provide a Kerberos URL in the format of `principal/cluster`");
       }
 
       Map<String, String> saslProperties = new HashMap<>();
