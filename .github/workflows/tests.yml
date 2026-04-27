@@ -50,7 +50,7 @@ jobs:
       run: ./gradlew -Pci clean
     
     - name: Test Dumper
-      run: ./gradlew -Pci :dumper:app:build --stacktrace
+      run: ./gradlew -Pci -Pjdk8 :dumper:app:build --stacktrace
     
     - name: Test DTS transfer
       run: ./gradlew -Pci :dts-transfer-status:app:build --stacktrace
