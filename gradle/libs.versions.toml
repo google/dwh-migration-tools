@@ -78,7 +78,7 @@ nimbus-jose-jwt = "10.6"
 io-grpc = "1.76.1"
 xerces = "2.12.2"
 zookeeper = "3.9.4"
-common-configuration2 = "2.12.0"
+common-configuration2 = "2.14.0"
 
 [libraries]
 async-profiler = {module = "tools.profiler:async-profiler", version="4.2"}
