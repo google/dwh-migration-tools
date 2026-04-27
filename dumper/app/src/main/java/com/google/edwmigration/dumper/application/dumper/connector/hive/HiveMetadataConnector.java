@@ -200,10 +200,13 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   ImmutableList<String> allTables =
                       thriftClient.getAllTableNamesInDatabase(databaseName);
                   try (ConcurrentProgressMonitor monitor =
-                      new ConcurrentRecordProgressMonitor(
-                          "Writing tables in database '" + databaseName + "' to " + getTargetPath(),
-                          allTables.size());
-                       ExecutorManager manager = new ExecutorManager(clientPool)) {
+                          new ConcurrentRecordProgressMonitor(
+                              "Writing tables in database '"
+                                  + databaseName
+                                  + "' to "
+                                  + getTargetPath(),
+                              allTables.size());
+                      ExecutorManager manager = new ExecutorManager(clientPool)) {
                     for (String tableName : allTables) {
                       dumpTable(monitor, writer, clientPool, manager, databaseName, tableName);
                     }
@@ -329,10 +332,13 @@ public class HiveMetadataConnector extends AbstractHiveConnector
                   ImmutableList<String> allTables =
                       thriftClient.getAllTableNamesInDatabase(databaseName);
                   try (ConcurrentProgressMonitor monitor =
-                      new ConcurrentRecordProgressMonitor(
-                          "Writing tables in database '" + databaseName + "' to " + getTargetPath(),
-                          allTables.size());
-                       ExecutorManager manager = new ExecutorManager(clientPool)) {
+                          new ConcurrentRecordProgressMonitor(
+                              "Writing tables in database '"
+                                  + databaseName
+                                  + "' to "
+                                  + getTargetPath(),
+                              allTables.size());
+                      ExecutorManager manager = new ExecutorManager(clientPool)) {
                     for (String tableName : allTables) {
                       dumpTable(monitor, writer, clientPool, manager, databaseName, tableName);
                     }
