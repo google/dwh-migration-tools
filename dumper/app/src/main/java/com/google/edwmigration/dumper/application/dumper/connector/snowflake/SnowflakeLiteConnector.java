@@ -16,10 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
-import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -30,7 +28,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@AutoService(Connector.class)
 @ParametersAreNonnullByDefault
 @RespectsArgumentAssessment
 public final class SnowflakeLiteConnector extends AbstractSnowflakeConnector {
