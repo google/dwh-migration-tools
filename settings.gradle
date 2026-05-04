@@ -19,7 +19,5 @@ include(
 	':dumper:lib-dumper-spi',
 	':dumper:lib-ext-bigquery',
 	':dumper:lib-ext-hive-metastore',
-	':dumper:app',
-    ':permissions-migration:app',
-    ':dts-transfer-status:app'
+	':dumper:app'
 )

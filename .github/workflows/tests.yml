@@ -51,6 +51,3 @@ jobs:
     
     - name: Test Dumper
       run: ./gradlew -Pci -Pjdk8 :dumper:app:build --stacktrace
-
-    - name: Test Permissions migration
-      run: ./gradlew -Pci :permissions-migration:app:build --stacktrace
