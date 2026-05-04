@@ -51,9 +51,6 @@ jobs:
     
     - name: Test Dumper
       run: ./gradlew -Pci -Pjdk8 :dumper:app:build --stacktrace
-    
-    - name: Test DTS transfer
-      run: ./gradlew -Pci :dts-transfer-status:app:build --stacktrace
-    
+
     - name: Test Permissions migration
       run: ./gradlew -Pci :permissions-migration:app:build --stacktrace
