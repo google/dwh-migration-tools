@@ -105,6 +105,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   private final OptionalLong maxSqlLength;
   protected final ImmutableList<String> orderBy;
   private final ImmutableList<String> expressions;
+  private final boolean keepFailedLogs;
 
   private Optional<String> sql = Optional.empty();
 
@@ -123,7 +124,8 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
         /* logDateColumn= */ null,
         /* maxSqlLength= */ OptionalLong.empty(),
         /* orderBy= */ ImmutableList.of(),
-        EXPRESSIONS);
+        EXPRESSIONS,
+        /* keepFailedLogs= */ false);
   }
 
   protected TeradataLogsJdbcTask(
@@ -135,7 +137,8 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
       @CheckForNull String logDateColumn,
       OptionalLong maxSqlLength,
       List<String> orderBy,
-      List<String> expressions) {
+      List<String> expressions,
+      boolean keepFailedLogs) {
     super(targetPath);
     this.state = Preconditions.checkNotNull(state, "SharedState was null.");
     this.tableNames = tableNames;
@@ -145,6 +148,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     this.maxSqlLength = maxSqlLength;
     this.orderBy = ImmutableList.copyOf(orderBy);
     this.expressions = ImmutableList.copyOf(expressions);
+    this.keepFailedLogs = keepFailedLogs;
   }
 
   private static boolean isQueryTable(@Nonnull String expression) {
@@ -234,14 +238,13 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
 
     buf.append(
         String.format(
-            " WHERE L.ErrorCode=0\n"
-                + "AND L.StartTime >= CAST('%s' AS TIMESTAMP)\n"
+            " WHERE L.StartTime >= CAST('%s' AS TIMESTAMP)\n"
                 + "AND L.StartTime < CAST('%s' AS TIMESTAMP)\n",
             SQL_FORMAT.format(interval.getStart()), SQL_FORMAT.format(interval.getEndExclusive())));
-
-    if (logDateColumn != null) {
-      buf.append(" AND L.").append(createLogDateColumnConditionStr());
+    if (!keepFailedLogs) {
+      buf.append("AND L.ErrorCode=0\n");
     }
+    buf.append(createLogDateColumnConditionStr());
 
     for (String condition : conditions) {
       buf.append(" AND ").append(condition);
@@ -255,7 +258,12 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   }
 
   private String createLogDateColumnConditionStr() {
-    return logDateColumn + " = CAST('" + SQL_DATE_FORMAT.format(interval.getStart()) + "' AS DATE)";
+    if (logDateColumn == null) {
+      return "";
+    } else {
+      String start = SQL_DATE_FORMAT.format(interval.getStart());
+      return " AND L." + logDateColumn + " = CAST('" + start + "' AS DATE)";
+    }
   }
 
   private Expression createLogDateColumnCondition() {

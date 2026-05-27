@@ -72,6 +72,7 @@ public class ConnectorArguments extends DefaultArguments {
           + "\n";
 
   public static final String OPT_CONNECTOR = "connector";
+  public static final String OPT_KEEP_FAILED_LOGS = "keep-failed-logs";
   public static final String OPT_TELEMETRY = "telemetry";
   public static final String OPT_DRIVER = "driver";
   public static final String OPT_CLASS = "jdbcDriverClass";
@@ -166,6 +167,9 @@ public class ConnectorArguments extends DefaultArguments {
 
   private final OptionSpec<String> connectorNameOption =
       parser.accepts(OPT_CONNECTOR, "Target connector name").withRequiredArg().required();
+  private final OptionSpec<Void> optionKeepFailedLogs =
+      parser.accepts(OPT_KEEP_FAILED_LOGS, "Keep failed query logs.");
+
   private final OptionSpec<String> optionDriver =
       parser
           .accepts(
@@ -723,6 +727,10 @@ public class ConnectorArguments extends DefaultArguments {
   @CheckForNull
   public String getOracleSID() {
     return getOptions().valueOf(optionOracleSID);
+  }
+
+  public boolean shouldKeepFailedLogs() {
+    return getOptions().has(OPT_KEEP_FAILED_LOGS);
   }
 
   @Nonnull

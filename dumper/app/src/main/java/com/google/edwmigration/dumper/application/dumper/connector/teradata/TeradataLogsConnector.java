@@ -257,17 +257,31 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       for (ZonedInterval interval : intervals) {
         String file = getEntryFileNameWithTimestamp(ZIP_ENTRY_PREFIX, interval);
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
-        out.add(
-            new TeradataAssessmentLogsJdbcTask(
-                    file,
-                    queryLogsState,
-                    tableNames,
-                    conditions,
-                    interval,
-                    logDateColumn,
-                    maxSqlLength,
-                    orderBy)
-                .withHeaderClass(HeaderForAssessment.class));
+        TeradataAssessmentLogsJdbcTask logsTask;
+        if (arguments.isAssessment() && arguments.shouldKeepFailedLogs()) {
+          logsTask =
+              TeradataAssessmentLogsJdbcTask.withFailedLogs(
+                  file,
+                  queryLogsState,
+                  tableNames,
+                  conditions,
+                  interval,
+                  logDateColumn,
+                  maxSqlLength,
+                  orderBy);
+        } else {
+          logsTask =
+              new TeradataAssessmentLogsJdbcTask(
+                  file,
+                  queryLogsState,
+                  tableNames,
+                  conditions,
+                  interval,
+                  logDateColumn,
+                  maxSqlLength,
+                  orderBy);
+        }
+        out.add(logsTask.withHeaderClass(HeaderForAssessment.class));
         out.addAll(createTimeSeriesTasks(interval, arguments));
         out.add(
             new TeradataUtilityLogsJdbcTask(
