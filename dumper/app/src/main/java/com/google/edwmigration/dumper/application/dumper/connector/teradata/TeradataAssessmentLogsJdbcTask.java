@@ -199,7 +199,7 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
         keepFailedLogs);
   }
 
-  public static TeradataAssessmentLogsJdbcTask withFailedLogs(
+  public static TeradataAssessmentLogsJdbcTask keepingFailedLogs(
       @Nonnull String targetPath,
       SharedState state,
       QueryLogTableNames tableNames,

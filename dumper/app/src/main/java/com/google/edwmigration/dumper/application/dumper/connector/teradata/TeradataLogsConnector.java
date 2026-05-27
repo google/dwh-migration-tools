@@ -260,7 +260,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         TeradataAssessmentLogsJdbcTask logsTask;
         if (arguments.isAssessment() && arguments.shouldKeepFailedLogs()) {
           logsTask =
-              TeradataAssessmentLogsJdbcTask.withFailedLogs(
+              TeradataAssessmentLogsJdbcTask.keepingFailedLogs(
                   file,
                   queryLogsState,
                   tableNames,

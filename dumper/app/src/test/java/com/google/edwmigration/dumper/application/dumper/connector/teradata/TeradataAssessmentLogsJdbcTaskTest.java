@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
 import static java.util.Collections.emptyList;
+import static org.junit.Assert.assertFalse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -342,6 +343,29 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " AND QueryID=7 AND QueryText LIKE '%abc%'"
             + " ORDER BY ST.QueryID, ST.RowNo",
         query);
+  }
+
+  @Test
+  public void getOrCreateSql_failedLogsPreserved_noErrorCheckInQuery() {
+    QueryLogTableNames names = QueryLogTableNames.create("SampleQueryTable", "SampleSqlTable", false);
+        TeradataAssessmentLogsJdbcTask jdbcTask =
+        TeradataAssessmentLogsJdbcTask.keepingFailedLogs(
+            "query_history.csv",
+            queryLogsState,
+            names,
+            ImmutableSet.of("QueryID=7", "QueryText LIKE '%abc%'"),
+            interval,
+            "SampleLogDate",
+            /* maxSqlLength= */ OptionalLong.of(999999),
+            ImmutableList.of("ST.QueryID", "ST.RowNo"));
+
+    // Act
+    String query =
+        jdbcTask.getOrCreateSql(
+            s -> true, ImmutableList.of("L.QueryID", "L.QueryText", "ST.QueryID"));
+
+    // Assert
+    assertFalse(query, query.replace(" ", "").contains(".ErrorCode="));
   }
 
   private QueryLogTableNames createTableName(String logTable, String sqlTable) {
