@@ -362,18 +362,18 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
                         .getOrCreateSql(unused -> true, ImmutableList.of("SampleColumn")))
             .collect(toImmutableList());
     assertEquals(
-        
-            "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE"
-                + " L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP) AND"
-                + " L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND"
-                + " L.ErrorCode=0 AND"
-                + " L.UserName <> 'DBC'", queries.get(0));
+        "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE"
+            + " L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND"
+            + " L.ErrorCode=0 AND"
+            + " L.UserName <> 'DBC'",
+        queries.get(0));
     assertEquals(
-            "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE"
-                + " L.StartTime >= CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND"
-                + " L.StartTime < CAST('2023-12-22T02:00:00Z' AS TIMESTAMP)"
-                + " AND L.ErrorCode=0"
-                + " AND L.UserName <> 'DBC'",
+        "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE"
+            + " L.StartTime >= CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-12-22T02:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0"
+            + " AND L.UserName <> 'DBC'",
         queries.get(1));
   }
 

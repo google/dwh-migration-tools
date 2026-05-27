@@ -58,7 +58,8 @@ public class TeradataLogsJdbcTaskTest {
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)" + " AND L.ErrorCode=0\n",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -147,7 +148,8 @@ public class TeradataLogsJdbcTaskTest {
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T13:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T14:00:00Z' AS TIMESTAMP)"+ " AND L.ErrorCode=0",
+            + " L.StartTime < CAST('2023-03-04T14:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0",
         taskDescription);
   }
 }

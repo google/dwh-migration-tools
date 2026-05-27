@@ -68,7 +68,8 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)" + " AND L.ErrorCode=0\n",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -96,7 +97,8 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)" + " AND L.ErrorCode=0\n",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -130,7 +132,8 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " ) ST ON (L.QueryID=ST.QueryID)"
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)" + " AND L.ErrorCode=0\n",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -156,7 +159,8 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " FROM SampleQueryTable L"
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)" + " AND L.ErrorCode=0\n",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -210,8 +214,9 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " FROM SampleQueryTable L"
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)" + " AND L.ErrorCode=0\n" + 
-            " AND L.QueryID=7",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n"
+            + " AND L.QueryID=7",
         query);
   }
 
@@ -238,7 +243,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
             + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
-             + " AND L.ErrorCode=0\n"
+            + " AND L.ErrorCode=0\n"
             + " ORDER BY L.QueryID, L.QueryText",
         query);
   }
@@ -267,7 +272,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
             + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
-             + " AND L.ErrorCode=0\n"
+            + " AND L.ErrorCode=0\n"
             + " AND L.SampleLogDate = CAST('2023-03-04Z' AS DATE)",
         query);
   }
@@ -337,8 +342,7 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
             + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
-                         + " AND L.ErrorCode=0"
-
+            + " AND L.ErrorCode=0"
             + " AND L.SampleLogDate = CAST('2023-03-04Z' AS DATE)"
             + " AND QueryID=7 AND QueryText LIKE '%abc%'"
             + " ORDER BY ST.QueryID, ST.RowNo",
@@ -347,8 +351,9 @@ public class TeradataAssessmentLogsJdbcTaskTest {
 
   @Test
   public void getOrCreateSql_failedLogsPreserved_noErrorCheckInQuery() {
-    QueryLogTableNames names = QueryLogTableNames.create("SampleQueryTable", "SampleSqlTable", false);
-        TeradataAssessmentLogsJdbcTask jdbcTask =
+    QueryLogTableNames names =
+        QueryLogTableNames.create("SampleQueryTable", "SampleSqlTable", false);
+    TeradataAssessmentLogsJdbcTask jdbcTask =
         TeradataAssessmentLogsJdbcTask.keepingFailedLogs(
             "query_history.csv",
             queryLogsState,
