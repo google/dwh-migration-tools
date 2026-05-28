@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
@@ -58,6 +59,9 @@ import org.slf4j.LoggerFactory;
 /** @author matt */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Teradata version >=15.")
+@RespectsInput(
+    arg = ConnectorArguments.OPT_KEEP_FAILED_LOGS,
+    description = "If provided, disables filtering of failed queries.")
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
@@ -258,7 +262,7 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
         String file = getEntryFileNameWithTimestamp(ZIP_ENTRY_PREFIX, interval);
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
         TeradataAssessmentLogsJdbcTask logsTask;
-        if (arguments.isAssessment() && arguments.shouldKeepFailedLogs()) {
+        if (arguments.shouldKeepFailedLogs()) {
           logsTask =
               TeradataAssessmentLogsJdbcTask.keepingFailedLogs(
                   file,
