@@ -16,12 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -39,12 +39,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assume;
@@ -62,8 +59,6 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   @SuppressWarnings("UnusedVariable")
   private static final Logger logger =
       LoggerFactory.getLogger(SnowflakeMetadataConnectorTest.class);
-
-  private static final String FEATURES_CSV = "features.csv";
 
   private final MetadataConnector connector = new SnowflakeMetadataConnector();
 
@@ -153,30 +148,43 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   }
 
   @Test
-  public void connector_generatesExpectedSql() throws IOException {
-    Map<String, String> actualSqls = collectSqlStatements();
-    TaskSqlMap expectedSqls =
+  public void connector_noAssessment_doesNotContainFeatures() throws IOException {
+
+    ImmutableMap<String, String> sqls = collectSqlStatements();
+
+    assertFalse(sqls.containsKey("features.csv"));
+  }
+
+  @Test
+  public void connector_noAssessment_generatesExpectedSql() throws IOException {
+    TypeReference<Map<String, String>> typeReference = new TypeReference<Map<String, String>>() {};
+    Map<String, String> expectedSqls =
         CoreMetadataDumpFormat.MAPPER.readValue(
             Resources.toString(
                 Resources.getResource("connector/snowflake/jdbc-tasks-sql.yaml"),
                 StandardCharsets.UTF_8),
-            TaskSqlMap.class);
+            typeReference);
 
-    // ignore feature.csv, it will be tested in separate test because the query is too complex
-    int actualSizeWithoutFeatures = actualSqls.size() - 1;
-    Set<String> actualFileNamesWithoutFeatures = new HashSet<>(actualSqls.keySet());
-    actualFileNamesWithoutFeatures.remove(FEATURES_CSV);
+    ImmutableMap<String, String> sqls = collectSqlStatements();
 
-    assertEquals(expectedSqls.size(), actualSizeWithoutFeatures);
-    assertEquals(expectedSqls.keySet(), actualFileNamesWithoutFeatures);
-    for (String name : expectedSqls.keySet()) {
-      assertEquals(expectedSqls.get(name), actualSqls.get(name));
+    for (Entry<String, String> item : expectedSqls.entrySet()) {
+      String key = item.getKey();
+      assertTrue(key, sqls.containsKey(key));
+      assertEquals(key, sqls.get(key), item.getValue());
     }
+  }
+
+  @Test
+  public void connector_withAssessment_containsFeatures() throws IOException {
+
+    ImmutableMap<String, String> sqls = collectSqlStatements("--assessment");
+
+    assertTrue(sqls.containsKey("features.csv"));
   }
 
   @Theory
   public void featuresQueryPathValue_refersToExistingPath(FeaturesQueryPath path) {
-    loadFile(path.value);
+    path.loadFile();
   }
 
   @Test
@@ -284,16 +292,5 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     return collectSqlStatementsAsMultimap(extraArgs).entries().stream()
         .collect(
             ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue, (first, dup) -> first));
-  }
-
-  static class TaskSqlMap extends HashMap<String, String> {}
-
-  private void loadFile(String path) {
-    try {
-      Resources.toString(Resources.getResource(path), UTF_8);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(
-          String.format("An invalid file was provided: '%s'.", path), e);
-    }
   }
 }
