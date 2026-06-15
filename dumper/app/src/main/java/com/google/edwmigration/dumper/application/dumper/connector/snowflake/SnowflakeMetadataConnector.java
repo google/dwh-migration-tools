@@ -16,15 +16,15 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
-import static com.google.common.io.Resources.getResource;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.FeaturesQueryPath.COMPLEX;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.FeaturesQueryPath.SHOW_BASED;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.FeaturesQueryPath.SIMPLE;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.MetadataView.TABLE_STORAGE_METRICS;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -43,8 +43,6 @@ import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
-import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -64,9 +62,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   private static final String ACCOUNT_USAGE_SCHEMA_NAME = "SNOWFLAKE.ACCOUNT_USAGE";
   private static final String ACCOUNT_USAGE_WHERE_CONDITION = "DELETED IS NULL";
   private static final String EMPTY_WHERE_CONDITION = "";
-  private static final String ACCOUNT_USAGE_SIMPLE_FILE = "account-usage-simple.sql";
-  private static final String ACCOUNT_USAGE_COMPLEX_FILE = "account-usage-complex.sql";
-  private static final String SHOW_BASED_FILE = "show-based.sql";
 
   private enum PropertyAction {
     QUERY("query", "query"),
@@ -308,50 +303,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
   }
 
-  enum FeaturesQueryPath {
-    SIMPLE(ACCOUNT_USAGE_SIMPLE_FILE) {
-      @Override
-      TaskOptions taskOptions() {
-        return TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING);
-      }
-    },
-    COMPLEX(ACCOUNT_USAGE_COMPLEX_FILE) {
-      @Override
-      TaskOptions taskOptions() {
-        return TaskOptions.DEFAULT;
-      }
-    },
-    SHOW_BASED(SHOW_BASED_FILE) {
-      @Override
-      TaskOptions taskOptions() {
-        return TaskOptions.DEFAULT;
-      }
-    };
-
-    final String file;
-
-    FeaturesQueryPath(String file) {
-      this.file = file;
-    }
-
-    abstract TaskOptions taskOptions();
-
-    String loadFile() {
-      String value = "snowflake-features/" + file;
-      try {
-        URL queryUrl = getResource(value);
-        return Resources.toString(queryUrl, UTF_8);
-      } catch (IOException e) {
-        throw new IllegalArgumentException(
-            String.format("An invalid file was provided: '%s'.", value), e);
-      }
-    }
-  }
-
   private static ImmutableList<AbstractJdbcTask<Summary>> featuresTasks() {
-    ImmutableList<FeaturesQueryPath> paths =
-        ImmutableList.of(
-            FeaturesQueryPath.SIMPLE, FeaturesQueryPath.COMPLEX, FeaturesQueryPath.SHOW_BASED);
+    ImmutableList<FeaturesQueryPath> paths = ImmutableList.of(SIMPLE, COMPLEX, SHOW_BASED);
     ImmutableList.Builder<AbstractJdbcTask<Summary>> builder = ImmutableList.builder();
     for (FeaturesQueryPath item : paths) {
       JdbcSelectTask task =
