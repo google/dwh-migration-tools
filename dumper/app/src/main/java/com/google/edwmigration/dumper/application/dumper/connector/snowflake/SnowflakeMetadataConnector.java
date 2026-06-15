@@ -16,10 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.common.io.Resources.getResource;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.MetadataView.TABLE_STORAGE_METRICS;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.stream;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
@@ -67,7 +67,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   private static final String ACCOUNT_USAGE_SIMPLE_FILE = "account-usage-simple.sql";
   private static final String ACCOUNT_USAGE_COMPLEX_FILE = "account-usage-complex.sql";
   private static final String SHOW_BASED_FILE = "show-based.sql";
-  private static final String SNOWFLAKE_FEATURES_PREFIX = "snowflake-features/";
 
   private enum PropertyAction {
     QUERY("query", "query"),
@@ -273,23 +272,9 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         isAssessment,
         getInformationSchemaWhereCondition("function_catalog", arguments.getDatabases()));
 
-    stream(FeaturesQueryPath.values())
-        .forEach(
-            path -> {
-              TaskOptions taskOptions =
-                  path.value.contains(ACCOUNT_USAGE_SIMPLE_FILE)
-                      ? TaskOptions.DEFAULT
-                      : TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING);
-              out.add(
-                  new JdbcSelectTask(
-                          FeaturesFormat.IS_ZIP_ENTRY_NAME,
-                          loadFile(path.value),
-                          TaskCategory.OPTIONAL, // TODO: Change to REQUIRED after implementation
-                          taskOptions)
-                      .withHeaderClass(FeaturesFormat.Header.class));
-            });
-
     if (isAssessment) {
+      out.addAll(featuresTasks());
+
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
         String query = queryForAssessment(item, arguments);
         Task<?> task =
@@ -324,15 +309,57 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   enum FeaturesQueryPath {
-    SIMPLE(SNOWFLAKE_FEATURES_PREFIX + ACCOUNT_USAGE_SIMPLE_FILE),
-    COMPLEX(SNOWFLAKE_FEATURES_PREFIX + ACCOUNT_USAGE_COMPLEX_FILE),
-    SHOW_BASED(SNOWFLAKE_FEATURES_PREFIX + SHOW_BASED_FILE);
+    SIMPLE(ACCOUNT_USAGE_SIMPLE_FILE) {
+      @Override
+      TaskOptions taskOptions() {
+        return TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING);
+      }
+    },
+    COMPLEX(ACCOUNT_USAGE_COMPLEX_FILE) {
+      @Override
+      TaskOptions taskOptions() {
+        return TaskOptions.DEFAULT;
+      }
+    },
+    SHOW_BASED(SHOW_BASED_FILE) {
+      @Override
+      TaskOptions taskOptions() {
+        return TaskOptions.DEFAULT;
+      }
+    };
 
-    final String value;
+    final String file;
 
-    FeaturesQueryPath(String value) {
-      this.value = value;
+    FeaturesQueryPath(String file) {
+      this.file = file;
     }
+
+    abstract TaskOptions taskOptions();
+
+    String loadFile() {
+      String value = "snowflake-features/" + file;
+      try {
+        URL queryUrl = getResource(value);
+        return Resources.toString(queryUrl, UTF_8);
+      } catch (IOException e) {
+        throw new IllegalArgumentException(
+            String.format("An invalid file was provided: '%s'.", value), e);
+      }
+    }
+  }
+
+  private static ImmutableList<AbstractJdbcTask<Summary>> featuresTasks() {
+    ImmutableList<FeaturesQueryPath> paths =
+        ImmutableList.of(
+            FeaturesQueryPath.SIMPLE, FeaturesQueryPath.COMPLEX, FeaturesQueryPath.SHOW_BASED);
+    ImmutableList.Builder<AbstractJdbcTask<Summary>> builder = ImmutableList.builder();
+    for (FeaturesQueryPath item : paths) {
+      JdbcSelectTask task =
+          new JdbcSelectTask(
+              "features.csv", item.loadFile(), TaskCategory.OPTIONAL, item.taskOptions());
+      builder.add(task.withHeaderClass(FeaturesFormat.Header.class));
+    }
+    return builder.build();
   }
 
   // INFORMATION_SCHEMA queries must be qualified with a database
@@ -449,15 +476,5 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
     databaseName = databaseName.replace("\"", "\"\"");
     return String.format("\"%s\"", databaseName);
-  }
-
-  private static String loadFile(String path) {
-    try {
-      URL queryUrl = Resources.getResource(path);
-      return Resources.toString(queryUrl, UTF_8);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(
-          String.format("An invalid file was provided: '%s'.", path), e);
-    }
   }
 }
