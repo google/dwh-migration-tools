@@ -22,8 +22,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
+import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
+import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import java.util.Collection;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -37,8 +39,20 @@ final class SnowflakeTaskUtil {
       String zipEntryName,
       Collection<String> whereConditions,
       Class<? extends Enum<?>> header) {
+    return withFilter(
+        format, schemaName, zipEntryName, whereConditions, header, TaskOptions.DEFAULT);
+  }
+
+  static AbstractJdbcTask<Summary> withFilter(
+      String format,
+      String schemaName,
+      String zipEntryName,
+      Collection<String> whereConditions,
+      Class<? extends Enum<?>> header,
+      TaskOptions taskOptions) {
     String sql = String.format(format, schemaName, getWhereClause(whereConditions));
-    return new JdbcSelectTask(zipEntryName, sql).withHeaderClass(header);
+    return new JdbcSelectTask(zipEntryName, sql, TaskCategory.REQUIRED, taskOptions)
+        .withHeaderClass(header);
   }
 
   private static String getWhereClause(Collection<String> whereConditions) {

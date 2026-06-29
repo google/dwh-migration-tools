@@ -234,7 +234,8 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
         actualSqls.get("schemata-au.csv"));
     assertEquals(
         ImmutableList.of(
-            "SELECT catalog_name, schema_name FROM INFORMATION_SCHEMA.SCHEMATA WHERE SQL_OVERRIDE"),
+            "SELECT catalog_name, schema_name FROM db1.INFORMATION_SCHEMA.SCHEMATA WHERE SQL_OVERRIDE",
+            "SELECT catalog_name, schema_name FROM db2.INFORMATION_SCHEMA.SCHEMATA WHERE SQL_OVERRIDE"),
         actualSqls.get("schemata.csv"));
 
     // Two SHOW commands are executed and the result is appended to the same output file.

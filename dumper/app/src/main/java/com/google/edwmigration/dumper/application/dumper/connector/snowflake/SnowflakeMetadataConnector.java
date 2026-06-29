@@ -43,6 +43,7 @@ import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -142,30 +143,67 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull String informationSchemaFileName,
-      @Nonnull String informationSchemaName,
       @Nonnull String accountUsageFileName,
       @Nonnull String accountUsageWhereCondition,
-      boolean isAssessment,
-      @Nonnull String databaseFilter) {
-    AbstractJdbcTask<Summary> schemaTask =
-        SnowflakeTaskUtil.withFilter(
-            format,
-            informationSchemaName,
-            informationSchemaFileName,
-            ImmutableList.of(databaseFilter),
-            header);
+      @Nonnull ConnectorArguments arguments,
+      @Nonnull String databaseFilterColumnName) {
+    ImmutableList<String> databases = arguments.getDatabases();
+    boolean isAssessment = arguments.isAssessment();
+    String globalDatabaseFilter =
+        getInformationSchemaWhereCondition(databaseFilterColumnName, databases);
     AbstractJdbcTask<Summary> usageTask =
         SnowflakeTaskUtil.withFilter(
             format,
             ACCOUNT_USAGE_SCHEMA_NAME,
             accountUsageFileName,
-            ImmutableList.of(accountUsageWhereCondition, databaseFilter),
+            ImmutableList.of(accountUsageWhereCondition, globalDatabaseFilter),
             header);
     if (isAssessment) {
       out.add(usageTask);
-    } else {
-      out.addAll(inputSource.sqlTasks(schemaTask, usageTask));
+      return;
     }
+
+    if (databases.isEmpty()) {
+      AbstractJdbcTask<Summary> schemaTask =
+          SnowflakeTaskUtil.withFilter(
+              format,
+              "INFORMATION_SCHEMA",
+              informationSchemaFileName,
+              ImmutableList.of(""),
+              header);
+      out.addAll(inputSource.sqlTasks(schemaTask, usageTask));
+      return;
+    }
+
+    List<Task<?>> tasks = new ArrayList<>();
+    if (inputSource == SnowflakeInput.USAGE_ONLY_SOURCE
+        || inputSource == SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE) {
+      tasks.add(usageTask);
+    }
+    if (inputSource == SnowflakeInput.SCHEMA_ONLY_SOURCE
+        || inputSource == SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE) {
+      TaskOptions taskOptions = TaskOptions.DEFAULT;
+      for (String database : databases) {
+        String schemaPrefix = sanitizeDatabaseName(database) + ".INFORMATION_SCHEMA";
+        String databaseFilter =
+            getInformationSchemaWhereCondition(
+                databaseFilterColumnName, ImmutableList.of(database));
+        AbstractJdbcTask<Summary> schemaTask =
+            SnowflakeTaskUtil.withFilter(
+                format,
+                schemaPrefix,
+                informationSchemaFileName,
+                ImmutableList.of(databaseFilter),
+                header,
+                taskOptions);
+        if (inputSource == SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE) {
+          schemaTask.onlyIfFailed(usageTask);
+        }
+        tasks.add(schemaTask);
+        taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
+      }
+    }
+    out.addAll(tasks);
   }
 
   @Override
@@ -175,7 +213,6 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     out.add(new FormatTask(FORMAT_NAME));
     out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
 
-    String schemaPrefix = getQualifierPrefix(arguments);
     boolean isAssessment = arguments.isAssessment();
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -185,11 +222,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
             MetadataView.DATABASES),
         DatabasesFormat.IS_ZIP_ENTRY_NAME,
-        schemaPrefix,
         DatabasesFormat.AU_ZIP_ENTRY_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition("database_name", arguments.getDatabases()));
+        arguments,
+        "database_name");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -199,11 +235,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
             MetadataView.SCHEMATA),
         SchemataFormat.IS_ZIP_ENTRY_NAME,
-        schemaPrefix,
         SchemataFormat.AU_ZIP_ENTRY_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition("catalog_name", arguments.getDatabases()));
+        arguments,
+        "catalog_name");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -214,12 +249,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 + " clustering_key FROM %1$s.TABLES%2$s",
             MetadataView.TABLES),
         TablesFormat.IS_ZIP_ENTRY_NAME,
-        schemaPrefix,
         TablesFormat.AU_ZIP_ENTRY_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition(
-            "table_catalog", arguments.getDatabases())); // Painfully slow.
+        arguments,
+        "table_catalog");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -231,12 +264,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 + " numeric_precision, numeric_scale, datetime_precision, comment FROM %1$s.COLUMNS%2$s",
             MetadataView.COLUMNS),
         ColumnsFormat.IS_ZIP_ENTRY_NAME,
-        schemaPrefix,
         ColumnsFormat.AU_ZIP_ENTRY_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition(
-            "table_catalog", arguments.getDatabases())); // Very fast.
+        arguments,
+        "table_catalog");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -246,11 +277,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT table_catalog, table_schema, table_name, view_definition FROM %1$s.VIEWS%2$s",
             MetadataView.VIEWS),
         ViewsFormat.IS_ZIP_ENTRY_NAME,
-        schemaPrefix,
         ViewsFormat.AU_ZIP_ENTRY_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition("table_catalog", arguments.getDatabases()));
+        arguments,
+        "table_catalog");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -261,11 +291,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 + " %1$s.FUNCTIONS%2$s",
             MetadataView.FUNCTIONS),
         FunctionsFormat.IS_ZIP_ENTRY_NAME,
-        schemaPrefix,
         FunctionsFormat.AU_ZIP_ENTRY_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition("function_catalog", arguments.getDatabases()));
+        arguments,
+        "function_catalog");
 
     if (isAssessment) {
       out.addAll(featuresTasks());
