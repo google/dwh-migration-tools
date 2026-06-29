@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
 /** @author shevek */
 public abstract class AbstractConnector implements Connector {
 
+  /** The name of this connector. */
   private final String name;
 
   public AbstractConnector(@Nonnull String name) {
