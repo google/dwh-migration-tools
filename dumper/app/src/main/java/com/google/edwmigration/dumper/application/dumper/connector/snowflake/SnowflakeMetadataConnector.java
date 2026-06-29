@@ -152,7 +152,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     String globalDatabaseFilter =
         getInformationSchemaWhereCondition(databaseFilterColumnName, databases);
     AbstractJdbcTask<Summary> usageTask =
-        SnowflakeTaskUtil.withFilter(
+        SnowflakeTaskUtil.createJdbcSelectTask(
             format,
             ACCOUNT_USAGE_SCHEMA_NAME,
             accountUsageFileName,
@@ -165,7 +165,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
 
     if (databases.isEmpty()) {
       AbstractJdbcTask<Summary> schemaTask =
-          SnowflakeTaskUtil.withFilter(
+          SnowflakeTaskUtil.createJdbcSelectTask(
               format,
               "INFORMATION_SCHEMA",
               informationSchemaFileName,
@@ -182,6 +182,14 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     }
     if (inputSource == SnowflakeInput.SCHEMA_ONLY_SOURCE
         || inputSource == SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE) {
+      // INFORMATION_SCHEMA is database-scoped. To fetch metadata from multiple databases,
+      // we must query each database's INFORMATION_SCHEMA individually (e.g.,
+      // db.INFORMATION_SCHEMA.TABLES).
+      // Prefixing the database name also helps the query optimizer scope the metadata scan,
+      // avoiding performance issues that occur when querying INFORMATION_SCHEMA without a database
+      // scope.
+      //
+      // The first task overwrites the output file; subsequent tasks append to it.
       TaskOptions taskOptions = TaskOptions.DEFAULT;
       for (String database : databases) {
         String schemaPrefix = sanitizeDatabaseName(database) + ".INFORMATION_SCHEMA";
@@ -189,7 +197,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             getInformationSchemaWhereCondition(
                 databaseFilterColumnName, ImmutableList.of(database));
         AbstractJdbcTask<Summary> schemaTask =
-            SnowflakeTaskUtil.withFilter(
+            SnowflakeTaskUtil.createJdbcSelectTask(
                 format,
                 schemaPrefix,
                 informationSchemaFileName,

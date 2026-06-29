@@ -33,17 +33,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 final class SnowflakeTaskUtil {
   private static final String EMPTY_WHERE_CLAUSE = "";
 
-  static AbstractJdbcTask<Summary> withFilter(
+  static AbstractJdbcTask<Summary> createJdbcSelectTask(
       String format,
       String schemaName,
       String zipEntryName,
       Collection<String> whereConditions,
       Class<? extends Enum<?>> header) {
-    return withFilter(
+    return createJdbcSelectTask(
         format, schemaName, zipEntryName, whereConditions, header, TaskOptions.DEFAULT);
   }
 
-  static AbstractJdbcTask<Summary> withFilter(
+  static AbstractJdbcTask<Summary> createJdbcSelectTask(
       String format,
       String schemaName,
       String zipEntryName,
