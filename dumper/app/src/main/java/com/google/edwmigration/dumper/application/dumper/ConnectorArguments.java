@@ -1157,6 +1157,15 @@ public class ConnectorArguments extends DefaultArguments {
   @Override
   @Nonnull
   public String toString() {
+    return buildToString(/* excludeQueries= */ false);
+  }
+
+  @Nonnull
+  public String toStringWithoutCustomQueries() {
+    return buildToString(/* excludeQueries= */ true);
+  }
+
+  private String buildToString(boolean excludeQueries) {
     // We do not include password here b/c as of this writing,
     // this string representation is logged out to file by ArgumentsTask.
     ToStringHelper toStringHelper =
@@ -1178,7 +1187,9 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_SPARK_HISTORY_SERVICE_NAMES, getSparkHistoryServiceNames())
             .add(OPT_ASSESSMENT, isAssessment())
             .add(OPT_TELEMETRY, isTelemetryOn());
-    getConnectorProperties().getDefinitionMap().forEach(toStringHelper::add);
+    getConnectorProperties().getDefinitionMap().entrySet().stream()
+        .filter(entry -> !excludeQueries || !entry.getKey().contains(".query"))
+        .forEach(entry -> toStringHelper.add(entry.getKey(), entry.getValue()));
     return toStringHelper.toString();
   }
 

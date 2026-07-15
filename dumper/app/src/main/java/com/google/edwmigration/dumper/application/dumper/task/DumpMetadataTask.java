@@ -58,7 +58,8 @@ public class DumpMetadataTask extends AbstractTask<Void>
     {
       Product product = new Product();
       product.version = String.valueOf(new ProductMetadata());
-      product.arguments = String.valueOf(getArguments(context));
+      ConnectorArguments args = getArguments(context);
+      product.arguments = args != null ? args.toStringWithoutCustomQueries() : "null";
       root.product = product;
     }
 

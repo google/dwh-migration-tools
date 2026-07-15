@@ -156,6 +156,35 @@ public class ConnectorArgumentsTest {
     assertEquals(expectedName, actualName);
   }
 
+  @Test
+  public void toString_excludesQueryProperties() throws IOException {
+    ConnectorArguments arguments =
+        new ConnectorArguments(
+            "--connector",
+            "snowflake-logs",
+            "-D",
+            "snowflake.logs.query=SELECT * FROM logs",
+            "-D",
+            "snowflake.logs.where=id = 123",
+            "-D",
+            "snowflake.warehouse_events_history.query=SELECT * FROM warehouse_events");
+
+    String defaultToString = arguments.toString();
+    assertTrue(
+        "Should contain query definitions by default",
+        defaultToString.contains("SELECT * FROM logs"));
+    assertTrue(
+        "Should contain query definitions by default",
+        defaultToString.contains("SELECT * FROM warehouse_events"));
+
+    String result = arguments.toStringWithoutCustomQueries();
+
+    assertFalse("Should not contain query definitions", result.contains("SELECT * FROM logs"));
+    assertFalse(
+        "Should not contain query definitions", result.contains("SELECT * FROM warehouse_events"));
+    assertTrue("Should contain other definitions", result.contains("id = 123"));
+  }
+
   // helper method to suppress IOException
   private static ConnectorArguments arguments(String... terms) {
     try {
