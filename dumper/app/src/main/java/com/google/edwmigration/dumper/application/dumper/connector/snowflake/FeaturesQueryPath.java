@@ -29,19 +29,19 @@ enum FeaturesQueryPath {
   SIMPLE("account-usage-simple.sql") {
     @Override
     TaskOptions taskOptions() {
-      return TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING);
+      return TaskOptions.DEFAULT;
     }
   },
   COMPLEX("account-usage-complex.sql") {
     @Override
     TaskOptions taskOptions() {
-      return TaskOptions.DEFAULT;
+      return TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING);
     }
   },
   SHOW_BASED("show-based.sql") {
     @Override
     TaskOptions taskOptions() {
-      return TaskOptions.DEFAULT;
+      return TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING);
     }
   };
 
