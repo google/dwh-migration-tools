@@ -216,7 +216,7 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
         "SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE DELETED IS NULL AND catalog_name IN ('DB1')",
         actualSqls.get("schemata-au.csv"));
     assertEquals(
-        "SELECT catalog_name, schema_name FROM db1.INFORMATION_SCHEMA.SCHEMATA WHERE catalog_name IN ('DB1')",
+        "SELECT catalog_name, schema_name FROM db1.INFORMATION_SCHEMA.SCHEMATA",
         actualSqls.get("schemata.csv"));
     assertEquals("SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", actualSqls.get("external_tables.csv"));
   }
@@ -246,27 +246,107 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   }
 
   @Test
-  public void databaseNameStringLiteral() {
-    assertEquals("'ABC'", SnowflakeMetadataConnector.databaseNameStringLiteral("abc"));
-    assertEquals("'abc'", SnowflakeMetadataConnector.databaseNameStringLiteral("\"abc\""));
+  public void connector_generatesExpectedSql_withSchemaFilter() throws IOException {
+    Map<String, String> actualSqls = collectSqlStatements("--schema", "schema1,schema2");
 
-    assertEquals("''''", SnowflakeMetadataConnector.databaseNameStringLiteral("'"));
-    assertEquals("''''", SnowflakeMetadataConnector.databaseNameStringLiteral("\"'\""));
+    assertEquals(
+        "SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE DELETED IS NULL AND schema_name IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("schemata-au.csv"));
+    assertEquals(
+        "SELECT catalog_name, schema_name FROM INFORMATION_SCHEMA.SCHEMATA WHERE schema_name IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("schemata.csv"));
+    assertEquals(
+        "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES WHERE DELETED IS NULL AND table_schema IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("tables-au.csv"));
+    assertEquals(
+        "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM INFORMATION_SCHEMA.TABLES WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("tables.csv"));
+    assertEquals(
+        "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale, datetime_precision, comment FROM SNOWFLAKE.ACCOUNT_USAGE.COLUMNS WHERE DELETED IS NULL AND table_schema IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("columns-au.csv"));
+    assertEquals(
+        "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale, datetime_precision, comment FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("columns.csv"));
+    assertEquals(
+        "SELECT function_schema, function_name, data_type, argument_signature FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL AND function_schema IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("functions-au.csv"));
+    assertEquals(
+        "SELECT function_schema, function_name, data_type, argument_signature FROM INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("functions.csv"));
 
-    assertEquals("'A''C\"'", SnowflakeMetadataConnector.databaseNameStringLiteral("a'c\""));
-    assertEquals("'a''c\"'", SnowflakeMetadataConnector.databaseNameStringLiteral("\"a'c\"\""));
   }
 
   @Test
-  public void databaseNameQuoted() {
-    assertEquals("\"ABC\"", SnowflakeMetadataConnector.databaseNameQuoted("abc"));
-    assertEquals("\"abc\"", SnowflakeMetadataConnector.databaseNameQuoted("\"abc\""));
+  public void connector_generatesExpectedSql_withDatabaseAndSchemaFilter() throws IOException {
+    ImmutableMultimap<String, String> actualSqls =
+        collectSqlStatementsAsMultimap("--database", "db1,db2", "--schema", "schema1,schema2");
 
-    assertEquals("\"'\"", SnowflakeMetadataConnector.databaseNameQuoted("'"));
-    assertEquals("\"'\"", SnowflakeMetadataConnector.databaseNameQuoted("\"'\""));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE DELETED IS NULL AND catalog_name IN ('DB1', 'DB2') AND schema_name IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("schemata-au.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT catalog_name, schema_name FROM db1.INFORMATION_SCHEMA.SCHEMATA WHERE schema_name IN ('SCHEMA1', 'SCHEMA2')",
+            "SELECT catalog_name, schema_name FROM db2.INFORMATION_SCHEMA.SCHEMATA WHERE schema_name IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("schemata.csv"));
+    assertEquals(
+        ImmutableList.of("SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES WHERE DELETED IS NULL AND table_catalog IN ('DB1', 'DB2') AND table_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("tables-au.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM db1.INFORMATION_SCHEMA.TABLES WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')",
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM db2.INFORMATION_SCHEMA.TABLES WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("tables.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale, datetime_precision, comment FROM SNOWFLAKE.ACCOUNT_USAGE.COLUMNS WHERE DELETED IS NULL AND table_catalog IN ('DB1', 'DB2') AND table_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("columns-au.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale, datetime_precision, comment FROM db1.INFORMATION_SCHEMA.COLUMNS WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')",
+            "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale, datetime_precision, comment FROM db2.INFORMATION_SCHEMA.COLUMNS WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("columns.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT function_schema, function_name, data_type, argument_signature FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL AND function_catalog IN ('DB1', 'DB2') AND function_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("functions-au.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT function_schema, function_name, data_type, argument_signature FROM db1.INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')",
+            "SELECT function_schema, function_name, data_type, argument_signature FROM db2.INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("functions.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SHOW EXTERNAL TABLES IN SCHEMA \"DB1\".\"SCHEMA1\"",
+            "SHOW EXTERNAL TABLES IN SCHEMA \"DB1\".\"SCHEMA2\"",
+            "SHOW EXTERNAL TABLES IN SCHEMA \"DB2\".\"SCHEMA1\"",
+            "SHOW EXTERNAL TABLES IN SCHEMA \"DB2\".\"SCHEMA2\""),
+        actualSqls.get("external_tables.csv"));
+  }
 
-    assertEquals("\"A'C\"\"\"", SnowflakeMetadataConnector.databaseNameQuoted("a'c\""));
-    assertEquals("\"a'c\"\"\"", SnowflakeMetadataConnector.databaseNameQuoted("\"a'c\"\""));
+  @Test
+  public void identifierNameStringLiteral() {
+    assertEquals("'ABC'", SnowflakeMetadataConnector.identifierNameStringLiteral("abc"));
+    assertEquals("'abc'", SnowflakeMetadataConnector.identifierNameStringLiteral("\"abc\""));
+
+    assertEquals("''''", SnowflakeMetadataConnector.identifierNameStringLiteral("'"));
+    assertEquals("''''", SnowflakeMetadataConnector.identifierNameStringLiteral("\"'\""));
+
+    assertEquals("'A''C\"'", SnowflakeMetadataConnector.identifierNameStringLiteral("a'c\""));
+    assertEquals("'a''c\"'", SnowflakeMetadataConnector.identifierNameStringLiteral("\"a'c\"\""));
+  }
+
+  @Test
+  public void identifierNameQuoted() {
+    assertEquals("\"ABC\"", SnowflakeMetadataConnector.identifierNameQuoted("abc"));
+    assertEquals("\"abc\"", SnowflakeMetadataConnector.identifierNameQuoted("\"abc\""));
+
+    assertEquals("\"'\"", SnowflakeMetadataConnector.identifierNameQuoted("'"));
+    assertEquals("\"'\"", SnowflakeMetadataConnector.identifierNameQuoted("\"'\""));
+
+    assertEquals("\"A'C\"\"\"", SnowflakeMetadataConnector.identifierNameQuoted("a'c\""));
+    assertEquals("\"a'c\"\"\"", SnowflakeMetadataConnector.identifierNameQuoted("\"a'c\"\""));
   }
 
   private static ImmutableMultimap<String, String> collectSqlStatementsAsMultimap(

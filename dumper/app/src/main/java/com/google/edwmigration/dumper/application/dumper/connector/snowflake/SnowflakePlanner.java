@@ -107,6 +107,12 @@ final class SnowflakePlanner {
     return new AssessmentQuery(false, query, zipEntryName, LOWER_UNDERSCORE);
   }
 
+  AssessmentQuery externalTablesInSchema(String quotedSchemaName) {
+    String query = String.format("SHOW EXTERNAL TABLES IN SCHEMA %s", quotedSchemaName);
+    String zipEntryName = Format.EXTERNAL_TABLES.value;
+    return new AssessmentQuery(false, query, zipEntryName, LOWER_UNDERSCORE);
+  }
+
   ImmutableList<AssessmentQuery> generateAssessmentQueries() {
     return assessmentQueries;
   }
