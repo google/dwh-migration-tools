@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -36,6 +37,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
+import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
@@ -45,7 +47,9 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -53,6 +57,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A connector to Snowflake databases.
@@ -67,6 +73,7 @@ import javax.annotation.Nonnull;
 public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
 
+  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
   private static final String ACCOUNT_USAGE_SCHEMA_NAME = "SNOWFLAKE.ACCOUNT_USAGE";
   private static final String ACCOUNT_USAGE_WHERE_CONDITION = "DELETED IS NULL";
   private static final String EMPTY_WHERE_CONDITION = "";
@@ -165,12 +172,25 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         schemaFilterColumnName.equals(EMPTY_WHERE_CONDITION)
             ? EMPTY_WHERE_CONDITION
             : getInformationSchemaWhereCondition(schemaFilterColumnName, schemata);
+    String cloneDatabaseFilter =
+        arguments.isIgnoreCloneOnlyDatabase()
+            ? String.format(
+                "NVL(%s, '') NOT IN (SELECT table_catalog FROM %s.TABLE_STORAGE_METRICS WHERE"
+                    + " deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL AND"
+                    + " table_catalog IS NOT NULL GROUP BY table_catalog HAVING COUNT(CASE WHEN id"
+                    + " = clone_group_id THEN 1 END) = 0)",
+                databaseFilterColumnName, ACCOUNT_USAGE_SCHEMA_NAME)
+            : EMPTY_WHERE_CONDITION;
     AbstractJdbcTask<Summary> usageTask =
         SnowflakeTaskUtil.createJdbcSelectTask(
             format,
             ACCOUNT_USAGE_SCHEMA_NAME,
             accountUsageFileName,
-            ImmutableList.of(accountUsageWhereCondition, globalDatabaseFilter, globalSchemaFilter),
+            ImmutableList.of(
+                accountUsageWhereCondition,
+                globalDatabaseFilter,
+                globalSchemaFilter,
+                cloneDatabaseFilter),
             header);
     if (isAssessment) {
       out.add(usageTask);
@@ -228,9 +248,21 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    if (arguments.getDatabases().isEmpty() && !arguments.isIgnoreCloneOnlyDatabase()) {
+      LOG.warn(
+          "No specific database filter (--database) or clone suppression flag"
+              + " (--ignore-clone-only-database) was provided. If your Snowflake account contains"
+              + " zero-copy cloned databases or daily snapshots, consider running with"
+              + " '--ignore-clone-only-database' to exclude clone-only databases and prevent"
+              + " excessively large metadata extracts.");
+    }
+
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
+    if (!arguments.isIgnoreCloneOnlyDatabase()) {
+      out.add(new CheckClonedDatabasesTask());
+    }
 
     boolean isAssessment = arguments.isAssessment();
     addSqlTasksWithInfoSchemaFallback(
@@ -536,5 +568,53 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       identifierName = identifierName.toUpperCase();
     }
     return identifierName;
+  }
+
+  public enum CheckClonedDatabasesHeader {
+    DATABASE_NAME
+  }
+
+  private static final class CheckClonedDatabasesTask extends JdbcSelectTask {
+    private static final Logger LOG = LoggerFactory.getLogger(CheckClonedDatabasesTask.class);
+
+    private static final String SQL =
+        "SELECT table_catalog AS database_name FROM SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS"
+            + " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL AND"
+            + " table_catalog IS NOT NULL GROUP BY table_catalog HAVING COUNT(CASE WHEN id ="
+            + " clone_group_id THEN 1 END) = 0";
+
+    private long fullyClonedDbCount = 0;
+
+    CheckClonedDatabasesTask() {
+      super("check_cloned_databases.csv", SQL, TaskCategory.OPTIONAL);
+      withHeaderClass(CheckClonedDatabasesHeader.class);
+    }
+
+    @Override
+    protected Summary doInConnection(
+        TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
+        throws SQLException {
+      Summary summary = super.doInConnection(context, jdbcHandle, sink, connection);
+      this.fullyClonedDbCount = summary.rowCount();
+      if (fullyClonedDbCount > 0) {
+        LOG.warn(
+            "WARNING: Detected {} fully cloned database(s). Dumping cloned databases can result"
+                + " in massive metadata bloat and memory errors during migration. Consider using"
+                + " '--ignore-clone-only-database' to automatically exclude databases that consist"
+                + " only of cloned tables.",
+            fullyClonedDbCount);
+      }
+      return summary;
+    }
+
+    @Override
+    public String toString() {
+      if (fullyClonedDbCount > 0) {
+        return String.format(
+            "%s (WARNING: Detected %d fully cloned database(s))",
+            getTargetPath(), fullyClonedDbCount);
+      }
+      return super.toString();
+    }
   }
 }

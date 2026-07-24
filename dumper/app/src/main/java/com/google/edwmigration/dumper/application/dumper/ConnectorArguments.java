@@ -111,6 +111,7 @@ public class ConnectorArguments extends DefaultArguments {
   // Snowflake
   public static final String OPT_PRIVATE_KEY_FILE = "private-key-file";
   public static final String OPT_PRIVATE_KEY_PASSWORD = "private-key-password";
+  public static final String OPT_IGNORE_CLONE_ONLY_DATABASE = "ignore-clone-only-database";
 
   // Cloudera
   public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
@@ -247,6 +248,10 @@ public class ConnectorArguments extends DefaultArguments {
               OPT_PRIVATE_KEY_PASSWORD, "Private Key file password. Required if file is encrypted.")
           .withRequiredArg()
           .describedAs("sekr1t");
+  private final OptionSpec<Void> optionIgnoreCloneOnlyDatabase =
+      parser.accepts(
+          OPT_IGNORE_CLONE_ONLY_DATABASE,
+          "Whether to ignore clone-only databases (databases containing only cloned tables).");
 
   private final OptionSpec<ZonedDateTime> optionStartDate =
       parser
@@ -787,6 +792,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isAssessment() {
     return getOptions().has(optionAssessment);
+  }
+
+  public boolean isIgnoreCloneOnlyDatabase() {
+    return getOptions().has(optionIgnoreCloneOnlyDatabase);
   }
 
   @Nonnull

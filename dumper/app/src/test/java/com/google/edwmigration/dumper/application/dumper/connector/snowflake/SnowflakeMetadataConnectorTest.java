@@ -222,6 +222,30 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   }
 
   @Test
+  public void connector_generatesExpectedSql_withIgnoreCloneOnlyDatabase() throws IOException {
+    Map<String, String> actualSqls = collectSqlStatements("--ignore-clone-only-database");
+
+    assertTrue(
+        actualSqls
+            .get("schemata-au.csv")
+            .contains(
+                "WHERE DELETED IS NULL AND NVL(catalog_name, '') NOT IN (SELECT table_catalog FROM"
+                    + " SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS WHERE deleted = FALSE AND"
+                    + " schema_dropped IS NULL AND table_dropped IS NULL AND table_catalog IS NOT"
+                    + " NULL GROUP BY table_catalog HAVING COUNT(CASE WHEN id = clone_group_id"
+                    + " THEN 1 END) = 0)"));
+    assertTrue(
+        actualSqls
+            .get("tables-au.csv")
+            .contains(
+                "WHERE DELETED IS NULL AND NVL(table_catalog, '') NOT IN (SELECT table_catalog FROM"
+                    + " SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS WHERE deleted = FALSE AND"
+                    + " schema_dropped IS NULL AND table_dropped IS NULL AND table_catalog IS NOT"
+                    + " NULL GROUP BY table_catalog HAVING COUNT(CASE WHEN id = clone_group_id"
+                    + " THEN 1 END) = 0)"));
+  }
+
+  @Test
   public void connector_generatesExpectedSql_withDatabaseFilterAndWhereOverride()
       throws IOException {
     ImmutableMultimap<String, String> actualSqls =
