@@ -273,7 +273,7 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     assertEquals(
         "SELECT function_schema, function_name, data_type, argument_signature FROM INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')",
         actualSqls.get("functions.csv"));
-
+    assertEquals("SHOW EXTERNAL TABLES", actualSqls.get("external_tables.csv"));
   }
 
   @Test
@@ -291,7 +291,8 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
             "SELECT catalog_name, schema_name FROM db2.INFORMATION_SCHEMA.SCHEMATA WHERE schema_name IN ('SCHEMA1', 'SCHEMA2')"),
         actualSqls.get("schemata.csv"));
     assertEquals(
-        ImmutableList.of("SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES WHERE DELETED IS NULL AND table_catalog IN ('DB1', 'DB2') AND table_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        ImmutableList.of(
+            "SELECT table_catalog, table_schema, table_name, table_type, row_count, bytes, clustering_key FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES WHERE DELETED IS NULL AND table_catalog IN ('DB1', 'DB2') AND table_schema IN ('SCHEMA1', 'SCHEMA2')"),
         actualSqls.get("tables-au.csv"));
     assertEquals(
         ImmutableList.of(
@@ -318,10 +319,7 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
         actualSqls.get("functions.csv"));
     assertEquals(
         ImmutableList.of(
-            "SHOW EXTERNAL TABLES IN SCHEMA \"DB1\".\"SCHEMA1\"",
-            "SHOW EXTERNAL TABLES IN SCHEMA \"DB1\".\"SCHEMA2\"",
-            "SHOW EXTERNAL TABLES IN SCHEMA \"DB2\".\"SCHEMA1\"",
-            "SHOW EXTERNAL TABLES IN SCHEMA \"DB2\".\"SCHEMA2\""),
+            "SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", "SHOW EXTERNAL TABLES IN DATABASE \"DB2\""),
         actualSqls.get("external_tables.csv"));
   }
 

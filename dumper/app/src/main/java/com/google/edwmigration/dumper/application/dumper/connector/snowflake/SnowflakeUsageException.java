@@ -17,8 +17,10 @@
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ASSESSMENT;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_DATABASE;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_PRIVATE_KEY_PASSWORD;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_SCHEMA;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.collect.ImmutableList;
@@ -89,7 +91,11 @@ class SnowflakeUsageException extends MetadataDumperUsageException {
             "This is unsupported in Assessment.",
             "Remove either the --"
                 + OPT_ASSESSMENT
-                + " or the filter flags (--database/--schema).");
+                + " or the filter flags (--"
+                + OPT_DATABASE
+                + "/--"
+                + OPT_SCHEMA
+                + ").");
     return new SnowflakeUsageException(messages.collect(joining(" ")));
   }
 }

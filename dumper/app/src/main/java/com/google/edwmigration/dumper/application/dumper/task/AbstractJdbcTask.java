@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -63,6 +64,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   @CheckForNull private Class<? extends Enum<?>> headerClass;
   @CheckForNull private ResultSetTransformer<String[]> headerTransformer;
+  @CheckForNull private Predicate<ResultSet> predicate;
 
   public AbstractJdbcTask(@Nonnull String targetPath) {
     super(targetPath);
@@ -87,6 +89,12 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   public AbstractJdbcTask<T> withHeaderTransformer(
       @Nonnull ResultSetTransformer<String[]> headerTransformer) {
     this.headerTransformer = headerTransformer;
+    return this;
+  }
+
+  @Nonnull
+  public AbstractJdbcTask<T> withPredicate(@Nonnull Predicate<ResultSet> predicate) {
+    this.predicate = predicate;
     return this;
   }
 
@@ -155,6 +163,9 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         CSVPrinter printer = format.print(writer)) {
       int columnCount = resultSet.getMetaData().getColumnCount();
       while (resultSet.next()) {
+        if (predicate != null && !predicate.apply(resultSet)) {
+          continue;
+        }
         monitor.count();
         for (int i = 1; i <= columnCount; i++) {
           Object resultItem = resultSet.getObject(i);

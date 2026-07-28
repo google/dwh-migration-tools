@@ -778,8 +778,11 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @Nonnull
-  public List<String> getSchemata() {
-    return getOptions().valuesOf(optionSchema);
+  public ImmutableList<String> getSchemata() {
+    return getOptions().valuesOf(optionSchema).stream()
+        .map(String::trim)
+        .filter(StringUtils::isNotEmpty)
+        .collect(toImmutableList());
   }
 
   public boolean isAssessment() {
