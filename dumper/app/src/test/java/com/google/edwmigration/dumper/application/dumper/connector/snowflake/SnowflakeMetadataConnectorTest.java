@@ -268,10 +268,10 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
         "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale, datetime_precision, comment FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')",
         actualSqls.get("columns.csv"));
     assertEquals(
-        "SELECT function_schema, function_name, data_type, argument_signature FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL AND function_schema IN ('SCHEMA1', 'SCHEMA2')",
+        "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL AND function_schema IN ('SCHEMA1', 'SCHEMA2')",
         actualSqls.get("functions-au.csv"));
     assertEquals(
-        "SELECT function_schema, function_name, data_type, argument_signature FROM INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')",
+        "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')",
         actualSqls.get("functions.csv"));
     assertEquals("SHOW EXTERNAL TABLES", actualSqls.get("external_tables.csv"));
   }
@@ -310,12 +310,12 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
         actualSqls.get("columns.csv"));
     assertEquals(
         ImmutableList.of(
-            "SELECT function_schema, function_name, data_type, argument_signature FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL AND function_catalog IN ('DB1', 'DB2') AND function_schema IN ('SCHEMA1', 'SCHEMA2')"),
+            "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL AND function_catalog IN ('DB1', 'DB2') AND function_schema IN ('SCHEMA1', 'SCHEMA2')"),
         actualSqls.get("functions-au.csv"));
     assertEquals(
         ImmutableList.of(
-            "SELECT function_schema, function_name, data_type, argument_signature FROM db1.INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')",
-            "SELECT function_schema, function_name, data_type, argument_signature FROM db2.INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')"),
+            "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM db1.INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')",
+            "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM db2.INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')"),
         actualSqls.get("functions.csv"));
     assertEquals(
         ImmutableList.of(

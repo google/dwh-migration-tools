@@ -311,8 +311,10 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         FunctionsFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT function_schema, function_name, data_type, argument_signature FROM"
-                + " %1$s.FUNCTIONS%2$s",
+            "SELECT function_catalog, function_schema, function_name, data_type, argument_signature,"
+                + " character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale,"
+                + " function_language, runtime_version, volatility, is_external, is_aggregate"
+                + " FROM %1$s.FUNCTIONS%2$s",
             MetadataView.FUNCTIONS),
         FunctionsFormat.IS_ZIP_ENTRY_NAME,
         FunctionsFormat.AU_ZIP_ENTRY_NAME,

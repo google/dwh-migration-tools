@@ -8,6 +8,6 @@ columns-au.csv: "SELECT table_catalog, table_schema, table_name, ordinal_positio
 columns.csv: "SELECT table_catalog, table_schema, table_name, ordinal_position, column_name, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale, datetime_precision, comment FROM INFORMATION_SCHEMA.COLUMNS"
 views-au.csv: "SELECT table_catalog, table_schema, table_name, view_definition FROM SNOWFLAKE.ACCOUNT_USAGE.VIEWS WHERE DELETED IS NULL"
 views.csv: "SELECT table_catalog, table_schema, table_name, view_definition FROM INFORMATION_SCHEMA.VIEWS"
-functions-au.csv: "SELECT function_schema, function_name, data_type, argument_signature FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL"
-functions.csv: "SELECT function_schema, function_name, data_type, argument_signature FROM INFORMATION_SCHEMA.FUNCTIONS"
+functions-au.csv: "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL"
+functions.csv: "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM INFORMATION_SCHEMA.FUNCTIONS"
 external_tables.csv: "SHOW EXTERNAL TABLES"
