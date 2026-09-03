@@ -56,9 +56,10 @@ public class TeradataLogsJdbcTaskTest {
     assertQueryEquals(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -85,9 +86,10 @@ public class TeradataLogsJdbcTaskTest {
     assertEquals(
         "Write result.csv from\n        SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP) AND"
+            + " L.ErrorCode=0",
         taskDescription);
   }
 
@@ -113,9 +115,11 @@ public class TeradataLogsJdbcTaskTest {
     assertQueryEquals(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP) AND L.UserName <> 'DBC'",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0"
+            + " AND L.UserName <> 'DBC'",
         query);
   }
 
@@ -142,9 +146,10 @@ public class TeradataLogsJdbcTaskTest {
     assertEquals(
         "Write result.csv from\n        SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T13:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T14:00:00Z' AS TIMESTAMP)",
+            + " L.StartTime < CAST('2023-03-04T14:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0",
         taskDescription);
   }
 }

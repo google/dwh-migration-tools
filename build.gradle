@@ -8,7 +8,7 @@ plugins {
 apply plugin: 'com.github.jk1.dependency-license-report'
 apply plugin: 'com.adarshr.test-logger'
 
-if (project.hasProperty('release') || project.hasProperty('ci')) {
+if (project.hasProperty('release') || project.hasProperty('ci') || project.hasProperty('jdk8')) {
     // todo add check for version ends with '-SNAPSHOT' after b/440037454
     if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
         throw new GradleException("The Dumper release and CI builds must be run with JDK 8 but was executed with JDK " + JavaVersion.current())
@@ -20,28 +20,12 @@ distributions {
         distributionBaseName = "dwh-migration-tools"
         contents {
             duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-            from("client") {
-                exclude "**/__pycache__"
-                into "client"
-            }
 
             def dumperProject = project(':dumper:app')
-            def permissionsProject = project(':permissions-migration:app')
-            def dtsTransferProject = project(':dts-transfer-status:app')
 
             dumperProject.afterEvaluate {
                 into("dumper") {
                     from dumperProject.tasks.installPublishedDist
-                }
-            }
-            permissionsProject.afterEvaluate {
-                into("permissions-migration") {
-                    from permissionsProject.tasks.installPublishedDist
-                }
-            }
-            dtsTransferProject.afterEvaluate {
-                into("dts-transfer-status") {
-                    from dtsTransferProject.tasks.installPublishedDist
                 }
             }
         }
@@ -71,12 +55,12 @@ versionCatalogUpdate {
 
 licenseReport {
     filters = [
-            new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
+            new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/licenses/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
     ]
     renderers = [
             new com.google.edwmigration.dumper.build.licensereport.CsvReportRenderer(),
             new com.github.jk1.license.render.JsonReportRenderer('index.json', false),
             new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
     ]
-    allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
+    allowedLicensesFile = rootProject.file("gradle/licenses/license-allowed.json")
 }

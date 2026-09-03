@@ -146,4 +146,25 @@ public class JdbcSelectTaskTest {
     String actualOutput = sink.openStream().toString();
     assertEquals("Foo,Bar,Baz\n,14,3\n,15,2\n", actualOutput);
   }
+
+  @Test
+  public void testWithPredicate() throws Exception {
+    String sql = "SELECT a, b, c FROM foo";
+    MemoryByteSink sink = new MemoryByteSink();
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
+      AbstractJdbcTask<Summary> task =
+          new JdbcSelectTask("(memory)", sql)
+              .withPredicate(
+                  rs -> {
+                    try {
+                      return rs.getInt("a") > 1;
+                    } catch (SQLException e) {
+                      return false;
+                    }
+                  });
+      task.doRun(mockContext, sink, handle);
+    }
+    String actualOutput = sink.openStream().toString();
+    assertEquals("a,b,c\n", actualOutput);
+  }
 }

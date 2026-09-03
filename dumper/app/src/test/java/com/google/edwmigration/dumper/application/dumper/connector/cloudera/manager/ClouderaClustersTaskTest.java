@@ -112,14 +112,14 @@ public class ClouderaClustersTaskTest {
     server.stubFor(
         get("/cmf/clusters/aaa/status.json").willReturn(okJson(clusterStatusJsonWithId("111"))));
     server.stubFor(
-        get("/cmf/clusters/bbb/status.json")
+        get("/cmf/clusters/B%20b%20-%20b/status.json")
             .willReturn(aResponse().withStatus(401).withBody(clusterStatusJsonWithId("222"))));
 
     task.doRun(context, sink, handle);
 
     server.verify(getRequestedFor(urlEqualTo("/api/vTest/clusters?clusterType=ANY")));
     server.verify(getRequestedFor(urlEqualTo("/cmf/clusters/aaa/status.json")));
-    server.verify(getRequestedFor(urlEqualTo("/cmf/clusters/bbb/status.json")));
+    server.verify(getRequestedFor(urlEqualTo("/cmf/clusters/B%20b%20-%20b/status.json")));
     assertTrue(server.findAllUnmatchedRequests().isEmpty());
 
     verify(writer)
@@ -141,7 +141,7 @@ public class ClouderaClustersTaskTest {
     assertNotNull(clusters);
     assertEquals(
         ImmutableList.of(
-            ClouderaClusterDTO.create("111", "aaa"), ClouderaClusterDTO.create(null, "bbb")),
+            ClouderaClusterDTO.create("111", "aaa"), ClouderaClusterDTO.create(null, "B b - b")),
         clusters);
     verify(writer).close();
   }

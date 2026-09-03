@@ -25,6 +25,7 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.net.URI;
 import java.util.List;
 import javax.annotation.Nonnull;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -71,8 +72,11 @@ public class ClouderaCmfHostsTask extends AbstractClouderaManagerTask {
           continue;
         }
 
-        String hostPerClusterUrl =
-            baseURI + "/cmf/hardware/hosts/hostsOverview.json?clusterId=" + cluster.getId();
+        URI hostPerClusterUrl =
+            new URIBuilder(baseURI)
+                .appendPath("cmf/hardware/hosts/hostsOverview.json")
+                .addParameter("clusterId", String.valueOf(cluster.getId()))
+                .build();
 
         JsonNode hostsJson;
         try (CloseableHttpResponse hostsResponse =

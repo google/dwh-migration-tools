@@ -16,23 +16,28 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.FeaturesQueryPath.COMPLEX;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.FeaturesQueryPath.SHOW_BASED;
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.FeaturesQueryPath.SIMPLE;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.MetadataView.TABLE_STORAGE_METRICS;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.stream;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
+import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentAssessment;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentSchemaPredicate;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.snowflake.SnowflakePlanner.AssessmentQuery;
+import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
@@ -42,12 +47,18 @@ import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
+import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat;
-import java.io.IOException;
-import java.net.URL;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A connector to Snowflake databases.
@@ -58,16 +69,14 @@ import javax.annotation.Nonnull;
 @RespectsArgumentAssessment
 @RespectsArgumentDatabaseForConnection
 @RespectsArgumentDatabasePredicate
+@RespectsArgumentSchemaPredicate
 public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     implements MetadataConnector, SnowflakeMetadataDumpFormat {
 
+  private static final Logger LOG = LoggerFactory.getLogger(SnowflakeMetadataConnector.class);
   private static final String ACCOUNT_USAGE_SCHEMA_NAME = "SNOWFLAKE.ACCOUNT_USAGE";
   private static final String ACCOUNT_USAGE_WHERE_CONDITION = "DELETED IS NULL";
   private static final String EMPTY_WHERE_CONDITION = "";
-  private static final String ACCOUNT_USAGE_SIMPLE_FILE = "account-usage-simple.sql";
-  private static final String ACCOUNT_USAGE_COMPLEX_FILE = "account-usage-complex.sql";
-  private static final String SHOW_BASED_FILE = "show-based.sql";
-  private static final String SNOWFLAKE_FEATURES_PREFIX = "snowflake-features/";
 
   private enum PropertyAction {
     QUERY("query", "query"),
@@ -138,7 +147,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @Override
   protected void validateForConnector(@Nonnull ConnectorArguments arguments) {
     boolean hasDatabases = !arguments.getDatabases().isEmpty();
-    if (arguments.isAssessment() && hasDatabases) {
+    boolean hasSchemata = !arguments.getSchemata().isEmpty();
+    if (arguments.isAssessment() && (hasDatabases || hasSchemata)) {
       throw SnowflakeUsageException.unsupportedFilter();
     }
   }
@@ -148,52 +158,110 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       @Nonnull Class<? extends Enum<?>> header,
       @Nonnull String format,
       @Nonnull String informationSchemaFileName,
-      @Nonnull String informationSchemaName,
       @Nonnull String accountUsageFileName,
-      @Nonnull String accountUsageSchemaName,
       @Nonnull String accountUsageWhereCondition,
-      boolean isAssessment,
-      @Nonnull String databaseFilter) {
-    AbstractJdbcTask<Summary> schemaTask =
-        SnowflakeTaskUtil.withFilter(
-            format,
-            informationSchemaName,
-            informationSchemaFileName,
-            ImmutableList.of(databaseFilter),
-            header);
+      @Nonnull ConnectorArguments arguments,
+      @Nonnull String databaseFilterColumnName,
+      @Nonnull String schemaFilterColumnName) {
+    ImmutableList<String> databases = arguments.getDatabases();
+    ImmutableList<String> schemata = arguments.getSchemata();
+    boolean isAssessment = arguments.isAssessment();
+    String globalDatabaseFilter =
+        getInformationSchemaWhereCondition(databaseFilterColumnName, databases);
+    String globalSchemaFilter =
+        schemaFilterColumnName.equals(EMPTY_WHERE_CONDITION)
+            ? EMPTY_WHERE_CONDITION
+            : getInformationSchemaWhereCondition(schemaFilterColumnName, schemata);
+    String cloneDatabaseFilter =
+        arguments.isIgnoreCloneOnlyDatabase()
+            ? String.format(
+                "NVL(%s, '') NOT IN (SELECT table_catalog FROM %s.TABLE_STORAGE_METRICS WHERE"
+                    + " deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL AND"
+                    + " table_catalog IS NOT NULL GROUP BY table_catalog HAVING COUNT(CASE WHEN id"
+                    + " = clone_group_id THEN 1 END) = 0)",
+                databaseFilterColumnName, ACCOUNT_USAGE_SCHEMA_NAME)
+            : EMPTY_WHERE_CONDITION;
     AbstractJdbcTask<Summary> usageTask =
-        SnowflakeTaskUtil.withFilter(
+        SnowflakeTaskUtil.createJdbcSelectTask(
             format,
-            accountUsageSchemaName,
+            ACCOUNT_USAGE_SCHEMA_NAME,
             accountUsageFileName,
-            ImmutableList.of(accountUsageWhereCondition, databaseFilter),
+            ImmutableList.of(
+                accountUsageWhereCondition,
+                globalDatabaseFilter,
+                globalSchemaFilter,
+                cloneDatabaseFilter),
             header);
     if (isAssessment) {
       out.add(usageTask);
-    } else {
-      out.addAll(inputSource.sqlTasks(schemaTask, usageTask));
+      return;
     }
+
+    if (databases.isEmpty()) {
+      AbstractJdbcTask<Summary> schemaTask =
+          SnowflakeTaskUtil.createJdbcSelectTask(
+              format,
+              "INFORMATION_SCHEMA",
+              informationSchemaFileName,
+              ImmutableList.of(globalSchemaFilter),
+              header);
+      out.addAll(inputSource.sqlTasks(schemaTask, usageTask));
+      return;
+    }
+
+    List<Task<?>> tasks = new ArrayList<>();
+    if (inputSource == SnowflakeInput.USAGE_ONLY_SOURCE
+        || inputSource == SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE) {
+      tasks.add(usageTask);
+    }
+    if (inputSource == SnowflakeInput.SCHEMA_ONLY_SOURCE
+        || inputSource == SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE) {
+      // INFORMATION_SCHEMA is database-scoped. To fetch metadata from multiple databases,
+      // we must query each database's INFORMATION_SCHEMA individually (e.g.,
+      // db.INFORMATION_SCHEMA.TABLES).
+      // Prefixing the database name also helps the query optimizer scope the metadata scan,
+      // avoiding performance issues that occur when querying INFORMATION_SCHEMA without a database
+      // scope.
+      //
+      // The first task overwrites the output file; subsequent tasks append to it.
+      TaskOptions taskOptions = TaskOptions.DEFAULT;
+      for (String database : databases) {
+        String schemaPrefix = sanitizeDatabaseName(database) + ".INFORMATION_SCHEMA";
+        AbstractJdbcTask<Summary> schemaTask =
+            SnowflakeTaskUtil.createJdbcSelectTask(
+                format,
+                schemaPrefix,
+                informationSchemaFileName,
+                ImmutableList.of(globalSchemaFilter),
+                header,
+                taskOptions);
+        if (inputSource == SnowflakeInput.USAGE_THEN_SCHEMA_SOURCE) {
+          schemaTask.onlyIfFailed(usageTask);
+        }
+        tasks.add(schemaTask);
+        taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
+      }
+    }
+    out.addAll(tasks);
   }
 
   @Override
   public final void addTasksTo(
       @Nonnull List<? super Task<?>> out, @Nonnull ConnectorArguments arguments) {
+    if (arguments.getDatabases().isEmpty() && !arguments.isIgnoreCloneOnlyDatabase()) {
+      LOG.warn(
+          "No specific database filter (--database) or clone suppression flag"
+              + " (--ignore-clone-only-database) was provided. If your Snowflake account contains"
+              + " zero-copy cloned databases or daily snapshots, consider running with"
+              + " '--ignore-clone-only-database' to exclude clone-only databases and prevent"
+              + " excessively large metadata extracts.");
+    }
+
     out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
     out.add(new FormatTask(FORMAT_NAME));
     out.add(SnowflakeYamlSummaryTask.create(FORMAT_NAME, arguments));
-
-    boolean INJECT_IS_FAULT = arguments.isTestFlag('A');
-    // INFORMATION_SCHEMA queries must be qualified with a database
-    // name or that a "USE DATABASE" command has previously been run
-    // in the same session. Qualify the name to avoid this dependency.
-    final String databaseName = arguments.getDatabaseSingleName();
-    final String IS;
-    if (INJECT_IS_FAULT) {
-      IS = "__NONEXISTENT__";
-    } else if (databaseName == null) {
-      IS = "INFORMATION_SCHEMA";
-    } else {
-      IS = sanitizeDatabaseName(databaseName) + ".INFORMATION_SCHEMA";
+    if (!arguments.isIgnoreCloneOnlyDatabase()) {
+      out.add(new CheckClonedDatabasesTask());
     }
 
     boolean isAssessment = arguments.isAssessment();
@@ -205,12 +273,11 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT database_name, database_owner FROM %1$s.DATABASES%2$s",
             MetadataView.DATABASES),
         DatabasesFormat.IS_ZIP_ENTRY_NAME,
-        IS,
         DatabasesFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition("database_name", arguments.getDatabases()));
+        arguments,
+        "database_name",
+        EMPTY_WHERE_CONDITION); // Changed to EMPTY_WHERE_CONDITION
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -220,12 +287,11 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT catalog_name, schema_name FROM %1$s.SCHEMATA%2$s",
             MetadataView.SCHEMATA),
         SchemataFormat.IS_ZIP_ENTRY_NAME,
-        IS,
         SchemataFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition("catalog_name", arguments.getDatabases()));
+        arguments,
+        "catalog_name",
+        "schema_name");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -236,13 +302,11 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 + " clustering_key FROM %1$s.TABLES%2$s",
             MetadataView.TABLES),
         TablesFormat.IS_ZIP_ENTRY_NAME,
-        IS,
         TablesFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition(
-            "table_catalog", arguments.getDatabases())); // Painfully slow.
+        arguments,
+        "table_catalog",
+        "table_schema");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -254,13 +318,11 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
                 + " numeric_precision, numeric_scale, datetime_precision, comment FROM %1$s.COLUMNS%2$s",
             MetadataView.COLUMNS),
         ColumnsFormat.IS_ZIP_ENTRY_NAME,
-        IS,
         ColumnsFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition(
-            "table_catalog", arguments.getDatabases())); // Very fast.
+        arguments,
+        "table_catalog",
+        "table_schema");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
@@ -270,46 +332,32 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
             "SELECT table_catalog, table_schema, table_name, view_definition FROM %1$s.VIEWS%2$s",
             MetadataView.VIEWS),
         ViewsFormat.IS_ZIP_ENTRY_NAME,
-        IS,
         ViewsFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition("table_catalog", arguments.getDatabases()));
+        arguments,
+        "table_catalog",
+        "table_schema");
 
     addSqlTasksWithInfoSchemaFallback(
         out,
         FunctionsFormat.Header.class,
         getOverrideableQuery(
             arguments,
-            "SELECT function_schema, function_name, data_type, argument_signature FROM"
-                + " %1$s.FUNCTIONS%2$s",
+            "SELECT function_catalog, function_schema, function_name, data_type, argument_signature,"
+                + " character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale,"
+                + " function_language, runtime_version, volatility, is_external, is_aggregate"
+                + " FROM %1$s.FUNCTIONS%2$s",
             MetadataView.FUNCTIONS),
         FunctionsFormat.IS_ZIP_ENTRY_NAME,
-        IS,
         FunctionsFormat.AU_ZIP_ENTRY_NAME,
-        ACCOUNT_USAGE_SCHEMA_NAME,
         ACCOUNT_USAGE_WHERE_CONDITION,
-        isAssessment,
-        getInformationSchemaWhereCondition("function_catalog", arguments.getDatabases()));
-
-    stream(FeaturesQueryPath.values())
-        .forEach(
-            path -> {
-              TaskOptions taskOptions =
-                  path.value.contains(ACCOUNT_USAGE_SIMPLE_FILE)
-                      ? TaskOptions.DEFAULT
-                      : TaskOptions.DEFAULT.withWriteMode(WriteMode.APPEND_EXISTING);
-              out.add(
-                  new JdbcSelectTask(
-                          FeaturesFormat.IS_ZIP_ENTRY_NAME,
-                          loadFile(path.value),
-                          TaskCategory.OPTIONAL, // TODO: Change to REQUIRED after implementation
-                          taskOptions)
-                      .withHeaderClass(FeaturesFormat.Header.class));
-            });
+        arguments,
+        "function_catalog",
+        "function_schema");
 
     if (isAssessment) {
+      out.addAll(featuresTasks());
+
       for (AssessmentQuery item : planner.generateAssessmentQueries()) {
         String query = queryForAssessment(item, arguments);
         Task<?> task =
@@ -320,38 +368,55 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       return;
     }
     ImmutableList<String> databases = arguments.getDatabases();
-
+    List<String> schemata = arguments.getSchemata();
+    TaskOptions taskOptions = TaskOptions.DEFAULT;
     if (databases.isEmpty()) {
       AssessmentQuery query = SnowflakePlanner.SHOW_EXTERNAL_TABLES;
-      Task<?> task = convertAssessmentQuery(query, arguments, TaskOptions.DEFAULT);
-      out.add(task);
-      return;
-    }
-
-    TaskOptions taskOptions = TaskOptions.DEFAULT;
-
-    for (String item : databases) {
-      String quotedName = databaseNameQuoted(item);
-      AssessmentQuery baseQuery = SnowflakePlanner.SHOW_EXTERNAL_TABLES;
-
-      String formatString = String.format("%s IN DATABASE %s", baseQuery.formatString, quotedName);
-      AssessmentQuery query = baseQuery.withFormatString(formatString);
       Task<?> task = convertAssessmentQuery(query, arguments, taskOptions);
+      if (!schemata.isEmpty() && task instanceof AbstractJdbcTask) {
+        ((AbstractJdbcTask<?>) task).withPredicate(createSchemaPredicate("schema_name", schemata));
+      }
       out.add(task);
-      // Next tasks will append to the same file.
-      taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
+    } else {
+      for (String database : databases) {
+        String quotedName = identifierNameQuoted(database);
+        AssessmentQuery query = planner.externalTablesInDatabase(quotedName);
+        AbstractJdbcTask<?> task =
+            new JdbcSelectTask(
+                    query.zipEntryName, query.formatString, TaskCategory.REQUIRED, taskOptions)
+                .withHeaderTransformer(query.transformer());
+        if (!schemata.isEmpty()) {
+          task.withPredicate(createSchemaPredicate("schema_name", schemata));
+        }
+        out.add(task);
+        taskOptions = taskOptions.withWriteMode(WriteMode.APPEND_EXISTING);
+      }
     }
   }
 
-  enum FeaturesQueryPath {
-    SIMPLE(SNOWFLAKE_FEATURES_PREFIX + ACCOUNT_USAGE_SIMPLE_FILE),
-    COMPLEX(SNOWFLAKE_FEATURES_PREFIX + ACCOUNT_USAGE_COMPLEX_FILE),
-    SHOW_BASED(SNOWFLAKE_FEATURES_PREFIX + SHOW_BASED_FILE);
+  private static ImmutableList<AbstractJdbcTask<Summary>> featuresTasks() {
+    ImmutableList<FeaturesQueryPath> paths = ImmutableList.of(SIMPLE, COMPLEX, SHOW_BASED);
+    ImmutableList.Builder<AbstractJdbcTask<Summary>> builder = ImmutableList.builder();
+    for (FeaturesQueryPath item : paths) {
+      JdbcSelectTask task =
+          new JdbcSelectTask(
+              "features.csv", item.loadFile(), TaskCategory.OPTIONAL, item.taskOptions());
+      builder.add(task.withHeaderClass(FeaturesFormat.Header.class));
+    }
+    return builder.build();
+  }
 
-    final String value;
-
-    FeaturesQueryPath(String value) {
-      this.value = value;
+  // INFORMATION_SCHEMA queries must be qualified with a database
+  // name or that a "USE DATABASE" command has previously been run
+  // in the same session. Qualify the name to avoid this dependency.
+  @Nonnull
+  private static String getQualifierPrefix(@Nonnull ConnectorArguments arguments) {
+    String informationSchema = "INFORMATION_SCHEMA";
+    String databaseName = arguments.getDatabaseSingleName();
+    if (databaseName == null) {
+      return informationSchema;
+    } else {
+      return sanitizeDatabaseName(databaseName) + "." + informationSchema;
     }
   }
 
@@ -419,51 +484,139 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   private static String getInformationSchemaWhereCondition(
-      @Nonnull String databaseNameColumn, @Nonnull ImmutableList<String> databaseNames) {
-    if (databaseNames.isEmpty()) {
+      @Nonnull String columnName, @Nonnull ImmutableList<String> objectNames) {
+    if (objectNames.isEmpty()) {
       return EMPTY_WHERE_CONDITION;
     }
     String quotedNames =
-        databaseNames.stream()
-            .map(SnowflakeMetadataConnector::databaseNameStringLiteral)
+        objectNames.stream()
+            .map(SnowflakeMetadataConnector::identifierNameStringLiteral)
             .collect(Collectors.joining(", "));
 
-    return String.format("%s IN (%s)", databaseNameColumn, quotedNames);
+    return String.format("%s IN (%s)", columnName, quotedNames);
   }
 
   @VisibleForTesting
-  public static String databaseNameStringLiteral(@Nonnull String databaseName) {
-    if (databaseName.startsWith("\"") && databaseName.endsWith("\"")) {
-      // This is a quoted identifier, it should be matched case-sensitively
-      databaseName = databaseName.substring(1, databaseName.length() - 1);
-    } else {
-      // Unquoted identifiers are stored uppercase, single quotes need to be escaped.
-      databaseName = databaseName.toUpperCase();
-    }
-    databaseName = databaseName.replace("'", "''");
-    return String.format("'%s'", databaseName);
+  public static String identifierNameStringLiteral(@Nonnull String identifierName) {
+    String rawIdentifierString = identifierNameStringRaw(identifierName);
+    String escapedIdentifierSqlLiteral = rawIdentifierString.replace("'", "''");
+    return String.format("'%s'", escapedIdentifierSqlLiteral);
   }
 
   @VisibleForTesting
-  public static String databaseNameQuoted(@Nonnull String databaseName) {
-    if (databaseName.startsWith("\"") && databaseName.endsWith("\"")) {
-      // This is a quoted identifier, it should be matched case-sensitively
-      databaseName = databaseName.substring(1, databaseName.length() - 1);
-    } else {
-      // Unquoted identifiers are stored uppercase, single quotes need to be escaped.
-      databaseName = databaseName.toUpperCase();
-    }
-    databaseName = databaseName.replace("\"", "\"\"");
-    return String.format("\"%s\"", databaseName);
+  public static String identifierNameQuoted(@Nonnull String identifierName) {
+    String rawIdentifierString = identifierNameStringRaw(identifierName);
+    String escapedIdentifierName = rawIdentifierString.replace("\"", "\"\"");
+    return String.format("\"%s\"", escapedIdentifierName);
   }
 
-  private static String loadFile(String path) {
-    try {
-      URL queryUrl = Resources.getResource(path);
-      return Resources.toString(queryUrl, UTF_8);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(
-          String.format("An invalid file was provided: '%s'.", path), e);
+  @Nonnull
+  public static Predicate<ResultSet> createSchemaPredicate(
+      @Nonnull String schemaColumnName, @Nonnull List<String> schemata) {
+    if (schemata.isEmpty()) {
+      return Predicates.alwaysTrue();
+    }
+    Predicate<String> schemaPredicate = createSchemaPredicate(schemata);
+    return new Predicate<ResultSet>() {
+      private int columnIndex = -1;
+
+      @Override
+      public boolean apply(ResultSet resultSet) {
+        try {
+          if (columnIndex == -1) {
+            columnIndex = findColumnIndex(resultSet, schemaColumnName);
+          }
+          if (columnIndex > 0) {
+            String schemaValue = resultSet.getString(columnIndex);
+            return schemaPredicate.apply(schemaValue);
+          }
+          return true;
+        } catch (SQLException e) {
+          return true;
+        }
+      }
+    };
+  }
+
+  @Nonnull
+  public static Predicate<String> createSchemaPredicate(@Nonnull List<String> schemata) {
+    if (schemata.isEmpty()) {
+      return Predicates.alwaysTrue();
+    }
+    Set<String> set =
+        schemata.stream()
+            .map(SnowflakeMetadataConnector::identifierNameStringRaw)
+            .collect(Collectors.toSet());
+    return input -> input != null && (set.contains(input));
+  }
+
+  private static int findColumnIndex(ResultSet resultSet, String columnName) throws SQLException {
+    int count = resultSet.getMetaData().getColumnCount();
+    for (int i = 1; i <= count; i++) {
+      if (columnName.equalsIgnoreCase(resultSet.getMetaData().getColumnLabel(i))
+          || columnName.equalsIgnoreCase(resultSet.getMetaData().getColumnName(i))) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private static String identifierNameStringRaw(@Nonnull String identifierName) {
+    if (identifierName.startsWith("\"") && identifierName.endsWith("\"")) {
+      // This is a quoted identifier, it should be matched case-sensitively
+      identifierName = identifierName.substring(1, identifierName.length() - 1);
+    } else {
+      // Unquoted identifiers are stored uppercase, single quotes need to be escaped.
+      identifierName = identifierName.toUpperCase();
+    }
+    return identifierName;
+  }
+
+  public enum CheckClonedDatabasesHeader {
+    DATABASE_NAME
+  }
+
+  private static final class CheckClonedDatabasesTask extends JdbcSelectTask {
+    private static final Logger LOG = LoggerFactory.getLogger(CheckClonedDatabasesTask.class);
+
+    private static final String SQL =
+        "SELECT table_catalog AS database_name FROM SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS"
+            + " WHERE deleted = FALSE AND schema_dropped IS NULL AND table_dropped IS NULL AND"
+            + " table_catalog IS NOT NULL GROUP BY table_catalog HAVING COUNT(CASE WHEN id ="
+            + " clone_group_id THEN 1 END) = 0";
+
+    private long fullyClonedDbCount = 0;
+
+    CheckClonedDatabasesTask() {
+      super("check_cloned_databases.csv", SQL, TaskCategory.OPTIONAL);
+      withHeaderClass(CheckClonedDatabasesHeader.class);
+    }
+
+    @Override
+    protected Summary doInConnection(
+        TaskRunContext context, JdbcHandle jdbcHandle, ByteSink sink, Connection connection)
+        throws SQLException {
+      Summary summary = super.doInConnection(context, jdbcHandle, sink, connection);
+      this.fullyClonedDbCount = summary.rowCount();
+      if (fullyClonedDbCount > 0) {
+        LOG.warn(
+            "WARNING: Detected {} fully cloned database(s). Dumping cloned databases can result"
+                + " in massive metadata bloat and memory errors during migration. Consider using"
+                + " '--ignore-clone-only-database' to automatically exclude databases that consist"
+                + " only of cloned tables.",
+            fullyClonedDbCount);
+      }
+      return summary;
+    }
+
+    @Override
+    public String toString() {
+      if (fullyClonedDbCount > 0) {
+        return String.format(
+            "%s (WARNING: Detected %d fully cloned database(s))",
+            getTargetPath(), fullyClonedDbCount);
+      }
+      return super.toString();
     }
   }
 }

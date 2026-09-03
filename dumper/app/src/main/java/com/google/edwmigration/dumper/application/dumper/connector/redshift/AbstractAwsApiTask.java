@@ -17,10 +17,10 @@
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import com.google.common.io.ByteSink;
+import com.google.common.io.Closer;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import java.io.IOException;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -38,12 +38,15 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
   static class CsvRecordWriter implements AutoCloseable {
     private final CSVPrinter printer;
     private final RecordProgressMonitor monitor;
-    private final Writer writer;
+    private final Closer closer;
 
     CsvRecordWriter(ByteSink sink, CSVFormat format, String name) throws IOException {
       monitor = new RecordProgressMonitor(name);
-      writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
-      printer = format.print(writer);
+      printer = format.print(sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream());
+      closer = Closer.create();
+
+      closer.register(printer);
+      closer.register(monitor);
     }
 
     void handleRecord(Object... record) throws IOException {
@@ -53,9 +56,7 @@ public abstract class AbstractAwsApiTask extends AbstractTask<Void> {
 
     @Override
     public void close() throws IOException {
-      // close Monitor first, because closing Writer can throw a checked exception
-      monitor.close();
-      writer.close();
+      closer.close();
     }
   }
 }

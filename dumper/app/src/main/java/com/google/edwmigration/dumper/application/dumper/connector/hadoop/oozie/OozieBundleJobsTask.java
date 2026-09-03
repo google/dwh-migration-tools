@@ -43,7 +43,8 @@ public class OozieBundleJobsTask extends AbstractOozieJobsTask<BundleJob> {
     // Bundle's endTime is obtained from Coordinators under the bundle control,
     // so the similar logic is applied.
     if (jobEndTime == null) {
-      return job.getStartTime().getTime() < maxJobEndTimeTimestamp;
+      Date startTime = job.getStartTime();
+      return startTime != null && startTime.getTime() < maxJobEndTimeTimestamp;
     } else {
       return minJobEndTimeTimestamp <= jobEndTime.getTime()
           && jobEndTime.getTime() < maxJobEndTimeTimestamp;

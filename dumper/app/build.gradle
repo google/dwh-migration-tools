@@ -25,6 +25,7 @@ buildscript {
 plugins {
     id 'dwh-migration-dumper.java-application-conventions'
     id 'jacoco'
+    id 'org.cyclonedx.bom' version '1.10.0'
 }
 
 apply plugin: 'com.github.jk1.dependency-license-report'
@@ -156,8 +157,8 @@ dependencies {
     testRuntimeOnly libs.datanucleus.javax.jdo
     testRuntimeOnly libs.datanucleus.rdbms
 
-    sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}@sources"
-    sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}@sources"
+    sources "org.slf4j:jcl-over-slf4j:${libs.versions.jcl.over.slf4j.get()}:sources"
+    sources "ch.qos.logback:logback-classic:${libs.versions.logback.get()}:sources"
 }
 
 dependencyLocking {
@@ -220,14 +221,24 @@ task cloudExtractorStartScripts(type: CreateStartScripts) {
 licenseReport {
     // onlyIf { ! gradle.startParameter.offline }
     filters = [
-        new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
+        new com.github.jk1.license.filter.LicenseBundleNormalizer(bundlePath: rootProject.file("gradle/licenses/license-bundle-normalizer.json"), createDefaultTransformationRules: true)
     ]
     renderers = [
         new com.google.edwmigration.dumper.build.licensereport.CsvReportRenderer(),
         new com.github.jk1.license.render.JsonReportRenderer('index.json', false),
         new com.github.jk1.license.render.InventoryHtmlReportRenderer("index.html", "Licenses of Third Party Dependencies")
     ]
-    allowedLicensesFile = rootProject.file("gradle/license-allowed.json")
+    allowedLicensesFile = rootProject.file("gradle/licenses/license-allowed.json")
+}
+
+cyclonedxBom {
+    includeConfigs = ["runtimeClasspath"]
+    skipConfigs = ["compileClasspath", "testCompileClasspath"]
+    projectType = "application"
+    schemaVersion = "1.5"
+    destination = file("build/reports/bom")
+    outputFormat = "json"
+    outputName = "bom"
 }
 
 tasks.named('check') {
@@ -248,7 +259,9 @@ tasks.register('generateSourceMirror', Copy) {
         dependencies.createArtifactResolutionQuery()
                 .forComponents(
                         configurations.runtimeClasspath.incoming.resolutionResult
-                                .allDependencies.collect { it.selected.id }
+                                .allDependencies
+                                .findAll { it instanceof ResolvedDependencyResult }
+                                .collect { it.selected.id }
                 )
                 .withArtifacts(JvmLibrary, SourcesArtifact)
                 .execute()
@@ -300,6 +313,9 @@ distributions {
             }
             from(generateSourceMirror) {
                 into "docs/sources"
+            }
+            from(cyclonedxBom) {
+                into "docs/bom"
             }
         }
     }

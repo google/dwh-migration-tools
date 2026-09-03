@@ -30,6 +30,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArg
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogDays;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogEnd;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentQueryLogStart;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInput;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
@@ -58,6 +59,9 @@ import org.slf4j.LoggerFactory;
 /** @author matt */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Teradata version >=15.")
+@RespectsInput(
+    arg = ConnectorArguments.OPT_KEEP_FAILED_LOGS,
+    description = "If provided, disables filtering of failed queries.")
 @RespectsArgumentQueryLogDays
 @RespectsArgumentQueryLogStart
 @RespectsArgumentQueryLogEnd
@@ -257,17 +261,31 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
       for (ZonedInterval interval : intervals) {
         String file = getEntryFileNameWithTimestamp(ZIP_ENTRY_PREFIX, interval);
         List<String> orderBy = Arrays.asList("ST.QueryID", "ST.SQLRowNo");
-        out.add(
-            new TeradataAssessmentLogsJdbcTask(
-                    file,
-                    queryLogsState,
-                    tableNames,
-                    conditions,
-                    interval,
-                    logDateColumn,
-                    maxSqlLength,
-                    orderBy)
-                .withHeaderClass(HeaderForAssessment.class));
+        TeradataAssessmentLogsJdbcTask logsTask;
+        if (arguments.shouldKeepFailedLogs()) {
+          logsTask =
+              TeradataAssessmentLogsJdbcTask.keepingFailedLogs(
+                  file,
+                  queryLogsState,
+                  tableNames,
+                  conditions,
+                  interval,
+                  logDateColumn,
+                  maxSqlLength,
+                  orderBy);
+        } else {
+          logsTask =
+              new TeradataAssessmentLogsJdbcTask(
+                  file,
+                  queryLogsState,
+                  tableNames,
+                  conditions,
+                  interval,
+                  logDateColumn,
+                  maxSqlLength,
+                  orderBy);
+        }
+        out.add(logsTask.withHeaderClass(HeaderForAssessment.class));
         out.addAll(createTimeSeriesTasks(interval, arguments));
         out.add(
             new TeradataUtilityLogsJdbcTask(

@@ -167,7 +167,23 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
 
     assertTrue(
         e.getMessage(),
-        e.getMessage().contains("Trying to filter by database with the --assessment flag."));
+        e.getMessage()
+            .contains("Trying to filter by database or schema with the --assessment flag."));
+  }
+
+  @Test
+  public void validate_assessmentEnabledWithSchemaFilter_throwsUsageException() throws IOException {
+    ConnectorArguments arguments =
+        makeArguments("--connector", "snowflake", "--schema", "PUBLIC", "--assessment");
+
+    MetadataDumperUsageException e =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> metadataConnector.validate(arguments));
+
+    assertTrue(
+        e.getMessage(),
+        e.getMessage()
+            .contains("Trying to filter by database or schema with the --assessment flag."));
   }
 
   @Test

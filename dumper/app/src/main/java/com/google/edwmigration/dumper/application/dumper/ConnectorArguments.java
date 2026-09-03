@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.lang3.BooleanUtils;
@@ -71,6 +72,7 @@ public class ConnectorArguments extends DefaultArguments {
           + "\n";
 
   public static final String OPT_CONNECTOR = "connector";
+  public static final String OPT_KEEP_FAILED_LOGS = "keep-failed-logs";
   public static final String OPT_TELEMETRY = "telemetry";
   public static final String OPT_DRIVER = "driver";
   public static final String OPT_CLASS = "jdbcDriverClass";
@@ -109,6 +111,7 @@ public class ConnectorArguments extends DefaultArguments {
   // Snowflake
   public static final String OPT_PRIVATE_KEY_FILE = "private-key-file";
   public static final String OPT_PRIVATE_KEY_PASSWORD = "private-key-password";
+  public static final String OPT_IGNORE_CLONE_ONLY_DATABASE = "ignore-clone-only-database";
 
   // Cloudera
   public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
@@ -165,6 +168,9 @@ public class ConnectorArguments extends DefaultArguments {
 
   private final OptionSpec<String> connectorNameOption =
       parser.accepts(OPT_CONNECTOR, "Target connector name").withRequiredArg().required();
+  private final OptionSpec<Void> optionKeepFailedLogs =
+      parser.accepts(OPT_KEEP_FAILED_LOGS, "Keep failed query logs.");
+
   private final OptionSpec<String> optionDriver =
       parser
           .accepts(
@@ -242,6 +248,10 @@ public class ConnectorArguments extends DefaultArguments {
               OPT_PRIVATE_KEY_PASSWORD, "Private Key file password. Required if file is encrypted.")
           .withRequiredArg()
           .describedAs("sekr1t");
+  private final OptionSpec<Void> optionIgnoreCloneOnlyDatabase =
+      parser.accepts(
+          OPT_IGNORE_CLONE_ONLY_DATABASE,
+          "Whether to ignore clone-only databases (databases containing only cloned tables).");
 
   private final OptionSpec<ZonedDateTime> optionStartDate =
       parser
@@ -724,6 +734,10 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().valueOf(optionOracleSID);
   }
 
+  public boolean shouldKeepFailedLogs() {
+    return getOptions().has(OPT_KEEP_FAILED_LOGS);
+  }
+
   @Nonnull
   private static Predicate<String> toPredicate(@CheckForNull List<String> in) {
     if (in == null || in.isEmpty()) {
@@ -754,12 +768,11 @@ public class ConnectorArguments extends DefaultArguments {
     return toPredicate(getDatabases());
   }
 
-  /** Returns the name of the single database specified, if exactly one database was specified. */
-  // This can be used to generate an output filename, but it makes 1 be a special
-  // case
-  // that I find a little uncomfortable from the Unix philosophy:
-  // "Sometimes the output filename is different" is hard to automate around.
-  @CheckForNull
+  /**
+   * Returns the name of the single database specified, if exactly one database was specified or
+   * {@code null} otherwise.
+   */
+  @Nullable
   public String getDatabaseSingleName() {
     List<String> databases = getDatabases();
     if (databases.size() == 1) {
@@ -770,12 +783,19 @@ public class ConnectorArguments extends DefaultArguments {
   }
 
   @Nonnull
-  public List<String> getSchemata() {
-    return getOptions().valuesOf(optionSchema);
+  public ImmutableList<String> getSchemata() {
+    return getOptions().valuesOf(optionSchema).stream()
+        .map(String::trim)
+        .filter(StringUtils::isNotEmpty)
+        .collect(toImmutableList());
   }
 
   public boolean isAssessment() {
     return getOptions().has(optionAssessment);
+  }
+
+  public boolean isIgnoreCloneOnlyDatabase() {
+    return getOptions().has(optionIgnoreCloneOnlyDatabase);
   }
 
   @Nonnull
@@ -1149,6 +1169,15 @@ public class ConnectorArguments extends DefaultArguments {
   @Override
   @Nonnull
   public String toString() {
+    return buildToString(/* excludeQueries= */ false);
+  }
+
+  @Nonnull
+  public String toStringWithoutCustomQueries() {
+    return buildToString(/* excludeQueries= */ true);
+  }
+
+  private String buildToString(boolean excludeQueries) {
     // We do not include password here b/c as of this writing,
     // this string representation is logged out to file by ArgumentsTask.
     ToStringHelper toStringHelper =
@@ -1170,7 +1199,9 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_SPARK_HISTORY_SERVICE_NAMES, getSparkHistoryServiceNames())
             .add(OPT_ASSESSMENT, isAssessment())
             .add(OPT_TELEMETRY, isTelemetryOn());
-    getConnectorProperties().getDefinitionMap().forEach(toStringHelper::add);
+    getConnectorProperties().getDefinitionMap().entrySet().stream()
+        .filter(entry -> !excludeQueries || !entry.getKey().contains(".query"))
+        .forEach(entry -> toStringHelper.add(entry.getKey(), entry.getValue()));
     return toStringHelper.toString();
   }
 

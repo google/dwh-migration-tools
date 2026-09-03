@@ -33,6 +33,8 @@ import com.google.edwmigration.dumper.application.dumper.connector.cloudera.mana
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -123,7 +126,8 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   }
 
   private Set<String> collectYarnApplicationTypes(
-      TaskRunContext context, ClouderaManagerHandle handle, String clusterName) {
+      TaskRunContext context, ClouderaManagerHandle handle, String clusterName)
+      throws URISyntaxException {
     Set<String> yarnApplicationTypes = new HashSet<>();
     ImmutableList<String> predefinedYarnAppTypes =
         stream(YarnApplicationType.values())
@@ -136,9 +140,13 @@ public class ClouderaYarnApplicationTypeTask extends AbstractClouderaYarnApplica
   }
 
   private ImmutableList<String> fetchClusterServiceTypes(
-      ClouderaManagerHandle handle, String clusterName) {
-    String serviceTypesUrl =
-        handle.getApiURI().toString() + "clusters/" + clusterName + "/serviceTypes";
+      ClouderaManagerHandle handle, String clusterName) throws URISyntaxException {
+    URI serviceTypesUrl =
+        new URIBuilder(handle.getApiURI())
+            .appendPath("clusters")
+            .appendPath(clusterName)
+            .appendPath("serviceTypes")
+            .build();
     CloseableHttpClient httpClient = handle.getClouderaManagerHttpClient();
     try (CloseableHttpResponse serviceTypesResp =
         httpClient.execute(new HttpGet(serviceTypesUrl))) {

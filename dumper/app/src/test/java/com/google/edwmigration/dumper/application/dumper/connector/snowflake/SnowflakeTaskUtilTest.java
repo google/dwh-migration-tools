@@ -37,7 +37,7 @@ public class SnowflakeTaskUtilTest {
   }
 
   @Test
-  public void withFilter_whereConditions() {
+  public void createJdbcSelectTask_whereConditions() {
 
     assertEquals(
         "SELECT A, B, C FROM SCHEMA.TABLE", getSqlForWhereConditions(Lists.newArrayList()));
@@ -57,7 +57,7 @@ public class SnowflakeTaskUtilTest {
 
   private static String getSqlForWhereConditions(List<String> whereConditions) {
     AbstractJdbcTask<Summary> task =
-        SnowflakeTaskUtil.withFilter(
+        SnowflakeTaskUtil.createJdbcSelectTask(
             /* format= */ "SELECT A, B, C FROM %1$s.TABLE%2$s",
             /* schemaName= */ "SCHEMA",
             /* zipEntryName= */ "file.csv",

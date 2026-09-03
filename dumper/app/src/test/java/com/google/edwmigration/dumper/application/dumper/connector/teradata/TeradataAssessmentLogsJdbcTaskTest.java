@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
 import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.assertQueryEquals;
 import static java.util.Collections.emptyList;
+import static org.junit.Assert.assertFalse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -65,9 +66,10 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     assertQueryEquals(
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -93,9 +95,10 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     assertQueryEquals(
         "SELECT NULL, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST ON (L.QueryID=ST.QueryID)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -127,9 +130,10 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + "     CAST(SUBSTR(SqlTextInfo, 20001, 20000) AS VARCHAR(20000)) AS SqlTextInfo,"
             + "     (((SqlRowNo - 1) * 2) + 2) AS SqlRowNo FROM SampleSqlTable"
             + " ) ST ON (L.QueryID=ST.QueryID)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -153,9 +157,10 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     assertQueryEquals(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n",
         query);
   }
 
@@ -179,10 +184,11 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     assertQueryEquals(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP) AND"
-            + " L.SampleLogDate = CAST('2023-03-04Z' AS DATE)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0"
+            + " AND L.SampleLogDate = CAST('2023-03-04Z' AS DATE)",
         query);
   }
 
@@ -206,9 +212,11 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     assertQueryEquals(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP) AND L.QueryID=7",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n"
+            + " AND L.QueryID=7",
         query);
   }
 
@@ -232,9 +240,10 @@ public class TeradataAssessmentLogsJdbcTaskTest {
     assertQueryEquals(
         "SELECT L.QueryID"
             + " FROM SampleQueryTable L"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
             + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n"
             + " ORDER BY L.QueryID, L.QueryText",
         query);
   }
@@ -260,10 +269,11 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         "SELECT L.QueryID, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST"
             + " ON (L.QueryID=ST.QueryID AND L.SampleLogDate=ST.SampleLogDate)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP) AND"
-            + " L.SampleLogDate = CAST('2023-03-04Z' AS DATE)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n"
+            + " AND L.SampleLogDate = CAST('2023-03-04Z' AS DATE)",
         query);
   }
 
@@ -298,10 +308,11 @@ public class TeradataAssessmentLogsJdbcTaskTest {
             + "     WHERE SampleLogDate = CAST('2023-03-04Z' AS DATE)"
             + " ) ST"
             + " ON (L.QueryID=ST.QueryID AND L.SampleLogDate=ST.SampleLogDate)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP) AND"
-            + " L.SampleLogDate = CAST('2023-03-04Z' AS DATE)",
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0\n"
+            + " AND L.SampleLogDate = CAST('2023-03-04Z' AS DATE)",
         query);
   }
 
@@ -328,13 +339,38 @@ public class TeradataAssessmentLogsJdbcTaskTest {
         "SELECT L.QueryID, L.QueryText, ST.QueryID"
             + " FROM SampleQueryTable L LEFT OUTER JOIN SampleSqlTable ST"
             + " ON (L.QueryID=ST.QueryID AND L.SampleLogDate=ST.SampleLogDate)"
-            + " WHERE L.ErrorCode=0 AND"
+            + " WHERE"
             + " L.StartTime >= CAST('2023-03-04T16:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP) AND"
-            + " L.SampleLogDate = CAST('2023-03-04Z' AS DATE) AND"
-            + " QueryID=7 AND QueryText LIKE '%abc%'"
+            + " L.StartTime < CAST('2023-03-04T17:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0"
+            + " AND L.SampleLogDate = CAST('2023-03-04Z' AS DATE)"
+            + " AND QueryID=7 AND QueryText LIKE '%abc%'"
             + " ORDER BY ST.QueryID, ST.RowNo",
         query);
+  }
+
+  @Test
+  public void getOrCreateSql_failedLogsPreserved_noErrorCheckInQuery() {
+    QueryLogTableNames names =
+        QueryLogTableNames.create("SampleQueryTable", "SampleSqlTable", false);
+    TeradataAssessmentLogsJdbcTask jdbcTask =
+        TeradataAssessmentLogsJdbcTask.keepingFailedLogs(
+            "query_history.csv",
+            queryLogsState,
+            names,
+            ImmutableSet.of("QueryID=7", "QueryText LIKE '%abc%'"),
+            interval,
+            "SampleLogDate",
+            /* maxSqlLength= */ OptionalLong.of(999999),
+            ImmutableList.of("ST.QueryID", "ST.RowNo"));
+
+    // Act
+    String query =
+        jdbcTask.getOrCreateSql(
+            s -> true, ImmutableList.of("L.QueryID", "L.QueryText", "ST.QueryID"));
+
+    // Assert
+    assertFalse(query, query.replace(" ", "").contains(".ErrorCode="));
   }
 
   private QueryLogTableNames createTableName(String logTable, String sqlTable) {

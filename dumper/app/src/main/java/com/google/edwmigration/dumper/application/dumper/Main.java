@@ -27,6 +27,7 @@ import java.nio.file.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import one.profiler.AsyncProfiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +59,7 @@ public class Main {
 
   public static void main(String... args) throws Exception {
     try {
-      AsyncProfiler asyncProfiler = AsyncProfiler.getInstance();
-      asyncProfiler.execute("start,event=cpu,interval=10ms");
+      AsyncProfiler asyncProfiler = tryInitAsyncProfiler();
 
       StartUpMetaInfoProcessor.printMetaInfo();
 
@@ -90,16 +90,23 @@ public class Main {
     }
   }
 
-  private static void stopProfileAndAppendToZip(
-      AsyncProfiler asyncProfiler, String outputFileLocation) {
+  /**
+   * AsyncProfiler doesn't support all the OSs, so the usage is optional.
+   *
+   * @return AsyncProfiler instance or {@code null} if OS is not supported.
+   */
+  @Nullable
+  private static AsyncProfiler tryInitAsyncProfiler() {
     try {
-      File tempFlameGraph = File.createTempFile("flamegraph", ".html");
-      String stopCommand = "stop,output=flamegraph,file=" + tempFlameGraph.getAbsolutePath();
-      asyncProfiler.execute(stopCommand);
-
-      moveFileToZip(outputFileLocation, tempFlameGraph, "flamegraph.html");
-    } catch (Exception ignored) {
+      AsyncProfiler asyncProfiler = AsyncProfiler.getInstance();
+      asyncProfiler.execute("start,event=cpu,interval=10ms");
+      return asyncProfiler;
+    } catch (Exception ignore) {
+      logger.info(
+          "Async profiler was not inited for the execution. The root cause: "
+              + ignore.getMessage());
     }
+    return null;
   }
 
   private static void moveFileToZip(String zipFile, File file, String entryName)
@@ -112,6 +119,22 @@ public class Main {
 
       Files.copy(file.toPath(), pathInZip, StandardCopyOption.REPLACE_EXISTING);
       Files.deleteIfExists(file.toPath());
+    }
+  }
+
+  private static void stopProfileAndAppendToZip(
+      @Nullable AsyncProfiler asyncProfiler, String outputFileLocation) {
+    if (asyncProfiler == null) {
+      return;
+    }
+
+    try {
+      File tempFlameGraph = File.createTempFile("flamegraph", ".html");
+      String stopCommand = "stop,output=flamegraph,file=" + tempFlameGraph.getAbsolutePath();
+      asyncProfiler.execute(stopCommand);
+
+      moveFileToZip(outputFileLocation, tempFlameGraph, "flamegraph.html");
+    } catch (Exception ignored) {
     }
   }
 }

@@ -26,9 +26,10 @@ import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Scanner;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import org.apache.commons.io.IOUtils;
 
 abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
   protected final ObjectMapper objectMapper =
@@ -74,13 +75,7 @@ abstract class AbstractClouderaManagerTask extends AbstractTask<Void> {
     return objectMapper.writeValueAsString(obj);
   }
 
-  protected String readFromStream(InputStream is) {
-    StringBuilder stringBuilder = new StringBuilder();
-    try (Scanner sc = new Scanner(is)) {
-      while (sc.hasNext()) {
-        stringBuilder.append(sc.next());
-      }
-    }
-    return stringBuilder.toString();
+  protected String readFromStream(InputStream is) throws IOException {
+    return IOUtils.toString(is, StandardCharsets.UTF_8);
   }
 }

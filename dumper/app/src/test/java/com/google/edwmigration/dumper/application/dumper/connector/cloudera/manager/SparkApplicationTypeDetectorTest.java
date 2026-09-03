@@ -32,7 +32,9 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_sparkR_viaRRunner() {
-    ObjectNode rootNode = createRootWithProp("sun.java.command", "org.apache.spark.deploy.RRunner");
+    ObjectNode rootNode =
+        createRootWithProp(
+            "System Properties", "sun.java.command", "org.apache.spark.deploy.RRunner");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -41,7 +43,7 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_sparkR_viaRCommand() {
-    ObjectNode rootNode = createRootWithProp("spark.r.command", "Rscript");
+    ObjectNode rootNode = createRootWithProp("Spark Properties", "spark.r.command", "Rscript");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -50,7 +52,8 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_sparkR_viaPrimaryResource() {
-    ObjectNode rootNode = createRootWithProp("spark.yarn.primary.py.file", "script.R");
+    ObjectNode rootNode =
+        createRootWithProp("Spark Properties", "spark.yarn.primary.py.file", "script.R");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -61,7 +64,9 @@ public class SparkApplicationTypeDetectorTest {
   public void detect_sparkSql_viaSqlCliDriver() {
     ObjectNode rootNode =
         createRootWithProp(
-            "sun.java.command", "org.apache.spark.sql.hive.thriftserver.SparkSQLCLIDriver");
+            "System Properties",
+            "sun.java.command",
+            "org.apache.spark.sql.hive.thriftserver.SparkSQLCLIDriver");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -72,7 +77,9 @@ public class SparkApplicationTypeDetectorTest {
   public void detect_sparkSql_viaThriftServer() {
     ObjectNode rootNode =
         createRootWithProp(
-            "sun.java.command", "org.apache.spark.sql.hive.thriftserver.HiveThriftServer2");
+            "System Properties",
+            "sun.java.command",
+            "org.apache.spark.sql.hive.thriftserver.HiveThriftServer2");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -81,7 +88,7 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_sparkSql_viaAppName() {
-    ObjectNode rootNode = createRootWithProp("spark.app.name", "SparkSQL");
+    ObjectNode rootNode = createRootWithProp("Spark Properties", "spark.app.name", "SparkSQL");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -90,7 +97,8 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_pig() {
-    ObjectNode rootNode = createRootWithProp("sun.java.command", "org.apache.pig.Main");
+    ObjectNode rootNode =
+        createRootWithProp("System Properties", "sun.java.command", "org.apache.pig.Main");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -100,7 +108,8 @@ public class SparkApplicationTypeDetectorTest {
   @Test
   public void detect_pySpark_viaPythonPath() {
     ObjectNode rootNode =
-        createRootWithProp("spark.executorEnv.PYTHONPATH", "/some/path/pyspark.zip");
+        createRootWithProp(
+            "Spark Properties", "spark.executorEnv.PYTHONPATH", "/some/path/pyspark.zip");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -109,7 +118,8 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_pySpark_viaPrimaryResource() {
-    ObjectNode rootNode = createRootWithProp("spark.yarn.primary.py.file", "script.py");
+    ObjectNode rootNode =
+        createRootWithProp("Spark Properties", "spark.yarn.primary.py.file", "script.py");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -118,7 +128,7 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_scalaJava_viaJarInCommand() {
-    ObjectNode rootNode = createRootWithProp("sun.java.command", "my-app.jar");
+    ObjectNode rootNode = createRootWithProp("System Properties", "sun.java.command", "my-app.jar");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -127,9 +137,7 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_scalaJava_viaSparkJarsProp() {
-    ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode sparkProps = rootNode.putObject("Spark Properties");
-    sparkProps.put("spark.jars", "file:/path/to.jar");
+    ObjectNode rootNode = createRootWithProp("Spark Properties", "spark.jars", "file:/path/to.jar");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -138,7 +146,7 @@ public class SparkApplicationTypeDetectorTest {
 
   @Test
   public void detect_empty_whenNoMatch() {
-    ObjectNode rootNode = createRootWithProp("spark.app.name", "GenericApp");
+    ObjectNode rootNode = createRootWithProp("Spark Properties", "spark.app.name", "GenericApp");
 
     SparkApplicationType result = SparkApplicationTypeDetector.detect(rootNode);
 
@@ -154,10 +162,10 @@ public class SparkApplicationTypeDetectorTest {
     assertEquals(SparkApplicationType.UNKNOWN, result);
   }
 
-  private ObjectNode createRootWithProp(String key, String value) {
+  private ObjectNode createRootWithProp(String root, String key, String value) {
     ObjectNode rootNode = mapper.createObjectNode();
-    ObjectNode sparkProps = rootNode.putObject("Spark Properties");
-    sparkProps.put(key, value);
+    ObjectNode props = rootNode.putObject(root);
+    props.put(key, value);
     return rootNode;
   }
 }

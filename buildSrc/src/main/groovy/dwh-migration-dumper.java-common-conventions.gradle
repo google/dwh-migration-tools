@@ -23,6 +23,15 @@ plugins {
 }
 
 repositories {
+    if (project.hasProperty('profile') &&  project.property('profile') == 'google') {
+        println("ACTIVE PROFILE: " + project.property('profile'))
+        maven {
+            url System.getenv("INTERNAL_REPOSITORY")
+        }
+    } else {
+        println("ACTIVE PROFILE: DEFAULT")
+        mavenCentral()
+    }
     mavenCentral()
 }
 

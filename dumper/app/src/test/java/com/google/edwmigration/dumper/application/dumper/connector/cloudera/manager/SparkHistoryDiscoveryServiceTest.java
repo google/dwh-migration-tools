@@ -76,19 +76,19 @@ public class SparkHistoryDiscoveryServiceTest {
   public void resolveUrl_spark3_success() throws Exception {
     // 1. Mock services list
     server.stubFor(
-        get("/api/v41/clusters/my-cluster/services")
-            .willReturn(okJson("{\"items\": [{\"name\": \"knox-1\", \"type\": \"KNOX\"}]}")));
+        get("/api/v41/clusters/my%20Cluster%20-%20test%2001/services")
+            .willReturn(okJson("{\"items\": [{\"name\": \"my Knox name\", \"type\": \"KNOX\"}]}")));
 
     // 2. Mock roles list
     server.stubFor(
-        get("/api/v41/clusters/my-cluster/services/knox-1/roles")
+        get("/api/v41/clusters/my%20Cluster%20-%20test%2001/services/my%20Knox%20name/roles")
             .willReturn(
                 okJson(
                     "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
 
     // 3. Mock config
     server.stubFor(
-        get("/api/v41/clusters/my-cluster/services/knox-1/roleConfigGroups/knox-BASE/config")
+        get("/api/v41/clusters/my%20Cluster%20-%20test%2001/services/my%20Knox%20name/roleConfigGroups/knox-BASE/config")
             .willReturn(
                 okJson(
                     "{\"items\": [{\"name\": \"gateway_path\", \"value\": \"gateway\"}, {\"name\": \"gateway_default_api_topology_name\", \"value\": \"cdp-proxy-api\"}]}")));
@@ -115,7 +115,8 @@ public class SparkHistoryDiscoveryServiceTest {
 
     // Act
     List<String> result =
-        service.resolveUrl("my-cluster", knoxClient, com.google.common.collect.ImmutableList.of());
+        service.resolveUrl(
+            "my Cluster - test 01", knoxClient, com.google.common.collect.ImmutableList.of());
 
     // Assert
     assertEquals(1, result.size());

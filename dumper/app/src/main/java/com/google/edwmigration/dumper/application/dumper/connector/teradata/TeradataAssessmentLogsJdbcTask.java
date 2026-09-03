@@ -164,6 +164,28 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
       @CheckForNull String logDateColumn,
       OptionalLong maxSqlLength,
       List<String> orderBy) {
+    this(
+        targetPath,
+        state,
+        tableNames,
+        conditions,
+        interval,
+        logDateColumn,
+        maxSqlLength,
+        orderBy,
+        false);
+  }
+
+  private TeradataAssessmentLogsJdbcTask(
+      @Nonnull String targetPath,
+      SharedState state,
+      QueryLogTableNames tableNames,
+      Set<String> conditions,
+      ZonedInterval interval,
+      @CheckForNull String logDateColumn,
+      OptionalLong maxSqlLength,
+      List<String> orderBy,
+      boolean keepFailedLogs) {
     super(
         targetPath,
         state,
@@ -173,6 +195,28 @@ public class TeradataAssessmentLogsJdbcTask extends TeradataLogsJdbcTask {
         logDateColumn,
         maxSqlLength,
         orderBy,
-        EXPRESSIONS);
+        EXPRESSIONS,
+        keepFailedLogs);
+  }
+
+  public static TeradataAssessmentLogsJdbcTask keepingFailedLogs(
+      @Nonnull String targetPath,
+      SharedState state,
+      QueryLogTableNames tableNames,
+      Set<String> conditions,
+      ZonedInterval interval,
+      @CheckForNull String logDateColumn,
+      OptionalLong maxSqlLength,
+      List<String> orderBy) {
+    return new TeradataAssessmentLogsJdbcTask(
+        targetPath,
+        state,
+        tableNames,
+        conditions,
+        interval,
+        logDateColumn,
+        maxSqlLength,
+        orderBy,
+        true);
   }
 }

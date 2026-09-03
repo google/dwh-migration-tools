@@ -60,8 +60,8 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", TaskCategory.OPTIONAL))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-resource-allocation.jsonl", TaskCategory.REQUIRED,
-                    "host-resource-allocation.jsonl", TaskCategory.REQUIRED,
+                    "cluster-cpu.jsonl", TaskCategory.REQUIRED,
+                    "host-ram.jsonl", TaskCategory.REQUIRED,
                     "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
                     "yarn-application-types.jsonl", TaskCategory.OPTIONAL,
@@ -94,9 +94,8 @@ public class ClouderaManagerConnectorTest {
             .putAll(
                 ImmutableMap.of(
                     "host-components.jsonl", ClouderaHostComponentsTask.class,
-                    "cluster-resource-allocation.jsonl",
-                        ClouderaClusterResourceAllocationChartTask.class,
-                    "host-resource-allocation.jsonl", ClouderaHostResourceAllocationChartTask.class,
+                    "cluster-cpu.jsonl", ClouderaClusterResourceAllocationChartTask.class,
+                    "host-ram.jsonl", ClouderaHostResourceAllocationChartTask.class,
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,
@@ -140,8 +139,8 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", TaskCategory.OPTIONAL))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-resource-allocation.jsonl", TaskCategory.REQUIRED,
-                    "host-resource-allocation.jsonl", TaskCategory.REQUIRED,
+                    "cluster-cpu.jsonl", TaskCategory.REQUIRED,
+                    "host-ram.jsonl", TaskCategory.REQUIRED,
                     "service-resource-allocation.jsonl", TaskCategory.OPTIONAL,
                     "yarn-applications.jsonl", TaskCategory.OPTIONAL,
                     "yarn-application-types.jsonl", TaskCategory.OPTIONAL,
@@ -183,9 +182,8 @@ public class ClouderaManagerConnectorTest {
                     "host-components.jsonl", ClouderaHostComponentsTask.class))
             .putAll(
                 ImmutableMap.of(
-                    "cluster-resource-allocation.jsonl",
-                        ClouderaClusterResourceAllocationChartTask.class,
-                    "host-resource-allocation.jsonl", ClouderaHostResourceAllocationChartTask.class,
+                    "cluster-cpu.jsonl", ClouderaClusterResourceAllocationChartTask.class,
+                    "host-ram.jsonl", ClouderaHostResourceAllocationChartTask.class,
                     "service-resource-allocation.jsonl",
                         ClouderaServiceResourceAllocationChartTask.class,
                     "yarn-applications.jsonl", ClouderaYarnApplicationsTask.class,

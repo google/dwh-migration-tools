@@ -100,10 +100,21 @@ public interface SnowflakeMetadataDumpFormat {
     String AU_ZIP_ENTRY_NAME = "functions-au.csv";
 
     enum Header {
+      FunctionCatalog,
       FunctionSchema,
       FunctionName,
       DataType,
-      ArgumentSignature
+      ArgumentSignature,
+      CharacterMaximumLength,
+      CharacterOctetLength,
+      NumericPrecision,
+      NumericPrecisionRadix,
+      NumericScale,
+      FunctionLanguage,
+      RuntimeVersion,
+      Volatility,
+      IsExternal,
+      IsAggregate
     }
   }
 
@@ -112,6 +123,7 @@ public interface SnowflakeMetadataDumpFormat {
     String IS_ZIP_ENTRY_NAME = "user_defined_functions.csv";
 
     enum Header {
+      FUNCTION_ID,
       FUNCTION_CATALOG,
       FUNCTION_SCHEMA,
       FUNCTION_NAME,
@@ -194,8 +206,6 @@ public interface SnowflakeMetadataDumpFormat {
   }
 
   interface FeaturesFormat {
-
-    String IS_ZIP_ENTRY_NAME = "features.csv";
 
     enum Header {
       FeatureType,

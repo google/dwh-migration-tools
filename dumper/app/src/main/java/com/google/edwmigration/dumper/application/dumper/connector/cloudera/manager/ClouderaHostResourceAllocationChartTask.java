@@ -50,7 +50,8 @@ public class ClouderaHostResourceAllocationChartTask extends AbstractClouderaTim
       ZonedDateTime endDate,
       TimeSeriesAggregation tsAggregation,
       TaskCategory taskCategory) {
-    super("host-resource-allocation.jsonl", startDate, endDate, tsAggregation, taskCategory);
+    // TODO(b/483215016): rename to 'host-resource-allocation.jsonl'
+    super("host-ram.jsonl", startDate, endDate, tsAggregation, taskCategory);
   }
 
   @Override

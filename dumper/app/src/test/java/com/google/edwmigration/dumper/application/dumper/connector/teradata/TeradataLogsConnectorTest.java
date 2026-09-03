@@ -331,9 +331,9 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
             .collect(toImmutableList());
     assertEquals(1, queries.size());
     assertQueryEquals(
-        "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE L.ErrorCode=0 AND"
+        "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE"
             + " L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP) AND"
-            + " L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND L.UserName <> 'DBC'",
+            + " L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND L.ErrorCode=0 AND L.UserName <> 'DBC'",
         getOnlyElement(queries));
   }
 
@@ -362,14 +362,19 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
                         .getOrCreateSql(unused -> true, ImmutableList.of("SampleColumn")))
             .collect(toImmutableList());
     assertEquals(
-        ImmutableList.of(
-            "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE L.ErrorCode=0 AND"
-                + " L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP) AND"
-                + " L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND L.UserName <> 'DBC'",
-            "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE L.ErrorCode=0 AND"
-                + " L.StartTime >= CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND"
-                + " L.StartTime < CAST('2023-12-22T02:00:00Z' AS TIMESTAMP) AND L.UserName <> 'DBC'"),
-        queries);
+        "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE"
+            + " L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND"
+            + " L.ErrorCode=0 AND"
+            + " L.UserName <> 'DBC'",
+        queries.get(0));
+    assertEquals(
+        "SELECT SampleColumn FROM dbc.DBQLogTbl L WHERE"
+            + " L.StartTime >= CAST('2023-12-22T01:00:00Z' AS TIMESTAMP) AND"
+            + " L.StartTime < CAST('2023-12-22T02:00:00Z' AS TIMESTAMP)"
+            + " AND L.ErrorCode=0"
+            + " AND L.UserName <> 'DBC'",
+        queries.get(1));
   }
 
   @Test
@@ -401,10 +406,10 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
     assertQueryEquals(
         "SELECT ST.QueryID"
             + " FROM dbc.QryLogV L LEFT OUTER JOIN dbc.DBQLSQLTbl ST ON (L.QueryID=ST.QueryID)"
-            + " WHERE L.ErrorCode=0"
-            + " AND L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP)"
+            + " WHERE"
+            + " L.StartTime >= CAST('2023-12-22T00:00:00Z' AS TIMESTAMP)"
             + " AND L.StartTime < CAST('2023-12-22T01:00:00Z' AS TIMESTAMP)"
-            + " ORDER BY ST.QueryID, ST.SQLRowNo",
+            + " AND L.ErrorCode=0 ORDER BY ST.QueryID, ST.SQLRowNo",
         getOnlyElement(queries));
   }
 
