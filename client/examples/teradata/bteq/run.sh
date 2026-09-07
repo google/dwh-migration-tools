@@ -75,7 +75,7 @@ log_debug "Script dir: ${SCRIPT_DIR}."
 log_exec "Setting project to: ${BQMS_PROJECT}." "Could not set project to: ${BQMS_PROJECT}." \
     gcloud config set project "${BQMS_PROJECT}"
 
-# Determine whether gsutil and the Python tool should use threads.
+# Determine whether the Python tool should use threads.
 case $(echo "${BQMS_MULTITHREADED}" | tr '[:upper:]' '[:lower:]') in # smash to lowercase
     "true"|"1"|"t") MULTITHREADED="true"; log_info "Multithreading enabled.";;
     *) log_info "Multithreading disabled.";;
