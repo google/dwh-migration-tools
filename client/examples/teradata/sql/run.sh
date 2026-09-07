@@ -101,8 +101,8 @@ then
     # Sync config files and input files to GCS to be processed by Cloud Run job.
     log_exec "Syncing ${SCRIPT_DIR} to gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}." \
         "Could not sync ${SCRIPT_DIR} to gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}." \
-            gcloud storage rsync --recursive --delete-unmatched-destination-objects \
-                "${SCRIPT_DIR}" "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}"
+            gcloud storage \
+                rsync --recursive --delete-unmatched-destination-objects "${SCRIPT_DIR}" "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}"
 
     # Build and export path env vars that the Cloud Run Python tool will use.
     export BQMS_INPUT_PATH="gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}/input"
@@ -191,8 +191,8 @@ then
         # Sync the translated BQMS output locally so it can be inspected if need be.
         log_exec "Syncing gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX} to ${SCRIPT_DIR}." \
             "Could not sync gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX} to ${SCRIPT_DIR}." \
-                gcloud storage rsync --recursive --delete-unmatched-destination-objects \
-                    "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}" "${SCRIPT_DIR}"
+                gcloud storage \
+                    rsync --recursive --delete-unmatched-destination-objects "gs://${BQMS_GCS_BUCKET}/${BQMS_GCS_PREFIX}" "${SCRIPT_DIR}"
     fi
 # Execute Python tool locally.
 else

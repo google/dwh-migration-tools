@@ -94,7 +94,7 @@ log_exec "Enabling service: bigquerymigration.googleapis.com." \
 # Create the GCS bucket for BQMS input/output.
 log_exec "Creating bucket: ${BQMS_GCS_BUCKET}." \
     "Could not create bucket: ${BQMS_GCS_BUCKET}." \
-    gcloud storage buckets create "gs://${BQMS_GCS_BUCKET}" --location "${BQMS_GCS_BUCKET_LOCATION}"
+    gcloud storage buckets create --location="${BQMS_GCS_BUCKET_LOCATION}" "gs://${BQMS_GCS_BUCKET}"
 
 # Ensure the BQMS developer has admin rights to objects in GCS bucket.
 log_exec "Granting storage.objectAdmin role to ${BQMS_DEVELOPER_EMAIL} on ${BQMS_GCS_BUCKET} bucket." \
