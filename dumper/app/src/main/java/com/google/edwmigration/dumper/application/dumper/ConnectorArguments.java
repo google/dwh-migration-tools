@@ -207,7 +207,7 @@ public class ConnectorArguments extends DefaultArguments {
       parser
           .accepts(
               OPT_WAREHOUSE,
-              "Virtual warehouse to use once connected (for providers such as Snowflake)")
+              "Virtual warehouse to use once connected (for providers such as Snowflake or Databricks)")
           .withRequiredArg()
           .ofType(String.class);
   private final OptionSpec<String> optionDatabase =

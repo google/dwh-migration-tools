@@ -15,5 +15,4 @@ driver's manual for details.
 To get started using the Dumper, read
 [the documentation](https://cloud.google.com/bigquery/docs/generate-metadata).
 
-
 [BQMS]: https://cloud.google.com/bigquery/docs/migration-intro

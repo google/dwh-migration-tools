@@ -89,6 +89,7 @@ dependencies {
     implementation libs.hikaricp
     implementation libs.rate.limited.logger
     implementation libs.jackson.databind
+    implementation libs.okhttp
     implementation libs.jackson.dataformat.yaml
     implementation libs.jackson.datatype.guava
     implementation libs.google.cloud.bigquery
