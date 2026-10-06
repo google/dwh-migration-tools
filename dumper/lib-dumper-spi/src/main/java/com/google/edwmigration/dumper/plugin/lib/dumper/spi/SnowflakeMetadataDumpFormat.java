@@ -205,6 +205,61 @@ public interface SnowflakeMetadataDumpFormat {
     }
   }
 
+  interface TableConstraintsFormat {
+
+    String IS_ZIP_ENTRY_NAME = "table_constraints.csv";
+    String AU_ZIP_ENTRY_NAME = "table_constraints-au.csv";
+
+    enum Header {
+      ConstraintCatalog,
+      ConstraintSchema,
+      ConstraintName,
+      TableCatalog,
+      TableSchema,
+      TableName,
+      ConstraintType,
+      IsDeferrable,
+      InitiallyDeferred,
+      Enforced,
+      Comment,
+      Created,
+      LastAltered,
+      Rely
+    }
+  }
+
+  interface PrimaryKeysFormat {
+    String AU_ZIP_ENTRY_NAME = "primary_keys.csv";
+
+    enum Header {
+      CreatedOn,
+      DatabaseName,
+      SchemaName,
+      TableName,
+      ColumnName,
+      KeySequence,
+      ConstraintName,
+      Rely,
+      Comment
+    }
+  }
+
+  interface UniqueKeysFormat {
+    String AU_ZIP_ENTRY_NAME = "unique_keys.csv";
+
+    enum Header {
+      CreatedOn,
+      DatabaseName,
+      SchemaName,
+      TableName,
+      ColumnName,
+      KeySequence,
+      ConstraintName,
+      Rely,
+      Comment
+    }
+  }
+
   interface FeaturesFormat {
 
     enum Header {

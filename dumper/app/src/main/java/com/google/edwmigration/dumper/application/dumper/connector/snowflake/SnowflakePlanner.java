@@ -27,9 +27,11 @@ import com.google.edwmigration.dumper.application.dumper.task.Task;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.DatabasesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.ExternalTablesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.FunctionInfoFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.PrimaryKeysFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.SchemataFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TableStorageMetricsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.TablesFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.UniqueKeysFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.UserDefinedFunctionsFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.SnowflakeMetadataDumpFormat.WarehousesFormat;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -45,6 +47,10 @@ final class SnowflakePlanner {
 
   public static final AssessmentQuery SHOW_EXTERNAL_TABLES =
       AssessmentQuery.createShow("EXTERNAL TABLES", Format.EXTERNAL_TABLES);
+  public static final AssessmentQuery SHOW_PRIMARY_KEYS =
+      AssessmentQuery.createShow("PRIMARY KEYS", Format.PRIMARY_KEYS);
+  public static final AssessmentQuery SHOW_UNIQUE_KEYS =
+      AssessmentQuery.createShow("UNIQUE KEYS", Format.UNIQUE_KEYS);
 
   private enum Format {
     CORTEX_AI_SEARCH("cortex_ai_search-au.csv"),
@@ -57,10 +63,12 @@ final class SnowflakePlanner {
     EXTERNAL_TABLES(ExternalTablesFormat.AU_ZIP_ENTRY_NAME),
     FUNCTION_INFO(FunctionInfoFormat.AU_ZIP_ENTRY_NAME),
     HYBRID_TABLE_USAGE("hybrid_table_usage-au.csv"),
+    PRIMARY_KEYS(PrimaryKeysFormat.AU_ZIP_ENTRY_NAME),
     SEARCH_OPTIMIZATION("search_optimization-au.csv"),
     SNOWPIPE_STREAMING("snowpipe_streaming-au.csv"),
     STAGE_STORAGE_USAGE("stage_storage_usage-au.csv"),
     TABLE_STORAGE_METRICS(TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME),
+    UNIQUE_KEYS(UniqueKeysFormat.AU_ZIP_ENTRY_NAME),
     USER_DEFINED_FUNCTIONS(UserDefinedFunctionsFormat.IS_ZIP_ENTRY_NAME),
     VIEW_REFRESH("view_refresh-au.csv"),
     WAREHOUSES(WarehousesFormat.AU_ZIP_ENTRY_NAME);
@@ -93,7 +101,9 @@ final class SnowflakePlanner {
           AssessmentQuery.createStageStorageSelect(),
           AssessmentQuery.createUserDefinedFunctionsSelect(),
           AssessmentQuery.createViewRefreshSelect(),
-          SHOW_EXTERNAL_TABLES);
+          SHOW_EXTERNAL_TABLES,
+          SHOW_PRIMARY_KEYS,
+          SHOW_UNIQUE_KEYS);
 
   private final ImmutableList<AssessmentQuery> liteAssessmentQueries =
       ImmutableList.of(
@@ -104,6 +114,18 @@ final class SnowflakePlanner {
   AssessmentQuery externalTablesInDatabase(String quotedDatabaseName) {
     String query = String.format("SHOW EXTERNAL TABLES IN DATABASE %s", quotedDatabaseName);
     String zipEntryName = Format.EXTERNAL_TABLES.value;
+    return new AssessmentQuery(false, query, zipEntryName, LOWER_UNDERSCORE);
+  }
+
+  AssessmentQuery primaryKeysInDatabase(String quotedDatabaseName) {
+    String query = String.format("SHOW PRIMARY KEYS IN DATABASE %s", quotedDatabaseName);
+    String zipEntryName = Format.PRIMARY_KEYS.value;
+    return new AssessmentQuery(false, query, zipEntryName, LOWER_UNDERSCORE);
+  }
+
+  AssessmentQuery uniqueKeysInDatabase(String quotedDatabaseName) {
+    String query = String.format("SHOW UNIQUE KEYS IN DATABASE %s", quotedDatabaseName);
+    String zipEntryName = Format.UNIQUE_KEYS.value;
     return new AssessmentQuery(false, query, zipEntryName, LOWER_UNDERSCORE);
   }
 

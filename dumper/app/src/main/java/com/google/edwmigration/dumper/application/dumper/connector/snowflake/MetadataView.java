@@ -24,6 +24,7 @@ enum MetadataView {
   COLUMNS("columns"),
   VIEWS("views"),
   FUNCTIONS("functions"),
+  TABLE_CONSTRAINTS("tableConstraints", "table constraints"),
   TABLE_STORAGE_METRICS("storagemetrics", "table storage metrics");
 
   final String description;

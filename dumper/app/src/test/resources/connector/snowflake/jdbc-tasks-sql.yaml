@@ -10,4 +10,8 @@ views-au.csv: "SELECT table_catalog, table_schema, table_name, view_definition F
 views.csv: "SELECT table_catalog, table_schema, table_name, view_definition FROM INFORMATION_SCHEMA.VIEWS"
 functions-au.csv: "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM SNOWFLAKE.ACCOUNT_USAGE.FUNCTIONS WHERE DELETED IS NULL"
 functions.csv: "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM INFORMATION_SCHEMA.FUNCTIONS"
+table_constraints-au.csv: "SELECT constraint_catalog, constraint_schema, constraint_name, table_catalog, table_schema, table_name, constraint_type, is_deferrable, initially_deferred, enforced, comment, created, last_altered, rely FROM SNOWFLAKE.ACCOUNT_USAGE.TABLE_CONSTRAINTS WHERE DELETED IS NULL"
+table_constraints.csv: "SELECT constraint_catalog, constraint_schema, constraint_name, table_catalog, table_schema, table_name, constraint_type, is_deferrable, initially_deferred, enforced, comment, created, last_altered, rely FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS"
 external_tables.csv: "SHOW EXTERNAL TABLES"
+primary_keys.csv: "SHOW PRIMARY KEYS"
+unique_keys.csv: "SHOW UNIQUE KEYS"
