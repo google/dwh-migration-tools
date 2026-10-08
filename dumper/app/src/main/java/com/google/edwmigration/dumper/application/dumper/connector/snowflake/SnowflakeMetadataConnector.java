@@ -55,6 +55,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -355,6 +356,23 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
         "function_catalog",
         "function_schema");
 
+    addSqlTasksWithInfoSchemaFallback(
+        out,
+        TableConstraintsFormat.Header.class,
+        getOverrideableQuery(
+            arguments,
+            "SELECT constraint_catalog, constraint_schema, constraint_name, table_catalog,"
+                + " table_schema, table_name, constraint_type, is_deferrable, initially_deferred,"
+                + " enforced, comment, created, last_altered, rely"
+                + " FROM %1$s.TABLE_CONSTRAINTS%2$s",
+            MetadataView.TABLE_CONSTRAINTS),
+        TableConstraintsFormat.IS_ZIP_ENTRY_NAME,
+        TableConstraintsFormat.AU_ZIP_ENTRY_NAME,
+        ACCOUNT_USAGE_WHERE_CONDITION,
+        arguments,
+        "table_catalog",
+        "table_schema");
+
     if (isAssessment) {
       out.addAll(featuresTasks());
 
@@ -367,12 +385,23 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
       }
       return;
     }
+    addShowTasks(
+        out, arguments, SnowflakePlanner.SHOW_EXTERNAL_TABLES, planner::externalTablesInDatabase);
+    addShowTasks(
+        out, arguments, SnowflakePlanner.SHOW_PRIMARY_KEYS, planner::primaryKeysInDatabase);
+    addShowTasks(out, arguments, SnowflakePlanner.SHOW_UNIQUE_KEYS, planner::uniqueKeysInDatabase);
+  }
+
+  private void addShowTasks(
+      @Nonnull List<? super Task<?>> out,
+      @Nonnull ConnectorArguments arguments,
+      @Nonnull AssessmentQuery accountQuery,
+      @Nonnull Function<String, AssessmentQuery> databaseQueryFn) {
     ImmutableList<String> databases = arguments.getDatabases();
     List<String> schemata = arguments.getSchemata();
     TaskOptions taskOptions = TaskOptions.DEFAULT;
     if (databases.isEmpty()) {
-      AssessmentQuery query = SnowflakePlanner.SHOW_EXTERNAL_TABLES;
-      Task<?> task = convertAssessmentQuery(query, arguments, taskOptions);
+      Task<?> task = convertAssessmentQuery(accountQuery, arguments, taskOptions);
       if (!schemata.isEmpty() && task instanceof AbstractJdbcTask) {
         ((AbstractJdbcTask<?>) task).withPredicate(createSchemaPredicate("schema_name", schemata));
       }
@@ -380,7 +409,7 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
     } else {
       for (String database : databases) {
         String quotedName = identifierNameQuoted(database);
-        AssessmentQuery query = planner.externalTablesInDatabase(quotedName);
+        AssessmentQuery query = databaseQueryFn.apply(quotedName);
         AbstractJdbcTask<?> task =
             new JdbcSelectTask(
                     query.zipEntryName, query.formatString, TaskCategory.REQUIRED, taskOptions)

@@ -62,8 +62,17 @@ public class SnowflakeAccountUsageMetadataConnectorTest
         SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
     validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.TableConstraintsFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.TableConstraintsFormat.Header.class);
+    validator.withEntryValidator(
         SnowflakeMetadataDumpFormat.ExternalTablesFormat.AU_ZIP_ENTRY_NAME,
         SnowflakeMetadataDumpFormat.ExternalTablesFormat.Header.class);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.PrimaryKeysFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.PrimaryKeysFormat.Header.class);
+    validator.withEntryValidator(
+        SnowflakeMetadataDumpFormat.UniqueKeysFormat.AU_ZIP_ENTRY_NAME,
+        SnowflakeMetadataDumpFormat.UniqueKeysFormat.Header.class);
 
     validator.withExpectedEntries(
         SnowflakeMetadataDumpFormat.TableStorageMetricsFormat.AU_ZIP_ENTRY_NAME,

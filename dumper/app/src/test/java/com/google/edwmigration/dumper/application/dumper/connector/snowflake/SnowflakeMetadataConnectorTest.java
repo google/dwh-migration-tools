@@ -16,10 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +40,10 @@ import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -120,6 +126,21 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
               SnowflakeMetadataDumpFormat.FunctionsFormat.IS_ZIP_ENTRY_NAME,
               SnowflakeMetadataDumpFormat.FunctionsFormat.AU_ZIP_ENTRY_NAME),
           SnowflakeMetadataDumpFormat.FunctionsFormat.Header.class);
+      validator.withEntryValidator(
+          iffaulty(
+              i,
+              SnowflakeMetadataDumpFormat.TableConstraintsFormat.IS_ZIP_ENTRY_NAME,
+              SnowflakeMetadataDumpFormat.TableConstraintsFormat.AU_ZIP_ENTRY_NAME),
+          SnowflakeMetadataDumpFormat.TableConstraintsFormat.Header.class);
+      validator.withEntryValidator(
+          SnowflakeMetadataDumpFormat.ExternalTablesFormat.AU_ZIP_ENTRY_NAME,
+          SnowflakeMetadataDumpFormat.ExternalTablesFormat.Header.class);
+      validator.withEntryValidator(
+          SnowflakeMetadataDumpFormat.PrimaryKeysFormat.AU_ZIP_ENTRY_NAME,
+          SnowflakeMetadataDumpFormat.PrimaryKeysFormat.Header.class);
+      validator.withEntryValidator(
+          SnowflakeMetadataDumpFormat.UniqueKeysFormat.AU_ZIP_ENTRY_NAME,
+          SnowflakeMetadataDumpFormat.UniqueKeysFormat.Header.class);
     }
   }
 
@@ -179,6 +200,9 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     ImmutableMap<String, String> sqls = collectSqlStatements("--assessment");
 
     assertTrue(sqls.containsKey("features.csv"));
+    assertTrue(sqls.containsKey("table_constraints-au.csv"));
+    assertEquals("SHOW PRIMARY KEYS", sqls.get("primary_keys.csv"));
+    assertEquals("SHOW UNIQUE KEYS", sqls.get("unique_keys.csv"));
   }
 
   @Theory
@@ -189,16 +213,22 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   @Test
   public void connector_generatesExpectedSql_withQueryOverrides() throws IOException {
     Map<String, String> actualSqls =
-        collectSqlStatements("-Dsnowflake.metadata.columns.query=SQL_OVERRIDE");
+        collectSqlStatements(
+            "-Dsnowflake.metadata.columns.query=SQL_OVERRIDE",
+            "-Dsnowflake.metadata.tableConstraints.query=CONSTRAINTS_OVERRIDE");
 
     assertEquals("SQL_OVERRIDE", actualSqls.get("columns-au.csv"));
     assertEquals("SQL_OVERRIDE", actualSqls.get("columns.csv"));
+    assertEquals("CONSTRAINTS_OVERRIDE", actualSqls.get("table_constraints-au.csv"));
+    assertEquals("CONSTRAINTS_OVERRIDE", actualSqls.get("table_constraints.csv"));
   }
 
   @Test
   public void connector_generatesExpectedSql_withWhereOverrides() throws IOException {
     Map<String, String> actualSqls =
-        collectSqlStatements("-Dsnowflake.metadata.columns.where=SQL_OVERRIDE");
+        collectSqlStatements(
+            "-Dsnowflake.metadata.columns.where=SQL_OVERRIDE",
+            "-Dsnowflake.metadata.tableConstraints.where=CONSTRAINTS_WHERE");
 
     assertTrue(actualSqls.get("columns-au.csv").endsWith("WHERE SQL_OVERRIDE"));
     assertFalse(actualSqls.get("columns-au.csv").contains("WHERE DELETED IS NULL"));
@@ -206,6 +236,14 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
 
     assertTrue(actualSqls.get("columns.csv").endsWith("WHERE SQL_OVERRIDE"));
     assertEquals(1, StringUtils.countMatches(actualSqls.get("columns.csv"), " WHERE "));
+
+    assertTrue(actualSqls.get("table_constraints-au.csv").endsWith("WHERE CONSTRAINTS_WHERE"));
+    assertFalse(actualSqls.get("table_constraints-au.csv").contains("WHERE DELETED IS NULL"));
+    assertEquals(
+        1, StringUtils.countMatches(actualSqls.get("table_constraints-au.csv"), " WHERE "));
+
+    assertTrue(actualSqls.get("table_constraints.csv").endsWith("WHERE CONSTRAINTS_WHERE"));
+    assertEquals(1, StringUtils.countMatches(actualSqls.get("table_constraints.csv"), " WHERE "));
   }
 
   @Test
@@ -219,6 +257,8 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
         "SELECT catalog_name, schema_name FROM db1.INFORMATION_SCHEMA.SCHEMATA",
         actualSqls.get("schemata.csv"));
     assertEquals("SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", actualSqls.get("external_tables.csv"));
+    assertEquals("SHOW PRIMARY KEYS IN DATABASE \"DB1\"", actualSqls.get("primary_keys.csv"));
+    assertEquals("SHOW UNIQUE KEYS IN DATABASE \"DB1\"", actualSqls.get("unique_keys.csv"));
   }
 
   @Test
@@ -237,6 +277,15 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     assertTrue(
         actualSqls
             .get("tables-au.csv")
+            .contains(
+                "WHERE DELETED IS NULL AND NVL(table_catalog, '') NOT IN (SELECT table_catalog FROM"
+                    + " SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS WHERE deleted = FALSE AND"
+                    + " schema_dropped IS NULL AND table_dropped IS NULL AND table_catalog IS NOT"
+                    + " NULL GROUP BY table_catalog HAVING COUNT(CASE WHEN id = clone_group_id"
+                    + " THEN 1 END) = 0)"));
+    assertTrue(
+        actualSqls
+            .get("table_constraints-au.csv")
             .contains(
                 "WHERE DELETED IS NULL AND NVL(table_catalog, '') NOT IN (SELECT table_catalog FROM"
                     + " SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS WHERE deleted = FALSE AND"
@@ -267,6 +316,14 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
         ImmutableList.of(
             "SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", "SHOW EXTERNAL TABLES IN DATABASE \"DB2\""),
         actualSqls.get("external_tables.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SHOW PRIMARY KEYS IN DATABASE \"DB1\"", "SHOW PRIMARY KEYS IN DATABASE \"DB2\""),
+        actualSqls.get("primary_keys.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SHOW UNIQUE KEYS IN DATABASE \"DB1\"", "SHOW UNIQUE KEYS IN DATABASE \"DB2\""),
+        actualSqls.get("unique_keys.csv"));
   }
 
   @Test
@@ -297,7 +354,15 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
     assertEquals(
         "SELECT function_catalog, function_schema, function_name, data_type, argument_signature, character_maximum_length, character_octet_length, numeric_precision, numeric_precision_radix, numeric_scale, function_language, runtime_version, volatility, is_external, is_aggregate FROM INFORMATION_SCHEMA.FUNCTIONS WHERE function_schema IN ('SCHEMA1', 'SCHEMA2')",
         actualSqls.get("functions.csv"));
+    assertEquals(
+        "SELECT constraint_catalog, constraint_schema, constraint_name, table_catalog, table_schema, table_name, constraint_type, is_deferrable, initially_deferred, enforced, comment, created, last_altered, rely FROM SNOWFLAKE.ACCOUNT_USAGE.TABLE_CONSTRAINTS WHERE DELETED IS NULL AND table_schema IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("table_constraints-au.csv"));
+    assertEquals(
+        "SELECT constraint_catalog, constraint_schema, constraint_name, table_catalog, table_schema, table_name, constraint_type, is_deferrable, initially_deferred, enforced, comment, created, last_altered, rely FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')",
+        actualSqls.get("table_constraints.csv"));
     assertEquals("SHOW EXTERNAL TABLES", actualSqls.get("external_tables.csv"));
+    assertEquals("SHOW PRIMARY KEYS", actualSqls.get("primary_keys.csv"));
+    assertEquals("SHOW UNIQUE KEYS", actualSqls.get("unique_keys.csv"));
   }
 
   @Test
@@ -343,8 +408,25 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
         actualSqls.get("functions.csv"));
     assertEquals(
         ImmutableList.of(
+            "SELECT constraint_catalog, constraint_schema, constraint_name, table_catalog, table_schema, table_name, constraint_type, is_deferrable, initially_deferred, enforced, comment, created, last_altered, rely FROM SNOWFLAKE.ACCOUNT_USAGE.TABLE_CONSTRAINTS WHERE DELETED IS NULL AND table_catalog IN ('DB1', 'DB2') AND table_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("table_constraints-au.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SELECT constraint_catalog, constraint_schema, constraint_name, table_catalog, table_schema, table_name, constraint_type, is_deferrable, initially_deferred, enforced, comment, created, last_altered, rely FROM db1.INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')",
+            "SELECT constraint_catalog, constraint_schema, constraint_name, table_catalog, table_schema, table_name, constraint_type, is_deferrable, initially_deferred, enforced, comment, created, last_altered, rely FROM db2.INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE table_schema IN ('SCHEMA1', 'SCHEMA2')"),
+        actualSqls.get("table_constraints.csv"));
+    assertEquals(
+        ImmutableList.of(
             "SHOW EXTERNAL TABLES IN DATABASE \"DB1\"", "SHOW EXTERNAL TABLES IN DATABASE \"DB2\""),
         actualSqls.get("external_tables.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SHOW PRIMARY KEYS IN DATABASE \"DB1\"", "SHOW PRIMARY KEYS IN DATABASE \"DB2\""),
+        actualSqls.get("primary_keys.csv"));
+    assertEquals(
+        ImmutableList.of(
+            "SHOW UNIQUE KEYS IN DATABASE \"DB1\"", "SHOW UNIQUE KEYS IN DATABASE \"DB2\""),
+        actualSqls.get("unique_keys.csv"));
   }
 
   @Test
@@ -369,6 +451,43 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
 
     assertEquals("\"A'C\"\"\"", SnowflakeMetadataConnector.identifierNameQuoted("a'c\""));
     assertEquals("\"a'c\"\"\"", SnowflakeMetadataConnector.identifierNameQuoted("\"a'c\"\""));
+  }
+
+  @Test
+  public void showKeysHeaderTransformer_matchesFormatHeaders() throws Exception {
+    ImmutableList<String> showColumns =
+        ImmutableList.of(
+            "created_on",
+            "database_name",
+            "schema_name",
+            "table_name",
+            "column_name",
+            "key_sequence",
+            "constraint_name",
+            "rely",
+            "comment");
+    ResultSet rs = mock(ResultSet.class);
+    ResultSetMetaData metaData = mock(ResultSetMetaData.class);
+    when(rs.getMetaData()).thenReturn(metaData);
+    when(metaData.getColumnCount()).thenReturn(showColumns.size());
+    for (int i = 0; i < showColumns.size(); i++) {
+      when(metaData.getColumnLabel(i + 1)).thenReturn(showColumns.get(i));
+    }
+
+    String[] pkHeaders = SnowflakePlanner.SHOW_PRIMARY_KEYS.transformer().transform(rs);
+    String[] ukHeaders = SnowflakePlanner.SHOW_UNIQUE_KEYS.transformer().transform(rs);
+
+    String[] expectedPkHeaders =
+        Arrays.stream(SnowflakeMetadataDumpFormat.PrimaryKeysFormat.Header.values())
+            .map(Enum::name)
+            .toArray(String[]::new);
+    String[] expectedUkHeaders =
+        Arrays.stream(SnowflakeMetadataDumpFormat.UniqueKeysFormat.Header.values())
+            .map(Enum::name)
+            .toArray(String[]::new);
+
+    assertArrayEquals(expectedPkHeaders, pkHeaders);
+    assertArrayEquals(expectedUkHeaders, ukHeaders);
   }
 
   private static ImmutableMultimap<String, String> collectSqlStatementsAsMultimap(
