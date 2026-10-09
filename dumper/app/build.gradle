@@ -26,6 +26,7 @@ plugins {
     id 'dwh-migration-dumper.java-application-conventions'
     id 'jacoco'
     id 'org.cyclonedx.bom' version '1.10.0'
+    alias libs.plugins.shadow
 }
 
 apply plugin: 'com.github.jk1.dependency-license-report'
@@ -323,4 +324,15 @@ distributions {
 
 ['publishedDistZip', 'publishedDistTar', 'installPublishedDist'].collect(tasks::named).each {
     it.configure { dependsOn('checkLicense') }
+}
+
+shadowJar {
+    zip64 true
+    archiveBaseName.set('dwh-migration-dumper')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+    mergeServiceFiles()
+    manifest {
+        attributes 'Main-Class': application.mainClass.get()
+    }
 }
