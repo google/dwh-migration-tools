@@ -51,6 +51,7 @@ public interface CoreMetadataDumpFormat {
 
       public String version;
       public String arguments;
+      public String javaVersion;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

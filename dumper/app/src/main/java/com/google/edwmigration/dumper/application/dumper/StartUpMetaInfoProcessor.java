@@ -68,6 +68,7 @@ public class StartUpMetaInfoProcessor {
             + dumperMetadata.getGitCommit()
             + "]");
     System.out.println("Build date: " + dumperMetadata.getBuildDate());
+    System.out.println("Java version: " + dumperMetadata.getJavaVersion());
     System.out.println();
   }
 
@@ -82,7 +83,7 @@ public class StartUpMetaInfoProcessor {
     String change = manifest.getMainAttributes().getValue("Change");
     String version = manifest.getMainAttributes().getValue("Implementation-Version");
 
-    return new DumperMetadata(version, change, buildDate);
+    return new DumperMetadata(version, change, buildDate, System.getProperty("java.version"));
   }
 
   private static Manifest loadCurrentClassManifest() {
