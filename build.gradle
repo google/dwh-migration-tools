@@ -28,6 +28,10 @@ distributions {
                     from dumperProject.tasks.installPublishedDist
                 }
             }
+
+            into("migration-discovery-scripts") {
+                from("migration-discovery-scripts")
+            }
         }
     }
 }

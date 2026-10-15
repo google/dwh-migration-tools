@@ -1,0 +1,25 @@
+SELECT
+    ID AS "Id",
+    TABLE_NAME AS "TableName",
+    TABLE_SCHEMA AS "TableSchema",
+    TABLE_SCHEMA_ID AS "TableSchemaId",
+    TABLE_CATALOG AS "TableCatalog",
+    CLONE_GROUP_ID AS "CloneGroupId",
+    IS_TRANSIENT AS "IsTransient",
+    ACTIVE_BYTES AS "ActiveBytes",
+    TIME_TRAVEL_BYTES AS "TimeTravelBytes",
+    FAILSAFE_BYTES AS "FailsafeBytes",
+    RETAINED_FOR_CLONE_BYTES AS "RetainedForCloneBytes",
+    TABLE_CREATED AS "TableCreated",
+    TABLE_DROPPED AS "TableDropped",
+    TABLE_ENTERED_FAILSAFE AS "TableEnteredFailsafe",
+    CATALOG_CREATED AS "CatalogCreated",
+    CATALOG_DROPPED AS "CatalogDropped",
+    SCHEMA_CREATED AS "SchemaCreated",
+    SCHEMA_DROPPED AS "SchemaDropped",
+    COMMENT AS "Comment",
+    DELETED AS "Deleted"
+FROM SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS
+WHERE TABLE_CATALOG != 'SNOWFLAKE'
+  AND (ACTIVE_BYTES > 0 OR TIME_TRAVEL_BYTES > 0 OR FAILSAFE_BYTES > 0 OR RETAINED_FOR_CLONE_BYTES > 0)
+ORDER BY ACTIVE_BYTES DESC;
