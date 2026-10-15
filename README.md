@@ -26,6 +26,44 @@ and view the [installation instructions](client/README.md).
 - **Dbsync Tools (work in progress):** Command line utility to sync large
   files into Google Cloud Storage. View the [documentation](dbsync/README.md).
 
+## Databricks Dumper
+
+The `databricks` connector dumps tables registered in Unity Catalog. It can
+also dump tables in the legacy `hive_metastore` catalog when a Databricks SQL
+warehouse ID is provided with `--warehouse`.
+
+### Unity Catalog only
+
+Without `--warehouse`, the connector uses the Unity Catalog REST API and dumps
+Unity Catalog tables and their table metadata, including column definitions:
+
+```bash
+./gradlew :dumper:app:run --args="--connector databricks \
+  --url https://<workspace-host> \
+  --password <databricks-token>"
+```
+
+### Unity Catalog and Hive Metastore
+
+With `--warehouse <sql-warehouse-id>`, the connector dumps both Unity Catalog
+and Hive Metastore tables. Hive Metastore metadata is collected through the
+Databricks SQL Statement Execution API using the configured SQL warehouse.
+For each Hive Metastore table, the connector collects column definitions with
+`DESCRIBE TABLE` and writes them in the same `meta.columns` format used for
+Unity Catalog tables.
+
+```bash
+./gradlew :dumper:app:run --args="--connector databricks \
+  --url https://<workspace-host> \
+  --password <databricks-token> \
+  --warehouse <sql-warehouse-id>"
+```
+
+The token must be authorized to access the workspace and execute statements on
+the SQL warehouse. The output JSONL identifies legacy tables with
+`catalog: "hive_metastore"`; for example,
+`hive_metastore.default.example_table`.
+
 ## Compiling from source
 You need to have `JDK 8` installed. For multiple jdk versions we recommend to use https://sdkman.io/ 
 ### Build all the modules ###
