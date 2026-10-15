@@ -150,6 +150,7 @@ if [[ -n "$SF_PRIVATE_KEY_PATH" ]]; then
   SNOWSQL_CMD+=(--private-key-path "$SF_PRIVATE_KEY_PATH")
 fi
 SNOWSQL_CMD+=(
+  -o exit_on_error=true
   -o output_format=csv
   -o header=true
   -o timing=false
@@ -199,17 +200,31 @@ TASK_DETAILS_JSON=""
 SUCCEEDED_COUNT=0
 FAILED_COUNT=0
 
+append_task_detail() {
+  local item_json="$1"
+  if [[ -z "$TASK_DETAILS_JSON" ]]; then
+    TASK_DETAILS_JSON="$item_json"
+  else
+    TASK_DETAILS_JSON="$TASK_DETAILS_JSON,$item_json"
+  fi
+}
+
 clean_csv_header() {
   local csv_file="$1"
   local hdr_pattern="$2"
-  if [[ -f "$csv_file" ]]; then
-    awk -v pat="$hdr_pattern" '
-      BEGIN { found = 0 }
-      $0 ~ pat { found = 1 }
-      found { print }
-    ' "$csv_file" > "${csv_file}.tmp"
-    mv "${csv_file}.tmp" "$csv_file"
+  if [[ ! -f "$csv_file" ]]; then
+    return 1
   fi
+  if ! awk -v pat="$hdr_pattern" '
+    BEGIN { found = 0 }
+    $0 ~ pat { found = 1 }
+    found { print }
+    END { if (!found) exit 1 }
+  ' "$csv_file" > "${csv_file}.tmp"; then
+    rm -f "${csv_file}.tmp"
+    return 1
+  fi
+  mv "${csv_file}.tmp" "$csv_file"
 }
 
 for task in "${TASKS[@]}"; do
@@ -223,12 +238,13 @@ for task in "${TASKS[@]}"; do
     echo "FAILED"
     echo "[ERROR] SQL template '$input_path' does not exist." >&2
     FAILED_COUNT=$((FAILED_COUNT + 1))
+    append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"error\":\"missing SQL template\"}"
     continue
   fi
 
-  # Render SQL: strip SET LOOKBACK_DAYS and substitute variables
+  # Render SQL: strip SET LOOKBACK_DAYS (portable across GNU and BSD/macOS sed) and substitute variables
   rendered_sql=$(sed -E \
-    -e "s/^[[:space:]]*SET[[:space:]]+LOOKBACK_DAYS[[:space:]]*=[[:space:]]*[0-9]+;[[:space:]]*$//I" \
+    -e "s/^[[:space:]]*[Ss][Ee][Tt][[:space:]]+[Ll][Oo][Oo][Kk][Bb][Aa][Cc][Kk]_[Dd][Aa][Yy][Ss][[:space:]]*=[[:space:]]*[0-9]+;[[:space:]]*$//" \
     -e "s/\\\$LOOKBACK_DAYS/${LOOKBACK_DAYS}/g" \
     -e "s/&1/${LOOKBACK_DAYS}/g" \
     "$input_path")
@@ -267,40 +283,39 @@ EOF
       rm -f "$output_path.stdout"
     fi
 
-    # Strip any multi-statement preamble (ALTER SESSION status, SHOW WAREHOUSES results)
-    clean_csv_header "$output_path" "$hdr_pattern"
+    # Strip any multi-statement preamble and verify expected CSV header is present
+    if clean_csv_header "$output_path" "$hdr_pattern"; then
+      SUCCEEDED_COUNT=$((SUCCEEDED_COUNT + 1))
+      append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\"}"
 
-    SUCCEEDED_COUNT=$((SUCCEEDED_COUNT + 1))
-    item_json="{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\"}"
-    if [[ -z "$TASK_DETAILS_JSON" ]]; then
-      TASK_DETAILS_JSON="$item_json"
+      if [[ -s "$output_path" ]]; then
+        row_count=$(($(wc -l < "$output_path") - 1))
+        echo "DONE ($row_count rows, ${query_elapsed_secs}s)"
+      else
+        echo "DONE (Empty / 0 rows, ${query_elapsed_secs}s)"
+      fi
     else
-      TASK_DETAILS_JSON="$TASK_DETAILS_JSON,$item_json"
-    fi
-
-    if [[ -s "$output_path" ]]; then
-      row_count=$(($(wc -l < "$output_path") - 1))
-      echo "DONE ($row_count rows, ${query_elapsed_secs}s)"
-    else
-      echo "DONE (Empty / 0 rows, ${query_elapsed_secs}s)"
+      FAILED_COUNT=$((FAILED_COUNT + 1))
+      append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"error\":\"missing expected CSV header\"}"
+      echo "FAILED (${query_elapsed_secs}s)"
+      echo "[ERROR] Expected header pattern '$hdr_pattern' not found in $output_csv" >&2
+      if [[ -f "$output_path" && -s "$output_path" ]]; then
+        echo "[ERROR] Output details:" >&2
+        cat "$output_path" >&2
+      fi
+      rm -f "$output_path" "$output_path.stdout"
     fi
   else
     query_elapsed_secs=$(( $(date +%s) - query_start_epoch ))
     FAILED_COUNT=$((FAILED_COUNT + 1))
-    item_json="{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"error\":\"snowsql execution failure\"}"
-    if [[ -z "$TASK_DETAILS_JSON" ]]; then
-      TASK_DETAILS_JSON="$item_json"
-    else
-      TASK_DETAILS_JSON="$TASK_DETAILS_JSON,$item_json"
-    fi
+    append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"error\":\"snowsql execution failure\"}"
     echo "FAILED (${query_elapsed_secs}s)"
     echo "[ERROR] Failed executing $sql_file" >&2
     if [[ -f "$output_path.stdout" && -s "$output_path.stdout" ]]; then
       echo "[ERROR] Output details:" >&2
       cat "$output_path.stdout" >&2
     fi
-    rm -f "$TMP_SQL_FILE" "$output_path.stdout"
-    exit 1
+    rm -f "$output_path" "$output_path.stdout"
   fi
 done
 
@@ -326,12 +341,17 @@ product:
   arguments: "ConnectorArguments{connector=snowflake-mds, assessment=true}"
 EOF
 
-TASK_DETAILS_JSON="$TASK_DETAILS_JSON,{\"name\":\"compilerworks-metadata.yaml\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\"}"
+append_task_detail "{\"name\":\"compilerworks-metadata.yaml\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\"}"
 
 # 2. Generate BQMS Client Telemetry (dumper-telemetry.jsonl)
 cat > "$OUTPUT_DIR/dumper-telemetry.jsonl" << EOF
 {"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"overallStatus":"$OVERALL_STATUS","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"lookback_days":$LOOKBACK_DAYS}}]}
 EOF
+
+if [[ $FAILED_COUNT -gt 0 ]]; then
+  echo "[ERROR] $FAILED_COUNT extraction task(s) failed. Telemetry written to $OUTPUT_DIR/dumper-telemetry.jsonl. Aborting ZIP creation." >&2
+  exit 1
+fi
 
 echo "[INFO] Building final ZIP package: $ZIP_NAME..."
 ZIP_OUT_PATH="$OUTPUT_DIR/$ZIP_NAME"
