@@ -17,9 +17,12 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat;
+import com.google.edwmigration.dumper.plugin.lib.dumper.spi.CoreMetadataDumpFormat.CompilerWorksDumpMetadataTaskFormat.Root;
 import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +39,11 @@ public class DumpMetadataTaskTest {
     MemoryByteSink sink = new MemoryByteSink();
     ConnectorArguments arguments = new ConnectorArguments("--connector", "bigquery-logs");
     new DumpMetadataTask(arguments, "test-format").doRun(mockContext, sink, () -> {});
+
+    Root root = CoreMetadataDumpFormat.MAPPER.readValue(sink.toByteArray(), Root.class);
+    assertEquals("test-format", root.format);
+    assertNotNull(root.product);
+    assertEquals(System.getProperty("java.version"), root.product.javaVersion);
   }
 
   @Test

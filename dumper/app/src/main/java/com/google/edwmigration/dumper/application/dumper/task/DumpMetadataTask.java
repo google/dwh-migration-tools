@@ -60,6 +60,7 @@ public class DumpMetadataTask extends AbstractTask<Void>
       product.version = String.valueOf(new ProductMetadata());
       ConnectorArguments args = getArguments(context);
       product.arguments = args != null ? args.toStringWithoutCustomQueries() : "null";
+      product.javaVersion = System.getProperty("java.version");
       root.product = product;
     }
 

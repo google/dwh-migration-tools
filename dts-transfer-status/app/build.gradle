@@ -152,7 +152,7 @@ distributions {
 spotless {
 
     java {
-        googleJavaFormat()
+        googleJavaFormat(libs.versions.google.java.format.get())
         licenseHeaderFile rootProject.file("gradle/codequality/HEADER.java")
         trimTrailingWhitespace()
         FileCollection files = files()

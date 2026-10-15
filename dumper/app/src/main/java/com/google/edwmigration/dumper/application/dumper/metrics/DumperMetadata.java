@@ -21,11 +21,17 @@ public class DumperMetadata {
   private final String version;
   private final String gitCommit;
   private final String buildDate;
+  private final String javaVersion;
 
   public DumperMetadata(String version, String gitCommit, String buildDate) {
+    this(version, gitCommit, buildDate, System.getProperty("java.version"));
+  }
+
+  public DumperMetadata(String version, String gitCommit, String buildDate, String javaVersion) {
     this.version = version;
     this.gitCommit = gitCommit;
     this.buildDate = buildDate;
+    this.javaVersion = javaVersion;
   }
 
   public String getVersion() {
@@ -38,5 +44,9 @@ public class DumperMetadata {
 
   public final String getBuildDate() {
     return buildDate;
+  }
+
+  public String getJavaVersion() {
+    return javaVersion;
   }
 }
