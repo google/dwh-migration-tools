@@ -13,6 +13,7 @@ ben-manes-versions-plugin = "0.54.0"
 cel = "0.8.0"
 checkerframework = "3.51.0"
 commons-io = "2.19.0"
+databricks-sdk-java = "0.163.0"
 datanucleus-api-jdo = "4.2.5"
 datanucleus-core = "4.1.17"
 datanucleus-javax-jdo = "3.2.1"
@@ -96,6 +97,7 @@ aws-java-sdk-redshiftserverless = { module = "com.amazonaws:aws-java-sdk-redshif
 cel = { module = "dev.cel:cel", version.ref = "cel" }
 checker-qual = { module = "org.checkerframework:checker-qual", version.ref = "checkerframework" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
+databricks-sdk = { module = "com.databricks:databricks-sdk-java", version.ref = "databricks-sdk-java" }
 datanucleus-api-jdo = { module = "org.datanucleus:datanucleus-api-jdo", version.ref = "datanucleus-api-jdo" }
 datanucleus-core = { module = "org.datanucleus:datanucleus-core", version.ref = "datanucleus-core" }
 datanucleus-javax-jdo = { module = "org.datanucleus:javax.jdo", version.ref = "datanucleus-javax-jdo" }

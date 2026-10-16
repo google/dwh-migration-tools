@@ -1,0 +1,6 @@
+ConstraintCatalog,ConstraintSchema,ConstraintName,TableCatalog,TableSchema,TableName,ConstraintType,ConstraintColumns,ReferencedTableCatalog,ReferencedTableSchema,ReferencedTableName,ReferencedColumns,Rely,CheckClause
+dumper_test_uc,dumper_test_schema,items_pk,dumper_test_uc,dumper_test_schema,items,PRIMARY KEY,"[\"id\"]",,,,,false,
+dumper_test_uc,dumper_test_schema,items_org_fk,dumper_test_uc,dumper_test_schema,items,FOREIGN KEY,"[\"org_id\"]",dumper_test_uc,dumper_test_schema,orgs,"[\"org_id\"]",false,
+dumper_test_uc,dumper_test_schema,orgs_pk,dumper_test_uc,dumper_test_schema,orgs,PRIMARY KEY,"[\"org_id\"]",,,,,true,
+dumper_test_uc,dumper_test_schema,orgs_name_uq,dumper_test_uc,dumper_test_schema,orgs,UNIQUE,"[\"org_name\"]",,,,,false,
+dumper_test_uc,dumper_test_schema,org_id_positive,dumper_test_uc,dumper_test_schema,orgs,CHECK,,,,,,,org_id > 0

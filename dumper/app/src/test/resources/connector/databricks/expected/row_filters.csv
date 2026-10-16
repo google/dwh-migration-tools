@@ -1,0 +1,2 @@
+TableCatalog,TableSchema,TableName,FilterName,TargetColumns
+dumper_test_uc,dumper_test_schema,items,dumper_test_uc.dumper_test_schema.filter_fn,region

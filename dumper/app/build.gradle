@@ -107,6 +107,7 @@ dependencies {
     implementation libs.google.cloud.nio
     implementation libs.google.cloud.kms
     implementation libs.httpclient5
+    implementation libs.databricks.sdk
     implementation libs.aws.java.sdk.redshift
     implementation libs.aws.java.sdk.redshiftserverless
     implementation libs.aws.java.sdk.cloudwatch

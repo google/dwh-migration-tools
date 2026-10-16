@@ -1,0 +1,2 @@
+TableCatalog,TableSchema,TableName,ViewDefinition
+hive_metastore,dumper_test_hms,items_view,"SELECT id, c_int FROM hive_metastore.dumper_test_hms.delta_items"

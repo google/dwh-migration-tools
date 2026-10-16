@@ -1,0 +1,373 @@
+{
+  "/api/2.1/unity-catalog/catalogs?include_browse=true&max_results=0": {
+    "catalogs": [
+      {
+        "comment": "",
+        "name": "dumper_test_uc",
+        "owner": "owner@example.com",
+        "storage_location": "abfss://container@storage.dfs.core.windows.net/catalogs/c33e728a-e62d-4ce7-b222-d7da06aca39c"
+      },
+      {
+        "comment": "System catalog (auto-created)",
+        "name": "system",
+        "owner": "System user"
+      }
+    ]
+  },
+  "/api/2.1/unity-catalog/schemas?catalog_name=dumper_test_uc&include_browse=true&max_results=0": {
+    "schemas": [
+      {
+        "catalog_name": "dumper_test_uc",
+        "comment": "",
+        "name": "dumper_test_schema",
+        "owner": "owner@example.com",
+        "related_entity_hints": {
+          "policy": {
+            "exists": false
+          },
+          "tag": {
+            "exists": false
+          }
+        }
+      },
+      {
+        "catalog_name": "dumper_test_uc",
+        "comment": "Information schema (auto-created)",
+        "name": "information_schema",
+        "owner": "System user",
+        "related_entity_hints": {
+          "policy": {
+            "exists": false
+          },
+          "tag": {
+            "exists": false
+          }
+        }
+      }
+    ]
+  },
+  "/api/2.1/unity-catalog/tables?catalog_name=dumper_test_uc&include_browse=true&max_results=0&schema_name=dumper_test_schema": {
+    "tables": [
+      {
+        "catalog_name": "dumper_test_uc",
+        "columns": [
+          {
+            "name": "id",
+            "nullable": false,
+            "position": 0,
+            "type_json": "{\"name\":\"id\",\"type\":\"long\",\"nullable\":false,\"metadata\":{\"delta.identity.step\":1,\"delta.identity.allowExplicitInsert\":true,\"delta.identity.start\":1}}",
+            "type_name": "LONG",
+            "type_text": "bigint"
+          },
+          {
+            "name": "org_id",
+            "nullable": false,
+            "position": 1,
+            "type_json": "{\"name\":\"org_id\",\"type\":\"integer\",\"nullable\":false,\"metadata\":{}}",
+            "type_name": "INT",
+            "type_text": "int"
+          },
+          {
+            "comment": "region code",
+            "name": "region",
+            "nullable": true,
+            "position": 2,
+            "type_json": "{\"name\":\"region\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"comment\":\"region code\",\"CURRENT_DEFAULT\":\"'US'\"}}",
+            "type_name": "STRING",
+            "type_text": "string"
+          },
+          {
+            "mask": {
+              "function_name": "dumper_test_uc.dumper_test_schema.mask_fn",
+              "using_column_names": [
+                "region"
+              ]
+            },
+            "name": "secret",
+            "nullable": true,
+            "position": 3,
+            "type_json": "{\"name\":\"secret\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}}",
+            "type_name": "STRING",
+            "type_text": "string"
+          },
+          {
+            "name": "price",
+            "nullable": true,
+            "position": 4,
+            "type_json": "{\"name\":\"price\",\"type\":\"decimal(10,2)\",\"nullable\":true,\"metadata\":{}}",
+            "type_name": "DECIMAL",
+            "type_text": "decimal(10,2)"
+          },
+          {
+            "name": "tags",
+            "nullable": true,
+            "position": 5,
+            "type_json": "{\"name\":\"tags\",\"type\":{\"type\":\"array\",\"elementType\":\"string\",\"containsNull\":true},\"nullable\":true,\"metadata\":{}}",
+            "type_name": "ARRAY",
+            "type_text": "array<string>"
+          },
+          {
+            "name": "attrs",
+            "nullable": true,
+            "position": 6,
+            "type_json": "{\"name\":\"attrs\",\"type\":{\"type\":\"map\",\"keyType\":\"string\",\"valueType\":\"integer\",\"valueContainsNull\":true},\"nullable\":true,\"metadata\":{}}",
+            "type_name": "MAP",
+            "type_text": "map<string,int>"
+          },
+          {
+            "name": "details",
+            "nullable": true,
+            "position": 7,
+            "type_json": "{\"name\":\"details\",\"type\":{\"type\":\"struct\",\"fields\":[{\"name\":\"code\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}},{\"name\":\"label\",\"type\":\"varchar(16)\",\"nullable\":true,\"metadata\":{}},{\"name\":\"amount\",\"type\":\"decimal(8,2)\",\"nullable\":true,\"metadata\":{}}]},\"nullable\":true,\"metadata\":{\"__CHAR_VARCHAR_TYPE_STRING\":\"struct<code:int,label:varchar(16),amount:decimal(8,2)>\"}}",
+            "type_name": "STRUCT",
+            "type_text": "struct<code:int,label:varchar(16),amount:decimal(8,2)>"
+          },
+          {
+            "name": "created_at",
+            "nullable": true,
+            "position": 8,
+            "type_json": "{\"name\":\"created_at\",\"type\":\"timestamp\",\"nullable\":true,\"metadata\":{}}",
+            "type_name": "TIMESTAMP",
+            "type_text": "timestamp"
+          },
+          {
+            "name": "dt",
+            "nullable": true,
+            "partition_index": 0,
+            "position": 9,
+            "type_json": "{\"name\":\"dt\",\"type\":\"date\",\"nullable\":true,\"metadata\":{}}",
+            "type_name": "DATE",
+            "type_text": "date"
+          },
+          {
+            "name": "next_id",
+            "nullable": true,
+            "position": 10,
+            "type_json": "{\"name\":\"next_id\",\"type\":\"long\",\"nullable\":true,\"metadata\":{\"delta.generationExpression\":\"id + 1\"}}",
+            "type_name": "LONG",
+            "type_text": "bigint"
+          }
+        ],
+        "comment": "Main items table",
+        "data_source_format": "DELTA",
+        "name": "items",
+        "owner": "owner@example.com",
+        "properties": {
+          "delta.checkpoint.writeStatsAsJson": "false",
+          "delta.checkpoint.writeStatsAsStruct": "true",
+          "spark.sql.statistics.totalSize": "4096"
+        },
+        "row_filter": {
+          "function_name": "dumper_test_uc.dumper_test_schema.filter_fn",
+          "input_column_names": [
+            "region"
+          ]
+        },
+        "schema_name": "dumper_test_schema",
+        "securable_kind": "TABLE_DELTA",
+        "storage_location": "abfss://container@storage.dfs.core.windows.net/tables/3c68c0cf-0530-49b0-ab76-09c7d19b4309",
+        "table_type": "MANAGED"
+      },
+      {
+        "catalog_name": "dumper_test_uc",
+        "columns": [
+          {
+            "name": "id",
+            "nullable": false,
+            "position": 0,
+            "type_json": "{\"name\":\"id\",\"type\":\"long\",\"nullable\":false,\"metadata\":{}}",
+            "type_name": "LONG",
+            "type_text": "bigint"
+          },
+          {
+            "comment": "region code",
+            "name": "region",
+            "nullable": true,
+            "position": 1,
+            "type_json": "{\"name\":\"region\",\"type\":\"string\",\"nullable\":true,\"metadata\":{\"comment\":\"region code\",\"CURRENT_DEFAULT\":\"'US'\"}}",
+            "type_name": "STRING",
+            "type_text": "string"
+          },
+          {
+            "name": "price",
+            "nullable": true,
+            "position": 2,
+            "type_json": "{\"name\":\"price\",\"type\":\"decimal(10,2)\",\"nullable\":true,\"metadata\":{}}",
+            "type_name": "DECIMAL",
+            "type_text": "decimal(10,2)"
+          }
+        ],
+        "comment": "Items view",
+        "name": "items_view",
+        "owner": "owner@example.com",
+        "schema_name": "dumper_test_schema",
+        "securable_kind": "TABLE_VIEW",
+        "table_type": "VIEW",
+        "view_definition": "SELECT id, region, price FROM dumper_test_uc.dumper_test_schema.items"
+      },
+      {
+        "catalog_name": "dumper_test_uc",
+        "columns": [
+          {
+            "name": "org_id",
+            "nullable": false,
+            "position": 0,
+            "type_json": "{\"name\":\"org_id\",\"type\":\"integer\",\"nullable\":false,\"metadata\":{}}",
+            "type_name": "INT",
+            "type_text": "int"
+          },
+          {
+            "name": "org_name",
+            "nullable": true,
+            "position": 1,
+            "type_json": "{\"name\":\"org_name\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}}",
+            "type_name": "STRING",
+            "type_text": "string"
+          },
+          {
+            "name": "org_code",
+            "nullable": true,
+            "position": 2,
+            "type_json": "{\"name\":\"org_code\",\"type\":\"char(4)\",\"nullable\":true,\"metadata\":{\"__CHAR_VARCHAR_TYPE_STRING\":\"char(4)\"}}",
+            "type_name": "CHAR",
+            "type_text": "char(4)"
+          },
+          {
+            "name": "org_label",
+            "nullable": true,
+            "position": 3,
+            "type_json": "{\"name\":\"org_label\",\"type\":\"varchar(16)\",\"nullable\":true,\"metadata\":{\"__CHAR_VARCHAR_TYPE_STRING\":\"varchar(16)\"}}",
+            "type_name": "STRING",
+            "type_text": "varchar(16)"
+          },
+          {
+            "name": "org_rank",
+            "nullable": true,
+            "position": 4,
+            "type_json": "{\"name\":\"org_rank\",\"type\":\"short\",\"nullable\":true,\"metadata\":{}}",
+            "type_name": "SHORT",
+            "type_text": "smallint"
+          },
+          {
+            "name": "org_flag",
+            "nullable": true,
+            "position": 5,
+            "type_json": "{\"name\":\"org_flag\",\"type\":\"byte\",\"nullable\":true,\"metadata\":{}}",
+            "type_name": "BYTE",
+            "type_text": "tinyint"
+          }
+        ],
+        "data_source_format": "DELTA",
+        "name": "orgs",
+        "owner": "owner@example.com",
+        "properties": {
+          "delta.checkpoint.writeStatsAsJson": "false",
+          "delta.checkpoint.writeStatsAsStruct": "true"
+        },
+        "schema_name": "dumper_test_schema",
+        "securable_kind": "TABLE_DELTA",
+        "storage_location": "abfss://container@storage.dfs.core.windows.net/tables/eddb78b8-5a86-4577-a761-1b35d5fc7e15",
+        "table_type": "MANAGED"
+      }
+    ]
+  },
+  "/api/2.1/unity-catalog/tables?catalog_name=dumper_test_uc&include_browse=true&max_results=0&omit_columns=true&omit_properties=true&schema_name=dumper_test_schema": {
+    "tables": [
+      {
+        "catalog_name": "dumper_test_uc",
+        "comment": "Main items table",
+        "data_source_format": "DELTA",
+        "name": "items",
+        "owner": "owner@example.com",
+        "row_filter": {
+          "function_name": "dumper_test_uc.dumper_test_schema.filter_fn",
+          "input_column_names": [
+            "region"
+          ]
+        },
+        "schema_name": "dumper_test_schema",
+        "storage_location": "abfss://container@storage.dfs.core.windows.net/tables/3c68c0cf-0530-49b0-ab76-09c7d19b4309",
+        "table_type": "MANAGED"
+      },
+      {
+        "catalog_name": "dumper_test_uc",
+        "comment": "Items view",
+        "name": "items_view",
+        "owner": "owner@example.com",
+        "schema_name": "dumper_test_schema",
+        "table_type": "VIEW",
+        "view_definition": "SELECT id, region, price FROM dumper_test_uc.dumper_test_schema.items"
+      },
+      {
+        "catalog_name": "dumper_test_uc",
+        "data_source_format": "DELTA",
+        "name": "orgs",
+        "owner": "owner@example.com",
+        "schema_name": "dumper_test_schema",
+        "storage_location": "abfss://container@storage.dfs.core.windows.net/tables/eddb78b8-5a86-4577-a761-1b35d5fc7e15",
+        "table_type": "MANAGED"
+      }
+    ]
+  },
+  "/api/2.1/unity-catalog/tables/dumper_test_uc.dumper_test_schema.orgs?include_browse=true": {
+    "catalog_name": "dumper_test_uc",
+    "name": "orgs",
+    "properties": {
+      "delta.checkpoint.writeStatsAsJson": "false",
+      "delta.checkpoint.writeStatsAsStruct": "true",
+      "delta.constraints.org_id_positive": "org_id > 0"
+    },
+    "schema_name": "dumper_test_schema",
+    "table_constraints": [
+      {
+        "constraint_id": "8f79a2a9-d16b-425d-805e-f8be8e6fe14c",
+        "primary_key_constraint": {
+          "child_columns": [
+            "org_id"
+          ],
+          "name": "orgs_pk",
+          "rely": true
+        }
+      },
+      {
+        "constraint_id": "f322bb16-64de-479f-9fd2-9cf6777c79a2",
+        "unique_constraint": {
+          "child_columns": [
+            "org_name"
+          ],
+          "name": "orgs_name_uq",
+          "rely": false
+        }
+      }
+    ]
+  },
+  "/api/2.1/unity-catalog/tables/dumper_test_uc.dumper_test_schema.items?include_browse=true": {
+    "catalog_name": "dumper_test_uc",
+    "name": "items",
+    "schema_name": "dumper_test_schema",
+    "table_constraints": [
+      {
+        "constraint_id": "c2a876ed-be04-47bf-8d66-bca398e2f9b3",
+        "primary_key_constraint": {
+          "child_columns": [
+            "id"
+          ],
+          "name": "items_pk"
+        }
+      },
+      {
+        "constraint_id": "41e28dde-63ce-452e-80ce-650b212d5155",
+        "foreign_key_constraint": {
+          "child_columns": [
+            "org_id"
+          ],
+          "name": "items_org_fk",
+          "parent_columns": [
+            "org_id"
+          ],
+          "parent_table": "dumper_test_uc.dumper_test_schema.orgs"
+        }
+      }
+    ]
+  }
+}

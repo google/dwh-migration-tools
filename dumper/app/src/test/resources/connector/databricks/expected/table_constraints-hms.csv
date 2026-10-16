@@ -1,0 +1,3 @@
+ConstraintCatalog,ConstraintSchema,ConstraintName,TableCatalog,TableSchema,TableName,ConstraintType,ConstraintColumns,ReferencedTableCatalog,ReferencedTableSchema,ReferencedTableName,ReferencedColumns,Rely,CheckClause
+hive_metastore,dumper_test_hms,c_str_set,hive_metastore,dumper_test_hms,delta_items,CHECK,,,,,,,"c_str IN ('a', 'b, c')"
+hive_metastore,dumper_test_hms,valid_id,hive_metastore,dumper_test_hms,delta_items,CHECK,,,,,,,id > 0
