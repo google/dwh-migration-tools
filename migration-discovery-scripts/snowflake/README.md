@@ -12,8 +12,7 @@ The extracted metadata is packaged into a standard ZIP archive (`snowflake_asses
 
 1. **SnowSQL (Option 1)**: Snowflake Command Line Interface ([SnowSQL Installation Guide](https://docs.snowflake.com/en/user-guide/snowsql-install-config)).
 2. **Database Permissions**: A Snowflake role with read access to the `SNOWFLAKE.ACCOUNT_USAGE` shared schema (e.g. `ACCOUNTADMIN`, `SYSADMIN`, or a custom audit role granted `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE`).
-   - *Note on Virtual Warehouses (`SHOW WAREHOUSES`)*: If using a custom role instead of `ACCOUNTADMIN` or `SYSADMIN`, grant `GRANT MONITOR ON ALL WAREHOUSES TO ROLE <role>;` (or grant monitor on each warehouse) so that `SHOW WAREHOUSES` in `warehouses.sql` returns all virtual warehouse definitions in your account.
-   - *Note on `ACCESS_HISTORY`*: The scripts automatically inspect complex analytical joins using `ACCOUNT_USAGE.ACCESS_HISTORY`. If your account is on Snowflake Standard Edition or lacks `GOVERNANCE_VIEWER` access, the extraction script gracefully falls back to `HasComplexJoins = FALSE` without failing.
+   - *Note on `ACCESS_HISTORY`*: The scripts automatically inspect multi-object queries using `ACCOUNT_USAGE.ACCESS_HISTORY`. If your account is on Snowflake Standard Edition or lacks `GOVERNANCE_VIEWER` access, the extraction script gracefully falls back to `IsMultiObject = FALSE` without failing.
 3. **Local Utilities (Option 1)**: `bash`, `sed`, `awk`, and `zip`.
 
 ---
@@ -89,9 +88,7 @@ If running command-line utilities is restricted by corporate security policies, 
    - **Historical time-filtered scripts** (each begins with `SET LOOKBACK_DAYS = 14;` allowing you to adjust the lookback window directly in the session variable):
      - `sql/warehouses_workload_structure.sql` $\rightarrow$ Download CSV as `warehouses_workload_structure.csv`
      - `sql/warehouse_metering_history.sql` $\rightarrow$ Download CSV as `warehouse_metering_history-au.csv`
-     - `sql/warehouse_events_history.sql` $\rightarrow$ Download CSV as `warehouse_events_history.csv`
-   - **Current state snapshot scripts** (extract current account state; no lookback variable required):
-     - `sql/warehouses.sql` $\rightarrow$ Download CSV as `warehouses.csv`
+   - **Current state snapshot script** (extracts current account storage state; no lookback variable required):
      - `sql/table_storage_metrics.sql` $\rightarrow$ Download CSV as `table_storage_metrics-au.csv`
 4. Create a metadata descriptor file named `compilerworks-metadata.yaml` in the same directory as the downloaded CSVs:
    - **From a terminal (Linux / macOS / Git Bash / WSL)** — automatically injects the current Unix epoch timestamp in milliseconds:
@@ -112,7 +109,7 @@ If running command-line utilities is restricted by corporate security policies, 
        version: "migration-discovery-scripts:1.0.0"
        arguments: "ConnectorArguments{connector=snowflake-mds, assessment=true}"
      ```
-5. Package the 5 CSVs and `compilerworks-metadata.yaml` into a ZIP archive:
+5. Package the 3 CSVs and `compilerworks-metadata.yaml` into a ZIP archive:
    ```bash
    zip snowflake_assessment_tco.zip *.csv compilerworks-metadata.yaml
    ```

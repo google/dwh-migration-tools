@@ -182,17 +182,15 @@ if "${SNOWSQL_CMD[@]}" -q "$CHECK_QUERY" -o output_format=plain -o header=false 
 else
   echo "UNAVAILABLE"
   echo "[WARN] SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY is inaccessible (e.g. Snowflake Standard Edition or missing GOVERNANCE_VIEWER role)."
-  echo "[WARN] Falling back to HasComplexJoins = FALSE in warehouses_workload_structure.sql."
+  echo "[WARN] Falling back to IsMultiObject = FALSE in warehouses_workload_structure.sql."
   ACCESS_HISTORY_AVAILABLE=false
 fi
 
 # Extraction tasks: "sql_file:output_csv_name:header_pattern:description"
 TASKS=(
-  "warehouses_workload_structure.sql:warehouses_workload_structure.csv:^\"?WarehouseName\"?:Virtual Warehouse Workload Structure"
+  "warehouses_workload_structure.sql:warehouses_workload_structure.csv:^\"?WarehouseName\"?,\"?AvgTotalBlocks\"?:Virtual Warehouse Workload Structure"
   "warehouse_metering_history.sql:warehouse_metering_history-au.csv:^\"?StartTime\"?:Virtual Warehouse Metering History"
-  "warehouse_events_history.sql:warehouse_events_history.csv:^\"?Timestamp\"?:Warehouse Cluster Lifecycle Events"
-  "warehouses.sql:warehouses.csv:^\"?Name\"?,\"?State\"?:Virtual Warehouse Definitions"
-  "table_storage_metrics.sql:table_storage_metrics-au.csv:^\"?Id\"?:Table Storage Breakdown"
+  "table_storage_metrics.sql:table_storage_metrics-au.csv:^\"?TableName\"?,\"?ActiveBytes\"?:Table Storage Breakdown"
 )
 
 TMP_SQL_FILE="$OUTPUT_DIR/.temp_query.sql"
@@ -249,11 +247,11 @@ for task in "${TASKS[@]}"; do
     -e "s/&1/${LOOKBACK_DAYS}/g" \
     "$input_path")
 
-  # If ACCESS_HISTORY is unavailable, replace ComplexJoinsFromHistory query body
+  # If ACCESS_HISTORY is unavailable, replace MultiObjectQueries query body
   if [[ "$sql_file" == "warehouses_workload_structure.sql" && "$ACCESS_HISTORY_AVAILABLE" == "false" ]]; then
     rendered_sql=$(echo "$rendered_sql" | awk '
-      /ComplexJoinsFromHistory AS \(/ {
-        print "ComplexJoinsFromHistory AS ("
+      /MultiObjectQueries AS \(/ {
+        print "MultiObjectQueries AS ("
         print "    SELECT CAST(NULL AS VARCHAR) AS QUERY_ID WHERE 1=0"
         print "),"
         skip = 1
@@ -361,8 +359,6 @@ rm -f "$ZIP_OUT_PATH" "./$ZIP_NAME"
   zip -q "$ZIP_NAME" \
     warehouses_workload_structure.csv \
     warehouse_metering_history-au.csv \
-    warehouse_events_history.csv \
-    warehouses.csv \
     table_storage_metrics-au.csv \
     compilerworks-metadata.yaml \
     dumper-telemetry.jsonl
