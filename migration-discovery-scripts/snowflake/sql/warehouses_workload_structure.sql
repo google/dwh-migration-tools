@@ -31,7 +31,9 @@ QueryRaw AS (
         QL.USER_NAME,
         COALESCE(QL.BYTES_SCANNED, 0) AS "BytesScanned",
         COALESCE(QL.ROWS_PRODUCED, 0) AS "RowsProduced",
-        GREATEST(CEIL(COALESCE(QL.BYTES_SCANNED, 0) / 1048576.0), 10) AS "QueryBlocks",
+        GREATEST(
+            CEIL(COALESCE(QL.BYTES_SCANNED, 0) / 1048576.0), 10
+        ) AS "QueryBlocks",
         MOQ.QUERY_ID IS NOT NULL AS "IsMultiObject",
         COALESCE(QAH.CREDITS_ATTRIBUTED_COMPUTE, 0.0) AS "RawAttributedCredits",
         SUM(COALESCE(QAH.CREDITS_ATTRIBUTED_COMPUTE, 0.0)) OVER (
@@ -62,7 +64,8 @@ QueryBase AS (
         CASE
             WHEN QR."HourAttributedCreditsSum" > 0 THEN QR."RawAttributedCredits"
             WHEN QR."HourExecutionTimeSum" > 0 THEN
-                DIV0(QR."ExecutionTime", QR."HourExecutionTimeSum") * QR."HourCreditsBilled"
+                DIV0(QR."ExecutionTime", QR."HourExecutionTimeSum")
+                    * QR."HourCreditsBilled"
             ELSE
                 DIV0(1.0, QR."HourQueryCount") * QR."HourCreditsBilled"
         END AS "AttributedCredits"
@@ -82,7 +85,8 @@ QueryClassified AS (
          )
          AND (
              (QB."BytesScanned" > 0
-              AND DIV0(QB."AttributedCredits", QB."BytesScanned") * 3774873600.0 < 0.003)
+              AND DIV0(QB."AttributedCredits", QB."BytesScanned")
+                  * 3774873600.0 < 0.003)
              OR QB."AttributedCredits" < 0.001
          )) AS "IsLowCost"
     FROM QueryBase AS QB
@@ -92,10 +96,17 @@ QueryAnalysisPerWarehousePerHour AS (
         "WarehouseName",
         "AggregateTime",
         SUM("AttributedCredits") AS "TotalCreditsAttributed",
-        SUM(IFF(QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM', "QueryBlocks", 0)) AS "TotalBlocks",
-        SUM(IFF(QUERY_TYPE = 'COPY' AND USER_NAME != 'SYSTEM', "AttributedCredits", 0.0)) AS "CreditsForCopy",
+        SUM(IFF(
+            QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM',
+            "QueryBlocks", 0
+        )) AS "TotalBlocks",
+        SUM(IFF(
+            QUERY_TYPE = 'COPY' AND USER_NAME != 'SYSTEM',
+            "AttributedCredits", 0.0
+        )) AS "CreditsForCopy",
         SUM(IFF(USER_NAME = 'SYSTEM', "AttributedCredits", 0.0)) AS "CreditsForSystem",
-        SUM(IFF("IsFilteringAbove1Gb", "AttributedCredits", 0.0)) AS "CreditsForFilteringAbove1Gb",
+        SUM(IFF("IsFilteringAbove1Gb", "AttributedCredits", 0.0))
+            AS "CreditsForFilteringAbove1Gb",
         SUM(IFF("IsFilteringAbove1Gb", "QueryBlocks", 0)) AS "BlocksForFilteringAbove1Gb",
         SUM(IFF("IsLowCost", "AttributedCredits", 0.0)) AS "CreditsForLowCost",
         SUM(IFF("IsLowCost", "QueryBlocks", 0)) AS "BlocksForLowCost",
@@ -131,20 +142,40 @@ HourlyStructure AS (
         COALESCE(Queries."BlocksForLowCost", 0) AS "BlocksForLowCost",
         COALESCE(Queries."BlocksForMultiObject", 0) AS "BlocksForMultiObject",
         COALESCE(Queries."BlocksForStandard", 0) AS "BlocksForStandard",
-        COALESCE(DIV0(Queries."CreditsForFilteringAbove1Gb", Queries."TotalCreditsAttributed"), 0.0) AS "FilteringAbove1GbCreditRatio",
-        COALESCE(DIV0(Queries."CreditsForLowCost", Queries."TotalCreditsAttributed"), 0.0) AS "LowCostCreditRatio",
-        COALESCE(DIV0(Queries."CreditsForCopy", Queries."TotalCreditsAttributed"), 0.0) AS "CopyCreditRatio",
-        COALESCE(DIV0(Queries."CreditsForMultiObject", Queries."TotalCreditsAttributed"), 0.0) AS "MultiObjectCreditRatio",
-        COALESCE(DIV0(Queries."CreditsForStandard", Queries."TotalCreditsAttributed"), 0.0) AS "StandardCreditRatio",
+        COALESCE(DIV0(
+            Queries."CreditsForFilteringAbove1Gb", Queries."TotalCreditsAttributed"
+        ), 0.0) AS "FilteringAbove1GbCreditRatio",
+        COALESCE(DIV0(
+            Queries."CreditsForLowCost", Queries."TotalCreditsAttributed"
+        ), 0.0) AS "LowCostCreditRatio",
+        COALESCE(DIV0(
+            Queries."CreditsForCopy", Queries."TotalCreditsAttributed"
+        ), 0.0) AS "CopyCreditRatio",
+        COALESCE(DIV0(
+            Queries."CreditsForMultiObject", Queries."TotalCreditsAttributed"
+        ), 0.0) AS "MultiObjectCreditRatio",
+        COALESCE(DIV0(
+            Queries."CreditsForStandard", Queries."TotalCreditsAttributed"
+        ), 0.0) AS "StandardCreditRatio",
         IFF(
             COALESCE(Queries."TotalCreditsAttributed", 0.0) = 0.0,
             1.0,
-            COALESCE(DIV0(Queries."CreditsForSystem", Queries."TotalCreditsAttributed"), 0.0)
+            COALESCE(DIV0(
+                Queries."CreditsForSystem", Queries."TotalCreditsAttributed"
+            ), 0.0)
         ) AS "SystemCreditRatio",
-        COALESCE(DIV0(Queries."BlocksForFilteringAbove1Gb", Queries."TotalBlocks"), 0.0) AS "FilteringAbove1GbBlockRatio",
-        COALESCE(DIV0(Queries."BlocksForLowCost", Queries."TotalBlocks"), 0.0) AS "LowCostBlockRatio",
-        COALESCE(DIV0(Queries."BlocksForMultiObject", Queries."TotalBlocks"), 0.0) AS "MultiObjectBlockRatio",
-        COALESCE(DIV0(Queries."BlocksForStandard", Queries."TotalBlocks"), 0.0) AS "StandardBlockRatio"
+        COALESCE(DIV0(
+            Queries."BlocksForFilteringAbove1Gb", Queries."TotalBlocks"
+        ), 0.0) AS "FilteringAbove1GbBlockRatio",
+        COALESCE(DIV0(
+            Queries."BlocksForLowCost", Queries."TotalBlocks"
+        ), 0.0) AS "LowCostBlockRatio",
+        COALESCE(DIV0(
+            Queries."BlocksForMultiObject", Queries."TotalBlocks"
+        ), 0.0) AS "MultiObjectBlockRatio",
+        COALESCE(DIV0(
+            Queries."BlocksForStandard", Queries."TotalBlocks"
+        ), 0.0) AS "StandardBlockRatio"
     FROM CreditsPerHourPerWarehouse AS Credits
     LEFT JOIN QueryAnalysisPerWarehousePerHour AS Queries
         ON Credits."WarehouseName" = Queries."WarehouseName"
