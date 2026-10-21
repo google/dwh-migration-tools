@@ -332,7 +332,10 @@ shadowJar {
     archiveClassifier.set('')
     archiveVersion.set('')
     exclude 'META-INF/services/java.net.spi.InetAddressResolverProvider'
-    mergeServiceFiles()
+    inputs.property('excludeDnsjavaProvider', true)
+    mergeServiceFiles {
+        exclude 'META-INF/services/java.net.spi.InetAddressResolverProvider'
+    }
     manifest {
         attributes 'Main-Class': application.mainClass.get()
     }
