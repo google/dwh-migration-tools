@@ -7,7 +7,9 @@ WITH CreditsPerHourPerWarehouse AS (
     FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
     WHERE START_TIME >= DATEADD('day', -$LOOKBACK_DAYS, CURRENT_TIMESTAMP())
       AND WAREHOUSE_NAME IS NOT NULL
+      AND WAREHOUSE_NAME != 'CLOUD_SERVICES_ONLY'
     GROUP BY 1, 2
+    HAVING SUM(CREDITS_USED_COMPUTE) > 0
 ),
 MultiObjectQueries AS (
     SELECT DISTINCT QUERY_ID
@@ -18,7 +20,7 @@ MultiObjectQueries AS (
 FilteredQueryAttribution AS (
     SELECT
         QUERY_ID,
-        COALESCE(CREDITS_ATTRIBUTED_COMPUTE, 0.0) AS CREDITS_ATTRIBUTED_COMPUTE
+        CREDITS_ATTRIBUTED_COMPUTE
     FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_ATTRIBUTION_HISTORY
     WHERE START_TIME >= DATEADD('day', -$LOOKBACK_DAYS, CURRENT_TIMESTAMP())
 ),
@@ -35,10 +37,7 @@ QueryRaw AS (
             CEIL(COALESCE(QL.BYTES_SCANNED, 0) / 1048576.0), 10
         ) AS "QueryBlocks",
         MOQ.QUERY_ID IS NOT NULL AS "IsMultiObject",
-        COALESCE(QAH.CREDITS_ATTRIBUTED_COMPUTE, 0.0) AS "RawAttributedCredits",
-        SUM(COALESCE(QAH.CREDITS_ATTRIBUTED_COMPUTE, 0.0)) OVER (
-            PARTITION BY QL.WAREHOUSE_NAME, DATE_TRUNC('HOUR', QL.START_TIME)
-        ) AS "HourAttributedCreditsSum",
+        QAH.CREDITS_ATTRIBUTED_COMPUTE AS "RawAttributedCredits",
         COALESCE(QL.EXECUTION_TIME, 0) AS "ExecutionTime",
         SUM(COALESCE(QL.EXECUTION_TIME, 0)) OVER (
             PARTITION BY QL.WAREHOUSE_NAME, DATE_TRUNC('HOUR', QL.START_TIME)
@@ -62,7 +61,8 @@ QueryBase AS (
     SELECT
         QR.*,
         CASE
-            WHEN QR."HourAttributedCreditsSum" > 0 THEN QR."RawAttributedCredits"
+            WHEN QR."RawAttributedCredits" IS NOT NULL THEN
+                QR."RawAttributedCredits"
             WHEN QR."HourExecutionTimeSum" > 0 THEN
                 DIV0(QR."ExecutionTime", QR."HourExecutionTimeSum")
                     * QR."HourCreditsBilled"
@@ -137,6 +137,7 @@ HourlyStructure AS (
     SELECT
         Credits."WarehouseName",
         Credits."AggregateTime",
+        Credits."TotalCreditsBilled",
         COALESCE(Queries."TotalBlocks", 0) AS "TotalBlocks",
         COALESCE(Queries."BlocksForFilteringAbove1Gb", 0) AS "BlocksForFilteringAbove1Gb",
         COALESCE(Queries."BlocksForLowCost", 0) AS "BlocksForLowCost",
@@ -157,13 +158,9 @@ HourlyStructure AS (
         COALESCE(DIV0(
             Queries."CreditsForStandard", Queries."TotalCreditsAttributed"
         ), 0.0) AS "StandardCreditRatio",
-        IFF(
-            COALESCE(Queries."TotalCreditsAttributed", 0.0) = 0.0,
-            1.0,
-            COALESCE(DIV0(
-                Queries."CreditsForSystem", Queries."TotalCreditsAttributed"
-            ), 0.0)
-        ) AS "SystemCreditRatio",
+        COALESCE(DIV0(
+            Queries."CreditsForSystem", Queries."TotalCreditsAttributed"
+        ), 0.0) AS "SystemCreditRatio",
         COALESCE(DIV0(
             Queries."BlocksForFilteringAbove1Gb", Queries."TotalBlocks"
         ), 0.0) AS "FilteringAbove1GbBlockRatio",
@@ -177,7 +174,7 @@ HourlyStructure AS (
             Queries."BlocksForStandard", Queries."TotalBlocks"
         ), 0.0) AS "StandardBlockRatio"
     FROM CreditsPerHourPerWarehouse AS Credits
-    LEFT JOIN QueryAnalysisPerWarehousePerHour AS Queries
+    INNER JOIN QueryAnalysisPerWarehousePerHour AS Queries
         ON Credits."WarehouseName" = Queries."WarehouseName"
        AND Credits."AggregateTime" = Queries."AggregateTime"
 )
@@ -188,12 +185,30 @@ SELECT
     AVG("BlocksForLowCost") AS "AvgLowCostBlocks",
     AVG("BlocksForMultiObject") AS "AvgMultiObjectBlocks",
     AVG("BlocksForStandard") AS "AvgStandardBlocks",
-    AVG("FilteringAbove1GbCreditRatio") AS "FilteringAbove1GbCreditRatio",
-    AVG("LowCostCreditRatio") AS "LowCostCreditRatio",
-    AVG("CopyCreditRatio") AS "CopyCreditRatio",
-    AVG("MultiObjectCreditRatio") AS "MultiObjectCreditRatio",
-    AVG("StandardCreditRatio") AS "StandardCreditRatio",
-    AVG("SystemCreditRatio") AS "SystemCreditRatio",
+    COALESCE(DIV0(
+        SUM("TotalCreditsBilled" * "FilteringAbove1GbCreditRatio"),
+        SUM("TotalCreditsBilled")
+    ), 0.0) AS "FilteringAbove1GbCreditRatio",
+    COALESCE(DIV0(
+        SUM("TotalCreditsBilled" * "LowCostCreditRatio"),
+        SUM("TotalCreditsBilled")
+    ), 0.0) AS "LowCostCreditRatio",
+    COALESCE(DIV0(
+        SUM("TotalCreditsBilled" * "CopyCreditRatio"),
+        SUM("TotalCreditsBilled")
+    ), 0.0) AS "CopyCreditRatio",
+    COALESCE(DIV0(
+        SUM("TotalCreditsBilled" * "MultiObjectCreditRatio"),
+        SUM("TotalCreditsBilled")
+    ), 0.0) AS "MultiObjectCreditRatio",
+    COALESCE(DIV0(
+        SUM("TotalCreditsBilled" * "StandardCreditRatio"),
+        SUM("TotalCreditsBilled")
+    ), 0.0) AS "StandardCreditRatio",
+    COALESCE(DIV0(
+        SUM("TotalCreditsBilled" * "SystemCreditRatio"),
+        SUM("TotalCreditsBilled")
+    ), 0.0) AS "SystemCreditRatio",
     AVG("FilteringAbove1GbBlockRatio") AS "FilteringAbove1GbBlockRatio",
     AVG("LowCostBlockRatio") AS "LowCostBlockRatio",
     AVG("MultiObjectBlockRatio") AS "MultiObjectBlockRatio",

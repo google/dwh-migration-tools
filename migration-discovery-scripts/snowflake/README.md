@@ -86,10 +86,10 @@ If running command-line utilities is restricted by corporate security policies, 
    ```
 3. Run each SQL script in `sql/` and download the results as CSV:
    - **Historical time-filtered scripts** (each begins with `SET LOOKBACK_DAYS = 14;` allowing you to adjust the lookback window directly in the session variable):
-     - `sql/warehouses_workload_structure.sql` $\rightarrow$ Download CSV as `warehouses_workload_structure.csv`
-     - `sql/warehouse_metering_history.sql` $\rightarrow$ Download CSV as `warehouse_metering_history-au.csv`
+     - `sql/warehouses_workload_structure_mds.sql` $\rightarrow$ Download CSV as `warehouses_workload_structure_mds.csv`
+     - `sql/warehouse_metering_history_mds.sql` $\rightarrow$ Download CSV as `warehouse_metering_history_mds.csv`
    - **Current state snapshot script** (extracts current account storage state; no lookback variable required):
-     - `sql/table_storage_metrics.sql` $\rightarrow$ Download CSV as `table_storage_metrics-au.csv`
+     - `sql/table_storage_metrics_mds.sql` $\rightarrow$ Download CSV as `table_storage_metrics_mds.csv`
 4. Create a metadata descriptor file named `compilerworks-metadata.yaml` in the same directory as the downloaded CSVs:
    - **From a terminal (Linux / macOS / Git Bash / WSL)** — automatically injects the current Unix epoch timestamp in milliseconds:
      ```bash

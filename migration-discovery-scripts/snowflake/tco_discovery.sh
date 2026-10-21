@@ -182,15 +182,15 @@ if "${SNOWSQL_CMD[@]}" -q "$CHECK_QUERY" -o output_format=plain -o header=false 
 else
   echo "UNAVAILABLE"
   echo "[WARN] SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY is inaccessible (e.g. Snowflake Standard Edition or missing GOVERNANCE_VIEWER role)."
-  echo "[WARN] Falling back to IsMultiObject = FALSE in warehouses_workload_structure.sql."
+  echo "[WARN] Falling back to IsMultiObject = FALSE in warehouses_workload_structure_mds.sql."
   ACCESS_HISTORY_AVAILABLE=false
 fi
 
 # Extraction tasks: "sql_file:output_csv_name:header_pattern:description"
 TASKS=(
-  "warehouses_workload_structure.sql:warehouses_workload_structure.csv:^\"?WarehouseName\"?,\"?AvgTotalBlocks\"?:Virtual Warehouse Workload Structure"
-  "warehouse_metering_history.sql:warehouse_metering_history-au.csv:^\"?StartTime\"?:Virtual Warehouse Metering History"
-  "table_storage_metrics.sql:table_storage_metrics-au.csv:^\"?TableName\"?,\"?ActiveBytes\"?:Table Storage Breakdown"
+  "warehouses_workload_structure_mds.sql:warehouses_workload_structure_mds.csv:^\"?WarehouseName\"?,\"?AvgTotalBlocks\"?:Virtual Warehouse Workload Structure"
+  "warehouse_metering_history_mds.sql:warehouse_metering_history_mds.csv:^\"?StartTime\"?:Virtual Warehouse Metering History"
+  "table_storage_metrics_mds.sql:table_storage_metrics_mds.csv:^\"?TableName\"?,\"?ActiveBytes\"?:Table Storage Breakdown"
 )
 
 TMP_SQL_FILE="$OUTPUT_DIR/.temp_query.sql"
@@ -248,7 +248,7 @@ for task in "${TASKS[@]}"; do
     "$input_path")
 
   # If ACCESS_HISTORY is unavailable, replace MultiObjectQueries query body
-  if [[ "$sql_file" == "warehouses_workload_structure.sql" && "$ACCESS_HISTORY_AVAILABLE" == "false" ]]; then
+  if [[ "$sql_file" == "warehouses_workload_structure_mds.sql" && "$ACCESS_HISTORY_AVAILABLE" == "false" ]]; then
     rendered_sql=$(echo "$rendered_sql" | awk '
       /MultiObjectQueries AS \(/ {
         print "MultiObjectQueries AS ("
@@ -343,7 +343,7 @@ append_task_detail "{\"name\":\"compilerworks-metadata.yaml\",\"type\":\"REQUIRE
 
 # 2. Generate BQMS Client Telemetry (dumper-telemetry.jsonl)
 cat > "$OUTPUT_DIR/dumper-telemetry.jsonl" << EOF
-{"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"overallStatus":"$OVERALL_STATUS","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"lookback_days":$LOOKBACK_DAYS}}]}
+{"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"overallStatus":"$OVERALL_STATUS","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"lookback_days":$LOOKBACK_DAYS,"access_history_available":$ACCESS_HISTORY_AVAILABLE}}]}
 EOF
 
 if [[ $FAILED_COUNT -gt 0 ]]; then
@@ -357,9 +357,9 @@ rm -f "$ZIP_OUT_PATH" "./$ZIP_NAME"
 (
   cd "$OUTPUT_DIR"
   zip -q "$ZIP_NAME" \
-    warehouses_workload_structure.csv \
-    warehouse_metering_history-au.csv \
-    table_storage_metrics-au.csv \
+    warehouses_workload_structure_mds.csv \
+    warehouse_metering_history_mds.csv \
+    table_storage_metrics_mds.csv \
     compilerworks-metadata.yaml \
     dumper-telemetry.jsonl
 )
