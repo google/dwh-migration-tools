@@ -90,129 +90,49 @@ QueryClassified AS (
              OR QB."AttributedCredits" < 0.001
          )) AS "IsLowCost"
     FROM QueryBase AS QB
-),
-QueryAnalysisPerWarehousePerHour AS (
-    SELECT
-        "WarehouseName",
-        "AggregateTime",
-        SUM("AttributedCredits") AS "TotalCreditsAttributed",
-        SUM(IFF(
-            QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM',
-            "QueryBlocks", 0
-        )) AS "TotalBlocks",
-        SUM(IFF(
-            QUERY_TYPE = 'COPY' AND USER_NAME != 'SYSTEM',
-            "AttributedCredits", 0.0
-        )) AS "CreditsForCopy",
-        SUM(IFF(USER_NAME = 'SYSTEM', "AttributedCredits", 0.0)) AS "CreditsForSystem",
-        SUM(IFF("IsFilteringAbove1Gb", "AttributedCredits", 0.0))
-            AS "CreditsForFilteringAbove1Gb",
-        SUM(IFF("IsFilteringAbove1Gb", "QueryBlocks", 0)) AS "BlocksForFilteringAbove1Gb",
-        SUM(IFF("IsLowCost", "AttributedCredits", 0.0)) AS "CreditsForLowCost",
-        SUM(IFF("IsLowCost", "QueryBlocks", 0)) AS "BlocksForLowCost",
-        SUM(IFF(
-            QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM'
-            AND NOT "IsFilteringAbove1Gb" AND NOT "IsLowCost" AND "IsMultiObject",
-            "AttributedCredits", 0.0
-        )) AS "CreditsForMultiObject",
-        SUM(IFF(
-            QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM'
-            AND NOT "IsFilteringAbove1Gb" AND NOT "IsLowCost" AND "IsMultiObject",
-            "QueryBlocks", 0
-        )) AS "BlocksForMultiObject",
-        SUM(IFF(
-            QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM'
-            AND NOT "IsFilteringAbove1Gb" AND NOT "IsLowCost" AND NOT "IsMultiObject",
-            "AttributedCredits", 0.0
-        )) AS "CreditsForStandard",
-        SUM(IFF(
-            QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM'
-            AND NOT "IsFilteringAbove1Gb" AND NOT "IsLowCost" AND NOT "IsMultiObject",
-            "QueryBlocks", 0
-        )) AS "BlocksForStandard"
-    FROM QueryClassified
-    GROUP BY 1, 2
-),
-HourlyStructure AS (
-    SELECT
-        Credits."WarehouseName",
-        Credits."AggregateTime",
-        Credits."TotalCreditsBilled",
-        COALESCE(Queries."TotalBlocks", 0) AS "TotalBlocks",
-        COALESCE(Queries."BlocksForFilteringAbove1Gb", 0) AS "BlocksForFilteringAbove1Gb",
-        COALESCE(Queries."BlocksForLowCost", 0) AS "BlocksForLowCost",
-        COALESCE(Queries."BlocksForMultiObject", 0) AS "BlocksForMultiObject",
-        COALESCE(Queries."BlocksForStandard", 0) AS "BlocksForStandard",
-        COALESCE(DIV0(
-            Queries."CreditsForFilteringAbove1Gb", Queries."TotalCreditsAttributed"
-        ), 0.0) AS "FilteringAbove1GbCreditRatio",
-        COALESCE(DIV0(
-            Queries."CreditsForLowCost", Queries."TotalCreditsAttributed"
-        ), 0.0) AS "LowCostCreditRatio",
-        COALESCE(DIV0(
-            Queries."CreditsForCopy", Queries."TotalCreditsAttributed"
-        ), 0.0) AS "CopyCreditRatio",
-        COALESCE(DIV0(
-            Queries."CreditsForMultiObject", Queries."TotalCreditsAttributed"
-        ), 0.0) AS "MultiObjectCreditRatio",
-        COALESCE(DIV0(
-            Queries."CreditsForStandard", Queries."TotalCreditsAttributed"
-        ), 0.0) AS "StandardCreditRatio",
-        COALESCE(DIV0(
-            Queries."CreditsForSystem", Queries."TotalCreditsAttributed"
-        ), 0.0) AS "SystemCreditRatio",
-        COALESCE(DIV0(
-            Queries."BlocksForFilteringAbove1Gb", Queries."TotalBlocks"
-        ), 0.0) AS "FilteringAbove1GbBlockRatio",
-        COALESCE(DIV0(
-            Queries."BlocksForLowCost", Queries."TotalBlocks"
-        ), 0.0) AS "LowCostBlockRatio",
-        COALESCE(DIV0(
-            Queries."BlocksForMultiObject", Queries."TotalBlocks"
-        ), 0.0) AS "MultiObjectBlockRatio",
-        COALESCE(DIV0(
-            Queries."BlocksForStandard", Queries."TotalBlocks"
-        ), 0.0) AS "StandardBlockRatio"
-    FROM CreditsPerHourPerWarehouse AS Credits
-    INNER JOIN QueryAnalysisPerWarehousePerHour AS Queries
-        ON Credits."WarehouseName" = Queries."WarehouseName"
-       AND Credits."AggregateTime" = Queries."AggregateTime"
 )
 SELECT
     "WarehouseName",
-    AVG("TotalBlocks") AS "AvgTotalBlocks",
-    AVG("BlocksForFilteringAbove1Gb") AS "AvgFilteringAbove1GbBlocks",
-    AVG("BlocksForLowCost") AS "AvgLowCostBlocks",
-    AVG("BlocksForMultiObject") AS "AvgMultiObjectBlocks",
-    AVG("BlocksForStandard") AS "AvgStandardBlocks",
-    COALESCE(DIV0(
-        SUM("TotalCreditsBilled" * "FilteringAbove1GbCreditRatio"),
-        SUM("TotalCreditsBilled")
-    ), 0.0) AS "FilteringAbove1GbCreditRatio",
-    COALESCE(DIV0(
-        SUM("TotalCreditsBilled" * "LowCostCreditRatio"),
-        SUM("TotalCreditsBilled")
-    ), 0.0) AS "LowCostCreditRatio",
-    COALESCE(DIV0(
-        SUM("TotalCreditsBilled" * "CopyCreditRatio"),
-        SUM("TotalCreditsBilled")
-    ), 0.0) AS "CopyCreditRatio",
-    COALESCE(DIV0(
-        SUM("TotalCreditsBilled" * "MultiObjectCreditRatio"),
-        SUM("TotalCreditsBilled")
-    ), 0.0) AS "MultiObjectCreditRatio",
-    COALESCE(DIV0(
-        SUM("TotalCreditsBilled" * "StandardCreditRatio"),
-        SUM("TotalCreditsBilled")
-    ), 0.0) AS "StandardCreditRatio",
-    COALESCE(DIV0(
-        SUM("TotalCreditsBilled" * "SystemCreditRatio"),
-        SUM("TotalCreditsBilled")
-    ), 0.0) AS "SystemCreditRatio",
-    AVG("FilteringAbove1GbBlockRatio") AS "FilteringAbove1GbBlockRatio",
-    AVG("LowCostBlockRatio") AS "LowCostBlockRatio",
-    AVG("MultiObjectBlockRatio") AS "MultiObjectBlockRatio",
-    AVG("StandardBlockRatio") AS "StandardBlockRatio"
-FROM HourlyStructure
-GROUP BY "WarehouseName"
-ORDER BY "WarehouseName" ASC;
+    "AggregateTime",
+    SUM("AttributedCredits") AS "TotalCreditsAttributed",
+    SUM(IFF(
+        QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM',
+        "QueryBlocks", 0
+    )) AS "TotalBlocks",
+    SUM(IFF(
+        QUERY_TYPE = 'COPY' AND USER_NAME != 'SYSTEM',
+        "AttributedCredits", 0.0
+    )) AS "CreditsForCopy",
+    SUM(IFF(USER_NAME = 'SYSTEM', "AttributedCredits", 0.0))
+        AS "CreditsForSystem",
+    SUM(IFF("IsFilteringAbove1Gb", "AttributedCredits", 0.0))
+        AS "CreditsForFilteringAbove1Gb",
+    SUM(IFF("IsFilteringAbove1Gb", "QueryBlocks", 0))
+        AS "BlocksForFilteringAbove1Gb",
+    SUM(IFF("IsLowCost", "AttributedCredits", 0.0))
+        AS "CreditsForLowCost",
+    SUM(IFF("IsLowCost", "QueryBlocks", 0))
+        AS "BlocksForLowCost",
+    SUM(IFF(
+        QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM'
+        AND NOT "IsFilteringAbove1Gb" AND NOT "IsLowCost" AND "IsMultiObject",
+        "AttributedCredits", 0.0
+    )) AS "CreditsForMultiObject",
+    SUM(IFF(
+        QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM'
+        AND NOT "IsFilteringAbove1Gb" AND NOT "IsLowCost" AND "IsMultiObject",
+        "QueryBlocks", 0
+    )) AS "BlocksForMultiObject",
+    SUM(IFF(
+        QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM'
+        AND NOT "IsFilteringAbove1Gb" AND NOT "IsLowCost" AND NOT "IsMultiObject",
+        "AttributedCredits", 0.0
+    )) AS "CreditsForStandard",
+    SUM(IFF(
+        QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM'
+        AND NOT "IsFilteringAbove1Gb" AND NOT "IsLowCost" AND NOT "IsMultiObject",
+        "QueryBlocks", 0
+    )) AS "BlocksForStandard"
+FROM QueryClassified
+GROUP BY 1, 2
+ORDER BY "WarehouseName" ASC, "AggregateTime" ASC;

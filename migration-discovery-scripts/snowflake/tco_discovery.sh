@@ -188,7 +188,7 @@ fi
 
 # Extraction tasks: "sql_file:output_csv_name:header_pattern:description"
 TASKS=(
-  "warehouses_workload_structure_mds.sql:warehouses_workload_structure_mds.csv:^\"?WarehouseName\"?,\"?AvgTotalBlocks\"?:Virtual Warehouse Workload Structure"
+  "warehouses_workload_structure_mds.sql:warehouses_workload_structure_mds.csv:^\"?WarehouseName\"?,\"?AggregateTime\"?:Virtual Warehouse Workload Structure"
   "warehouse_metering_history_mds.sql:warehouse_metering_history_mds.csv:^\"?StartTime\"?:Virtual Warehouse Metering History"
   "table_storage_metrics_mds.sql:table_storage_metrics_mds.csv:^\"?TableName\"?,\"?ActiveBytes\"?:Table Storage Breakdown"
 )
