@@ -105,6 +105,7 @@ shadowJar {
     configurations = [project.configurations.hive312RuntimeClasspath]
 
     exclude 'META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat' // or write a custom merger
+    exclude 'META-INF/services/java.net.spi.InetAddressResolverProvider'
 
     dependencies {
         exclude(dependency('org.slf4j:slf4j-log4j12'))
@@ -123,6 +124,22 @@ shadowJar {
     relocate 'com.fasterxml', 'shadow.com.fasterxml'
 
 }
+
+tasks.register('verifyShadowJar') {
+    dependsOn 'shadowJar'
+    inputs.file(shadowJar.archiveFile)
+    doLast {
+        def shadowJarFile = shadowJar.archiveFile.get().asFile
+        new java.util.zip.ZipFile(shadowJarFile).withCloseable { zipFile ->
+            def entry = zipFile.getEntry('META-INF/services/java.net.spi.InetAddressResolverProvider')
+            if (entry != null) {
+                throw new GradleException("Shadow JAR contains forbidden service file 'META-INF/services/java.net.spi.InetAddressResolverProvider' which causes ServiceConfigurationError on Java 18+ (b/575552296)")
+            }
+        }
+    }
+}
+
+shadowJar.finalizedBy 'verifyShadowJar'
 
 tasks.register("generateThrift") {
     def thriftFiles = Files.list(projectDir.toPath().resolve('src/main/thrift'))
