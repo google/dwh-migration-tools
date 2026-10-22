@@ -6,7 +6,6 @@ Unlike the traditional Java-based `dwh-migration-dumper`, these scripts use **na
 
 The extracted metadata is packaged into a standard ZIP archive (`snowflake_assessment_tco.zip`) accepted directly by the **BigQuery Migration Assessment Service**.
 
----
 
 ## 🚀 Prerequisites & Permissions
 
@@ -15,7 +14,6 @@ The extracted metadata is packaged into a standard ZIP archive (`snowflake_asses
    - *Note on `ACCESS_HISTORY`*: The scripts automatically inspect multi-object queries using `ACCOUNT_USAGE.ACCESS_HISTORY`. If your account is on Snowflake Standard Edition or lacks `GOVERNANCE_VIEWER` access, the extraction script gracefully falls back to `IsMultiObject = FALSE` without failing.
 3. **Local Utilities (Option 1)**: `bash`, `sed`, `awk`, and `zip`.
 
----
 
 ## 📂 Package Structure & Extracted Metadata
 
@@ -31,22 +29,15 @@ migration-discovery-scripts/snowflake/
 
 The discovery package executes **3 native SQL scripts** against `SNOWFLAKE.ACCOUNT_USAGE` and produces 3 lightweight CSV files. **Zero SQL query text (`QUERY_TEXT`), zero table/schema names, zero query literals, and zero PII ever leave your Snowflake environment:**
 
-| # | SQL Script | Output CSV | Source `ACCOUNT_USAGE` View(s) | Granularity & Contents |
-| :--- | :--- | :--- | :--- | :--- |
-| **1** | `sql/warehouses_workload_structure_mds.sql` | `warehouses_workload_structure_mds.csv` | `QUERY_HISTORY`, `QUERY_ATTRIBUTION_HISTORY`, `WAREHOUSE_METERING_HISTORY`, `ACCESS_HISTORY` | **1 row per warehouse-hour**: 14 raw compute credit and scanned block sums grouped by `(WarehouseName, AggregateTime)` across technical query categories (`Copy`, `System`, `FilteringAbove1Gb`, `LowCost`, `MultiObject`, `Standard`). Includes duration-proportional credit attribution fallback when `QUERY_ATTRIBUTION_HISTORY` is unpopulated. Contains zero SQL text and zero customer-side TCO multipliers. |
-| **2** | `sql/warehouse_metering_history_mds.sql` | `warehouse_metering_history_mds.csv` | `WAREHOUSE_METERING_HISTORY` | **1 row per warehouse-hour**: Hourly billed compute and cloud-services credits (`StartTime`, `EndTime`, `WarehouseId`, `WarehouseName`, `CreditsUsed`, `CreditsUsedCompute`, `CreditsUsedCloudServices`). |
-| **3** | `sql/table_storage_metrics_mds.sql` | `table_storage_metrics_mds.csv` | `TABLE_STORAGE_METRICS` | **1 summary row (`'AllTables'`)**: Account-wide sum of `ActiveBytes`, `TimeTravelBytes`, `FailsafeBytes`, and `RetainedForCloneBytes` across active customer tables, avoiding any table or schema name exposure. |
-
 ### Generated Archive (`snowflake_assessment_tco.zip`)
 
-Running `tco_discovery.sh` bundles the 3 CSV files together with 2 non-PII descriptor files into `snowflake_assessment_tco.zip`:
+Running `tco_discovery.sh` bundles the 3 CSV files together files into `snowflake_assessment_tco.zip`:
 - `warehouses_workload_structure_mds.csv`
 - `warehouse_metering_history_mds.csv`
 - `table_storage_metrics_mds.csv`
 - `compilerworks-metadata.yaml` — Declares `ConnectorArguments{connector=snowflake-mds, assessment=true}` and extraction epoch timestamp.
 - `dumper-telemetry.jsonl` — Records non-PII execution telemetry (`account_region` via `CURRENT_REGION()`, `lookback_days`, `access_history_available`, `started_at`, `completed_at`, and per-task `duration_seconds` and `row_count`).
 
----
 
 ## 💻 Extraction Workflow
 
@@ -150,7 +141,6 @@ If running command-line utilities is restricted by corporate security policies, 
      compilerworks-metadata.yaml
    ```
 
----
 
 ## 📤 Next Steps: Running BigQuery Migration Assessment
 
@@ -160,4 +150,4 @@ If running command-line utilities is restricted by corporate security policies, 
    ```
 2. Navigate to **BigQuery Migration Assessment** in the Google Cloud Console.
 3. Click **Create Assessment**, select **Snowflake** as the source, point the input path to your GCS bucket, and run the assessment.
-4. Review the generated Looker Studio Bridge Report for slot sizing recommendations and cost comparisons.
+4. Review the generated Data Studio Report.
