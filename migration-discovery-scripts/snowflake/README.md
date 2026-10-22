@@ -17,15 +17,34 @@ The extracted metadata is packaged into a standard ZIP archive (`snowflake_asses
 
 ---
 
-## 📂 Extracted Metadata & Privacy Guarantees
+## 📂 Package Structure & Extracted Metadata
+
+```text
+migration-discovery-scripts/snowflake/
+├── tco_discovery.sh                          # Automated CLI runner script
+├── README.md                                 # DBA & CE execution guide
+└── sql/                                      # Native Snowflake SQL scripts
+    ├── warehouses_workload_structure_mds.sql # Hourly raw credit & block sums (14 cols)
+    ├── warehouse_metering_history_mds.sql    # Hourly compute & cloud-services credits (7 cols)
+    └── table_storage_metrics_mds.sql         # Single-row ('AllTables') storage summary (5 cols)
+```
 
 The discovery package executes **3 native SQL scripts** against `SNOWFLAKE.ACCOUNT_USAGE` and produces 3 lightweight CSV files. **Zero SQL query text (`QUERY_TEXT`), zero table/schema names, zero query literals, and zero PII ever leave your Snowflake environment:**
 
 | # | SQL Script | Output CSV | Source `ACCOUNT_USAGE` View(s) | Granularity & Contents |
 | :--- | :--- | :--- | :--- | :--- |
-| **1** | `sql/warehouses_workload_structure_mds.sql` | `warehouses_workload_structure_mds.csv` | `QUERY_HISTORY`, `QUERY_ATTRIBUTION_HISTORY`, `WAREHOUSE_METERING_HISTORY`, `ACCESS_HISTORY` | **1 row per warehouse-hour**: 14 raw compute credit and scanned block sums grouped by `(WarehouseName, AggregateTime)` across technical query categories (`Copy`, `System`, `FilteringAbove1Gb`, `LowCost`, `MultiObject`, `Standard`). Contains zero SQL text and zero customer-side TCO multipliers. |
+| **1** | `sql/warehouses_workload_structure_mds.sql` | `warehouses_workload_structure_mds.csv` | `QUERY_HISTORY`, `QUERY_ATTRIBUTION_HISTORY`, `WAREHOUSE_METERING_HISTORY`, `ACCESS_HISTORY` | **1 row per warehouse-hour**: 14 raw compute credit and scanned block sums grouped by `(WarehouseName, AggregateTime)` across technical query categories (`Copy`, `System`, `FilteringAbove1Gb`, `LowCost`, `MultiObject`, `Standard`). Includes duration-proportional credit attribution fallback when `QUERY_ATTRIBUTION_HISTORY` is unpopulated. Contains zero SQL text and zero customer-side TCO multipliers. |
 | **2** | `sql/warehouse_metering_history_mds.sql` | `warehouse_metering_history_mds.csv` | `WAREHOUSE_METERING_HISTORY` | **1 row per warehouse-hour**: Hourly billed compute and cloud-services credits (`StartTime`, `EndTime`, `WarehouseId`, `WarehouseName`, `CreditsUsed`, `CreditsUsedCompute`, `CreditsUsedCloudServices`). |
 | **3** | `sql/table_storage_metrics_mds.sql` | `table_storage_metrics_mds.csv` | `TABLE_STORAGE_METRICS` | **1 summary row (`'AllTables'`)**: Account-wide sum of `ActiveBytes`, `TimeTravelBytes`, `FailsafeBytes`, and `RetainedForCloneBytes` across active customer tables, avoiding any table or schema name exposure. |
+
+### Generated Archive (`snowflake_assessment_tco.zip`)
+
+Running `tco_discovery.sh` bundles the 3 CSV files together with 2 non-PII descriptor files into `snowflake_assessment_tco.zip`:
+- `warehouses_workload_structure_mds.csv`
+- `warehouse_metering_history_mds.csv`
+- `table_storage_metrics_mds.csv`
+- `compilerworks-metadata.yaml` — Declares `ConnectorArguments{connector=snowflake-mds, assessment=true}` and extraction epoch timestamp.
+- `dumper-telemetry.jsonl` — Records non-PII execution telemetry (`account_region` via `CURRENT_REGION()`, `lookback_days`, `access_history_available`, `started_at`, `completed_at`, and per-task `duration_seconds` and `row_count`).
 
 ---
 
@@ -91,17 +110,18 @@ The script runs the pre-flight checks, executes the queries sequentially, cleans
 
 If running command-line utilities is restricted by corporate security policies, DBAs can execute the SQL queries directly inside Snowflake Snowsight:
 
-1. Open **Snowsight** $\rightarrow$ **Worksheets**.
+1. Open **Snowsight** → **Worksheets**.
 2. Set session timestamp output formats (ensuring ISO-8601 formatting required by BigQuery Migration Assessment):
    ```sql
    ALTER SESSION SET TIMESTAMP_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"', TIMESTAMP_LTZ_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"', TIMESTAMP_NTZ_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"';
    ```
 3. Run each SQL script in `sql/` and download the results as CSV:
    - **Historical time-filtered scripts** (each begins with `SET LOOKBACK_DAYS = 14;` allowing you to adjust the lookback window directly in the session variable):
-     - `sql/warehouses_workload_structure_mds.sql` $\rightarrow$ Download CSV as `warehouses_workload_structure_mds.csv`
-     - `sql/warehouse_metering_history_mds.sql` $\rightarrow$ Download CSV as `warehouse_metering_history_mds.csv`
+     - `sql/warehouses_workload_structure_mds.sql` → Download CSV as `warehouses_workload_structure_mds.csv`
+       *(Note: If running manually on Snowflake Standard Edition where `SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY` is unavailable, replace the `MultiObjectQueries` CTE body with `SELECT CAST(NULL AS VARCHAR) AS QUERY_ID WHERE 1=0` before running.)*
+     - `sql/warehouse_metering_history_mds.sql` → Download CSV as `warehouse_metering_history_mds.csv`
    - **Current state snapshot script** (extracts current account storage state; no lookback variable required):
-     - `sql/table_storage_metrics_mds.sql` $\rightarrow$ Download CSV as `table_storage_metrics_mds.csv`
+     - `sql/table_storage_metrics_mds.sql` → Download CSV as `table_storage_metrics_mds.csv`
 4. Create a metadata descriptor file named `compilerworks-metadata.yaml` in the same directory as the downloaded CSVs:
    - **From a terminal (Linux / macOS / Git Bash / WSL)** — automatically injects the current Unix epoch timestamp in milliseconds:
      ```bash
@@ -123,7 +143,11 @@ If running command-line utilities is restricted by corporate security policies, 
      ```
 5. Package the 3 CSVs and `compilerworks-metadata.yaml` into a ZIP archive:
    ```bash
-   zip snowflake_assessment_tco.zip *.csv compilerworks-metadata.yaml
+   zip snowflake_assessment_tco.zip \
+     warehouses_workload_structure_mds.csv \
+     warehouse_metering_history_mds.csv \
+     table_storage_metrics_mds.csv \
+     compilerworks-metadata.yaml
    ```
 
 ---
