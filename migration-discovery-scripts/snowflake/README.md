@@ -17,6 +17,18 @@ The extracted metadata is packaged into a standard ZIP archive (`snowflake_asses
 
 ---
 
+## 📂 Extracted Metadata & Privacy Guarantees
+
+The discovery package executes **3 native SQL scripts** against `SNOWFLAKE.ACCOUNT_USAGE` and produces 3 lightweight CSV files. **Zero SQL query text (`QUERY_TEXT`), zero table/schema names, zero query literals, and zero PII ever leave your Snowflake environment:**
+
+| # | SQL Script | Output CSV | Source `ACCOUNT_USAGE` View(s) | Granularity & Contents |
+| :--- | :--- | :--- | :--- | :--- |
+| **1** | `sql/warehouses_workload_structure_mds.sql` | `warehouses_workload_structure_mds.csv` | `QUERY_HISTORY`, `QUERY_ATTRIBUTION_HISTORY`, `WAREHOUSE_METERING_HISTORY`, `ACCESS_HISTORY` | **1 row per warehouse-hour**: 14 raw compute credit and scanned block sums grouped by `(WarehouseName, AggregateTime)` across technical query categories (`Copy`, `System`, `FilteringAbove1Gb`, `LowCost`, `MultiObject`, `Standard`). Contains zero SQL text and zero customer-side TCO multipliers. |
+| **2** | `sql/warehouse_metering_history_mds.sql` | `warehouse_metering_history_mds.csv` | `WAREHOUSE_METERING_HISTORY` | **1 row per warehouse-hour**: Hourly billed compute and cloud-services credits (`StartTime`, `EndTime`, `WarehouseId`, `WarehouseName`, `CreditsUsed`, `CreditsUsedCompute`, `CreditsUsedCloudServices`). |
+| **3** | `sql/table_storage_metrics_mds.sql` | `table_storage_metrics_mds.csv` | `TABLE_STORAGE_METRICS` | **1 summary row (`'AllTables'`)**: Account-wide sum of `ActiveBytes`, `TimeTravelBytes`, `FailsafeBytes`, and `RetainedForCloneBytes` across active customer tables, avoiding any table or schema name exposure. |
+
+---
+
 ## 💻 Extraction Workflow
 
 ### Option 1: Automated CLI Execution via `tco_discovery.sh` (Recommended)

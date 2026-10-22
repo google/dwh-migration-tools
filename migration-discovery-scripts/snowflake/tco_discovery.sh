@@ -160,11 +160,13 @@ SNOWSQL_CMD+=(
 
 SESSION_INIT="ALTER SESSION SET TIMESTAMP_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', TIMESTAMP_LTZ_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', TIMESTAMP_NTZ_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', STATEMENT_TIMEOUT_IN_SECONDS=3600;"
 
-# Pre-flight check: Test Snowflake connection & authentication
+# Pre-flight check: Test Snowflake connection, authentication & capture account region
 echo -n "[INFO] Testing Snowflake connection... "
-CONN_TEST_QUERY="${SESSION_INIT} SELECT CURRENT_USER();"
+CONN_TEST_QUERY="${SESSION_INIT} SELECT CURRENT_REGION();"
 if CONN_OUTPUT=$("${SNOWSQL_CMD[@]}" -q "$CONN_TEST_QUERY" -o output_format=plain -o header=false -o timing=false -o friendly=false -o quiet=true < /dev/null 2>&1); then
-  echo "OK"
+  ACCOUNT_REGION=$(echo "$CONN_OUTPUT" | tr -d '\r"' | awk 'NF {last=$0} END {print last}')
+  ACCOUNT_REGION="${ACCOUNT_REGION:-UNKNOWN}"
+  echo "OK (region: $ACCOUNT_REGION)"
 else
   echo "FAILED"
   echo "[ERROR] Could not authenticate or connect to Snowflake." >&2
@@ -195,6 +197,7 @@ TASKS=(
 
 TMP_SQL_FILE="$OUTPUT_DIR/.temp_query.sql"
 TASK_DETAILS_JSON=""
+ERROR_SUMMARY=""
 SUCCEEDED_COUNT=0
 FAILED_COUNT=0
 
@@ -204,6 +207,15 @@ append_task_detail() {
     TASK_DETAILS_JSON="$item_json"
   else
     TASK_DETAILS_JSON="$TASK_DETAILS_JSON,$item_json"
+  fi
+}
+
+append_error_summary() {
+  local msg="$1"
+  if [[ -z "$ERROR_SUMMARY" ]]; then
+    ERROR_SUMMARY="$msg"
+  else
+    ERROR_SUMMARY="$ERROR_SUMMARY; $msg"
   fi
 }
 
@@ -236,7 +248,8 @@ for task in "${TASKS[@]}"; do
     echo "FAILED"
     echo "[ERROR] SQL template '$input_path' does not exist." >&2
     FAILED_COUNT=$((FAILED_COUNT + 1))
-    append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"error\":\"missing SQL template\"}"
+    append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"duration_seconds\":0,\"error\":\"missing SQL template\"}"
+    append_error_summary "$output_csv: missing SQL template"
     continue
   fi
 
@@ -283,18 +296,19 @@ EOF
 
     # Strip any multi-statement preamble and verify expected CSV header is present
     if clean_csv_header "$output_path" "$hdr_pattern"; then
-      SUCCEEDED_COUNT=$((SUCCEEDED_COUNT + 1))
-      append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\"}"
-
       if [[ -s "$output_path" ]]; then
         row_count=$(($(wc -l < "$output_path") - 1))
         echo "DONE ($row_count rows, ${query_elapsed_secs}s)"
       else
+        row_count=0
         echo "DONE (Empty / 0 rows, ${query_elapsed_secs}s)"
       fi
+      SUCCEEDED_COUNT=$((SUCCEEDED_COUNT + 1))
+      append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\",\"duration_seconds\":$query_elapsed_secs,\"row_count\":$row_count}"
     else
       FAILED_COUNT=$((FAILED_COUNT + 1))
-      append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"error\":\"missing expected CSV header\"}"
+      append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"duration_seconds\":$query_elapsed_secs,\"error\":\"missing expected CSV header\"}"
+      append_error_summary "$output_csv: missing expected CSV header"
       echo "FAILED (${query_elapsed_secs}s)"
       echo "[ERROR] Expected header pattern '$hdr_pattern' not found in $output_csv" >&2
       if [[ -f "$output_path" && -s "$output_path" ]]; then
@@ -306,7 +320,8 @@ EOF
   else
     query_elapsed_secs=$(( $(date +%s) - query_start_epoch ))
     FAILED_COUNT=$((FAILED_COUNT + 1))
-    append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"error\":\"snowsql execution failure\"}"
+    append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"duration_seconds\":$query_elapsed_secs,\"error\":\"snowsql execution failure\"}"
+    append_error_summary "$output_csv: snowsql execution failure"
     echo "FAILED (${query_elapsed_secs}s)"
     echo "[ERROR] Failed executing $sql_file" >&2
     if [[ -f "$output_path.stdout" && -s "$output_path.stdout" ]]; then
@@ -320,6 +335,7 @@ done
 rm -f "$TMP_SQL_FILE"
 
 END_TIME_EPOCH=$(date +%s)
+END_TIME_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 TOTAL_SECONDS=$(( END_TIME_EPOCH - START_TIME_EPOCH ))
 DURATION_MINS=$(( (TOTAL_SECONDS + 59) / 60 ))
 OVERALL_STATUS="SUCCESS"
@@ -339,11 +355,11 @@ product:
   arguments: "ConnectorArguments{connector=snowflake-mds, assessment=true}"
 EOF
 
-append_task_detail "{\"name\":\"compilerworks-metadata.yaml\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\"}"
+append_task_detail "{\"name\":\"compilerworks-metadata.yaml\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\",\"duration_seconds\":0}"
 
 # 2. Generate BQMS Client Telemetry (dumper-telemetry.jsonl)
 cat > "$OUTPUT_DIR/dumper-telemetry.jsonl" << EOF
-{"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"overallStatus":"$OVERALL_STATUS","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"lookback_days":$LOOKBACK_DAYS,"access_history_available":$ACCESS_HISTORY_AVAILABLE}}]}
+{"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","measureEndTime":"$END_TIME_ISO","started_at":"$START_TIME_ISO","completed_at":"$END_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"duration_seconds":$TOTAL_SECONDS,"overallStatus":"$OVERALL_STATUS","status":"$OVERALL_STATUS","failed_tasks":$FAILED_COUNT,"error_summary":"$ERROR_SUMMARY","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"account_region":"$ACCOUNT_REGION","lookback_days":$LOOKBACK_DAYS,"access_history_available":$ACCESS_HISTORY_AVAILABLE}}]}
 EOF
 
 if [[ $FAILED_COUNT -gt 0 ]]; then
