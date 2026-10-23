@@ -20,9 +20,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
@@ -95,6 +97,7 @@ public class MetadataTasksTest {
 
   private static final String TABLES_PATH = "/api/2.1/unity-catalog/tables";
   private static final String STATEMENTS_PATH = "/api/2.0/sql/statements";
+  private static final String DESCRIBE_TABLE_STATEMENT = "DESCRIBE TABLE EXTENDED .* AS JSON";
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final DatabricksFilter ACCEPT_ALL =
@@ -152,13 +155,9 @@ public class MetadataTasksTest {
 
     // Each written file matches its file in expected/.
     for (String entryName : listFiles(directory)) {
-      String expectedCsv =
-          Resources.toString(
-              Resources.getResource("connector/databricks/expected/" + entryName), UTF_8);
-      // Git may check out the expected files with CRLF line endings on Windows.
       assertEquals(
           entryName,
-          expectedCsv.replace("\r\n", "\n"),
+          readExpectedFile(entryName),
           readFile(directory, entryName).replace("\r\n", "\n"));
     }
     // No object was skipped, so no task summary has a warning.
@@ -258,6 +257,42 @@ public class MetadataTasksTest {
   }
 
   @Test
+  public void hiveMetastoreTableTask_replacesFilesCommittedByEarlierRun() throws Exception {
+    // An earlier run committed columns-hms.csv but not tables-hms.csv, the only file that
+    // --continue checks, so the rerun of the task writes columns-hms.csv again.
+    Path directory = temporaryFolder.newFolder().toPath();
+    Files.write(directory.resolve(ColumnsFormat.HMS_ZIP_ENTRY_NAME), "stale".getBytes(UTF_8));
+
+    runTasks(ImmutableList.of(findTask(TablesFormat.HMS_ZIP_ENTRY_NAME)), ACCEPT_ALL, directory);
+
+    assertEquals(
+        readExpectedFile(ColumnsFormat.HMS_ZIP_ENTRY_NAME),
+        readFile(directory, ColumnsFormat.HMS_ZIP_ENTRY_NAME));
+  }
+
+  @Test
+  public void hiveMetastoreTableTask_failsOnFirstTableWhenWarehouseCannotParseAsJson()
+      throws Exception {
+    // A SQL warehouse before Databricks Runtime 16.2 can't parse DESCRIBE TABLE ... AS JSON.
+    server.stubFor(
+        post(urlEqualTo(STATEMENTS_PATH))
+            .withRequestBody(matchingJsonPath("$.statement", matching(DESCRIBE_TABLE_STATEMENT)))
+            .willReturn(
+                failedStatement(
+                    "[PARSE_SYNTAX_ERROR] Syntax error at or near 'JSON': extra input 'JSON'.")));
+
+    IOException thrown =
+        assertThrows(IOException.class, () -> runTask(TablesFormat.HMS_ZIP_ENTRY_NAME, ACCEPT_ALL));
+
+    assertTrue(thrown.getMessage(), thrown.getMessage().contains("Databricks Runtime 16.2"));
+    // The other tables aren't described, because their statements would fail the same way.
+    server.verify(
+        1,
+        postRequestedFor(urlEqualTo(STATEMENTS_PATH))
+            .withRequestBody(matchingJsonPath("$.statement", matching(DESCRIBE_TABLE_STATEMENT))));
+  }
+
+  @Test
   public void getTableJson_escapesFullNameAsPathSegment() throws Exception {
     String path = TABLES_PATH + "/main.sales.my%20orders%231%3F%25";
     server.stubFor(get(urlPathEqualTo(path)).willReturn(okJson("{\"name\":\"my orders#1?%\"}")));
@@ -343,6 +378,16 @@ public class MetadataTasksTest {
   }
 
   /**
+   * Returns the file of {@code entryName} in expected/, with LF line endings, because Git may check
+   * out the expected files with CRLF line endings on Windows.
+   */
+  private static String readExpectedFile(String entryName) throws IOException {
+    return Resources.toString(
+            Resources.getResource("connector/databricks/expected/" + entryName), UTF_8)
+        .replace("\r\n", "\n");
+  }
+
+  /**
    * Returns the records of a tables, columns or table_constraints CSV file whose {@code TableName}
    * is {@code tableName}, so that the tests read the values by column name.
    */
@@ -406,9 +451,15 @@ public class MetadataTasksTest {
     server.stubFor(
         post(urlEqualTo(STATEMENTS_PATH))
             .withRequestBody(matchingJsonPath("$.statement", equalTo(sql)))
-            .willReturn(
-                okJson(
-                    "{\"statement_id\": \"stmt-failed\", \"status\": {\"state\": \"FAILED\","
-                        + " \"error\": {\"message\": \"[INSUFFICIENT_PERMISSIONS] No access.\"}}}")));
+            .willReturn(failedStatement("[INSUFFICIENT_PERMISSIONS] No access.")));
+  }
+
+  /** Returns the response of a statement that failed with the error {@code message}. */
+  private static ResponseDefinitionBuilder failedStatement(String message) {
+    return okJson(
+        String.format(
+            "{\"statement_id\": \"stmt-failed\", \"status\": {\"state\": \"FAILED\","
+                + " \"error\": {\"message\": \"%s\"}}}",
+            message));
   }
 }

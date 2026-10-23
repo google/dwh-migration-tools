@@ -186,7 +186,9 @@ public final class DatabricksHandle extends AbstractHandle {
 
   /**
    * Like {@link #runForEach(String, Collection, IOFunction, IOBiConsumer)}, and also passes each
-   * skipped object and its failure to {@code onFailure}, in input order with the results.
+   * skipped object and its failure to {@code onFailure}, in input order with the results. An
+   * exception thrown by {@code onFailure} stops the calls and is thrown, such as for a failure that
+   * every other object would repeat.
    *
    * @return the warning for the task summary when only some objects fail, or null when no object
    *     fails

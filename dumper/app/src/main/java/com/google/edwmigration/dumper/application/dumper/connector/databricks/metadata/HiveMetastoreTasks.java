@@ -69,6 +69,8 @@ public final class HiveMetastoreTasks {
   private static final String PARTITION_COLUMNS_DETAIL = "partitionColumns";
   private static final String SIZE_IN_BYTES_DETAIL = "sizeInBytes";
   private static final String DEFAULT_COLLATION = "UTF8_BINARY";
+  // The error class of a statement that the SQL warehouse can't parse.
+  private static final String PARSE_SYNTAX_ERROR = "[PARSE_SYNTAX_ERROR]";
   private static final ObjectReader JSON_READER = new ObjectMapper().readerFor(JsonNode.class);
 
   private final Object schemasLock = new Object();
@@ -124,7 +126,8 @@ public final class HiveMetastoreTasks {
    * Writes the rows of {@code tables-hms.csv}, {@code columns-hms.csv}, {@code views-hms.csv} and
    * {@code table_constraints-hms.csv}: the tables of each schema are listed with {@code SHOW
    * TABLES}, then each table is described and its rows are written. A table whose {@code DESCRIBE
-   * TABLE} fails gets a tables row with its names and the {@code TableType} ERROR.
+   * TABLE} fails gets a tables row with its names and the {@code TableType} ERROR, unless the SQL
+   * warehouse can't parse {@code AS JSON}: then the task fails on the first table.
    */
   ImmutableList<String> writeTableFiles(DatabricksHandle handle, Map<String, CSVPrinter> printers)
       throws IOException {
@@ -146,7 +149,10 @@ public final class HiveMetastoreTasks {
             table -> describeTable(handle, table),
             (table, description) ->
                 printTable(handle, table, description, tables, columns, views, constraints),
-            (table, failure) -> tables.printRecord(tableErrorRecord(table)));
+            (table, failure) -> {
+              throwIfAsJsonUnsupported(failure);
+              tables.printRecord(tableErrorRecord(table));
+            });
     return constructWarnings(showWarning, describeWarning);
   }
 
@@ -194,6 +200,23 @@ public final class HiveMetastoreTasks {
           "DESCRIBE TABLE AS JSON returned no JSON object for " + table.quotedName() + ".");
     }
     return description;
+  }
+
+  /**
+   * Throws when {@code DESCRIBE TABLE ... AS JSON} failed because the SQL warehouse can't parse
+   * {@code AS JSON}, which needs Databricks SQL or Databricks Runtime 16.2 and above, so that the
+   * task fails on the first table instead of running a statement that fails for every table.
+   */
+  private static void throwIfAsJsonUnsupported(Exception failure) throws IOException {
+    String message = failure.getMessage();
+    if (message != null && message.contains(PARSE_SYNTAX_ERROR)) {
+      throw new IOException(
+          "The SQL warehouse given with --warehouse can't run DESCRIBE TABLE ... AS JSON, which"
+              + " needs Databricks SQL or Databricks Runtime 16.2 or above. Use a SQL warehouse on"
+              + " the Current channel. "
+              + message,
+          failure);
+    }
   }
 
   /**
