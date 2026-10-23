@@ -17,6 +17,7 @@ datanucleus-api-jdo = "4.2.5"
 datanucleus-core = "4.1.17"
 datanucleus-javax-jdo = "3.2.1"
 datanucleus-rdbms = "4.1.20"
+google-api-client = "2.9.2"
 google-cloud-bigquery = "2.55.2"
 google-cloud-bigquerydatatransfer = "2.91.0"
 google-cloud-kms = "2.78.0"
@@ -101,6 +102,7 @@ datanucleus-api-jdo = { module = "org.datanucleus:datanucleus-api-jdo", version.
 datanucleus-core = { module = "org.datanucleus:datanucleus-core", version.ref = "datanucleus-core" }
 datanucleus-javax-jdo = { module = "org.datanucleus:javax.jdo", version.ref = "datanucleus-javax-jdo" }
 datanucleus-rdbms = { module = "org.datanucleus:datanucleus-rdbms", version.ref = "datanucleus-rdbms" }
+google-api-client = { module = "com.google.api-client:google-api-client", version.ref = "google-api-client" }
 google-cloud-bigquery = { module = "com.google.cloud:google-cloud-bigquery", version.ref = "google-cloud-bigquery" }
 grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "io-grpc" }
 grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "io-grpc" }

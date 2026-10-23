@@ -66,6 +66,9 @@ dependencies {
         implementation libs.rate.limited.logger
 
         implementation libs.google.cloud.bigquery
+        implementation(libs.google.api.client) {
+            because 'google-api-client 2.9.2 drops the distrusted AAA Certificate Services root from its bundled trust stores'
+        }
 
         implementation libs.snakeyaml
 
