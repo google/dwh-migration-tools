@@ -60,13 +60,15 @@ If CLI access is restricted, run the queries directly in **Snowsight → Workshe
    - `sql/warehouses_workload_structure_mds.sql` → `warehouses_workload_structure_mds.csv` *(adjust `SET LOOKBACK_DAYS = 14;` at line 1 if needed; on Standard Edition without `ACCESS_HISTORY`, replace `MultiObjectQueries` body with `SELECT CAST(NULL AS VARCHAR) AS QUERY_ID WHERE 1=0`)*
    - `sql/warehouse_metering_history_mds.sql` → `warehouse_metering_history_mds.csv`
    - `sql/table_storage_metrics_mds.sql` → `table_storage_metrics_mds.csv`
-3. **Create `compilerworks-metadata.yaml`** in the same directory:
-   ```yaml
+3. **Generate `compilerworks-metadata.yaml`** in the same directory (automatically sets the current epoch timestamp in milliseconds):
+   ```bash
+   cat <<EOF > compilerworks-metadata.yaml
    format: "snowflake_assessment_tco.zip"
-   timestamp: 1760000000000
+   timestamp: $(($(date +%s) * 1000))
    product:
      version: "migration-discovery-scripts:1.0.0"
      arguments: "ConnectorArguments{connector=snowflake-mds, assessment=true}"
+   EOF
    ```
 4. **Package into `snowflake_assessment_tco.zip`**:
    ```bash
