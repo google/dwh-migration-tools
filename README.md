@@ -26,6 +26,12 @@ and view the [installation instructions](client/README.md).
 - **Dbsync Tools (work in progress):** Command line utility to sync large
   files into Google Cloud Storage. View the [documentation](dbsync/README.md).
 
+- **Migration Discovery Scripts:** Lightweight, native SQL extraction scripts
+  (requiring zero Java runtime or external binaries) to collect operational and
+  storage metrics for BigQuery Migration Assessment TCO modeling. View the
+  [Oracle](migration-discovery-scripts/oracle/README.md) and
+  [Snowflake](migration-discovery-scripts/snowflake/README.md) discovery guides.
+
 ## Compiling from source
 You need to have `JDK 8` installed. For multiple jdk versions we recommend to use https://sdkman.io/ 
 ### Build all the modules ###
