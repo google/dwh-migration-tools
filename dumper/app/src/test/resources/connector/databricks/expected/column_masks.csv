@@ -1,0 +1,2 @@
+TableCatalog,TableSchema,TableName,ColumnName,MaskName,UsingColumns
+dumper_test_uc,dumper_test_schema,items,secret,dumper_test_uc.dumper_test_schema.mask_fn,region

@@ -1,0 +1,315 @@
+{
+  "SHOW SCHEMAS": {
+    "rows": [
+      [
+        "dumper_test_hms"
+      ],
+      [
+        "information_schema"
+      ]
+    ]
+  },
+  "SHOW TABLES IN `dumper_test_hms`": {
+    "rows": [
+      [
+        "dumper_test_hms",
+        "delta_items",
+        "false"
+      ],
+      [
+        "dumper_test_hms",
+        "items_view",
+        "false"
+      ],
+      [
+        "dumper_test_hms",
+        "parquet_items",
+        "false"
+      ]
+    ]
+  },
+  "DESCRIBE TABLE EXTENDED `dumper_test_hms`.`delta_items` AS JSON": {
+    "json_cell": {
+      "table_name": "delta_items",
+      "catalog_name": "hive_metastore",
+      "schema_name": "dumper_test_hms",
+      "columns": [
+        {
+          "name": "id",
+          "type": {
+            "name": "bigint"
+          },
+          "nullable": false
+        },
+        {
+          "name": "c_int",
+          "type": {
+            "name": "int"
+          },
+          "nullable": true,
+          "comment": "int col",
+          "default": "0"
+        },
+        {
+          "name": "c_dec",
+          "type": {
+            "name": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_char",
+          "type": {
+            "name": "char",
+            "length": 4
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_varchar",
+          "type": {
+            "name": "varchar",
+            "length": 16
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_str",
+          "type": {
+            "name": "string",
+            "collation": "UTF8_BINARY"
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_str_lcase",
+          "type": {
+            "name": "string",
+            "collation": "UTF8_LCASE"
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_ivl_ym",
+          "type": {
+            "name": "interval",
+            "start_unit": "year",
+            "end_unit": "month"
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_ivl_y",
+          "type": {
+            "name": "interval",
+            "start_unit": "year",
+            "end_unit": "year"
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_arr",
+          "type": {
+            "name": "array",
+            "element_type": {
+              "name": "int"
+            },
+            "element_nullable": true
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_map",
+          "type": {
+            "name": "map",
+            "key_type": {
+              "name": "string",
+              "collation": "UTF8_BINARY"
+            },
+            "value_type": {
+              "name": "int"
+            },
+            "value_nullable": true
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_struct",
+          "type": {
+            "name": "struct",
+            "fields": [
+              {
+                "name": "code",
+                "type": {
+                  "name": "int"
+                },
+                "nullable": true
+              },
+              {
+                "name": "label",
+                "type": {
+                  "name": "varchar",
+                  "length": 16
+                },
+                "nullable": true
+              },
+              {
+                "name": "amount",
+                "type": {
+                  "name": "decimal",
+                  "precision": 8,
+                  "scale": 2
+                },
+                "nullable": true
+              }
+            ]
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_ts",
+          "type": {
+            "name": "timestamp_ltz"
+          },
+          "nullable": true
+        },
+        {
+          "name": "dt",
+          "type": {
+            "name": "date"
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_small",
+          "type": {
+            "name": "smallint"
+          },
+          "nullable": true
+        },
+        {
+          "name": "c_tiny",
+          "type": {
+            "name": "tinyint"
+          },
+          "nullable": true
+        }
+      ],
+      "type": "MANAGED",
+      "comment": "HMS delta table",
+      "location": "dbfs:/user/hive/warehouse/dumper_test_hms.db/delta_items",
+      "provider": "delta",
+      "table_properties": {
+        "delta.constraints.valid_id": "id > 0",
+        "delta.constraints.c_str_set": "c_str IN ('a', 'b, c')",
+        "delta.enableDeletionVectors": "true",
+        "delta.minReaderVersion": "3",
+        "delta.minWriterVersion": "7",
+        "this.is.my.key": "12"
+      }
+    }
+  },
+  "DESCRIBE TABLE EXTENDED `dumper_test_hms`.`items_view` AS JSON": {
+    "json_cell": {
+      "table_name": "items_view",
+      "catalog_name": "hive_metastore",
+      "schema_name": "dumper_test_hms",
+      "columns": [
+        {
+          "name": "id",
+          "type": {
+            "name": "bigint"
+          },
+          "nullable": false
+        },
+        {
+          "name": "c_int",
+          "type": {
+            "name": "int"
+          },
+          "nullable": true,
+          "comment": "int col",
+          "default": "0"
+        }
+      ],
+      "type": "VIEW",
+      "comment": "HMS view",
+      "view_text": "SELECT id, c_int FROM hive_metastore.dumper_test_hms.delta_items"
+    }
+  },
+  "DESCRIBE TABLE EXTENDED `dumper_test_hms`.`parquet_items` AS JSON": {
+    "json_cell": {
+      "table_name": "parquet_items",
+      "catalog_name": "hive_metastore",
+      "schema_name": "dumper_test_hms",
+      "columns": [
+        {
+          "name": "id",
+          "type": {
+            "name": "bigint"
+          },
+          "nullable": true
+        },
+        {
+          "name": "s",
+          "type": {
+            "name": "struct",
+            "fields": [
+              {
+                "name": "a-b",
+                "type": {
+                  "name": "string",
+                  "collation": "UTF8_BINARY"
+                },
+                "nullable": true,
+                "comment": "nested"
+              }
+            ]
+          },
+          "nullable": true
+        },
+        {
+          "name": "region",
+          "type": {
+            "name": "string",
+            "collation": "UTF8_BINARY"
+          },
+          "nullable": true
+        }
+      ],
+      "location": "dbfs:/user/hive/warehouse/dumper_test_hms.db/parquet_items",
+      "type": "MANAGED",
+      "provider": "PARQUET",
+      "comment": "HMS parquet table",
+      "statistics": {
+        "size_in_bytes": 2048,
+        "num_rows": 2
+      },
+      "partition_columns": [
+        "region"
+      ]
+    }
+  },
+  "DESCRIBE DETAIL `dumper_test_hms`.`delta_items`": {
+    "columns": [
+      {
+        "name": "format"
+      },
+      {
+        "name": "partitionColumns"
+      },
+      {
+        "name": "sizeInBytes"
+      }
+    ],
+    "rows": [
+      [
+        "delta",
+        "[\"dt\"]",
+        "1024"
+      ]
+    ]
+  }
+}

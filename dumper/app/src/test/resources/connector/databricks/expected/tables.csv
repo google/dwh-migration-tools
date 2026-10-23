@@ -1,0 +1,4 @@
+TableCatalog,TableSchema,TableName,TableType,DataSourceFormat,StoragePath,SecurableKind,PipelineId,SizeInBytes
+dumper_test_uc,dumper_test_schema,items,MANAGED,DELTA,abfss://container@storage.dfs.core.windows.net/tables/3c68c0cf-0530-49b0-ab76-09c7d19b4309,TABLE_DELTA,,4096
+dumper_test_uc,dumper_test_schema,items_view,VIEW,,,TABLE_VIEW,,
+dumper_test_uc,dumper_test_schema,orgs,MANAGED,DELTA,abfss://container@storage.dfs.core.windows.net/tables/eddb78b8-5a86-4577-a761-1b35d5fc7e15,TABLE_DELTA,,

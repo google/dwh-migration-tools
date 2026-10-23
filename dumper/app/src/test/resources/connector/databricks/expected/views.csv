@@ -1,0 +1,2 @@
+TableCatalog,TableSchema,TableName,ViewDefinition
+dumper_test_uc,dumper_test_schema,items_view,"SELECT id, region, price FROM dumper_test_uc.dumper_test_schema.items"

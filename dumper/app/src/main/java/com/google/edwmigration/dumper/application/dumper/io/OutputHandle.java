@@ -58,7 +58,7 @@ public interface OutputHandle extends Closeable {
   }
 
   /**
-   * Renames the temporary file to the final file.
+   * Renames the temporary file to the final file, replacing the final file if it exists.
    *
    * <p>The stream, if any, must be closed. The temporary file must exist. If the instance of this
    * class is created in a try-with-resources call or this method is used in finally block, then

@@ -1,0 +1,4 @@
+TableCatalog,TableSchema,TableName,TableType,DataSourceFormat,StoragePath,SecurableKind,PipelineId,SizeInBytes
+hive_metastore,dumper_test_hms,delta_items,MANAGED,DELTA,dbfs:/user/hive/warehouse/dumper_test_hms.db/delta_items,,,1024
+hive_metastore,dumper_test_hms,items_view,VIEW,,,,,
+hive_metastore,dumper_test_hms,parquet_items,MANAGED,PARQUET,dbfs:/user/hive/warehouse/dumper_test_hms.db/parquet_items,,,2048

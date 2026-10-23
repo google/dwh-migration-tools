@@ -16,6 +16,8 @@
  */
 package com.google.edwmigration.dumper.application.dumper.io;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import com.google.common.io.ByteSink;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -77,7 +79,9 @@ public class FileSystemOutputHandle implements OutputHandle {
     if (!Files.exists(temporaryPath))
       throw new FileNotFoundException(
           "File does not exist: " + temporaryPath + "; cannot move to " + targetPath);
-    Files.move(temporaryPath, targetPath);
+    // A rerun with --continue checks only the target of a task, so another file of the task may
+    // exist from an earlier run that failed before it committed the target.
+    Files.move(temporaryPath, targetPath, REPLACE_EXISTING);
   }
 
   @Override
