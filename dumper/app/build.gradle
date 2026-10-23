@@ -243,7 +243,7 @@ cyclonedxBom {
 }
 
 tasks.named('check') {
-    dependsOn 'checkLicense', 'printBanner'
+    dependsOn 'checkLicense', 'printBanner', 'verifyShadowJar'
 }
 
 tasks.named('distTar') {
@@ -331,8 +331,28 @@ shadowJar {
     archiveBaseName.set('dwh-migration-dumper')
     archiveClassifier.set('')
     archiveVersion.set('')
-    mergeServiceFiles()
+    exclude 'META-INF/services/java.net.spi.InetAddressResolverProvider'
+    inputs.property('excludeDnsjavaProvider', true)
+    mergeServiceFiles {
+        exclude 'META-INF/services/java.net.spi.InetAddressResolverProvider'
+    }
     manifest {
         attributes 'Main-Class': application.mainClass.get()
     }
 }
+
+tasks.register('verifyShadowJar') {
+    dependsOn 'shadowJar'
+    inputs.file(shadowJar.archiveFile)
+    doLast {
+        def shadowJarFile = shadowJar.archiveFile.get().asFile
+        new java.util.zip.ZipFile(shadowJarFile).withCloseable { zipFile ->
+            def entry = zipFile.getEntry('META-INF/services/java.net.spi.InetAddressResolverProvider')
+            if (entry != null) {
+                throw new GradleException("Shadow JAR contains forbidden service file 'META-INF/services/java.net.spi.InetAddressResolverProvider' which causes ServiceConfigurationError on Java 18+ (b/575552296)")
+            }
+        }
+    }
+}
+
+shadowJar.finalizedBy 'verifyShadowJar'
