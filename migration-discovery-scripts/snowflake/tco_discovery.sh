@@ -163,7 +163,7 @@ SESSION_INIT="ALTER SESSION SET TIMESTAMP_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:
 # Pre-flight check: Test Snowflake connection, authentication & capture account region
 echo -n "[INFO] Testing Snowflake connection... "
 CONN_TEST_QUERY="${SESSION_INIT} SELECT CURRENT_REGION();"
-if CONN_OUTPUT=$("${SNOWSQL_CMD[@]}" -q "$CONN_TEST_QUERY" -o output_format=plain -o header=false -o timing=false -o friendly=false -o quiet=true < /dev/null 2>&1); then
+if CONN_OUTPUT=$("${SNOWSQL_CMD[@]}" -q "$CONN_TEST_QUERY" -o output_format=csv -o header=false -o timing=false -o friendly=false -o quiet=false < /dev/null 2>&1); then
   ACCOUNT_REGION=$(echo "$CONN_OUTPUT" | tr -d '\r"' | awk 'NF {last=$0} END {print last}')
   ACCOUNT_REGION="${ACCOUNT_REGION:-UNKNOWN}"
   echo "OK (region: $ACCOUNT_REGION)"

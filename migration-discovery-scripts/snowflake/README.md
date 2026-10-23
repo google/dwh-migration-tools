@@ -27,11 +27,11 @@ migration-discovery-scripts/snowflake/
     └── table_storage_metrics_mds.sql         # Single-row ('AllTables') storage summary (5 cols)
 ```
 
-The discovery package executes **3 native SQL scripts** against `SNOWFLAKE.ACCOUNT_USAGE` and produces 3 lightweight CSV files. **Zero SQL query text (`QUERY_TEXT`), zero table/schema names, zero query literals, and zero PII ever leave your Snowflake environment:**
+The discovery package executes **3 native SQL scripts** against `SNOWFLAKE.ACCOUNT_USAGE` and produces 3 lightweight CSV files. **Zero SQL query text (`QUERY_TEXT`), zero table/schema names, zero query literals, and zero PII ever leave your Snowflake environment.**
 
 ### Generated Archive (`snowflake_assessment_tco.zip`)
 
-Running `tco_discovery.sh` bundles the 3 CSV files together files into `snowflake_assessment_tco.zip`:
+Running `tco_discovery.sh` bundles the 3 CSV files and metadata files into `snowflake_assessment_tco.zip`:
 - `warehouses_workload_structure_mds.csv`
 - `warehouse_metering_history_mds.csv`
 - `table_storage_metrics_mds.csv`
