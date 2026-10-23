@@ -1,138 +1,74 @@
-# ❄️ Snowflake Discovery & TCO Extraction Scripts
+# ❄️ Snowflake Discovery Scripts
 
-This package provides native Snowflake discovery scripts to automate the collection of key performance, utilization, and configuration metrics essential for BigQuery Total Cost of Ownership (TCO) analysis.
+Lightweight, native Snowflake discovery scripts to collect workload, credit consumption, and storage metrics for **BigQuery Migration Assessment (TCO analysis)**.
 
-Unlike the traditional Java-based `dwh-migration-dumper`, these scripts use **native Snowflake tooling only** (`snowsql` or Snowsight Web UI worksheets). They require zero JVM runtime installation, extract **zero customer SQL text or PII**, and can be executed by database administrators or cloud architects in minutes.
+Unlike `dwh-migration-dumper`, these scripts require **zero Java runtime**, extract **zero SQL query text (`QUERY_TEXT`), table/schema names, or PII**, and package the output into `snowflake_assessment_tco.zip`.
 
-The extracted metadata is packaged into a standard ZIP archive (`snowflake_assessment_tco.zip`) accepted directly by the **BigQuery Migration Assessment Service**.
+## 🚀 Prerequisites
 
-
-## 🚀 Prerequisites & Permissions
-
-1. **SnowSQL (Option 1)**: Snowflake Command Line Interface ([SnowSQL Installation Guide](https://docs.snowflake.com/en/user-guide/snowsql-install-config)).
-2. **Database Permissions**: A Snowflake role with read access to the `SNOWFLAKE.ACCOUNT_USAGE` shared schema (e.g. `ACCOUNTADMIN`, `SYSADMIN`, or a custom audit role granted `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE`).
-   - *Note on `ACCESS_HISTORY`*: The scripts automatically inspect multi-object queries using `ACCOUNT_USAGE.ACCESS_HISTORY`. If your account is on Snowflake Standard Edition or lacks `GOVERNANCE_VIEWER` access, the extraction script gracefully falls back to `IsMultiObject = FALSE` without failing.
-3. **Local Utilities (Option 1)**: `bash`, `sed`, `awk`, and `zip`.
-
-
-## 📂 Package Structure & Extracted Metadata
-
-```text
-migration-discovery-scripts/snowflake/
-├── tco_discovery.sh                          # Automated CLI runner script
-├── README.md                                 # DBA & CE execution guide
-└── sql/                                      # Native Snowflake SQL scripts
-    ├── warehouses_workload_structure_mds.sql # Hourly raw credit & block sums (14 cols)
-    ├── warehouse_metering_history_mds.sql    # Hourly compute & cloud-services credits (7 cols)
-    └── table_storage_metrics_mds.sql         # Single-row ('AllTables') storage summary (5 cols)
-```
-
-The discovery package executes **3 native SQL scripts** against `SNOWFLAKE.ACCOUNT_USAGE` and produces 3 lightweight CSV files. **Zero SQL query text (`QUERY_TEXT`), zero table/schema names, zero query literals, and zero PII ever leave your Snowflake environment.**
-
-### Generated Archive (`snowflake_assessment_tco.zip`)
-
-Running `tco_discovery.sh` bundles the 3 CSV files and metadata files into `snowflake_assessment_tco.zip`:
-- `warehouses_workload_structure_mds.csv`
-- `warehouse_metering_history_mds.csv`
-- `table_storage_metrics_mds.csv`
-- `compilerworks-metadata.yaml` — Declares `ConnectorArguments{connector=snowflake-mds, assessment=true}` and extraction epoch timestamp.
-- `dumper-telemetry.jsonl` — Records non-PII execution telemetry (`account_region` via `CURRENT_REGION()`, `lookback_days`, `access_history_available`, `started_at`, `completed_at`, and per-task `duration_seconds` and `row_count`).
-
-
-## 💻 Extraction Workflow
-
-### Option 1: Automated CLI Execution via `tco_discovery.sh` (Recommended)
-
-1. **Configure Authentication** (choose one before running the script, as `snowsql` is invoked multiple times non-interactively):
-   - **Password Authentication**: Export `SNOWSQL_PWD` in your shell session (prefix with a leading space if `HISTCONTROL=ignorespace` is enabled to keep it out of shell history):
-     ```bash
-     export SNOWSQL_PWD='<your_snowflake_password>'
-     ```
-   - **Key-Pair Authentication**: Pass `-k /path/to/rsa_key.p8` (and if your private key is encrypted, `export SNOWSQL_PRIVATE_KEY_PASSPHRASE='<passphrase>'`).
-   - **SnowSQL Config File**: Configure `password` or `private_key_path` under `[connections]` in `~/.snowsql/config`.
-
-2. **Run `tco_discovery.sh`** passing your Snowflake account and username:
-
-```bash
-./tco_discovery.sh \
-  -a <account_identifier> \
-  -u <username> \
-  -r <role> \
-  -w <warehouse>
-```
-
-#### Command Options
-
-| Flag | Argument | Required? | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `-a, --account` | `ACCOUNT` | **Yes** | — | Snowflake account identifier (e.g. `xy12345.us-east-1` or `org-account`). |
-| `-u, --user` | `USERNAME` | **Yes** | — | Snowflake database username. |
-| `-r, --role` | `ROLE` | No | User default | Snowflake role with `ACCOUNT_USAGE` privileges (e.g. `ACCOUNTADMIN`). |
-| `-w, --warehouse` | `WAREHOUSE` | No | Active WH | Virtual warehouse for query execution (e.g. `COMPUTE_WH`, typically X-Small). |
-| `-k, --private-key-path` | `FILE` | No | — | Path to RSA private key file (e.g. `rsa_key.p8`) for key-pair authentication. |
-| `-d, --days` | `DAYS` | No | `14` | Lookback period in days (1 to 365). |
-| `-o, --output` | `DIR` | No | `./out` | Local staging directory for output files. |
-| `-h, --help` | — | No | — | Display usage syntax. |
-
-#### Examples
-
-```bash
-# Standard 14-day discovery with password authentication
-export SNOWSQL_PWD='<your_snowflake_password>'
-./tco_discovery.sh -a myorg-myaccount -u myuser -r ACCOUNTADMIN -w COMPUTE_WH
-
-# Using RSA key-pair authentication
-./tco_discovery.sh -a myorg-myaccount -u myuser -r ACCOUNTADMIN -w COMPUTE_WH -k /path/to/rsa_key.p8
-
-# 365-day annual lookback for seasonal TCO modeling
-./tco_discovery.sh -a myorg-myaccount -u myuser -r ACCOUNTADMIN -w COMPUTE_WH -d 365
-```
-
-> [!TIP]
-> **Warehouse Sizing Guidance for Long Lookbacks**:
-> - For default 14-day lookbacks (`-d 14`), an **X-Small** warehouse executes in ~1–3 minutes consuming `< 0.05` credits.
-> - For longer lookbacks (> 30 days) on large enterprise accounts with tens of millions of queries, specify a **Small** or **Medium** warehouse (`-w`) and increase statement timeout if necessary. All joined views include timestamp pruning filters.
-
-The script runs the pre-flight checks, executes the queries sequentially, cleans multi-statement preamble headers, generates `compilerworks-metadata.yaml` (connector `snowflake-mds`) alongside telemetry (`dumper-telemetry.jsonl`), and packages all artifacts into `snowflake_assessment_tco.zip`.
+- **Database Permissions**: Read access to `SNOWFLAKE.ACCOUNT_USAGE` (e.g. `ACCOUNTADMIN`, `SYSADMIN`, or a role with `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE`).
+  - *Note*: If `ACCOUNT_USAGE.ACCESS_HISTORY` is unavailable (e.g. Snowflake Standard Edition), the script automatically falls back to `IsMultiObject = FALSE`.
+- **For CLI Execution (Option 1)**: [SnowSQL CLI](https://docs.snowflake.com/en/user-guide/snowsql-install-config) and standard shell utilities (`bash`, `sed`, `awk`, `zip`).
 
 ---
 
-### Option 2: Manual Execution via Snowflake Snowsight (Web Console)
+## 💻 Option 1: Automated CLI (`tco_discovery.sh`)
 
-If running command-line utilities is restricted by corporate security policies, DBAs can execute the SQL queries directly inside Snowflake Snowsight:
+### 1. Authenticate
+Configure one of the following before running:
+- **Password**: `export SNOWSQL_PWD='<password>'`
+- **Key-pair**: Pass `-k /path/to/rsa_key.p8` (and `export SNOWSQL_PRIVATE_KEY_PASSPHRASE='<passphrase>'` if encrypted)
+- **Config file**: Set credentials under `[connections]` in `~/.snowsql/config`
 
-1. Open **Snowsight** → **Worksheets**.
-2. Set session timestamp output formats (ensuring ISO-8601 formatting required by BigQuery Migration Assessment):
+### 2. Run Extraction
+
+```bash
+./tco_discovery.sh -a <account> -u <user> [-r <role>] [-w <warehouse>] [-d <days>]
+```
+
+| Flag | Required | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `-a, --account` | **Yes** | — | Snowflake account identifier (e.g. `xy12345.us-east-1` or `org-account`). |
+| `-u, --user` | **Yes** | — | Snowflake username. |
+| `-r, --role` | No | User default | Role with `ACCOUNT_USAGE` access (e.g. `ACCOUNTADMIN`). |
+| `-w, --warehouse` | No | Active WH | Warehouse to run queries (X-Small recommended for 14d; Small/Medium for >30d). |
+| `-k, --private-key-path` | No | — | Path to RSA private key file (`rsa_key.p8`). |
+| `-d, --days` | No | `14` | Historical lookback window in days (`1`–`365`). |
+| `-o, --output` | No | `./out` | Output directory for extracted CSVs and metadata. |
+
+**Examples:**
+```bash
+# Standard 14-day discovery
+export SNOWSQL_PWD='<your_snowflake_password>'
+./tco_discovery.sh -a myorg-myaccount -u myuser -r ACCOUNTADMIN -w COMPUTE_WH
+
+# 365-day annual lookback with RSA key-pair auth
+./tco_discovery.sh -a myorg-myaccount -u myuser -r ACCOUNTADMIN -w COMPUTE_WH -k rsa_key.p8 -d 365
+```
+
+---
+
+## 🌐 Option 2: Manual Execution via Snowsight (Web UI)
+
+If CLI access is restricted, run the queries directly in **Snowsight → Worksheets**:
+
+1. **Set ISO-8601 timestamp format**:
    ```sql
    ALTER SESSION SET TIMESTAMP_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"', TIMESTAMP_LTZ_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"', TIMESTAMP_NTZ_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"';
    ```
-3. Run each SQL script in `sql/` and download the results as CSV:
-   - **Historical time-filtered scripts** (each begins with `SET LOOKBACK_DAYS = 14;` allowing you to adjust the lookback window directly in the session variable):
-     - `sql/warehouses_workload_structure_mds.sql` → Download CSV as `warehouses_workload_structure_mds.csv`
-       *(Note: If running manually on Snowflake Standard Edition where `SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY` is unavailable, replace the `MultiObjectQueries` CTE body with `SELECT CAST(NULL AS VARCHAR) AS QUERY_ID WHERE 1=0` before running.)*
-     - `sql/warehouse_metering_history_mds.sql` → Download CSV as `warehouse_metering_history_mds.csv`
-   - **Current state snapshot script** (extracts current account storage state; no lookback variable required):
-     - `sql/table_storage_metrics_mds.sql` → Download CSV as `table_storage_metrics_mds.csv`
-4. Create a metadata descriptor file named `compilerworks-metadata.yaml` in the same directory as the downloaded CSVs:
-   - **From a terminal (Linux / macOS / Git Bash / WSL)** — automatically injects the current Unix epoch timestamp in milliseconds:
-     ```bash
-     cat <<EOF > compilerworks-metadata.yaml
-     format: "snowflake_assessment_tco.zip"
-     timestamp: $(($(date +%s) * 1000))
-     product:
-       version: "migration-discovery-scripts:1.0.0"
-       arguments: "ConnectorArguments{connector=snowflake-mds, assessment=true}"
-     EOF
-     ```
-   - **Or manually in a text editor** — replace `<CURRENT_EPOCH_MS>` with the output of `SELECT DATE_PART(EPOCH_MILLISECOND, CURRENT_TIMESTAMP());` in Snowsight (or omit the `timestamp:` line, which is optional):
-     ```yaml
-     format: "snowflake_assessment_tco.zip"
-     timestamp: <CURRENT_EPOCH_MS>
-     product:
-       version: "migration-discovery-scripts:1.0.0"
-       arguments: "ConnectorArguments{connector=snowflake-mds, assessment=true}"
-     ```
-5. Package the 3 CSVs and `compilerworks-metadata.yaml` into a ZIP archive:
+2. **Run each SQL script in `sql/` and download results as CSV**:
+   - `sql/warehouses_workload_structure_mds.sql` → `warehouses_workload_structure_mds.csv` *(adjust `SET LOOKBACK_DAYS = 14;` at line 1 if needed; on Standard Edition without `ACCESS_HISTORY`, replace `MultiObjectQueries` body with `SELECT CAST(NULL AS VARCHAR) AS QUERY_ID WHERE 1=0`)*
+   - `sql/warehouse_metering_history_mds.sql` → `warehouse_metering_history_mds.csv`
+   - `sql/table_storage_metrics_mds.sql` → `table_storage_metrics_mds.csv`
+3. **Create `compilerworks-metadata.yaml`** in the same directory:
+   ```yaml
+   format: "snowflake_assessment_tco.zip"
+   timestamp: 1760000000000
+   product:
+     version: "migration-discovery-scripts:1.0.0"
+     arguments: "ConnectorArguments{connector=snowflake-mds, assessment=true}"
+   ```
+4. **Package into `snowflake_assessment_tco.zip`**:
    ```bash
    zip snowflake_assessment_tco.zip \
      warehouses_workload_structure_mds.csv \
@@ -141,13 +77,12 @@ If running command-line utilities is restricted by corporate security policies, 
      compilerworks-metadata.yaml
    ```
 
+---
 
-## 📤 Next Steps: Running BigQuery Migration Assessment
+## 📤 Next Steps
 
-1. Upload the generated `snowflake_assessment_tco.zip` to your Google Cloud Storage bucket:
+1. Upload `snowflake_assessment_tco.zip` to Google Cloud Storage:
    ```bash
    gcloud storage cp snowflake_assessment_tco.zip gs://<your-assessment-bucket>/
    ```
-2. Navigate to **BigQuery Migration Assessment** in the Google Cloud Console.
-3. Click **Create Assessment**, select **Snowflake** as the source, point the input path to your GCS bucket, and run the assessment.
-4. Review the generated Data Studio Report.
+2. In the **Google Cloud Console**, open **BigQuery → Migration Assessment**, create an assessment with **Snowflake** as the data source, and select your GCS bucket.
