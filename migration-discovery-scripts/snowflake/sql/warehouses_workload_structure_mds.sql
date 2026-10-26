@@ -45,7 +45,7 @@ QueryRaw AS (
         COUNT(*) OVER (
             PARTITION BY QL.WAREHOUSE_NAME, DATE_TRUNC('HOUR', QL.START_TIME)
         ) AS "HourQueryCount",
-        COALESCE(Credits."TotalCreditsBilled", 1.0) AS "HourCreditsBilled"
+        COALESCE(Credits."TotalCreditsBilled", 0.0) AS "HourCreditsBilled"
     FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY AS QL
     LEFT JOIN CreditsPerHourPerWarehouse AS Credits
         ON QL.WAREHOUSE_NAME = Credits."WarehouseName"
@@ -135,4 +135,6 @@ SELECT
     )) AS "BlocksForStandard"
 FROM QueryClassified
 GROUP BY 1, 2
+HAVING SUM("AttributedCredits") <> 0
+    OR SUM(IFF(QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM', "QueryBlocks", 0)) <> 0
 ORDER BY "WarehouseName" ASC, "AggregateTime" ASC;

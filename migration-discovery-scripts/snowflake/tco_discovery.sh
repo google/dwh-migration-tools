@@ -121,23 +121,6 @@ START_TIME_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 RUN_DATE=$(date -u +"%Y-%m-%d")
 RUN_ID="snowflake-discovery-$(date +%Y%m%d%H%M%S)"
 
-echo "================================================================="
-echo "  Snowflake Discovery & TCO Extraction for BigQuery Migration"
-echo "================================================================="
-echo "Account:          $SF_ACCOUNT"
-echo "User:             $SF_USER"
-echo "Role:             ${SF_ROLE:-<user-default>}"
-echo "Warehouse:        ${SF_WAREHOUSE:-<active-warehouse>}"
-echo "Lookback Days:    $LOOKBACK_DAYS"
-echo "Output Directory: $OUTPUT_DIR"
-echo "Run ID:           $RUN_ID"
-echo "-----------------------------------------------------------------"
-
-# Notify if neither SNOWSQL_PWD nor -k is set
-if [[ -z "${SNOWSQL_PWD:-}" && -z "$SF_PRIVATE_KEY_PATH" ]]; then
-  echo "[INFO] Neither SNOWSQL_PWD nor -k (--private-key-path) is set; relying on ~/.snowsql/config."
-fi
-
 # Build SnowSQL command base
 SNOWSQL_CMD=(snowsql -a "$SF_ACCOUNT" -u "$SF_USER")
 if [[ -n "$SF_ROLE" ]]; then
@@ -158,17 +141,17 @@ SNOWSQL_CMD+=(
   -o quiet=true
 )
 
-SESSION_INIT="ALTER SESSION SET TIMESTAMP_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', TIMESTAMP_LTZ_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', TIMESTAMP_NTZ_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', STATEMENT_TIMEOUT_IN_SECONDS=3600;"
+SESSION_INIT="ALTER SESSION SET TIMEZONE='UTC', TIMESTAMP_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', TIMESTAMP_LTZ_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', TIMESTAMP_NTZ_OUTPUT_FORMAT='YYYY-MM-DD\"T\"HH24:MI:SS.FF3\"Z\"', STATEMENT_TIMEOUT_IN_SECONDS=3600;"
 
 # Pre-flight check: Test Snowflake connection, authentication & capture account region
-echo -n "[INFO] Testing Snowflake connection... "
 CONN_TEST_QUERY="${SESSION_INIT} SELECT CURRENT_REGION();"
 if CONN_OUTPUT=$("${SNOWSQL_CMD[@]}" -q "$CONN_TEST_QUERY" -o output_format=csv -o header=false -o timing=false -o friendly=false -o quiet=false < /dev/null 2>&1); then
   ACCOUNT_REGION=$(echo "$CONN_OUTPUT" | tr -d '\r"' | awk 'NF {last=$0} END {print last}')
   ACCOUNT_REGION="${ACCOUNT_REGION:-UNKNOWN}"
-  echo "OK (region: $ACCOUNT_REGION)"
+  if [[ "$ACCOUNT_REGION" == "UNKNOWN" ]]; then
+    echo "[WARN] Account region is UNKNOWN"
+  fi
 else
-  echo "FAILED"
   echo "[ERROR] Could not authenticate or connect to Snowflake." >&2
   echo "[HINT] Ensure SNOWSQL_PWD is exported (export SNOWSQL_PWD='<password>'), -k <private_key_path> is passed, or credentials are set in ~/.snowsql/config." >&2
   echo "$CONN_OUTPUT" >&2
@@ -177,12 +160,8 @@ fi
 
 # Pre-flight check on ACCESS_HISTORY
 ACCESS_HISTORY_AVAILABLE=true
-echo -n "[INFO] Checking access to SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY... "
 CHECK_QUERY="${SESSION_INIT} SELECT 1 FROM SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY LIMIT 1;"
-if "${SNOWSQL_CMD[@]}" -q "$CHECK_QUERY" -o output_format=plain -o header=false -o timing=false -o friendly=false -o quiet=true > /dev/null 2>&1; then
-  echo "OK (ACCESS_HISTORY available)"
-else
-  echo "UNAVAILABLE"
+if ! "${SNOWSQL_CMD[@]}" -q "$CHECK_QUERY" -o output_format=plain -o header=false -o timing=false -o friendly=false -o quiet=true > /dev/null 2>&1; then
   echo "[WARN] SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY is inaccessible (e.g. Snowflake Standard Edition or missing GOVERNANCE_VIEWER role)."
   echo "[WARN] Falling back to IsMultiObject = FALSE in warehouses_workload_structure_mds.sql."
   ACCESS_HISTORY_AVAILABLE=false
@@ -242,10 +221,8 @@ for task in "${TASKS[@]}"; do
   input_path="$SQL_DIR/$sql_file"
   output_path="$OUTPUT_DIR/$output_csv"
 
-  echo -n "[INFO] Extracting $desc ($output_csv)... "
-
   if [[ ! -f "$input_path" ]]; then
-    echo "FAILED"
+    echo "$output_csv  FAILED: SQL template '$input_path' does not exist"
     echo "[ERROR] SQL template '$input_path' does not exist." >&2
     FAILED_COUNT=$((FAILED_COUNT + 1))
     append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"duration_seconds\":0,\"error\":\"missing SQL template\"}"
@@ -298,10 +275,10 @@ EOF
     if clean_csv_header "$output_path" "$hdr_pattern"; then
       if [[ -s "$output_path" ]]; then
         row_count=$(($(wc -l < "$output_path") - 1))
-        echo "DONE ($row_count rows, ${query_elapsed_secs}s)"
+        echo "$output_csv  $row_count rows  ${query_elapsed_secs}s"
       else
         row_count=0
-        echo "DONE (Empty / 0 rows, ${query_elapsed_secs}s)"
+        echo "$output_csv  0 rows  ${query_elapsed_secs}s"
       fi
       SUCCEEDED_COUNT=$((SUCCEEDED_COUNT + 1))
       append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"SUCCEEDED\",\"duration_seconds\":$query_elapsed_secs,\"row_count\":$row_count}"
@@ -309,7 +286,7 @@ EOF
       FAILED_COUNT=$((FAILED_COUNT + 1))
       append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"duration_seconds\":$query_elapsed_secs,\"error\":\"missing expected CSV header\"}"
       append_error_summary "$output_csv: missing expected CSV header"
-      echo "FAILED (${query_elapsed_secs}s)"
+      echo "$output_csv  FAILED (${query_elapsed_secs}s): missing expected CSV header"
       echo "[ERROR] Expected header pattern '$hdr_pattern' not found in $output_csv" >&2
       if [[ -f "$output_path" && -s "$output_path" ]]; then
         echo "[ERROR] Output details:" >&2
@@ -322,7 +299,7 @@ EOF
     FAILED_COUNT=$((FAILED_COUNT + 1))
     append_task_detail "{\"name\":\"$output_csv\",\"type\":\"REQUIRED\",\"status\":\"FAILED\",\"duration_seconds\":$query_elapsed_secs,\"error\":\"snowsql execution failure\"}"
     append_error_summary "$output_csv: snowsql execution failure"
-    echo "FAILED (${query_elapsed_secs}s)"
+    echo "$output_csv  FAILED (${query_elapsed_secs}s): snowsql execution failure"
     echo "[ERROR] Failed executing $sql_file" >&2
     if [[ -f "$output_path.stdout" && -s "$output_path.stdout" ]]; then
       echo "[ERROR] Output details:" >&2
@@ -343,9 +320,6 @@ if [[ $FAILED_COUNT -gt 0 ]]; then
   OVERALL_STATUS="FAILED"
 fi
 
-echo "-----------------------------------------------------------------"
-echo "[INFO] Creating metadata descriptor & telemetry..."
-
 # 1. Generate BQMS Assessment metadata descriptor (compilerworks-metadata.yaml)
 cat > "$OUTPUT_DIR/compilerworks-metadata.yaml" << EOF
 format: "snowflake_assessment_tco.zip"
@@ -359,7 +333,7 @@ append_task_detail "{\"name\":\"compilerworks-metadata.yaml\",\"type\":\"REQUIRE
 
 # 2. Generate BQMS Client Telemetry (dumper-telemetry.jsonl)
 cat > "$OUTPUT_DIR/dumper-telemetry.jsonl" << EOF
-{"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","measureEndTime":"$END_TIME_ISO","started_at":"$START_TIME_ISO","completed_at":"$END_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"duration_seconds":$TOTAL_SECONDS,"overallStatus":"$OVERALL_STATUS","status":"$OVERALL_STATUS","failed_tasks":$FAILED_COUNT,"error_summary":"$ERROR_SUMMARY","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"account_region":"$ACCOUNT_REGION","lookback_days":$LOOKBACK_DAYS,"access_history_available":$ACCESS_HISTORY_AVAILABLE}}]}
+{"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","measureEndTime":"$END_TIME_ISO","started_at":"$START_TIME_ISO","completed_at":"$END_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"duration_seconds":$TOTAL_SECONDS,"overallStatus":"$OVERALL_STATUS","status":"$OVERALL_STATUS","failed_tasks":$FAILED_COUNT,"error_summary":"$ERROR_SUMMARY","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"account_region":"$ACCOUNT_REGION","lookback_days":$LOOKBACK_DAYS,"access_history_available":$ACCESS_HISTORY_AVAILABLE,"extraction_method":"snowflake-cli"}}]}
 EOF
 
 if [[ $FAILED_COUNT -gt 0 ]]; then
@@ -367,7 +341,6 @@ if [[ $FAILED_COUNT -gt 0 ]]; then
   exit 1
 fi
 
-echo "[INFO] Building final ZIP package: $ZIP_NAME..."
 ZIP_OUT_PATH="$OUTPUT_DIR/$ZIP_NAME"
 rm -f "$ZIP_OUT_PATH" "./$ZIP_NAME"
 (
@@ -382,20 +355,5 @@ rm -f "$ZIP_OUT_PATH" "./$ZIP_NAME"
 
 cp -f "$ZIP_OUT_PATH" "./$ZIP_NAME" 2>/dev/null || true
 
-FINAL_END_EPOCH=$(date +%s)
-TOTAL_ELAPSED_SECS=$(( FINAL_END_EPOCH - START_TIME_EPOCH ))
-ELAPSED_MINS=$(( TOTAL_ELAPSED_SECS / 60 ))
-ELAPSED_REM_SECS=$(( TOTAL_ELAPSED_SECS % 60 ))
-
-echo "================================================================="
-echo "  EXTRACTION COMPLETE"
-echo "================================================================="
-echo "Archive created:      $(pwd)/$ZIP_NAME (and $ZIP_OUT_PATH)"
-echo "Total execution time: ${ELAPSED_MINS}m ${ELAPSED_REM_SECS}s (${TOTAL_ELAPSED_SECS}s)"
-echo ""
-echo "Next steps:"
-echo "1. Upload '$ZIP_NAME' to your Google Cloud Storage bucket:"
-echo "     gcloud storage cp $ZIP_NAME gs://<your-assessment-bucket>/"
-echo "2. Create a new Migration Assessment in the Google Cloud Console"
-echo "   pointing to the bucket location."
-echo "================================================================="
+echo "Archive: $(pwd)/$ZIP_NAME"
+echo "Upload to GCS: gcloud storage cp $ZIP_NAME gs://<your-assessment-bucket>/"
