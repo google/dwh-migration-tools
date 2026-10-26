@@ -2,20 +2,20 @@
 
 Lightweight, native Snowflake discovery scripts to collect workload structure, hourly warehouse metering, and table storage metrics for **BigQuery Migration Assessment (TCO modeling)**.
 
-Zero Java runtime, zero SQL text (`QUERY_TEXT`), table/schema names, or PII extracted. Automatically falls back to `IsMultiObject = FALSE` on Snowflake Standard Edition (inaccessible `ACCESS_HISTORY`). SQL templates in `sql/` are the single source of truth across all options, producing `snowflake_assessment_tco.zip`.
+Zero Java runtime, zero SQL text, table/schema names, or PII extracted. Automatically falls back to `IsMultiObject = FALSE` on Snowflake Standard Edition (inaccessible `ACCESS_HISTORY`). SQL templates in `sql/` are the single source of truth across all options, producing `snowflake_assessment_tco.zip`.
 
 ## Choose an Option
 
 | Option | How you run it | Privileges | Output |
 | :--- | :--- | :--- | :--- |
-| **1. Python Worksheet** *(Recommended)* | Snowsight UI | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse, db, schema; `CREATE STAGE` on schema (or existing `BQMS_TCO_DISCOVERY_STAGE`) | Pre-signed URL or stage download |
+| **1. Python Worksheet**| Snowsight UI | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse, db, schema; `CREATE STAGE` on schema (or existing `BQMS_TCO_DISCOVERY_STAGE`) | Pre-signed URL or stage download |
 | **2. Notebook** | Snowsight UI | Same as Option 1 + `CREATE NOTEBOOK` on schema | Pre-signed URL or stage download |
 | **3. CLI Script** | Local terminal | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse; local SnowSQL CLI, bash, zip | Local zip file |
 | **4. Manual SQL** | Snowsight UI | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse | 3 downloaded CSVs + manual zip |
 
 ---
 
-### Option 1: Snowsight Python Worksheet (Recommended)
+### Option 1: Snowsight Python Worksheet
 1. In Snowsight, open **Projects → Worksheets**, click **+** → **Python Worksheet**.
 2. Select an active **Database**, **Schema**, and **Warehouse** in the context selector.
 3. In worksheet **Settings** (gear icon), set **Handler** = `main` and **Return type** = `Table()`.
