@@ -34,6 +34,39 @@ DEFAULT_OUTPUT_NOTEBOOK = SCRIPT_DIR / "snowflake_tco_discovery.ipynb"
 DEFAULT_OUTPUT_WORKSHEET = SCRIPT_DIR / "snowflake_tco_discovery_worksheet.py"
 DEFAULT_OUTPUT_PROCEDURE = SCRIPT_DIR / "snowflake_tco_discovery_procedure.sql"
 
+# License headers (Apache 2.0)
+LICENSE_HEADER_HASH = """# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+"""
+
+LICENSE_HEADER_SQL = """-- Copyright 2026 Google LLC
+--
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+"""
+
 # =====================================================================
 # Shared Python Logic
 # =====================================================================
@@ -174,7 +207,7 @@ Native Snowflake discovery notebook to collect workload structure, hourly wareho
 3. At the end of the notebook, click the pre-signed download URL or use the Snowsight Stage UI to download `snowflake_assessment_tco.zip`.
 """
 
-    cell_2_config = """# =====================================================================
+    cell_2_config = LICENSE_HEADER_HASH + """# =====================================================================
 # Configuration Parameters
 # =====================================================================
 
@@ -950,7 +983,7 @@ product:
 
 def generate_worksheet_py(templates: dict[str, str]) -> str:
     """Generates snowflake_tco_discovery_worksheet.py for Snowsight Python worksheets."""
-    header = '''# =====================================================================
+    header = f'''{LICENSE_HEADER_HASH}# =====================================================================
 # Snowflake Discovery & TCO Extraction for BigQuery Migration
 # Snowsight Python Worksheet
 # =====================================================================
@@ -977,7 +1010,7 @@ def generate_worksheet_py(templates: dict[str, str]) -> str:
 
 def generate_procedure_sql(templates: dict[str, str]) -> str:
     """Generates snowflake_tco_discovery_procedure.sql as a Snowflake anonymous stored procedure."""
-    header = '''-- =====================================================================
+    header = f'''{LICENSE_HEADER_SQL}-- =====================================================================
 -- Snowflake Discovery & TCO Extraction for BigQuery Migration
 -- Anonymous Stored Procedure (Snowflake SQL Worksheet)
 -- =====================================================================
