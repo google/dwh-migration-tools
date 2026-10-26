@@ -73,7 +73,7 @@ export SNOWSQL_PWD='<password>'  # or pass -k /path/to/rsa_key.p8
    - `sql/warehouses_workload_structure_mds.sql` → `warehouses_workload_structure_mds.csv` *(adjust `SET LOOKBACK_DAYS = 14;`; on Standard Edition, replace `MultiObjectQueries` CTE with `SELECT CAST(NULL AS VARCHAR) AS QUERY_ID WHERE 1=0`)*
    - `sql/warehouse_metering_history_mds.sql` → `warehouse_metering_history_mds.csv`
    - `sql/table_storage_metrics_mds.sql` → `table_storage_metrics_mds.csv`
-3. Generate `compilerworks-metadata.yaml` and package into `snowflake_assessment_tco.zip`:
+3. Generate `compilerworks-metadata.yaml`:
    ```bash
    cat <<EOF > compilerworks-metadata.yaml
    format: "snowflake_assessment_tco.zip"
@@ -82,7 +82,26 @@ export SNOWSQL_PWD='<password>'  # or pass -k /path/to/rsa_key.p8
      version: "migration-discovery-scripts:1.0.0"
      arguments: "ConnectorArguments{connector=snowflake-mds, assessment=true}"
    EOF
-   zip snowflake_assessment_tco.zip warehouses_workload_structure_mds.csv warehouse_metering_history_mds.csv table_storage_metrics_mds.csv compilerworks-metadata.yaml
+   ```
+4. Generate `dumper-telemetry.jsonl` (run `SELECT CURRENT_REGION();` in Snowsight to find your account region; set `ACCESS_HISTORY_AVAILABLE=false` if you applied the Standard Edition fallback):
+   ```bash
+   LOOKBACK_DAYS=14
+   ACCOUNT_REGION='<result of SELECT CURRENT_REGION();>'
+   ACCESS_HISTORY_AVAILABLE=true
+   NOW_ISO=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+   RUN_DATE=$(date -u +%Y-%m-%d)
+   RUN_ID="snowflake-discovery-$(date -u +%Y%m%d%H%M%S)"
+   WORKLOAD_ROWS=$(($(wc -l < warehouses_workload_structure_mds.csv) - 1))
+   METERING_ROWS=$(($(wc -l < warehouse_metering_history_mds.csv) - 1))
+   STORAGE_ROWS=$(($(wc -l < table_storage_metrics_mds.csv) - 1))
+
+   cat <<EOF > dumper-telemetry.jsonl
+   {"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$NOW_ISO","dumperMetadata":{"version":"1.0.0","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$NOW_ISO","measureEndTime":"$NOW_ISO","started_at":"$NOW_ISO","completed_at":"$NOW_ISO","runDurationInMinutes":0,"duration_seconds":0,"overallStatus":"SUCCESS","status":"SUCCESS","failed_tasks":0,"error_summary":"","taskExecutionSummary":[{"count":3,"status":"SUCCEEDED"},{"count":0,"status":"FAILED"}],"taskDetailedSummary":[{"name":"warehouses_workload_structure_mds.csv","type":"REQUIRED","status":"SUCCEEDED","duration_seconds":0,"row_count":$WORKLOAD_ROWS},{"name":"warehouse_metering_history_mds.csv","type":"REQUIRED","status":"SUCCEEDED","duration_seconds":0,"row_count":$METERING_ROWS},{"name":"table_storage_metrics_mds.csv","type":"REQUIRED","status":"SUCCEEDED","duration_seconds":0,"row_count":$STORAGE_ROWS},{"name":"compilerworks-metadata.yaml","type":"REQUIRED","status":"SUCCEEDED","duration_seconds":0}],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"account_region":"$ACCOUNT_REGION","lookback_days":$LOOKBACK_DAYS,"access_history_available":$ACCESS_HISTORY_AVAILABLE,"extraction_method":"snowflake-manual"}}]}
+   EOF
+   ```
+5. Package into `snowflake_assessment_tco.zip`:
+   ```bash
+   zip snowflake_assessment_tco.zip warehouses_workload_structure_mds.csv warehouse_metering_history_mds.csv table_storage_metrics_mds.csv compilerworks-metadata.yaml dumper-telemetry.jsonl
    ```
 
 ---

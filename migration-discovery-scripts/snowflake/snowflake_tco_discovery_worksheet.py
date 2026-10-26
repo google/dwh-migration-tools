@@ -303,13 +303,9 @@ def format_value(val) -> str:
     if isinstance(val, decimal.Decimal):
         return format(val, "f")
     if isinstance(val, float):
-        # 15 significant digits = reliable double precision; hides
-        # non-deterministic FLOAT summation noise (0.9999989999999999).
-        s = format(val, ".15g")
+        s = format(val, ".10g")
         if "e" in s.lower():
             s = format(decimal.Decimal(s), "f")
-        if s.lstrip("-").isdigit():
-            s += ".0"
         return s
     return str(val)
 
@@ -391,7 +387,7 @@ def main(session):
 
             row_count = 0
             with open(output_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
+                writer = csv.writer(f, quoting=csv.QUOTE_ALL, lineterminator="\n")
                 if cur is not None:
                     try:
                         cur.execute(rendered_sql)
@@ -497,7 +493,7 @@ product:
                     "account_region": account_region,
                     "lookback_days": LOOKBACK_DAYS,
                     "access_history_available": access_history_available,
-                    "runtime": "snowflake-python-worksheet",
+                    "extraction_method": "snowflake-worksheet",
                 },
             }
         ],

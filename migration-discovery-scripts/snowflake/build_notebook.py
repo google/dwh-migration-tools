@@ -118,13 +118,9 @@ SHARED_FORMAT_VALUE_CODE = '''def format_value(val) -> str:
     if isinstance(val, decimal.Decimal):
         return format(val, "f")
     if isinstance(val, float):
-        # 15 significant digits = reliable double precision; hides
-        # non-deterministic FLOAT summation noise (0.9999989999999999).
-        s = format(val, ".15g")
+        s = format(val, ".10g")
         if "e" in s.lower():
             s = format(decimal.Decimal(s), "f")
-        if s.lstrip("-").isdigit():
-            s += ".0"
         return s
     return str(val)'''
 
@@ -308,6 +304,8 @@ print(f"[INFO] Start Time (UTC): {start_time_iso}")
 # Extraction Tasks & Query Execution
 # =====================================================================
 import csv
+import datetime
+import decimal
 import os
 import re
 import tempfile
@@ -343,7 +341,7 @@ for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
 
         row_count = 0
         with open(output_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
+            writer = csv.writer(f, quoting=csv.QUOTE_ALL, lineterminator="\\n")
             if cur is not None:
                 try:
                     cur.execute(rendered_sql)
@@ -459,7 +457,7 @@ telemetry_record = {
                 "account_region": account_region,
                 "lookback_days": LOOKBACK_DAYS,
                 "access_history_available": access_history_available,
-                "runtime": "snowflake-notebook",
+                "extraction_method": "snowflake-notebook",
             },
         }
     ],
@@ -662,7 +660,7 @@ def generate_notebook_json(templates: dict[str, str]) -> str:
 # Python Worksheet & Anonymous Procedure Generator
 # =====================================================================
 
-def generate_python_handler(templates: dict[str, str], runtime: str) -> str:
+def generate_python_handler(templates: dict[str, str], extraction_method: str = "snowflake-worksheet") -> str:
     """Generates the core Python script with def main(session) for worksheet and procedure."""
     sql_constants = format_sql_constants(templates)
 
@@ -784,7 +782,7 @@ def main(session):
 
             row_count = 0
             with open(output_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
+                writer = csv.writer(f, quoting=csv.QUOTE_ALL, lineterminator="\\n")
                 if cur is not None:
                     try:
                         cur.execute(rendered_sql)
@@ -890,7 +888,7 @@ product:
                     "account_region": account_region,
                     "lookback_days": LOOKBACK_DAYS,
                     "access_history_available": access_history_available,
-                    "runtime": "{runtime}",
+                    "extraction_method": "{extraction_method}",
                 }},
             }}
         ],
@@ -1004,7 +1002,7 @@ def generate_worksheet_py(templates: dict[str, str]) -> str:
 # - CREATE STAGE on the active Schema (or pre-existing SSE stage BQMS_TCO_DISCOVERY_STAGE).
 # ====================================================================='''
 
-    body = generate_python_handler(templates, runtime="snowflake-python-worksheet")
+    body = generate_python_handler(templates, extraction_method="snowflake-worksheet")
     return f"{header}\n\n{body}\n"
 
 
@@ -1031,7 +1029,7 @@ def generate_procedure_sql(templates: dict[str, str]) -> str:
 -- No CREATE PROCEDURE privileges are required on the schema.
 -- ====================================================================='''
 
-    body = generate_python_handler(templates, runtime="snowflake-anonymous-procedure")
+    body = generate_python_handler(templates, extraction_method="snowflake-worksheet")
     assert "$$" not in body, "Embedded Python body must not contain '$$'"
 
     sql = f'''{header}
