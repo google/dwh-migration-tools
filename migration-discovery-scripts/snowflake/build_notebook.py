@@ -215,17 +215,25 @@ OUTPUT_STAGE = "BQMS_TCO_DISCOVERY_STAGE"
 # Name of the output zip package
 ZIP_NAME = "snowflake_assessment_tco.zip"
 
+# Enable verbose output (detailed configuration, run ID, and step logging)
+VERBOSE = False
+
 # Tool version
 TOOL_VERSION = "1.0.0"
+
+# Log message helper for verbose mode
+def log(msg: str) -> None:
+    if VERBOSE:
+        print(msg)
 
 # Validate configuration
 if not isinstance(LOOKBACK_DAYS, int) or LOOKBACK_DAYS < 1 or LOOKBACK_DAYS > 365:
     raise ValueError(f"LOOKBACK_DAYS must be an integer between 1 and 365 (got: {LOOKBACK_DAYS})")
 
-print(f"[CONFIG] Lookback Days: {LOOKBACK_DAYS}")
-print(f"[CONFIG] Output Stage:  @{OUTPUT_STAGE}")
-print(f"[CONFIG] Zip Package:   {ZIP_NAME}")
-print(f"[CONFIG] Tool Version:  {TOOL_VERSION}")
+log(f"[CONFIG] Lookback Days: {LOOKBACK_DAYS}")
+log(f"[CONFIG] Output Stage:  @{OUTPUT_STAGE}")
+log(f"[CONFIG] Zip Package:   {ZIP_NAME}")
+log(f"[CONFIG] Tool Version:  {TOOL_VERSION}")
 """
 
     cell_3_setup = """# =====================================================================
@@ -269,7 +277,11 @@ try:
         account_region = str(region_row[0])
 except Exception as e:
     print(f"[WARN] Failed to get CURRENT_REGION(): {e}")
-print(f"[INFO] Connected to Snowflake. Account Region: {account_region}")
+
+if account_region == "UNKNOWN":
+    print("[WARN] Account region is UNKNOWN")
+else:
+    log(f"[INFO] Connected to Snowflake. Account Region: {account_region}")
 
 # Pre-flight check: probe SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY
 access_history_available = True
@@ -279,8 +291,8 @@ try:
         cur.fetchone()
     else:
         session.sql("SELECT 1 FROM SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY LIMIT 1;").collect()
-    print("[INFO] SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY is available.")
-except Exception as e:
+    log("[INFO] SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY is available.")
+except Exception:
     access_history_available = False
     print("[WARN] SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY is inaccessible (e.g. Snowflake Standard Edition or missing GOVERNANCE_VIEWER role).")
     print("[WARN] Falling back to IsMultiObject = FALSE in warehouses_workload_structure_mds.")
@@ -293,8 +305,8 @@ start_time_iso = start_dt_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 run_date = start_dt_utc.strftime("%Y-%m-%d")
 run_id = f"snowflake-discovery-{start_dt_utc.strftime('%Y%m%d%H%M%S')}"
 
-print(f"[INFO] Run ID:          {run_id}")
-print(f"[INFO] Start Time (UTC): {start_time_iso}")
+log(f"[INFO] Run ID:          {run_id}")
+log(f"[INFO] Start Time (UTC): {start_time_iso}")
 """
 
     sql_constants = format_sql_constants(templates)
@@ -324,11 +336,10 @@ errors = []
 succeeded_count = 0
 failed_count = 0
 
-print(f"[INFO] Staging extracted data in: {{temp_dir}}\\n")
+log(f"[INFO] Staging extracted data in: {{temp_dir}}\\n")
 
 for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
     output_path = os.path.join(temp_dir, output_csv)
-    print(f"[INFO] Extracting {{desc}} ({{output_csv}})... ", end="", flush=True)
     q_start = time.time()
 
     try:
@@ -373,7 +384,7 @@ for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
             "duration_seconds": elapsed,
             "row_count": row_count,
         }})
-        print(f"DONE ({{row_count}} rows, {{elapsed}}s)")
+        print(f"{{output_csv}}  {{row_count}} rows  {{elapsed}}s")
 
     except Exception as e:
         elapsed = int(time.time() - q_start)
@@ -387,8 +398,7 @@ for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
             "duration_seconds": elapsed,
             "error": err_msg,
         }})
-        print(f"FAILED ({{elapsed}}s)")
-        print(f"       [ERROR] {{err_msg}}")
+        print(f"{{output_csv}}  FAILED ({{elapsed}}s): {{err_msg}}")
 """
 
     cell_5_packaging = """# =====================================================================
@@ -473,8 +483,8 @@ task_details.append({
     "duration_seconds": 0,
 })
 
-print(f"[INFO] Created compilerworks-metadata.yaml")
-print(f"[INFO] Created dumper-telemetry.jsonl")
+log("[INFO] Created compilerworks-metadata.yaml")
+log("[INFO] Created dumper-telemetry.jsonl")
 
 # Abort packaging if any task failed
 if failed_count > 0:
@@ -497,7 +507,7 @@ with zipfile.ZipFile(local_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z
         zf.write(fpath, arcname=fname)
 
 zip_size_bytes = os.path.getsize(local_zip_path)
-print(f"[INFO] Successfully packaged {ZIP_NAME} ({zip_size_bytes:,} bytes)")
+log(f"[INFO] Successfully packaged {ZIP_NAME} ({zip_size_bytes:,} bytes)")
 """
 
     cell_6_upload = """# =====================================================================
@@ -513,9 +523,9 @@ else:
 
 # Upload the zip package to the internal stage
 stage_target = f"@{OUTPUT_STAGE}"
-print(f"[INFO] Uploading {ZIP_NAME} to {stage_target}...")
+log(f"[INFO] Uploading {ZIP_NAME} to {stage_target}...")
 put_result = session.file.put(local_zip_path, stage_target, auto_compress=False, overwrite=True)
-print(f"[INFO] Stage upload complete.")
+log("[INFO] Stage upload complete.")
 
 # Generate pre-signed download URL (valid for 3600 seconds / 1 hour)
 presigned_sql = f"SELECT GET_PRESIGNED_URL(@{OUTPUT_STAGE}, '{ZIP_NAME}', 3600);"
@@ -538,32 +548,24 @@ else:
 curr_db = db_schema_row[0] if db_schema_row and db_schema_row[0] else "<CURRENT_DATABASE>"
 curr_schema = db_schema_row[1] if db_schema_row and db_schema_row[1] else "<CURRENT_SCHEMA>"
 
-print("\\n" + "=" * 65)
-print("  EXTRACTION COMPLETE & PACKAGE STAGED")
-print("=" * 65)
-print(f"Stage Location:   @{curr_db}.{curr_schema}.{OUTPUT_STAGE}/{ZIP_NAME}")
-print(f"Archive Size:     {zip_size_bytes:,} bytes")
-print("-" * 65)
-print("DOWNLOAD OPTION 1: Pre-signed URL (Valid for 1 Hour):")
-print(presigned_url)
-print("-" * 65)
-print("DOWNLOAD OPTION 2: Snowsight Web UI:")
-print(f"1. Open Snowsight -> Data -> Databases")
-print(f"2. Navigate to: {curr_db} -> {curr_schema} -> Stages -> {OUTPUT_STAGE}")
-print(f"3. Select '{ZIP_NAME}' and click 'Download'")
-print("=" * 65 + "\\n")
+print(f"Download URL (valid 1h): {presigned_url}")
+print(f"Snowsight stage path:   @{curr_db}.{curr_schema}.{OUTPUT_STAGE}/{ZIP_NAME}")
 
-# Print Summary Table
-print("Task Execution Summary:")
-print(f"{'Task Name':<38} {'Status':<12} {'Rows':<10} {'Duration':<10}")
-print("-" * 72)
-for task in task_details:
-    t_name = task["name"]
-    t_status = task["status"]
-    t_rows = str(task.get("row_count", "-"))
-    t_dur = f"{task['duration_seconds']}s"
-    print(f"{t_name:<38} {t_status:<12} {t_rows:<10} {t_dur:<10}")
-print("-" * 72)
+if VERBOSE:
+    print(f"\\nArchive Size:     {zip_size_bytes:,} bytes")
+    print(f"Stage Location:   @{curr_db}.{curr_schema}.{OUTPUT_STAGE}/{ZIP_NAME}")
+    print("Snowsight Navigation: Data -> Databases -> "
+          f"{curr_db} -> {curr_schema} -> Stages -> {OUTPUT_STAGE} -> {ZIP_NAME}")
+    print("\\nTask Execution Summary:")
+    print(f"{'Task Name':<38} {'Status':<12} {'Rows':<10} {'Duration':<10}")
+    print("-" * 72)
+    for task in task_details:
+        t_name = task["name"]
+        t_status = task["status"]
+        t_rows = str(task.get("row_count", "-"))
+        t_dur = f"{task['duration_seconds']}s"
+        print(f"{t_name:<38} {t_status:<12} {t_rows:<10} {t_dur:<10}")
+    print("-" * 72)
 """
 
     cell_7_markdown = """## 📤 Next Steps
@@ -726,8 +728,8 @@ def main(session):
             cur.execute("ALTER SESSION SET TIMEZONE='UTC', STATEMENT_TIMEOUT_IN_SECONDS=3600;")
         else:
             session.sql("ALTER SESSION SET TIMEZONE='UTC', STATEMENT_TIMEOUT_IN_SECONDS=3600;").collect()
-    except Exception as e:
-        print(f"[WARN] Failed to set session parameters: {{e}}")
+    except Exception:
+        pass
 
     # Pre-flight check: capture account region
     account_region = "UNKNOWN"
@@ -740,8 +742,8 @@ def main(session):
             region_row = region_res[0] if region_res else None
         if region_row and region_row[0]:
             account_region = str(region_row[0])
-    except Exception as e:
-        print(f"[WARN] Failed to get CURRENT_REGION(): {{e}}")
+    except Exception:
+        pass
 
     # Pre-flight check: probe SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY
     access_history_available = True
@@ -905,20 +907,27 @@ product:
     }})
 
     # Build summary rows table: columns = STEP, STATUS, DETAIL
-    summary_rows = [
-        ("region", "INFO", account_region),
-        ("access_history_available", "INFO", str(access_history_available)),
-    ]
+    summary_rows = []
+
+    # 1. One row per CSV extraction task (keep any failures as FAILED rows)
     for task in task_details:
         t_name = task["name"]
         t_status = task["status"]
-        if t_status == "SUCCEEDED":
-            row_str = f"{{task.get('row_count', 0):,}} rows, " if "row_count" in task else ""
-            summary_rows.append((t_name, t_status, f"{{row_str}}{{task['duration_seconds']}}s"))
-        else:
-            summary_rows.append((t_name, t_status, f"Error: {{task.get('error', 'Unknown error')}} ({{task['duration_seconds']}}s)"))
+        if t_name.endswith(".csv"):
+            if t_status == "SUCCEEDED":
+                summary_rows.append((t_name, t_status, f"{{task.get('row_count', 0):,}} rows, {{task['duration_seconds']}}s"))
+            else:
+                summary_rows.append((t_name, t_status, f"Error: {{task.get('error', 'Unknown error')}} ({{task['duration_seconds']}}s)"))
+        elif t_status == "FAILED":
+            summary_rows.append((t_name, t_status, f"Error: {{task.get('error', 'Unknown error')}}"))
 
-    # Packaging & Staging (only executed if all extraction tasks succeeded)
+    # 2. Optional WARN rows: only when something degrades
+    if not access_history_available:
+        summary_rows.append(("access_history", "WARN", "Inaccessible (e.g. Standard Edition); falling back to IsMultiObject = FALSE"))
+    if account_region == "UNKNOWN":
+        summary_rows.append(("region", "WARN", "Account region could not be determined"))
+
+    # 3. Packaging & Staging (only executed if all extraction tasks succeeded)
     if failed_count == 0:
         local_zip_path = os.path.join(temp_dir, ZIP_NAME)
         with zipfile.ZipFile(local_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
@@ -961,16 +970,12 @@ product:
         curr_schema = db_schema_row[1] if db_schema_row and db_schema_row[1] else "<CURRENT_SCHEMA>"
 
         summary_rows.extend([
-            ("zip_size", "SUCCEEDED", f"{{zip_size_bytes:,}} bytes"),
-            ("stage_upload", "SUCCEEDED", f"@{{curr_db}}.{{curr_schema}}.{{OUTPUT_STAGE}}/{{ZIP_NAME}}"),
-            ("PRESIGNED_URL", "SUCCEEDED", presigned_url),
+            ("DOWNLOAD_URL", "SUCCEEDED", presigned_url),
             ("SNOWSIGHT_PATH", "INFO", f"Data -> Databases -> {{curr_db}} -> {{curr_schema}} -> Stages -> {{OUTPUT_STAGE}} -> {{ZIP_NAME}}"),
         ])
     else:
         summary_rows.extend([
-            ("zip_size", "SKIPPED", f"{{failed_count}} extraction task(s) failed; packaging skipped"),
-            ("stage_upload", "SKIPPED", "Upload skipped due to extraction task failure"),
-            ("PRESIGNED_URL", "SKIPPED", "No package uploaded"),
+            ("DOWNLOAD_URL", "SKIPPED", "No package uploaded"),
             ("SNOWSIGHT_PATH", "SKIPPED", "No package uploaded"),
         ])
 

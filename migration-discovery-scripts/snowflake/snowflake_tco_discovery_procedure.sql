@@ -339,8 +339,8 @@ def main(session):
             cur.execute("ALTER SESSION SET TIMEZONE='UTC', STATEMENT_TIMEOUT_IN_SECONDS=3600;")
         else:
             session.sql("ALTER SESSION SET TIMEZONE='UTC', STATEMENT_TIMEOUT_IN_SECONDS=3600;").collect()
-    except Exception as e:
-        print(f"[WARN] Failed to set session parameters: {e}")
+    except Exception:
+        pass
 
     # Pre-flight check: capture account region
     account_region = "UNKNOWN"
@@ -353,8 +353,8 @@ def main(session):
             region_row = region_res[0] if region_res else None
         if region_row and region_row[0]:
             account_region = str(region_row[0])
-    except Exception as e:
-        print(f"[WARN] Failed to get CURRENT_REGION(): {e}")
+    except Exception:
+        pass
 
     # Pre-flight check: probe SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY
     access_history_available = True
@@ -518,20 +518,27 @@ product:
     })
 
     # Build summary rows table: columns = STEP, STATUS, DETAIL
-    summary_rows = [
-        ("region", "INFO", account_region),
-        ("access_history_available", "INFO", str(access_history_available)),
-    ]
+    summary_rows = []
+
+    # 1. One row per CSV extraction task (keep any failures as FAILED rows)
     for task in task_details:
         t_name = task["name"]
         t_status = task["status"]
-        if t_status == "SUCCEEDED":
-            row_str = f"{task.get('row_count', 0):,} rows, " if "row_count" in task else ""
-            summary_rows.append((t_name, t_status, f"{row_str}{task['duration_seconds']}s"))
-        else:
-            summary_rows.append((t_name, t_status, f"Error: {task.get('error', 'Unknown error')} ({task['duration_seconds']}s)"))
+        if t_name.endswith(".csv"):
+            if t_status == "SUCCEEDED":
+                summary_rows.append((t_name, t_status, f"{task.get('row_count', 0):,} rows, {task['duration_seconds']}s"))
+            else:
+                summary_rows.append((t_name, t_status, f"Error: {task.get('error', 'Unknown error')} ({task['duration_seconds']}s)"))
+        elif t_status == "FAILED":
+            summary_rows.append((t_name, t_status, f"Error: {task.get('error', 'Unknown error')}"))
 
-    # Packaging & Staging (only executed if all extraction tasks succeeded)
+    # 2. Optional WARN rows: only when something degrades
+    if not access_history_available:
+        summary_rows.append(("access_history", "WARN", "Inaccessible (e.g. Standard Edition); falling back to IsMultiObject = FALSE"))
+    if account_region == "UNKNOWN":
+        summary_rows.append(("region", "WARN", "Account region could not be determined"))
+
+    # 3. Packaging & Staging (only executed if all extraction tasks succeeded)
     if failed_count == 0:
         local_zip_path = os.path.join(temp_dir, ZIP_NAME)
         with zipfile.ZipFile(local_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
@@ -574,16 +581,12 @@ product:
         curr_schema = db_schema_row[1] if db_schema_row and db_schema_row[1] else "<CURRENT_SCHEMA>"
 
         summary_rows.extend([
-            ("zip_size", "SUCCEEDED", f"{zip_size_bytes:,} bytes"),
-            ("stage_upload", "SUCCEEDED", f"@{curr_db}.{curr_schema}.{OUTPUT_STAGE}/{ZIP_NAME}"),
-            ("PRESIGNED_URL", "SUCCEEDED", presigned_url),
+            ("DOWNLOAD_URL", "SUCCEEDED", presigned_url),
             ("SNOWSIGHT_PATH", "INFO", f"Data -> Databases -> {curr_db} -> {curr_schema} -> Stages -> {OUTPUT_STAGE} -> {ZIP_NAME}"),
         ])
     else:
         summary_rows.extend([
-            ("zip_size", "SKIPPED", f"{failed_count} extraction task(s) failed; packaging skipped"),
-            ("stage_upload", "SKIPPED", "Upload skipped due to extraction task failure"),
-            ("PRESIGNED_URL", "SKIPPED", "No package uploaded"),
+            ("DOWNLOAD_URL", "SKIPPED", "No package uploaded"),
             ("SNOWSIGHT_PATH", "SKIPPED", "No package uploaded"),
         ])
 

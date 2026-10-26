@@ -22,7 +22,7 @@ Zero Java runtime, zero SQL text (`QUERY_TEXT`), table/schema names, or PII extr
 3. In worksheet **Settings** (gear icon), set **Handler** = `main` and **Return type** = `Table()`.
 4. Paste [`snowflake_tco_discovery_worksheet.py`](./snowflake_tco_discovery_worksheet.py); adjust `LOOKBACK_DAYS = 14` near the top if needed.
 5. Click **Run**. The result table displays `STEP`, `STATUS`, and `DETAIL`.
-6. Open the `PRESIGNED_URL` to download `snowflake_assessment_tco.zip`, or download from **Data → Databases → <db> → <schema> → Stages → BQMS_TCO_DISCOVERY_STAGE**.
+6. Open the `DOWNLOAD_URL` to download `snowflake_assessment_tco.zip`, or download from **Data → Databases → <db> → <schema> → Stages → BQMS_TCO_DISCOVERY_STAGE**.
 
 ### Option 2: Snowflake Notebook
 1. In Snowsight, open **Projects → Notebooks**, click the arrow next to **+ Notebook** → **Import .ipynb file**.
@@ -36,14 +36,14 @@ Zero Java runtime, zero SQL text (`QUERY_TEXT`), table/schema names, or PII extr
 2. Select an active **Database**, **Schema**, and **Warehouse**.
 3. Paste [`snowflake_tco_discovery_procedure.sql`](./snowflake_tco_discovery_procedure.sql); adjust `LOOKBACK_DAYS = 14` in the Python body near the top if needed.
 4. Click **Run All** (Ctrl/Cmd + Shift + Enter).
-5. Download `snowflake_assessment_tco.zip` using the returned `PRESIGNED_URL` or from stage `BQMS_TCO_DISCOVERY_STAGE`.
+5. Download `snowflake_assessment_tco.zip` using the returned `DOWNLOAD_URL` or from stage `BQMS_TCO_DISCOVERY_STAGE`.
 
 ---
 
 ### Option 4: Automated CLI (`tco_discovery.sh`)
 ```bash
 export SNOWSQL_PWD='<password>'  # or pass -k /path/to/rsa_key.p8
-./tco_discovery.sh -a <account> -u <user> [-r <role>] [-w <warehouse>] [-d <days>] [-o <output_dir>]
+./tco_discovery.sh -a <account> -u <user> [-r <role>] [-w <warehouse>] [-d <days>] [-o <output_dir>] [-v]
 ```
 
 | Flag | Required | Default | Description |
@@ -55,6 +55,7 @@ export SNOWSQL_PWD='<password>'  # or pass -k /path/to/rsa_key.p8
 | `-k, --private-key-path` | No | — | Path to RSA private key file (`rsa_key.p8`) for key-pair auth. |
 | `-d, --days` | No | `14` | Historical lookback window in days (`1`–`365`). |
 | `-o, --output` | No | `./out` | Output staging directory for extracted CSVs and zip archive. |
+| `-v, --verbose` | No | `false` | Enable verbose execution output (banners, config echo, debug details). |
 
 **Examples:**
 ```bash
