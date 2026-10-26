@@ -311,10 +311,9 @@ def format_value(val) -> str:
     if isinstance(val, decimal.Decimal):
         return format(val, "f")
     if isinstance(val, float):
-        s = format(val, ".10g")
-        if "e" in s.lower():
-            s = format(decimal.Decimal(s), "f")
-        return s
+        # Matches SnowSQL FLOAT rendering exactly (10 significant digits,
+        # e.g. '1', '0.999999', '1.055555556e-05').
+        return format(val, ".10g")
     return str(val)
 
 
