@@ -19,7 +19,6 @@
 Produces:
 1. snowflake_tco_discovery.ipynb (Snowflake Notebook)
 2. snowflake_tco_discovery_worksheet.py (Snowsight Python Worksheet)
-3. snowflake_tco_discovery_procedure.sql (Snowflake Anonymous Stored Procedure)
 """
 
 import argparse
@@ -32,7 +31,6 @@ SCRIPT_DIR = pathlib.Path(__file__).parent.resolve()
 SQL_DIR = SCRIPT_DIR / "sql"
 DEFAULT_OUTPUT_NOTEBOOK = SCRIPT_DIR / "snowflake_tco_discovery.ipynb"
 DEFAULT_OUTPUT_WORKSHEET = SCRIPT_DIR / "snowflake_tco_discovery_worksheet.py"
-DEFAULT_OUTPUT_PROCEDURE = SCRIPT_DIR / "snowflake_tco_discovery_procedure.sql"
 
 # License headers (Apache 2.0)
 LICENSE_HEADER_HASH = """# Copyright 2026 Google LLC
@@ -49,22 +47,6 @@ LICENSE_HEADER_HASH = """# Copyright 2026 Google LLC
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""
-
-LICENSE_HEADER_SQL = """-- Copyright 2026 Google LLC
---
--- Licensed under the Apache License, Version 2.0 (the "License");
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
 """
 
 # =====================================================================
@@ -658,11 +640,11 @@ def generate_notebook_json(templates: dict[str, str]) -> str:
 
 
 # =====================================================================
-# Python Worksheet & Anonymous Procedure Generator
+# Python Worksheet Generator
 # =====================================================================
 
 def generate_python_handler(templates: dict[str, str], extraction_method: str = "snowflake-worksheet") -> str:
-    """Generates the core Python script with def main(session) for worksheet and procedure."""
+    """Generates the core Python script with def main(session) for worksheet."""
     sql_constants = format_sql_constants(templates)
 
     return f'''import csv
@@ -1010,49 +992,6 @@ def generate_worksheet_py(templates: dict[str, str]) -> str:
     return f"{header}\n\n{body}\n"
 
 
-def generate_procedure_sql(templates: dict[str, str]) -> str:
-    """Generates snowflake_tco_discovery_procedure.sql as a Snowflake anonymous stored procedure."""
-    header = f'''{LICENSE_HEADER_SQL}-- =====================================================================
--- Snowflake Discovery & TCO Extraction for BigQuery Migration
--- Anonymous Stored Procedure (Snowflake SQL Worksheet)
--- =====================================================================
--- INSTRUCTIONS:
--- 1. Open Snowsight -> Worksheets -> '+' -> 'SQL Worksheet'.
--- 2. Select an active Database, Schema, and Virtual Warehouse.
--- 3. Paste this entire script into the worksheet and click 'Run'
---    (or press Ctrl/Cmd + Shift + Enter).
--- 4. Review the returned summary table for the pre-signed download URL
---    and Snowsight Stage download path.
---
--- REQUIRED PRIVILEGES:
--- - IMPORTED PRIVILEGES on database SNOWFLAKE (to read SNOWFLAKE.ACCOUNT_USAGE).
--- - USAGE on the active Database, Schema, and Virtual Warehouse.
--- - CREATE STAGE on the active Schema (or pre-existing SSE stage BQMS_TCO_DISCOVERY_STAGE).
---
--- Note: Executes as a Snowflake ANONYMOUS stored procedure (CALL with WITH).
--- No CREATE PROCEDURE privileges are required on the schema.
--- ====================================================================='''
-
-    body = generate_python_handler(templates, extraction_method="snowflake-worksheet")
-    assert "$$" not in body, "Embedded Python body must not contain '$$'"
-
-    sql = f'''{header}
-
-WITH bqms_tco_discovery AS PROCEDURE()
-RETURNS TABLE(STEP VARCHAR, STATUS VARCHAR, DETAIL VARCHAR)
-LANGUAGE PYTHON
-RUNTIME_VERSION = '3.11'
-PACKAGES = ('snowflake-snowpark-python')
-HANDLER = 'main'
-AS
-$$
-{body}
-$$
-CALL bqms_tco_discovery();
-'''
-    return sql
-
-
 # =====================================================================
 # Main CLI & Validation
 # =====================================================================
@@ -1079,23 +1018,15 @@ def main():
         default=DEFAULT_OUTPUT_WORKSHEET,
         help=f"Path to output Python worksheet (default: {DEFAULT_OUTPUT_WORKSHEET})",
     )
-    parser.add_argument(
-        "--procedure-path",
-        type=pathlib.Path,
-        default=DEFAULT_OUTPUT_PROCEDURE,
-        help=f"Path to output SQL procedure (default: {DEFAULT_OUTPUT_PROCEDURE})",
-    )
     args = parser.parse_args()
 
     templates = load_sql_templates()
     generated_notebook = generate_notebook_json(templates)
     generated_worksheet = generate_worksheet_py(templates)
-    generated_procedure = generate_procedure_sql(templates)
 
     targets = [
         ("Notebook", args.output, generated_notebook),
         ("Worksheet", args.worksheet_path, generated_worksheet),
-        ("Procedure", args.procedure_path, generated_procedure),
     ]
 
     if args.check:

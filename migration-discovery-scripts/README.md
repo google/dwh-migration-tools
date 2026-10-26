@@ -6,4 +6,4 @@ This directory contains lightweight, native scripts that can be run on top of da
 ## Available Discovery Packages
 
 - **[Oracle](./oracle/)**: Native SQL*Plus extraction scripts for Oracle Database / Exadata to extract instance sizing, storage metrics, and performance statistics without full Java dumper execution.
-- **[Snowflake](./snowflake/)**: Native Snowsight (Python worksheet, notebook, SQL procedure) and SnowSQL CLI scripts for Snowflake to extract hourly virtual warehouse workload credit and block sums, compute credit consumption, and aggregated storage metrics with zero external binaries or SQL text exposure.
+- **[Snowflake](./snowflake/)**: Native Snowsight (Python worksheet, notebook) and SnowSQL CLI scripts for Snowflake to extract hourly virtual warehouse workload credit and block sums, compute credit consumption, and aggregated storage metrics with zero external binaries or SQL text exposure.

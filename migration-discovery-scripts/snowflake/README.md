@@ -10,9 +10,8 @@ Zero Java runtime, zero SQL text (`QUERY_TEXT`), table/schema names, or PII extr
 | :--- | :--- | :--- | :--- |
 | **1. Python Worksheet** *(Recommended)* | Snowsight UI | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse, db, schema; `CREATE STAGE` on schema (or existing `BQMS_TCO_DISCOVERY_STAGE`) | Pre-signed URL or stage download |
 | **2. Notebook** | Snowsight UI | Same as Option 1 + `CREATE NOTEBOOK` on schema | Pre-signed URL or stage download |
-| **3. SQL Procedure** | Snowsight UI | Same as Option 1 (runs as anonymous procedure; no `CREATE PROCEDURE` needed) | Pre-signed URL or stage download |
-| **4. CLI Script** | Local terminal | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse; local SnowSQL CLI, bash, zip | Local zip file |
-| **5. Manual SQL** | Snowsight UI | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse | 3 downloaded CSVs + manual zip |
+| **3. CLI Script** | Local terminal | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse; local SnowSQL CLI, bash, zip | Local zip file |
+| **4. Manual SQL** | Snowsight UI | `IMPORTED PRIVILEGES` on `SNOWFLAKE` db, `USAGE` on warehouse | 3 downloaded CSVs + manual zip |
 
 ---
 
@@ -31,16 +30,9 @@ Zero Java runtime, zero SQL text (`QUERY_TEXT`), table/schema names, or PII extr
 4. Click **Run All**.
 5. Use the printed pre-signed URL or stage location to download `snowflake_assessment_tco.zip`.
 
-### Option 3: SQL Worksheet / Anonymous Procedure
-1. In Snowsight, open **Projects → Worksheets**, click **+** → **SQL Worksheet**.
-2. Select an active **Database**, **Schema**, and **Warehouse**.
-3. Paste [`snowflake_tco_discovery_procedure.sql`](./snowflake_tco_discovery_procedure.sql); adjust `LOOKBACK_DAYS = 14` in the Python body near the top if needed.
-4. Click **Run All** (Ctrl/Cmd + Shift + Enter).
-5. Download `snowflake_assessment_tco.zip` using the returned `DOWNLOAD_URL` or from stage `BQMS_TCO_DISCOVERY_STAGE`.
-
 ---
 
-### Option 4: Automated CLI (`tco_discovery.sh`)
+### Option 3: Automated CLI (`tco_discovery.sh`)
 ```bash
 export SNOWSQL_PWD='<password>'  # or pass -k /path/to/rsa_key.p8
 ./tco_discovery.sh -a <account> -u <user> [-r <role>] [-w <warehouse>] [-d <days>] [-o <output_dir>] [-v]
@@ -65,7 +57,7 @@ export SNOWSQL_PWD='<password>'  # or pass -k /path/to/rsa_key.p8
 
 ---
 
-### Option 5: Manual Execution in Snowsight
+### Option 4: Manual Execution in Snowsight
 1. Set session parameters:
    ```sql
    ALTER SESSION SET TIMEZONE='UTC', TIMESTAMP_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"', TIMESTAMP_LTZ_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"', TIMESTAMP_NTZ_OUTPUT_FORMAT='YYYY-MM-DD"T"HH24:MI:SS.FF3"Z"';
