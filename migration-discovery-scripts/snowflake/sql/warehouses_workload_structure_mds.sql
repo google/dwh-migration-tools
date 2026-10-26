@@ -135,4 +135,6 @@ SELECT
     )) AS "BlocksForStandard"
 FROM QueryClassified
 GROUP BY 1, 2
+HAVING SUM("AttributedCredits") <> 0
+    OR SUM(IFF(QUERY_TYPE != 'COPY' AND USER_NAME != 'SYSTEM', "QueryBlocks", 0)) <> 0
 ORDER BY "WarehouseName" ASC, "AggregateTime" ASC;
