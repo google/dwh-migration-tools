@@ -27,10 +27,9 @@ Supported in both the **Legacy Snowsight UI** and **New Snowsight Workspaces UI*
   5. Click **Run**. The result table displays `STEP`, `STATUS`, and `DETAIL`.
 
 - **New Snowsight Workspaces UI**:
-  1. Open **Workspaces**, create or import a Python worksheet (runs top-to-bottom as a script via `__main__` or via handler `main`).
-  2. If the workspace has no active database/schema selected, set `OUTPUT_DATABASE` and `OUTPUT_SCHEMA` at the top of the worksheet script.
-  3. *Note on Container Runtime*: If the workspace uses Snowflake Container Runtime, compute-pool quota is required. If your account hits compute pool or node quota limits, switch to warehouse runtime in legacy UI or use **Option 3 (CLI script)**.
-  4. Click **Run**.
+  1. Click the big **+** → **Python file** and paste [`snowflake_tco_discovery_worksheet.py`](./snowflake_tco_discovery_worksheet.py) (it runs top-to-bottom as a script).
+  2. If no database/schema is selected, set `OUTPUT_DATABASE` and `OUTPUT_SCHEMA` at the top of the file.
+  3. Click **Run** and confirm **Connect your Python file** (Container Runtime compute pool). Requires compute-pool quota; if you see a *node limit* error, use the Legacy UI, **Option 3 (CLI)** or **Option 4 (Manual SQL)**.
 
 Once complete, open the `DOWNLOAD_URL` to download `snowflake_assessment_tco.zip`, or download from **Data → Databases → <db> → <schema> → Stages → BQMS_TCO_DISCOVERY_STAGE**.
 
@@ -45,10 +44,9 @@ Supported in both legacy warehouse environments and Snowsight Workspaces:
   4. Click **Run All**.
 
 - **New Snowsight Workspaces UI**:
-  1. Import [`snowflake_tco_discovery.ipynb`](./snowflake_tco_discovery.ipynb) into your Workspace.
-  2. If the notebook lacks active database/schema context, explicitly set `OUTPUT_DATABASE` and `OUTPUT_SCHEMA` in the configuration cell.
-  3. *Note on Container Runtime*: Workspaces using Container Runtime require compute-pool quota (`CREATE COMPUTE POOL` or compute pool access). If your account lacks Container Runtime quota, run on a standard warehouse in the legacy UI, or use **Option 1 (Python Worksheet)** or **Option 3 (CLI Script)** instead.
-  4. Click **Run All**.
+  1. Click the big **+** → **Notebook** and import [`snowflake_tco_discovery.ipynb`](./snowflake_tco_discovery.ipynb).
+  2. If no database/schema is selected, set `OUTPUT_DATABASE` and `OUTPUT_SCHEMA` in the configuration cell.
+  3. Click **Run all** and confirm **Connect your notebook** (Container Runtime compute pool). Requires compute-pool quota; if you see a *node limit* error, use the Legacy UI, **Option 3 (CLI)** or **Option 4 (Manual SQL)**.
 
 Use the printed pre-signed URL or stage location to download `snowflake_assessment_tco.zip`.
 
