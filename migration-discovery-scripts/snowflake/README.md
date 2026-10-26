@@ -35,7 +35,7 @@ Zero Java runtime, zero SQL text, table/schema names, or PII extracted. Automati
 ### Option 3: Automated CLI (`tco_discovery.sh`)
 ```bash
 export SNOWSQL_PWD='<password>'  # or pass -k /path/to/rsa_key.p8
-./tco_discovery.sh -a <account> -u <user> [-r <role>] [-w <warehouse>] [-d <days>] [-o <output_dir>] [-v]
+./tco_discovery.sh -a <account> -u <user> [-r <role>] [-w <warehouse>] [-d <days>] [-o <output_dir>]
 ```
 
 | Flag | Required | Default | Description |
@@ -47,7 +47,6 @@ export SNOWSQL_PWD='<password>'  # or pass -k /path/to/rsa_key.p8
 | `-k, --private-key-path` | No | — | Path to RSA private key file (`rsa_key.p8`) for key-pair auth. |
 | `-d, --days` | No | `14` | Historical lookback window in days (`1`–`365`). |
 | `-o, --output` | No | `./out` | Output staging directory for extracted CSVs and zip archive. |
-| `-v, --verbose` | No | `false` | Enable verbose execution output (banners, config echo, debug details). |
 
 **Examples:**
 ```bash
