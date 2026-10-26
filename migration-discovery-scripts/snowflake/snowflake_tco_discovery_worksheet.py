@@ -113,7 +113,7 @@ QueryRaw AS (
         COUNT(*) OVER (
             PARTITION BY QL.WAREHOUSE_NAME, DATE_TRUNC('HOUR', QL.START_TIME)
         ) AS "HourQueryCount",
-        COALESCE(Credits."TotalCreditsBilled", 1.0) AS "HourCreditsBilled"
+        COALESCE(Credits."TotalCreditsBilled", 0.0) AS "HourCreditsBilled"
     FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY AS QL
     LEFT JOIN CreditsPerHourPerWarehouse AS Credits
         ON QL.WAREHOUSE_NAME = Credits."WarehouseName"
