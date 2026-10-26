@@ -16,19 +16,41 @@ Zero Java runtime, zero SQL text, table/schema names, or PII extracted. Automati
 ---
 
 ### Option 1: Snowsight Python Worksheet
-1. In Snowsight, open **Projects → Worksheets**, click **+** → **Python Worksheet**.
-2. Select an active **Database**, **Schema**, and **Warehouse** in the context selector.
-3. In worksheet **Settings** (gear icon), set **Handler** = `main` and **Return type** = `Table()`.
-4. Paste [`snowflake_tco_discovery_worksheet.py`](./snowflake_tco_discovery_worksheet.py); adjust `LOOKBACK_DAYS = 14` near the top if needed.
-5. Click **Run**. The result table displays `STEP`, `STATUS`, and `DETAIL`.
-6. Open the `DOWNLOAD_URL` to download `snowflake_assessment_tco.zip`, or download from **Data → Databases → <db> → <schema> → Stages → BQMS_TCO_DISCOVERY_STAGE**.
+
+Supported in both the **Legacy Snowsight UI** and **New Snowsight Workspaces UI**:
+
+- **Legacy Snowsight UI**:
+  1. Open **Projects → Worksheets**, click **+** → **Python Worksheet**.
+  2. Select an active **Database**, **Schema**, and **Warehouse** in the context selector.
+  3. In worksheet **Settings** (gear icon), ensure **Handler** = `main` and **Return type** = `Table()`.
+  4. Paste [`snowflake_tco_discovery_worksheet.py`](./snowflake_tco_discovery_worksheet.py); adjust `LOOKBACK_DAYS = 14` near the top if needed.
+  5. Click **Run**. The result table displays `STEP`, `STATUS`, and `DETAIL`.
+
+- **New Snowsight Workspaces UI**:
+  1. Open **Workspaces**, create or import a Python worksheet (runs top-to-bottom as a script via `__main__` or via handler `main`).
+  2. If the workspace has no active database/schema selected, set `OUTPUT_DATABASE` and `OUTPUT_SCHEMA` at the top of the worksheet script.
+  3. *Note on Container Runtime*: If the workspace uses Snowflake Container Runtime, compute-pool quota is required. If your account hits compute pool or node quota limits, switch to warehouse runtime in legacy UI or use **Option 3 (CLI script)**.
+  4. Click **Run**.
+
+Once complete, open the `DOWNLOAD_URL` to download `snowflake_assessment_tco.zip`, or download from **Data → Databases → <db> → <schema> → Stages → BQMS_TCO_DISCOVERY_STAGE**.
 
 ### Option 2: Snowflake Notebook
-1. In Snowsight, open **Projects → Notebooks**, click the arrow next to **+ Notebook** → **Import .ipynb file**.
-2. Select [`snowflake_tco_discovery.ipynb`](./snowflake_tco_discovery.ipynb), choose your **Database**, **Schema**, and **Warehouse**, then import.
-3. Adjust `LOOKBACK_DAYS = 14` in the first configuration cell if needed.
-4. Click **Run All**.
-5. Use the printed pre-signed URL or stage location to download `snowflake_assessment_tco.zip`.
+
+Supported in both legacy warehouse environments and Snowsight Workspaces:
+
+- **Legacy Snowsight UI**:
+  1. Open **Projects → Notebooks**, click the arrow next to **+ Notebook** → **Import .ipynb file**.
+  2. Select [`snowflake_tco_discovery.ipynb`](./snowflake_tco_discovery.ipynb), choose your **Database**, **Schema**, and **Warehouse**, then import.
+  3. Adjust `LOOKBACK_DAYS = 14` in the first configuration cell if needed.
+  4. Click **Run All**.
+
+- **New Snowsight Workspaces UI**:
+  1. Import [`snowflake_tco_discovery.ipynb`](./snowflake_tco_discovery.ipynb) into your Workspace.
+  2. If the notebook lacks active database/schema context, explicitly set `OUTPUT_DATABASE` and `OUTPUT_SCHEMA` in the configuration cell.
+  3. *Note on Container Runtime*: Workspaces using Container Runtime require compute-pool quota (`CREATE COMPUTE POOL` or compute pool access). If your account lacks Container Runtime quota, run on a standard warehouse in the legacy UI, or use **Option 1 (Python Worksheet)** or **Option 3 (CLI Script)** instead.
+  4. Click **Run All**.
+
+Use the printed pre-signed URL or stage location to download `snowflake_assessment_tco.zip`.
 
 ---
 

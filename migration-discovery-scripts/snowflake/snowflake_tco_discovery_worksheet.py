@@ -17,14 +17,26 @@
 # Snowsight Python Worksheet
 # =====================================================================
 # INSTRUCTIONS:
+#
+# Option A: Legacy Snowsight UI
 # 1. Open Snowsight -> Worksheets -> '+' -> 'Python Worksheet'.
-# 2. Select an active Database and Schema in the top-right context selector.
+# 2. Select an active Database, Schema, and Warehouse in the context selector.
 # 3. In worksheet Settings (top-right gear or settings panel):
 #    - Handler: main
 #    - Return type: Table()
 # 4. Review or adjust LOOKBACK_DAYS below if needed (default: 14).
 # 5. Click 'Run'.
-# 6. Review the returned summary table for the pre-signed download URL
+#
+# Option B: New Snowsight Workspaces UI
+# 1. Open Snowsight -> Workspaces -> '+' -> 'Python Worksheet' (or run as script).
+# 2. If the workspace does not have an active database/schema context,
+#    set OUTPUT_DATABASE and OUTPUT_SCHEMA below to an existing database/schema.
+# 3. Note: Workspaces using Container Runtime require compute-pool quota.
+#    If execution fails due to compute pool or node quota limits,
+#    switch to the legacy warehouse runtime or use Option 3 (CLI script).
+# 4. Click 'Run' (runs main(session) or executes as script via __main__).
+#
+# 5. Review the returned summary table for the pre-signed download URL
 #    and Snowsight Stage download path.
 #
 # REQUIRED PRIVILEGES:
@@ -56,6 +68,13 @@ except ImportError:
 # Historical lookback window in days (min: 1, max: 365)
 LOOKBACK_DAYS = 14
 
+# Output database and schema where the staging area will be located.
+# If None, automatically falls back to CURRENT_DATABASE() and CURRENT_SCHEMA().
+# Set these explicitly if running in environments without an active database context
+# (such as Snowsight Workspaces Container Runtime or automated scripts).
+OUTPUT_DATABASE = None
+OUTPUT_SCHEMA = None
+
 # Output Snowflake stage name where the zip archive will be stored
 OUTPUT_STAGE = "BQMS_TCO_DISCOVERY_STAGE"
 
@@ -64,6 +83,10 @@ ZIP_NAME = "snowflake_assessment_tco.zip"
 
 # Tool version
 TOOL_VERSION = "1.0.0"
+
+# Module-level result cache to prevent duplicate execution when the worksheet
+# is executed as a script and main(session) is also called by the UI handler.
+_RESULT = None
 
 # Embedded SQL templates (single source of truth: sql/*.sql)
 SQL_WAREHOUSES_WORKLOAD_STRUCTURE = """SET LOOKBACK_DAYS = 14;
@@ -311,8 +334,21 @@ def format_value(val) -> str:
     return str(val)
 
 
+def quote_ident(ident: str) -> str:
+    """Quotes a Snowflake identifier if it contains lowercase or special characters."""
+    if not ident or not isinstance(ident, str):
+        raise ValueError(f"Invalid identifier: {ident!r}")
+    if re.match(r"^[A-Za-z_][A-Za-z0-9_$]*$", ident):
+        return ident
+    return '"' + ident.replace('"', '""') + '"' 
+
+
 def main(session):
     """Main execution handler for Snowflake discovery and TCO extraction."""
+    global _RESULT
+    if _RESULT is not None:
+        return _RESULT
+
     # Validate configuration
     if not isinstance(LOOKBACK_DAYS, int) or LOOKBACK_DAYS < 1 or LOOKBACK_DAYS > 365:
         raise ValueError(f"LOOKBACK_DAYS must be an integer between 1 and 365 (got: {LOOKBACK_DAYS})")
@@ -326,6 +362,34 @@ def main(session):
             cur.fetchone()
     except Exception:
         cur = None
+
+    # Resolve database and schema context for output stage
+    target_db = OUTPUT_DATABASE
+    target_schema = OUTPUT_SCHEMA
+    if not target_db or not target_schema:
+        try:
+            db_schema_sql = "SELECT CURRENT_DATABASE(), CURRENT_SCHEMA();"
+            if cur is not None:
+                cur.execute(db_schema_sql)
+                db_schema_row = cur.fetchone()
+            else:
+                db_schema_res = session.sql(db_schema_sql).collect()
+                db_schema_row = db_schema_res[0] if db_schema_res else None
+            if not target_db and db_schema_row and db_schema_row[0]:
+                target_db = str(db_schema_row[0])
+            if not target_schema and db_schema_row and db_schema_row[1]:
+                target_schema = str(db_schema_row[1])
+        except Exception:
+            pass
+
+    if not target_db or not target_schema:
+        _RESULT = session.create_dataframe(
+            [("STAGE_CONTEXT", "FAILED", "No database/schema selected. Set OUTPUT_DATABASE and OUTPUT_SCHEMA at the top of the file/notebook.")],
+            schema=["STEP", "STATUS", "DETAIL"],
+        )
+        return _RESULT
+
+    target_stage = f"{quote_ident(target_db)}.{quote_ident(target_schema)}.{quote_ident(OUTPUT_STAGE)}"
 
     # Configure session parameters (UTC timezone and statement timeout)
     try:
@@ -547,15 +611,15 @@ product:
                 zf.write(fpath, arcname=fname)
         zip_size_bytes = os.path.getsize(local_zip_path)
 
-        create_stage_sql = f"CREATE STAGE IF NOT EXISTS {OUTPUT_STAGE} ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');"
+        create_stage_sql = f"CREATE STAGE IF NOT EXISTS {target_stage} ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');"
         if cur is not None:
             cur.execute(create_stage_sql)
         else:
             session.sql(create_stage_sql).collect()
 
-        session.file.put(local_zip_path, f"@{OUTPUT_STAGE}", auto_compress=False, overwrite=True)
+        session.file.put(local_zip_path, f"@{target_stage}", auto_compress=False, overwrite=True)
 
-        presigned_sql = f"SELECT GET_PRESIGNED_URL(@{OUTPUT_STAGE}, '{ZIP_NAME}', 3600);"
+        presigned_sql = f"SELECT GET_PRESIGNED_URL(@{target_stage}, '{ZIP_NAME}', 3600);"
         if cur is not None:
             cur.execute(presigned_sql)
             presigned_row = cur.fetchone()
@@ -564,19 +628,9 @@ product:
             presigned_row = presigned_res[0] if presigned_res else None
         presigned_url = presigned_row[0] if presigned_row and presigned_row[0] else "Unavailable"
 
-        db_schema_sql = "SELECT CURRENT_DATABASE(), CURRENT_SCHEMA();"
-        if cur is not None:
-            cur.execute(db_schema_sql)
-            db_schema_row = cur.fetchone()
-        else:
-            db_schema_res = session.sql(db_schema_sql).collect()
-            db_schema_row = db_schema_res[0] if db_schema_res else None
-        curr_db = db_schema_row[0] if db_schema_row and db_schema_row[0] else "<CURRENT_DATABASE>"
-        curr_schema = db_schema_row[1] if db_schema_row and db_schema_row[1] else "<CURRENT_SCHEMA>"
-
         summary_rows.extend([
             ("DOWNLOAD_URL", "SUCCEEDED", presigned_url),
-            ("SNOWSIGHT_PATH", "INFO", f"Data -> Databases -> {curr_db} -> {curr_schema} -> Stages -> {OUTPUT_STAGE} -> {ZIP_NAME}"),
+            ("SNOWSIGHT_PATH", "INFO", f"Data -> Databases -> {target_db} -> {target_schema} -> Stages -> {OUTPUT_STAGE} -> {ZIP_NAME}"),
         ])
     else:
         summary_rows.extend([
@@ -584,5 +638,17 @@ product:
             ("SNOWSIGHT_PATH", "SKIPPED", "No package uploaded"),
         ])
 
-    return session.create_dataframe(summary_rows, schema=["STEP", "STATUS", "DETAIL"])
+    _RESULT = session.create_dataframe(summary_rows, schema=["STEP", "STATUS", "DETAIL"])
+    return _RESULT
+
+
+if __name__ == "__main__":
+    from snowflake.snowpark.context import get_active_session
+    session = get_active_session()
+    result = main(session)
+    if hasattr(result, "show"):
+        result.show()
+    elif hasattr(result, "collect"):
+        for r in result.collect():
+            print(r)
 
