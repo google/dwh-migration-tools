@@ -85,9 +85,13 @@ SHARED_FORMAT_VALUE_CODE = '''def format_value(val) -> str:
     if isinstance(val, decimal.Decimal):
         return format(val, "f")
     if isinstance(val, float):
-        s = repr(val)
+        # 15 significant digits = reliable double precision; hides
+        # non-deterministic FLOAT summation noise (0.9999989999999999).
+        s = format(val, ".15g")
         if "e" in s.lower():
-            return format(decimal.Decimal(str(val)), "f")
+            s = format(decimal.Decimal(s), "f")
+        if s.lstrip("-").isdigit():
+            s += ".0"
         return s
     return str(val)'''
 
