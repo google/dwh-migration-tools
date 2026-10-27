@@ -17,8 +17,12 @@
 
 name: "Pull Request Labeler"
 
+# `pull_request` instead of `pull_request_target`: from 2026-12-02 GitHub blocks
+# `pull_request_target` workflows in public repositories without an explicit
+# Actions event policy (b/577109057). Labels are informational only; the Kokoro
+# presubmits trigger on changed paths, not on labels.
 on:
-  - pull_request_target
+  pull_request:
 
 permissions:
   contents: read
@@ -26,10 +30,13 @@ permissions:
 
 jobs:
   labeler:
+    # GITHUB_TOKEN is read-only on pull requests from forks and from Dependabot,
+    # so labeling them would fail with HTTP 403. Those PRs are labeled by hand.
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Labeling
-        uses: actions/labeler@v6
+        uses: actions/labeler@b8dd2d9be0f68b860e7dae5dae7d772984eacd6d # v6.2.0
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           sync-labels: true
