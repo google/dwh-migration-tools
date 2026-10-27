@@ -17,7 +17,7 @@
 # Snowflake Migration Discovery Scripts (MDS) for BigQuery TCO Assessment
 #
 # Usage:
-#   ./tco_discovery.sh -a <account> -u <user> [-r <role>] [-w <warehouse>] [-d <lookback_days>] [-o <output_dir>]
+#   ./tco_discovery.sh -a <account> -u <user> [-r <role>] [-w <warehouse>] [-s <start_date>] [-e <end_date>] [-o <output_dir>]
 #
 
 set -euo pipefail
@@ -28,7 +28,8 @@ SF_USER=""
 SF_ROLE=""
 SF_WAREHOUSE=""
 SF_PRIVATE_KEY_PATH=""
-LOOKBACK_DAYS=14
+START_DATE=""
+END_DATE=""
 OUTPUT_DIR="./out"
 ZIP_NAME="snowflake_assessment_tco.zip"
 
@@ -47,7 +48,8 @@ Optional Options:
   -r, --role              Snowflake Role (e.g. ACCOUNTADMIN, SYSADMIN)
   -w, --warehouse         Snowflake Virtual Warehouse to execute queries (e.g. COMPUTE_WH)
   -k, --private-key-path  Path to RSA private key file (e.g. rsa_key.p8) for key-pair auth
-  -d, --days              Lookback period in days for historical metrics (default: 14, min: 1, max: 365)
+  -s, --start-date        Window start date in UTC (YYYY-MM-DD, default: 14 days ago)
+  -e, --end-date          Window end date in UTC (YYYY-MM-DD, inclusive, default: today)
   -o, --output            Output staging directory (default: ./out)
   -h, --help              Display this help message
 
@@ -56,12 +58,12 @@ Authentication:
   or configure credentials in ~/.snowsql/config.
 
 Examples:
-  # Standard 14-day discovery
+  # Default extraction (last 14 days ending today UTC)
   export SNOWSQL_PWD='<your_snowflake_password>'
   $0 -a myorg-myaccount -u myuser -r ACCOUNTADMIN -w COMPUTE_WH
 
-  # 365-day annual lookback for seasonal TCO modeling
-  $0 -a myorg-myaccount -u myuser -r ACCOUNTADMIN -w COMPUTE_WH -d 365
+  # Custom date range (Feb 1, 2026 through May 10, 2026 inclusive)
+  $0 -a myorg-myaccount -u myuser -r ACCOUNTADMIN -w COMPUTE_WH -s 2026-02-01 -e 2026-05-10
 EOF
   exit 1
 }
@@ -74,7 +76,8 @@ while [[ "$#" -gt 0 ]]; do
     -r|--role)             SF_ROLE="$2"; shift 2 ;;
     -w|--warehouse)        SF_WAREHOUSE="$2"; shift 2 ;;
     -k|--private-key-path) SF_PRIVATE_KEY_PATH="$2"; shift 2 ;;
-    -d|--days)             LOOKBACK_DAYS="$2"; shift 2 ;;
+    -s|--start-date)       START_DATE="$2"; shift 2 ;;
+    -e|--end-date)         END_DATE="$2"; shift 2 ;;
     -o|--output)           OUTPUT_DIR="$2"; shift 2 ;;
     -h|--help)             usage ;;
     *) echo "[ERROR] Unknown option: $1" >&2; usage ;;
@@ -91,10 +94,54 @@ if [[ -n "$SF_PRIVATE_KEY_PATH" && ! -f "$SF_PRIVATE_KEY_PATH" ]]; then
   exit 1
 fi
 
-if ! [[ "$LOOKBACK_DAYS" =~ ^[0-9]+$ ]] || [[ "$LOOKBACK_DAYS" -lt 1 ]] || [[ "$LOOKBACK_DAYS" -gt 365 ]]; then
-  echo "[ERROR] Lookback days (-d) must be an integer between 1 and 365." >&2
+is_valid_date() {
+  local dt="$1"
+  if [[ ! "$dt" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+    return 1
+  fi
+  local canon=""
+  if canon=$(date -u -d "$dt" +%Y-%m-%d 2>/dev/null); then
+    [[ "$canon" == "$dt" ]] && return 0
+  fi
+  if canon=$(date -u -j -f "%Y-%m-%d" "$dt" +%Y-%m-%d 2>/dev/null); then
+    [[ "$canon" == "$dt" ]] && return 0
+  fi
+  return 1
+}
+
+TODAY_UTC=$(date -u +%Y-%m-%d)
+DEFAULT_START=$(date -u -d "$TODAY_UTC - 14 days" +%Y-%m-%d 2>/dev/null || date -u -v-14d +%Y-%m-%d 2>/dev/null || date -u -j -v-14d -f "%Y-%m-%d" "$TODAY_UTC" +%Y-%m-%d 2>/dev/null)
+DEFAULT_END="$TODAY_UTC"
+
+START_DATE="${START_DATE:-$DEFAULT_START}"
+END_DATE="${END_DATE:-$DEFAULT_END}"
+
+if ! is_valid_date "$START_DATE"; then
+  echo "[ERROR] Invalid date format for --start-date: '$START_DATE'. Expected a valid calendar date in YYYY-MM-DD format." >&2
   exit 1
 fi
+if ! is_valid_date "$END_DATE"; then
+  echo "[ERROR] Invalid date format for --end-date: '$END_DATE'. Expected a valid calendar date in YYYY-MM-DD format." >&2
+  exit 1
+fi
+if [[ "$START_DATE" > "$END_DATE" ]]; then
+  echo "[ERROR] Start date ($START_DATE) must be on or before end date ($END_DATE)." >&2
+  exit 1
+fi
+if [[ "$END_DATE" > "$TODAY_UTC" ]]; then
+  echo "[ERROR] End date ($END_DATE) cannot be in the future (today UTC: $TODAY_UTC)." >&2
+  exit 1
+fi
+MIN_RETENTION_DATE=$(date -u -d "$TODAY_UTC - 365 days" +%Y-%m-%d 2>/dev/null || date -u -v-365d +%Y-%m-%d 2>/dev/null || date -u -j -v-365d -f "%Y-%m-%d" "$TODAY_UTC" +%Y-%m-%d 2>/dev/null)
+if [[ "$START_DATE" < "$MIN_RETENTION_DATE" ]]; then
+  echo "[ERROR] Start date ($START_DATE) exceeds Snowflake ACCOUNT_USAGE 365-day retention limit (oldest allowed: $MIN_RETENTION_DATE)." >&2
+  exit 1
+fi
+
+END_DATE_PLUS_1=$(date -u -d "$END_DATE + 1 day" +%Y-%m-%d 2>/dev/null || date -u -j -v+1d -f "%Y-%m-%d" "$END_DATE" +%Y-%m-%d 2>/dev/null)
+
+DATE_RANGE_START="${START_DATE}T00:00:00Z"
+DATE_RANGE_END="${END_DATE_PLUS_1}T00:00:00Z"
 
 # Verify snowsql is installed
 if ! command -v snowsql &> /dev/null; then
@@ -115,11 +162,12 @@ mkdir -p "$OUTPUT_DIR"
 START_TIME_EPOCH=$(date +%s)
 START_TIME_MS=$(date +%s%3N 2>/dev/null || true)
 if ! [[ "$START_TIME_MS" =~ ^[0-9]+$ ]]; then
-  START_TIME_MS=$(python3 -c 'import time; print(int(time.time() * 1000))' 2>/dev/null || echo "${START_TIME_EPOCH}000")
+  START_TIME_MS="${START_TIME_EPOCH}000"
 fi
 START_TIME_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 RUN_DATE=$(date -u +"%Y-%m-%d")
 RUN_ID="snowflake-discovery-$(date +%Y%m%d%H%M%S)"
+
 
 # Build SnowSQL command base
 SNOWSQL_CMD=(snowsql -a "$SF_ACCOUNT" -u "$SF_USER")
@@ -172,6 +220,7 @@ TASKS=(
   "warehouses_workload_structure_mds.sql:warehouses_workload_structure_mds.csv:^\"?WarehouseName\"?,\"?AggregateTime\"?:Virtual Warehouse Workload Structure"
   "warehouse_metering_history_mds.sql:warehouse_metering_history_mds.csv:^\"?StartTime\"?:Virtual Warehouse Metering History"
   "table_storage_metrics_mds.sql:table_storage_metrics_mds.csv:^\"?TableName\"?,\"?ActiveBytes\"?:Table Storage Breakdown"
+  "report_date_range_mds.sql:report_date_range.csv:^\"?StartTime\"?,\"?EndTime\"?$:Report Date Range"
 )
 
 TMP_SQL_FILE="$OUTPUT_DIR/.temp_query.sql"
@@ -230,11 +279,12 @@ for task in "${TASKS[@]}"; do
     continue
   fi
 
-  # Render SQL: strip SET LOOKBACK_DAYS (portable across GNU and BSD/macOS sed) and substitute variables
+  # Render SQL: strip SET lines (portable across GNU and BSD/macOS sed) and substitute variables
   rendered_sql=$(sed -E \
-    -e "s/^[[:space:]]*[Ss][Ee][Tt][[:space:]]+[Ll][Oo][Oo][Kk][Bb][Aa][Cc][Kk]_[Dd][Aa][Yy][Ss][[:space:]]*=[[:space:]]*[0-9]+;[[:space:]]*$//" \
-    -e "s/\\\$LOOKBACK_DAYS/${LOOKBACK_DAYS}/g" \
-    -e "s/&1/${LOOKBACK_DAYS}/g" \
+    -e "s/^[[:space:]]*[Ss][Ee][Tt][[:space:]]+[Ss][Tt][Aa][Rr][Tt]_[Dd][Aa][Tt][Ee][[:space:]]*=.*;[[:space:]]*$//" \
+    -e "s/^[[:space:]]*[Ss][Ee][Tt][[:space:]]+[Ee][Nn][Dd]_[Dd][Aa][Tt][Ee][[:space:]]*=.*;[[:space:]]*$//" \
+    -e "s|\\\$START_DATE|'${START_DATE}'::DATE|g" \
+    -e "s|\\\$END_DATE|'${END_DATE}'::DATE|g" \
     "$input_path")
 
   # If ACCESS_HISTORY is unavailable, replace MultiObjectQueries query body
@@ -333,7 +383,7 @@ append_task_detail "{\"name\":\"compilerworks-metadata.yaml\",\"type\":\"REQUIRE
 
 # 2. Generate BQMS Client Telemetry (dumper-telemetry.jsonl)
 cat > "$OUTPUT_DIR/dumper-telemetry.jsonl" << EOF
-{"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","measureEndTime":"$END_TIME_ISO","started_at":"$START_TIME_ISO","completed_at":"$END_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"duration_seconds":$TOTAL_SECONDS,"overallStatus":"$OVERALL_STATUS","status":"$OVERALL_STATUS","failed_tasks":$FAILED_COUNT,"error_summary":"$ERROR_SUMMARY","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"account_region":"$ACCOUNT_REGION","lookback_days":$LOOKBACK_DAYS,"access_history_available":$ACCESS_HISTORY_AVAILABLE,"extraction_method":"snowflake-cli"}}]}
+{"id":"$RUN_ID","eventType":"DUMPER_RUN_METRICS","dumperRunStartClientTime":"$START_TIME_ISO","dumperMetadata":{"version":"$TOOL_VERSION","gitCommit":"migration-discovery-scripts","buildDate":"$RUN_DATE"},"payload":[{"id":"snowflake-tco-discovery","measureStartTime":"$START_TIME_ISO","measureEndTime":"$END_TIME_ISO","started_at":"$START_TIME_ISO","completed_at":"$END_TIME_ISO","runDurationInMinutes":$DURATION_MINS,"duration_seconds":$TOTAL_SECONDS,"overallStatus":"$OVERALL_STATUS","status":"$OVERALL_STATUS","failed_tasks":$FAILED_COUNT,"error_summary":"$ERROR_SUMMARY","taskExecutionSummary":[{"count":$SUCCEEDED_COUNT,"status":"SUCCEEDED"},{"count":$FAILED_COUNT,"status":"FAILED"}],"taskDetailedSummary":[$TASK_DETAILS_JSON],"argumentSummary":{"connector":"snowflake-mds","assessment":true,"account_region":"$ACCOUNT_REGION","access_history_available":$ACCESS_HISTORY_AVAILABLE,"extraction_method":"snowflake-cli","date_range_start":"$DATE_RANGE_START","date_range_end":"$DATE_RANGE_END"}}]}
 EOF
 
 if [[ $FAILED_COUNT -gt 0 ]]; then
@@ -349,6 +399,7 @@ rm -f "$ZIP_OUT_PATH" "./$ZIP_NAME"
     warehouses_workload_structure_mds.csv \
     warehouse_metering_history_mds.csv \
     table_storage_metrics_mds.csv \
+    report_date_range.csv \
     compilerworks-metadata.yaml \
     dumper-telemetry.jsonl
 )

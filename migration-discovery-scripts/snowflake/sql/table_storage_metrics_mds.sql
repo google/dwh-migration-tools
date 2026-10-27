@@ -1,3 +1,4 @@
+-- Note: TABLE_STORAGE_METRICS reflects the current storage snapshot and does not support historical date filtering.
 SELECT
     'AllTables' AS "TableName",
     COALESCE(SUM(ACTIVE_BYTES), 0) AS "ActiveBytes",
@@ -8,4 +9,3 @@ FROM SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS
 WHERE UPPER(TABLE_CATALOG) != 'SNOWFLAKE'
   AND COALESCE(CATALOG_DROPPED, SCHEMA_DROPPED, TABLE_DROPPED) IS NULL
   AND TABLE_NAME != '_notification_channels';
-

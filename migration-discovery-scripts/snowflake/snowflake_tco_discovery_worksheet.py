@@ -24,7 +24,7 @@
 # 3. In worksheet Settings (top-right gear or settings panel):
 #    - Handler: main
 #    - Return type: Table()
-# 4. Review or adjust LOOKBACK_DAYS below if needed (default: 14).
+# 4. Review or adjust START_DATE and END_DATE below if needed (defaults to last 14 days).
 # 5. Click 'Run'.
 #
 # Option B: New Snowsight Workspaces UI
@@ -65,8 +65,12 @@ except ImportError:
 # Configuration Parameters
 # =====================================================================
 
-# Historical lookback window in days (min: 1, max: 365)
-LOOKBACK_DAYS = 14
+# Extraction date range (UTC). Format: 'YYYY-MM-DD'. Default: last 14 days.
+# Start date is inclusive (00:00:00 UTC), end date is inclusive (through 23:59:59 UTC).
+# If None, START_DATE defaults to today - 14 days and END_DATE defaults to today (UTC).
+# Minimum retention: 365 days ago. Future dates are not allowed.
+START_DATE = None
+END_DATE = None
 
 # Output database and schema where the staging area will be located.
 # If None, automatically falls back to CURRENT_DATABASE() and CURRENT_SCHEMA().
@@ -89,14 +93,17 @@ TOOL_VERSION = "1.0.0"
 _RESULT = None
 
 # Embedded SQL templates (single source of truth: sql/*.sql)
-SQL_WAREHOUSES_WORKLOAD_STRUCTURE = """SET LOOKBACK_DAYS = 14;
+SQL_WAREHOUSES_WORKLOAD_STRUCTURE = """-- Extraction window (UTC, END_DATE inclusive). Default: last 14 days. For a custom range set e.g.
+-- SET START_DATE = '2026-02-01'::DATE;  SET END_DATE = '2026-05-10'::DATE;
+SET START_DATE = DATEADD('day', -14, CURRENT_DATE());
+SET END_DATE = CURRENT_DATE();
 WITH CreditsPerHourPerWarehouse AS (
     SELECT
         WAREHOUSE_NAME AS "WarehouseName",
         DATE_TRUNC('HOUR', START_TIME) AS "AggregateTime",
         SUM(CREDITS_USED_COMPUTE) AS "TotalCreditsBilled"
     FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
-    WHERE START_TIME >= DATEADD('day', -$LOOKBACK_DAYS, CURRENT_TIMESTAMP())
+    WHERE START_TIME >= $START_DATE::TIMESTAMP_TZ AND START_TIME < DATEADD('day', 1, $END_DATE)::TIMESTAMP_TZ
       AND WAREHOUSE_NAME IS NOT NULL
       AND WAREHOUSE_NAME != 'CLOUD_SERVICES_ONLY'
     GROUP BY 1, 2
@@ -105,7 +112,7 @@ WITH CreditsPerHourPerWarehouse AS (
 MultiObjectQueries AS (
     SELECT DISTINCT QUERY_ID
     FROM SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY
-    WHERE QUERY_START_TIME >= DATEADD('day', -$LOOKBACK_DAYS, CURRENT_TIMESTAMP())
+    WHERE QUERY_START_TIME >= $START_DATE::TIMESTAMP_TZ AND QUERY_START_TIME < DATEADD('day', 1, $END_DATE)::TIMESTAMP_TZ
       AND ARRAY_SIZE(DIRECT_OBJECTS_ACCESSED) >= 6
 ),
 FilteredQueryAttribution AS (
@@ -113,7 +120,7 @@ FilteredQueryAttribution AS (
         QUERY_ID,
         CREDITS_ATTRIBUTED_COMPUTE
     FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_ATTRIBUTION_HISTORY
-    WHERE START_TIME >= DATEADD('day', -$LOOKBACK_DAYS, CURRENT_TIMESTAMP())
+    WHERE START_TIME >= $START_DATE::TIMESTAMP_TZ AND START_TIME < DATEADD('day', 1, $END_DATE)::TIMESTAMP_TZ
 ),
 QueryRaw AS (
     SELECT
@@ -146,7 +153,7 @@ QueryRaw AS (
     LEFT JOIN FilteredQueryAttribution AS QAH
         ON QL.QUERY_ID = QAH.QUERY_ID
     WHERE QL.WAREHOUSE_NAME IS NOT NULL
-      AND QL.START_TIME >= DATEADD('day', -$LOOKBACK_DAYS, CURRENT_TIMESTAMP())
+      AND QL.START_TIME >= $START_DATE::TIMESTAMP_TZ AND QL.START_TIME < DATEADD('day', 1, $END_DATE)::TIMESTAMP_TZ
 ),
 QueryBase AS (
     SELECT
@@ -231,7 +238,10 @@ HAVING SUM("AttributedCredits") <> 0
 ORDER BY "WarehouseName" ASC, "AggregateTime" ASC;
 """
 
-SQL_WAREHOUSE_METERING_HISTORY = """SET LOOKBACK_DAYS = 14;
+SQL_WAREHOUSE_METERING_HISTORY = """-- Extraction window (UTC, END_DATE inclusive). Default: last 14 days. For a custom range set e.g.
+-- SET START_DATE = '2026-02-01'::DATE;  SET END_DATE = '2026-05-10'::DATE;
+SET START_DATE = DATEADD('day', -14, CURRENT_DATE());
+SET END_DATE = CURRENT_DATE();
 SELECT
     START_TIME AS "StartTime",
     END_TIME AS "EndTime",
@@ -241,11 +251,13 @@ SELECT
     CREDITS_USED_COMPUTE AS "CreditsUsedCompute",
     CREDITS_USED_CLOUD_SERVICES AS "CreditsUsedCloudServices"
 FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
-WHERE START_TIME >= DATEADD('day', -$LOOKBACK_DAYS, CURRENT_TIMESTAMP())
+WHERE START_TIME >= $START_DATE::TIMESTAMP_TZ AND START_TIME < DATEADD('day', 1, $END_DATE)::TIMESTAMP_TZ
 ORDER BY START_TIME ASC;
+
 """
 
-SQL_TABLE_STORAGE_METRICS = """SELECT
+SQL_TABLE_STORAGE_METRICS = """-- Note: TABLE_STORAGE_METRICS reflects the current storage snapshot and does not support historical date filtering.
+SELECT
     'AllTables' AS "TableName",
     COALESCE(SUM(ACTIVE_BYTES), 0) AS "ActiveBytes",
     COALESCE(SUM(TIME_TRAVEL_BYTES), 0) AS "TimeTravelBytes",
@@ -255,6 +267,15 @@ FROM SNOWFLAKE.ACCOUNT_USAGE.TABLE_STORAGE_METRICS
 WHERE UPPER(TABLE_CATALOG) != 'SNOWFLAKE'
   AND COALESCE(CATALOG_DROPPED, SCHEMA_DROPPED, TABLE_DROPPED) IS NULL
   AND TABLE_NAME != '_notification_channels';
+"""
+
+SQL_REPORT_DATE_RANGE = """-- Extraction window (UTC, END_DATE inclusive). Default: last 14 days. For a custom range set e.g.
+-- SET START_DATE = '2026-02-01'::DATE;  SET END_DATE = '2026-05-10'::DATE;
+SET START_DATE = DATEADD('day', -14, CURRENT_DATE());
+SET END_DATE = CURRENT_DATE();
+SELECT
+    $START_DATE::TIMESTAMP_TZ AS "StartTime",
+    DATEADD('day', 1, $END_DATE)::TIMESTAMP_TZ AS "EndTime";
 
 """
 
@@ -277,22 +298,33 @@ EXTRACTION_TASKS = [
         SQL_TABLE_STORAGE_METRICS,
         "Table Storage Breakdown",
     ),
+    (
+        "report_date_range_mds.sql",
+        "report_date_range.csv",
+        SQL_REPORT_DATE_RANGE,
+        "Report Date Range",
+    ),
 ]
 
 
-def render_sql(raw_sql: str, lookback_days: int, access_history_available: bool = True) -> str:
-    """Renders SQL template by removing SET LOOKBACK_DAYS and substituting variables."""
-    # 1. Strip SET LOOKBACK_DAYS = N; line case-insensitively
+def render_sql(
+    raw_sql: str,
+    start_date: str,
+    end_date: str,
+    access_history_available: bool = True,
+) -> str:
+    """Renders SQL template by removing SET lines and substituting variables."""
+    # 1. Strip SET lines case-insensitively
     lines = []
     for line in raw_sql.splitlines():
-        if re.match(r"^\s*SET\s+LOOKBACK_DAYS\s*=\s*\d+;\s*$", line, re.IGNORECASE):
+        if re.match(r"^\s*SET\s+(START_DATE|END_DATE)\s*=.*;\s*$", line, re.IGNORECASE):
             continue
         lines.append(line)
     sql = "\n".join(lines)
 
     # 2. Substitute variable placeholders
-    sql = sql.replace("$LOOKBACK_DAYS", str(lookback_days))
-    sql = sql.replace("&1", str(lookback_days))
+    sql = sql.replace("$START_DATE", f"'{start_date}'::DATE")
+    sql = sql.replace("$END_DATE", f"'{end_date}'::DATE")
 
     # 3. If ACCESS_HISTORY is unavailable, replace MultiObjectQueries CTE body
     if not access_history_available and "MultiObjectQueries AS (" in sql:
@@ -349,9 +381,46 @@ def main(session):
     if _RESULT is not None:
         return _RESULT
 
-    # Validate configuration
-    if not isinstance(LOOKBACK_DAYS, int) or LOOKBACK_DAYS < 1 or LOOKBACK_DAYS > 365:
-        raise ValueError(f"LOOKBACK_DAYS must be an integer between 1 and 365 (got: {LOOKBACK_DAYS})")
+    # Resolve and validate date range
+    today_utc = datetime.datetime.now(datetime.timezone.utc).date()
+    default_end = today_utc
+    default_start = today_utc - datetime.timedelta(days=14)
+
+    if START_DATE is None:
+        start_d = default_start
+        effective_start_date = start_d.isoformat()
+    elif not isinstance(START_DATE, str):
+        raise ValueError("START_DATE must be a string in 'YYYY-MM-DD' format.")
+    else:
+        try:
+            start_d = datetime.date.fromisoformat(START_DATE)
+            effective_start_date = start_d.isoformat()
+        except Exception as e:
+            raise ValueError(f"Invalid START_DATE format '{START_DATE}': {e}. Expected YYYY-MM-DD.")
+
+    if END_DATE is None:
+        end_d = default_end
+        effective_end_date = end_d.isoformat()
+    elif not isinstance(END_DATE, str):
+        raise ValueError("END_DATE must be a string in 'YYYY-MM-DD' format.")
+    else:
+        try:
+            end_d = datetime.date.fromisoformat(END_DATE)
+            effective_end_date = end_d.isoformat()
+        except Exception as e:
+            raise ValueError(f"Invalid END_DATE format '{END_DATE}': {e}. Expected YYYY-MM-DD.")
+
+    if start_d > end_d:
+        raise ValueError(f"START_DATE ({effective_start_date}) must be on or before END_DATE ({effective_end_date}).")
+    if end_d > today_utc:
+        raise ValueError(f"END_DATE ({effective_end_date}) cannot be in the future (today UTC: {today_utc}).")
+    min_date = today_utc - datetime.timedelta(days=365)
+    if start_d < min_date:
+        raise ValueError(f"START_DATE ({effective_start_date}) exceeds Snowflake ACCOUNT_USAGE 365-day retention limit (oldest allowed: {min_date}).")
+
+    end_plus_1_d = end_d + datetime.timedelta(days=1)
+    date_range_start = f"{effective_start_date}T00:00:00Z"
+    date_range_end = f"{end_plus_1_d.isoformat()}T00:00:00Z"
 
     # Setup session & cursor with fallback
     cur = None
@@ -446,7 +515,8 @@ def main(session):
         try:
             rendered_sql = render_sql(
                 raw_sql,
-                lookback_days=LOOKBACK_DAYS,
+                start_date=effective_start_date,
+                end_date=effective_end_date,
                 access_history_available=access_history_available,
             )
 
@@ -556,9 +626,10 @@ product:
                     "connector": "snowflake-mds",
                     "assessment": True,
                     "account_region": account_region,
-                    "lookback_days": LOOKBACK_DAYS,
                     "access_history_available": access_history_available,
                     "extraction_method": "snowflake-worksheet",
+                    "date_range_start": date_range_start,
+                    "date_range_end": date_range_end,
                 },
             }
         ],
@@ -604,6 +675,7 @@ product:
                 "warehouses_workload_structure_mds.csv",
                 "warehouse_metering_history_mds.csv",
                 "table_storage_metrics_mds.csv",
+                "report_date_range.csv",
                 "compilerworks-metadata.yaml",
                 "dumper-telemetry.jsonl",
             ]:

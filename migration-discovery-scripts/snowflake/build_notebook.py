@@ -53,19 +53,24 @@ LICENSE_HEADER_HASH = """# Copyright 2026 Google LLC
 # Shared Python Logic
 # =====================================================================
 
-SHARED_RENDER_SQL_CODE = '''def render_sql(raw_sql: str, lookback_days: int, access_history_available: bool = True) -> str:
-    """Renders SQL template by removing SET LOOKBACK_DAYS and substituting variables."""
-    # 1. Strip SET LOOKBACK_DAYS = N; line case-insensitively
+SHARED_RENDER_SQL_CODE = '''def render_sql(
+    raw_sql: str,
+    start_date: str,
+    end_date: str,
+    access_history_available: bool = True,
+) -> str:
+    """Renders SQL template by removing SET lines and substituting variables."""
+    # 1. Strip SET lines case-insensitively
     lines = []
     for line in raw_sql.splitlines():
-        if re.match(r"^\\s*SET\\s+LOOKBACK_DAYS\\s*=\\s*\\d+;\\s*$", line, re.IGNORECASE):
+        if re.match(r"^\\s*SET\\s+(START_DATE|END_DATE)\\s*=.*;\\s*$", line, re.IGNORECASE):
             continue
         lines.append(line)
     sql = "\\n".join(lines)
 
     # 2. Substitute variable placeholders
-    sql = sql.replace("$LOOKBACK_DAYS", str(lookback_days))
-    sql = sql.replace("&1", str(lookback_days))
+    sql = sql.replace("$START_DATE", f"'{start_date}'::DATE")
+    sql = sql.replace("$END_DATE", f"'{end_date}'::DATE")
 
     # 3. If ACCESS_HISTORY is unavailable, replace MultiObjectQueries CTE body
     if not access_history_available and "MultiObjectQueries AS (" in sql:
@@ -121,6 +126,7 @@ def load_sql_templates() -> dict[str, str]:
         "warehouses_workload_structure_mds": SQL_DIR / "warehouses_workload_structure_mds.sql",
         "warehouse_metering_history_mds": SQL_DIR / "warehouse_metering_history_mds.sql",
         "table_storage_metrics_mds": SQL_DIR / "table_storage_metrics_mds.sql",
+        "report_date_range_mds": SQL_DIR / "report_date_range_mds.sql",
     }
     templates = {}
     for key, path in files.items():
@@ -135,12 +141,15 @@ def format_sql_constants(templates: dict[str, str]) -> str:
     escaped_workload = templates["warehouses_workload_structure_mds"].replace('"""', r'\"\"\"')
     escaped_metering = templates["warehouse_metering_history_mds"].replace('"""', r'\"\"\"')
     escaped_storage = templates["table_storage_metrics_mds"].replace('"""', r'\"\"\"')
+    escaped_date_range = templates["report_date_range_mds"].replace('"""', r'\"\"\"')
     return f'''# Embedded SQL templates (single source of truth: sql/*.sql)
 SQL_WAREHOUSES_WORKLOAD_STRUCTURE = """{escaped_workload}"""
 
 SQL_WAREHOUSE_METERING_HISTORY = """{escaped_metering}"""
 
 SQL_TABLE_STORAGE_METRICS = """{escaped_storage}"""
+
+SQL_REPORT_DATE_RANGE = """{escaped_date_range}"""
 
 EXTRACTION_TASKS = [
     (
@@ -160,6 +169,12 @@ EXTRACTION_TASKS = [
         "table_storage_metrics_mds.csv",
         SQL_TABLE_STORAGE_METRICS,
         "Table Storage Breakdown",
+    ),
+    (
+        "report_date_range_mds.sql",
+        "report_date_range.csv",
+        SQL_REPORT_DATE_RANGE,
+        "Report Date Range",
     ),
 ]'''
 
@@ -184,7 +199,7 @@ Native Snowflake discovery notebook to collect workload structure, hourly wareho
 ### Required Privileges
 - **Database & Schema**: `USAGE` on the database and schema where this notebook runs.
 - **Account Usage**: Read access to `SNOWFLAKE.ACCOUNT_USAGE` (e.g. `ACCOUNTADMIN`, `SYSADMIN`, or a role granted `IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE`).
-- **Warehouse**: `USAGE` privilege on a virtual warehouse (X-Small is sufficient for standard 14-day discovery; Small or Medium recommended for lookbacks >30 days).
+- **Warehouse**: `USAGE` privilege on a virtual warehouse (X-Small is sufficient for standard 14-day discovery; Small or Medium recommended for windows >30 days).
 - **Stage**: Privilege to create an internal stage (`CREATE STAGE` on the current schema) or access to the output stage.
 
 ### Snowflake Environment & Runtime Note
@@ -193,7 +208,7 @@ Native Snowflake discovery notebook to collect workload structure, hourly wareho
 - **Database & Schema Context**: In Container Runtime or headless environments, active database and schema context may not be automatically inherited. If needed, explicitly set `OUTPUT_DATABASE` and `OUTPUT_SCHEMA` in the configuration cell below.
 
 ### How to Run
-1. Review or adjust the configuration cell below (`LOOKBACK_DAYS = 14` by default; set `OUTPUT_DATABASE` / `OUTPUT_SCHEMA` if needed).
+1. Review or adjust the configuration cell below (`START_DATE` and `END_DATE` default to the last 14 days, or set custom dates; set `OUTPUT_DATABASE` / `OUTPUT_SCHEMA` if needed).
 2. Click **Run All** (or run each cell sequentially).
 3. At the end of the notebook, click the pre-signed download URL or use the Snowsight Stage UI to download `snowflake_assessment_tco.zip`.
 """
@@ -201,9 +216,14 @@ Native Snowflake discovery notebook to collect workload structure, hourly wareho
     cell_2_config = LICENSE_HEADER_HASH + """# =====================================================================
 # Configuration Parameters
 # =====================================================================
+import datetime
 
-# Historical lookback window in days (min: 1, max: 365)
-LOOKBACK_DAYS = 14
+# Extraction date range (UTC). Format: 'YYYY-MM-DD'. Default: last 14 days.
+# Start date is inclusive (00:00:00 UTC), end date is inclusive (through 23:59:59 UTC).
+# If None, START_DATE defaults to today - 14 days and END_DATE defaults to today (UTC).
+# Minimum retention: 365 days ago. Future dates are not allowed.
+START_DATE = None
+END_DATE = None
 
 # Output database and schema where the staging area will be located.
 # If None, automatically falls back to CURRENT_DATABASE() and CURRENT_SCHEMA().
@@ -228,11 +248,48 @@ def log(msg: str) -> None:
     if VERBOSE:
         print(msg)
 
-# Validate configuration
-if not isinstance(LOOKBACK_DAYS, int) or LOOKBACK_DAYS < 1 or LOOKBACK_DAYS > 365:
-    raise ValueError(f"LOOKBACK_DAYS must be an integer between 1 and 365 (got: {LOOKBACK_DAYS})")
+# Resolve and validate date range
+_today_utc = datetime.datetime.now(datetime.timezone.utc).date()
+_default_end = _today_utc
+_default_start = _today_utc - datetime.timedelta(days=14)
 
-log(f"[CONFIG] Lookback Days:   {LOOKBACK_DAYS}")
+if START_DATE is None:
+    _start_d = _default_start
+    effective_start_date = _start_d.isoformat()
+elif not isinstance(START_DATE, str):
+    raise ValueError("START_DATE must be a string in 'YYYY-MM-DD' format.")
+else:
+    try:
+        _start_d = datetime.date.fromisoformat(START_DATE)
+        effective_start_date = _start_d.isoformat()
+    except Exception as e:
+        raise ValueError(f"Invalid START_DATE format '{START_DATE}': {e}. Expected YYYY-MM-DD.")
+
+if END_DATE is None:
+    _end_d = _default_end
+    effective_end_date = _end_d.isoformat()
+elif not isinstance(END_DATE, str):
+    raise ValueError("END_DATE must be a string in 'YYYY-MM-DD' format.")
+else:
+    try:
+        _end_d = datetime.date.fromisoformat(END_DATE)
+        effective_end_date = _end_d.isoformat()
+    except Exception as e:
+        raise ValueError(f"Invalid END_DATE format '{END_DATE}': {e}. Expected YYYY-MM-DD.")
+
+if _start_d > _end_d:
+    raise ValueError(f"START_DATE ({effective_start_date}) must be on or before END_DATE ({effective_end_date}).")
+if _end_d > _today_utc:
+    raise ValueError(f"END_DATE ({effective_end_date}) cannot be in the future (today UTC: {_today_utc}).")
+_min_date = _today_utc - datetime.timedelta(days=365)
+if _start_d < _min_date:
+    raise ValueError(f"START_DATE ({effective_start_date}) exceeds Snowflake ACCOUNT_USAGE 365-day retention limit (oldest allowed: {_min_date}).")
+
+_end_plus_1_d = _end_d + datetime.timedelta(days=1)
+date_range_start = f"{effective_start_date}T00:00:00Z"
+date_range_end = f"{_end_plus_1_d.isoformat()}T00:00:00Z"
+log(f"[CONFIG] Date Range:      {effective_start_date} to {effective_end_date} ({_end_plus_1_d.isoformat()} exclusive)")
+
 log(f"[CONFIG] Output Database: {OUTPUT_DATABASE or '(auto-detect)'}")
 log(f"[CONFIG] Output Schema:   {OUTPUT_SCHEMA or '(auto-detect)'}")
 log(f"[CONFIG] Output Stage:    {OUTPUT_STAGE}")
@@ -383,7 +440,8 @@ for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
     try:
         rendered_sql = render_sql(
             raw_sql,
-            lookback_days=LOOKBACK_DAYS,
+            start_date=effective_start_date,
+            end_date=effective_end_date,
             access_history_available=access_history_available,
         )
 
@@ -502,9 +560,10 @@ telemetry_record = {
                 "connector": "snowflake-mds",
                 "assessment": True,
                 "account_region": account_region,
-                "lookback_days": LOOKBACK_DAYS,
                 "access_history_available": access_history_available,
                 "extraction_method": "snowflake-notebook",
+                "date_range_start": date_range_start,
+                "date_range_end": date_range_end,
             },
         }
     ],
@@ -538,6 +597,7 @@ with zipfile.ZipFile(local_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as z
         "warehouses_workload_structure_mds.csv",
         "warehouse_metering_history_mds.csv",
         "table_storage_metrics_mds.csv",
+        "report_date_range.csv",
         "compilerworks-metadata.yaml",
         "dumper-telemetry.jsonl",
     ]:
@@ -733,8 +793,12 @@ except ImportError:
 # Configuration Parameters
 # =====================================================================
 
-# Historical lookback window in days (min: 1, max: 365)
-LOOKBACK_DAYS = 14
+# Extraction date range (UTC). Format: 'YYYY-MM-DD'. Default: last 14 days.
+# Start date is inclusive (00:00:00 UTC), end date is inclusive (through 23:59:59 UTC).
+# If None, START_DATE defaults to today - 14 days and END_DATE defaults to today (UTC).
+# Minimum retention: 365 days ago. Future dates are not allowed.
+START_DATE = None
+END_DATE = None
 
 # Output database and schema where the staging area will be located.
 # If None, automatically falls back to CURRENT_DATABASE() and CURRENT_SCHEMA().
@@ -774,9 +838,46 @@ def main(session):
     if _RESULT is not None:
         return _RESULT
 
-    # Validate configuration
-    if not isinstance(LOOKBACK_DAYS, int) or LOOKBACK_DAYS < 1 or LOOKBACK_DAYS > 365:
-        raise ValueError(f"LOOKBACK_DAYS must be an integer between 1 and 365 (got: {{LOOKBACK_DAYS}})")
+    # Resolve and validate date range
+    today_utc = datetime.datetime.now(datetime.timezone.utc).date()
+    default_end = today_utc
+    default_start = today_utc - datetime.timedelta(days=14)
+
+    if START_DATE is None:
+        start_d = default_start
+        effective_start_date = start_d.isoformat()
+    elif not isinstance(START_DATE, str):
+        raise ValueError("START_DATE must be a string in 'YYYY-MM-DD' format.")
+    else:
+        try:
+            start_d = datetime.date.fromisoformat(START_DATE)
+            effective_start_date = start_d.isoformat()
+        except Exception as e:
+            raise ValueError(f"Invalid START_DATE format '{{START_DATE}}': {{e}}. Expected YYYY-MM-DD.")
+
+    if END_DATE is None:
+        end_d = default_end
+        effective_end_date = end_d.isoformat()
+    elif not isinstance(END_DATE, str):
+        raise ValueError("END_DATE must be a string in 'YYYY-MM-DD' format.")
+    else:
+        try:
+            end_d = datetime.date.fromisoformat(END_DATE)
+            effective_end_date = end_d.isoformat()
+        except Exception as e:
+            raise ValueError(f"Invalid END_DATE format '{{END_DATE}}': {{e}}. Expected YYYY-MM-DD.")
+
+    if start_d > end_d:
+        raise ValueError(f"START_DATE ({{effective_start_date}}) must be on or before END_DATE ({{effective_end_date}}).")
+    if end_d > today_utc:
+        raise ValueError(f"END_DATE ({{effective_end_date}}) cannot be in the future (today UTC: {{today_utc}}).")
+    min_date = today_utc - datetime.timedelta(days=365)
+    if start_d < min_date:
+        raise ValueError(f"START_DATE ({{effective_start_date}}) exceeds Snowflake ACCOUNT_USAGE 365-day retention limit (oldest allowed: {{min_date}}).")
+
+    end_plus_1_d = end_d + datetime.timedelta(days=1)
+    date_range_start = f"{{effective_start_date}}T00:00:00Z"
+    date_range_end = f"{{end_plus_1_d.isoformat()}}T00:00:00Z"
 
     # Setup session & cursor with fallback
     cur = None
@@ -871,7 +972,8 @@ def main(session):
         try:
             rendered_sql = render_sql(
                 raw_sql,
-                lookback_days=LOOKBACK_DAYS,
+                start_date=effective_start_date,
+                end_date=effective_end_date,
                 access_history_available=access_history_available,
             )
 
@@ -981,9 +1083,10 @@ product:
                     "connector": "snowflake-mds",
                     "assessment": True,
                     "account_region": account_region,
-                    "lookback_days": LOOKBACK_DAYS,
                     "access_history_available": access_history_available,
                     "extraction_method": "{extraction_method}",
+                    "date_range_start": date_range_start,
+                    "date_range_end": date_range_end,
                 }},
             }}
         ],
@@ -1029,6 +1132,7 @@ product:
                 "warehouses_workload_structure_mds.csv",
                 "warehouse_metering_history_mds.csv",
                 "table_storage_metrics_mds.csv",
+                "report_date_range.csv",
                 "compilerworks-metadata.yaml",
                 "dumper-telemetry.jsonl",
             ]:
@@ -1093,7 +1197,7 @@ def generate_worksheet_py(templates: dict[str, str]) -> str:
 # 3. In worksheet Settings (top-right gear or settings panel):
 #    - Handler: main
 #    - Return type: Table()
-# 4. Review or adjust LOOKBACK_DAYS below if needed (default: 14).
+# 4. Review or adjust START_DATE and END_DATE below if needed (defaults to last 14 days).
 # 5. Click 'Run'.
 #
 # Option B: New Snowsight Workspaces UI
