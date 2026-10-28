@@ -49,15 +49,6 @@ class SnowflakeUsageException extends MetadataDumperUsageException {
     return String.format("%s: %s", className, getLocalizedMessage());
   }
 
-  @Nonnull
-  static SnowflakeUsageException missingAssessmentException(String connector) {
-    Stream<String> messages =
-        Stream.of(
-            "The " + connector + " connector only supports extraction for assessment.",
-            "Provide the '--" + OPT_ASSESSMENT + " flag to use this connector.");
-    return new SnowflakeUsageException(messages.collect(joining(" ")));
-  }
-
   static SnowflakeUsageException mixedAuthentication() {
     Stream<String> messages =
         Stream.of(
