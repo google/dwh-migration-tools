@@ -126,6 +126,7 @@ QueryRaw AS (
     SELECT
         QL.QUERY_ID,
         QL.WAREHOUSE_NAME AS "WarehouseName",
+        QL.WAREHOUSE_SIZE,
         DATE_TRUNC('HOUR', QL.START_TIME) AS "AggregateTime",
         QL.QUERY_TYPE,
         COALESCE(QL.BYTES_SCANNED, 0) AS "BytesScanned",
@@ -191,6 +192,7 @@ QueryClassified AS (
 SELECT
     "WarehouseName",
     "AggregateTime",
+    BOOLOR_AGG(UPPER(WAREHOUSE_SIZE) = 'ADAPTIVE') AS "IsAdaptiveWarehouse",
     SUM(COALESCE("AttributedCredits", 0.0)) AS "TotalCreditsAttributed",
     SUM(IFF(
         QUERY_TYPE != 'COPY',
