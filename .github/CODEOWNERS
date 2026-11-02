@@ -1,7 +1,18 @@
 # Code owners
+#
+# Interim configuration (step 1 of the plan in go/dwh-migration-tools-approvals):
+# every maintainer with write access is listed directly, so any one of them can
+# satisfy the "require review from code owners" rule. Once the MDB-backed teams
+# exist (go/teamsync, visibility=Visible), replace the user lists with
+#   @google/dwh-migration-tools-maintainers  and  @google/dwh-migration-tools-admins
+#
+# Later rules take precedence over earlier ones for the same path.
 
-# Reviewers for any change in the repository
-* @kaxuna @shevek-google
+# Any change in the repository: any maintainer
+* @kaxuna @haselbach @paolomorandini @ @dominik-klimczak @sayuzbas-google @mshetairy
 
-# Reviewers for client changes
-/client/ @xiashang0624 @yzhvictor @ajwelch4
+
+# CI, security policy and the CVE allowlist: repository admins only
+/.github/   @kaxuna @haselbach @paolomorandini @mjquinn-google
+/security/  @kaxuna @haselbach @paolomorandini @mjquinn-google
+/.security/ @kaxuna @haselbach @paolomorandini @mjquinn-google
