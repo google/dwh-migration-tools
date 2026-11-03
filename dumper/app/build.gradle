@@ -75,11 +75,13 @@ dependencies {
     //Overrides for hadoop-common transient deps
     implementation libs.jetty.server // explicit version for vulnerabilities update
     implementation libs.netty.handler // explicit version for vulnerabilities update
+    implementation libs.netty.transport.native.epoll // explicit version for vulnerabilities update
     implementation libs.dnsjava // explicit version for vulnerabilities update
     implementation libs.nimbus.jose.jwt // explicit version for vulnerabilities update
     implementation libs.zookeeper // explicit version for vulnerabilities update
     implementation libs.common.configuration2 // explicit version for vulnerabilities update
     implementation libs.bouncycastle // explicit version for vulnerabilities update
+    implementation libs.snappy.java // explicit version for vulnerabilities update
 
     implementation libs.hadoop.hdfs.client
     implementation(libs.harawata.appdirs) {
