@@ -131,6 +131,8 @@ nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimb
 dnsjava = { module = "dnsjava:dnsjava", version.ref = "dnsjava" }
 jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty-server" }
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty-handler" }
+netty-bom = { module = "io.netty:netty-bom", version.ref = "netty-handler" }
+okio = { module = "com.squareup.okio:okio", version = "1.17.6" }
 netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty-handler" }
 snappy-java = { module = "org.xerial.snappy:snappy-java", version = "1.1.10.9" }
 hadoop-hdfs-client = { module = "org.apache.hadoop:hadoop-hdfs-client", version.ref = "hadoop" }

@@ -28,3 +28,125 @@
   justification: >
     False positive; this artifact is incorrectly identified by the OWASP scanner. 
     It is not a direct or transitive dependency of dwh-migration-tools:dumper.
+- CVE: CVE-2026-1225
+  artifact: ch.qos.logback:logback-core:1.3.16
+  justification: >
+    Not a false positive. Fixed only in logback 1.5.x, which requires Java 11; the Dumper still targets
+    Java 8. Accepted temporarily to unblock the version-only remediation in PR #1195. Remediation
+    (Java 11+ baseline) is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2026-9828
+  artifact: ch.qos.logback:logback-core:1.3.16
+  justification: >
+    Not a false positive. Fixed only in logback 1.5.x, which requires Java 11; the Dumper still targets
+    Java 8. Accepted temporarily to unblock the version-only remediation in PR #1195. Remediation
+    (Java 11+ baseline) is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2026-10532
+  artifact: ch.qos.logback:logback-core:1.3.16
+  justification: >
+    Not a false positive. Fixed only in logback 1.5.x, which requires Java 11; the Dumper still targets
+    Java 8. Accepted temporarily to unblock the version-only remediation in PR #1195. Remediation
+    (Java 11+ baseline) is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2019-16869
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2019-20444
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2019-20445
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2021-21290
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2021-21295
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2021-21409
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2021-37136
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2021-37137
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2021-43797
+  artifact: io.netty:netty:3.10.6.Final
+  justification: >
+    Not a false positive. Netty 3.x is end-of-life with no fixed release. It is pulled transitively into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), not the main Dumper
+    classpath. Accepted temporarily to unblock PR #1195; removal is tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2026-45292
+  artifact: io.opentelemetry:opentelemetry-api:1.52.0
+  justification: >
+    Not a false positive. Fixed in opentelemetry-api 1.67.0, but opentelemetry-api, -sdk and -api-incubator
+    resolve to mismatched versions through google-cloud-bigquery and grpc, so the fix needs an
+    opentelemetry-bom alignment rather than a single pin. Accepted temporarily to unblock PR #1195;
+    tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2026-118259
+  artifact: io.opentelemetry:opentelemetry-api:1.52.0
+  justification: >
+    Not a false positive. Fixed in opentelemetry-api 1.67.0, but opentelemetry-api, -sdk and -api-incubator
+    resolve to mismatched versions through google-cloud-bigquery and grpc, so the fix needs an
+    opentelemetry-bom alignment rather than a single pin. Accepted temporarily to unblock PR #1195;
+    tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+- CVE: CVE-2021-33036
+  artifact: org.apache.hadoop:hadoop-yarn-server-common:3.1.3
+  justification: >
+    Not a false positive. Fixed only in Hadoop 3.2.3 / 3.3.2; this artifact is pulled into the
+    hive312RuntimeClasspath (shaded Hive 3.1.2 runtime in lib-ext-hive-metastore), which stays on the
+    Hadoop 3.1.x line for Hive 3.1.2 compatibility. Accepted temporarily to unblock PR #1195; tracked in
+    b/579421681.
+  expiration_date: 2027-01-31
