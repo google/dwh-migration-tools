@@ -45,6 +45,15 @@ configurations {
 
         // We use logback-classic instead of simple
         exclude group: 'org.slf4j', module: 'slf4j-simple'
+
+        // hadoop-auth pins Apache Kerby 2.0.3 (CVE-2026-57914). Kerby has no BOM and
+        // Hadoop pulls seven modules, so align the whole group instead of pinning each.
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.apache.kerby') {
+                details.useVersion(libs.versions.kerby.get())
+                details.because('CVE-2026-57914: hadoop-auth pins kerby 2.0.3')
+            }
+        }
     }
 }
 
