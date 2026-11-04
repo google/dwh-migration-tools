@@ -61,6 +61,9 @@ dependencies {
 
     //Overrides for hadoop-common transient deps
     hive312RuntimeOnly libs.netty.handler // explicit version for vulnerabilities update
+    hive312RuntimeOnly platform(libs.netty.bom) // align transitive netty modules for vulnerabilities update
+    hive312RuntimeOnly libs.jackson.databind // explicit version for vulnerabilities update
+    hive312RuntimeOnly libs.okio // explicit version for vulnerabilities update
     hive312RuntimeOnly libs.dnsjava // explicit version for vulnerabilities update
     hive312RuntimeOnly libs.nimbus.jose.jwt // explicit version for vulnerabilities update
     hive312RuntimeOnly libs.zookeeper // explicit version for vulnerabilities update
@@ -91,7 +94,7 @@ dependencies {
     }
     hive312RuntimeOnly("com.google.guava:guava") {
         version {
-            strictly '32.1.2-jre'
+            strictly libs.versions.guava.get()
         }
     }
 }
