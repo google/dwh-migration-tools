@@ -9,6 +9,7 @@ com.amazonaws:aws-java-sdk-core:1.12.797=compileClasspath,runtimeClasspath,testC
 com.amazonaws:aws-java-sdk-redshift:1.12.797=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.amazonaws:aws-java-sdk-redshiftserverless:1.12.797=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.amazonaws:jmespath-java:1.12.797=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
+com.databricks:databricks-jdbc:3.4.4=runtimeClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.databricks:databricks-sdk-java:0.163.0=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-annotations:2.21=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-core:2.21.7=compileClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath

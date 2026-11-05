@@ -135,6 +135,7 @@ dependencies {
 
     implementation libs.async.profiler
 
+    runtimeOnly libs.databricks.jdbc
     runtimeOnly libs.postgresql
     runtimeOnly libs.snowflake.jdbc
     runtimeOnly libs.redshift.jdbc

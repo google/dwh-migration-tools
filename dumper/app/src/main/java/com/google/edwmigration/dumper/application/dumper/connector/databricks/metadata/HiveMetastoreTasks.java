@@ -16,11 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata;
 
-import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper.SqlQuoting.quoteIdentifier;
-import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper.SqlQuoting.quoteIdentifierIfNeeded;
-import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper.SqlQuoting.quoteQualifiedName;
-import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper.SqlQuoting.quoteStringLiteral;
-import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper.StatementResult.cell;
+import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksClientSqlRunner.SqlQuoting.quoteIdentifier;
+import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksClientSqlRunner.SqlQuoting.quoteIdentifierIfNeeded;
+import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksClientSqlRunner.SqlQuoting.quoteQualifiedName;
+import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksClientSqlRunner.SqlQuoting.quoteStringLiteral;
+import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlRunner.StatementResult.cell;
 import static com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.DatabricksFilter.HIVE_METASTORE_CATALOG;
 import static com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.constructWarnings;
 import static com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.printCheckConstraints;
@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper.StatementResult;
+import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlRunner.StatementResult;
 import com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.MetadataTask;
 import com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.MultiFileMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -69,7 +69,7 @@ public final class HiveMetastoreTasks {
   private static final String PARTITION_COLUMNS_DETAIL = "partitionColumns";
   private static final String SIZE_IN_BYTES_DETAIL = "sizeInBytes";
   private static final String DEFAULT_COLLATION = "UTF8_BINARY";
-  // The error class of a statement that the SQL warehouse can't parse.
+  // The error class of a statement that the SQL warehouse or cluster can't parse.
   private static final String PARSE_SYNTAX_ERROR = "[PARSE_SYNTAX_ERROR]";
   private static final ObjectReader JSON_READER = new ObjectMapper().readerFor(JsonNode.class);
 
@@ -127,7 +127,7 @@ public final class HiveMetastoreTasks {
    * {@code table_constraints-hms.csv}: the tables of each schema are listed with {@code SHOW
    * TABLES}, then each table is described and its rows are written. A table whose {@code DESCRIBE
    * TABLE} fails gets a tables row with its names and the {@code TableType} ERROR, unless the SQL
-   * warehouse can't parse {@code AS JSON}: then the task fails on the first table.
+   * warehouse or cluster can't parse {@code AS JSON}: then the task fails on the first table.
    */
   ImmutableList<String> writeTableFiles(DatabricksHandle handle, Map<String, CSVPrinter> printers)
       throws IOException {
@@ -148,7 +148,7 @@ public final class HiveMetastoreTasks {
             listedTables.build(),
             table -> describeTable(handle, table),
             (table, description) ->
-                printTable(handle, table, description, tables, columns, views, constraints),
+                printTable(table, description, tables, columns, views, constraints),
             (table, failure) -> {
               throwIfAsJsonUnsupported(failure);
               tables.printRecord(tableErrorRecord(table));
@@ -160,11 +160,11 @@ public final class HiveMetastoreTasks {
     synchronized (this.schemasLock) {
       if (this.schemas == null) {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
-        StatementResult rows =
-            handle.sqlHelper().executeSqlInCatalog(HIVE_METASTORE_CATALOG, "SHOW SCHEMAS");
-        for (List<String> row = rows.nextRow(); row != null; row = rows.nextRow()) {
-          if (handle.filter().acceptsSchema(row.get(0))) {
-            builder.add(row.get(0));
+        try (StatementResult rows = executeSql(handle, "SHOW SCHEMAS")) {
+          for (List<String> row = rows.nextRow(); row != null; row = rows.nextRow()) {
+            if (handle.filter().acceptsSchema(row.get(0))) {
+              builder.add(row.get(0));
+            }
           }
         }
 
@@ -179,68 +179,40 @@ public final class HiveMetastoreTasks {
       throws IOException {
     String query = "SHOW TABLES IN " + quoteIdentifier(schema);
     ImmutableList.Builder<TableName> builder = ImmutableList.builder();
-    StatementResult rows = handle.sqlHelper().executeSqlInCatalog(HIVE_METASTORE_CATALOG, query);
-    // The cells of a row are the schema, the table name and isTemporary.
-    for (List<String> row = rows.nextRow(); row != null; row = rows.nextRow()) {
-      if (!"true".equalsIgnoreCase(row.get(2))) {
-        builder.add(new TableName(schema, row.get(1)));
+    try (StatementResult rows = executeSql(handle, query)) {
+      // The cells of a row are the schema, the table name and isTemporary.
+      for (List<String> row = rows.nextRow(); row != null; row = rows.nextRow()) {
+        if (!"true".equalsIgnoreCase(row.get(2))) {
+          builder.add(new TableName(schema, row.get(1)));
+        }
       }
     }
     return builder.build();
   }
 
-  private static JsonNode describeTable(DatabricksHandle handle, TableName table)
+  /**
+   * Describes a table with {@code DESCRIBE TABLE EXTENDED ... AS JSON} and, for a Delta table, with
+   * {@code DESCRIBE DETAIL}, because the JSON of a Delta table omits the partition columns and the
+   * live table size. A failed {@code DESCRIBE DETAIL} is logged, and the JSON values are kept.
+   */
+  private static TableDescription describeTable(DatabricksHandle handle, TableName table)
       throws IOException {
     String query = "DESCRIBE TABLE EXTENDED " + table.quotedName() + " AS JSON";
-    StatementResult rows = handle.sqlHelper().executeSqlInCatalog(HIVE_METASTORE_CATALOG, query);
-    String json = cell(rows.nextRow(), 0);
+    String json;
+    try (StatementResult rows = executeSql(handle, query)) {
+      json = cell(rows.nextRow(), 0);
+    }
     JsonNode description = json == null ? null : JSON_READER.readTree(json);
     if (description == null || !description.isObject()) {
       throw new IOException(
           "DESCRIBE TABLE AS JSON returned no JSON object for " + table.quotedName() + ".");
     }
-    return description;
-  }
 
-  /**
-   * Throws when {@code DESCRIBE TABLE ... AS JSON} failed because the SQL warehouse can't parse
-   * {@code AS JSON}, which needs Databricks SQL or Databricks Runtime 16.2 and above, so that the
-   * task fails on the first table instead of running a statement that fails for every table.
-   */
-  private static void throwIfAsJsonUnsupported(Exception failure) throws IOException {
-    String message = failure.getMessage();
-    if (message != null && message.contains(PARSE_SYNTAX_ERROR)) {
-      throw new IOException(
-          "The SQL warehouse given with --warehouse can't run DESCRIBE TABLE ... AS JSON, which"
-              + " needs Databricks SQL or Databricks Runtime 16.2 or above. Use a SQL warehouse on"
-              + " the Current channel. "
-              + message,
-          failure);
-    }
-  }
-
-  /**
-   * Prints the rows of a table from its {@code DESCRIBE TABLE} output. For a Delta table, {@code
-   * DESCRIBE TABLE EXTENDED ... AS JSON} omits the partition columns and the live table size, so
-   * they are read with {@code DESCRIBE DETAIL}. The CHECK constraints of a Delta table are in its
-   * {@code table_properties}.
-   */
-  private static void printTable(
-      DatabricksHandle handle,
-      TableName table,
-      JsonNode description,
-      CSVPrinter tables,
-      CSVPrinter columns,
-      CSVPrinter views,
-      CSVPrinter constraints)
-      throws IOException {
     JsonNode partitionColumns = description.path("partition_columns");
     String sizeInBytes = description.path("statistics").path("size_in_bytes").asText("");
     if ("delta".equalsIgnoreCase(description.path("provider").asText(""))) {
       String detailQuery = "DESCRIBE DETAIL " + table.quotedName();
-      try {
-        StatementResult detail =
-            handle.sqlHelper().executeSqlInCatalog(HIVE_METASTORE_CATALOG, detailQuery);
+      try (StatementResult detail = executeSql(handle, detailQuery)) {
         List<String> row = detail.nextRow();
         String detailSize = cell(row, detail.columnNames().indexOf(SIZE_IN_BYTES_DETAIL));
         if (detailSize != null) {
@@ -262,7 +234,47 @@ public final class HiveMetastoreTasks {
             e.getMessage());
       }
     }
+    return new TableDescription(description, partitionColumns, sizeInBytes);
+  }
 
+  private static StatementResult executeSql(DatabricksHandle handle, String sql)
+      throws IOException {
+    return handle.sqlRunner().executeSqlInCatalog(HIVE_METASTORE_CATALOG, sql);
+  }
+
+  /**
+   * Throws when {@code DESCRIBE TABLE ... AS JSON} failed because the SQL warehouse or cluster
+   * can't parse {@code AS JSON}, which needs Databricks SQL or Databricks Runtime 16.2 and above,
+   * so that the task fails on the first table instead of running a statement that fails for every
+   * table.
+   */
+  private static void throwIfAsJsonUnsupported(Exception failure) throws IOException {
+    String message = failure.getMessage();
+    if (message != null && message.contains(PARSE_SYNTAX_ERROR)) {
+      throw new IOException(
+          "The SQL warehouse or cluster can't run DESCRIBE TABLE ... AS JSON, which needs"
+              + " Databricks SQL or Databricks Runtime 16.2 or above. Use a SQL warehouse on the"
+              + " Current channel, or a cluster on Databricks Runtime 16.4 LTS or above. "
+              + message,
+          failure);
+    }
+  }
+
+  /**
+   * Prints the rows of a table from its {@code DESCRIBE TABLE} output. The CHECK constraints of a
+   * Delta table are in its {@code table_properties}.
+   */
+  private static void printTable(
+      TableName table,
+      TableDescription tableDescription,
+      CSVPrinter tables,
+      CSVPrinter columns,
+      CSVPrinter views,
+      CSVPrinter constraints)
+      throws IOException {
+    JsonNode description = tableDescription.description;
+    JsonNode partitionColumns = tableDescription.partitionColumns;
+    String sizeInBytes = tableDescription.sizeInBytes;
     String tableType = description.path("type").asText("");
     // A hive_metastore table has no SecurableKind or PipelineId.
     tables.printRecord(
@@ -422,6 +434,22 @@ public final class HiveMetastoreTasks {
     @Override
     public String toString() {
       return quotedName();
+    }
+  }
+
+  /**
+   * The output of {@code DESCRIBE TABLE EXTENDED ... AS JSON} of a table, with its partition
+   * columns and size, which come from {@code DESCRIBE DETAIL} for a Delta table.
+   */
+  private static final class TableDescription {
+    private final JsonNode description;
+    private final JsonNode partitionColumns;
+    private final String sizeInBytes;
+
+    private TableDescription(JsonNode description, JsonNode partitionColumns, String sizeInBytes) {
+      this.description = description;
+      this.partitionColumns = partitionColumns;
+      this.sizeInBytes = sizeInBytes;
     }
   }
 }

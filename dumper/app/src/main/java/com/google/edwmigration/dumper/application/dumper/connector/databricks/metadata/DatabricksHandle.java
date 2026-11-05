@@ -24,14 +24,16 @@ import com.databricks.sdk.core.DatabricksException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.ByteSink;
 import com.google.common.io.Closer;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
-import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper;
+import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlRunner;
 import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
@@ -46,12 +48,19 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.DatabricksMetadataDu
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.Writer;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.commons.csv.CSVPrinter;
@@ -78,19 +87,27 @@ public final class DatabricksHandle extends AbstractHandle {
   private static final int TABLE_CONSTRAINTS_RECORD_SIZE =
       TableConstraintsFormat.Header.values().length;
 
-  private final DatabricksSqlHelper sqlHelper;
+  private final DatabricksSqlRunner sqlRunner;
   private final WorkspaceClient client;
   private final DatabricksFilter filter;
+  private final int parallelism;
 
   /**
-   * Creates the handle of a run. {@code sqlHelper} is null when no SQL warehouse was given; then
-   * only the Unity Catalog tasks run, because they read the REST API only.
+   * Creates the handle of a run whose per-object calls, such as {@code DESCRIBE TABLE} or {@code
+   * tables.get}, run on up to {@code parallelism} threads. {@code sqlRunner} is null when neither a
+   * SQL warehouse nor a cluster was given; then only the Unity Catalog tasks run, because they read
+   * the REST API only.
    */
   public DatabricksHandle(
-      DatabricksSqlHelper sqlHelper, WorkspaceClient client, DatabricksFilter filter) {
-    this.sqlHelper = sqlHelper;
+      DatabricksSqlRunner sqlRunner,
+      WorkspaceClient client,
+      DatabricksFilter filter,
+      int parallelism) {
+    Preconditions.checkArgument(parallelism > 0, "Parallelism was %s.", parallelism);
+    this.sqlRunner = sqlRunner;
     this.client = Preconditions.checkNotNull(client, "WorkspaceClient was null.");
     this.filter = Preconditions.checkNotNull(filter, "DatabricksFilter was null.");
+    this.parallelism = parallelism;
   }
 
   /**
@@ -151,10 +168,19 @@ public final class DatabricksHandle extends AbstractHandle {
   }
 
   /**
-   * Returns the SQL helper of the hive_metastore tasks, or null when no SQL warehouse was given.
+   * Returns the SQL runner of the hive_metastore tasks, or null when neither a SQL warehouse nor a
+   * cluster was given.
    */
-  public DatabricksSqlHelper sqlHelper() {
-    return this.sqlHelper;
+  DatabricksSqlRunner sqlRunner() {
+    return this.sqlRunner;
+  }
+
+  /** Closes the SQL runner, such as the JDBC connections to a cluster. */
+  @Override
+  public void close() throws IOException {
+    if (this.sqlRunner != null) {
+      this.sqlRunner.close();
+    }
   }
 
   /** Returns the client of the Unity Catalog tasks, which read the REST API. */
@@ -167,28 +193,29 @@ public final class DatabricksHandle extends AbstractHandle {
   }
 
   /**
-   * Executes {@code call} sequentially for each element of {@code inputs} and forwards each
-   * successful result to {@code onSuccess} in input order. Logs and skips per-object {@link
-   * IOException} and {@link DatabricksException} failures, and throws an {@link IOException} if
-   * {@code call} fails for every object in a non-empty {@code inputs}, or an {@link
-   * InterruptedIOException} if the thread is interrupted. The objects are logged with their {@code
-   * toString()}, and a {@link RecordProgressMonitor} logs the progress at DEBUG level.
+   * Executes {@code call} for each element of {@code inputs}, on up to the parallelism of the
+   * handle threads, and forwards each successful result to {@code onSuccess} in input order, on the
+   * calling thread. Logs and skips per-object {@link IOException} and {@link DatabricksException}
+   * failures, and throws an {@link IOException} if {@code call} fails for every object in a
+   * non-empty {@code inputs}, or an {@link InterruptedIOException} if the thread is interrupted.
+   * The objects are logged with their {@code toString()}, and a {@link RecordProgressMonitor} logs
+   * the progress at DEBUG level.
    *
    * @return the warning for the task summary when only some objects fail, such as {@code tables.get
    *     failed for 1 of 3 objects}, which is also logged, or null when no object fails
    */
   @Nullable
   <I, O> String runForEach(
-      String callName, Collection<I> inputs, IOFunction<I, O> call, IOBiConsumer<I, O> onSuccess)
+      String callName, List<I> inputs, IOFunction<I, O> call, IOBiConsumer<I, O> onSuccess)
       throws IOException {
     return runForEach(callName, inputs, call, onSuccess, IOBiConsumer.noop());
   }
 
   /**
-   * Like {@link #runForEach(String, Collection, IOFunction, IOBiConsumer)}, and also passes each
-   * skipped object and its failure to {@code onFailure}, in input order with the results. An
-   * exception thrown by {@code onFailure} stops the calls and is thrown, such as for a failure that
-   * every other object would repeat.
+   * Like {@link #runForEach(String, List, IOFunction, IOBiConsumer)}, and also passes each skipped
+   * object and its failure to {@code onFailure}, in input order with the results. An exception
+   * thrown by {@code onFailure} stops the calls and is thrown, such as for a failure that every
+   * other object would repeat.
    *
    * @return the warning for the task summary when only some objects fail, or null when no object
    *     fails
@@ -196,7 +223,7 @@ public final class DatabricksHandle extends AbstractHandle {
   @Nullable
   <I, O> String runForEach(
       String callName,
-      Collection<I> inputs,
+      List<I> inputs,
       IOFunction<I, O> call,
       IOBiConsumer<I, O> onSuccess,
       IOBiConsumer<I, Exception> onFailure)
@@ -204,32 +231,53 @@ public final class DatabricksHandle extends AbstractHandle {
     int successCount = 0;
     int failureCount = 0;
     Exception firstFailure = null;
+    ExecutorService executor = newExecutor(callName, this.parallelism);
+    Queue<Future<O>> futures = new ArrayDeque<>(this.parallelism);
+    Iterator<I> remaining = inputs.iterator();
     try (RecordProgressMonitor monitor = new RecordProgressMonitor(callName, inputs.size())) {
+      for (int i = 0; i < this.parallelism && remaining.hasNext(); i++) {
+        I next = remaining.next();
+        futures.add(executor.submit(() -> call.apply(next)));
+      }
       for (I input : inputs) {
         if (Thread.currentThread().isInterrupted()) {
-          throw new InterruptedIOException("Interrupted while running " + callName + ".");
+          throw interrupted(callName);
         }
 
-        O result;
+        O result = null;
+        boolean succeeded = false;
         try {
-          result = call.apply(input);
+          result = awaitResult(futures.remove(), callName);
+          succeeded = true;
         } catch (IOException | DatabricksException e) {
+          if (Thread.currentThread().isInterrupted()) {
+            throw interrupted(callName);
+          }
+
           failureCount++;
           if (firstFailure == null) {
             firstFailure = e;
           }
           logger.warn("Skipping {} for {}: {}", callName, input, e.getMessage());
           onFailure.accept(input, e);
-          continue;
         } finally {
           monitor.count();
         }
 
         // Outside the try, so that a failure to write the output, such as an IOException of the
         // CSV printer, fails the task instead of skipping the object.
-        onSuccess.accept(input, result);
-        successCount++;
+        if (succeeded) {
+          onSuccess.accept(input, result);
+          successCount++;
+        }
+        if (remaining.hasNext()) {
+          I next = remaining.next();
+          futures.add(executor.submit(() -> call.apply(next)));
+        }
       }
+    } finally {
+      // Interrupts the running calls and drops the calls that haven't started.
+      executor.shutdownNow();
     }
 
     if (failureCount == 0) {
@@ -249,6 +297,34 @@ public final class DatabricksHandle extends AbstractHandle {
             "%s failed for %d of %d objects", callName, failureCount, failureCount + successCount);
     logger.warn("{}.", warning);
     return warning;
+  }
+
+  private static ExecutorService newExecutor(String callName, int threadCount) {
+    ThreadFactory threads =
+        new ThreadFactoryBuilder()
+            .setNameFormat("databricks-" + callName.replaceAll("\\W+", "-") + "-%d")
+            .setDaemon(true)
+            .build();
+    return Executors.newFixedThreadPool(threadCount, threads);
+  }
+
+  private static InterruptedIOException interrupted(String callName) {
+    return new InterruptedIOException("Interrupted while running " + callName + ".");
+  }
+
+  /** Returns the result of a call, or throws its exception. */
+  private static <O> O awaitResult(Future<O> result, String callName) throws IOException {
+    try {
+      return result.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw interrupted(callName);
+    } catch (ExecutionException e) {
+      Throwable cause = e.getCause();
+      Throwables.throwIfInstanceOf(cause, IOException.class);
+      Throwables.throwIfUnchecked(cause);
+      throw new IOException(cause);
+    }
   }
 
   /** Returns the warnings for the summary of a metadata task, leaving out the nulls. */

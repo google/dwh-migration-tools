@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 
 import com.databricks.sdk.WorkspaceClient;
 import com.databricks.sdk.core.DatabricksConfig;
+import com.databricks.sdk.service.sql.Disposition;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -53,7 +54,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.databricks.DatabricksMetadataConnector;
-import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper;
+import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksClientSqlRunner;
 import com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.DatabricksFilter;
 import com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.UnityCatalogTasks.TableName;
 import com.google.edwmigration.dumper.application.dumper.io.FileSystemOutputHandleFactory;
@@ -131,27 +132,42 @@ public class MetadataTasksTest {
   @Before
   public void stubRecordedResponses() throws IOException {
     server.resetAll();
-    for (Map.Entry<String, JsonNode> entry : loadTestCases("unity-catalog-responses.json")) {
+    for (Map.Entry<String, JsonNode> entry :
+        loadResponseFile("unity-catalog-responses.json").properties()) {
       server.stubFor(
           get(urlEqualTo(entry.getKey())).willReturn(okJson(entry.getValue().toString())));
     }
     int index = 0;
-    for (Map.Entry<String, JsonNode> entry : loadTestCases("hive-metastore-responses.json")) {
-      JsonNode spec = entry.getValue();
-      String rows =
-          spec.has("json_cell")
-              ? MAPPER.writeValueAsString(
-                  ImmutableList.of(ImmutableList.of(spec.get("json_cell").toString())))
-              : spec.path("rows").toString();
-      stubStatement(entry.getKey(), "/chunk/" + index++, rows, spec.get("columns"));
+    for (Map.Entry<String, JsonNode> entry :
+        loadResponseFile("hive-metastore-responses.json").properties()) {
+      stubStatement(entry.getKey(), "/chunk/" + index++, entry.getValue(), 0);
     }
   }
 
   @Test
   public void tasks_writeExpectedCsvsFromRecordedFixtures() throws Exception {
+    // Delay the first table of each catalog so later tables finish first when running in parallel,
+    // verifying that parallel execution keeps the output CSV rows in input order.
+    String firstUcTable =
+        TABLES_PATH + "/dumper_test_uc.dumper_test_schema.items?include_browse=true";
+    server.stubFor(
+        get(urlEqualTo(firstUcTable))
+            .willReturn(
+                okJson(
+                        loadResponseFile("unity-catalog-responses.json")
+                            .get(firstUcTable)
+                            .toString())
+                    .withFixedDelay(50)));
+    String firstHmsTable = "DESCRIBE TABLE EXTENDED `dumper_test_hms`.`delta_items` AS JSON";
+    stubStatement(
+        firstHmsTable,
+        "/chunk/delayed",
+        loadResponseFile("hive-metastore-responses.json").get(firstHmsTable),
+        50);
+
     Path directory = temporaryFolder.newFolder().toPath();
     ImmutableList<Task<?>> tasks = allTasks();
-    runTasks(tasks, ACCEPT_ALL, directory);
+    runTasks(tasks, ACCEPT_ALL, directory, 4);
 
     // Each written file matches its file in expected/.
     for (String entryName : listFiles(directory)) {
@@ -333,10 +349,17 @@ public class MetadataTasksTest {
         thrown.getMessage(), thrown.getMessage().contains("All Databricks metadata tasks failed."));
   }
 
-  /** Runs {@code tasks} with one handle, with their files in {@code directory}. */
+  /** Runs {@code tasks} sequentially with one handle, with their files in {@code directory}. */
   private static void runTasks(
       Iterable<? extends Task<?>> tasks, DatabricksFilter filter, Path directory) throws Exception {
-    try (DatabricksHandle handle = newHandle(filter)) {
+    runTasks(tasks, filter, directory, 1);
+  }
+
+  /** Runs {@code tasks} with one handle, with their files in {@code directory}. */
+  private static void runTasks(
+      Iterable<? extends Task<?>> tasks, DatabricksFilter filter, Path directory, int parallelism)
+      throws Exception {
+    try (DatabricksHandle handle = newHandle(filter, parallelism)) {
       TaskRunContext context =
           new TaskRunContext(
               new FileSystemOutputHandleFactory(directory), handle, 1, null, ARGUMENTS);
@@ -405,19 +428,26 @@ public class MetadataTasksTest {
   }
 
   private static DatabricksHandle newHandle(DatabricksFilter filter) {
+    return newHandle(filter, 1);
+  }
+
+  private static DatabricksHandle newHandle(DatabricksFilter filter, int parallelism) {
     WorkspaceClient client =
         new WorkspaceClient(
             new DatabricksConfig()
                 .setHost(server.baseUrl())
                 .setToken("test-token")
                 .setAuthType("pat"));
-    return new DatabricksHandle(new DatabricksSqlHelper(client, "wh-test"), client, filter);
+    return new DatabricksHandle(
+        new DatabricksClientSqlRunner(client, "wh-test", Disposition.EXTERNAL_LINKS),
+        client,
+        filter,
+        parallelism);
   }
 
-  private static Set<Map.Entry<String, JsonNode>> loadTestCases(String name) throws IOException {
-    return MAPPER
-        .readTree(Resources.toString(Resources.getResource("connector/databricks/" + name), UTF_8))
-        .properties();
+  private static JsonNode loadResponseFile(String name) throws IOException {
+    return MAPPER.readTree(
+        Resources.toString(Resources.getResource("connector/databricks/" + name), UTF_8));
   }
 
   private static ResponseDefinitionBuilder permissionDenied(String message) {
@@ -428,12 +458,15 @@ public class MetadataTasksTest {
             String.format("{\"error_code\": \"PERMISSION_DENIED\", \"message\": \"%s\"}", message));
   }
 
-  /**
-   * Stubs a statement that succeeds with one chunk of {@code rows}, a JSON array of rows. {@code
-   * columns} is the JSON array of the result columns, or null.
-   */
-  private static void stubStatement(String sql, String chunkPath, String rows, JsonNode columns) {
-    server.stubFor(get(urlEqualTo(chunkPath)).willReturn(okJson(rows)));
+  /** Stubs a statement that succeeds with one chunk of rows from {@code spec}. */
+  private static void stubStatement(String sql, String chunkPath, JsonNode spec, int delayMillis)
+      throws IOException {
+    String rows =
+        spec.has("json_cell")
+            ? MAPPER.writeValueAsString(
+                ImmutableList.of(ImmutableList.of(spec.get("json_cell").toString())))
+            : spec.path("rows").toString();
+    server.stubFor(get(urlEqualTo(chunkPath)).willReturn(okJson(rows).withFixedDelay(delayMillis)));
     server.stubFor(
         post(urlEqualTo(STATEMENTS_PATH))
             .withRequestBody(matchingJsonPath("$.statement", equalTo(sql)))
@@ -444,7 +477,7 @@ public class MetadataTasksTest {
                             + " \"manifest\": {\"total_chunk_count\": 1, \"schema\": {\"columns\":"
                             + " %s}}, \"result\": {\"external_links\": [{\"external_link\":"
                             + " \"%s%s\"}]}}",
-                        columns, server.baseUrl(), chunkPath))));
+                        spec.get("columns"), server.baseUrl(), chunkPath))));
   }
 
   private static void stubFailed(String sql) {
