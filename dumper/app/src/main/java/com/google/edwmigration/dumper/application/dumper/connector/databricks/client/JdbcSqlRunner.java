@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 import com.databricks.sdk.WorkspaceClient;
 import com.databricks.sdk.core.DatabricksConfig;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -144,8 +145,8 @@ public final class JdbcSqlRunner implements DatabricksSqlRunner {
   }
 
   /** Returns the JDBC URL of the Thrift endpoint of a cluster. */
-  private static String createClusterUrl(DatabricksConfig config, String clusterId)
-      throws IOException {
+  @VisibleForTesting
+  static String createClusterUrl(DatabricksConfig config, String clusterId) throws IOException {
     URI host = parseHost(config);
     return formatUrl(
         host, String.format("sql/protocolv1/o/%s/%s", getWorkspaceId(config, host), clusterId));
@@ -155,8 +156,8 @@ public final class JdbcSqlRunner implements DatabricksSqlRunner {
    * Returns the JDBC URL of the Thrift endpoint of a SQL warehouse, with the dumper query tag so
    * query history dumps skip the statements.
    */
-  private static String createWarehouseUrl(DatabricksConfig config, String warehouseId)
-      throws IOException {
+  @VisibleForTesting
+  static String createWarehouseUrl(DatabricksConfig config, String warehouseId) throws IOException {
     return formatUrl(parseHost(config), "sql/1.0/warehouses/" + warehouseId) + WAREHOUSE_QUERY_TAGS;
   }
 
@@ -175,7 +176,13 @@ public final class JdbcSqlRunner implements DatabricksSqlRunner {
     return host;
   }
 
-  private static String formatUrl(URI host, String httpPath) {
+  /**
+   * Returns the JDBC URL of the Thrift endpoint at {@code httpPath} of {@code host}, with TLS
+   * unless the scheme of the host is http, and on the port of the host, or else the default port of
+   * its scheme.
+   */
+  @VisibleForTesting
+  static String formatUrl(URI host, String httpPath) {
     boolean ssl = !"http".equalsIgnoreCase(host.getScheme());
     int port = host.getPort() != -1 ? host.getPort() : ssl ? HTTPS_PORT : HTTP_PORT;
     return String.format(URL_FORMAT, host.getHost(), port, ssl ? 1 : 0, httpPath);

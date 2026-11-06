@@ -235,21 +235,19 @@ public final class DatabricksHandle extends AbstractHandle {
     Queue<Future<O>> futures = new ArrayDeque<>(this.parallelism);
     Iterator<I> remaining = inputs.iterator();
     try (RecordProgressMonitor monitor = new RecordProgressMonitor(callName, inputs.size())) {
-      for (int i = 0; i < this.parallelism && remaining.hasNext(); i++) {
-        I next = remaining.next();
-        futures.add(executor.submit(() -> call.apply(next)));
-      }
       for (I input : inputs) {
-        if (Thread.currentThread().isInterrupted()) {
-          throw interrupted(callName);
+        // Keeps up to parallelism calls in flight, starting with the call of this input.
+        while (futures.size() < this.parallelism && remaining.hasNext()) {
+          I next = remaining.next();
+          futures.add(executor.submit(() -> call.apply(next)));
         }
 
-        O result = null;
-        boolean succeeded = false;
+        O result;
         try {
           result = awaitResult(futures.remove(), callName);
-          succeeded = true;
         } catch (IOException | DatabricksException e) {
+          // Only an interrupt of this thread stops the calls. A call can fail with its own
+          // InterruptedIOException, such as a SocketTimeoutException, which skips the object.
           if (Thread.currentThread().isInterrupted()) {
             throw interrupted(callName);
           }
@@ -258,22 +256,18 @@ public final class DatabricksHandle extends AbstractHandle {
           if (firstFailure == null) {
             firstFailure = e;
           }
+
           logger.warn("Skipping {} for {}: {}", callName, input, e.getMessage());
           onFailure.accept(input, e);
+          continue;
         } finally {
           monitor.count();
         }
 
         // Outside the try, so that a failure to write the output, such as an IOException of the
         // CSV printer, fails the task instead of skipping the object.
-        if (succeeded) {
-          onSuccess.accept(input, result);
-          successCount++;
-        }
-        if (remaining.hasNext()) {
-          I next = remaining.next();
-          futures.add(executor.submit(() -> call.apply(next)));
-        }
+        onSuccess.accept(input, result);
+        successCount++;
       }
     } finally {
       // Interrupts the running calls and drops the calls that haven't started.
@@ -312,8 +306,15 @@ public final class DatabricksHandle extends AbstractHandle {
     return new InterruptedIOException("Interrupted while running " + callName + ".");
   }
 
-  /** Returns the result of a call, or throws its exception. */
+  /**
+   * Returns the result of a call, or throws its exception. Checks the interrupt flag first, because
+   * {@link Future#get()} checks it only when it has to wait for the result.
+   */
   private static <O> O awaitResult(Future<O> result, String callName) throws IOException {
+    if (Thread.currentThread().isInterrupted()) {
+      throw interrupted(callName);
+    }
+
     try {
       return result.get();
     } catch (InterruptedException e) {

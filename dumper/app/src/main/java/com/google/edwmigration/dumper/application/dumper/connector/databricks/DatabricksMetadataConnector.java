@@ -26,6 +26,7 @@ import com.databricks.sdk.service.compute.DataSecurityMode;
 import com.databricks.sdk.service.compute.State;
 import com.databricks.sdk.service.sql.Disposition;
 import com.google.auto.service.AutoService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -395,7 +396,8 @@ public class DatabricksMetadataConnector extends AbstractConnector implements Me
    * Throws a usage error when a cluster isn't running, so opening a JDBC connection doesn't trigger
    * an unintended cluster start, and warns when its access mode isn't dedicated.
    */
-  private static void checkCluster(ClusterDetails cluster) {
+  @VisibleForTesting
+  static void checkCluster(ClusterDetails cluster) {
     if (cluster.getState() != State.RUNNING) {
       throw new MetadataDumperUsageException(
           String.format(
