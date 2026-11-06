@@ -18,6 +18,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.databricks;
 
 import static org.junit.Assert.assertThrows;
 
+import com.databricks.sdk.service.compute.ClusterDetails;
+import com.databricks.sdk.service.compute.DataSecurityMode;
+import com.databricks.sdk.service.compute.State;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -48,6 +51,27 @@ public class DatabricksMetadataConnectorTest {
 
   private void assertValidateRejects(String... flags) {
     assertThrows(MetadataDumperUsageException.class, () -> connector.validate(arguments(flags)));
+  }
+
+  @Test
+  public void checkCluster_rejectsClustersThatArentRunning() {
+    DatabricksMetadataConnector.checkCluster(cluster(State.RUNNING));
+
+    assertCheckClusterRejects(cluster(State.TERMINATED));
+    assertCheckClusterRejects(cluster(State.PENDING));
+  }
+
+  private static void assertCheckClusterRejects(ClusterDetails cluster) {
+    assertThrows(
+        MetadataDumperUsageException.class,
+        () -> DatabricksMetadataConnector.checkCluster(cluster));
+  }
+
+  private static ClusterDetails cluster(State state) {
+    return new ClusterDetails()
+        .setClusterId(CLUSTER_ID)
+        .setState(state)
+        .setDataSecurityMode(DataSecurityMode.SINGLE_USER);
   }
 
   private static ConnectorArguments arguments(String... arguments) {

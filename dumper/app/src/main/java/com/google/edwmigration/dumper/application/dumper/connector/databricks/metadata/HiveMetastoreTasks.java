@@ -254,7 +254,7 @@ public final class HiveMetastoreTasks {
       throw new IOException(
           "The SQL warehouse or cluster can't run DESCRIBE TABLE ... AS JSON, which needs"
               + " Databricks SQL or Databricks Runtime 16.2 or above. Use a SQL warehouse on the"
-              + " Current channel, or a cluster on Databricks Runtime 16.4 LTS or above. "
+              + " Current channel, or a cluster on Databricks Runtime 16.2 or above. "
               + message,
           failure);
     }
