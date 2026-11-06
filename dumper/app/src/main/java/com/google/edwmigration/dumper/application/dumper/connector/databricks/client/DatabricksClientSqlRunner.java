@@ -52,6 +52,8 @@ import java.io.InterruptedIOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -60,11 +62,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Executes SQL statements on a Databricks SQL Warehouse via the Statement Execution API using
- * {@link Disposition#EXTERNAL_LINKS} and {@link Format#JSON_ARRAY}, streaming chunks incrementally.
- * The calls throw the {@code DatabricksException} of the SDK when the API returns an error, and an
- * {@link IOException} when a statement fails or a chunk can't be downloaded.
+ * {@link Disposition#EXTERNAL_LINKS} or {@link Disposition#INLINE} and {@link Format#JSON_ARRAY},
+ * streaming chunks incrementally. The calls throw the {@code DatabricksException} of the SDK when
+ * the API returns an error, and an {@link IOException} when a statement fails or a chunk can't be
+ * downloaded.
  */
-public final class DatabricksSqlHelper {
+public final class DatabricksClientSqlRunner implements DatabricksSqlRunner {
 
   /**
    * Key and value of the query tag attached to dumper SQL statements, so query history dumps skip
@@ -74,7 +77,7 @@ public final class DatabricksSqlHelper {
 
   public static final String QUERY_TAG_VALUE = "dwh-migration-dumper";
 
-  private static final Logger logger = LoggerFactory.getLogger(DatabricksSqlHelper.class);
+  private static final Logger logger = LoggerFactory.getLogger(DatabricksClientSqlRunner.class);
   // 50s is the maximum synchronous wait of the API before polling.
   private static final String DEFAULT_WAIT_TIMEOUT = "50s";
   private static final Duration DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
@@ -118,73 +121,78 @@ public final class DatabricksSqlHelper {
   }
 
   /**
-   * Streams the result rows of a SQL statement executed by {@link DatabricksSqlHelper}: the rows of
-   * the first chunk of the response, then the rows of chunks 1 to {@code total_chunk_count - 1}.
+   * Streams the result rows of a SQL statement executed by {@link DatabricksClientSqlRunner}: the
+   * rows of the first chunk of the response, then the rows of chunks 1 to {@code total_chunk_count
+   * - 1}.
    */
-  public static final class StatementResult {
+  private static final class ChunkedStatementResult implements StatementResult {
 
-    private final DatabricksSqlHelper helper;
+    private final DatabricksClientSqlRunner runner;
     private final String statementId;
     private final long totalChunkCount;
     private final ImmutableList<String> columnNames;
     private long nextChunkIndex = 1;
     private Iterator<List<String>> currentRows;
 
-    private StatementResult(DatabricksSqlHelper helper, StatementResponse response)
+    private ChunkedStatementResult(DatabricksClientSqlRunner runner, StatementResponse response)
         throws IOException {
       ResultManifest manifest = response.getManifest();
-      this.helper = helper;
+      this.runner = runner;
       this.statementId = response.getStatementId();
       this.totalChunkCount =
           manifest != null && manifest.getTotalChunkCount() != null
               ? manifest.getTotalChunkCount()
               : 0L;
-      this.columnNames = findColumnNames(manifest);
-      this.currentRows = helper.downloadRows(response.getResult()).iterator();
+      this.columnNames = getColumnNames(manifest);
+      this.currentRows = runner.readRows(response.getResult()).iterator();
     }
 
-    /**
-     * Returns the cell at {@code index}, or null if {@code row} is null or {@code index} is out of
-     * bounds.
-     */
-    public static String cell(List<String> row, int index) {
-      return row == null || index < 0 || index >= row.size() ? null : row.get(index);
-    }
-
-    /** Returns the names of the result columns, in order. */
+    @Override
     public ImmutableList<String> columnNames() {
       return this.columnNames;
     }
 
-    /** Returns the next result row, downloading the next chunk when needed, or null at the end. */
+    /** Returns the next result row, reading the next chunk when needed, or null at the end. */
+    @Override
     public List<String> nextRow() throws IOException {
       while (!currentRows.hasNext()) {
         if (nextChunkIndex >= totalChunkCount) {
           return null;
         }
-        currentRows = helper.downloadChunkRows(statementId, nextChunkIndex++).iterator();
+
+        currentRows = runner.readChunkRows(statementId, nextChunkIndex++).iterator();
       }
+
       return currentRows.next();
     }
   }
 
   private final WorkspaceClient workspaceClient;
   private final String warehouseId;
+  private final Disposition disposition;
   private final HttpClient httpClient;
   private final long pollIntervalMillis;
   private final Duration statementTimeout;
 
-  public DatabricksSqlHelper(WorkspaceClient workspaceClient, String warehouseId) {
-    this(workspaceClient, warehouseId, DEFAULT_POLL_INTERVAL, DEFAULT_STATEMENT_TIMEOUT);
+  public DatabricksClientSqlRunner(
+      WorkspaceClient workspaceClient, String warehouseId, Disposition disposition) {
+    this(
+        workspaceClient,
+        warehouseId,
+        disposition,
+        DEFAULT_POLL_INTERVAL,
+        DEFAULT_STATEMENT_TIMEOUT);
   }
 
-  DatabricksSqlHelper(
+  DatabricksClientSqlRunner(
       WorkspaceClient workspaceClient,
       String warehouseId,
+      Disposition disposition,
       Duration pollInterval,
       Duration statementTimeout) {
     this.workspaceClient = Preconditions.checkNotNull(workspaceClient, "WorkspaceClient was null.");
     this.warehouseId = Preconditions.checkNotNull(warehouseId, "Warehouse ID was null.");
+    this.disposition = Preconditions.checkNotNull(disposition, "Disposition was null.");
     this.httpClient = workspaceClient.apiClient().getHttpClient();
     this.pollIntervalMillis = pollInterval.toMillis();
     this.statementTimeout = statementTimeout;
@@ -195,13 +203,17 @@ public final class DatabricksSqlHelper {
    * statement and throws an {@link InterruptedIOException} if the thread is interrupted while the
    * statement runs.
    */
+  @Override
   public StatementResult executeSqlInCatalog(String catalog, String sql) throws IOException {
-    return new StatementResult(this, executeToCompletion(catalog, sql));
+    return new ChunkedStatementResult(this, executeToCompletion(catalog, sql));
   }
 
-  private List<List<String>> downloadChunkRows(String statementId, long chunkIndex)
-      throws IOException {
-    return downloadRows(
+  /** Does nothing, because the statements of a SQL warehouse need no session. */
+  @Override
+  public void close() {}
+
+  private List<List<String>> readChunkRows(String statementId, long chunkIndex) throws IOException {
+    return readRows(
         workspaceClient.statementExecution().getStatementResultChunkN(statementId, chunkIndex));
   }
 
@@ -211,7 +223,7 @@ public final class DatabricksSqlHelper {
             .setWarehouseId(warehouseId)
             .setCatalog(catalog)
             .setStatement(sql)
-            .setDisposition(Disposition.EXTERNAL_LINKS)
+            .setDisposition(disposition)
             .setFormat(Format.JSON_ARRAY)
             .setWaitTimeout(DEFAULT_WAIT_TIMEOUT)
             .setOnWaitTimeout(ExecuteStatementRequestOnWaitTimeout.CONTINUE)
@@ -251,16 +263,28 @@ public final class DatabricksSqlHelper {
               "SQL statement %s failed in state %s: %s",
               statementId, status.getState(), error == null ? null : error.getMessage()));
     }
+
     return response;
   }
 
-  private List<List<String>> downloadRows(ResultData chunk) throws IOException {
+  private List<List<String>> readRows(ResultData chunk) throws IOException {
     List<List<String>> rows = new ArrayList<>();
-    if (chunk != null && chunk.getExternalLinks() != null) {
+    if (chunk == null) {
+      return rows;
+    }
+
+    if (chunk.getDataArray() != null) {
+      for (Collection<String> row : chunk.getDataArray()) {
+        rows.add(row == null ? Collections.emptyList() : new ArrayList<>(row));
+      }
+    }
+
+    if (chunk.getExternalLinks() != null) {
       for (ExternalLink link : chunk.getExternalLinks()) {
         rows.addAll(downloadLink(link));
       }
     }
+
     return rows;
   }
 
@@ -305,7 +329,7 @@ public final class DatabricksSqlHelper {
     throw failure;
   }
 
-  private static ImmutableList<String> findColumnNames(ResultManifest manifest) {
+  private static ImmutableList<String> getColumnNames(ResultManifest manifest) {
     ResultSchema schema = manifest != null ? manifest.getSchema() : null;
     if (schema == null || schema.getColumns() == null) {
       return ImmutableList.of();
