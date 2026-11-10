@@ -17,11 +17,11 @@ documentation](https://cloud.google.com/bigquery/docs/generate-metadata).
     To run the Dumper `Java 8` or  higher is required. Third party JDBC drivers might
   impose additional restrictions on Java versions. Refer to the JDBC driver's manual for details.
 
-- **Batch SQL Translation Client:** Command line utility to run a Batch SQL
-Translation job with support for macro expansion/unexpansion. For more
-information, [read how to submit a translation job using the
-client](https://cloud.google.com/bigquery/docs/batch-sql-translator#submit_a_translation_job)
-and view the [installation instructions](client/README.md).
+- **Batch SQL Translation Client (Removed):** The standalone Python Batch SQL
+  Translation client (`client/`) has been removed from this repository; its
+  functionality is now provided via the `gcloud` CLI. For instructions going
+  forward, see the
+  [documentation](https://docs.cloud.google.com/bigquery/docs/generate-metadata).
 
 - **Dbsync Tools (work in progress):** Command line utility to sync large
   files into Google Cloud Storage. View the [documentation](dbsync/README.md).
@@ -45,7 +45,6 @@ You need to have `JDK 8` installed. For multiple jdk versions we recommend to us
 
 Contributing instructions are available, per tool, at the following locations:
 - [Metadata and Log Dumper contribution guide](dumper/CONTRIBUTING.md)
-- [Batch SQL Translation Client contribution guide](client/CONTRIBUTING.md)
 
 ## License
 

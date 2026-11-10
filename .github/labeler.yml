@@ -24,9 +24,6 @@ DOCS:
           - 'docs/**/*'
           - '**/*.md'
 
-Client:
-  - changed-files:
-      - any-glob-to-any-file: 'client/**/*'
 Dumper:
   - changed-files:
     - any-glob-to-any-file: 'dumper/**/*'
