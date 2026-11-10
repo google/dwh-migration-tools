@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThrows;
 import com.databricks.sdk.WorkspaceClient;
 import com.databricks.sdk.core.DatabricksConfig;
 import com.databricks.sdk.core.utils.SerDeUtils;
+import com.databricks.sdk.service.sql.Disposition;
 import com.databricks.sdk.service.sql.ExternalLink;
 import com.databricks.sdk.service.sql.ResultData;
 import com.databricks.sdk.service.sql.ResultManifest;
@@ -41,8 +42,8 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.google.common.collect.ImmutableList;
-import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper.SqlQuoting;
-import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlHelper.StatementResult;
+import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksClientSqlRunner.SqlQuoting;
+import com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksSqlRunner.StatementResult;
 import java.io.InterruptedIOException;
 import java.io.UncheckedIOException;
 import java.time.Duration;
@@ -54,7 +55,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class DatabricksSqlHelperTest {
+public class DatabricksClientSqlRunnerTest {
 
   private static final String CATALOG = "hive_metastore";
   private static final String STATEMENTS_PATH = "/api/2.0/sql/statements";
@@ -76,7 +77,7 @@ public class DatabricksSqlHelperTest {
   }
 
   @Test
-  public void sqlHelper_pollsStatementAndReadsEveryChunkWithRetry() throws Exception {
+  public void executeSqlInCatalog_pollsStatementAndReadsEveryChunkWithRetry() throws Exception {
     // The statement is PENDING, then SUCCEEDED with 2 chunks, and the download of the first chunk
     // fails once with HTTP 503.
     StatementResponse succeeded =
@@ -104,12 +105,12 @@ public class DatabricksSqlHelperTest {
             .willReturn(okJson("[[\"r0\"], [\"r1\"]]")));
     wireMock.stubFor(get(urlPathEqualTo("/chunk/1")).willReturn(okJson("[[\"r2\"]]")));
 
-    StatementResult result =
-        new DatabricksSqlHelper(newWorkspaceClient(), "wh-1", Duration.ZERO, Duration.ofMinutes(1))
-            .executeSqlInCatalog(CATALOG, "SELECT 1");
     ImmutableList.Builder<List<String>> rows = ImmutableList.builder();
-    for (List<String> row = result.nextRow(); row != null; row = result.nextRow()) {
-      rows.add(row);
+    try (DatabricksClientSqlRunner runner = newRunner();
+        StatementResult result = runner.executeSqlInCatalog(CATALOG, "SELECT 1")) {
+      for (List<String> row = result.nextRow(); row != null; row = result.nextRow()) {
+        rows.add(row);
+      }
     }
 
     assertEquals(
@@ -118,19 +119,18 @@ public class DatabricksSqlHelperTest {
   }
 
   @Test
-  public void sqlHelper_cancelsStatementWhenInterrupted() {
+  public void executeSqlInCatalog_cancelsStatementWhenInterrupted() {
     wireMock.stubFor(
         post(urlPathEqualTo(STATEMENTS_PATH))
             .willReturn(okModel(statement(StatementState.RUNNING))));
     wireMock.stubFor(
         post(urlPathEqualTo(STATEMENTS_PATH + "/stmt-1/cancel")).willReturn(okJson("{}")));
-    DatabricksSqlHelper helper =
-        new DatabricksSqlHelper(newWorkspaceClient(), "wh-1", Duration.ZERO, Duration.ofMinutes(1));
+    DatabricksClientSqlRunner runner = newRunner();
 
     Thread.currentThread().interrupt();
     try {
       assertThrows(
-          InterruptedIOException.class, () -> helper.executeSqlInCatalog(CATALOG, "SELECT 1"));
+          InterruptedIOException.class, () -> runner.executeSqlInCatalog(CATALOG, "SELECT 1"));
     } finally {
       // Clears the interrupt flag for the next tests.
       Thread.interrupted();
@@ -162,12 +162,15 @@ public class DatabricksSqlHelperTest {
             ImmutableList.of(new ExternalLink().setExternalLink(wireMock.baseUrl() + path)));
   }
 
-  private WorkspaceClient newWorkspaceClient() {
-    return new WorkspaceClient(
-        new DatabricksConfig()
-            .setHost(wireMock.baseUrl())
-            .setToken("test-token")
-            .setAuthType("pat"));
+  private DatabricksClientSqlRunner newRunner() {
+    WorkspaceClient client =
+        new WorkspaceClient(
+            new DatabricksConfig()
+                .setHost(wireMock.baseUrl())
+                .setToken("test-token")
+                .setAuthType("pat"));
+    return new DatabricksClientSqlRunner(
+        client, "wh-1", Disposition.EXTERNAL_LINKS, Duration.ZERO, Duration.ofMinutes(1));
   }
 
   private static ResponseDefinitionBuilder okModel(Object model) {
