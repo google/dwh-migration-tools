@@ -17,7 +17,6 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import org.anarres.jdiagnostics.ClassLoaderQuery;
-import org.anarres.jdiagnostics.ClassPathQuery;
 import org.anarres.jdiagnostics.CompositeQuery;
 import org.anarres.jdiagnostics.DOMQuery;
 import org.anarres.jdiagnostics.EnvironmentQuery;
@@ -37,7 +36,7 @@ public class DumperDiagnosticQuery extends CompositeQuery {
     add(new SAXQuery());
     add(new DOMQuery());
     add(new JAXPQuery());
-    add(new ClassPathQuery());
+    add(new ClassPathNamesQuery());
     // add(new XSLTQuery());
     add(new EnvironmentQuery());
     // add(new AntQuery());
