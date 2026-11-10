@@ -23,8 +23,11 @@ information, [read how to submit a translation job using the
 client](https://cloud.google.com/bigquery/docs/batch-sql-translator#submit_a_translation_job)
 and view the [installation instructions](client/README.md).
 
-- **Dbsync Tools (work in progress):** Command line utility to sync large
-  files into Google Cloud Storage. View the [documentation](dbsync/README.md).
+- **Dbsync Tools (Removed):** The `dbsync` command line utility for syncing
+  large files into Google Cloud Storage has been removed from this repository.
+  For syncing and transferring files to Google Cloud Storage going forward, use
+  [Storage Transfer Service (STS)](https://docs.cloud.google.com/storage-transfer/docs/overview)
+  or [Cloud Storage FUSE](https://docs.cloud.google.com/storage/docs/cloud-storage-fuse/overview).
 
 - **Migration Discovery Scripts:** Lightweight, native SQL extraction scripts
   (requiring zero Java runtime or external binaries) to collect operational and
