@@ -17,14 +17,12 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import org.anarres.jdiagnostics.ClassLoaderQuery;
-import org.anarres.jdiagnostics.ClassPathQuery;
 import org.anarres.jdiagnostics.CompositeQuery;
 import org.anarres.jdiagnostics.DOMQuery;
 import org.anarres.jdiagnostics.EnvironmentQuery;
 import org.anarres.jdiagnostics.JAXPQuery;
 import org.anarres.jdiagnostics.ProductMetadataQuery;
 import org.anarres.jdiagnostics.SAXQuery;
-import org.anarres.jdiagnostics.SystemPropertiesQuery;
 import org.anarres.jdiagnostics.ThrowableQuery;
 import org.anarres.jdiagnostics.TmpDirQuery;
 import org.anarres.jdiagnostics.XalanQuery;
@@ -34,11 +32,11 @@ import org.anarres.jdiagnostics.XercesQuery;
 public class DumperDiagnosticQuery extends CompositeQuery {
 
   public DumperDiagnosticQuery(Throwable t) {
-    add(new SystemPropertiesQuery());
+    add(new AllowedSystemPropertiesQuery());
     add(new SAXQuery());
     add(new DOMQuery());
     add(new JAXPQuery());
-    add(new ClassPathQuery());
+    add(new ClassPathNamesQuery());
     // add(new XSLTQuery());
     add(new EnvironmentQuery());
     // add(new AntQuery());
