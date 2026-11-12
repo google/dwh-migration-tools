@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
 import com.google.cloud.storage.contrib.nio.CloudStorageFileSystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
@@ -48,6 +49,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
@@ -66,12 +68,22 @@ public class MetadataDumper {
   private final TelemetryProcessor telemetryProcessor;
   private final ConnectorArguments connectorArguments;
   private final ShutdownHook shutdownHook;
+  private final Supplier<OutputBucketVerifier> outputBucketVerifierSupplier;
 
   public MetadataDumper(String... args) throws Exception {
     this((zipPath) -> {}, args);
   }
 
   public MetadataDumper(ShutdownHook shutdownHook, String... args) throws Exception {
+    this(shutdownHook, OutputBucketVerifier::createWithDefaultCredentials, args);
+  }
+
+  @VisibleForTesting
+  MetadataDumper(
+      ShutdownHook shutdownHook,
+      Supplier<OutputBucketVerifier> outputBucketVerifierSupplier,
+      String... args)
+      throws Exception {
     this.connectorArguments = new ConnectorArguments(JsonResponseFile.addResponseFiles(args));
     telemetryProcessor =
         new TelemetryProcessor(
@@ -81,6 +93,7 @@ public class MetadataDumper {
     }
 
     this.shutdownHook = shutdownHook;
+    this.outputBucketVerifierSupplier = outputBucketVerifierSupplier;
   }
 
   public boolean run() throws Exception {
@@ -125,6 +138,8 @@ public class MetadataDumper {
       }
       return true;
     }
+
+    verifyOutputBucket(outputFileLocation);
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     long outputFileLength = 0;
@@ -188,6 +203,29 @@ public class MetadataDumper {
         print(subtask, indent + 1);
       }
     }
+  }
+
+  /**
+   * Checks that a gs:// output bucket belongs to the caller's project and is not public, unless the
+   * check was turned off. Does nothing for local output.
+   */
+  @VisibleForTesting
+  void verifyOutputBucket(@Nonnull String outputFileLocation) {
+    Matcher matcher = GCS_PATH_PATTERN.matcher(outputFileLocation);
+    if (!matcher.matches()) {
+      return;
+    }
+
+    String bucket = matcher.group("bucket");
+    if (connectorArguments.isSkipBucketVerification()) {
+      logger.warn(
+          "Not verifying output bucket gs://{} because --{} was given.",
+          bucket,
+          ConnectorArguments.OPT_SKIP_BUCKET_VERIFICATION);
+      return;
+    }
+
+    outputBucketVerifierSupplier.get().verify(bucket);
   }
 
   private Path prepareOutputPath(

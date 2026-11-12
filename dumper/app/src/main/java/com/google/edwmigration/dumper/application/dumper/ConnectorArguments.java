@@ -107,6 +107,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_DATABASE = "database";
   public static final String OPT_SCHEMA = "schema";
   public static final String OPT_OUTPUT = "output";
+  public static final String OPT_SKIP_BUCKET_VERIFICATION = "skip-bucket-verification";
   public static final String OPT_CONFIG = "config";
   public static final String OPT_ASSESSMENT = "assessment";
   public static final String OPT_SANITIZE_CSV = "sanitize-csv";
@@ -341,6 +342,11 @@ public class ConnectorArguments extends DefaultArguments {
               + " applications show them as text. This changes the exported values: use it only"
               + " for output that will be read by hand, not for output that will be uploaded for"
               + " assessment or translation.");
+  private final OptionSpec<Void> optionSkipBucketVerification =
+      parser.accepts(
+          OPT_SKIP_BUCKET_VERIFICATION,
+          "Writes to a gs:// output without first checking that the bucket belongs to the Google"
+              + " Cloud project of the application default credentials and is not public.");
 
   /**
    * (Deprecated) earliest timestamp of logs to extract.
@@ -923,6 +929,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isOutputContinue() {
     return getOptions().has(optionOutputContinue);
+  }
+
+  public boolean isSkipBucketVerification() {
+    return getOptions().has(optionSkipBucketVerification);
   }
 
   public boolean isDryRun() {
