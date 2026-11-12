@@ -16,10 +16,17 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
+import static org.junit.Assert.assertTrue;
+
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
+import com.google.edwmigration.dumper.application.dumper.task.Task;
+import com.google.edwmigration.dumper.application.dumper.task.TaskGroup;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.RedshiftRawLogsDumpFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +46,30 @@ public class RedshiftRawLogsConnectorTest extends AbstractConnectorExecutionTest
   @Test
   public void testConnector() throws Exception {
     testConnectorDefaults(connector);
+  }
+
+  @Test
+  public void addTasksTo_earliestTimestamp_usedAsGiven() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+    ConnectorArguments arguments =
+        new ConnectorArguments(
+            "--connector",
+            connector.getName(),
+            "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
+            "2024-03-21T10:15");
+
+    connector.addTasksTo(tasks, arguments);
+
+    List<Task<?>> allTasks = new ArrayList<>();
+    for (Task<?> task : tasks) {
+      allTasks.add(task);
+      if (task instanceof TaskGroup) {
+        allTasks.addAll(((TaskGroup) task).getTasks());
+      }
+    }
+    String descriptions = allTasks.toString();
+    assertTrue(
+        descriptions, descriptions.contains("starttime >= CAST( '2024-03-21T10:15' as TIMESTAMP)"));
   }
 
   @Ignore("Expensive. Move to integration tests? Needs IAM parameters.")

@@ -17,6 +17,8 @@
 package com.google.edwmigration.dumper.application.dumper;
 
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST_DEFAULT;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_QUERY_LOG_START;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -183,6 +185,75 @@ public class ConnectorArgumentsTest {
     assertFalse(
         "Should not contain query definitions", result.contains("SELECT * FROM warehouse_events"));
     assertTrue("Should contain other definitions", result.contains("id = 123"));
+  }
+
+  @Test
+  public void getQueryLogEarliestTimestamp_dateOrTimestamp_returnsValue() {
+    ImmutableList<String> values =
+        ImmutableList.of(
+            "2024-03-21",
+            "2024-03-21 10:15",
+            "2024-03-21 10:15:30",
+            "2024-03-21 10:15:30.123456",
+            "2024-03-21T10:15",
+            "2024-03-21T10:15:30.5");
+
+    for (String value : values) {
+      ConnectorArguments arguments =
+          arguments(
+              "--connector", "snowflake-logs", "--" + OPT_QUERY_LOG_EARLIEST_TIMESTAMP, value);
+
+      assertEquals(value, arguments.getQueryLogEarliestTimestamp());
+    }
+  }
+
+  @Test
+  public void getQueryLogEarliestTimestamp_surroundingSpaces_trimmed() {
+    ConnectorArguments arguments =
+        arguments(
+            "--connector",
+            "snowflake-logs",
+            "--" + OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
+            " 2024-03-21 ");
+
+    assertEquals("2024-03-21", arguments.getQueryLogEarliestTimestamp());
+  }
+
+  @Test
+  public void getQueryLogEarliestTimestamp_otherValue_throwsUsageException() {
+    ImmutableList<String> values =
+        ImmutableList.of(
+            "CURRENT_TIMESTAMP - INTERVAL '3' DAY",
+            "2024-03-21' OR '1'='1",
+            "2024-03-21 OR 1=1",
+            "2024-03-21 --",
+            "2024-13-01",
+            "2024-03-21 25:00:00",
+            "2024-03-21T10:15:30Z",
+            "2024-03-21 10:15:30+01:00",
+            "2024-03-21 10",
+            "21/03/2024");
+
+    for (String value : values) {
+      ConnectorArguments arguments =
+          arguments(
+              "--connector", "snowflake-logs", "--" + OPT_QUERY_LOG_EARLIEST_TIMESTAMP, value);
+
+      MetadataDumperUsageException e =
+          assertThrows(
+              value, MetadataDumperUsageException.class, arguments::getQueryLogEarliestTimestamp);
+      assertTrue(e.getMessage(), e.getMessage().contains("--" + OPT_QUERY_LOG_START));
+    }
+  }
+
+  @Test
+  public void toString_invalidQueryLogEarliestTimestamp_doesNotThrow() {
+    ConnectorArguments arguments =
+        arguments("--connector", "snowflake-logs", "--" + OPT_QUERY_LOG_EARLIEST_TIMESTAMP, "now");
+
+    String result = arguments.toString();
+
+    assertTrue(result, result.contains(OPT_QUERY_LOG_EARLIEST_TIMESTAMP + "=now"));
   }
 
   // helper method to suppress IOException

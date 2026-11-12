@@ -61,6 +61,28 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
   private final TeradataLogsConnector connector = new TeradataLogsConnector();
 
   @Test
+  public void addTasksTo_earliestTimestamp_comparedAsTimestampLiteral() throws Exception {
+    List<Task<?>> tasks = new ArrayList<>();
+    ConnectorArguments arguments =
+        new ConnectorArguments(
+            "--connector",
+            connector.getName(),
+            "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
+            "2024-03-21");
+
+    connector.addTasksTo(tasks, arguments);
+
+    TeradataLogsJdbcTask logsTask =
+        tasks.stream()
+            .filter(TeradataLogsJdbcTask.class::isInstance)
+            .map(TeradataLogsJdbcTask.class::cast)
+            .findFirst()
+            .get();
+    String sql = logsTask.getOrCreateSql(expression -> true, ImmutableList.of("L.QueryID"));
+    assertTrue(sql, sql.contains("L.StartTime >= CAST('2024-03-21 00:00:00' AS TIMESTAMP)"));
+  }
+
+  @Test
   public void addTaskTo_TableValidationTasksBeforeSelectTasks() throws Exception {
     List<Task<?>> tasks = new ArrayList<>();
     ConnectorArguments arguments =

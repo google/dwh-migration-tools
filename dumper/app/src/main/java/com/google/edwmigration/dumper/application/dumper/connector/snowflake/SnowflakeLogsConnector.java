@@ -270,11 +270,11 @@ public class SnowflakeLogsConnector extends AbstractSnowflakeConnector
 
   @Nonnull
   static String earliestTimestamp(@Nonnull ConnectorArguments arguments) {
-    String timestamp = arguments.getQueryLogEarliestTimestamp();
+    String timestamp = arguments.getQueryLogEarliestTimestampNormalized();
     if (isBlank(timestamp)) {
       return "";
     } else {
-      return String.format("AND start_time >= %s\n", timestamp);
+      return String.format("AND start_time >= to_timestamp_ltz('%s')\n", timestamp);
     }
   }
 
