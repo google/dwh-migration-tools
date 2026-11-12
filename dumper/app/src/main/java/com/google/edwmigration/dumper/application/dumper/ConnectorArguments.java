@@ -96,6 +96,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_DATABASE = "database";
   public static final String OPT_SCHEMA = "schema";
   public static final String OPT_OUTPUT = "output";
+  public static final String OPT_SKIP_BUCKET_VERIFICATION = "skip-bucket-verification";
   public static final String OPT_CONFIG = "config";
   public static final String OPT_ASSESSMENT = "assessment";
   public static final String OPT_ORACLE_SID = "oracle-sid";
@@ -310,6 +311,11 @@ public class ConnectorArguments extends DefaultArguments {
           .describedAs("cw-dump.zip");
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
+  private final OptionSpec<Void> optionSkipBucketVerification =
+      parser.accepts(
+          OPT_SKIP_BUCKET_VERIFICATION,
+          "Writes to a gs:// output without first checking that the bucket belongs to the Google"
+              + " Cloud project of the application default credentials and is not public.");
 
   /**
    * (Deprecated) earliest timestamp of logs to extract.
@@ -892,6 +898,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isOutputContinue() {
     return getOptions().has(optionOutputContinue);
+  }
+
+  public boolean isSkipBucketVerification() {
+    return getOptions().has(optionSkipBucketVerification);
   }
 
   public boolean isDryRun() {

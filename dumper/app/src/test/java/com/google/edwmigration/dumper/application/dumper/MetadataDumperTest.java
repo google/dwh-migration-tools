@@ -20,11 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.bigquery.BigQueryLogsConnector;
 import com.google.edwmigration.dumper.application.dumper.connector.test.TestConnector;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import joptsimple.OptionException;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -217,5 +220,88 @@ public class MetadataDumperTest {
 
     // Assert
     assertTrue(file.exists());
+  }
+
+  @Test
+  public void run_gcsBucketNotInProject_failsBeforeOpeningBucket() throws Exception {
+    FakeBucketMetadataClient client = new FakeBucketMetadataClient("customer-project");
+    List<String> shutdownCalls = new ArrayList<>();
+    MetadataDumper dumper =
+        new MetadataDumper(
+            shutdownCalls::add,
+            () -> new OutputBucketVerifier(client, "customer-project"),
+            "--connector",
+            connector.getName(),
+            "--output",
+            "gs://other-bucket/extracts/");
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, dumper::run);
+
+    assertTrue(exception.getMessage().contains("gs://other-bucket"));
+    assertEquals(ImmutableList.of("customer-project:other-bucket"), client.listCalls);
+    assertTrue(shutdownCalls.isEmpty());
+  }
+
+  @Test
+  public void run_gcsOutputWithDryRun_doesNotVerifyBucket() throws Exception {
+    boolean result =
+        new MetadataDumper(
+                outputFile -> {},
+                MetadataDumperTest::failVerifierCreation,
+                "--connector",
+                connector.getName(),
+                "--output",
+                "gs://customer-bucket/extracts/",
+                "--dry-run")
+            .run();
+
+    assertTrue(result);
+  }
+
+  @Test
+  public void verifyOutputBucket_ownedPrivateBucket_passes() throws Exception {
+    FakeBucketMetadataClient client =
+        new FakeBucketMetadataClient("customer-project")
+            .withBucket("customer-bucket", /* publicAccessPreventionEnforced= */ true);
+    MetadataDumper dumper =
+        new MetadataDumper(
+            outputFile -> {},
+            () -> new OutputBucketVerifier(client, "customer-project"),
+            "--connector",
+            connector.getName());
+
+    dumper.verifyOutputBucket("gs://customer-bucket/extracts/" + DEFAULT_FILENAME);
+
+    assertEquals(ImmutableList.of("customer-project:customer-bucket"), client.listCalls);
+  }
+
+  @Test
+  public void verifyOutputBucket_skipFlag_doesNotVerify() throws Exception {
+    MetadataDumper dumper =
+        new MetadataDumper(
+            outputFile -> {},
+            MetadataDumperTest::failVerifierCreation,
+            "--connector",
+            connector.getName(),
+            "--skip-bucket-verification");
+
+    dumper.verifyOutputBucket("gs://other-bucket/extracts/" + DEFAULT_FILENAME);
+  }
+
+  @Test
+  public void verifyOutputBucket_localOutput_doesNotVerify() throws Exception {
+    MetadataDumper dumper =
+        new MetadataDumper(
+            outputFile -> {},
+            MetadataDumperTest::failVerifierCreation,
+            "--connector",
+            connector.getName());
+
+    dumper.verifyOutputBucket(DEFAULT_FILENAME);
+  }
+
+  private static OutputBucketVerifier failVerifierCreation() {
+    throw new AssertionError("The output bucket must not be verified.");
   }
 }
