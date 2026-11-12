@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
@@ -90,8 +91,6 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
       ImmutableList.of(
           "catalogs.jsonl",
           "databases.jsonl",
-          "master-keys.jsonl",
-          "delegation-tokens.jsonl",
           "functions.jsonl",
           "resource-plans.jsonl",
           "tables-raw.jsonl");
@@ -111,5 +110,33 @@ public class HiveMetadataConnectorTest extends AbstractConnectorTest {
     assertTrue(
         "Task names must contain '" + taskName + "'. Actual tasks: " + taskNames,
         taskNames.contains(taskName));
+  }
+
+  @Theory
+  public void addTasksTo_keyAndTokenFiles_notScheduled(
+      boolean migrationMetadataEnabled, boolean assessment) throws IOException {
+    ImmutableList.Builder<String> argList =
+        ImmutableList.<String>builder()
+            .add(
+                "--connector", "hiveql", "-Dhiveql.migration.metadata=" + migrationMetadataEnabled);
+    if (assessment) {
+      argList.add("--assessment");
+    }
+
+    ConnectorArguments args = new ConnectorArguments(argList.build().toArray(new String[0]));
+    List<Task<?>> tasks = new ArrayList<>();
+
+    // Act
+    connector.addTasksTo(tasks, args);
+
+    // Assert
+    ImmutableList<String> targetPaths =
+        tasks.stream().map(Task::getTargetPath).collect(toImmutableList());
+    assertFalse(
+        "No task may write master-keys.jsonl. Actual targets: " + targetPaths,
+        targetPaths.contains("master-keys.jsonl"));
+    assertFalse(
+        "No task may write delegation-tokens.jsonl. Actual targets: " + targetPaths,
+        targetPaths.contains("delegation-tokens.jsonl"));
   }
 }
