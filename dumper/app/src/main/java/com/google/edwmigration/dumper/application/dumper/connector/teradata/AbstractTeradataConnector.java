@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.teradata;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.determineTransactionMode;
 import static org.springframework.dao.support.DataAccessUtils.nullableSingleResult;
 
@@ -188,7 +191,8 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
   public Handle open(ConnectorArguments arguments) throws Exception {
     String url = arguments.getUri();
     if (url == null) {
-      String host = arguments.getHostOrDefault();
+      String host =
+          checkUrlComponent(OPT_HOST, arguments.getHostOrDefault(), DELIMITERS_WITH_FRAGMENT);
       int port = arguments.getPort(OPT_PORT_DEFAULT);
       ImmutableList.Builder<String> properties = ImmutableList.builder();
       properties.add("DBS_PORT=" + port);

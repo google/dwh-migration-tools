@@ -133,4 +133,81 @@ public class AbstractOracleConnectorTest {
     // Assert
     assertEquals(argumentUrl, url);
   }
+
+  @Test
+  public void buildUrl_hostWithDelimiter_throwsException() {
+    when(arguments.getOracleServicename()).thenReturn("ORCLPDB");
+    when(arguments.getHost(anyString())).thenReturn("localhost/ORCLPDB?a=b");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+
+    Exception exception =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
+
+    assertTrue(
+        exception.getMessage(), exception.getMessage().startsWith("The --host value contains '/'"));
+  }
+
+  @Test
+  public void buildUrl_serviceNameWithDelimiter_throwsException() {
+    when(arguments.getOracleServicename()).thenReturn("ORCLPDB?a=b");
+    when(arguments.getHost(anyString())).thenReturn("localhost");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+
+    Exception exception =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
+
+    assertTrue(
+        exception.getMessage(),
+        exception.getMessage().startsWith("The --oracle-service value contains '?'"));
+  }
+
+  @Test
+  public void buildUrl_sidWithDelimiter_throwsException() {
+    when(arguments.getOracleSID()).thenReturn("ORCLPDB1)(A=B");
+    when(arguments.getHost(anyString())).thenReturn("localhost");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+
+    Exception exception =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> AbstractOracleConnector.buildUrl(arguments));
+
+    assertTrue(
+        exception.getMessage(),
+        exception.getMessage().startsWith("The --oracle-sid value contains ')'"));
+  }
+
+  @Test
+  public void buildUrl_ipv6HostAndSidWithDollarAndHash_success() {
+    when(arguments.getOracleSID()).thenReturn("ORCL$#1");
+    when(arguments.getHost(anyString())).thenReturn("[2001:db8::7]");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+
+    String url = AbstractOracleConnector.buildUrl(arguments);
+
+    assertEquals("jdbc:oracle:thin:@[2001:db8::7]:1521:ORCL$#1", url);
+  }
+
+  @Test
+  public void buildUrl_serviceNameWithDomain_success() {
+    when(arguments.getOracleServicename()).thenReturn("sales_pdb.example.com");
+    when(arguments.getHost(anyString())).thenReturn("db-1.example.com");
+    when(arguments.getPort(anyInt())).thenReturn(1521);
+
+    String url = AbstractOracleConnector.buildUrl(arguments);
+
+    assertEquals("jdbc:oracle:thin:@//db-1.example.com:1521/sales_pdb.example.com", url);
+  }
+
+  @Test
+  public void buildUrl_providedUrlWithParameters_returnsUrlUnchanged() {
+    String argumentUrl = "jdbc:oracle:thin:@//localhost:1521/ORCLPDB?oracle.net.CONNECT_TIMEOUT=5";
+    when(arguments.getPort()).thenReturn(null);
+    when(arguments.getUri()).thenReturn(argumentUrl);
+
+    String url = AbstractOracleConnector.buildUrl(arguments);
+
+    assertEquals(argumentUrl, url);
+  }
 }

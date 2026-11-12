@@ -17,7 +17,11 @@
 package com.google.edwmigration.dumper.application.dumper.connector.airflow;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_SCHEMA;
 import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
 import static com.google.edwmigration.dumper.application.dumper.connector.airflow.AirflowDatabaseDriverClasses.jdbcPrefixForClassName;
 
 import com.google.auto.service.AutoService;
@@ -235,6 +239,8 @@ public class AirflowConnector extends AbstractJdbcConnector implements MetadataC
     } else {
       Preconditions.checkState(arguments.getPort() != null, "--port is required with --host");
       Preconditions.checkState(arguments.getSchema() != null, "--schema is required with --host");
+      checkUrlComponent(OPT_HOST, arguments.getHost(), DELIMITERS_WITH_FRAGMENT);
+      checkUrlComponent(OPT_SCHEMA, arguments.getSchema(), DELIMITERS_WITH_FRAGMENT);
     }
 
     validateDateRange(arguments);
