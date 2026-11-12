@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import joptsimple.OptionException;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -229,7 +230,7 @@ public class MetadataDumperTest {
     MetadataDumper dumper =
         new MetadataDumper(
             shutdownCalls::add,
-            () -> new OutputBucketVerifier(client, "customer-project"),
+            verifierWithDefaultProject(client, "customer-project"),
             "--connector",
             connector.getName(),
             "--output",
@@ -267,7 +268,7 @@ public class MetadataDumperTest {
     MetadataDumper dumper =
         new MetadataDumper(
             outputFile -> {},
-            () -> new OutputBucketVerifier(client, "customer-project"),
+            verifierWithDefaultProject(client, "customer-project"),
             "--connector",
             connector.getName());
 
@@ -301,7 +302,70 @@ public class MetadataDumperTest {
     dumper.verifyOutputBucket(DEFAULT_FILENAME);
   }
 
-  private static OutputBucketVerifier failVerifierCreation() {
+  @Test
+  public void verifyOutputBucket_ownerProjectFlag_checksGivenProject() throws Exception {
+    FakeBucketMetadataClient client =
+        new FakeBucketMetadataClient("owner-project")
+            .withBucket("customer-bucket", /* publicAccessPreventionEnforced= */ true);
+    MetadataDumper dumper =
+        new MetadataDumper(
+            outputFile -> {},
+            verifierWithDefaultProject(client, "customer-project"),
+            "--connector",
+            connector.getName(),
+            "--bucket-owner-project",
+            "owner-project");
+
+    dumper.verifyOutputBucket("gs://customer-bucket/extracts/" + DEFAULT_FILENAME);
+
+    assertEquals(ImmutableList.of("owner-project:customer-bucket"), client.listCalls);
+  }
+
+  @Test
+  public void verifyOutputBucket_emptyOwnerProject_checksDefaultProject() throws Exception {
+    FakeBucketMetadataClient client =
+        new FakeBucketMetadataClient("customer-project")
+            .withBucket("customer-bucket", /* publicAccessPreventionEnforced= */ true);
+    MetadataDumper dumper =
+        new MetadataDumper(
+            outputFile -> {},
+            verifierWithDefaultProject(client, "customer-project"),
+            "--connector",
+            connector.getName(),
+            "--bucket-owner-project",
+            "");
+
+    dumper.verifyOutputBucket("gs://customer-bucket/extracts/" + DEFAULT_FILENAME);
+
+    assertEquals(ImmutableList.of("customer-project:customer-bucket"), client.listCalls);
+  }
+
+  @Test
+  public void verifyOutputBucket_ownerProjectWithLocalOutput_throws() throws Exception {
+    MetadataDumper dumper =
+        new MetadataDumper(
+            outputFile -> {},
+            MetadataDumperTest::failVerifierCreation,
+            "--connector",
+            connector.getName(),
+            "--bucket-owner-project",
+            "owner-project");
+
+    MetadataDumperUsageException exception =
+        assertThrows(
+            MetadataDumperUsageException.class, () -> dumper.verifyOutputBucket(DEFAULT_FILENAME));
+
+    assertTrue(exception.getMessage().startsWith("--bucket-owner-project can only be used"));
+  }
+
+  /** Mirrors {@link OutputBucketVerifier#createWithDefaultCredentials} with a fake client. */
+  private static Function<String, OutputBucketVerifier> verifierWithDefaultProject(
+      FakeBucketMetadataClient client, String defaultProject) {
+    return ownerProject ->
+        new OutputBucketVerifier(client, ownerProject != null ? ownerProject : defaultProject);
+  }
+
+  private static OutputBucketVerifier failVerifierCreation(String ownerProject) {
     throw new AssertionError("The output bucket must not be verified.");
   }
 }

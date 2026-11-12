@@ -107,6 +107,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_DATABASE = "database";
   public static final String OPT_SCHEMA = "schema";
   public static final String OPT_OUTPUT = "output";
+  public static final String OPT_BUCKET_OWNER_PROJECT = "bucket-owner-project";
   public static final String OPT_SKIP_BUCKET_VERIFICATION = "skip-bucket-verification";
   public static final String OPT_CONFIG = "config";
   public static final String OPT_ASSESSMENT = "assessment";
@@ -342,11 +343,23 @@ public class ConnectorArguments extends DefaultArguments {
               + " applications show them as text. This changes the exported values: use it only"
               + " for output that will be read by hand, not for output that will be uploaded for"
               + " assessment or translation.");
+  private final OptionSpec<String> optionBucketOwnerProject =
+      parser
+          .accepts(
+              OPT_BUCKET_OWNER_PROJECT,
+              "ID of the Google Cloud project that must own the gs:// output bucket. Defaults to"
+                  + " the default project of the Google Cloud client libraries, which is"
+                  + " GOOGLE_CLOUD_PROJECT if set.")
+          .withRequiredArg()
+          .ofType(String.class)
+          .describedAs("my-project");
   private final OptionSpec<Void> optionSkipBucketVerification =
       parser.accepts(
           OPT_SKIP_BUCKET_VERIFICATION,
-          "Writes to a gs:// output without first checking that the bucket belongs to the Google"
-              + " Cloud project of the application default credentials and is not public.");
+          "Writes to a gs:// output without first checking that the bucket belongs to the project"
+              + " given by --"
+              + OPT_BUCKET_OWNER_PROJECT
+              + " (or its default) and is not public.");
 
   /**
    * (Deprecated) earliest timestamp of logs to extract.
@@ -929,6 +942,11 @@ public class ConnectorArguments extends DefaultArguments {
 
   public boolean isOutputContinue() {
     return getOptions().has(optionOutputContinue);
+  }
+
+  @CheckForNull
+  public String getBucketOwnerProject() {
+    return StringUtils.defaultIfEmpty(getOptions().valueOf(optionBucketOwnerProject), null);
   }
 
   public boolean isSkipBucketVerification() {
