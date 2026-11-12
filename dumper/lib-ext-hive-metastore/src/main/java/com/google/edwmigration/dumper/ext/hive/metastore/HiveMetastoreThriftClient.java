@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,16 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
 
   public static class Builder {
 
+    /** Default time allowed for establishing the TCP connection to the metastore. */
+    public static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 30;
+
+    /**
+     * Default time a read may wait for data from the metastore. Matches the default of Hive's own
+     * metastore client ({@code hive.metastore.client.socket.timeout}), since some calls on large
+     * metastores take minutes before the first byte of the response arrives.
+     */
+    public static final int DEFAULT_SOCKET_TIMEOUT_SECONDS = 600;
+
     private static final Map<String, HiveMetastoreThriftClientProvider> supportedVersionMappings =
         new ImmutableMap.Builder<String, HiveMetastoreThriftClientProvider>()
             .put(
@@ -79,6 +90,8 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     @Nonnegative private int port;
     @Nullable private String kerberosUrl;
     @Nonnull private String saslQop;
+    @Nonnull private Duration connectTimeout = Duration.ofSeconds(DEFAULT_CONNECT_TIMEOUT_SECONDS);
+    @Nonnull private Duration socketTimeout = Duration.ofSeconds(DEFAULT_SOCKET_TIMEOUT_SECONDS);
 
     @Nonnull
     private UnavailableClientVersionBehavior unavailableClientBehavior =
@@ -100,6 +113,8 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       this.debug = builder.debug;
       this.kerberosUrl = builder.kerberosUrl;
       this.saslQop = builder.saslQop;
+      this.connectTimeout = builder.connectTimeout;
+      this.socketTimeout = builder.socketTimeout;
     }
 
     @Nonnull
@@ -132,6 +147,32 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
       return this;
     }
 
+    /** Sets the time allowed for connecting to the metastore. Zero means no timeout. */
+    @Nonnull
+    public Builder withConnectTimeout(@Nonnull Duration timeout) {
+      this.connectTimeout = checkTimeout(timeout);
+      return this;
+    }
+
+    /** Sets the time a read may wait for data from the metastore. Zero means no timeout. */
+    @Nonnull
+    public Builder withSocketTimeout(@Nonnull Duration timeout) {
+      this.socketTimeout = checkTimeout(timeout);
+      return this;
+    }
+
+    @Nonnull
+    private static Duration checkTimeout(@Nonnull Duration timeout) {
+      Preconditions.checkNotNull(timeout, "Timeout was null.");
+      Preconditions.checkArgument(!timeout.isNegative(), "Timeout was negative: %s.", timeout);
+      Preconditions.checkArgument(
+          timeout.toMillis() <= Integer.MAX_VALUE,
+          "Timeout exceeds %s milliseconds: %s.",
+          Integer.MAX_VALUE,
+          timeout);
+      return timeout;
+    }
+
     @Nonnull
     public Builder withUnavailableClientVersionBehavior(
         @Nonnull UnavailableClientVersionBehavior behavior) {
@@ -148,13 +189,15 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     @Nonnull
     private TTransport createTransport() throws SaslException, TTransportException {
       TTransport transport =
-          new TSocket(
+          new ClosingOnErrorSocket(
               new TConfiguration(
                   Integer.MAX_VALUE,
                   TConfiguration.DEFAULT_MAX_FRAME_SIZE,
                   TConfiguration.DEFAULT_RECURSION_DEPTH),
               host,
-              port);
+              port,
+              (int) socketTimeout.toMillis(),
+              (int) connectTimeout.toMillis());
 
       if (kerberosUrl == null) {
         return transport;
@@ -219,6 +262,55 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
     }
   }
 
+  /**
+   * A socket that closes itself when a read or write fails, for example on a timeout. After such a
+   * failure the position in the Thrift message stream is unknown, and a late reply could otherwise
+   * be read as the reply to the next call. Closing makes later calls fail fast and lets callers
+   * detect the broken client through {@link HiveMetastoreThriftClient#isOpen()}.
+   */
+  private static class ClosingOnErrorSocket extends TSocket {
+
+    ClosingOnErrorSocket(
+        TConfiguration configuration,
+        String host,
+        int port,
+        int socketTimeoutMillis,
+        int connectTimeoutMillis)
+        throws TTransportException {
+      super(configuration, host, port, socketTimeoutMillis, connectTimeoutMillis);
+    }
+
+    @Override
+    public int read(byte[] buf, int off, int len) throws TTransportException {
+      try {
+        return super.read(buf, off, len);
+      } catch (TTransportException e) {
+        close();
+        throw e;
+      }
+    }
+
+    @Override
+    public void write(byte[] buf, int off, int len) throws TTransportException {
+      try {
+        super.write(buf, off, len);
+      } catch (TTransportException e) {
+        close();
+        throw e;
+      }
+    }
+
+    @Override
+    public void flush() throws TTransportException {
+      try {
+        super.flush();
+      } catch (TTransportException e) {
+        close();
+        throw e;
+      }
+    }
+  }
+
   @Nonnull private final String name;
 
   public HiveMetastoreThriftClient(@Nonnull String name) {
@@ -229,6 +321,12 @@ public abstract class HiveMetastoreThriftClient implements AutoCloseable {
   public String getName() {
     return name;
   }
+
+  /**
+   * Returns false once the connection is closed, including after a failed read or write. A closed
+   * client cannot be used again.
+   */
+  public abstract boolean isOpen();
 
   @Nonnull
   public abstract ImmutableList<String> getAllDatabaseNames() throws Exception;

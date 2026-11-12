@@ -603,7 +603,16 @@ public class HiveMetastoreThriftClient_v2_3_6 extends HiveMetastoreThriftClient 
   }
 
   @Override
+  public boolean isOpen() {
+    return client.getOutputProtocol().getTransport().isOpen();
+  }
+
+  @Override
   public void close() throws IOException {
+    if (!isOpen()) {
+      return;
+    }
+
     try {
       client.shutdown();
     } catch (TException e) {
