@@ -34,8 +34,10 @@ import java.util.Optional;
 import java.util.Set;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +77,21 @@ public class SparkHistoryDiscoveryService {
       }
 
       KnoxGatewayInfo info = knoxInfo.get();
+      // The probes carry the user's credentials, so only probe the cluster's own hosts. The host
+      // is parsed the same way as the HTTP client parses it when connecting.
+      HttpHost knoxHost =
+          URIUtils.extractHost(new URIBuilder().setScheme("https").setHost(info.hostname).build());
+      if (knoxHost == null
+          || !ClouderaHttpClientFactory.isSameHostOrDomain(
+              apiURI.getHost(), knoxHost.getHostName())) {
+        logger.warn(
+            "Cluster '{}': Skipping Knox host '{}', which is neither the Cloudera Manager host '{}'"
+                + " nor in its domain.",
+            clusterName,
+            info.hostname,
+            apiURI.getHost());
+        return ImmutableList.of();
+      }
 
       Set<String> allCandidates = new LinkedHashSet<>(customCandidatePaths);
       allCandidates.addAll(DEFAULT_CANDIDATE_PATHS);
