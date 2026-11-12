@@ -256,6 +256,23 @@ public class ConnectorArgumentsTest {
     assertTrue(result, result.contains(OPT_QUERY_LOG_EARLIEST_TIMESTAMP + "=now"));
   }
 
+  @Test
+  public void isSanitizeCsv_notSpecified_falseAndNotInToString() throws IOException {
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "teradata");
+
+    assertFalse(arguments.isSanitizeCsv());
+    assertFalse(arguments.toString().contains("sanitize-csv"));
+  }
+
+  @Test
+  public void isSanitizeCsv_specified_trueAndInToString() throws IOException {
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "teradata", "--sanitize-csv");
+
+    assertTrue(arguments.isSanitizeCsv());
+    assertTrue(arguments.toString().contains("sanitize-csv=true"));
+  }
+
   // helper method to suppress IOException
   private static ConnectorArguments arguments(String... terms) {
     try {
