@@ -28,6 +28,7 @@ dependencies {
     implementation libs.grpc.stub // explicit version for vulnerabilities update
     implementation libs.grpc.auth // explicit version for vulnerabilities update
     implementation libs.grpc.bom // explicit version for vulnerabilities update
+    implementation libs.org.json // explicit version for vulnerabilities update
     implementation platform(libs.netty.bom) // align transitive netty modules for vulnerabilities update
 }
 

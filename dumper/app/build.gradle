@@ -115,6 +115,7 @@ dependencies {
     implementation libs.grpc.rls // explicit version for vulnerabilities update
     implementation libs.grpc.xds // explicit version for vulnerabilities update
     implementation libs.grpc.bom // explicit version for vulnerabilities update
+    implementation libs.org.json // explicit version for vulnerabilities update
 
     implementation libs.google.cloud.nio
     implementation libs.google.cloud.kms
