@@ -23,10 +23,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +42,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -88,14 +89,27 @@ class RangerClient implements AutoCloseable {
 
   static RangerClient instance(@Nonnull ConnectorArguments arguments) {
     URIBuilder uriBuilder =
-        new URIBuilder().setPort(arguments.getPort()).setHost(arguments.getHostOrDefault());
-    if (Objects.equals(arguments.getRangerScheme(), "https")) {
-      uriBuilder.setScheme("https");
-    } else {
-      uriBuilder.setScheme("http");
-    }
+        new URIBuilder()
+            .setPort(arguments.getPort())
+            .setHost(arguments.getHostOrDefault())
+            .setScheme(parseScheme(arguments.getRangerScheme()));
     ConnectionWrapper httpClient = createHttpClient(arguments, uriBuilder);
     return new RangerClient(httpClient);
+  }
+
+  private static String parseScheme(String scheme) {
+    if ("https".equalsIgnoreCase(scheme)) {
+      return "https";
+    }
+    if ("http".equalsIgnoreCase(scheme)) {
+      return "http";
+    }
+    throw new MetadataDumperUsageException(
+        "Unsupported value '"
+            + scheme
+            + "' for --"
+            + ConnectorArguments.OPT_RANGER_SCHEME
+            + ". Use https or http.");
   }
 
   public ImmutableList<Object> findUsers(Map<String, String> args) throws RangerException {
@@ -146,7 +160,7 @@ class RangerClient implements AutoCloseable {
 
   static ConnectionWrapper createHttpClient(ConnectorArguments arguments, URIBuilder baseUri) {
     ConnectionWrapper.Builder clientBuilder = ConnectionWrapper.builder(baseUri);
-    if (arguments.hasRangerIgnoreTlsValidation() && arguments.getRangerScheme().equals("https")) {
+    if (arguments.hasRangerIgnoreTlsValidation() && "https".equals(baseUri.getScheme())) {
       clientBuilder.disableTlsValidation();
     }
 
@@ -174,11 +188,16 @@ class RangerClient implements AutoCloseable {
 
   static class ConnectionWrapper {
 
+    static final int CONNECT_TIMEOUT_MILLIS = 30_000;
+    static final int READ_TIMEOUT_MILLIS = 120_000;
+
     private final String basicAuth;
     private final URIBuilder baseUri;
     private final SSLSocketFactory socketFactory;
     private final HostnameVerifier hostnameVerifier;
     private final boolean useKerberosAuth;
+    private final int connectTimeoutMillis;
+    private final int readTimeoutMillis;
 
     static class Builder {
       private String basicAuth;
@@ -186,6 +205,8 @@ class RangerClient implements AutoCloseable {
       private SSLSocketFactory socketFactory;
       private HostnameVerifier hostnameVerifier;
       private boolean useKerberosAuth = false;
+      private int connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS;
+      private int readTimeoutMillis = READ_TIMEOUT_MILLIS;
 
       Builder(URIBuilder baseUri) {
         this.baseUri = baseUri;
@@ -196,9 +217,22 @@ class RangerClient implements AutoCloseable {
         return this;
       }
 
+      @VisibleForTesting
+      Builder withTimeouts(int connectTimeoutMillis, int readTimeoutMillis) {
+        this.connectTimeoutMillis = connectTimeoutMillis;
+        this.readTimeoutMillis = readTimeoutMillis;
+        return this;
+      }
+
       ConnectionWrapper build() {
         return new ConnectionWrapper(
-            baseUri, basicAuth, socketFactory, hostnameVerifier, useKerberosAuth);
+            baseUri,
+            basicAuth,
+            socketFactory,
+            hostnameVerifier,
+            useKerberosAuth,
+            connectTimeoutMillis,
+            readTimeoutMillis);
       }
 
       public Builder disableTlsValidation() {
@@ -243,12 +277,16 @@ class RangerClient implements AutoCloseable {
         String basicAuth,
         SSLSocketFactory socketFactory,
         HostnameVerifier hostnameVerifier,
-        boolean useKerberosAuth) {
+        boolean useKerberosAuth,
+        int connectTimeoutMillis,
+        int readTimeoutMillis) {
       this.basicAuth = basicAuth;
       this.baseUri = baseUri;
       this.socketFactory = socketFactory;
       this.hostnameVerifier = hostnameVerifier;
       this.useKerberosAuth = useKerberosAuth;
+      this.connectTimeoutMillis = connectTimeoutMillis;
+      this.readTimeoutMillis = readTimeoutMillis;
     }
 
     public String doGet(String path, Map<String, String> queryParams) {
@@ -278,16 +316,19 @@ class RangerClient implements AutoCloseable {
       }
     }
 
-    private HttpURLConnection setupConnection(URL url) throws IOException, AuthenticationException {
+    @VisibleForTesting
+    HttpURLConnection setupConnection(URL url) throws IOException, AuthenticationException {
       HttpURLConnection connection;
       if (useKerberosAuth) {
         AuthenticatedURL.Token token = new AuthenticatedURL.Token();
         KerberosAuthenticator kerberosAuthenticator = new KerberosAuthenticator();
-        AuthenticatedURL authenticatedURL = new AuthenticatedURL(kerberosAuthenticator);
+        AuthenticatedURL authenticatedURL =
+            new AuthenticatedURL(kerberosAuthenticator, this::configureTimeouts);
         connection = authenticatedURL.openConnection(url, token);
       } else {
         connection = (HttpURLConnection) url.openConnection();
       }
+      configureTimeouts(connection);
       connection.setRequestMethod("GET");
       connection.setRequestProperty("Accept", "application/json");
       if (basicAuth != null) {
@@ -297,6 +338,12 @@ class RangerClient implements AutoCloseable {
         ((HttpsURLConnection) connection).setSSLSocketFactory(socketFactory);
         ((HttpsURLConnection) connection).setHostnameVerifier(hostnameVerifier);
       }
+      return connection;
+    }
+
+    private HttpURLConnection configureTimeouts(HttpURLConnection connection) {
+      connection.setConnectTimeout(connectTimeoutMillis);
+      connection.setReadTimeout(readTimeoutMillis);
       return connection;
     }
 

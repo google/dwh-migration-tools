@@ -159,7 +159,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_RANGER_PAGE_SIZE = "ranger-page-size";
   public static final int OPT_RANGER_PAGE_SIZE_DEFAULT = 1000;
   public static final String OPT_RANGER_SCHEME = "ranger-scheme";
-  public static final String OPT_RANGER_SCHEME_DEFAULT = "http";
+  public static final String OPT_RANGER_SCHEME_DEFAULT = "https";
   public static final String OPT_RANGER_DISABLE_TLS_VALIDATION = "ranger-disable-tls-validation";
 
   // These are blocking threads on the client side, so it doesn't really matter
@@ -458,7 +458,7 @@ public class ConnectorArguments extends DefaultArguments {
 
   private final OptionSpec<String> optionRangerScheme =
       parser
-          .accepts(OPT_RANGER_SCHEME, "The uri scheme used to fetch Ranger entries.")
+          .accepts(OPT_RANGER_SCHEME, "The URI scheme used to fetch Ranger entries: https or http.")
           .withRequiredArg()
           .ofType(String.class)
           .defaultsTo(OPT_RANGER_SCHEME_DEFAULT);
