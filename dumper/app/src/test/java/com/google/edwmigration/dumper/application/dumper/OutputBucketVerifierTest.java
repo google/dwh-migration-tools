@@ -150,7 +150,7 @@ public class OutputBucketVerifierTest {
             MetadataDumperUsageException.class,
             () -> new OutputBucketVerifier(client, /* projectId= */ null).verify(BUCKET));
 
-    assertMessageContains(exception, "gs://" + BUCKET, "GOOGLE_CLOUD_PROJECT");
+    assertMessageContains(exception, "gs://" + BUCKET, "--bucket-owner-project");
     assertTrue(client.listCalls.isEmpty());
   }
 

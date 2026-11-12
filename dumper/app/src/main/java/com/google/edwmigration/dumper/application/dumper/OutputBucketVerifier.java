@@ -37,9 +37,13 @@ import org.slf4j.LoggerFactory;
  * Access Prevention enforced cannot be made public, so its IAM policy is not read. Any check that
  * cannot be completed, for example for lack of permission, fails the verification.
  *
- * <p>The caller's project is the default project of the Google Cloud client libraries: the {@code
- * GOOGLE_CLOUD_PROJECT} environment variable, the project of the service account key, the active
- * gcloud configuration, or the Compute Engine project, in that order.
+ * <p>The bucket must belong to the project given by {@code --bucket-owner-project}. Without it, the
+ * caller's project is the default project of the Google Cloud client libraries. It is the first one
+ * found of: the {@code GOOGLE_CLOUD_PROJECT} or {@code GCLOUD_PROJECT} environment variable, the
+ * App Engine project, the {@code project_id} of the service account key named by {@code
+ * GOOGLE_APPLICATION_CREDENTIALS}, the project of the active gcloud configuration file, and the
+ * Compute Engine project. The {@code CLOUDSDK_CORE_PROJECT} variable and gcloud's {@code --project}
+ * flag are not read.
  */
 class OutputBucketVerifier {
 
@@ -85,11 +89,16 @@ class OutputBucketVerifier {
     this.projectId = projectId;
   }
 
-  /** Creates a verifier that uses the application default credentials and project. */
-  static OutputBucketVerifier createWithDefaultCredentials() {
+  /**
+   * Creates a verifier that uses the application default credentials.
+   *
+   * @param ownerProjectId the project that must own the bucket, or {@code null} for the default
+   *     project
+   */
+  static OutputBucketVerifier createWithDefaultCredentials(@Nullable String ownerProjectId) {
     return new OutputBucketVerifier(
         new CloudStorageBucketMetadataClient(StorageOptions.getDefaultInstance()),
-        ServiceOptions.getDefaultProjectId());
+        ownerProjectId != null ? ownerProjectId : ServiceOptions.getDefaultProjectId());
   }
 
   /**
@@ -102,10 +111,9 @@ class OutputBucketVerifier {
     if (projectId == null) {
       throw new MetadataDumperUsageException(
           String.format(
-              "Cannot verify output bucket gs://%s: no Google Cloud project is set. Set the project"
-                  + " that owns the bucket with 'gcloud config set project' or the"
-                  + " GOOGLE_CLOUD_PROJECT environment variable, or %s",
-              bucketName, SKIP_HINT));
+              "Cannot verify output bucket gs://%s: no Google Cloud project is set. Pass the"
+                  + " project that owns the bucket with --%s, or %s",
+              bucketName, ConnectorArguments.OPT_BUCKET_OWNER_PROJECT, SKIP_HINT));
     }
 
     logger.info("Verifying output bucket gs://{} in project {}.", bucketName, projectId);
@@ -128,9 +136,13 @@ class OutputBucketVerifier {
           String.format(
               "Cannot verify that output bucket gs://%s belongs to project %s: listing the"
                   + " buckets of the project failed (%s). This needs the storage.buckets.list"
-                  + " permission on the project. Grant it, set the project that owns the bucket"
-                  + " with 'gcloud config set project' or GOOGLE_CLOUD_PROJECT, or %s",
-              bucketName, projectId, e.getMessage(), SKIP_HINT));
+                  + " permission on the project. Grant it, pass the project that owns the bucket"
+                  + " with --%s, or %s",
+              bucketName,
+              projectId,
+              e.getMessage(),
+              ConnectorArguments.OPT_BUCKET_OWNER_PROJECT,
+              SKIP_HINT));
     }
 
     for (ListedBucket bucket : buckets) {
@@ -142,9 +154,12 @@ class OutputBucketVerifier {
     throw new MetadataDumperUsageException(
         String.format(
             "Output bucket gs://%s does not belong to project %s. Check the bucket name in --%s,"
-                + " set the project that owns the bucket with 'gcloud config set project' or"
-                + " GOOGLE_CLOUD_PROJECT, or %s",
-            bucketName, projectId, ConnectorArguments.OPT_OUTPUT, SKIP_HINT));
+                + " pass the project that owns the bucket with --%s, or %s",
+            bucketName,
+            projectId,
+            ConnectorArguments.OPT_OUTPUT,
+            ConnectorArguments.OPT_BUCKET_OWNER_PROJECT,
+            SKIP_HINT));
   }
 
   private void verifyNotPublic(@Nonnull String bucketName) {
