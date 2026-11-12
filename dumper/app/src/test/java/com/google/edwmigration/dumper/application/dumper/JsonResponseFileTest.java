@@ -16,20 +16,34 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assume.assumeTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ObjectArrays;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /** */
 @RunWith(JUnit4.class)
 public class JsonResponseFileTest {
+
+  @Rule public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   // replace single quotes to double quotes to avoid \" messup.
   private void check(String json, String... exp) throws IOException, JsonProcessingException {
@@ -126,5 +140,154 @@ public class JsonResponseFileTest {
 
     // Assert
     assertArrayEquals(args, result);
+  }
+
+  @Test
+  public void save_omitsSecretValues() throws IOException {
+    String saved =
+        saveResponseFile(
+            "--connector",
+            "redshift",
+            "--host",
+            "db.example.com",
+            "--password",
+            "value-1",
+            "--private-key-password",
+            "value-2",
+            "--iam-secretaccesskey",
+            "value-3",
+            "--iam-sessiontoken",
+            "value-4");
+
+    assertNoneContained(saved, "value-1", "value-2", "value-3", "value-4");
+    assertEquals(
+        ImmutableList.of("--connector", "redshift", "--host", "db.example.com", "--password"),
+        JsonResponseFile.to_arguments(saved));
+  }
+
+  @Test
+  public void save_omitsSecretValuesOfAbbreviatedAndInlineOptions() throws IOException {
+    String saved =
+        saveResponseFile(
+            "--connector",
+            "redshift",
+            "--pass=value-1",
+            "--private-key-pass",
+            "value-2",
+            "-iam-secretaccesskey",
+            "value-3",
+            "--iam-sessiontoken=value-4");
+
+    assertNoneContained(saved, "value-1", "value-2", "value-3", "value-4");
+    assertEquals(
+        ImmutableList.of("--connector", "redshift", "--password"),
+        JsonResponseFile.to_arguments(saved));
+  }
+
+  @Test
+  public void save_omitsSecretValuesThatStartWithHyphen() throws IOException {
+    String saved =
+        saveResponseFile(
+            "--connector",
+            "redshift",
+            "--private-key-password",
+            "-value-1",
+            "--password",
+            "--iam-sessiontoken",
+            "--value-2");
+
+    assertNoneContained(saved, "value-1", "value-2");
+    assertEquals(
+        ImmutableList.of("--connector", "redshift", "--password"),
+        JsonResponseFile.to_arguments(saved));
+  }
+
+  @Test
+  public void save_omitsUrlWithCredentials() throws IOException {
+    String[] urls = {
+      "jdbc:postgresql://admin:value-1@db.example.com:5432/db",
+      "jdbc:oracle:thin:admin/value-1@//db.example.com:1521/service",
+      "jdbc:snowflake://account.example.com/?user=admin&password=value-1",
+      "jdbc:databricks://db.example.com:443;AuthMech=3;UID=token;PWD=value-1",
+    };
+
+    for (String url : urls) {
+      String saved = saveResponseFile("--connector", "test", "--url", url);
+
+      assertNoneContained(saved, "value-1");
+      assertEquals(ImmutableList.of("--connector", "test"), JsonResponseFile.to_arguments(saved));
+    }
+  }
+
+  @Test
+  public void save_keepsUrlWithoutCredentials() throws IOException {
+    String[] urls = {
+      "jdbc:oracle:thin:@//db.example.com:1521/service",
+      "jdbc:postgresql://db.example.com:5432/db?ssl=true",
+      "https://admin@db.example.com:7180/api/v1/",
+    };
+
+    for (String url : urls) {
+      String saved = saveResponseFile("--connector", "test", "--url", url);
+
+      assertEquals(
+          ImmutableList.of("--connector", "test", "--url", url),
+          JsonResponseFile.to_arguments(saved));
+    }
+  }
+
+  @Test
+  public void save_createsFileReadableByOwnerOnly() throws IOException {
+    assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+    File file = new File(temporaryFolder.getRoot(), "response.json");
+
+    JsonResponseFile.save(
+        new ConnectorArguments("--connector", "test", "--save-response-file", file.getPath()));
+
+    assertEquals(
+        PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(file.toPath()));
+  }
+
+  @Test
+  public void save_restrictsExistingFileToOwner() throws IOException {
+    assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+    File file = temporaryFolder.newFile("response.json");
+    Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rw-rw-r--"));
+
+    JsonResponseFile.save(
+        new ConnectorArguments("--connector", "test", "--save-response-file", file.getPath()));
+
+    assertEquals(
+        PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(file.toPath()));
+  }
+
+  @Test
+  public void findSecretOptionNames_returnsConnectorArgumentsSecrets() throws IOException {
+    ConnectorArguments arguments = new ConnectorArguments("--connector", "test");
+
+    assertEquals(
+        ImmutableSet.of(
+            ConnectorArguments.OPT_PASSWORD,
+            ConnectorArguments.OPT_PRIVATE_KEY_PASSWORD,
+            ConnectorArguments.OPT_IAM_SECRETACCESSKEY,
+            ConnectorArguments.OPT_IAM_SESSIONTOKEN),
+        JsonResponseFile.findSecretOptionNames(arguments.parser.recognizedOptions()));
+  }
+
+  private String saveResponseFile(String... args) throws IOException {
+    File file = new File(temporaryFolder.getRoot(), "response.json");
+    String[] allArgs =
+        ObjectArrays.concat(
+            args, new String[] {"--save-response-file", file.getPath()}, String.class);
+
+    JsonResponseFile.save(new ConnectorArguments(allArgs));
+
+    return new String(Files.readAllBytes(file.toPath()), UTF_8);
+  }
+
+  private static void assertNoneContained(String text, String... values) {
+    for (String value : values) {
+      assertFalse(value + " found in: " + text, text.contains(value));
+    }
   }
 }
