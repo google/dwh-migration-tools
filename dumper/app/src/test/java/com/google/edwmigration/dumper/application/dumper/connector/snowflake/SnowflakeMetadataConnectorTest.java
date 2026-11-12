@@ -262,6 +262,16 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   }
 
   @Test
+  public void connector_generatesExpectedSql_withDatabaseNeedingQuotes() throws IOException {
+    Map<String, String> actualSqls = collectSqlStatements("--database", "my-db");
+
+    assertEquals(
+        "SELECT catalog_name, schema_name FROM \"MY-DB\".INFORMATION_SCHEMA.SCHEMATA",
+        actualSqls.get("schemata.csv"));
+    assertEquals("SHOW PRIMARY KEYS IN DATABASE \"MY-DB\"", actualSqls.get("primary_keys.csv"));
+  }
+
+  @Test
   public void connector_generatesExpectedSql_withIgnoreCloneOnlyDatabase() throws IOException {
     Map<String, String> actualSqls = collectSqlStatements("--ignore-clone-only-database");
 
