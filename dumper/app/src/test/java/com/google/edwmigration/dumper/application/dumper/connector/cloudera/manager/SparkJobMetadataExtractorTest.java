@@ -16,6 +16,13 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.google.common.base.Strings.repeat;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.SparkJobMetadataExtractor.MAX_LINES_TO_PARSE;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.SparkJobMetadataExtractor.MAX_LINE_LENGTH;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.SparkJobMetadataExtractor.MAX_LOG_BYTES;
+import static com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.SparkJobMetadataExtractor.MAX_RESPONSE_BYTES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
@@ -25,6 +32,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.SparkHistoryConnectionException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.SparkLogFormatException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.model.SparkYarnApplicationMetadata;
@@ -34,6 +43,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.apache.http.HttpEntity;
@@ -41,7 +51,11 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,14 +63,44 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SparkJobMetadataExtractorTest {
 
+  private static final String LOG_PATH = "/applications/app-id/logs";
+  private static final String LOG_START_LINE =
+      "{\"Event\": \"SparkListenerLogStart\", \"Spark Version\": \"3.1.1\"}\n";
+  private static final String ENVIRONMENT_UPDATE_LINE =
+      "{\"Event\": \"SparkListenerEnvironmentUpdate\", \"Spark Properties\": {\"spark.app.name\": \"SparkSQL\"}}\n";
+
+  private static WireMockServer server;
+
   private final ObjectMapper mapper = new ObjectMapper();
   private CloseableHttpClient httpClient;
   private SparkJobMetadataExtractor extractor;
+  private CloseableHttpClient serverClient;
+  private SparkJobMetadataExtractor serverExtractor;
+
+  @BeforeClass
+  public static void startServer() {
+    server =
+        new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort().gzipDisabled(true));
+    server.start();
+  }
+
+  @AfterClass
+  public static void stopServer() {
+    server.stop();
+  }
 
   @Before
   public void setUp() {
     httpClient = mock(CloseableHttpClient.class);
     extractor = new SparkJobMetadataExtractor(mapper, httpClient);
+    server.resetAll();
+    serverClient = HttpClients.createDefault();
+    serverExtractor = new SparkJobMetadataExtractor(mapper, serverClient);
+  }
+
+  @After
+  public void tearDown() throws IOException {
+    serverClient.close();
   }
 
   @Test
@@ -274,6 +318,158 @@ public class SparkJobMetadataExtractorTest {
     // Assert
     // It should not find SparkListenerLogStart because it's after 50 lines
     assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void extract_serverSendsNormalLog_returnsMetadata() throws Exception {
+    StringBuilder hadoopProperties = new StringBuilder();
+    for (int i = 0; i < 3000; i++) {
+      hadoopProperties.append(String.format("\"hadoop.property.%d\": \"value-%d\", ", i, i));
+    }
+    StringBuilder classpath = new StringBuilder();
+    for (int i = 0; i < 500; i++) {
+      classpath.append(
+          String.format("\"/opt/cloudera/parcels/CDH/jars/lib-%d.jar\": \"System\", ", i));
+    }
+    StringBuilder log = new StringBuilder();
+    log.append("{\"Event\": \"SparkListenerLogStart\", \"Spark Version\": \"3.3.2\"}\n");
+    log.append("{\"Event\": \"SparkListenerResourceProfileAdded\", \"Resource Profile Id\": 0}\n");
+    log.append("{\"Event\": \"SparkListenerEnvironmentUpdate\"")
+        .append(", \"Spark Properties\": {\"spark.app.name\": \"SparkSQL\"}")
+        .append(", \"Hadoop Properties\": {")
+        .append(hadoopProperties)
+        .append("\"last\": \"\"}")
+        .append(", \"Classpath Entries\": {")
+        .append(classpath)
+        .append("\"last\": \"System\"}}\n");
+    for (int i = 0; i < 10_000; i++) {
+      log.append(String.format("{\"Event\": \"SparkListenerTaskEnd\", \"Task ID\": %d}\n", i));
+    }
+    stubLog(createZipWithLog(log.toString()));
+
+    Optional<SparkYarnApplicationMetadata> result = extractFromServer();
+
+    assertTrue(result.isPresent());
+    assertEquals("3.3.2", result.get().getSparkVersion());
+    assertEquals("SparkSQL", result.get().getSparkApplicationType());
+  }
+
+  @Test(timeout = 15_000)
+  public void extract_serverSendsWholeLogSlowly_stopsReadingAtLineLimit() throws Exception {
+    StringBuilder log = new StringBuilder();
+    for (int i = 0; i < 100_000; i++) {
+      log.append(String.format("{\"Event\": \"SparkListenerTaskEnd\", \"Task ID\": %d}\n", i));
+    }
+    log.append(LOG_START_LINE);
+    byte[] body = createZipWithLog(log.toString());
+    server.stubFor(
+        get(LOG_PATH)
+            .willReturn(
+                aResponse().withStatus(200).withBody(body).withChunkedDribbleDelay(50, 40_000)));
+
+    Optional<SparkYarnApplicationMetadata> result = extractFromServer();
+
+    assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void extract_responseLongerThanLimit_throwsException() throws Exception {
+    String paddingLine = paddingLine(MAX_LINE_LENGTH / 2);
+    StringBuilder log = new StringBuilder();
+    while (log.length() <= MAX_RESPONSE_BYTES) {
+      log.append(paddingLine);
+    }
+    log.append(LOG_START_LINE);
+    stubLog(createStoredZipWithLog(log.toString()));
+
+    assertThrows(SparkLogFormatException.class, this::extractFromServer);
+  }
+
+  @Test
+  public void extract_logLongerThanLimit_stopsReading() throws Exception {
+    String paddingLine = paddingLine(MAX_LINE_LENGTH);
+    StringBuilder log = new StringBuilder();
+    while (log.length() <= MAX_LOG_BYTES) {
+      log.append(paddingLine);
+    }
+    log.append(LOG_START_LINE);
+    stubLog(createZipWithLog(log.toString()));
+
+    Optional<SparkYarnApplicationMetadata> result = extractFromServer();
+
+    assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void extract_lineLongerThanLimit_skipsLine() throws Exception {
+    String logStartPrefix =
+        "{\"Event\": \"SparkListenerLogStart\", \"Spark Version\": \"3.1.1\", \"x\": \"";
+    String suffix = "\"}";
+    String longLine =
+        logStartPrefix
+            + repeat("a", MAX_LINE_LENGTH + 1 - logStartPrefix.length() - suffix.length())
+            + suffix
+            + "\n";
+    stubLog(createZipWithLog(longLine + ENVIRONMENT_UPDATE_LINE));
+
+    Optional<SparkYarnApplicationMetadata> result = extractFromServer();
+
+    assertTrue(result.isPresent());
+    assertEquals("unknown", result.get().getSparkVersion());
+    assertEquals("SparkSQL", result.get().getSparkApplicationType());
+  }
+
+  @Test
+  public void extract_blankLinesUpToLineLimit_stopsReading() throws Exception {
+    String log = repeat("\n", MAX_LINES_TO_PARSE) + LOG_START_LINE;
+    stubLog(createZipWithLog(log));
+
+    Optional<SparkYarnApplicationMetadata> result = extractFromServer();
+
+    assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void extract_linesWithoutEventUpToLineLimit_stopsReading() throws Exception {
+    String log = repeat("{\"Other\": 1}\n", MAX_LINES_TO_PARSE) + LOG_START_LINE;
+    stubLog(createZipWithLog(log));
+
+    Optional<SparkYarnApplicationMetadata> result = extractFromServer();
+
+    assertFalse(result.isPresent());
+  }
+
+  private Optional<SparkYarnApplicationMetadata> extractFromServer() throws Exception {
+    return serverExtractor.extract(
+        URI.create(server.baseUrl() + LOG_PATH), "test-cluster", "app-id");
+  }
+
+  private static void stubLog(byte[] body) {
+    server.stubFor(get(LOG_PATH).willReturn(aResponse().withStatus(200).withBody(body)));
+  }
+
+  private static String paddingLine(int length) {
+    String prefix = "{\"Event\": \"Padding\", \"x\": \"";
+    String suffix = "\"}";
+    return prefix + repeat("a", length - prefix.length() - suffix.length()) + suffix + "\n";
+  }
+
+  private static byte[] createStoredZipWithLog(String logContent) throws IOException {
+    byte[] data = logContent.getBytes(StandardCharsets.UTF_8);
+    CRC32 crc = new CRC32();
+    crc.update(data);
+    ZipEntry entry = new ZipEntry("eventLog");
+    entry.setMethod(ZipEntry.STORED);
+    entry.setSize(data.length);
+    entry.setCompressedSize(data.length);
+    entry.setCrc(crc.getValue());
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+      zos.putNextEntry(entry);
+      zos.write(data);
+      zos.closeEntry();
+    }
+    return baos.toByteArray();
   }
 
   private void mockResponse(byte[] zipData) throws IOException {
