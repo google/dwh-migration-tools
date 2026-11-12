@@ -16,6 +16,7 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
+import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.AbstractSnowflakeConnector.sanitizeDatabaseName;
 import static com.google.edwmigration.dumper.application.dumper.connector.snowflake.AbstractSnowflakeConnector.unrecognizedDatabase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -104,6 +105,28 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
     assertTrue(
         e.getMessage(),
         e.getMessage().contains("Database name has incorrectly placed double quote(s)."));
+  }
+
+  @Test
+  public void sanitizeDatabaseName_unquotedIdentifier_keptUnquoted() {
+    assertEquals("db1", sanitizeDatabaseName("db1"));
+    assertEquals("My_DB$2", sanitizeDatabaseName("My_DB$2"));
+    assertEquals("_db", sanitizeDatabaseName("_db"));
+    assertEquals("MyDb", sanitizeDatabaseName("\"MyDb\""));
+  }
+
+  @Test
+  public void sanitizeDatabaseName_otherCharacters_quotedAndUpperCased() {
+    assertEquals("\"MY-DB\"", sanitizeDatabaseName("my-db"));
+    assertEquals("\"O'NEIL#1\"", sanitizeDatabaseName("O'Neil#1"));
+    assertEquals("\"1DB\"", sanitizeDatabaseName("1db"));
+    assertEquals("\"DB; USE ROLE X --\"", sanitizeDatabaseName("db; USE ROLE x --"));
+  }
+
+  @Test
+  public void sanitizeDatabaseName_quotedInputWithOtherCharacters_keepsCase() {
+    assertEquals("\"my db\"", sanitizeDatabaseName("\"my db\""));
+    assertEquals("\"O'Neil#1\"", sanitizeDatabaseName("\"O'Neil#1\""));
   }
 
   @Test
