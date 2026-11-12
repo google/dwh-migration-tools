@@ -16,26 +16,21 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import org.apache.commons.io.FileUtils;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-public class ScriptTmpDirCleanup {
+/**
+ * Extracts a script, records the script directory in the file given as the first argument and
+ * exits. Started in a separate JVM to observe what is left behind after the JVM exits.
+ */
+public class HadoopScriptsExitProbe {
 
-  private static final AtomicBoolean hookRegistered = new AtomicBoolean();
-
-  public static void cleanupAfterAllTestsAreFinished() {
-    if (hookRegistered.compareAndSet(false, true)) {
-      Runtime.getRuntime()
-          .addShutdownHook(
-              new Thread(
-                  () -> {
-                    try {
-                      FileUtils.deleteDirectory(HadoopScripts.getScriptDir().toFile());
-                    } catch (IOException ex) {
-                      ex.printStackTrace();
-                    }
-                  }));
-    }
+  public static void main(String[] args) throws IOException {
+    Path script = HadoopScripts.extract("hadoop-version.sh");
+    Files.write(Paths.get(args[0]), script.getParent().toAbsolutePath().toString().getBytes(UTF_8));
   }
 }

@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.task.Task;
@@ -44,13 +45,33 @@ public class BashTask implements Task<Void> {
 
   private static final Duration SCRIPT_TIMEOUT = Duration.ofMinutes(1);
 
+  private static final Duration STOP_TIMEOUT = Duration.ofSeconds(5);
+
+  /**
+   * Runs the script given as the first argument in its own process group, so that the script and
+   * every process it starts can be stopped together; Java 8 cannot list the children of a process.
+   * On SIGTERM, SIGINT or SIGHUP the wrapper kills that process group. Otherwise it exits with the
+   * exit status of the script.
+   */
+  private static final String PROCESS_GROUP_WRAPPER =
+      "trap 'kill -KILL -- -$script_pid 2>/dev/null; exit 143' TERM INT HUP; "
+          + "set -m; /bin/bash \"$1\" & script_pid=$!; wait $script_pid";
+
   private final String scriptName;
 
   private final Path scriptFile;
 
+  private final Duration scriptTimeout;
+
   public BashTask(String scriptName, Path scriptFile) {
+    this(scriptName, scriptFile, SCRIPT_TIMEOUT);
+  }
+
+  @VisibleForTesting
+  BashTask(String scriptName, Path scriptFile, Duration scriptTimeout) {
     this.scriptName = scriptName;
     this.scriptFile = scriptFile;
+    this.scriptTimeout = scriptTimeout;
   }
 
   @Override
@@ -62,29 +83,57 @@ public class BashTask implements Task<Void> {
       throws IOException, ExecutionException {
     logger.info("Running bash task '{}'", scriptName);
     Process process =
-        new ProcessBuilder("/bin/bash", scriptFile.toAbsolutePath().toString()).start();
-    Future<Void> outputStreamPump;
-    Future<Void> errorStreamPump;
+        new ProcessBuilder(
+                "/bin/bash",
+                "-c",
+                PROCESS_GROUP_WRAPPER,
+                "bash",
+                scriptFile.toAbsolutePath().toString())
+            .start();
+    boolean processFinished;
     ExecutorService executorService = Executors.newFixedThreadPool(2);
     try (OutputStream outputStream = outputSink.openBufferedStream();
         OutputStream errorStream = errorSink.openBufferedStream()) {
-      outputStreamPump =
+      Future<Void> outputStreamPump =
           executorService.submit(
               throwing(() -> IOUtils.copy(process.getInputStream(), outputStream)));
-      errorStreamPump =
+      Future<Void> errorStreamPump =
           executorService.submit(
               throwing(() -> IOUtils.copy(process.getErrorStream(), errorStream)));
-      boolean processFinished = process.waitFor(SCRIPT_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
+      processFinished = process.waitFor(scriptTimeout.toMillis(), TimeUnit.MILLISECONDS);
       logger.info("Process finished: '{}'", processFinished);
+      if (!processFinished) {
+        logger.warn("Bash task '{}' timed out after {}, stopping it.", scriptName, scriptTimeout);
+        stop(process);
+      }
+
+      propagateException(outputStreamPump, "output");
+      propagateException(errorStreamPump, "error");
     } catch (InterruptedException e) {
+      stop(process);
       writeExitStatus(exitStatusSink, "interrupted");
       throw new RuntimeException(e);
     } finally {
       executorService.shutdown();
     }
-    writeExitStatusOrTimeout(exitStatusSink, process);
-    propagateException(outputStreamPump, "output");
-    propagateException(errorStreamPump, "error");
+    writeExitStatus(
+        exitStatusSink, processFinished ? String.valueOf(process.exitValue()) : "timeout");
+  }
+
+  /**
+   * Stops the script and the processes it started. The wrapper reacts to SIGTERM by killing the
+   * process group of the script. If the wrapper does not exit in time, it is killed directly.
+   */
+  private static void stop(Process process) {
+    process.destroy();
+    try {
+      if (!process.waitFor(STOP_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
+        process.destroyForcibly();
+      }
+    } catch (InterruptedException e) {
+      process.destroyForcibly();
+      Thread.currentThread().interrupt();
+    }
   }
 
   private void propagateException(Future<Void> future, String streamName)
@@ -97,15 +146,6 @@ public class BashTask implements Task<Void> {
           String.format(
               "Error while processing the '%s' stream from the bash command.", streamName),
           ex);
-    }
-  }
-
-  private static void writeExitStatusOrTimeout(ByteSink exitStatusSink, Process process)
-      throws IOException {
-    try {
-      writeExitStatus(exitStatusSink, process.exitValue() + "");
-    } catch (Exception e) {
-      writeExitStatus(exitStatusSink, "timeout");
     }
   }
 

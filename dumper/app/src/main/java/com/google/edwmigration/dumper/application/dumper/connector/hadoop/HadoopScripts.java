@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Suppliers.memoize;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.attribute.PosixFilePermissions.asFileAttribute;
 import static org.apache.hadoop.thirdparty.com.google.common.collect.Maps.immutableEntry;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -29,36 +30,53 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HadoopScripts {
   private static final Logger logger = LoggerFactory.getLogger(HadoopScripts.class);
   private static final String TMP_DIR_PREFIX = "dwh-migration-tools-tmp-";
-  private static final Supplier<Path> SCRIPT_DIR_SUPPLIER =
-      memoize(
-          () -> {
-            Path tmpDir;
-            Path workingDir = Paths.get("");
-            logger.info(
-                "Creating temporary directory in the working directory '{}'...",
-                workingDir.toAbsolutePath());
-            try {
-              tmpDir = Files.createTempDirectory(workingDir, TMP_DIR_PREFIX);
-            } catch (IOException e) {
-              throw new IllegalStateException("Error creating temporary directory.", e);
-            }
-            logger.info("Temporary directory created: '{}'.", tmpDir);
-            return tmpDir;
-          });
+  private static final Supplier<Path> SCRIPT_DIR_SUPPLIER = memoize(HadoopScripts::createScriptDir);
+
+  /**
+   * Creates a directory for the scripts in the system temporary directory, accessible only by the
+   * current user, and deletes it when the JVM exits.
+   */
+  private static Path createScriptDir() {
+    Path scriptDir;
+    try {
+      if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+        scriptDir =
+            Files.createTempDirectory(
+                TMP_DIR_PREFIX, asFileAttribute(PosixFilePermissions.fromString("rwx------")));
+      } else {
+        scriptDir = Files.createTempDirectory(TMP_DIR_PREFIX);
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException("Error creating temporary directory.", e);
+    }
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteScriptDir(scriptDir)));
+    logger.info("Temporary directory created: '{}'.", scriptDir);
+    return scriptDir;
+  }
+
+  private static void deleteScriptDir(Path scriptDir) {
+    try {
+      FileUtils.deleteDirectory(scriptDir.toFile());
+    } catch (IOException e) {
+      logger.warn("Cannot delete temporary directory '{}'.", scriptDir, e);
+    }
+  }
 
   /** Reads the script from the resources directory inside the jar. */
   public static byte[] read(String scriptFilename) throws IOException {
@@ -126,7 +144,6 @@ public class HadoopScripts {
     logger.info("Extracting '{}' to '{}'...", scriptFilename, scriptDir);
     Path scriptPath = scriptDir.resolve(scriptFilename);
     Files.write(scriptPath, scriptBody);
-    scriptPath.toFile().setExecutable(true);
     return scriptPath;
   }
 
