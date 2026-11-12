@@ -33,16 +33,17 @@ public final class JdbcUrlComponents {
 
   /**
    * Characters that end a host or a name in the URL syntax of at least one driver: the path, query
-   * and parameter separators {@code / ? & ,} (MySQL, PostgreSQL, Vertica, Teradata), the property
-   * separator and value quotes {@code ; { }} and the instance separator {@code \} (SQL Server), the
-   * host list and key-value host syntax {@code , ( ) =} (MySQL, MariaDB, Oracle) and the user info
-   * separator {@code @}.
+   * and parameter separators {@code / ? & = ,} (MySQL, PostgreSQL, Vertica, Teradata, Snowflake),
+   * the property separator {@code ;} (SQL Server, Netezza, Databricks), the value quotes {@code {}}
+   * and the instance separator {@code \} (SQL Server), the host list and key-value host syntax
+   * {@code , ( ) =} (MySQL, MariaDB, Oracle) and the user info separator {@code @}.
    */
   public static final String DELIMITERS = "/\\?&;,=(){}@";
 
   /**
-   * {@link #DELIMITERS} and {@code #}, which starts the URL fragment in MySQL Connector/J. For host
-   * names, which never contain {@code #}, and for names in MySQL and MariaDB URLs.
+   * {@link #DELIMITERS} and {@code #}, which starts the URL fragment in MySQL Connector/J and in
+   * Snowflake. For host names, which never contain {@code #}, and for names in MySQL, MariaDB and
+   * Snowflake URLs.
    */
   public static final String DELIMITERS_WITH_FRAGMENT = DELIMITERS + "#";
 

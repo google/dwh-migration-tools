@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.databricks.sdk.core.DatabricksConfig;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -74,6 +75,36 @@ public class JdbcSqlRunnerTest {
             + URL_OPTIONS
             + ";query_tags=source:dwh-migration-dumper",
         JdbcSqlRunner.createWarehouseUrl(config, WAREHOUSE_ID));
+  }
+
+  @Test
+  public void createClusterUrl_clusterIdWithDelimiter_throwsUsageException() {
+    DatabricksConfig config =
+        new DatabricksConfig()
+            .setHost("https://example.cloud.databricks.com")
+            .setWorkspaceId(WORKSPACE_ID);
+
+    MetadataDumperUsageException thrown =
+        assertThrows(
+            MetadataDumperUsageException.class,
+            () -> JdbcSqlRunner.createClusterUrl(config, CLUSTER_ID + ";a=b"));
+
+    assertTrue(
+        thrown.getMessage(), thrown.getMessage().startsWith("The --cluster value contains ';'"));
+  }
+
+  @Test
+  public void createWarehouseUrl_warehouseIdWithDelimiter_throwsUsageException() {
+    DatabricksConfig config =
+        new DatabricksConfig().setHost("https://example.cloud.databricks.com/");
+
+    MetadataDumperUsageException thrown =
+        assertThrows(
+            MetadataDumperUsageException.class,
+            () -> JdbcSqlRunner.createWarehouseUrl(config, WAREHOUSE_ID + ";a=b"));
+
+    assertTrue(
+        thrown.getMessage(), thrown.getMessage().startsWith("The --warehouse value contains ';'"));
   }
 
   @Test

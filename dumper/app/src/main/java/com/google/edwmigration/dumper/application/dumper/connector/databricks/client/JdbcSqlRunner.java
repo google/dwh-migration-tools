@@ -16,6 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.databricks.client;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_CLUSTER;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_WAREHOUSE;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
 import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksClientSqlRunner.SqlQuoting.quoteIdentifier;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -150,7 +154,10 @@ public final class JdbcSqlRunner implements DatabricksSqlRunner {
   static String createClusterUrl(DatabricksConfig config, String clusterId) throws IOException {
     URI host = parseHost(config);
     return formatUrl(
-        host, String.format("sql/protocolv1/o/%s/%s", getWorkspaceId(config, host), clusterId));
+        host,
+        String.format(
+            "sql/protocolv1/o/%s/%s",
+            getWorkspaceId(config, host), checkUrlComponent(OPT_CLUSTER, clusterId, DELIMITERS)));
   }
 
   /**
@@ -159,7 +166,9 @@ public final class JdbcSqlRunner implements DatabricksSqlRunner {
    */
   @VisibleForTesting
   static String createWarehouseUrl(DatabricksConfig config, String warehouseId) throws IOException {
-    return formatUrl(parseHost(config), "sql/1.0/warehouses/" + warehouseId) + WAREHOUSE_QUERY_TAGS;
+    String httpPath =
+        "sql/1.0/warehouses/" + checkUrlComponent(OPT_WAREHOUSE, warehouseId, DELIMITERS);
+    return formatUrl(parseHost(config), httpPath) + WAREHOUSE_QUERY_TAGS;
   }
 
   private static URI parseHost(DatabricksConfig config) throws IOException {

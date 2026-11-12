@@ -16,6 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.netezza;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
+
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
@@ -290,7 +294,8 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
   public Handle open(ConnectorArguments arguments) throws Exception {
     String url = arguments.getUri();
     if (url == null) {
-      String host = arguments.getHost("localhost");
+      String host =
+          checkUrlComponent(OPT_HOST, arguments.getHost("localhost"), DELIMITERS_WITH_FRAGMENT);
       int port = arguments.getPort(OPT_PORT_DEFAULT);
       url = "jdbc:netezza://" + host + ":" + port + "/system";
       //  "TMODE=ANSI,CHARSET=UTF8";
