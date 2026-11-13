@@ -18,11 +18,13 @@ package com.google.edwmigration.dumper.application.dumper.connector.cloudera.man
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.ByteStreams;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.SparkHistoryConnectionException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.exception.SparkLogFormatException;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.model.SparkApplicationType;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.model.SparkYarnApplicationMetadata;
 import java.io.BufferedReader;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +34,7 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
+import javax.annotation.Nullable;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -42,8 +45,15 @@ import org.slf4j.LoggerFactory;
 public class SparkJobMetadataExtractor {
 
   private static final Logger logger = LoggerFactory.getLogger(SparkJobMetadataExtractor.class);
-  private static final long MAX_BYTES_TO_PARSE = 1024L * 10;
-  private static final int MAX_LINES_TO_PARSE = 50;
+  // The server may ignore the Range header and send the whole log; the limits below still apply.
+  private static final long REQUESTED_BYTES = 1024L * 10;
+  // Upper bound on the bytes read from the response body.
+  static final long MAX_RESPONSE_BYTES = 8L * 1024 * 1024;
+  // Upper bound on the decompressed bytes read from the event log.
+  static final long MAX_LOG_BYTES = 8L * 1024 * 1024;
+  // Longer lines are skipped. An environment update event is usually well below 1 MiB.
+  static final int MAX_LINE_LENGTH = 2 * 1024 * 1024;
+  static final int MAX_LINES_TO_PARSE = 50;
 
   private final ObjectMapper mapper;
   private final CloseableHttpClient httpClient;
@@ -58,7 +68,7 @@ public class SparkJobMetadataExtractor {
       throws SparkHistoryConnectionException, SparkLogFormatException {
 
     HttpGet request = new HttpGet(logUrl);
-    request.setHeader("Range", String.format("bytes=0-%d", MAX_BYTES_TO_PARSE));
+    request.setHeader("Range", String.format("bytes=0-%d", REQUESTED_BYTES));
 
     try (CloseableHttpResponse response = httpClient.execute(request)) {
       int status = response.getStatusLine().getStatusCode();
@@ -80,6 +90,12 @@ public class SparkJobMetadataExtractor {
           BufferedReader reader =
               new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
         return parseApplicationLog(reader, clusterName, applicationId);
+      } catch (ResponseTooLongException e) {
+        throw new SparkLogFormatException(
+            String.format(
+                "Log response for app %s is longer than %d bytes.",
+                applicationId, MAX_RESPONSE_BYTES),
+            e);
       } catch (ZipException e) {
         throw new SparkLogFormatException("Log stream is not a valid ZIP file.", e);
       } catch (IOException e) {
@@ -93,13 +109,14 @@ public class SparkJobMetadataExtractor {
 
   private InputStream getResponseContent(CloseableHttpResponse response)
       throws SparkLogFormatException, IOException {
+    InputStream content = new BoundedResponseStream(response.getEntity().getContent());
     try {
-      ZipInputStream zipStream = new ZipInputStream(response.getEntity().getContent());
+      ZipInputStream zipStream = new ZipInputStream(content);
       ZipEntry entry = zipStream.getNextEntry();
       if (entry == null) {
         throw new SparkLogFormatException("Stream contains no ZIP entries.");
       }
-      return zipStream;
+      return ByteStreams.limit(zipStream, MAX_LOG_BYTES);
     } catch (IllegalArgumentException e) {
       throw new SparkLogFormatException("Invalid ZIP header or format.", e);
     }
@@ -113,7 +130,18 @@ public class SparkJobMetadataExtractor {
     String line;
     int linesRead = 0;
 
-    while ((line = reader.readLine()) != null && linesRead < MAX_LINES_TO_PARSE) {
+    while (linesRead < MAX_LINES_TO_PARSE && (line = readLine(reader)) != null) {
+      linesRead++;
+      if (line.length() > MAX_LINE_LENGTH) {
+        logger.warn(
+            "Skipped line {} of the event log of YARN application with ID: {}, it is longer than {}"
+                + " characters.",
+            linesRead,
+            applicationId,
+            MAX_LINE_LENGTH);
+        continue;
+      }
+
       if (line.trim().isEmpty()) {
         continue;
       }
@@ -143,7 +171,6 @@ public class SparkJobMetadataExtractor {
                 applicationId),
             e);
       }
-      linesRead++;
     }
 
     if (version == null && applicationType == null) {
@@ -158,4 +185,94 @@ public class SparkJobMetadataExtractor {
             (applicationType != null ? applicationType : SparkApplicationType.UNKNOWN)
                 .getDisplayName()));
   }
+
+  /**
+   * Reads a line like {@link BufferedReader#readLine()}, but keeps at most {@code MAX_LINE_LENGTH +
+   * 1} characters of it, so a line over the limit is returned truncated and still over the limit.
+   */
+  @Nullable
+  private static String readLine(BufferedReader reader) throws IOException {
+    int c = reader.read();
+    if (c == -1) {
+      return null;
+    }
+
+    StringBuilder line = new StringBuilder();
+    while (c != -1 && c != '\n' && c != '\r') {
+      if (line.length() <= MAX_LINE_LENGTH) {
+        line.append((char) c);
+      }
+
+      c = reader.read();
+    }
+
+    if (c == '\r') {
+      reader.mark(1);
+      if (reader.read() != '\n') {
+        reader.reset();
+      }
+    }
+
+    return line.toString();
+  }
+
+  /**
+   * Reads at most {@code MAX_RESPONSE_BYTES} of the response body and leaves the body open when
+   * closed. Closing the body would make the HTTP client read the rest of it; closing the response
+   * discards the connection instead.
+   */
+  private static class BoundedResponseStream extends FilterInputStream {
+
+    private long remaining = MAX_RESPONSE_BYTES;
+
+    BoundedResponseStream(InputStream content) {
+      super(content);
+    }
+
+    @Override
+    public int read() throws IOException {
+      checkRemaining();
+      int result = in.read();
+      if (result != -1) {
+        remaining--;
+      }
+
+      return result;
+    }
+
+    @Override
+    public int read(byte[] buffer, int offset, int length) throws IOException {
+      checkRemaining();
+      int result = in.read(buffer, offset, (int) Math.min(length, remaining));
+      if (result != -1) {
+        remaining -= result;
+      }
+
+      return result;
+    }
+
+    @Override
+    public long skip(long count) throws IOException {
+      checkRemaining();
+      long skipped = in.skip(Math.min(count, remaining));
+      remaining -= skipped;
+      return skipped;
+    }
+
+    @Override
+    public boolean markSupported() {
+      return false;
+    }
+
+    @Override
+    public void close() {}
+
+    private void checkRemaining() throws ResponseTooLongException {
+      if (remaining == 0) {
+        throw new ResponseTooLongException();
+      }
+    }
+  }
+
+  private static class ResponseTooLongException extends IOException {}
 }
