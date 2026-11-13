@@ -114,9 +114,15 @@ public class OracleMetadataConnector extends AbstractOracleConnector
 
   @CheckForNull
   private static String toInList(@CheckForNull List<String> owners) {
-    return (owners == null || owners.isEmpty())
-        ? null
-        : String.format("('%s')", String.join("','", owners));
+    if (owners == null || owners.isEmpty()) {
+      return null;
+    }
+
+    ImmutableList.Builder<String> literals = ImmutableList.builder();
+    for (String owner : owners) {
+      literals.add("'" + owner.replace("'", "''") + "'");
+    }
+    return "(" + String.join(",", literals.build()) + ")";
   }
 
   @Override

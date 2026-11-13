@@ -53,6 +53,38 @@ public class OracleMetadataConnectorTest {
   }
 
   @Test
+  public void generateTasks_schemaWithQuote_quoteIsEscaped() throws Exception {
+    OracleMetadataConnector connector = new OracleMetadataConnector();
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "oracle", "--schema", "HR,O'NEIL') OR 1=1 --");
+
+    List<Task<?>> tasks = connector.generateTasks(arguments);
+
+    ImmutableList<String> selectSqls =
+        tasks.stream()
+            .flatMap(task -> optionalToStream(TaskTestUtil.getSql(task)))
+            .collect(toImmutableList());
+    String expected = "SELECT * FROM ALL_Arguments WHERE OWNER IN ('HR','O''NEIL'') OR 1=1 --')";
+    assertTrue(selectSqls.toString(), selectSqls.contains(expected));
+  }
+
+  @Test
+  public void generateTasks_schemaWithDollarAndHash_keptAsIs() throws Exception {
+    OracleMetadataConnector connector = new OracleMetadataConnector();
+    ConnectorArguments arguments =
+        new ConnectorArguments("--connector", "oracle", "--schema", "APP$OWNER,APP#2");
+
+    List<Task<?>> tasks = connector.generateTasks(arguments);
+
+    ImmutableList<String> selectSqls =
+        tasks.stream()
+            .flatMap(task -> optionalToStream(TaskTestUtil.getSql(task)))
+            .collect(toImmutableList());
+    String expected = "SELECT * FROM ALL_Arguments WHERE OWNER IN ('APP$OWNER','APP#2')";
+    assertTrue(selectSqls.toString(), selectSqls.contains(expected));
+  }
+
+  @Test
   public void getConnectorScope_success() {
     OracleMetadataConnector connector = new OracleMetadataConnector();
     assertEquals(OracleConnectorScope.METADATA, connector.getConnectorScope());
