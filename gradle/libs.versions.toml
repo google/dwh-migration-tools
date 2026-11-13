@@ -128,6 +128,7 @@ gradle-license-report = { module = "com.github.jk1:gradle-license-report", versi
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hadoop-auth = { module = "org.apache.hadoop:hadoop-auth", version.ref = "hadoop"}
 hadoop-common = { module = "org.apache.hadoop:hadoop-common", version.ref = "hadoop" }
+hadoop-shaded-guava = { module = "org.apache.hadoop.thirdparty:hadoop-shaded-guava", version = "1.6.0" }
 bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version = "1.85" }
 common-configuration2 = { module = "org.apache.commons:commons-configuration2", version.ref = "common-configuration2" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus-jose-jwt" }

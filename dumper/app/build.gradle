@@ -91,6 +91,7 @@ dependencies {
     implementation libs.common.configuration2 // explicit version for vulnerabilities update
     implementation libs.bouncycastle // explicit version for vulnerabilities update
     implementation libs.snappy.java // explicit version for vulnerabilities update
+    implementation libs.hadoop.shaded.guava // explicit version for vulnerabilities update
 
     implementation libs.hadoop.hdfs.client
     implementation(libs.harawata.appdirs) {
