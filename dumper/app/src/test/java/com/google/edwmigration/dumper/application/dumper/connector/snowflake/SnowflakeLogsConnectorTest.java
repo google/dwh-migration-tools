@@ -154,6 +154,21 @@ public class SnowflakeLogsConnectorTest {
     assertTrue(result, result.endsWith("\n"));
   }
 
+  @Test
+  public void earliestTimestamp_provided_comparedAsTimestampLiteral() {
+    ConnectorArguments arguments =
+        ConnectorArguments.create(
+            ImmutableList.of(
+                "--connector",
+                "snowflake-logs",
+                "--" + ConnectorArguments.OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
+                "2024-03-21 10:15:30"));
+
+    String result = earliestTimestamp(arguments);
+
+    assertEquals("AND start_time >= to_timestamp_ltz('2024-03-21 10:15:30')\n", result);
+  }
+
   enum TestEnum {
     FirstValue,
     SecondValue;

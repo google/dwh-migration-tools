@@ -290,8 +290,11 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
     List<String> lSqlConditions = new ArrayList<>();
     List<String> logConditions = new ArrayList<>();
     if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp())) {
-      lSqlConditions.add("ST.CollectTimeStamp >= " + arguments.getQueryLogEarliestTimestamp());
-      logConditions.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
+      String earliestTimestamp =
+          String.format(
+              "CAST('%s' AS TIMESTAMP)", arguments.getQueryLogEarliestTimestampNormalized());
+      lSqlConditions.add("ST.CollectTimeStamp >= " + earliestTimestamp);
+      logConditions.add("L.StartTime >= " + earliestTimestamp);
     }
 
     // Beware of Teradata SQLSTATE HY000. See issue #4126.

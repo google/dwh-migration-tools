@@ -18,6 +18,8 @@ package com.google.edwmigration.dumper.application.dumper;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.util.Arrays.stream;
@@ -36,15 +38,24 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnegative;
@@ -107,6 +118,17 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_QUERY_LOG_END = "query-log-end";
   public static final String OPT_QUERY_LOG_EARLIEST_TIMESTAMP = "query-log-earliest-timestamp";
   public static final String OPT_QUERY_LOG_ALTERNATES = "query-log-alternates";
+
+  /** A date, optionally followed by a time: yyyy-MM-dd[(' '|'T')HH:mm[:ss[.ffffff]]]. */
+  private static final Pattern QUERY_LOG_EARLIEST_TIMESTAMP_PATTERN =
+      Pattern.compile("(\\d{4}-\\d{2}-\\d{2})(?:[ T](\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{1,6})?)?))?");
+
+  private static final DateTimeFormatter QUERY_LOG_EARLIEST_TIMESTAMP_FORMAT =
+      new DateTimeFormatterBuilder()
+          .append(ISO_LOCAL_DATE)
+          .appendLiteral(' ')
+          .append(ISO_LOCAL_TIME)
+          .toFormatter(Locale.ROOT);
 
   // Snowflake
   public static final String OPT_PRIVATE_KEY_FILE = "private-key-file";
@@ -328,9 +350,9 @@ public class ConnectorArguments extends DefaultArguments {
                   + OPT_QUERY_LOG_START
                   + " and "
                   + OPT_QUERY_LOG_END
-                  + "] Accepts a SQL expression that will be compared to the execution timestamp of"
-                  + " each query log entry; entries with timestamps occurring before this"
-                  + " expression will not be exported")
+                  + "] Accepts a date or timestamp in the form yyyy-MM-dd or"
+                  + " yyyy-MM-dd HH:mm[:ss[.ffffff]], with a space or 'T' before the time; query"
+                  + " log entries with timestamps occurring before it will not be exported")
           .withRequiredArg()
           .ofType(String.class);
 
@@ -898,10 +920,59 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().has(optionDryrun);
   }
 
+  /**
+   * Returns the trimmed value of --query-log-earliest-timestamp, which is a date or timestamp in
+   * the form yyyy-MM-dd or yyyy-MM-dd HH:mm[:ss[.ffffff]], with a space or 'T' before the time. A
+   * blank value is returned unchanged.
+   *
+   * @throws MetadataDumperUsageException if the value is not a date or timestamp in that form
+   */
   @CheckForNull
   @Deprecated
   public String getQueryLogEarliestTimestamp() {
-    return getOptions().valueOf(optionQueryLogEarliestTimestamp);
+    String value = getOptions().valueOf(optionQueryLogEarliestTimestamp);
+    if (StringUtils.isBlank(value)) {
+      return value;
+    }
+
+    String timestamp = value.trim();
+    parseQueryLogEarliestTimestamp(timestamp);
+    return timestamp;
+  }
+
+  /**
+   * Returns the value of --query-log-earliest-timestamp in the form yyyy-MM-dd HH:mm:ss[.ffffff],
+   * where a date given alone means the start of that day, or null if the value is blank.
+   *
+   * @throws MetadataDumperUsageException if the value is not a date or timestamp
+   */
+  @CheckForNull
+  @Deprecated
+  public String getQueryLogEarliestTimestampNormalized() {
+    String timestamp = getQueryLogEarliestTimestamp();
+    if (StringUtils.isBlank(timestamp)) {
+      return null;
+    }
+    return QUERY_LOG_EARLIEST_TIMESTAMP_FORMAT.format(parseQueryLogEarliestTimestamp(timestamp));
+  }
+
+  @Nonnull
+  private static LocalDateTime parseQueryLogEarliestTimestamp(@Nonnull String timestamp) {
+    Matcher matcher = QUERY_LOG_EARLIEST_TIMESTAMP_PATTERN.matcher(timestamp);
+    if (matcher.matches()) {
+      try {
+        LocalDate date = LocalDate.parse(matcher.group(1));
+        String time = matcher.group(2);
+        return time == null ? date.atStartOfDay() : date.atTime(LocalTime.parse(time));
+      } catch (DateTimeParseException e) {
+        // Reported below with the accepted forms.
+      }
+    }
+    throw new MetadataDumperUsageException(
+        String.format(
+            "The value '%s' of --%s is not a date or timestamp. Use the form yyyy-MM-dd or"
+                + " yyyy-MM-dd HH:mm[:ss[.ffffff]], or use --%s or --%s instead.",
+            timestamp, OPT_QUERY_LOG_EARLIEST_TIMESTAMP, OPT_QUERY_LOG_START, OPT_QUERY_LOG_DAYS));
   }
 
   public boolean hasQueryLogEarliestTimestamp() {
@@ -1191,7 +1262,9 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_USER, getUser())
             .add(OPT_CONFIG, getConfiguration())
             .add(OPT_OUTPUT, getOutputFile().orElse(null))
-            .add(OPT_QUERY_LOG_EARLIEST_TIMESTAMP, getQueryLogEarliestTimestamp())
+            .add(
+                OPT_QUERY_LOG_EARLIEST_TIMESTAMP,
+                getOptions().valueOf(optionQueryLogEarliestTimestamp))
             .add(OPT_QUERY_LOG_DAYS, getQueryLogDays())
             .add(OPT_QUERY_LOG_START, getQueryLogStart())
             .add(OPT_QUERY_LOG_END, getQueryLogEnd())

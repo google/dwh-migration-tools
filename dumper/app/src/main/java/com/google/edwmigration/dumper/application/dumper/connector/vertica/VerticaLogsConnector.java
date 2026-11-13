@@ -51,21 +51,26 @@ public class VerticaLogsConnector extends AbstractVerticaConnector
     // Importantly, dc_requests_issued is the only relation containing query text,
     // but such queries may not have been successful, hence the join on dc_requests_completed.
 
-    String startTimestamp = arguments.getQueryLogEarliestTimestamp();
+    String startTimestamp = arguments.getQueryLogEarliestTimestampNormalized();
 
     // Shevek checked on PostgreSQL, and it does not appear that `time` needs quoting here.
     StringBuilder dc_requests_issued = new StringBuilder("SELECT * FROM dc_requests_issued");
     if (!StringUtils.isBlank(startTimestamp))
-      dc_requests_issued.append(" WHERE time >= ").append(startTimestamp);
+      dc_requests_issued.append(timeCondition(startTimestamp));
     out.add(
         new JdbcSelectTask(
             ZIP_ENTRY_PREFIX + "dc_requests_issued.csv", dc_requests_issued.toString()));
 
     StringBuilder dc_requests_completed = new StringBuilder("SELECT * FROM dc_requests_completed");
     if (!StringUtils.isBlank(startTimestamp))
-      dc_requests_completed.append(" WHERE time >= ").append(startTimestamp);
+      dc_requests_completed.append(timeCondition(startTimestamp));
     out.add(
         new JdbcSelectTask(
             ZIP_ENTRY_PREFIX + "dc_requests_completed.csv", dc_requests_completed.toString()));
+  }
+
+  @Nonnull
+  private static String timeCondition(@Nonnull String startTimestamp) {
+    return String.format(" WHERE time >= CAST('%s' AS TIMESTAMP)", startTimestamp);
   }
 }

@@ -219,7 +219,10 @@ public class TeradataLogsConnector extends AbstractTeradataConnector
     // preventing that in the future. To do that, we should require getQueryLogEarliestTimestamp()
     // to parse and return an ISO instant, not a database-server-specific format.
     if (!StringUtils.isBlank(arguments.getQueryLogEarliestTimestamp())) {
-      conditionsBuilder.add("L.StartTime >= " + arguments.getQueryLogEarliestTimestamp());
+      conditionsBuilder.add(
+          String.format(
+              "L.StartTime >= CAST('%s' AS TIMESTAMP)",
+              arguments.getQueryLogEarliestTimestampNormalized()));
     }
 
     Duration rotationDuration = arguments.getQueryLogRotationFrequency();
