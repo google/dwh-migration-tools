@@ -16,6 +16,9 @@
  */
 package com.google.edwmigration.dumper.application.dumper;
 
+import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,15 +28,27 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import joptsimple.OptionDescriptor;
+import joptsimple.OptionSpec;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -51,6 +66,21 @@ import org.slf4j.LoggerFactory;
 public class JsonResponseFile {
 
   private static final Logger logger = LoggerFactory.getLogger(JsonResponseFile.class);
+
+  private static final String OPTION_TERMINATOR = "--";
+
+  /** Options whose names contain one of these words hold secrets. */
+  private static final Pattern SECRET_OPTION_NAME = Pattern.compile("password|secret|token");
+
+  /**
+   * Finds credentials in a URL: user:password@, Oracle's user/password@, or a word that names a
+   * credential parameter.
+   */
+  private static final Pattern URL_WITH_CREDENTIALS =
+      Pattern.compile("[^:/@]+[:/][^:/@]+@|pass|pwd|secret|token|key", Pattern.CASE_INSENSITIVE);
+
+  private static final ImmutableSet<PosixFilePermission> OWNER_READ_WRITE =
+      Sets.immutableEnumSet(OWNER_READ, OWNER_WRITE);
 
   /** Adds arguments from JSON response files to the argument string(s). */
   @Nonnull
@@ -149,10 +179,155 @@ public class JsonResponseFile {
     }
   }
 
+  /**
+   * Saves the command-line arguments to the response file, without secret values. The file is
+   * readable and writable by its owner only where the file system supports POSIX permissions.
+   */
   public static void save(ConnectorArguments arguments) throws IOException {
-    File responseFile = FileUtils.getFile(arguments.getResponseFileName());
-    newObjectMapper().writeValue(responseFile, from_arguments(arguments.getArgs()));
-    logger.info("Saved response file to {}", responseFile.getAbsolutePath());
+    Path responseFile = FileUtils.getFile(arguments.getResponseFileName()).toPath();
+    String[] args = removeSecrets(arguments.getArgs(), arguments.parser.recognizedOptions());
+    restrictToOwner(responseFile);
+    try (OutputStream out = Files.newOutputStream(responseFile)) {
+      newObjectMapper().writeValue(out, from_arguments(args));
+    }
+    logger.info("Saved response file to {}", responseFile.toAbsolutePath());
+  }
+
+  /**
+   * Removes the values of secret options, and a --url that carries credentials, from the
+   * command-line arguments. A secret option with an optional value, such as --password, is kept
+   * without its value, so the dumper prompts for the value when the response file is used.
+   */
+  @Nonnull
+  private static String[] removeSecrets(
+      @Nonnull String[] args, @Nonnull Map<String, OptionSpec<?>> options) {
+    ImmutableSet<String> secretNames = findSecretOptionNames(options);
+    List<String> kept = new ArrayList<>();
+    ImmutableSet.Builder<String> removed = ImmutableSet.builder();
+    for (int i = 0; i < args.length; i++) {
+      String arg = args[i];
+      if (arg.equals(OPTION_TERMINATOR)) {
+        // The remaining arguments are not options, and the dumper does not use them.
+        break;
+      }
+
+      OptionDescriptor option = findOption(options, arg);
+      if (option == null) {
+        kept.add(arg);
+        continue;
+      }
+
+      String value = findInlineValue(arg);
+      boolean valueIsNext =
+          value == null
+              && i + 1 < args.length
+              && (option.requiresArgument()
+                  || (option.acceptsArguments() && !looksLikeOption(args[i + 1])));
+      if (valueIsNext) {
+        i++;
+        value = args[i];
+      }
+
+      String name = option.options().get(0);
+      boolean secret =
+          !Collections.disjoint(option.options(), secretNames)
+              || (name.equals(ConnectorArguments.OPT_URI)
+                  && value != null
+                  && URL_WITH_CREDENTIALS.matcher(value).find());
+      if (secret) {
+        removed.add("--" + name);
+        if (!option.requiresArgument()) {
+          // An empty value is saved as the option alone.
+          kept.add("--" + name);
+          kept.add("");
+        }
+      } else {
+        kept.add(arg);
+        if (valueIsNext) {
+          kept.add(value);
+        }
+      }
+    }
+
+    ImmutableSet<String> removedNames = removed.build();
+    if (!removedNames.isEmpty()) {
+      logger.warn(
+          "The response file does not contain the values of {}. Supply them again when using it.",
+          removedNames);
+    }
+    return kept.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
+  }
+
+  /** Returns the names of the options whose values are secrets. */
+  @VisibleForTesting
+  @Nonnull
+  static ImmutableSet<String> findSecretOptionNames(@Nonnull Map<String, OptionSpec<?>> options) {
+    ImmutableSet.Builder<String> names = ImmutableSet.builder();
+    for (String name : options.keySet()) {
+      if (SECRET_OPTION_NAME.matcher(name).find()) {
+        names.add(name);
+      }
+    }
+    return names.build();
+  }
+
+  /**
+   * Finds the option that the argument names, the way joptsimple does: by its full name or a unique
+   * abbreviation, after one or two hyphens and before an optional '='.
+   */
+  @CheckForNull
+  private static OptionDescriptor findOption(
+      @Nonnull Map<String, OptionSpec<?>> options, @Nonnull String arg) {
+    if (!arg.startsWith("-")) {
+      return null;
+    }
+
+    String name = StringUtils.substringBefore(arg.substring(arg.startsWith("--") ? 2 : 1), "=");
+    OptionSpec<?> option = options.get(name);
+    if (option == null) {
+      for (Map.Entry<String, OptionSpec<?>> entry : options.entrySet()) {
+        if (entry.getKey().startsWith(name)) {
+          if (option != null && option != entry.getValue()) {
+            return null;
+          }
+          option = entry.getValue();
+        }
+      }
+    }
+    return (OptionDescriptor) option;
+  }
+
+  /** Tells whether joptsimple reads the argument as an option rather than as a value. */
+  private static boolean looksLikeOption(@Nonnull String arg) {
+    return arg.startsWith("-") && !arg.equals("-");
+  }
+
+  @CheckForNull
+  private static String findInlineValue(@Nonnull String arg) {
+    int index = arg.indexOf('=');
+    return index < 0 ? null : arg.substring(index + 1);
+  }
+
+  /**
+   * Makes the file readable and writable by its owner only, creating it if needed, where the file
+   * system supports POSIX permissions.
+   */
+  private static void restrictToOwner(@Nonnull Path file) throws IOException {
+    if (!file.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+      return;
+    }
+
+    if (!Files.exists(file)) {
+      Files.createFile(file, PosixFilePermissions.asFileAttribute(OWNER_READ_WRITE));
+      return;
+    }
+
+    try {
+      Files.setPosixFilePermissions(file, OWNER_READ_WRITE);
+    } catch (IOException e) {
+      // Some mounts, such as FAT, reject permission changes; the file holds no secrets.
+      logger.warn("Unable to make {} readable by its owner only: {}", file, e.getMessage());
+    }
   }
 
   public static ResponseFileEntity from_arguments(String[] args) {
