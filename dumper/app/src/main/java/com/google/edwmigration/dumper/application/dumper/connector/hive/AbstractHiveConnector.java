@@ -16,7 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
+import static com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient.Builder.DEFAULT_CONNECT_TIMEOUT_SECONDS;
+import static com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient.Builder.DEFAULT_SOCKET_TIMEOUT_SECONDS;
+
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Range;
 import com.google.common.io.ByteSink;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -29,11 +33,13 @@ import com.google.edwmigration.dumper.application.dumper.handle.AbstractHandle;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient;
 import com.google.edwmigration.dumper.plugin.ext.jdk.concurrent.ExecutorManager;
 import com.google.errorprone.annotations.ForOverride;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -78,6 +84,9 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
 
   @SuppressWarnings("UnusedVariable")
   private static final Logger logger = LoggerFactory.getLogger(AbstractHiveConnector.class);
+
+  /** The largest timeout, in seconds, that fits the Thrift socket's millisecond setting. */
+  private static final long MAX_TIMEOUT_SECONDS = Integer.MAX_VALUE / 1000;
 
   /**
    * Each thread in the pool is lazily assigned a new Thrift client upon first use; we don't need to
@@ -142,9 +151,37 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
     public void execute(ThriftClientConsumer consumer) {
       executorManager.execute(
           () -> {
-            consumer.accept(getThreadLocalThriftClient().get());
+            HiveMetastoreThriftClient client = getThreadLocalThriftClient().get();
+            try {
+              consumer.accept(client);
+            } finally {
+              discardIfClosed(client);
+            }
             return null;
           });
+    }
+
+    /**
+     * Drops a client whose connection was closed by a failed call, for example a timeout, so the
+     * next call on this thread opens a new connection.
+     */
+    private void discardIfClosed(@Nonnull HiveMetastoreThriftClient client) {
+      if (client.isOpen()) {
+        return;
+      }
+
+      synchronized (lock) {
+        if (!builtClients.remove(client)) {
+          // Already discarded by a nested call on this thread.
+          return;
+        }
+      }
+
+      logger.debug(
+          "Discarding closed Thrift client '{}' owned by pooled client '{}'.",
+          client.getName(),
+          name);
+      getThreadLocalThriftClient().remove();
     }
 
     @Nonnull
@@ -253,7 +290,16 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
             + " SASL connection between hadoop and the dumper. Allowed values: '"
             + HadoopRpcProtection.ALLOWED_VALUES
             + "'.",
-        HadoopRpcProtection.PRIVACY.name());
+        HadoopRpcProtection.PRIVACY.name()),
+    CONNECT_TIMEOUT(
+        "connect-timeout-seconds",
+        "Seconds allowed for connecting to the Hive metastore. 0 means no timeout.",
+        String.valueOf(DEFAULT_CONNECT_TIMEOUT_SECONDS)),
+    SOCKET_TIMEOUT(
+        "socket-timeout-seconds",
+        "Seconds a call to the Hive metastore may wait for data before it fails. Increase it if"
+            + " calls on a large metastore time out. 0 means no timeout.",
+        String.valueOf(DEFAULT_SOCKET_TIMEOUT_SECONDS));
 
     private final String name;
     private final String description;
@@ -302,12 +348,23 @@ public abstract class AbstractHiveConnector extends AbstractConnector {
                     Integer.parseInt(ConnectorArguments.OPT_HIVE_METASTORE_PORT_DEFAULT)))
             .withUnavailableClientVersionBehavior(
                 HiveMetastoreThriftClient.Builder.UnavailableClientVersionBehavior.FALLBACK)
-            .withKerberosUrl(arguments.getHiveKerberosUrl());
+            .withKerberosUrl(arguments.getHiveKerberosUrl())
+            .withConnectTimeout(parseTimeout(arguments, HiveConnectorProperty.CONNECT_TIMEOUT))
+            .withSocketTimeout(parseTimeout(arguments, HiveConnectorProperty.SOCKET_TIMEOUT));
 
     HadoopSaslQopConverter.convert(
             arguments.getDefinitionOrDefault(HiveConnectorProperty.RPC_PROTECTION))
         .ifPresent(thriftClientBuilder::withSaslQop);
 
     return new ThriftClientHandle(thriftClientBuilder, arguments.getThreadPoolSize());
+  }
+
+  @Nonnull
+  private static Duration parseTimeout(
+      @Nonnull ConnectorArguments arguments, @Nonnull HiveConnectorProperty property) {
+    long seconds =
+        PropertyParser.parseNumber(arguments, property, Range.closed(0L, MAX_TIMEOUT_SECONDS))
+            .orElse(Long.parseLong(property.getDefaultValue()));
+    return Duration.ofSeconds(seconds);
   }
 }

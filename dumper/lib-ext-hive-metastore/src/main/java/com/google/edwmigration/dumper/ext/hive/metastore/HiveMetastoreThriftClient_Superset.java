@@ -626,7 +626,16 @@ public class HiveMetastoreThriftClient_Superset extends HiveMetastoreThriftClien
   }
 
   @Override
+  public boolean isOpen() {
+    return client.getOutputProtocol().getTransport().isOpen();
+  }
+
+  @Override
   public void close() throws IOException {
+    if (!isOpen()) {
+      return;
+    }
+
     try {
       client.shutdown();
     } catch (TException e) {
