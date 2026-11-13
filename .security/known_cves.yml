@@ -6,15 +6,7 @@
     The CVE is in Spring Security's @EnableMethodSecurity feature,
     this annotation or any other spring-security is not used in the Dumper tools.
     There is no dependency on Spring Security in the Dumper tools.
-
-- CVE: CVE-2025-41242
-  artifact: org.springframework:spring-core:5.3.39
-  justification: >
-    Spring Framework MVC applications can be vulnerable to a “Path Traversal Vulnerability” when deployed on a 
-    non-compliant Servlet container. An application can be vulnerable when all the following are true: 
-    * the application is deployed as a WAR or with an embedded Servlet container * ... and so on.
-    The Dumper tools distributes as Jar only, Spring MVC is not used in the code.
-    There is no dependency on Spring MVC in the Dumper tools.
+  expiration_date: 2027-01-31
 
 - CVE: CVE-2024-6763
   artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
@@ -22,12 +14,9 @@
     The Dumper is a CLI app, not a public-facing web server. It does not accept or process arbitrary URIs from untrusted
     external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
     a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
-    
-- CVE: CVE-2025-0982
-  artifact: cpe:2.3:a:google:application_integration:8.2.1
-  justification: >
-    False positive; this artifact is incorrectly identified by the OWASP scanner. 
-    It is not a direct or transitive dependency of dwh-migration-tools:dumper.
+    Jetty leaves the distribution with PR #1222; delete this entry when it is merged.
+  expiration_date: 2026-12-31
+
 - CVE: CVE-2026-1225
   artifact: ch.qos.logback:logback-core:1.3.16
   justification: >
@@ -150,3 +139,695 @@
     Hadoop 3.1.x line for Hive 3.1.2 compatibility. Accepted temporarily to unblock PR #1195; tracked in
     b/579421681.
   expiration_date: 2027-01-31
+
+# Open findings in libraries that other jars bundle. Not false positives: the shipped jar contains
+# the vulnerable code. Tracked in b/579421681; the expiry forces a review if they are still open.
+- CVE: CVE-2025-58056
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.125.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2025-58057
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.125.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2025-67735
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.129.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-33870
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.132.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-33871
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.132.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-41417
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-42578
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-42580
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-42581
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-42583
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-42584
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-42585
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-42587
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-44249
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-45416
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-45536
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-47244
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-48043
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-50010
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-50020
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-50560
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-59898
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-59899
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-59900
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-59901
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-59903
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.137.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-59921
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-62380
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.137.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-75595
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.137.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-75596
+  artifact: io.grpc:grpc-netty-shaded:1.76.1
+  justification: >
+    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
+    fixed in netty 4.1.137.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
+    copy needs a grpc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-59171
+  artifact: org.json:json:20240303
+  justification: >
+    Not a false positive. databricks-jdbc 3.4.4 bundles org.json 20240303 (relocated to
+    com.databricks.internal.json); fixed in 20260719. The standalone json jar is fixed (20260814,
+    PR #1221); the bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-102554
+  artifact: com.google.guava:guava:33.0.0-jre
+  justification: >
+    Not a false positive. databricks-jdbc 3.4.4 bundles guava 33.0.0-jre; the standalone guava jar
+    (33.7.2-jre) is fixed. The bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-102554
+  artifact: com.google.guava:guava:32.0.1-jre
+  justification: >
+    Not a false positive. hadoop-shaded-guava 1.4.0 bundles guava 32.0.1-jre; the standalone guava jar
+    (33.7.2-jre) is fixed. The bundled copy needs a hadoop-thirdparty upgrade. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+
+# Open findings in shipped jars, found by the full scan of the distribution. Tracked in b/579421681.
+- CVE: CVE-2026-59739
+  artifact: org.apache.zookeeper:zookeeper:3.9.5
+  justification: >
+    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
+    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
+    in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-59969
+  artifact: org.apache.zookeeper:zookeeper:3.9.5
+  justification: >
+    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
+    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
+    in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-79993
+  artifact: org.apache.zookeeper:zookeeper:3.9.5
+  justification: >
+    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
+    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
+    in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-84439
+  artifact: org.apache.zookeeper:zookeeper:3.9.5
+  justification: >
+    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
+    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
+    in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-84501
+  artifact: org.apache.zookeeper:zookeeper:3.9.5
+  justification: >
+    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
+    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
+    in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-71290
+  artifact: org.apache.httpcomponents.client5:httpclient5:5.6.3
+  justification: >
+    Not a false positive. HostnameVerificationPolicy.BUILTIN has no effect in the async client of
+    httpclient5 5.4 to 5.6.3; fixed in 5.6.4. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-3293
+  artifact: net.snowflake:snowflake-jdbc:3.27.1
+  justification: >
+    Not a false positive: weakness in SdkProxyRoutePlanner, affecting snowflake-jdbc up to 4.0.1. Moving
+    to the 4.x driver, or no longer bundling it, needs a product decision. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-86597
+  artifact: net.snowflake:snowflake-jdbc:3.27.1
+  justification: >
+    Not a false positive: fixed only in snowflake-jdbc 4.3.4. Moving to the 4.x driver, or no longer
+    bundling it, needs a product decision. Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-41848
+  artifact: org.springframework:spring-core:5.3.39
+  justification: >
+    Not a false positive: Spring Framework advisory that the GitHub advisory database maps to spring-
+    core 5.3.39. No open-source 5.3.x release has the fix; 6.2.x needs Java 17, and the Java 8
+    alternative is removing Spring. Tracked in b/579421681.
+  expiration_date: 2027-01-31
+- CVE: CVE-2026-59282
+  artifact: org.springframework:spring-core:5.3.39
+  justification: >
+    Not a false positive: data binding of untrusted property paths (spring-beans), affecting 5.3.0 to
+    5.3.49; the Dumper does not bind untrusted property paths. No open-source 5.3.x release has the fix;
+    6.2.x needs Java 17, and the Java 8 alternative is removing Spring. Tracked in b/579421681.
+  expiration_date: 2027-01-31
+
+# Jetty leaves the distribution with PR #1222; delete these entries when it is merged. Dependency-Check
+# reports each advisory on jetty-server and on the group of Jetty jars it bundles with jetty-io.
+- CVE: CVE-2025-11143
+  artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2025-11143
+  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-2332
+  artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-2332
+  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-5795
+  artifact: org.eclipse.jetty:jetty-security:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-5795
+  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-6790
+  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-6790
+  artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-10050
+  artifact: org.eclipse.jetty:jetty-security:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+- CVE: CVE-2026-10050
+  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
+  justification: >
+    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
+    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
+    Tracked in b/579421681.
+  expiration_date: 2026-12-31
+
+# ===================================================================================================
+# False positives of Dependency-Check's CPE matching: the CPE names the wrong product, implementation,
+# module or version. These are not open findings. Each rule drops only the advisories it lists, and only
+# on the artifacts it lists: group:name (any version, when the reason does not depend on the version),
+# group:name:version (that version only), or a file name for the Dumper's own jars, which have no Maven
+# coordinates. The daily scan reports how many findings each rule dropped, and fails on the findings of
+# an expired rule. Rules have no CVE key, so the PR scan, which reads only the CVE key, ignores them.
+# ===================================================================================================
+
+- false_positive: "app.jar: Google Cloud Application Integration advisory"
+  artifacts:
+    - app.jar
+  advisories:
+    - CVE-2025-0982
+  justification: >
+    app.jar holds the Dumper's own classes and has no Maven coordinates. Dependency-Check derives the
+    google:application_integration CPE from the words google and application in its package names
+    (com.google.edwmigration.dumper.application). CVE-2025-0982 is in the JavaScript Task feature of the
+    Google Cloud Application Integration service, which the Dumper does not contain.
+  expiration_date: 2027-05-31
+
+- false_positive: "grpc-netty-shaded: netty advisories that do not affect the bundled netty 4.1.124"
+  artifacts:
+    - io.grpc:grpc-netty-shaded:1.76.1
+  advisories:
+    - CVE-2014-3488
+    - CVE-2015-2156
+    - CVE-2019-16869
+    - CVE-2019-20444
+    - CVE-2019-20445
+    - CVE-2021-21290
+    - CVE-2021-21295
+    - CVE-2021-21409
+    - CVE-2021-37136
+    - CVE-2021-37137
+    - CVE-2021-43797
+    - CVE-2022-24823
+    - CVE-2022-41881
+    - CVE-2023-34462
+    - CVE-2023-44487
+    - CVE-2024-29025
+    - CVE-2024-47535
+    - CVE-2025-25193
+    - CVE-2025-55163
+    - CVE-2026-42579
+    - CVE-2026-42586
+    - CVE-2026-44248
+    - CVE-2026-44250
+    - CVE-2026-44890
+    - CVE-2026-44891
+    - CVE-2026-44893
+    - CVE-2026-45673
+    - CVE-2026-45674
+    - CVE-2026-46340
+    - CVE-2026-47691
+    - CVE-2026-48006
+    - CVE-2026-48059
+    - CVE-2026-50011
+    - CVE-2026-56818
+    - CVE-2026-56820
+    - CVE-2026-56821
+    - CVE-2026-56822
+    - CVE-2026-59902
+    - CVE-2026-59919
+    - CVE-2026-59920
+    - CVE-2026-73507
+    - CVE-2026-73508
+  justification: >
+    Dependency-Check identifies grpc-netty-shaded as netty with grpc's own version (1.76.1), so every
+    netty advisory with a range below 4.x matches. The jar bundles netty 4.1.124.Final (META-
+    INF/io.grpc.netty.shaded.io.netty.versions.properties) with the modules buffer, common, transport,
+    resolver, handler, handler-proxy, codec, codec-http, codec-http2, codec-socks and native epoll. Each
+    advisory listed was fixed before 4.1.124, or is in a netty module the jar does not bundle (codec-
+    haproxy, codec-dns, resolver-dns, codec-stomp, codec-redis, codec-xml, codec-mqtt, handler-ssl-ocsp,
+    codec-http3, transport-sctp), per the affected packages and ranges of the GitHub-reviewed advisory.
+    The rule names the exact version because the reason depends on the bundled netty. The advisories
+    that do affect 4.1.124 are listed as open findings above.
+  expiration_date: 2027-05-31
+
+- false_positive: "databricks-jdbc: netty advisories on the bundled netty-buffer and netty-common"
+  artifacts:
+    - io.netty:netty-buffer:4.2.15.Final
+    - io.netty:netty-common:4.2.15.Final
+  advisories:
+    - CVE-2026-44891
+    - CVE-2026-55831
+    - CVE-2026-55833
+    - CVE-2026-55851
+    - CVE-2026-56745
+    - CVE-2026-56746
+    - CVE-2026-56816
+    - CVE-2026-56817
+    - CVE-2026-56818
+    - CVE-2026-56819
+    - CVE-2026-56820
+    - CVE-2026-56821
+    - CVE-2026-56822
+    - CVE-2026-59898
+    - CVE-2026-59899
+    - CVE-2026-59900
+    - CVE-2026-59901
+    - CVE-2026-59902
+    - CVE-2026-59903
+    - CVE-2026-59919
+    - CVE-2026-59920
+    - CVE-2026-59921
+    - CVE-2026-62380
+    - CVE-2026-73507
+    - CVE-2026-73508
+    - CVE-2026-75595
+    - CVE-2026-75596
+    - CVE-2026-89044
+  justification: >
+    databricks-jdbc 3.4.4 bundles only netty-buffer and netty-common 4.2.15.Final (relocated to
+    com.databricks.internal.io.netty); the rule names that version because it describes that copy.
+    Dependency-Check matches the netty CPE, which covers every netty module. The advisories listed are
+    in other netty modules (handler, codec-*, transport-sctp, resolver-dns, handler-ssl-ocsp, codec-
+    http3), per the GitHub-reviewed advisories, or, for CVE-2026-62380 and CVE-2026-89044, in codec-
+    socks and codec-http per their descriptions.
+  expiration_date: 2027-05-31
+
+- false_positive: "Apache Arrow Java: C and C++ advisories"
+  artifacts:
+    - org.apache.arrow:arrow-format
+    - org.apache.arrow:arrow-memory-core
+    - org.apache.arrow:arrow-memory-netty
+    - org.apache.arrow:arrow-memory-netty-buffer-patch
+    - org.apache.arrow:arrow-memory-unsafe
+    - org.apache.arrow:arrow-vector
+  advisories:
+    - CVE-2026-25087
+    - CVE-2026-111497
+  justification: >
+    CVE-2026-25087 is in Apache Arrow C++ and CVE-2026-111497 is in the Brotli C decoder. The Dumper
+    ships only the Java Arrow libraries, standalone and inside databricks-jdbc.
+  expiration_date: 2027-05-31
+
+- false_positive: "grpc-java: gRPC-Go advisory"
+  artifacts:
+    - io.grpc:grpc-alts
+    - io.grpc:grpc-api
+    - io.grpc:grpc-auth
+    - io.grpc:grpc-bom
+    - io.grpc:grpc-context
+    - io.grpc:grpc-core
+    - io.grpc:grpc-googleapis
+    - io.grpc:grpc-grpclb
+    - io.grpc:grpc-inprocess
+    - io.grpc:grpc-netty-shaded
+    - io.grpc:grpc-opentelemetry
+    - io.grpc:grpc-protobuf
+    - io.grpc:grpc-protobuf-lite
+    - io.grpc:grpc-rls
+    - io.grpc:grpc-services
+    - io.grpc:grpc-stub
+    - io.grpc:grpc-util
+    - io.grpc:grpc-xds
+  advisories:
+    - CVE-2026-33186
+  justification: >
+    CVE-2026-33186 is in gRPC-Go; the grpc:grpc CPE covers every gRPC implementation. The Dumper ships
+    grpc-java.
+  expiration_date: 2027-05-31
+
+- false_positive: "hadoop-thirdparty: Hadoop advisories matched against the thirdparty version"
+  artifacts:
+    - org.apache.hadoop.thirdparty:hadoop-shaded-protobuf_3_25
+  advisories:
+    - CVE-2016-5001
+    - CVE-2017-3161
+    - CVE-2017-3162
+    - CVE-2022-26612
+    - CVE-2024-23454
+  justification: >
+    hadoop-shaded-protobuf_3_25 is Hadoop's relocated copy of protobuf, versioned 1.4.0. Dependency-
+    Check names it with the apache:hadoop CPE and that version, so Hadoop advisories with a range below
+    1.4.0 match; all listed are fixed in Hadoop 2.x or 3.x releases. Hadoop itself ships as hadoop-
+    common 3.4.2 and friends, which are scanned under their own version.
+  expiration_date: 2027-05-31
+
+- false_positive: "OpenTelemetry Java: advisories for the Go, JavaScript, .NET and C++ implementations"
+  artifacts:
+    - com.google.cloud.opentelemetry:detector-resources-support
+    - com.google.cloud.opentelemetry:exporter-metrics
+    - com.google.cloud.opentelemetry:shared-resourcemapping
+    - io.grpc:grpc-opentelemetry
+    - io.opentelemetry.contrib:opentelemetry-gcp-resources
+    - io.opentelemetry.semconv:opentelemetry-semconv
+    - io.opentelemetry:opentelemetry-api
+    - io.opentelemetry:opentelemetry-api-incubator
+    - io.opentelemetry:opentelemetry-bom
+    - io.opentelemetry:opentelemetry-common
+    - io.opentelemetry:opentelemetry-context
+    - io.opentelemetry:opentelemetry-sdk
+    - io.opentelemetry:opentelemetry-sdk-common
+    - io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi
+    - io.opentelemetry:opentelemetry-sdk-logs
+    - io.opentelemetry:opentelemetry-sdk-metrics
+    - io.opentelemetry:opentelemetry-sdk-trace
+  advisories:
+    - CVE-2023-43810
+    - CVE-2023-45142
+    - CVE-2023-47108
+    - CVE-2026-24051
+    - CVE-2026-29181
+    - CVE-2026-39882
+    - CVE-2026-39883
+    - CVE-2026-40894
+    - CVE-2026-41078
+    - CVE-2026-41178
+    - CVE-2026-44967
+    - CVE-2026-54285
+  justification: >
+    The opentelemetry:opentelemetry CPE covers every OpenTelemetry implementation. The advisories listed
+    are for OpenTelemetry-Go, OpenTelemetry-Go Contrib, opentelemetry-js, OpenTelemetry .NET and
+    OpenTelemetry C++, per their descriptions and the GitHub-reviewed advisories (no Maven package). The
+    Dumper ships only OpenTelemetry Java and Google's Java exporters.
+  expiration_date: 2027-05-31
+
+- false_positive: "jmespath-java: jmespath.php advisory"
+  artifacts:
+    - com.amazonaws:jmespath-java
+  advisories:
+    - CVE-2026-54133
+  justification: >
+    CVE-2026-54133 is in jmespath.php. The Dumper ships the AWS SDK's Java implementation.
+  expiration_date: 2027-05-31
+
+- false_positive: "protobuf-java: Python protobuf advisory"
+  artifacts:
+    - com.google.protobuf:protobuf-java
+  advisories:
+    - CVE-2026-0994
+  justification: >
+    CVE-2026-0994 is in google.protobuf.json_format.ParseDict() of the Python library.
+  expiration_date: 2027-05-31
+
+- false_positive: "oozie-client: Oozie web console advisory"
+  artifacts:
+    - org.apache.oozie:oozie-client
+  advisories:
+    - CVE-2025-26796
+  justification: >
+    CVE-2025-26796 is a cross-site scripting issue in the Oozie server's web console (GitHub advisory:
+    org.apache.oozie:oozie-core). The Dumper ships only the client library, which has no web interface.
+  expiration_date: 2027-05-31
+
+- false_positive: "spring-core: Spring Framework advisories in modules the Dumper does not ship"
+  artifacts:
+    - org.springframework:spring-core
+  advisories:
+    - CVE-2016-1000027
+    - CVE-2024-38820
+    - CVE-2026-22735
+    - CVE-2026-22737
+    - CVE-2026-22740
+    - CVE-2026-22741
+    - CVE-2026-22745
+    - CVE-2026-41838
+    - CVE-2026-41839
+    - CVE-2026-41840
+    - CVE-2026-41841
+    - CVE-2026-41842
+    - CVE-2026-41843
+    - CVE-2026-41844
+    - CVE-2026-41845
+    - CVE-2026-41846
+    - CVE-2026-41847
+    - CVE-2026-41849
+    - CVE-2026-41850
+    - CVE-2026-41851
+    - CVE-2026-41852
+    - CVE-2026-41853
+    - CVE-2026-41855
+    - CVE-2026-47884
+    - CVE-2026-47886
+    - CVE-2026-47887
+    - CVE-2026-47888
+    - CVE-2026-47891
+    - CVE-2026-47892
+    - CVE-2026-47893
+    - CVE-2026-59280
+    - CVE-2026-59281
+    - CVE-2026-59283
+    - CVE-2026-59313
+    - CVE-2026-59314
+  justification: >
+    Dependency-Check maps the framework-wide spring_framework CPE onto spring-core. The Dumper ships
+    spring-core, spring-beans, spring-jdbc and spring-tx. Each advisory listed is in another module
+    (spring-webmvc, spring-webflux, spring-web, spring-websocket, spring-expression, spring-context,
+    spring-context-support, spring-messaging, spring-jms), per the GitHub-reviewed advisory or, where
+    GitHub has not reviewed it, per the description. The advisories that do affect the shipped modules
+    are listed as open findings above.
+  expiration_date: 2027-05-31
+
+- false_positive: "Standalone netty jars: request smuggling advisory in netty-codec-http"
+  artifacts:
+    - io.netty:netty-bom
+    - io.netty:netty-buffer
+    - io.netty:netty-codec
+    - io.netty:netty-common
+    - io.netty:netty-handler
+    - io.netty:netty-resolver
+    - io.netty:netty-tcnative-boringssl-static
+    - io.netty:netty-tcnative-classes
+    - io.netty:netty-transport
+    - io.netty:netty-transport-classes-epoll
+    - io.netty:netty-transport-native-epoll
+    - io.netty:netty-transport-native-unix-common
+  advisories:
+    - CVE-2026-89044
+  justification: >
+    CVE-2026-89044 (Transfer-Encoding validation, netty 4.1.133 to 4.1.137) is in the HTTP codec.
+    Dependency-Check reports it on whichever standalone netty jar it groups the netty CPE under. The
+    Dumper does not ship netty-codec-http as a jar; its only copy of the codec is the 4.1.124 one inside
+    grpc-netty-shaded, which is outside the affected range.
+  expiration_date: 2027-05-31
