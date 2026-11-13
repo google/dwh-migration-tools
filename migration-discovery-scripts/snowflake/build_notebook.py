@@ -238,7 +238,7 @@ OUTPUT_STAGE = "BQMS_TCO_DISCOVERY_STAGE"
 ZIP_NAME = "snowflake_assessment_tco.zip"
 
 # Enable verbose output (detailed configuration, run ID, and step logging)
-VERBOSE = False
+VERBOSE = True
 
 # Tool version
 TOOL_VERSION = "1.0.0"
@@ -430,12 +430,14 @@ task_details = []
 errors = []
 succeeded_count = 0
 failed_count = 0
+total_tasks = len(EXTRACTION_TASKS)
 
 log(f"[INFO] Staging extracted data in: {{temp_dir}}\\n")
 
-for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
+for idx, (sql_file, output_csv, raw_sql, desc) in enumerate(EXTRACTION_TASKS, start=1):
     output_path = os.path.join(temp_dir, output_csv)
     q_start = time.time()
+    print(f"[INFO] [{{idx}}/{{total_tasks}}] Extracting {{desc}} ({{output_csv}})...")
 
     try:
         rendered_sql = render_sql(
@@ -480,7 +482,7 @@ for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
             "duration_seconds": elapsed,
             "row_count": row_count,
         }})
-        print(f"{{output_csv}}  {{row_count}} rows  {{elapsed}}s")
+        print(f"[INFO] [{{idx}}/{{total_tasks}}] {{output_csv}} -> OK ({{row_count:,}} rows, {{elapsed}}s)")
 
     except Exception as e:
         elapsed = int(time.time() - q_start)
@@ -494,7 +496,7 @@ for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
             "duration_seconds": elapsed,
             "error": err_msg,
         }})
-        print(f"{{output_csv}}  FAILED ({{elapsed}}s): {{err_msg}}")
+        print(f"[ERROR] [{{idx}}/{{total_tasks}}] {{output_csv}} -> FAILED ({{elapsed}}s): {{err_msg}}")
 """
 
     cell_5_packaging = """# =====================================================================
@@ -939,6 +941,7 @@ def main(session):
             account_region = str(region_row[0])
     except Exception:
         pass
+    print(f"[INFO] Connected to Snowflake. Account Region: {{account_region}}")
 
     # Pre-flight check: probe SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY
     access_history_available = True
@@ -948,8 +951,10 @@ def main(session):
             cur.fetchone()
         else:
             session.sql("SELECT 1 FROM SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY LIMIT 1;").collect()
+        print("[INFO] SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY is available.")
     except Exception:
         access_history_available = False
+        print("[WARN] SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY is inaccessible; falling back to IsMultiObject = FALSE.")
 
     # Initialize run tracking
     start_time_epoch = time.time()
@@ -958,17 +963,20 @@ def main(session):
     start_time_iso = start_dt_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     run_date = start_dt_utc.strftime("%Y-%m-%d")
     run_id = f"snowflake-discovery-{{start_dt_utc.strftime('%Y%m%d%H%M%S')}}"
+    print(f"[INFO] Run ID: {{run_id}} | Date Range (UTC): {{effective_start_date}} to {{effective_end_date}}")
 
     temp_dir = tempfile.mkdtemp(prefix="snowflake_tco_")
     task_details = []
     errors = []
     succeeded_count = 0
     failed_count = 0
+    total_tasks = len(EXTRACTION_TASKS)
 
     # Execute extraction tasks
-    for sql_file, output_csv, raw_sql, desc in EXTRACTION_TASKS:
+    for idx, (sql_file, output_csv, raw_sql, desc) in enumerate(EXTRACTION_TASKS, start=1):
         output_path = os.path.join(temp_dir, output_csv)
         q_start = time.time()
+        print(f"[INFO] [{{idx}}/{{total_tasks}}] Extracting {{desc}} ({{output_csv}})...")
         try:
             rendered_sql = render_sql(
                 raw_sql,
@@ -1012,6 +1020,7 @@ def main(session):
                 "duration_seconds": elapsed,
                 "row_count": row_count,
             }})
+            print(f"[INFO] [{{idx}}/{{total_tasks}}] {{output_csv}} -> OK ({{row_count:,}} rows, {{elapsed}}s)")
 
         except Exception as e:
             elapsed = int(time.time() - q_start)
@@ -1025,6 +1034,7 @@ def main(session):
                 "duration_seconds": elapsed,
                 "error": err_msg,
             }})
+            print(f"[ERROR] [{{idx}}/{{total_tasks}}] {{output_csv}} -> FAILED ({{elapsed}}s): {{err_msg}}")
 
     # Generate metadata descriptor (compilerworks-metadata.yaml)
     metadata_yaml_path = os.path.join(temp_dir, "compilerworks-metadata.yaml")
