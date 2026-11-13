@@ -200,6 +200,8 @@ parquet = { group = "org.apache.parquet", name = "parquet", version.ref = "parqu
 oozie-client = { group = "org.apache.oozie", name = "oozie-client", version.ref = "oozie-client"}
 xerces = { module = "xerces:xercesImpl", version.ref = "xerces"}
 jna = { group = "net.java.dev.jna", "name" = "jna", version.ref = "jna"}
+opentelemetry-api-incubator = { module = "io.opentelemetry:opentelemetry-api-incubator", version = "1.67.0-alpha" }
+opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version = "1.67.0" }
 zookeeper = { module = "org.apache.zookeeper:zookeeper", version.ref = "zookeeper"}
 hadoop-shaded-protobuf = { module = "org.apache.hadoop.thirdparty:hadoop-shaded-protobuf_3_25", version = "1.5.0"}
 

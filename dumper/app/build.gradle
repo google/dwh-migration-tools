@@ -106,6 +106,8 @@ dependencies {
     implementation libs.google.cloud.bigquery
 
     //Overrides for google-cloud-bigquery transient deps
+    implementation platform(libs.opentelemetry.bom) // align transitive opentelemetry modules for vulnerabilities update
+    runtimeOnly libs.opentelemetry.api.incubator // not in the BOM; must match the SDK version
     implementation libs.grpc.netty.shaded // explicit version for vulnerabilities update
     implementation libs.grpc.protobuf // explicit version for vulnerabilities update
     implementation libs.grpc.stub // explicit version for vulnerabilities update
