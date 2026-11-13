@@ -167,15 +167,17 @@ public class JsonResponseFile {
           throw new IllegalArgumentException(
               "Array in json response file can only contain strings");
         if (first) {
-          sb.append(childNode.textValue());
+          sb.append(childNode.asText());
           first = false;
-        } else sb.append(":").append(childNode.textValue());
+        } else sb.append(":").append(childNode.asText());
       }
       ret.add(prefix);
       ret.add(sb.toString());
     } else {
       ret.add(prefix);
-      if (!node.textValue().isEmpty()) ret.add(node.textValue());
+      // A null value, such as "assessment:" in YAML, gives the option alone.
+      String value = node.isNull() ? "" : node.asText();
+      if (!value.isEmpty()) ret.add(value);
     }
   }
 
@@ -393,10 +395,15 @@ public class JsonResponseFile {
       if (argument.equals("--save-response-file")) return; // don't save over and over again
 
       if (argument.startsWith("-D")) {
-        argument = argument.substring(2);
-        int idx = argument.indexOf('=');
+        // The definition follows -D in the same argument or comes as the next one.
+        String definition = argument.length() > 2 ? argument.substring(2) : value;
+        int idx = definition.indexOf('=');
+        if (idx < 0) {
+          // ConnectorProperties ignores a definition without '=', so there is nothing to save.
+          return;
+        }
         ResponseFileEntity definitions = fields.computeIfAbsent("definitions", d -> OBJECT.get());
-        definitions.put(argument.substring(0, idx), argument.substring(idx + 1));
+        definitions.put(definition.substring(0, idx), definition.substring(idx + 1));
       } else {
         argument = argument.substring(2);
         String[] tokens = StringUtils.split(argument, "-");
