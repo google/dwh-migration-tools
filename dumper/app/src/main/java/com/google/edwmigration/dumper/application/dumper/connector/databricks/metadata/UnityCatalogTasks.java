@@ -18,12 +18,12 @@ package com.google.edwmigration.dumper.application.dumper.connector.databricks.m
 
 import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
 import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksClientSqlRunner.SqlQuoting.quoteQualifiedName;
+import static com.google.edwmigration.dumper.application.dumper.connector.databricks.client.DatabricksRestApi.executeJson;
 import static com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.DatabricksFilter.HIVE_METASTORE_CATALOG;
 import static com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.constructWarnings;
 import static com.google.edwmigration.dumper.application.dumper.connector.databricks.metadata.DatabricksHandle.printCheckConstraints;
 import static com.google.edwmigration.dumper.plugin.lib.dumper.spi.DatabricksMetadataDumpFormat.ERROR_TYPE;
 
-import com.databricks.sdk.core.ApiClient;
 import com.databricks.sdk.core.http.Request;
 import com.databricks.sdk.core.utils.SerDeUtils;
 import com.databricks.sdk.service.catalog.CatalogInfo;
@@ -60,8 +60,8 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.DatabricksMetadataDu
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.DatabricksMetadataDumpFormat.TablesFormat;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.DatabricksMetadataDumpFormat.ViewsFormat;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -310,9 +310,11 @@ public final class UnityCatalogTasks {
   /**
    * Lists the tables of a schema with their columns. The request is the one of {@code
    * TablesAPI.list}, but the response is read as JSON, because the SDK {@link TableInfo} has no
-   * {@code securable_kind}. Of the properties, only {@code spark.sql.statistics.totalSize} is kept,
-   * because a table can have thousands of statistics properties and the tables of a schema stay in
-   * memory until they are written.
+   * {@code securable_kind}, and reads the enum values that it doesn't know, such as a new {@code
+   * table_type}, {@code data_source_format} or column {@code type_name}, as null, so they are read
+   * as text. Of the properties, only {@code spark.sql.statistics.totalSize} is kept, because a
+   * table can have thousands of statistics properties and the tables of a schema stay in memory
+   * until they are written.
    */
   private static ImmutableList<ListedTable> listTables(
       DatabricksHandle handle, String catalogName, String schemaName) throws IOException {
@@ -329,12 +331,20 @@ public final class UnityCatalogTasks {
         request.withQueryParam("page_token", pageToken);
       }
 
-      JsonNode page = executeJson(handle, request);
+      JsonNode page = executeJson(handle.client(), request);
       for (JsonNode table : page.path("tables")) {
+        ImmutableList.Builder<String> columnTypeNames = ImmutableList.builder();
+        for (JsonNode column : table.path("columns")) {
+          columnTypeNames.add(column.path("type_name").asText(""));
+        }
+
         tables.add(
             new ListedTable(
                 SDK_MAPPER.treeToValue(table, TableInfo.class).setProperties(null),
                 table.path("securable_kind").asText(""),
+                table.path("table_type").asText(null),
+                table.path("data_source_format").asText(null),
+                columnTypeNames.build(),
                 table.path("properties").path(TOTAL_SIZE_PROPERTY).asText(null)));
       }
       pageToken = page.path("next_page_token").asText("");
@@ -374,26 +384,13 @@ public final class UnityCatalogTasks {
     // The query is in the URL because Request.getUri() decodes the path when adding query
     // parameters, which would undo the %23 and %3F escaping.
     return executeJson(
-        handle,
+        handle.client(),
         new Request(
             Request.GET,
             TABLES_PATH
                 + "/"
                 + urlPathSegmentEscaper().escape(table.fullName())
                 + "?include_browse=true"));
-  }
-
-  /** Executes a GET request with the headers of the SDK calls and returns its JSON response. */
-  private static JsonNode executeJson(DatabricksHandle handle, Request request) throws IOException {
-    ApiClient apiClient = handle.client().apiClient();
-    request.withHeader("Accept", "application/json");
-    if (apiClient.workspaceId() != null) {
-      request.withHeader("X-Databricks-Workspace-Id", apiClient.workspaceId());
-    }
-
-    try (InputStream body = apiClient.execute(request, InputStream.class)) {
-      return JSON_READER.readTree(body);
-    }
   }
 
   /** Prints the rows of a {@code tables.list} table across the five table CSV files. */
@@ -410,8 +407,8 @@ public final class UnityCatalogTasks {
         table.getCatalogName(),
         table.getSchemaName(),
         table.getName(),
-        table.getTableType(),
-        table.getDataSourceFormat(),
+        listedTable.tableType,
+        listedTable.dataSourceFormat,
         table.getStorageLocation(),
         listedTable.securableKind,
         table.getPipelineId(),
@@ -435,8 +432,10 @@ public final class UnityCatalogTasks {
     }
 
     if (table.getColumns() != null) {
+      // The type names are in the order of the columns, which are read from the same JSON array.
+      Iterator<String> typeNames = listedTable.columnTypeNames.iterator();
       for (ColumnInfo column : table.getColumns()) {
-        columns.printRecord(columnRecord(table, column));
+        columns.printRecord(columnRecord(table, column, typeNames.next()));
         ColumnMask mask = column.getMask();
         if (mask != null) {
           columnMasks.printRecord(
@@ -451,15 +450,18 @@ public final class UnityCatalogTasks {
     }
   }
 
-  /** Returns the record of {@code columns.csv} for a column of a {@code tables.list} table. */
-  private static Object[] columnRecord(TableInfo table, ColumnInfo column) {
+  /**
+   * Returns the record of {@code columns.csv} for a column of a {@code tables.list} table, whose
+   * {@code type_name} is {@code typeName}.
+   */
+  private static Object[] columnRecord(TableInfo table, ColumnInfo column, String typeName) {
     Object[] record = new Object[COLUMNS_RECORD_SIZE];
     record[ColumnsFormat.Header.TableCatalog.ordinal()] = table.getCatalogName();
     record[ColumnsFormat.Header.TableSchema.ordinal()] = table.getSchemaName();
     record[ColumnsFormat.Header.TableName.ordinal()] = table.getName();
     record[ColumnsFormat.Header.OrdinalPosition.ordinal()] = column.getPosition();
     record[ColumnsFormat.Header.ColumnName.ordinal()] = column.getName();
-    record[ColumnsFormat.Header.DataType.ordinal()] = column.getTypeName();
+    record[ColumnsFormat.Header.DataType.ordinal()] = typeName;
     record[ColumnsFormat.Header.FullDataType.ordinal()] = column.getTypeText();
     record[ColumnsFormat.Header.IsNullable.ordinal()] =
         Boolean.FALSE.equals(column.getNullable()) ? "NO" : "YES";
@@ -642,18 +644,32 @@ public final class UnityCatalogTasks {
 
   /**
    * A table listed by {@code tables.list}, with its {@code securable_kind}, such as {@code
-   * TABLE_DELTA}, which the SDK {@link TableInfo} doesn't have, and its {@code
+   * TABLE_DELTA}, which the SDK {@link TableInfo} doesn't have, its {@code table_type}, {@code
+   * data_source_format} and the {@code type_name} of each column as text, and its {@code
    * spark.sql.statistics.totalSize} property, which is null when no statistics were computed or the
    * table is browse-only.
    */
   private static final class ListedTable {
     final TableInfo info;
     final String securableKind;
+    @Nullable final String tableType;
+    @Nullable final String dataSourceFormat;
+    // The type_name of each column, in the order of info.getColumns().
+    final ImmutableList<String> columnTypeNames;
     final String sizeInBytes;
 
-    ListedTable(TableInfo info, String securableKind, String sizeInBytes) {
+    ListedTable(
+        TableInfo info,
+        String securableKind,
+        @Nullable String tableType,
+        @Nullable String dataSourceFormat,
+        ImmutableList<String> columnTypeNames,
+        String sizeInBytes) {
       this.info = info;
       this.securableKind = securableKind;
+      this.tableType = tableType;
+      this.dataSourceFormat = dataSourceFormat;
+      this.columnTypeNames = columnTypeNames;
       this.sizeInBytes = sizeInBytes;
     }
   }

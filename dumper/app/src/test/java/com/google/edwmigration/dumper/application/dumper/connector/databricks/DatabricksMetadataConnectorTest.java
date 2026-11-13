@@ -55,7 +55,7 @@ public class DatabricksMetadataConnectorTest {
 
   @Test
   public void checkCluster_rejectsClustersThatArentRunning() {
-    DatabricksMetadataConnector.checkCluster(cluster(State.RUNNING));
+    AbstractDatabricksConnector.checkCluster(cluster(State.RUNNING));
 
     assertCheckClusterRejects(cluster(State.TERMINATED));
     assertCheckClusterRejects(cluster(State.PENDING));
@@ -64,7 +64,7 @@ public class DatabricksMetadataConnectorTest {
   private static void assertCheckClusterRejects(ClusterDetails cluster) {
     assertThrows(
         MetadataDumperUsageException.class,
-        () -> DatabricksMetadataConnector.checkCluster(cluster));
+        () -> AbstractDatabricksConnector.checkCluster(cluster));
   }
 
   private static ClusterDetails cluster(State state) {

@@ -273,6 +273,35 @@ public class MetadataTasksTest {
   }
 
   @Test
+  public void tablesTask_keepsTheEnumValuesThatTheSdkDoesNotKnow() throws Exception {
+    // The SDK TableType, DataSourceFormat and ColumnTypeName don't have these values.
+    server.stubFor(
+        get(urlEqualTo(
+                TABLES_PATH
+                    + "?catalog_name=dumper_test_uc&include_browse=true&max_results=0"
+                    + "&schema_name=dumper_test_schema"))
+            .willReturn(
+                okJson(
+                    "{\"tables\":[{\"catalog_name\":\"dumper_test_uc\","
+                        + "\"schema_name\":\"dumper_test_schema\",\"name\":\"future_table\","
+                        + "\"table_type\":\"FUTURE_TYPE\",\"data_source_format\":\"FUTURE_FORMAT\","
+                        + "\"columns\":[{\"name\":\"t\",\"position\":0,\"type_name\":\"TIME\","
+                        + "\"type_text\":\"time(6)\"}]}]}")));
+    Path directory = temporaryFolder.newFolder().toPath();
+    runTasks(ImmutableList.of(findTask(TablesFormat.ZIP_ENTRY_NAME)), ACCEPT_ALL, directory);
+
+    CSVRecord table =
+        Iterables.getOnlyElement(
+            findTableRecords(readFile(directory, TablesFormat.ZIP_ENTRY_NAME), "future_table"));
+    assertEquals("FUTURE_TYPE", table.get(TablesFormat.Header.TableType.name()));
+    assertEquals("FUTURE_FORMAT", table.get(TablesFormat.Header.DataSourceFormat.name()));
+    CSVRecord column =
+        Iterables.getOnlyElement(
+            findTableRecords(readFile(directory, ColumnsFormat.ZIP_ENTRY_NAME), "future_table"));
+    assertEquals("TIME", column.get(ColumnsFormat.Header.DataType.name()));
+  }
+
+  @Test
   public void hiveMetastoreTableTask_replacesFilesCommittedByEarlierRun() throws Exception {
     // An earlier run committed columns-hms.csv but not tables-hms.csv, the only file that
     // --continue checks, so the rerun of the task writes columns-hms.csv again.

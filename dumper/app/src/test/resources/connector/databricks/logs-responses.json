@@ -1,0 +1,89 @@
+{
+  "/api/2.0/sql/history/queries?filter_by.query_start_time_range.end_time_ms=1791554399999&filter_by.query_start_time_range.start_time_ms=1791550800000&include_metrics=true&max_results=999": {
+    "has_next_page": true,
+    "next_page_token": "page-2",
+    "res": [
+      {
+        "channel_used": {
+          "dbsql_version": "2026.39",
+          "name": "CHANNEL_NAME_CURRENT"
+        },
+        "client_application": "Databricks SQL Editor",
+        "duration": 2500,
+        "endpoint_id": "wh-1",
+        "executed_as_user_display_name": "Example User",
+        "executed_as_user_name": "service-principal",
+        "execution_end_time_ms": 1791550803400,
+        "is_final": true,
+        "metrics": {
+          "bytes_read_from_cache_percentage": 0,
+          "compilation_time_ms": 100,
+          "execution_time_ms": 2300,
+          "metadata_time_ms": 0,
+          "network_sent_bytes": 0,
+          "photon_total_time_ms": 0,
+          "pruned_files_count": 0,
+          "query_compilation_start_timestamp": 1791550801100,
+          "query_execution_time_ms": 2400,
+          "queue_end_time_ms": 1791550801050,
+          "read_bytes": 1024,
+          "read_cache_bytes": 0,
+          "read_files_count": 1,
+          "read_partitions_count": 1,
+          "read_remote_bytes": 1024,
+          "result_fetch_time_ms": 50,
+          "result_from_cache": false,
+          "rows_produced_count": 1,
+          "rows_read_count": 10,
+          "spill_to_disk_bytes": 64,
+          "total_time_ms": 2500,
+          "write_remote_bytes": 512,
+          "write_remote_files": 1,
+          "write_remote_rows": 1
+        },
+        "query_end_time_ms": 1791550803500,
+        "query_id": "01f1c9d5-56bd-13d5-b073-000000000001",
+        "query_start_time_ms": 1791550801000,
+        "query_text": "INSERT INTO sales.orders SELECT * FROM staging.orders",
+        "rows_produced": 1,
+        "session_id": "01f1c9d5-56b3-1978-bef8-000000000001",
+        "statement_type": "INSERT",
+        "status": "FINISHED",
+        "user_name": "user@example.com",
+        "warehouse_id": "wh-1",
+        "workspace_id": 1234567890123456
+      },
+      {
+        "client_application": "Databricks CLI",
+        "error_message": "[TABLE_OR_VIEW_NOT_FOUND] The table or view `sales`.`missing` cannot be found.",
+        "executed_as_user_name": "sp-runner",
+        "execution_end_time_ms": 1791550811200,
+        "query_id": "01f1c9d5-56bd-13d5-b073-000000000002",
+        "query_start_time_ms": 1791550810000,
+        "query_text": "SELECT * FROM sales.missing",
+        "statement_type": "SELECT",
+        "status": "FAILED"
+      }
+    ]
+  },
+  "/api/2.0/sql/history/queries?filter_by.query_start_time_range.end_time_ms=1791554399999&filter_by.query_start_time_range.start_time_ms=1791550800000&include_metrics=true&max_results=999&page_token=page-2": {
+    "has_next_page": false,
+    "next_page_token": "page-3",
+    "res": [
+      {
+        "query_end_time_ms": 1791550820500,
+        "query_id": "01f1c9d5-56bd-13d5-b073-000000000003",
+        "query_start_time_ms": 1791550820000,
+        "query_tags": [
+          {
+            "key": "source",
+            "value": "dwh-migration-dumper"
+          }
+        ],
+        "query_text": "SHOW SCHEMAS",
+        "statement_type": "SHOW",
+        "status": "FINISHED"
+      }
+    ]
+  }
+}
