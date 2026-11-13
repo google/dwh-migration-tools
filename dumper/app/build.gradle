@@ -80,9 +80,10 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-reload4j"
         exclude group: "org.bouncycastle", module: "bcprov-jdk15on" // We use 18, which is the latest and support JDK 1.8+
         exclude group: "javax.servlet.jsp", module: "jsp-api"
+        // Only used by Hadoop's embedded HTTP servers, which the dumper never starts.
+        exclude group: "org.eclipse.jetty"
     }
     //Overrides for hadoop-common transient deps
-    implementation libs.jetty.server // explicit version for vulnerabilities update
     implementation libs.netty.handler // explicit version for vulnerabilities update
     implementation libs.netty.transport.native.epoll // explicit version for vulnerabilities update
     implementation libs.dnsjava // explicit version for vulnerabilities update
