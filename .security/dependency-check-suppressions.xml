@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Dependency-Check suppressions for CPE false positives in the daily scan of the Dumper
+  distribution. Each rule is scoped to the jars it names and expires on its "until" date, after
+  which the findings come back and the rule must be reviewed. Real findings do not belong here:
+  list them in known_cves.yml.
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[app.jar: Google Cloud Application Integration advisory. app.jar holds the Dumper's own classes. Dependency-Check derives the google:application_integration CPE from the words google and application in its package names (com.google.edwmigration.dumper.application); CVE-2025-0982 is in the JavaScript Task feature of the Google Cloud Application Integration service, which the Dumper does not contain. Moved here from known_cves.yml.]]></notes>
+    <filePath regex="true">.*/app\.jar$</filePath>
+    <vulnerabilityName>CVE-2025-0982</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[grpc-netty-shaded: netty advisories that do not affect the bundled netty 4.1.124. Dependency-Check identifies grpc-netty-shaded as netty with grpc's own version (1.76.1), so it matches every netty advisory with a range below 4.x. The jar bundles netty 4.1.124.Final (META-INF/io.grpc.netty.shaded.io.netty.versions.properties) with the modules buffer, common, transport, resolver, handler, handler-proxy, codec, codec-http, codec-http2, codec-socks and native epoll. Each advisory below was either fixed before 4.1.124 or is in a netty module that the jar does not bundle (codec-haproxy, codec-dns, resolver-dns, codec-stomp, codec-redis, codec-xml, codec-mqtt, handler-ssl-ocsp, codec-http3, transport-sctp), per the affected packages and ranges of the GitHub-reviewed advisory. The advisories that do affect 4.1.124 are not suppressed here; they are in known_cves.yml.]]></notes>
+    <filePath regex="true">.*/grpc-netty-shaded-[^/]*\.jar$</filePath>
+    <vulnerabilityName>CVE-2014-3488</vulnerabilityName>
+    <vulnerabilityName>CVE-2015-2156</vulnerabilityName>
+    <vulnerabilityName>CVE-2019-16869</vulnerabilityName>
+    <vulnerabilityName>CVE-2019-20444</vulnerabilityName>
+    <vulnerabilityName>CVE-2019-20445</vulnerabilityName>
+    <vulnerabilityName>CVE-2021-21290</vulnerabilityName>
+    <vulnerabilityName>CVE-2021-21295</vulnerabilityName>
+    <vulnerabilityName>CVE-2021-21409</vulnerabilityName>
+    <vulnerabilityName>CVE-2021-37136</vulnerabilityName>
+    <vulnerabilityName>CVE-2021-37137</vulnerabilityName>
+    <vulnerabilityName>CVE-2021-43797</vulnerabilityName>
+    <vulnerabilityName>CVE-2022-24823</vulnerabilityName>
+    <vulnerabilityName>CVE-2022-41881</vulnerabilityName>
+    <vulnerabilityName>CVE-2023-34462</vulnerabilityName>
+    <vulnerabilityName>CVE-2023-44487</vulnerabilityName>
+    <vulnerabilityName>CVE-2024-29025</vulnerabilityName>
+    <vulnerabilityName>CVE-2024-47535</vulnerabilityName>
+    <vulnerabilityName>CVE-2025-25193</vulnerabilityName>
+    <vulnerabilityName>CVE-2025-55163</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-42579</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-42586</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-44248</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-44250</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-44890</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-44891</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-44893</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-45673</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-45674</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-46340</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47691</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-48006</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-48059</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-50011</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56818</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56820</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56821</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56822</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59902</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59919</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59920</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-73507</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-73508</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[databricks-jdbc: netty advisories on the bundled netty-buffer and netty-common 4.2.15. databricks-jdbc bundles only netty-buffer and netty-common 4.2.15.Final (relocated to com.databricks.internal.io.netty). Dependency-Check matches the netty CPE, which covers every netty module; the advisories below are in other netty modules (handler, codec-*, transport-sctp, resolver-dns, handler-ssl-ocsp, codec-http3), per the GitHub-reviewed advisories, or (CVE-2026-62380, CVE-2026-89044) in codec-socks and codec-http per their descriptions.]]></notes>
+    <filePath regex="true">.*/databricks-jdbc-[^/]*\.jar/META-INF/maven/io\.netty/netty-(buffer|common)/pom\.xml$</filePath>
+    <vulnerabilityName>CVE-2026-44891</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-55831</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-55833</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-55851</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56745</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56746</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56816</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56817</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56818</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56819</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56820</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56821</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-56822</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59898</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59899</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59900</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59901</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59902</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59903</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59919</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59920</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59921</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-62380</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-73507</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-73508</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-75595</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-75596</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-89044</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[Apache Arrow (arrow-memory-core and the copy in databricks-jdbc): C and C++ advisories. CVE-2026-25087 is in Apache Arrow C++ and CVE-2026-111497 in the Brotli C decoder. The dumper ships only the Java Arrow libraries.]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.arrow/.*$</packageUrl>
+    <vulnerabilityName>CVE-2026-25087</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-111497</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[grpc-java jars: gRPC-Go advisory. CVE-2026-33186 is in gRPC-Go (the grpc:grpc CPE covers every gRPC implementation). The dumper ships grpc-java.]]></notes>
+    <filePath regex="true">.*/grpc-[^/]*\.jar$</filePath>
+    <vulnerabilityName>CVE-2026-33186</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[hadoop-thirdparty jars: Hadoop advisories matched against the thirdparty version. hadoop-shaded-protobuf_3_25 and hadoop-shaded-guava are Hadoop's relocated copies of protobuf and guava, versioned 1.4.0. Dependency-Check names them with the apache:hadoop CPE and that version, so every Hadoop advisory with a range below 1.4.0 matches. Hadoop itself ships as hadoop-common 3.4.2 and friends, which are scanned under their own version.]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.hadoop\.thirdparty/.*$</packageUrl>
+    <cpe>cpe:/a:apache:hadoop</cpe>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[OpenTelemetry Java jars: advisories for the Go, JavaScript, .NET and C++ implementations. The opentelemetry:opentelemetry CPE covers every OpenTelemetry implementation. The advisories below are for OpenTelemetry-Go, OpenTelemetry-Go Contrib, opentelemetry-js, OpenTelemetry .NET and OpenTelemetry C++, per their descriptions and the GitHub-reviewed advisories (no Maven package). The dumper ships only OpenTelemetry Java and Google's Java exporters.]]></notes>
+    <filePath regex="true">.*/(opentelemetry-[^/]*|shared-resourcemapping-[^/]*|grpc-opentelemetry-[^/]*|exporter-metrics-[^/]*|detector-resources-support-[^/]*)\.jar$</filePath>
+    <vulnerabilityName>CVE-2023-43810</vulnerabilityName>
+    <vulnerabilityName>CVE-2023-45142</vulnerabilityName>
+    <vulnerabilityName>CVE-2023-47108</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-24051</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-29181</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-39882</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-39883</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-40894</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41078</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41178</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-44967</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-54285</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[jmespath-java: jmespath.php advisory. CVE-2026-54133 is in jmespath.php. The dumper ships the AWS SDK's Java implementation (com.amazonaws:jmespath-java).]]></notes>
+    <filePath regex="true">.*/jmespath-java-[^/]*\.jar$</filePath>
+    <vulnerabilityName>CVE-2026-54133</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[protobuf-java: Python protobuf advisory. CVE-2026-0994 is in google.protobuf.json_format.ParseDict() of the Python library.]]></notes>
+    <filePath regex="true">.*/protobuf-java-[^/]*\.jar$</filePath>
+    <vulnerabilityName>CVE-2026-0994</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[oozie-client: Oozie web console advisory. CVE-2025-26796 is a cross-site scripting issue in the Oozie server web console (GitHub advisory: org.apache.oozie:oozie-core). The dumper ships only the client library, which has no web interface.]]></notes>
+    <filePath regex="true">.*/oozie-client-[^/]*\.jar$</filePath>
+    <vulnerabilityName>CVE-2025-26796</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[spring-core: Spring Framework advisories in modules the dumper does not ship. Dependency-Check maps the framework-wide spring_framework CPE onto spring-core. The dumper ships spring-core, spring-beans, spring-jdbc and spring-tx 5.3.39. Each advisory below is in another module (spring-webmvc, spring-webflux, spring-web, spring-websocket, spring-expression, spring-context, spring-context-support, spring-messaging, spring-jms), per the GitHub-reviewed advisory or, for advisories GitHub has not reviewed, per the description. The advisories that do affect the shipped modules (CVE-2025-41249, CVE-2026-41848, CVE-2026-59282) are in known_cves.yml.]]></notes>
+    <filePath regex="true">.*/spring-core-[^/]*\.jar$</filePath>
+    <vulnerabilityName>CVE-2016-1000027</vulnerabilityName>
+    <vulnerabilityName>CVE-2024-38820</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-22735</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-22737</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-22740</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-22741</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-22745</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41838</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41839</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41840</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41841</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41842</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41843</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41844</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41845</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41846</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41847</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41849</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41850</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41851</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41852</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41853</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-41855</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47884</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47886</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47887</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47888</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47891</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47892</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-47893</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59280</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59281</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59283</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59313</vulnerabilityName>
+    <vulnerabilityName>CVE-2026-59314</vulnerabilityName>
+  </suppress>
+  <suppress until="2027-05-31Z">
+    <notes><![CDATA[Standalone netty jars: request smuggling advisory in netty-codec-http. CVE-2026-89044 (Transfer-Encoding validation, netty 4.1.133 to 4.1.137) is in the HTTP codec. Dependency-Check reports it on whichever standalone netty jar it groups the netty CPE under (netty-transport or netty-transport-native-epoll). The dumper does not ship netty-codec-http as a jar, and the rule does not apply to one; the only copy of the codec is the 4.1.124 one inside grpc-netty-shaded, which is outside the affected range.]]></notes>
+    <filePath regex="true">.*/netty-(?!codec-http)[^/]*\.jar$</filePath>
+    <vulnerabilityName>CVE-2026-89044</vulnerabilityName>
+  </suppress>
+</suppressions>
