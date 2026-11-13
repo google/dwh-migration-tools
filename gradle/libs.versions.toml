@@ -202,6 +202,7 @@ xerces = { module = "xerces:xercesImpl", version.ref = "xerces"}
 jna = { group = "net.java.dev.jna", "name" = "jna", version.ref = "jna"}
 zookeeper = { module = "org.apache.zookeeper:zookeeper", version.ref = "zookeeper"}
 hadoop-shaded-protobuf = { module = "org.apache.hadoop.thirdparty:hadoop-shaded-protobuf_3_25", version = "1.5.0"}
+org-json = { module = "org.json:json", version = "20260814" }
 
 [plugins]
 ben-manes-versions = { id = "com.github.ben-manes.versions", version.ref = "ben-manes-versions-plugin" }
