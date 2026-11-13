@@ -356,14 +356,8 @@
   artifact: org.json:json:20240303
   justification: >
     Not a false positive. databricks-jdbc 3.4.4 bundles org.json 20240303 (relocated to
-    com.databricks.internal.json); fixed in 20260719. The standalone json jar is upgraded by PR #1221;
-    the bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-59171
-  artifact: org.json:json:20250517
-  justification: >
-    Not a false positive. Fixed in 20260719; PR #1221 upgrades the standalone json jar to 20260814.
-    Delete this entry when it is merged. Tracked in b/579421681.
+    com.databricks.internal.json); fixed in 20260719. The standalone json jar is fixed (20260814,
+    PR #1221); the bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
   expiration_date: 2026-12-31
 - CVE: CVE-2026-102554
   artifact: com.google.guava:guava:33.0.0-jre
