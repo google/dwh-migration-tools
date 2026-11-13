@@ -76,7 +76,6 @@ oozie-client = "5.2.1"
 amazon = "2.31.16"
 jna = "5.18.1"
 cloudrun = "0.83.0"
-jetty-server = "9.4.58.v20250814"
 netty-handler = "4.1.137.Final"
 dnsjava = "3.6.3"
 nimbus-jose-jwt = "10.6"
@@ -132,7 +131,6 @@ bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version = "1.85" }
 common-configuration2 = { module = "org.apache.commons:commons-configuration2", version.ref = "common-configuration2" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus-jose-jwt" }
 dnsjava = { module = "dnsjava:dnsjava", version.ref = "dnsjava" }
-jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty-server" }
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty-handler" }
 netty-bom = { module = "io.netty:netty-bom", version.ref = "netty-handler" }
 okio = { module = "com.squareup.okio:okio", version = "1.17.6" }
