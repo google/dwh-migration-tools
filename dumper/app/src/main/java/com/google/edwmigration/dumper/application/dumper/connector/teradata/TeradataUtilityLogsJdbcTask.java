@@ -24,6 +24,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
@@ -39,9 +40,6 @@ import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
 
@@ -208,8 +206,7 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
 
   @Nonnull
   private String getOrCreateSql(@Nonnull JdbcHandle handle) {
-    Function<String, Boolean> validator =
-        expression -> isValid(handle.getJdbcTemplate(), expression);
+    Function<String, Boolean> validator = expression -> isValid(handle, expression);
     Predicate<String> predicate =
         expression -> state.expressionValidity.computeIfAbsent(expression, validator);
     return getOrCreateSql(predicate);
@@ -257,13 +254,13 @@ public class TeradataUtilityLogsJdbcTask extends AbstractJdbcTask<Summary> {
    * Runs a test query to check whether a given projection expression is legal on this Teradata
    * instance.
    */
-  private boolean isValid(@Nonnull JdbcTemplate template, @Nonnull String expression) {
+  private boolean isValid(@Nonnull JdbcHandle handle, @Nonnull String expression) {
     String sql = String.format(EXPRESSION_VALIDITY_QUERY, expression, utilityTable);
     logger.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
     try {
-      template.query(sql, rs -> {});
+      handle.executeQuery(sql);
       return true;
-    } catch (DataAccessException e) {
+    } catch (SQLException e) {
       logger.info(
           "Projection expression '{}' is not valid, will use NULL in projection: {}",
           expression,

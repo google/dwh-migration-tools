@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -42,8 +43,6 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** A {@link Task} that creates YAML with extraction metadata. */
 @ParametersAreNonnullByDefault
@@ -115,12 +114,12 @@ final class SnowflakeYamlSummaryTask extends AbstractJdbcTask<Void> {
     }
 
     @Override
-    public Void extractData(@Nullable ResultSet rs) throws SQLException, DataAccessException {
+    public Void extractData(@Nullable ResultSet rs) throws SQLException {
       doExtract(requireNonNull(rs));
       return null;
     }
 
-    void doExtract(ResultSet resultSet) throws SQLException, DataAccessException {
+    void doExtract(ResultSet resultSet) throws SQLException {
       resultSet.next();
       Optional<String> count = Optional.ofNullable(resultSet.getString(1));
       String yaml = rootString(isAssessment, count);

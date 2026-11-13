@@ -19,11 +19,44 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 import static com.google.edwmigration.dumper.application.dumper.connector.Connector.validateDateRange;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.InputDescriptor;
+import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
+import com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataMetadataConnector;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 
 public class ConnectorTest {
+
+  @Test
+  public void getAcceptsInputs_inputsFromComposedAnnotations_included() {
+    List<String> keys = new ArrayList<>();
+    for (InputDescriptor descriptor : Connector.getAcceptsInputs(new TeradataMetadataConnector())) {
+      keys.add(descriptor.getKey());
+    }
+
+    // @RespectsArgumentDatabasePredicate is on the connector class, @RespectsArgumentUser on its
+    // superclass, and the port is a plain @RespectsInput on the superclass.
+    ImmutableList<String> expected =
+        ImmutableList.of(
+            "--" + ConnectorArguments.OPT_DATABASE,
+            "--" + ConnectorArguments.OPT_USER,
+            "--" + ConnectorArguments.OPT_PORT);
+    assertTrue("Inputs: " + keys, keys.containsAll(expected));
+  }
+
+  @Test
+  public void printHelp_inputsFromComposedAnnotations_listed() throws Exception {
+    StringBuilder help = new StringBuilder();
+
+    new TeradataMetadataConnector().printHelp(help);
+
+    assertTrue(help.toString(), help.toString().contains(RespectsArgumentDriver.DESCRIPTION));
+  }
 
   @Test
   public void validateDateRange_startDateAndEndDate_success() throws Exception {

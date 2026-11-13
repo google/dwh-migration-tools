@@ -28,6 +28,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,11 +53,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.SqlTypeValue;
-import org.springframework.jdbc.core.StatementCreatorUtils;
-import org.springframework.jdbc.datasource.DataSourceUtils;
-import org.springframework.jdbc.support.JdbcUtils;
 
 /** @author shevek */
 public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
@@ -239,9 +235,9 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   public static void setParameterValues(@Nonnull PreparedStatement statement, Object... arguments)
       throws SQLException {
-    for (int i = 0; i < arguments.length; i++)
-      StatementCreatorUtils.setParameterValue(
-          statement, i + 1, SqlTypeValue.TYPE_UNKNOWN, arguments[i]);
+    for (int i = 0; i < arguments.length; i++) {
+      statement.setObject(i + 1, arguments[i]);
+    }
   }
 
   @SuppressWarnings("UnusedMethod")
@@ -318,7 +314,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
         result = resultSetExtractor.extractData(rs);
         logger.debug("Result set extraction took {}.", stopwatch);
       } finally {
-        JdbcUtils.closeResultSet(rs);
+        closeQuietly(rs);
       }
 
       SQLWarning warning = statement.getWarnings();
@@ -335,7 +331,17 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
       return result;
     } finally {
-      JdbcUtils.closeStatement(statement);
+      closeQuietly(statement);
+    }
+  }
+
+  private static void closeQuietly(@Nullable AutoCloseable closeable) {
+    if (closeable != null) {
+      try {
+        closeable.close();
+      } catch (Exception e) {
+        logger.trace("Could not close JDBC resource", e);
+      }
     }
   }
 
@@ -355,7 +361,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
     DataSource dataSource = jdbcHandle.getDataSource();
     // We could use JdbcUtils, but that would prevent us from getting a .exception.txt.
-    try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
+    try (Connection connection = dataSource.getConnection()) {
       // logger.debug("Connected to " + connection); // Hikari is using the same connection each
       // time.
       return doInConnection(context, jdbcHandle, sink, connection);

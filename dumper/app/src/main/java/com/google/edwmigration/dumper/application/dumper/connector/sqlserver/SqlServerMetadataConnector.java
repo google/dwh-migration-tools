@@ -36,6 +36,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
@@ -48,7 +49,6 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /**
  * ./gradlew :compilerworks-application-dumper:installDist && *
@@ -128,7 +128,7 @@ public class SqlServerMetadataConnector extends AbstractJdbcConnector
     Driver driver =
         newDriver(arguments.getDriverPaths(), "com.microsoft.sqlserver.jdbc.SQLServerDriver");
     String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+    DataSource dataSource = new DriverDataSource(driver, url, arguments.getUser(), password);
     return new JdbcHandle(dataSource);
   }
 }

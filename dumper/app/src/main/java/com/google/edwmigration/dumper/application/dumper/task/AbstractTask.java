@@ -21,18 +21,24 @@ import static java.lang.String.format;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle;
 import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMode;
 import com.google.errorprone.annotations.ForOverride;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -43,7 +49,6 @@ import org.apache.commons.csv.QuoteMode;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 
 /** @author shevek */
 public abstract class AbstractTask<T> implements Task<T> {
@@ -185,12 +190,38 @@ public abstract class AbstractTask<T> implements Task<T> {
   }
 
   protected static CSVFormat newCsvFormatForClass(Class<?> clazz) {
-    CSVFormat format =
-        FORMAT.withHeader(
-            Arrays.stream(BeanUtils.getPropertyDescriptors(clazz))
-                .map(PropertyDescriptor::getName)
-                .toArray(String[]::new));
-    return format;
+    return FORMAT.withHeader(getPropertyReadMethods(clazz).keySet().toArray(new String[0]));
+  }
+
+  public static ImmutableMap<String, Method> getPropertyReadMethods(Class<?> clazz) {
+    Map<String, Method> methods = new LinkedHashMap<>();
+    collectPropertyReadMethods(clazz, methods);
+    for (Class<?> curr = clazz; curr != null && curr != Object.class; curr = curr.getSuperclass()) {
+      collectInterfacePropertyReadMethods(curr, methods);
+    }
+    return ImmutableMap.copyOf(methods);
+  }
+
+  private static void collectInterfacePropertyReadMethods(
+      Class<?> type, Map<String, Method> methods) {
+    for (Class<?> iface : type.getInterfaces()) {
+      collectPropertyReadMethods(iface, methods);
+      collectInterfacePropertyReadMethods(iface, methods);
+    }
+  }
+
+  private static void collectPropertyReadMethods(Class<?> type, Map<String, Method> methods) {
+    try {
+      BeanInfo beanInfo = Introspector.getBeanInfo(type);
+      for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
+        Method readMethod = pd.getReadMethod();
+        if (readMethod != null) {
+          methods.putIfAbsent(pd.getName(), readMethod);
+        }
+      }
+    } catch (IntrospectionException e) {
+      throw new IllegalStateException("Failed to introspect bean properties of " + type, e);
+    }
   }
 
   protected String describeSourceData() {

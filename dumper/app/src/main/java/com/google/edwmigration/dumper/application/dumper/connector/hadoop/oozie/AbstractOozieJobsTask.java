@@ -23,10 +23,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -43,8 +46,6 @@ import org.apache.oozie.client.OozieClientException;
 import org.apache.oozie.client.XOozieClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
 
 public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
 
@@ -59,6 +60,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
   private final ZonedDateTime startDate;
   private final ZonedDateTime endDate;
   private final Class<J> oozieJobClass;
+  private final ImmutableMap<String, Method> propertyReadMethods;
 
   AbstractOozieJobsTask(String fileName, ZonedDateTime startDate, ZonedDateTime endDate) {
     super(fileName);
@@ -73,6 +75,7 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     this.oozieJobClass =
         (Class<J>)
             ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+    this.propertyReadMethods = getPropertyReadMethods(this.oozieJobClass);
   }
 
   @CheckForNull
@@ -156,16 +159,36 @@ public abstract class AbstractOozieJobsTask<J> extends AbstractTask<Void> {
     return ISO8601_UTC_FORMAT.format(dateTime.toInstant());
   }
 
-  private static Object[] toCSVRecord(Object job, ImmutableList<String> header) throws Exception {
+  private Object[] toCSVRecord(Object job, ImmutableList<String> header) throws Exception {
     Object[] record = new Object[header.size()];
-    BeanWrapper jobObjectWrapper = new BeanWrapperImpl(job);
     for (int i = 0; i < header.size(); i++) {
-      Object property = jobObjectWrapper.getPropertyValue(header.get(i));
+      Method readMethod = propertyReadMethods.get(header.get(i));
+      Object property = invokeReadMethod(readMethod, job);
       if (property != null) {
         record[i] = toRecordProperty(property);
       }
     }
     return record;
+  }
+
+  @Nullable
+  private static Object invokeReadMethod(@Nullable Method readMethod, Object target)
+      throws Exception {
+    if (readMethod == null) {
+      return null;
+    }
+    try {
+      return readMethod.invoke(target);
+    } catch (InvocationTargetException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof Exception) {
+        throw (Exception) cause;
+      }
+      if (cause instanceof Error) {
+        throw (Error) cause;
+      }
+      throw e;
+    }
   }
 
   static Object toRecordProperty(Object property) throws JsonProcessingException {

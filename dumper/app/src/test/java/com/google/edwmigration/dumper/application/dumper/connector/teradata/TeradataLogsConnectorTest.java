@@ -41,6 +41,8 @@ import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataLogsDumpForm
 import java.io.File;
 import java.net.URI;
 import java.nio.file.FileSystem;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -266,7 +268,12 @@ public class TeradataLogsConnectorTest extends AbstractConnectorExecutionTest {
     // This isn't great because all the column-validity queries fail.
     try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(dbFile);
         FileSystem fileSystem = newFileSystem(outputUri, ImmutableMap.of("create", "true"))) {
-      scripts.forEach(handle.getJdbcTemplate()::execute);
+      try (Connection connection = handle.getDataSource().getConnection();
+          Statement statement = connection.createStatement()) {
+        for (String script : scripts) {
+          statement.execute(script);
+        }
+      }
       ConnectorArguments arguments =
           ConnectorArguments.create(
               ImmutableList.of("--connector", "teradata-logs", "--query-log-days", "1"));

@@ -23,10 +23,10 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.Objects;
 import java.util.jar.Manifest;
-import org.springframework.core.io.ClassPathResource;
 
 public class StartUpMetaInfoProcessor {
 
@@ -45,11 +45,13 @@ public class StartUpMetaInfoProcessor {
   }
 
   private static void printBanner() {
-    try {
-      ClassPathResource classPathResource =
-          new ClassPathResource("/banner/banner.txt", StartUpMetaInfoProcessor.class);
+    try (InputStream stream =
+        StartUpMetaInfoProcessor.class.getResourceAsStream("/banner/banner.txt")) {
+      if (stream == null) {
+        return;
+      }
       try (BufferedReader reader =
-          new BufferedReader(new InputStreamReader(classPathResource.getInputStream()))) {
+          new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
         reader.lines().forEach(System.out::println);
       }
     } catch (Exception ignore) {

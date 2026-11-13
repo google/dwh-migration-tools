@@ -26,6 +26,10 @@ import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.csv.CSVParser;
@@ -58,19 +62,33 @@ public class AbstractJdbcTaskTest {
   public static void setUpClass() throws Exception {
     Class.forName("org.sqlite.JDBC");
     FILE.delete();
-    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-      handle.getJdbcTemplate().execute("CREATE TABLE cells ( id INT, val TEXT )");
-      int id = 0;
-      for (String value : FORMULA_VALUES) {
-        handle.getJdbcTemplate().update("INSERT INTO cells VALUES ( ?, ? )", id++, value);
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE);
+        Connection connection = handle.getDataSource().getConnection()) {
+      try (Statement statement = connection.createStatement()) {
+        statement.execute("CREATE TABLE cells ( id INT, val TEXT )");
       }
 
-      for (String value : PLAIN_VALUES) {
-        handle.getJdbcTemplate().update("INSERT INTO cells VALUES ( ?, ? )", id++, value);
-      }
+      try (PreparedStatement insert =
+          connection.prepareStatement("INSERT INTO cells VALUES ( ?, ? )")) {
+        int id = 0;
+        for (String value : FORMULA_VALUES) {
+          insertCell(insert, id++, value);
+        }
 
-      handle.getJdbcTemplate().update("INSERT INTO cells VALUES ( ?, NULL )", id);
+        for (String value : PLAIN_VALUES) {
+          insertCell(insert, id++, value);
+        }
+
+        insertCell(insert, id, null);
+      }
     }
+  }
+
+  private static void insertCell(PreparedStatement insert, int id, String value)
+      throws SQLException {
+    insert.setInt(1, id);
+    insert.setString(2, value);
+    insert.executeUpdate();
   }
 
   @Test

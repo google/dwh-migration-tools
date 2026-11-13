@@ -60,8 +60,6 @@ dependencies {
         implementation libs.apache.commons.csv
         implementation libs.apache.commons.lang3
         testFixturesImplementation libs.apache.commons.lang3
-        implementation libs.spring.core
-        implementation libs.spring.jdbc
         implementation libs.hikaricp
         implementation libs.rate.limited.logger
 

@@ -20,16 +20,19 @@ import static com.google.edwmigration.dumper.application.dumper.connector.terada
 import static org.junit.Assert.assertEquals;
 
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import javax.annotation.Nonnull;
-import org.springframework.jdbc.datasource.SingleConnectionDataSource;
+import javax.sql.DataSource;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
@@ -60,9 +63,40 @@ public class DumperTestUtils {
     dataSource.setUrl(JDBC_URL_PREFIX + file.getAbsolutePath());
     final Connection connection = dataSource.getConnection();
     // Now, we muck around to make sure we only use a single persistent connection
-    // so that using the JdbcTemplate to create tables or attach things
-    // leaves them attached for the later consumers.
-    return new JdbcHandle(new SingleConnectionDataSource(connection, true)) {
+    // so that creating tables or attaching things leaves them attached for the later consumers.
+    Connection nonClosingConnection =
+        (Connection)
+            Proxy.newProxyInstance(
+                Connection.class.getClassLoader(),
+                new Class<?>[] {Connection.class},
+                (proxy, method, args) -> {
+                  String name = method.getName();
+                  if ("close".equals(name)) {
+                    return null;
+                  }
+                  if ("isClosed".equals(name)) {
+                    return connection.isClosed();
+                  }
+                  if ("equals".equals(name)) {
+                    return proxy == args[0];
+                  }
+                  if ("hashCode".equals(name)) {
+                    return System.identityHashCode(proxy);
+                  }
+                  try {
+                    return method.invoke(connection, args);
+                  } catch (InvocationTargetException e) {
+                    throw e.getTargetException();
+                  }
+                });
+    DataSource singleConnectionDataSource =
+        new DriverDataSource() {
+          @Override
+          public Connection getConnection() {
+            return nonClosingConnection;
+          }
+        };
+    return new JdbcHandle(singleConnectionDataSource) {
       @Override
       public void close() throws IOException {
         try {

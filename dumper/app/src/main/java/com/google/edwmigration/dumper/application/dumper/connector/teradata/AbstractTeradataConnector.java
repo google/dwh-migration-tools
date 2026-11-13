@@ -20,7 +20,6 @@ import static com.google.edwmigration.dumper.application.dumper.ConnectorArgumen
 import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
 import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
 import static com.google.edwmigration.dumper.application.dumper.connector.teradata.TeradataUtils.determineTransactionMode;
-import static org.springframework.dao.support.DataAccessUtils.nullableSingleResult;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -39,6 +38,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcC
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorProperty;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
 import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
@@ -49,7 +49,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -57,10 +56,6 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.RowMapperResultSetExtractor;
-import org.springframework.jdbc.core.SingleColumnRowMapper;
 
 /**
  * Note that connecting to any Teradata database requires their JDBC driver (not included here for
@@ -136,11 +131,17 @@ public abstract class AbstractTeradataConnector extends AbstractJdbcConnector {
     private ResultSetExtractor<Summary> newCountedResultSetExtractor(
         @Nonnull ByteSink sink, @Nonnull Connection connection) throws SQLException {
       if (sqlCount != null) {
-        // It's a lot of infrastructure, but we don't have to write it.
-        RowMapper<Long> rowMapper = new SingleColumnRowMapper<>(Long.class);
-        ResultSetExtractor<List<Long>> extractor = new RowMapperResultSetExtractor<>(rowMapper);
-        List<Long> results = doSelect(connection, extractor, sqlCount);
-        Long count = nullableSingleResult(results);
+        Long count =
+            doSelect(
+                connection,
+                rs -> {
+                  if (!rs.next()) {
+                    return null;
+                  }
+                  long value = rs.getLong(1);
+                  return rs.wasNull() ? null : value;
+                },
+                sqlCount);
         if (count != null) {
           return newCsvResultSetExtractor(sink, count);
         }

@@ -24,6 +24,7 @@ import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.OracleStatsQuery;
 import com.google.edwmigration.dumper.application.dumper.connector.oracle.QueryGroup;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
@@ -41,7 +42,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.commons.csv.CSVFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 @ParametersAreNonnullByDefault
 public class StatsJdbcTask extends AbstractJdbcTask<Summary> {

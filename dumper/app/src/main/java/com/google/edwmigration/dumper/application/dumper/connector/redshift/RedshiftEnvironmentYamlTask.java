@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector.redshift;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
@@ -31,7 +32,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 public class RedshiftEnvironmentYamlTask extends AbstractJdbcTask<Void> {
 
