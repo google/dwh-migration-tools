@@ -109,6 +109,7 @@ public class ConnectorArguments extends DefaultArguments {
   public static final String OPT_OUTPUT = "output";
   public static final String OPT_CONFIG = "config";
   public static final String OPT_ASSESSMENT = "assessment";
+  public static final String OPT_SANITIZE_CSV = "sanitize-csv";
   public static final String OPT_ORACLE_SID = "oracle-sid";
   public static final String OPT_ORACLE_SERVICE = "oracle-service";
 
@@ -332,6 +333,14 @@ public class ConnectorArguments extends DefaultArguments {
           .describedAs("cw-dump.zip");
   private final OptionSpec<Void> optionOutputContinue =
       parser.accepts("continue", "Continues writing a previous output file.");
+  private final OptionSpec<Void> optionSanitizeCsv =
+      parser.accepts(
+          OPT_SANITIZE_CSV,
+          "In CSV files written from JDBC query results, prefix text values that start with"
+              + " =, +, -, @, tab or carriage return with a single quote, so that spreadsheet"
+              + " applications show them as text. This changes the exported values: use it only"
+              + " for output that will be read by hand, not for output that will be uploaded for"
+              + " assessment or translation.");
 
   /**
    * (Deprecated) earliest timestamp of logs to extract.
@@ -920,6 +929,10 @@ public class ConnectorArguments extends DefaultArguments {
     return getOptions().has(optionDryrun);
   }
 
+  public boolean isSanitizeCsv() {
+    return getOptions().has(optionSanitizeCsv);
+  }
+
   /**
    * Returns the trimmed value of --query-log-earliest-timestamp, which is a date or timestamp in
    * the form yyyy-MM-dd or yyyy-MM-dd HH:mm[:ss[.ffffff]], with a space or 'T' before the time. A
@@ -1272,6 +1285,11 @@ public class ConnectorArguments extends DefaultArguments {
             .add(OPT_SPARK_HISTORY_SERVICE_NAMES, getSparkHistoryServiceNames())
             .add(OPT_ASSESSMENT, isAssessment())
             .add(OPT_TELEMETRY, isTelemetryOn());
+    if (isSanitizeCsv()) {
+      // Added only when set, so that the default output stays the same.
+      toStringHelper.add(OPT_SANITIZE_CSV, true);
+    }
+
     getConnectorProperties().getDefinitionMap().entrySet().stream()
         .filter(entry -> !excludeQueries || !entry.getKey().contains(".query"))
         .forEach(entry -> toStringHelper.add(entry.getKey(), entry.getValue()));
