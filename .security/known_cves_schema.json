@@ -3,31 +3,81 @@
   "title": "Known vulnerabilities exceptions report",
   "type": "array",
   "items": {
-    "type": "object",
-    "properties": {
-      "CVE": {
-        "type": "string",
-        "description": "The Common Vulnerabilities and Exposures Id. https://www.cve.org/",
-        "pattern": "^CVE-\\d{4}-\\d{4,}$"
+    "oneOf": [
+      {
+        "type": "object",
+        "description": "An open finding that is known and tracked.",
+        "properties": {
+          "CVE": {
+            "type": "string",
+            "description": "The Common Vulnerabilities and Exposures Id. https://www.cve.org/",
+            "pattern": "^CVE-\\d{4}-\\d{4,}$"
+          },
+          "artifact": {
+            "type": "string",
+            "description": "The Maven style artifact id (group:artifact:version) the finding is reported on. The daily scan matches it exactly."
+          },
+          "justification": {
+            "type": "string",
+            "description": "The reason why this vulnerability does not impact the tools."
+          },
+          "expiration_date": {
+            "type": "string",
+            "format": "date",
+            "description": "The date (YYYY-MM-DD) when this waiver expires and must be reviewed."
+          }
+        },
+        "required": [
+          "CVE",
+          "artifact",
+          "justification"
+        ],
+        "additionalProperties": false
       },
-      "artifact": {
-        "type": "string",
-        "description": "The Maven style artifact id. (group:artifact:version)"
-      },
-      "justification": {
-        "type": "string",
-        "description": "The reason why this vulnerability does not impact the tools."
-      },
-      "expiration_date": {
-        "type": "string",
-        "format": "date",
-        "description": "The date (YYYY-MM-DD) when this waiver expires and must be reviewed."
+      {
+        "type": "object",
+        "description": "A false positive of Dependency-Check's CPE matching. Read only by the daily scan.",
+        "properties": {
+          "false_positive": {
+            "type": "string",
+            "description": "A short title of the rule, shown in the daily scan's job summary."
+          },
+          "artifacts": {
+            "type": "array",
+            "description": "group:artifact (any version), group:artifact:version (that version only), or the file name of a jar without Maven coordinates.",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "advisories": {
+            "type": "array",
+            "description": "The advisory IDs the rule drops on these artifacts.",
+            "items": {
+              "type": "string",
+              "pattern": "^(CVE-\\d{4}-\\d{4,}|GHSA(-[23456789cfghjmpqrvwx]{4}){3})$"
+            },
+            "minItems": 1
+          },
+          "justification": {
+            "type": "string",
+            "description": "Why these matches are false positives."
+          },
+          "expiration_date": {
+            "type": "string",
+            "format": "date",
+            "description": "The date (YYYY-MM-DD) when this rule expires and must be reviewed."
+          }
+        },
+        "required": [
+          "false_positive",
+          "artifacts",
+          "advisories",
+          "justification",
+          "expiration_date"
+        ],
+        "additionalProperties": false
       }
-    },
-    "required": [
-      "CVE",
-      "artifact",
-      "justification"
     ]
   }
 }
