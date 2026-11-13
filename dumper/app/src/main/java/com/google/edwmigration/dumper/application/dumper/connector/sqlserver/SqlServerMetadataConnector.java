@@ -16,6 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.sqlserver;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_DATABASE;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.SQL_SERVER_HOST_DELIMITERS;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
+
 import com.google.auto.service.AutoService;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabaseForConnection;
@@ -106,11 +112,15 @@ public class SqlServerMetadataConnector extends AbstractJdbcConnector
     String url = arguments.getUri();
     if (url == null) {
       StringBuilder buf = new StringBuilder("jdbc:sqlserver://");
-      buf.append(arguments.getHost("localhost"));
+      buf.append(
+          checkUrlComponent(OPT_HOST, arguments.getHost("localhost"), SQL_SERVER_HOST_DELIMITERS));
       buf.append(':').append(arguments.getPort(OPT_PORT_DEFAULT));
       buf.append(";encrypt=true;loginTimeout=30");
       List<String> databases = arguments.getDatabases();
-      if (!databases.isEmpty()) buf.append(";database=").append(databases.get(0));
+      if (!databases.isEmpty()) {
+        buf.append(";database=")
+            .append(checkUrlComponent(OPT_DATABASE, databases.get(0), DELIMITERS));
+      }
       url = buf.toString();
     }
 
