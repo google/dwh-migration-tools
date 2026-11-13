@@ -62,7 +62,7 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
  * dependency that is loaded by name only when JDBC is selected, and the dumper still compiles and
  * runs on Java 8 without it. On Java 16 and above, the JVM option {@code
  * --add-opens=java.base/java.nio=ALL-UNNAMED} is preferred but not required: with it, the driver
- * uses off-heap Arrow buffers, and without it, driver 3.4.4 falls back to Arrow buffers on the Java
+ * uses off-heap Arrow buffers, and without it, driver 3.4.5 falls back to Arrow buffers on the Java
  * heap ({@code DatabricksBufferAllocator}).
  */
 @ThreadSafe
