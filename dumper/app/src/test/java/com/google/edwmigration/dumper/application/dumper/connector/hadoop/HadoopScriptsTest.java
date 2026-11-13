@@ -16,30 +16,40 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.hadoop;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
-import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class HadoopScriptsTest {
-  Path extractedFile;
+  private static final long PROBE_TIMEOUT_SECONDS = 60;
 
-  @BeforeClass
-  public static void setUp() {
-    ScriptTmpDirCleanup.cleanupAfterAllTestsAreFinished();
-  }
+  @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+  Path extractedFile;
 
   @After
   public void tearDown() throws IOException {
@@ -122,6 +132,50 @@ public class HadoopScriptsTest {
     ImmutableList<String> osReleaseScript =
         readAllLines(HadoopScripts.extractSingleLineScripts().get("os-release"));
     assertEquals(ImmutableList.of("#!/bin/bash", "", "cat /etc/os-release"), osReleaseScript);
+  }
+
+  @Test
+  public void scriptDir_isInSystemTemporaryDirectory() {
+    Path systemTemporaryDir = Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath();
+
+    Path scriptDir = HadoopScripts.getScriptDir().toAbsolutePath();
+
+    assertEquals(systemTemporaryDir, scriptDir.getParent());
+  }
+
+  @Test
+  public void scriptDir_isAccessibleOnlyByOwner() throws IOException {
+    assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+
+    Path scriptDir = HadoopScripts.getScriptDir();
+
+    assertEquals(
+        ImmutableSet.of(OWNER_READ, OWNER_WRITE, OWNER_EXECUTE),
+        Files.getPosixFilePermissions(scriptDir));
+  }
+
+  @Test
+  public void scriptDir_jvmExits_isDeleted() throws Exception {
+    File workingDir = temporaryFolder.newFolder("working-dir");
+    Path scriptDirRecord = temporaryFolder.getRoot().toPath().resolve("script-dir.txt");
+    Path javaBinary = Paths.get(System.getProperty("java.home"), "bin", "java");
+    Process probe =
+        new ProcessBuilder(
+                javaBinary.toString(),
+                "-cp",
+                System.getProperty("java.class.path"),
+                HadoopScriptsExitProbe.class.getName(),
+                scriptDirRecord.toString())
+            .directory(workingDir)
+            .redirectErrorStream(true)
+            .redirectOutput(temporaryFolder.newFile("probe.log"))
+            .start();
+
+    assertTrue("Probe did not exit.", probe.waitFor(PROBE_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+    assertEquals(0, probe.exitValue());
+    Path scriptDir = Paths.get(new String(Files.readAllBytes(scriptDirRecord), UTF_8));
+    assertFalse("Directory still exists: " + scriptDir, Files.exists(scriptDir));
+    assertEquals(0, workingDir.list().length);
   }
 
   private static ImmutableList<String> readAllLines(Path path) {
