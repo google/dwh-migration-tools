@@ -54,20 +54,22 @@ public class TelemetryWriter {
   public static void write(FileSystem fileSystem, ClientTelemetry clientTelemetry)
       throws IOException {
 
-    String cacheDir = createDirPathIfNotExist();
+    write(fileSystem, clientTelemetry, createDirPathIfNotExist());
+  }
 
-    Path PathToCachedCumulativeSummary = Paths.get(cacheDir + ALL_DUMPER_RUN_METRICS);
+  static void write(FileSystem fileSystem, ClientTelemetry clientTelemetry, Path cacheDir) {
+    Path PathToCachedCumulativeSummary = cacheDir.resolve(ALL_DUMPER_RUN_METRICS);
 
     try {
       String serializedMetrics = MAPPER.writeValueAsString(clientTelemetry);
       appendToCacheOnDisk(PathToCachedCumulativeSummary, serializedMetrics);
-      copyCachedAsCurrent(fileSystem, PathToCachedCumulativeSummary);
+      writeCurrentRunToZip(fileSystem, serializedMetrics);
     } catch (JsonProcessingException e) {
       logger.warn("Failed to serialize dumperRunMetrics", e);
     }
   }
 
-  private static String createDirPathIfNotExist() throws IOException {
+  private static Path createDirPathIfNotExist() throws IOException {
     AppDirs appDirs = AppDirsFactory.getInstance();
 
     String appName = "DWH-Dumper";
@@ -80,28 +82,18 @@ public class TelemetryWriter {
       logger.info("Created application cache directory: {}", applicationCacheDirPath);
     }
 
-    return cacheDir;
+    return applicationCacheDirPath;
   }
 
-  private static void copyCachedAsCurrent(FileSystem zipFs, Path externalLogPath) {
+  /** Writes the record of the current run, and no earlier runs, into the output ZIP. */
+  private static void writeCurrentRunToZip(FileSystem zipFs, String serializedMetrics) {
     Path snapshotInZipPath = zipFs.getPath(DUMPER_RUN_METRICS);
-    try {
-      Path parentInZip = snapshotInZipPath.getParent();
-      if (parentInZip != null && java.nio.file.Files.notExists(parentInZip)) {
-        java.nio.file.Files.createDirectories(parentInZip);
-      }
-      java.nio.file.Files.copy(
-          externalLogPath, snapshotInZipPath, StandardCopyOption.REPLACE_EXISTING);
-      logger.debug(
-          "Copied cumulative run summary from {} to {} in the output ZIP.",
-          externalLogPath,
-          snapshotInZipPath);
+    try (BufferedWriter writer = newBufferedWriter(snapshotInZipPath, StandardCharsets.UTF_8)) {
+      writer.write(serializedMetrics);
+      writer.newLine();
+      logger.debug("Wrote current run summary to {} in the output ZIP.", snapshotInZipPath);
     } catch (IOException e) {
-      logger.warn(
-          "Failed to copy cumulative summary log {} to ZIP at {}",
-          externalLogPath,
-          snapshotInZipPath,
-          e);
+      logger.warn("Failed to write current run summary to ZIP at {}", snapshotInZipPath, e);
     }
   }
 
