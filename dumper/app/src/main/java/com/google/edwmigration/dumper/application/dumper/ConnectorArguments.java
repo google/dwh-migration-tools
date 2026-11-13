@@ -116,6 +116,8 @@ public class ConnectorArguments extends DefaultArguments {
   // Cloudera
   public static final String OPT_YARN_APPLICATION_TYPES = "yarn-application-types";
   public static final String OPT_SPARK_HISTORY_SERVICE_NAMES = "spark-history-service-names";
+  public static final String OPT_CLOUDERA_DISABLE_TLS_VALIDATION =
+      "cloudera-disable-tls-validation";
   public static final String OPT_PAGINATION_PAGE_SIZE = "pagination-page-size";
 
   // redshift.
@@ -583,6 +585,11 @@ public class ConnectorArguments extends DefaultArguments {
           .ofType(String.class)
           .withValuesSeparatedBy(',')
           .describedAs("name1,name2,...");
+  private final OptionSpec<Void> optionClouderaDisableTlsValidation =
+      parser.accepts(
+          OPT_CLOUDERA_DISABLE_TLS_VALIDATION,
+          "Disables TLS certificate and hostname validation for Cloudera Manager and Knox."
+              + " Set to accept self-signed certificates.");
   private final OptionSpec<Integer> optionPaginationPageSize =
       parser
           .accepts(OPT_PAGINATION_PAGE_SIZE, "Set page size for API requests.")
@@ -1151,6 +1158,10 @@ public class ConnectorArguments extends DefaultArguments {
 
   public List<String> getSparkHistoryServiceNames() {
     return ImmutableList.copyOf(getOptions().valuesOf(optionSparkHistoryServiceNames));
+  }
+
+  public boolean hasClouderaDisableTlsValidation() {
+    return getOptions().has(optionClouderaDisableTlsValidation);
   }
 
   /** Checks if the property was specified on the command-line. */

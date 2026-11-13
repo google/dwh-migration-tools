@@ -61,6 +61,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
     arg = ConnectorArguments.OPT_CLUSTER,
     description = "The name of Cloudera's cluster.",
     required = "Only if you need to dump data for a single Cloudera cluster")
+@RespectsInput(
+    order = 500,
+    arg = ConnectorArguments.OPT_CLOUDERA_DISABLE_TLS_VALIDATION,
+    description = "Disables TLS certificate and hostname validation for Cloudera Manager and Knox.",
+    required = "Only if the cluster uses certificates that the JVM trust store does not accept")
 public class ClouderaManagerConnector extends AbstractConnector {
 
   private static final String FORMAT_NAME = "cloudera-manager.dump.zip";
@@ -122,10 +127,14 @@ public class ClouderaManagerConnector extends AbstractConnector {
     String user = arguments.getUser();
     String password = arguments.getPasswordOrPrompt();
 
+    boolean disableTlsValidation = arguments.hasClouderaDisableTlsValidation();
+
     CloseableHttpClient clouderaManagerClient =
-        ClouderaHttpClientFactory.createClouderaManagerClient(apiUri, user, password);
+        ClouderaHttpClientFactory.createClouderaManagerClient(
+            apiUri, user, password, disableTlsValidation);
     CloseableHttpClient basicAuthClient =
-        ClouderaHttpClientFactory.createBasicAuthClient(user, password);
+        ClouderaHttpClientFactory.createBasicAuthClient(
+            apiUri, user, password, disableTlsValidation);
     ClouderaManagerHandle handle =
         new ClouderaManagerHandle(apiUri, clouderaManagerClient, basicAuthClient);
 
