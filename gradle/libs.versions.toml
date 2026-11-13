@@ -82,7 +82,7 @@ dnsjava = "3.6.3"
 nimbus-jose-jwt = "10.6"
 io-grpc = "1.76.1"
 xerces = "2.12.2"
-zookeeper = "3.9.5"
+zookeeper = "3.9.6"
 common-configuration2 = "2.14.0"
 
 [libraries]
