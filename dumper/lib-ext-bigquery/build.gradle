@@ -18,6 +18,13 @@ plugins {
     id 'dwh-migration-dumper.java-library-conventions'
 }
 
+configurations {
+    configureEach {
+        exclude group: 'io.grpc', module: 'grpc-xds'
+        exclude group: 'io.grpc', module: 'grpc-googleapis'
+    }
+}
+
 dependencies {
     implementation "com.swrve:rate-limited-logger"
     implementation "com.google.cloud:google-cloud-bigquery"
@@ -25,6 +32,7 @@ dependencies {
     //Overrides for google-cloud-bigquery transient deps
     implementation platform(libs.opentelemetry.bom) // align transitive opentelemetry modules for vulnerabilities update
     implementation libs.grpc.netty.shaded // explicit version for vulnerabilities update
+    implementation platform(libs.grpc.bom) // align transitive grpc modules for vulnerabilities update
     implementation libs.grpc.protobuf // explicit version for vulnerabilities update
     implementation libs.grpc.stub // explicit version for vulnerabilities update
     implementation libs.grpc.auth // explicit version for vulnerabilities update

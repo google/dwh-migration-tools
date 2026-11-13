@@ -46,6 +46,10 @@ configurations {
         // We use logback-classic instead of simple
         exclude group: 'org.slf4j', module: 'slf4j-simple'
 
+        // DirectPath xDS routing is unused; grpc-xds >= 1.83 pulls in CEL and protobuf-java 4.x
+        exclude group: 'io.grpc', module: 'grpc-xds'
+        exclude group: 'io.grpc', module: 'grpc-googleapis'
+
         // hadoop-auth pins Apache Kerby 2.0.3 (CVE-2026-57914). Kerby has no BOM and
         // Hadoop pulls seven modules, so align the whole group instead of pinning each.
         resolutionStrategy.eachDependency { details ->
@@ -111,13 +115,13 @@ dependencies {
     implementation platform(libs.opentelemetry.bom) // align transitive opentelemetry modules for vulnerabilities update
     runtimeOnly libs.opentelemetry.api.incubator // not in the BOM; must match the SDK version
     implementation libs.grpc.netty.shaded // explicit version for vulnerabilities update
+    implementation platform(libs.grpc.bom) // align transitive grpc modules for vulnerabilities update
     implementation libs.grpc.protobuf // explicit version for vulnerabilities update
     implementation libs.grpc.stub // explicit version for vulnerabilities update
     implementation libs.grpc.auth // explicit version for vulnerabilities update
     implementation libs.grpc.opentelemetry // explicit version for vulnerabilities update
     implementation libs.grpc.services // explicit version for vulnerabilities update
     implementation libs.grpc.rls // explicit version for vulnerabilities update
-    implementation libs.grpc.xds // explicit version for vulnerabilities update
     implementation libs.grpc.bom // explicit version for vulnerabilities update
     implementation libs.org.json // explicit version for vulnerabilities update
 

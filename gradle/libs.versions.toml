@@ -79,7 +79,7 @@ cloudrun = "0.83.0"
 netty-handler = "4.1.137.Final"
 dnsjava = "3.6.3"
 nimbus-jose-jwt = "10.6"
-io-grpc = "1.76.1"
+io-grpc = "1.85.0"
 xerces = "2.12.2"
 zookeeper = "3.9.6"
 common-configuration2 = "2.14.0"
@@ -115,7 +115,6 @@ grpc-auth = { module = "io.grpc:grpc-auth", version.ref = "io-grpc" }
 grpc-opentelemetry = { module = "io.grpc:grpc-opentelemetry", version.ref = "io-grpc" }
 grpc-services = { module = "io.grpc:grpc-services", version.ref = "io-grpc" }
 grpc-rls = { module = "io.grpc:grpc-rls", version.ref = "io-grpc" }
-grpc-xds = { module = "io.grpc:grpc-xds", version.ref = "io-grpc" }
 grpc-bom = { module = "io.grpc:grpc-bom", version.ref = "io-grpc" }
 google-cloud-bigquerydatatransfer = { module = "com.google.cloud:google-cloud-bigquerydatatransfer", version.ref = "google-cloud-bigquerydatatransfer" }
 google-cloud-kms = { module = "com.google.cloud:google-cloud-kms", version.ref = "google-cloud-kms" }
