@@ -4,6 +4,14 @@ Lightweight, native Snowflake discovery scripts to collect workload structure, h
 
 Zero Java runtime, zero SQL text, table/schema names, or PII extracted. Automatically falls back to `IsMultiObject = FALSE` on Snowflake Standard Edition (inaccessible `ACCESS_HISTORY`). SQL templates in `sql/` are the single source of truth across all options, producing `snowflake_assessment_tco.zip`.
 
+## Prerequisites (Snowflake Permissions)
+
+Before running any extraction option, ensure your Snowflake role has:
+
+- **Account Usage:** `IMPORTED PRIVILEGES` on database `SNOWFLAKE` (to read `SNOWFLAKE.ACCOUNT_USAGE` views; e.g., `ACCOUNTADMIN`, `SYSADMIN`, or a custom role granted `GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE <role>;`).
+- **Warehouse:** `USAGE` on a virtual warehouse (X-Small is sufficient for 14-day discovery; Small or Medium recommended for >30 days).
+- **Database, Schema & Stage *(Options 1 & 2 only)*:** `USAGE` on the target database and schema, `CREATE STAGE` on that schema (or access to an existing `BQMS_TCO_DISCOVERY_STAGE`), plus `CREATE NOTEBOOK` on the schema for Option 2.
+
 ## Choose an Option
 
 | Option | How you run it | Privileges | Output |
