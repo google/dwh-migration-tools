@@ -52,6 +52,9 @@ sourceSets {
 dependencies {
     api libs.libthrift
 
+    //Overrides for libthrift transient deps
+    runtimeOnly libs.httpclient5 // explicit version for vulnerabilities update
+
     implementation libs.guava
     implementation libs.jackson.databind
 
