@@ -123,6 +123,40 @@ public class JsonResponseFileTest {
   }
 
   @Test
+  public void to_arguments_nonTextValues() throws IOException {
+    check("port: 5432\n", "--port", "5432");
+    check(
+        "{'port': 5432, 'keep-failed-logs': true}", "--port", "5432", "--keep-failed-logs", "true");
+    check("{'driver': ['a.jar', 2]}", "--driver", "a.jar:2");
+  }
+
+  @Test
+  public void to_arguments_nullValue_givesOptionAlone() throws IOException {
+    check("assessment:\n", "--assessment");
+    check("{'assessment': null}", "--assessment");
+  }
+
+  @Test
+  public void from_arguments_definitionWithoutEquals_isNotSaved() throws IOException {
+    String[] args = {"--connector", "test", "-Dflag"};
+
+    String saved = new ObjectMapper().writeValueAsString(JsonResponseFile.from_arguments(args));
+
+    assertEquals("{\"connector\":\"test\"}", saved);
+  }
+
+  @Test
+  public void from_arguments_definitionInNextArgument() throws IOException {
+    String[] args = {"-D", "redshift.some.prop=some value"};
+
+    String saved = new ObjectMapper().writeValueAsString(JsonResponseFile.from_arguments(args));
+
+    assertArrayEquals(
+        new String[] {"-Dredshift.some.prop=some value"},
+        JsonResponseFile.to_arguments(saved).toArray(new String[] {}));
+  }
+
+  @Test
   public void addResponseFiles_emptyArray() throws IOException {
     // Act
     String[] result = JsonResponseFile.addResponseFiles(new String[0]);
