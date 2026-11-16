@@ -150,6 +150,48 @@ public class MetastoreConnectionDetailsScriptTest {
   }
 
   @Test
+  public void run_parenthesizedPropertiesWithAtInCredentials_valuesRedacted() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://address=(host=<redacted>)(user=<redacted>)(password=<redacted>)/metastore",
+        "jdbc:mysql://address=(host=metastore-host)(user=hive@corp)(password=Se@cret1)/metastore");
+  }
+
+  @Test
+  public void run_oracleUrlWithQueryContainingAt_queryRedactedAndHostKept() throws Exception {
+    assertRedacted(
+        "jdbc:oracle:thin:@metastore-host:1521:ORCL?user=<redacted>&password=<redacted>",
+        "jdbc:oracle:thin:hive/Se@cret1@metastore-host:1521:ORCL?user=hive@corp&password=Se@cret1");
+  }
+
+  @Test
+  public void run_oracleUrlWithSemicolonContainingAt_paramsRedactedAndHostKept() throws Exception {
+    assertRedacted(
+        "jdbc:oracle:thin:@metastore-host:1521:ORCL;user=<redacted>;password=<redacted>",
+        "jdbc:oracle:thin:@metastore-host:1521:ORCL;user=hive@corp;password=Se@cret1");
+  }
+
+  @Test
+  public void run_oracleTnsDescriptorContainingAt_descriptorRedacted() throws Exception {
+    assertRedacted(
+        "jdbc:oracle:thin:@(DESCRIPTION=<redacted>(ADDRESS=<redacted>(HOST=<redacted>)(PORT=<redacted>))"
+            + "(CONNECT_DATA=<redacted>(SERVICE_NAME=<redacted>)))",
+        "jdbc:oracle:thin:hive/Se@cret1@(DESCRIPTION=(ADDRESS=(HOST=metastore-host)(PORT=1521))"
+            + "(CONNECT_DATA=(SERVICE_NAME=svc@corp)))");
+  }
+
+  @Test
+  public void run_oracleUrlWithParenthesizedAt_notTruncated() throws Exception {
+    assertRedacted("jdbc:oracle:thin:@(host@corp)", "jdbc:oracle:thin:hive/Se@cret1@(host@corp)");
+  }
+
+  @Test
+  public void run_oraclePasswordWithQuestionSemicolonAndParens_removed() throws Exception {
+    assertRedacted(
+        "jdbc:oracle:thin:@metastore-host:1521:ORCL",
+        "jdbc:oracle:thin:hive/p?s;s(a@b)@metastore-host:1521:ORCL");
+  }
+
+  @Test
   public void run_otherLines_unchanged() throws Exception {
     String output = "+------+\n|  set  |\n+------+\nhive.execution.engine=tez\n+------+\n";
     Files.write(beelineOutput, output.getBytes(UTF_8));
