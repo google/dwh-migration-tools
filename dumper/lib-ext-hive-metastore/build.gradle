@@ -34,6 +34,8 @@ configurations {
         exclude group: "org.slf4j", module: "slf4j-reload4j"
         exclude group: "org.bouncycastle", module: "bcprov-jdk15on" // We use 18, which is the latest and support JDK 1.8+
         exclude group: "javax.servlet.jsp", module: "jsp-api"
+        exclude group: "io.netty", module: "netty"
+        exclude group: "org.apache.hadoop", module: "hadoop-yarn-server-common"
 
         // hadoop-auth pins Apache Kerby 2.0.3 (CVE-2026-57914); align the whole group.
         resolutionStrategy.eachDependency { details ->
