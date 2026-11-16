@@ -8,15 +8,6 @@
     There is no dependency on Spring Security in the Dumper tools.
   expiration_date: 2027-01-31
 
-- CVE: CVE-2024-6763
-  artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
-  justification: >
-    The Dumper is a CLI app, not a public-facing web server. It does not accept or process arbitrary URIs from untrusted
-    external users. The attack vector for CVE-2024-6763 requires an attacker to supply 
-    a malformed URI to be parsed by the server; The Dumper does not expose an interface for such input.
-    Jetty leaves the distribution with PR #1222; delete this entry when it is merged.
-  expiration_date: 2026-12-31
-
 - CVE: CVE-2026-1225
   artifact: ch.qos.logback:logback-core:1.3.16
   justification: >
@@ -41,27 +32,6 @@
     (Java 11+ baseline) is tracked in b/579421681.
   expiration_date: 2027-01-31
 
-- CVE: CVE-2026-45292
-  artifact: io.opentelemetry:opentelemetry-api:1.52.0
-  justification: >
-    Not a false positive. Fixed in opentelemetry-api 1.67.0, but opentelemetry-api, -sdk and -api-incubator
-    resolve to mismatched versions through google-cloud-bigquery and grpc, so the fix needs an
-    opentelemetry-bom alignment rather than a single pin. Accepted temporarily to unblock PR #1195;
-    tracked in b/579421681.
-  expiration_date: 2027-01-31
-
-- CVE: CVE-2026-118259
-  artifact: io.opentelemetry:opentelemetry-api:1.52.0
-  justification: >
-    Not a false positive. Fixed in opentelemetry-api 1.67.0, but opentelemetry-api, -sdk and -api-incubator
-    resolve to mismatched versions through google-cloud-bigquery and grpc, so the fix needs an
-    opentelemetry-bom alignment rather than a single pin. Accepted temporarily to unblock PR #1195;
-    tracked in b/579421681.
-  expiration_date: 2027-01-31
-
-
-# Open findings in libraries that other jars bundle. Not false positives: the shipped jar contains
-# the vulnerable code. Tracked in b/579421681; the expiry forces a review if they are still open.
 - CVE: CVE-2025-58056
   artifact: io.grpc:grpc-netty-shaded:1.76.1
   justification: >
@@ -275,24 +245,10 @@
 - CVE: CVE-2026-59171
   artifact: org.json:json:20240303
   justification: >
-    Not a false positive. databricks-jdbc 3.4.4 bundles org.json 20240303 (relocated to
+    Not a false positive. databricks-jdbc 3.4.5 bundles org.json 20240303 (relocated to
     com.databricks.internal.json); fixed in 20260719. The standalone json jar is fixed (20260814,
     PR #1221); the bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
   expiration_date: 2026-12-31
-- CVE: CVE-2026-102554
-  artifact: com.google.guava:guava:33.0.0-jre
-  justification: >
-    Not a false positive. databricks-jdbc 3.4.4 bundles guava 33.0.0-jre; the standalone guava jar
-    (33.7.2-jre) is fixed. The bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-102554
-  artifact: com.google.guava:guava:32.0.1-jre
-  justification: >
-    Not a false positive. hadoop-shaded-guava 1.4.0 bundles guava 32.0.1-jre; the standalone guava jar
-    (33.7.2-jre) is fixed. The bundled copy needs a hadoop-thirdparty upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-
-# Open findings in shipped jars, found by the full scan of the distribution. Tracked in b/579421681.
 - CVE: CVE-2026-59739
   artifact: org.apache.zookeeper:zookeeper:3.9.5
   justification: >
@@ -328,12 +284,6 @@
     server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
     in b/579421681.
   expiration_date: 2026-12-31
-- CVE: CVE-2026-71290
-  artifact: org.apache.httpcomponents.client5:httpclient5:5.6.3
-  justification: >
-    Not a false positive. HostnameVerificationPolicy.BUILTIN has no effect in the async client of
-    httpclient5 5.4 to 5.6.3; fixed in 5.6.4. Tracked in b/579421681.
-  expiration_date: 2026-12-31
 - CVE: CVE-2026-3293
   artifact: net.snowflake:snowflake-jdbc:3.27.1
   justification: >
@@ -360,79 +310,6 @@
     5.3.49; the Dumper does not bind untrusted property paths. No open-source 5.3.x release has the fix;
     6.2.x needs Java 17, and the Java 8 alternative is removing Spring. Tracked in b/579421681.
   expiration_date: 2027-01-31
-
-# Jetty leaves the distribution with PR #1222; delete these entries when it is merged. Dependency-Check
-# reports each advisory on jetty-server and on the group of Jetty jars it bundles with jetty-io.
-- CVE: CVE-2025-11143
-  artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2025-11143
-  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-2332
-  artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-2332
-  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-5795
-  artifact: org.eclipse.jetty:jetty-security:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-5795
-  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-6790
-  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-6790
-  artifact: org.eclipse.jetty:jetty-http:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-10050
-  artifact: org.eclipse.jetty:jetty-security:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-10050
-  artifact: org.eclipse.jetty:jetty-server:9.4.58.v20250814
-  justification: >
-    Not a false positive. Jetty 9.4 is end-of-life and 9.4.58 is the last public release. Jetty is
-    pulled in by hadoop-common and is not used by the Dumper; PR #1222 removes it from the distribution.
-    Tracked in b/579421681.
-  expiration_date: 2026-12-31
 
 # ===================================================================================================
 # False positives of Dependency-Check's CPE matching: the CPE names the wrong product, implementation,
@@ -511,48 +388,6 @@
     codec-http3, transport-sctp), per the affected packages and ranges of the GitHub-reviewed advisory.
     The rule names the exact version because the reason depends on the bundled netty. The advisories
     that do affect 4.1.124 are listed as open findings above.
-  expiration_date: 2027-05-31
-
-- false_positive: "databricks-jdbc: netty advisories on the bundled netty-buffer and netty-common"
-  artifacts:
-    - io.netty:netty-buffer:4.2.15.Final
-    - io.netty:netty-common:4.2.15.Final
-  advisories:
-    - CVE-2026-44891
-    - CVE-2026-55831
-    - CVE-2026-55833
-    - CVE-2026-55851
-    - CVE-2026-56745
-    - CVE-2026-56746
-    - CVE-2026-56816
-    - CVE-2026-56817
-    - CVE-2026-56818
-    - CVE-2026-56819
-    - CVE-2026-56820
-    - CVE-2026-56821
-    - CVE-2026-56822
-    - CVE-2026-59898
-    - CVE-2026-59899
-    - CVE-2026-59900
-    - CVE-2026-59901
-    - CVE-2026-59902
-    - CVE-2026-59903
-    - CVE-2026-59919
-    - CVE-2026-59920
-    - CVE-2026-59921
-    - CVE-2026-62380
-    - CVE-2026-73507
-    - CVE-2026-73508
-    - CVE-2026-75595
-    - CVE-2026-75596
-    - CVE-2026-89044
-  justification: >
-    databricks-jdbc 3.4.4 bundles only netty-buffer and netty-common 4.2.15.Final (relocated to
-    com.databricks.internal.io.netty); the rule names that version because it describes that copy.
-    Dependency-Check matches the netty CPE, which covers every netty module. The advisories listed are
-    in other netty modules (handler, codec-*, transport-sctp, resolver-dns, handler-ssl-ocsp, codec-
-    http3), per the GitHub-reviewed advisories, or, for CVE-2026-62380 and CVE-2026-89044, in codec-
-    socks and codec-http per their descriptions.
   expiration_date: 2027-05-31
 
 - false_positive: "Apache Arrow Java: C and C++ advisories"
