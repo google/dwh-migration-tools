@@ -272,6 +272,21 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
   }
 
   @Test
+  public void connector_generatesExpectedSql_withDatabaseContainingBackslashAndQuote()
+      throws IOException {
+    Map<String, String> actualSqls = collectSqlStatements("--database", "db\\' OR 1=1 --");
+
+    assertEquals(
+        "SELECT catalog_name, schema_name FROM SNOWFLAKE.ACCOUNT_USAGE.SCHEMATA WHERE DELETED IS NULL AND catalog_name IN ('DB\\\\'' OR 1=1 --')",
+        actualSqls.get("schemata-au.csv"));
+    assertEquals(
+        "SELECT catalog_name, schema_name FROM \"DB\\' OR 1=1 --\".INFORMATION_SCHEMA.SCHEMATA",
+        actualSqls.get("schemata.csv"));
+    assertEquals(
+        "SHOW PRIMARY KEYS IN DATABASE \"DB\\' OR 1=1 --\"", actualSqls.get("primary_keys.csv"));
+  }
+
+  @Test
   public void connector_generatesExpectedSql_withIgnoreCloneOnlyDatabase() throws IOException {
     Map<String, String> actualSqls = collectSqlStatements("--ignore-clone-only-database");
 
@@ -449,6 +464,11 @@ public class SnowflakeMetadataConnectorTest extends AbstractSnowflakeConnectorEx
 
     assertEquals("'A''C\"'", SnowflakeMetadataConnector.identifierNameStringLiteral("a'c\""));
     assertEquals("'a''c\"'", SnowflakeMetadataConnector.identifierNameStringLiteral("\"a'c\"\""));
+
+    assertEquals("'A\\\\B'", SnowflakeMetadataConnector.identifierNameStringLiteral("a\\b"));
+    assertEquals("'A\\\\'''", SnowflakeMetadataConnector.identifierNameStringLiteral("a\\'"));
+    assertEquals("'a\\\\'''", SnowflakeMetadataConnector.identifierNameStringLiteral("\"a\\'\""));
+    assertEquals("'\"'", SnowflakeMetadataConnector.identifierNameStringLiteral("\""));
   }
 
   @Test
