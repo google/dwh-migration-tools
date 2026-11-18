@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -276,10 +277,16 @@ public class ClouderaManagerConnectorTest {
             mockStatic(ClouderaConnectorVerifier.class)) {
       CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
       httpClientFactory
-          .when(() -> ClouderaHttpClientFactory.createClouderaManagerClient(any(), any(), any()))
+          .when(
+              () ->
+                  ClouderaHttpClientFactory.createClouderaManagerClient(
+                      any(), any(), any(), anyBoolean()))
           .thenReturn(httpClient);
       httpClientFactory
-          .when(() -> ClouderaHttpClientFactory.createBasicAuthClient(any(), any()))
+          .when(
+              () ->
+                  ClouderaHttpClientFactory.createBasicAuthClient(
+                      any(), any(), any(), anyBoolean()))
           .thenReturn(httpClient);
 
       ConnectorArguments arguments =
@@ -302,10 +309,58 @@ public class ClouderaManagerConnectorTest {
       httpClientFactory.verify(
           () ->
               ClouderaHttpClientFactory.createClouderaManagerClient(
-                  any(URI.class), eq("user"), eq("password")));
+                  any(URI.class), eq("user"), eq("password"), eq(false)));
       httpClientFactory.verify(
-          () -> ClouderaHttpClientFactory.createBasicAuthClient(eq("user"), eq("password")));
+          () ->
+              ClouderaHttpClientFactory.createBasicAuthClient(
+                  any(URI.class), eq("user"), eq("password"), eq(false)));
       connectorVerifier.verify(() -> ClouderaConnectorVerifier.verify(any(), any()));
+    }
+  }
+
+  @Test
+  public void open_disableTlsValidationFlag_passedToBothClients() throws Exception {
+    try (MockedStatic<ClouderaHttpClientFactory> httpClientFactory =
+            mockStatic(ClouderaHttpClientFactory.class);
+        MockedStatic<ClouderaConnectorVerifier> connectorVerifier =
+            mockStatic(ClouderaConnectorVerifier.class)) {
+      CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+      httpClientFactory
+          .when(
+              () ->
+                  ClouderaHttpClientFactory.createClouderaManagerClient(
+                      any(), any(), any(), anyBoolean()))
+          .thenReturn(httpClient);
+      httpClientFactory
+          .when(
+              () ->
+                  ClouderaHttpClientFactory.createBasicAuthClient(
+                      any(), any(), any(), anyBoolean()))
+          .thenReturn(httpClient);
+
+      ConnectorArguments arguments =
+          new ConnectorArguments(
+              "--connector",
+              "cloudera-manager",
+              "--url",
+              "https://localhost",
+              "--user",
+              "user",
+              "--password",
+              "password",
+              "--" + ConnectorArguments.OPT_CLOUDERA_DISABLE_TLS_VALIDATION);
+
+      new ClouderaManagerConnector().open(arguments);
+
+      URI apiUri = URI.create("https://localhost");
+      httpClientFactory.verify(
+          () ->
+              ClouderaHttpClientFactory.createClouderaManagerClient(
+                  eq(apiUri), eq("user"), eq("password"), eq(true)));
+      httpClientFactory.verify(
+          () ->
+              ClouderaHttpClientFactory.createBasicAuthClient(
+                  eq(apiUri), eq("user"), eq("password"), eq(true)));
     }
   }
 
@@ -317,10 +372,16 @@ public class ClouderaManagerConnectorTest {
             mockStatic(ClouderaConnectorVerifier.class)) {
       CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
       httpClientFactory
-          .when(() -> ClouderaHttpClientFactory.createClouderaManagerClient(any(), any(), any()))
+          .when(
+              () ->
+                  ClouderaHttpClientFactory.createClouderaManagerClient(
+                      any(), any(), any(), anyBoolean()))
           .thenReturn(httpClient);
       httpClientFactory
-          .when(() -> ClouderaHttpClientFactory.createBasicAuthClient(any(), any()))
+          .when(
+              () ->
+                  ClouderaHttpClientFactory.createBasicAuthClient(
+                      any(), any(), any(), anyBoolean()))
           .thenReturn(httpClient);
 
       ConnectorArguments arguments =
@@ -348,9 +409,11 @@ public class ClouderaManagerConnectorTest {
       httpClientFactory.verify(
           () ->
               ClouderaHttpClientFactory.createClouderaManagerClient(
-                  any(URI.class), eq("user"), eq("password")));
+                  any(URI.class), eq("user"), eq("password"), eq(false)));
       httpClientFactory.verify(
-          () -> ClouderaHttpClientFactory.createBasicAuthClient(eq("user"), eq("password")));
+          () ->
+              ClouderaHttpClientFactory.createBasicAuthClient(
+                  any(URI.class), eq("user"), eq("password"), eq(false)));
       connectorVerifier.verify(() -> ClouderaConnectorVerifier.verify(any(), any()));
     }
   }

@@ -23,11 +23,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.List;
 import org.apache.http.StatusLine;
@@ -67,8 +69,12 @@ public class SparkHistoryDiscoveryServiceTest {
   @Before
   public void setUp() {
     server.resetAll();
-    cmClient = HttpClients.createDefault();
-    URI apiUri = URI.create(server.baseUrl() + "/api/v41/");
+    // Resolve every host name to loopback, so the configured host can carry a domain.
+    cmClient =
+        HttpClients.custom()
+            .setDnsResolver(host -> new InetAddress[] {InetAddress.getLoopbackAddress()})
+            .build();
+    URI apiUri = URI.create("http://cm.example.com:" + server.port() + "/api/v41/");
     service = new SparkHistoryDiscoveryService(objectMapper, cmClient, apiUri);
   }
 
@@ -84,7 +90,7 @@ public class SparkHistoryDiscoveryServiceTest {
         get("/api/v41/clusters/my%20Cluster%20-%20test%2001/services/my%20Knox%20name/roles")
             .willReturn(
                 okJson(
-                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
+                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host.example.com\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
 
     // 3. Mock config
     server.stubFor(
@@ -120,7 +126,8 @@ public class SparkHistoryDiscoveryServiceTest {
 
     // Assert
     assertEquals(1, result.size());
-    assertEquals("https://knox-host/gateway/cdp-proxy-api/spark3history/api/v1", result.get(0));
+    assertEquals(
+        "https://knox-host.example.com/gateway/cdp-proxy-api/spark3history/api/v1", result.get(0));
   }
 
   @Test
@@ -135,7 +142,7 @@ public class SparkHistoryDiscoveryServiceTest {
         get("/api/v41/clusters/my-cluster/services/knox-1/roles")
             .willReturn(
                 okJson(
-                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
+                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host.example.com\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
 
     // 3. Mock config
     server.stubFor(
@@ -170,7 +177,8 @@ public class SparkHistoryDiscoveryServiceTest {
 
     // Assert
     assertEquals(1, result.size());
-    assertEquals("https://knox-host/gateway/cdp-proxy-api/sparkhistory/api/v1", result.get(0));
+    assertEquals(
+        "https://knox-host.example.com/gateway/cdp-proxy-api/sparkhistory/api/v1", result.get(0));
   }
 
   @Test
@@ -185,7 +193,7 @@ public class SparkHistoryDiscoveryServiceTest {
         get("/api/v41/clusters/my-cluster/services/knox-1/roles")
             .willReturn(
                 okJson(
-                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
+                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host.example.com\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
 
     // 3. Mock config
     server.stubFor(
@@ -208,8 +216,11 @@ public class SparkHistoryDiscoveryServiceTest {
 
     // Assert
     assertEquals(2, result.size());
-    assertTrue(result.contains("https://knox-host/gateway/cdp-proxy-api/spark3history/api/v1"));
-    assertTrue(result.contains("https://knox-host/gateway/cdp-proxy-api/sparkhistory/api/v1"));
+    assertTrue(
+        result.contains(
+            "https://knox-host.example.com/gateway/cdp-proxy-api/spark3history/api/v1"));
+    assertTrue(
+        result.contains("https://knox-host.example.com/gateway/cdp-proxy-api/sparkhistory/api/v1"));
   }
 
   @Test
@@ -224,7 +235,7 @@ public class SparkHistoryDiscoveryServiceTest {
         get("/api/v41/clusters/my-cluster/services/knox-1/roles")
             .willReturn(
                 okJson(
-                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
+                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host.example.com\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
 
     // 3. Mock config
     server.stubFor(
@@ -260,7 +271,8 @@ public class SparkHistoryDiscoveryServiceTest {
 
     // Assert
     assertEquals(1, result.size());
-    assertEquals("https://knox-host/gateway/cdp-proxy-api/custom-spark/api/v1", result.get(0));
+    assertEquals(
+        "https://knox-host.example.com/gateway/cdp-proxy-api/custom-spark/api/v1", result.get(0));
   }
 
   @Test
@@ -275,7 +287,7 @@ public class SparkHistoryDiscoveryServiceTest {
         get("/api/v41/clusters/my-cluster/services/knox-1/roles")
             .willReturn(
                 okJson(
-                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
+                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host.example.com\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
 
     // 3. Mock config
     server.stubFor(
@@ -354,7 +366,7 @@ public class SparkHistoryDiscoveryServiceTest {
         get("/api/v41/clusters/my-cluster/services/knox-1/roles")
             .willReturn(
                 okJson(
-                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
+                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host.example.com\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
 
     // 3. Mock config
     server.stubFor(
@@ -371,5 +383,26 @@ public class SparkHistoryDiscoveryServiceTest {
         service.resolveUrl("my-cluster", knoxClient, com.google.common.collect.ImmutableList.of());
 
     assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void resolveUrl_knoxHostOutsideConfiguredDomain_notProbed() throws Exception {
+    server.stubFor(
+        get("/api/v41/clusters/my-cluster/services")
+            .willReturn(okJson("{\"items\": [{\"name\": \"knox-1\", \"type\": \"KNOX\"}]}")));
+    server.stubFor(
+        get("/api/v41/clusters/my-cluster/services/knox-1/roles")
+            .willReturn(
+                okJson(
+                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox.example.org\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
+    server.stubFor(
+        get("/api/v41/clusters/my-cluster/services/knox-1/roleConfigGroups/knox-BASE/config")
+            .willReturn(okJson("{\"items\": []}")));
+
+    List<String> result =
+        service.resolveUrl("my-cluster", knoxClient, com.google.common.collect.ImmutableList.of());
+
+    assertTrue(result.isEmpty());
+    verifyNoInteractions(knoxClient);
   }
 }
