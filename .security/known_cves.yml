@@ -249,41 +249,6 @@
     com.databricks.internal.json); fixed in 20260719. The standalone json jar is fixed (20260814,
     PR #1221); the bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
   expiration_date: 2026-12-31
-- CVE: CVE-2026-59739
-  artifact: org.apache.zookeeper:zookeeper:3.9.5
-  justification: >
-    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
-    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
-    in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-59969
-  artifact: org.apache.zookeeper:zookeeper:3.9.5
-  justification: >
-    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
-    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
-    in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-79993
-  artifact: org.apache.zookeeper:zookeeper:3.9.5
-  justification: >
-    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
-    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
-    in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-84439
-  artifact: org.apache.zookeeper:zookeeper:3.9.5
-  justification: >
-    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
-    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
-    in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-84501
-  artifact: org.apache.zookeeper:zookeeper:3.9.5
-  justification: >
-    Not a false positive. Affects ZooKeeper 3.9.0 to 3.9.5 and is fixed in 3.9.6. The issue is on the
-    server side; the Dumper uses ZooKeeper only as a client, but the jar ships the server code. Tracked
-    in b/579421681.
-  expiration_date: 2026-12-31
 - CVE: CVE-2026-3293
   artifact: net.snowflake:snowflake-jdbc:3.27.1
   justification: >
