@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDatabasePredicate;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
@@ -51,6 +52,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.apache.commons.csv.CSVFormat;
@@ -91,8 +93,29 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
 
   public static final int OPT_PORT_DEFAULT = 5480;
 
+  /**
+   * A regular identifier, or a delimited identifier in double quotes. Neither form contains a
+   * character that ends the name in a query or that separates directories in an output path.
+   */
+  private static final Pattern DATABASE_NAME =
+      Pattern.compile("[\\p{L}_][\\p{L}\\p{M}\\p{Nd}_$]*|\"[^\"/\\\\\\p{Cntrl}]+\"");
+
   public NetezzaMetadataConnector() {
     super("netezza");
+  }
+
+  @Override
+  public void validate(@Nonnull ConnectorArguments arguments) {
+    for (String database : arguments.getDatabases()) {
+      if (!DATABASE_NAME.matcher(database).matches()) {
+        throw new MetadataDumperUsageException(
+            String.format(
+                "Database name '%s' is not a valid Netezza identifier. Use a name that starts"
+                    + " with a letter and contains only letters, digits, '_' and '$', or a name"
+                    + " in double quotes that contains no '\"', '/' or '\\'.",
+                database));
+      }
+    }
   }
 
   @SuppressWarnings("UnusedNestedClass")

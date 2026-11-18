@@ -16,6 +16,10 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.netezza;
 
+import static org.junit.Assert.assertThrows;
+
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,5 +34,43 @@ public class NetezzaConnectorTest extends AbstractConnectorTest {
   @Test
   public void testConnector() throws Exception {
     testConnectorDefaults(connector);
+  }
+
+  @Test
+  public void validate_regularDatabaseNames_success() throws Exception {
+    connector.validate(
+        new ConnectorArguments(
+            "--connector", "netezza", "--database", "sales,Sales_2024,db$1,_staging,donn\u00e9es"));
+  }
+
+  @Test
+  public void validate_delimitedDatabaseName_success() throws Exception {
+    connector.validate(
+        new ConnectorArguments("--connector", "netezza", "--database", "\"Sales Db-2024.v1\""));
+  }
+
+  @Test
+  public void validate_invalidDatabaseName_throws() throws Exception {
+    String[] names = {
+      "sales;",
+      "sales--",
+      "sa'les",
+      "sales db",
+      "sales.admin",
+      "1sales",
+      "../sales",
+      "sales/x",
+      "\"sales\"\"x\"",
+      "\"sales/x\"",
+      "\"sales\\x\"",
+      "\"\"",
+      "\"sales"
+    };
+    for (String name : names) {
+      ConnectorArguments arguments =
+          new ConnectorArguments("--connector", "netezza", "--database", name);
+
+      assertThrows(name, MetadataDumperUsageException.class, () -> connector.validate(arguments));
+    }
   }
 }
