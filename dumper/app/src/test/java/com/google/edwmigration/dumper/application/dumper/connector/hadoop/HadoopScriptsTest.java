@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,6 +47,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class HadoopScriptsTest {
   private static final long PROBE_TIMEOUT_SECONDS = 60;
+
+  private static final Pattern SUDO_PATTERN = Pattern.compile("\\bsudo\\b");
 
   @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -132,6 +135,34 @@ public class HadoopScriptsTest {
     ImmutableList<String> osReleaseScript =
         readAllLines(HadoopScripts.extractSingleLineScripts().get("os-release"));
     assertEquals(ImmutableList.of("#!/bin/bash", "", "cat /etc/os-release"), osReleaseScript);
+  }
+
+  @Test
+  public void extractSingleLineScripts_noScriptRunsSudo() {
+    HadoopScripts.extractSingleLineScripts()
+        .forEach(
+            (scriptName, scriptFile) -> {
+              for (String line : readAllLines(scriptFile)) {
+                assertFalse(
+                    String.format("Script '%s' runs sudo: '%s'.", scriptName, line),
+                    SUDO_PATTERN.matcher(line).find());
+              }
+            });
+  }
+
+  @Test
+  public void extractSingleLineScripts_dmidecodeProcessor() {
+    ImmutableList<String> dmidecodeScript =
+        readAllLines(HadoopScripts.extractSingleLineScripts().get("dmidecode-processor"));
+    assertEquals(
+        ImmutableList.of("#!/bin/bash", "", "dmidecode --type processor"), dmidecodeScript);
+  }
+
+  @Test
+  public void extractSingleLineScripts_blkid() {
+    ImmutableList<String> blkidScript =
+        readAllLines(HadoopScripts.extractSingleLineScripts().get("blkid"));
+    assertEquals(ImmutableList.of("#!/bin/bash", "", "blkid"), blkidScript);
   }
 
   @Test
