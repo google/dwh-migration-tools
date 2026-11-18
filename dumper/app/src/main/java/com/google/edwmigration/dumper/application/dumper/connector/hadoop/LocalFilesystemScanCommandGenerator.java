@@ -41,12 +41,26 @@ public class LocalFilesystemScanCommandGenerator {
           "elasticsearch.yml",
           "ganglia.conf");
 
+  /**
+   * Types of the filesystems that are scanned: disk filesystems and the overlay filesystem of
+   * containers. A directory on any other filesystem, such as /proc, /sys, /dev, a memory filesystem
+   * or a network mount, is skipped together with its content. The type is tested for directories
+   * only, which find examines anyway, so that the scan does not have to examine every file.
+   */
+  private static final ImmutableList<String> SCANNED_FILESYSTEM_TYPES =
+      ImmutableList.of(
+          "ext2", "ext3", "ext4", "xfs", "btrfs", "zfs", "jfs", "reiserfs", "f2fs", "overlay");
+
   public static String generate() {
-    return "find / "
+    return "find / -type d ! \\( "
+        + SCANNED_FILESYSTEM_TYPES.stream()
+            .map(filesystemType -> "-fstype " + filesystemType)
+            .collect(joining(" -o "))
+        + " \\) -prune -o \\( "
         + SEARCH_EXPRESSIONS.stream()
             .map(searchExpression -> "-iname " + quote(searchExpression))
             .collect(joining(" -o "))
-        + " 2>/dev/null";
+        + " \\) -print 2>/dev/null";
   }
 
   private static String quote(String expression) {
