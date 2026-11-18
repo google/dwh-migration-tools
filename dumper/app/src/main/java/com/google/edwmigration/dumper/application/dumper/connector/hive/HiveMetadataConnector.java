@@ -18,12 +18,9 @@ package com.google.edwmigration.dumper.application.dumper.connector.hive;
 
 import static java.lang.String.format;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
-import com.google.auto.value.AutoValue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +41,6 @@ import com.google.edwmigration.dumper.application.dumper.task.TaskCategory;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import com.google.edwmigration.dumper.application.dumper.utils.ArchiveNameUtil;
 import com.google.edwmigration.dumper.ext.hive.metastore.Database;
-import com.google.edwmigration.dumper.ext.hive.metastore.DelegationToken;
 import com.google.edwmigration.dumper.ext.hive.metastore.Field;
 import com.google.edwmigration.dumper.ext.hive.metastore.Function;
 import com.google.edwmigration.dumper.ext.hive.metastore.HiveMetastoreThriftClient;
@@ -553,84 +549,6 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     }
   }
 
-  private static class MasterKeysTask extends AbstractHiveMetadataTask {
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private MasterKeysTask() {
-      super("master-keys.jsonl");
-    }
-
-    @Override
-    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
-        throws Exception {
-      try (HiveMetastoreThriftClient client =
-              thriftClientHandle.newClient("master-keys-task-client");
-          RecordProgressMonitor monitor =
-              new RecordProgressMonitor("Writing Master Keys to " + getTargetPath())) {
-        ImmutableList<String> masterKeys = client.getMasterKeys();
-        for (String masterKey : masterKeys) {
-          monitor.count();
-          writer.write(objectMapper.writeValueAsString(MasterKey.create(masterKey)));
-          writer.write('\n');
-        }
-      }
-    }
-
-    @Override
-    public TaskCategory getCategory() {
-      return TaskCategory.OPTIONAL;
-    }
-
-    @Override
-    protected String toCallDescription() {
-      return "get_master_keys()";
-    }
-  }
-
-  @AutoValue
-  abstract static class MasterKey {
-    @JsonProperty
-    abstract String masterKey();
-
-    public static MasterKey create(String masterKey) {
-      return new AutoValue_HiveMetadataConnector_MasterKey(masterKey);
-    }
-  }
-
-  private static class DelegationTokensTask extends AbstractHiveMetadataTask {
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private DelegationTokensTask() {
-      super("delegation-tokens.jsonl");
-    }
-
-    @Override
-    protected void run(@Nonnull Writer writer, @Nonnull ThriftClientHandle thriftClientHandle)
-        throws Exception {
-      try (HiveMetastoreThriftClient client =
-              thriftClientHandle.newClient("delegation-tokens-task-client");
-          RecordProgressMonitor monitor =
-              new RecordProgressMonitor("Writing Delegation Tokens to " + getTargetPath())) {
-        ImmutableList<DelegationToken> delegationTokens = client.getDelegationTokens();
-        for (DelegationToken delegationToken : delegationTokens) {
-          monitor.count();
-          writer.write(objectMapper.writeValueAsString(delegationToken));
-          writer.write('\n');
-        }
-      }
-    }
-
-    @Override
-    public TaskCategory getCategory() {
-      return TaskCategory.OPTIONAL;
-    }
-
-    @Override
-    protected String toCallDescription() {
-      return "get_all_token_identifiers()*.get_token()";
-    }
-  }
-
   private static class ResourcePlansJsonlTask extends HiveJsonlTask {
 
     private ResourcePlansJsonlTask() {
@@ -704,8 +622,6 @@ public class HiveMetadataConnector extends AbstractHiveConnector
     out.add(new FunctionsTask(databasePredicate));
     out.add(new CatalogsJsonlTask());
     out.add(new DatabasesJsonlTask());
-    out.add(new MasterKeysTask());
-    out.add(new DelegationTokensTask());
     out.add(new FunctionsJsonlTask());
     out.add(new ResourcePlansJsonlTask());
     out.add(new TablesRawJsonlTask(databasePredicate));
