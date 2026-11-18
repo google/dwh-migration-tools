@@ -23,10 +23,12 @@ import static com.google.edwmigration.dumper.application.dumper.ConnectorArgumen
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_WAREHOUSE;
 import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
 import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.hadoop.util.Preconditions.checkNotNull;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
@@ -42,12 +44,15 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcC
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -73,6 +78,11 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 @RespectsArgumentDriver
 @RespectsArgumentJDBCUri
 public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
+
+  static final String OCSP_FAIL_OPEN_PROPERTY = "ocspFailOpen";
+  static final String OCSP_FAIL_OPEN_SYSTEM_PROPERTY = "net.snowflake.jdbc.ocspFailOpen";
+  private static final ImmutableSet<String> OCSP_DISABLING_PROPERTIES =
+      ImmutableSet.of("disableOCSPChecks", "insecureMode");
 
   public AbstractSnowflakeConnector(@Nonnull String name) {
     super(name);
@@ -128,13 +138,75 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   }
 
   @Nonnull
-  private static Properties dataSourceProperties(@Nonnull ConnectorArguments arguments)
+  static Properties dataSourceProperties(@Nonnull ConnectorArguments arguments)
       throws SQLException {
     String user = arguments.getUserOrFail();
+    Properties properties;
     if (arguments.isPrivateKeyFileProvided()) {
-      return createPrivateKeyProperties(arguments, user);
+      properties = createPrivateKeyProperties(arguments, user);
     } else {
-      return createUserPasswordProperties(arguments, user);
+      properties = createUserPasswordProperties(arguments, user);
+    }
+
+    // Since version 4.4.0 the driver checks certificate revocation (OCSP) only when ocspFailOpen
+    // is set. Keep the mode that was the driver's default before, unless the user chose one.
+    if (!choosesRevocationCheckMode(arguments.getUri())) {
+      properties.put(OCSP_FAIL_OPEN_PROPERTY, "true");
+    }
+    return properties;
+  }
+
+  /**
+   * Tells whether the user already decided how the driver checks certificate revocation: with the
+   * driver's system property, or in the JDBC URL by setting {@code ocspFailOpen} or by turning the
+   * checks off. Properties passed to the driver override the URL, so nothing is added then.
+   */
+  static boolean choosesRevocationCheckMode(@CheckForNull String url) {
+    if (System.getProperty(OCSP_FAIL_OPEN_SYSTEM_PROPERTY) != null) {
+      return true;
+    }
+    if (url == null) {
+      return false;
+    }
+    int queryStart = url.indexOf('?');
+    if (queryStart < 0) {
+      return false;
+    }
+    String query = url.substring(queryStart + 1);
+    int fragmentStart = query.indexOf('#');
+    if (fragmentStart >= 0) {
+      query = query.substring(0, fragmentStart);
+    }
+
+    // Read the query the way the driver does: it ignores a parameter that is not exactly
+    // "name=value", decodes percent-escapes in both parts, compares names without regard to case,
+    // and reads "true" and "on" as true.
+    for (String parameter : query.split("&")) {
+      String[] nameAndValue = parameter.split("=");
+      if (nameAndValue.length != 2) {
+        continue;
+      }
+      String name = decodeUrlComponent(nameAndValue[0]);
+      String value = decodeUrlComponent(nameAndValue[1]);
+      if (OCSP_FAIL_OPEN_PROPERTY.equalsIgnoreCase(name)) {
+        return true;
+      }
+      for (String disablingProperty : OCSP_DISABLING_PROPERTIES) {
+        if (disablingProperty.equalsIgnoreCase(name)
+            && ("true".equalsIgnoreCase(value) || "on".equalsIgnoreCase(value))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /** Decodes percent-escapes; a malformed escape is left as it is for the driver to reject. */
+  private static String decodeUrlComponent(@Nonnull String component) {
+    try {
+      return URLDecoder.decode(component, UTF_8.name());
+    } catch (IllegalArgumentException | UnsupportedEncodingException e) {
+      return component;
     }
   }
 
