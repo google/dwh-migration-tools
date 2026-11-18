@@ -249,18 +249,6 @@
     com.databricks.internal.json); fixed in 20260719. The standalone json jar is fixed (20260814,
     PR #1221); the bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
   expiration_date: 2026-12-31
-- CVE: CVE-2026-3293
-  artifact: net.snowflake:snowflake-jdbc:3.27.1
-  justification: >
-    Not a false positive: weakness in SdkProxyRoutePlanner, affecting snowflake-jdbc up to 4.0.1. Moving
-    to the 4.x driver, or no longer bundling it, needs a product decision. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-86597
-  artifact: net.snowflake:snowflake-jdbc:3.27.1
-  justification: >
-    Not a false positive: fixed only in snowflake-jdbc 4.3.4. Moving to the 4.x driver, or no longer
-    bundling it, needs a product decision. Tracked in b/579421681.
-  expiration_date: 2026-12-31
 - CVE: CVE-2026-41848
   artifact: org.springframework:spring-core:5.3.39
   justification: >
