@@ -32,215 +32,15 @@
     (Java 11+ baseline) is tracked in b/579421681.
   expiration_date: 2027-01-31
 
-- CVE: CVE-2025-58056
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
+- CVE: CVE-2026-89044
+  artifact: io.grpc:grpc-netty-shaded:1.85.0
   justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.125.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2025-58057
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.125.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2025-67735
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.129.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-33870
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.132.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-33871
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.132.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-41417
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-42578
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-42580
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-42581
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-42583
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-42584
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-42585
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-42587
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.133.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-44249
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-45416
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-45536
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-47244
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-48043
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-50010
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-50020
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-50560
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.135.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-59898
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-59899
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-59900
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-59901
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-59903
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.137.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-59921
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.136.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-62380
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.137.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-75595
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.137.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
-  expiration_date: 2026-12-31
-- CVE: CVE-2026-75596
-  artifact: io.grpc:grpc-netty-shaded:1.76.1
-  justification: >
-    Not a false positive. grpc-netty-shaded 1.76.1 bundles netty 4.1.124.Final, and this advisory is
-    fixed in netty 4.1.137.Final. The standalone netty jars are already at 4.1.137.Final; the bundled
-    copy needs a grpc upgrade. Tracked in b/579421681.
+    Not a false positive. grpc-netty-shaded 1.85.0 bundles netty 4.2.17.Final, including its HTTP codec,
+    and this advisory affects netty 4.2.13.Final to 4.2.17.Final; it is fixed in 4.2.18.Final. No grpc
+    release bundles the fix yet (1.85.1 also has 4.2.17.Final). Neither scanner reports it on this jar
+    (Dependency-Check reads the jar as netty 1.85.0, and the OSV record has no Maven package), so this
+    entry is kept by hand. The Dumper uses the bundled netty only as a gRPC client, through the Google
+    Cloud client libraries. Tracked in b/579421681.
   expiration_date: 2026-12-31
 - CVE: CVE-2026-59171
   artifact: org.json:json:20240303
@@ -332,9 +132,9 @@
     Google Cloud Application Integration service, which the Dumper does not contain.
   expiration_date: 2027-05-31
 
-- false_positive: "grpc-netty-shaded: netty advisories that do not affect the bundled netty 4.1.124"
+- false_positive: "grpc-netty-shaded: netty advisories that do not affect the bundled netty 4.2.17"
   artifacts:
-    - io.grpc:grpc-netty-shaded:1.76.1
+    - io.grpc:grpc-netty-shaded:1.85.0
   advisories:
     - CVE-2014-3488
     - CVE-2015-2156
@@ -355,39 +155,70 @@
     - CVE-2024-47535
     - CVE-2025-25193
     - CVE-2025-55163
+    - CVE-2025-58056
+    - CVE-2025-58057
+    - CVE-2025-67735
+    - CVE-2026-33870
+    - CVE-2026-33871
+    - CVE-2026-41417
+    - CVE-2026-42578
     - CVE-2026-42579
+    - CVE-2026-42580
+    - CVE-2026-42581
+    - CVE-2026-42583
+    - CVE-2026-42584
+    - CVE-2026-42585
     - CVE-2026-42586
+    - CVE-2026-42587
     - CVE-2026-44248
+    - CVE-2026-44249
     - CVE-2026-44250
     - CVE-2026-44890
     - CVE-2026-44891
     - CVE-2026-44893
+    - CVE-2026-45416
+    - CVE-2026-45536
     - CVE-2026-45673
     - CVE-2026-45674
     - CVE-2026-46340
+    - CVE-2026-47244
     - CVE-2026-47691
     - CVE-2026-48006
+    - CVE-2026-48043
     - CVE-2026-48059
+    - CVE-2026-50010
     - CVE-2026-50011
+    - CVE-2026-50020
+    - CVE-2026-50560
     - CVE-2026-56818
     - CVE-2026-56820
     - CVE-2026-56821
     - CVE-2026-56822
+    - CVE-2026-59898
+    - CVE-2026-59899
+    - CVE-2026-59900
+    - CVE-2026-59901
     - CVE-2026-59902
+    - CVE-2026-59903
     - CVE-2026-59919
     - CVE-2026-59920
+    - CVE-2026-59921
+    - CVE-2026-62380
     - CVE-2026-73507
     - CVE-2026-73508
+    - CVE-2026-75595
+    - CVE-2026-75596
   justification: >
-    Dependency-Check identifies grpc-netty-shaded as netty with grpc's own version (1.76.1), so every
-    netty advisory with a range below 4.x matches. The jar bundles netty 4.1.124.Final (META-
+    Dependency-Check identifies grpc-netty-shaded as netty with grpc's own version (1.85.0), so every
+    netty advisory with a range below 4.x matches. The jar bundles netty 4.2.17.Final (META-
     INF/io.grpc.netty.shaded.io.netty.versions.properties) with the modules buffer, common, transport,
-    resolver, handler, handler-proxy, codec, codec-http, codec-http2, codec-socks and native epoll. Each
-    advisory listed was fixed before 4.1.124, or is in a netty module the jar does not bundle (codec-
-    haproxy, codec-dns, resolver-dns, codec-stomp, codec-redis, codec-xml, codec-mqtt, handler-ssl-ocsp,
-    codec-http3, transport-sctp), per the affected packages and ranges of the GitHub-reviewed advisory.
-    The rule names the exact version because the reason depends on the bundled netty. The advisories
-    that do affect 4.1.124 are listed as open findings above.
+    resolver, handler, handler-proxy, codec-base, codec-compression, codec-http, codec-http2,
+    codec-socks and native epoll. Each advisory listed is fixed in 4.2.17 or earlier, or is in a netty
+    module the jar does not bundle (codec-haproxy, codec-dns, resolver-dns, codec-stomp, codec-redis,
+    codec-xml, codec-mqtt, handler-ssl-ocsp, transport-sctp), per the affected packages and ranges of
+    the GitHub-reviewed advisory or, where that names no netty package, the version range in NVD. The
+    rule names the exact version because the reason depends on the bundled netty. The advisory that
+    does affect 4.2.17 is listed as an open finding above.
   expiration_date: 2027-05-31
 
 - false_positive: "Apache Arrow Java: C and C++ advisories"
@@ -404,33 +235,6 @@
   justification: >
     CVE-2026-25087 is in Apache Arrow C++ and CVE-2026-111497 is in the Brotli C decoder. The Dumper
     ships only the Java Arrow libraries, standalone and inside databricks-jdbc.
-  expiration_date: 2027-05-31
-
-- false_positive: "grpc-java: gRPC-Go advisory"
-  artifacts:
-    - io.grpc:grpc-alts
-    - io.grpc:grpc-api
-    - io.grpc:grpc-auth
-    - io.grpc:grpc-bom
-    - io.grpc:grpc-context
-    - io.grpc:grpc-core
-    - io.grpc:grpc-googleapis
-    - io.grpc:grpc-grpclb
-    - io.grpc:grpc-inprocess
-    - io.grpc:grpc-netty-shaded
-    - io.grpc:grpc-opentelemetry
-    - io.grpc:grpc-protobuf
-    - io.grpc:grpc-protobuf-lite
-    - io.grpc:grpc-rls
-    - io.grpc:grpc-services
-    - io.grpc:grpc-stub
-    - io.grpc:grpc-util
-    - io.grpc:grpc-xds
-  advisories:
-    - CVE-2026-33186
-  justification: >
-    CVE-2026-33186 is in gRPC-Go; the grpc:grpc CPE covers every gRPC implementation. The Dumper ships
-    grpc-java.
   expiration_date: 2027-05-31
 
 - false_positive: "hadoop-thirdparty: Hadoop advisories matched against the thirdparty version"
@@ -583,6 +387,7 @@
   justification: >
     CVE-2026-89044 (Transfer-Encoding validation, netty 4.1.133 to 4.1.137) is in the HTTP codec.
     Dependency-Check reports it on whichever standalone netty jar it groups the netty CPE under. The
-    Dumper does not ship netty-codec-http as a jar; its only copy of the codec is the 4.1.124 one inside
-    grpc-netty-shaded, which is outside the affected range.
+    Dumper does not ship netty-codec-http as a jar. Copies of the codec that other jars bundle are not
+    covered by this rule: the 4.2.17 one inside grpc-netty-shaded 1.85.0 is in the advisory's second
+    range (4.2.13 to 4.2.17) and is listed as an open finding above.
   expiration_date: 2027-05-31
