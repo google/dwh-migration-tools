@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.ByteSink;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.connector.ResultSetTransformer;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
@@ -62,9 +63,14 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractJdbcTask.class);
 
+  /** Characters that make a spreadsheet application read a cell as a formula. */
+  private static final String FORMULA_START_CHARACTERS = "=+-@\t\r";
+
   @CheckForNull private Class<? extends Enum<?>> headerClass;
   @CheckForNull private ResultSetTransformer<String[]> headerTransformer;
   @CheckForNull private Predicate<ResultSet> predicate;
+  // Set from the arguments at the start of each run; read while writing the CSV in the same run.
+  private boolean sanitizeCsv;
 
   public AbstractJdbcTask(@Nonnull String targetPath) {
     super(targetPath);
@@ -173,19 +179,43 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
           String itemString;
           if (csvItemCandidate != null || resultItem == null) {
             // Item was recognized by the helper method or it was null.
-            printer.print(csvItemCandidate);
+            printer.print(neutralizeFormula(resultItem, csvItemCandidate));
           } else if ((itemString = resultItem.toString()) == null) {
             // Item violated usual toStringRules
             Class<?> itemClass = resultItem.getClass();
             logger.warn("Unexpected toString result for class {} - null", itemClass);
             printer.print(null);
           } else {
-            printer.print(itemString);
+            printer.print(neutralizeFormula(resultItem, itemString));
           }
         }
         printer.println();
       }
     }
+  }
+
+  /**
+   * Returns the text to write for a cell. When --sanitize-csv is set, a text value that starts with
+   * a character that spreadsheet applications treat as the start of a formula is prefixed with a
+   * single quote, which makes them show the value as text. Numbers are left alone, because negative
+   * numbers start with '-', and so is Base64 for binary values, which has no characters that can
+   * form a function call.
+   */
+  @CheckForNull
+  private String neutralizeFormula(@CheckForNull Object resultItem, @CheckForNull String text) {
+    if (!sanitizeCsv
+        || text == null
+        || text.isEmpty()
+        || resultItem instanceof Number
+        || resultItem instanceof byte[]) {
+      return text;
+    }
+
+    if (FORMULA_START_CHARACTERS.indexOf(text.charAt(0)) < 0) {
+      return text;
+    }
+
+    return "'" + text;
   }
 
   @Nullable
@@ -321,6 +351,7 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
   protected T doRun(TaskRunContext context, ByteSink sink, Handle handle) throws Exception {
     JdbcHandle jdbcHandle = (JdbcHandle) handle;
     logger.info("Writing to {} -> {}", getTargetPath(), sink);
+    this.sanitizeCsv = isSanitizeCsv(context);
 
     DataSource dataSource = jdbcHandle.getDataSource();
     // We could use JdbcUtils, but that would prevent us from getting a .exception.txt.
@@ -329,5 +360,11 @@ public abstract class AbstractJdbcTask<T> extends AbstractTask<T> {
       // time.
       return doInConnection(context, jdbcHandle, sink, connection);
     }
+  }
+
+  private static boolean isSanitizeCsv(@CheckForNull TaskRunContext context) {
+    // Unit tests run tasks with a null or mocked context, which has no arguments.
+    ConnectorArguments arguments = context == null ? null : context.getArguments();
+    return arguments != null && arguments.isSanitizeCsv();
   }
 }
