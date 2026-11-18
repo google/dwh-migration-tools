@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
 import com.google.edwmigration.dumper.application.dumper.task.JdbcSelectTask;
@@ -267,6 +268,51 @@ public class AirflowConnectorTest {
 
     assertEquals("One DumpMetadataTask is expected", dumpMetadataCount, 1);
     assertEquals("One FormatTask is expected", formatCount, 1);
+  }
+
+  @Test
+  public void validate_hostWithDelimiter_throwsUsageException() {
+    String argsStr =
+        "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password"
+            + " --host localhost/airflow_db?a=b --port 3306 --schema airflow_db";
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> connector.validate(args(argsStr)));
+
+    assertTrue(
+        exception.getMessage(), exception.getMessage().startsWith("The --host value contains '/'"));
+  }
+
+  @Test
+  public void validate_schemaWithDelimiter_throwsUsageException() {
+    String argsStr =
+        "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password"
+            + " --host localhost --port 3306 --schema airflow_db?a=b";
+
+    MetadataDumperUsageException exception =
+        assertThrows(MetadataDumperUsageException.class, () -> connector.validate(args(argsStr)));
+
+    assertTrue(
+        exception.getMessage(),
+        exception.getMessage().startsWith("The --schema value contains '?'"));
+  }
+
+  @Test
+  public void validate_ipv6HostAndSchemaWithDollar_success() throws Exception {
+    String argsStr =
+        "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password"
+            + " --host [::1] --port 5432 --schema airflow-db_v2.x$";
+
+    connector.validate(args(argsStr));
+  }
+
+  @Test
+  public void validate_urlWithParameters_success() throws Exception {
+    String argsStr =
+        "--connector airflow --assessment --driver /home/dir/ --user dbadmin --password"
+            + " --url jdbc:mysql://localhost:3306/airflow_db?connectTimeout=5000";
+
+    connector.validate(args(argsStr));
   }
 
   private static ConnectorArguments args(String args) throws Exception {

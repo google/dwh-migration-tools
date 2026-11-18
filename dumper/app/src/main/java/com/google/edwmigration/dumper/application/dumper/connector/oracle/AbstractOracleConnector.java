@@ -23,6 +23,9 @@ import static com.google.edwmigration.dumper.application.dumper.ConnectorArgumen
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_PORT;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_QUERY_LOG_DAYS;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_URI;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.ORACLE_NAME_DELIMITERS;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
@@ -204,12 +207,18 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
       return url;
     }
     checkServiceAndSid(arguments);
-    String host = arguments.getHost(OPT_HOST_DEFAULT);
+    String host =
+        checkUrlComponent(OPT_HOST, arguments.getHost(OPT_HOST_DEFAULT), DELIMITERS_WITH_FRAGMENT);
     int port = arguments.getPort(OPT_PORT_DEFAULT);
     if (arguments.getOracleSID() != null) {
-      return "jdbc:oracle:thin:@" + host + ":" + port + ":" + arguments.getOracleSID();
+      String sid =
+          checkUrlComponent(OPT_ORACLE_SID, arguments.getOracleSID(), ORACLE_NAME_DELIMITERS);
+      return "jdbc:oracle:thin:@" + host + ":" + port + ":" + sid;
     } else {
-      return "jdbc:oracle:thin:@//" + host + ":" + port + "/" + arguments.getOracleServicename();
+      String service =
+          checkUrlComponent(
+              OPT_ORACLE_SERVICE, arguments.getOracleServicename(), ORACLE_NAME_DELIMITERS);
+      return "jdbc:oracle:thin:@//" + host + ":" + port + "/" + service;
     }
   }
 

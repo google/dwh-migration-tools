@@ -18,6 +18,11 @@ package com.google.edwmigration.dumper.application.dumper.connector.snowflake;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_ROLE;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_WAREHOUSE;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
 import static org.apache.hadoop.util.Preconditions.checkNotNull;
 
 import com.google.common.base.CharMatcher;
@@ -169,15 +174,19 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
 
     StringBuilder buf = new StringBuilder("jdbc:snowflake://");
     String host = arguments.getHost("host.snowflakecomputing.com");
-    buf.append(host).append("/");
+    buf.append(checkUrlComponent(OPT_HOST, host, DELIMITERS_WITH_FRAGMENT)).append("/");
     // FWIW we can/should totally use a Properties object here and pass it to
     // SimpleDriverDataSource rather than messing with the URL.
     List<String> optionalArguments = new ArrayList<>();
     if (arguments.getWarehouse() != null) {
-      optionalArguments.add("warehouse=" + arguments.getWarehouse());
+      optionalArguments.add(
+          "warehouse="
+              + checkUrlComponent(
+                  OPT_WAREHOUSE, arguments.getWarehouse(), DELIMITERS_WITH_FRAGMENT));
     }
     if (arguments.getRole() != null) {
-      optionalArguments.add("role=" + arguments.getRole());
+      optionalArguments.add(
+          "role=" + checkUrlComponent(OPT_ROLE, arguments.getRole(), DELIMITERS_WITH_FRAGMENT));
     }
     if (!optionalArguments.isEmpty()) {
       buf.append("?").append(Joiner.on("&").join(optionalArguments));

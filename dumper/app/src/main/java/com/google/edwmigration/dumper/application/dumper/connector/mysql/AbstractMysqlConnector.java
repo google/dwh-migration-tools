@@ -16,6 +16,11 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.mysql;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_DATABASE;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
+
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriverRequired;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentHostUnlessUrl;
@@ -56,11 +61,14 @@ public abstract class AbstractMysqlConnector extends AbstractJdbcConnector {
     String url = arguments.getUri();
     if (url == null) {
       StringBuilder buf = new StringBuilder("jdbc:mysql://");
-      buf.append(arguments.getHost("localhost"));
+      buf.append(
+          checkUrlComponent(OPT_HOST, arguments.getHost("localhost"), DELIMITERS_WITH_FRAGMENT));
       buf.append(':').append(arguments.getPort(OPT_PORT_DEFAULT));
       buf.append("/");
       List<String> databases = arguments.getDatabases();
-      if (!databases.isEmpty()) buf.append(databases.get(0));
+      if (!databases.isEmpty()) {
+        buf.append(checkUrlComponent(OPT_DATABASE, databases.get(0), DELIMITERS_WITH_FRAGMENT));
+      }
       url = buf.toString();
     }
 

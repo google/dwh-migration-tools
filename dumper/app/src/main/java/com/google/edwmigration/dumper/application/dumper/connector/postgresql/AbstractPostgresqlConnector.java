@@ -16,6 +16,12 @@
  */
 package com.google.edwmigration.dumper.application.dumper.connector.postgresql;
 
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_DATABASE;
+import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HOST;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.DELIMITERS_WITH_FRAGMENT;
+import static com.google.edwmigration.dumper.application.dumper.connector.JdbcUrlComponents.checkUrlComponent;
+
 import com.google.common.collect.Iterables;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.annotations.RespectsArgumentDriver;
@@ -49,11 +55,12 @@ public abstract class AbstractPostgresqlConnector extends AbstractJdbcConnector 
   public Handle open(ConnectorArguments arguments) throws Exception {
     String url = arguments.getUri();
     if (url == null) {
-      String host = arguments.getHost("localhost");
+      String host =
+          checkUrlComponent(OPT_HOST, arguments.getHost("localhost"), DELIMITERS_WITH_FRAGMENT);
       int port = arguments.getPort(OPT_PORT_DEFAULT);
       String database = Iterables.getFirst(arguments.getDatabases(), null);
       url = "jdbc:postgresql://" + host + ":" + port + "/";
-      if (database != null) url = url + database;
+      if (database != null) url = url + checkUrlComponent(OPT_DATABASE, database, DELIMITERS);
     }
 
     Driver driver =
