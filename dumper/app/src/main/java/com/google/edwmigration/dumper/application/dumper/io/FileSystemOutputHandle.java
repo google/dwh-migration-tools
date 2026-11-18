@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.io;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSink;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,9 +39,28 @@ public class FileSystemOutputHandle implements OutputHandle {
 
   public FileSystemOutputHandle(@Nonnull Path rootPath, @Nonnull String targetPath) {
     // Due to the semantics of prepare(), both of these must be within the same subdirectory.
-    this.targetPath = rootPath.resolve(targetPath);
-    this.temporaryPath = rootPath.resolve(targetPath + ".tmp");
+    this.targetPath = resolveUnderRoot(rootPath, targetPath);
+    this.temporaryPath = resolveUnderRoot(rootPath, targetPath + ".tmp");
     // logger.debug("Created " + this);
+  }
+
+  /**
+   * Resolves a path against the root and checks that the result stays under the root.
+   *
+   * <p>The relative path is checked on its own as well, because some file systems, such as the ZIP
+   * file system, clamp {@code ..} at their root instead of leaving it.
+   */
+  @Nonnull
+  private static Path resolveUnderRoot(@Nonnull Path rootPath, @Nonnull String path) {
+    Path root = rootPath.toAbsolutePath().normalize();
+    Path relative = rootPath.getFileSystem().getPath(path).normalize();
+    Path resolved = root.resolve(relative).normalize();
+    Preconditions.checkArgument(
+        !relative.startsWith("..") && resolved.startsWith(root) && !resolved.equals(root),
+        "Output path '%s' is not inside the output root '%s'.",
+        path,
+        rootPath);
+    return resolved;
   }
 
   @Override

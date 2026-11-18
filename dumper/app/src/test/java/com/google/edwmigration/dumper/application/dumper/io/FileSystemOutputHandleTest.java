@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.io;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -55,5 +56,74 @@ public class FileSystemOutputHandleTest {
       assertEquals("this run", new String(Files.readAllBytes(root.resolve(TARGET_PATH)), UTF_8));
       assertFalse(Files.exists(root.resolve(TARGET_PATH + ".tmp")));
     }
+  }
+
+  @Test
+  public void constructor_zipTargetInSubdirectory_writesUnderRoot() throws IOException {
+    try (FileSystem zip = newZipFileSystem()) {
+      Path root = zip.getPath("/");
+      OutputHandle handle = new FileSystemOutputHandle(root, "DB/sub/../columns.csv");
+      handle.asTemporaryByteSink().write("data".getBytes(UTF_8));
+
+      handle.commit();
+
+      assertEquals("data", new String(Files.readAllBytes(root.resolve("DB/columns.csv")), UTF_8));
+    }
+  }
+
+  @Test
+  public void constructor_zipTargetOutsideRoot_throws() throws IOException {
+    try (FileSystem zip = newZipFileSystem()) {
+      Path root = zip.getPath("/");
+
+      assertThrows(
+          IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, "../columns.csv"));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new FileSystemOutputHandle(root, "DB/../../columns.csv"));
+    }
+  }
+
+  @Test
+  public void constructor_zipTargetOutsideSubdirectoryRoot_throws() throws IOException {
+    try (FileSystem zip = newZipFileSystem()) {
+      Path root = zip.getPath("/out");
+
+      assertThrows(
+          IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, "/columns.csv"));
+      assertThrows(
+          IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, "../columns.csv"));
+    }
+  }
+
+  @Test
+  public void constructor_directoryTargetInSubdirectory_writesUnderRoot() throws IOException {
+    Path root = temporaryFolder.newFolder("out").toPath();
+    OutputHandle handle = new FileSystemOutputHandle(root, "DB/columns.csv");
+    handle.asTemporaryByteSink().write("data".getBytes(UTF_8));
+
+    handle.commit();
+
+    assertEquals("data", new String(Files.readAllBytes(root.resolve("DB/columns.csv")), UTF_8));
+  }
+
+  @Test
+  public void constructor_directoryTargetOutsideRoot_throws() throws IOException {
+    Path root = temporaryFolder.newFolder("out").toPath();
+    String absoluteTarget = temporaryFolder.getRoot().toPath().resolve("columns.csv").toString();
+
+    assertThrows(
+        IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, "../columns.csv"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new FileSystemOutputHandle(root, "DB/../../columns.csv"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, absoluteTarget));
+    assertThrows(IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, "."));
+  }
+
+  private FileSystem newZipFileSystem() throws IOException {
+    URI uri = URI.create("jar:" + temporaryFolder.getRoot().toPath().resolve("out.zip").toUri());
+    return FileSystems.newFileSystem(uri, ImmutableMap.of("create", "true"));
   }
 }
