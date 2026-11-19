@@ -24,6 +24,18 @@
     (Java 11+ baseline) is tracked in b/579421681.
   expiration_date: 2027-01-31
 
+- CVE: CVE-2026-89044
+  artifact: net.snowflake:snowflake-jdbc:4.4.1
+  justification: >
+    Not a false positive. snowflake-jdbc 4.4.1 bundles a relocated copy of grpc-netty-shaded with netty
+    4.2.17.Final, including its HTTP codec, and this advisory affects netty 4.2.13.Final to
+    4.2.17.Final; it is fixed in 4.2.18.Final. 4.4.1 is the newest release of the driver. Its second
+    netty copy, 4.1.139.Final, is not affected. Neither scanner can see the libraries bundled in this
+    jar (it has no Maven metadata, and Dependency-Check gives it no netty CPE), so this entry is kept by
+    hand. Whether the Dumper reaches this code through the driver has not been checked. Tracked in
+    b/579421681.
+  expiration_date: 2026-12-31
+
 - CVE: CVE-2026-10532
   artifact: ch.qos.logback:logback-core:1.3.16
   justification: >
