@@ -27,6 +27,7 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.RedshiftHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
@@ -37,7 +38,6 @@ import javax.annotation.Nonnull;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /** */
 @RespectsArgumentDriver
@@ -170,7 +170,7 @@ public abstract class AbstractRedshiftConnector extends AbstractJdbcConnector {
     //   LogLevel 0/1
     logger.trace("URI is " + url);
     DataSource dataSource =
-        new SimpleDriverDataSource(driver, url, arguments.getUser(), password.orElse(null));
+        new DriverDataSource(driver, url, arguments.getUser(), password.orElse(null));
 
     return new RedshiftHandle(dataSource, arguments);
   }

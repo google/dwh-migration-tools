@@ -44,6 +44,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcC
 import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.Driver;
@@ -55,8 +56,6 @@ import java.util.function.Supplier;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /** @author shevek */
 @RespectsArgumentHostUnlessUrl
@@ -97,11 +96,10 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   public final Handle open(@Nonnull ConnectorArguments arguments) throws SQLException {
     Properties properties = dataSourceProperties(arguments);
     String url = getUrlFromArguments(arguments);
-    DataSource dataSource = new SimpleDriverDataSource(newDriver(arguments), url, properties);
+    DataSource dataSource = new DriverDataSource(newDriver(arguments), url, properties);
     if (arguments.isAssessment()) {
       JdbcHandle handle = new JdbcHandle(dataSource);
-      JdbcTemplate template = handle.getJdbcTemplate();
-      String actualDatabase = template.queryForObject("USE DATABASE SNOWFLAKE;", String.class);
+      String actualDatabase = handle.queryForString("USE DATABASE SNOWFLAKE;");
       checkNotNull(actualDatabase);
       return handle;
     } else {
@@ -110,7 +108,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
               ? "SNOWFLAKE"
               : sanitizeDatabaseName(arguments.getDatabases().get(0));
       JdbcHandle handle = new JdbcHandle(dataSource);
-      setCurrentDatabase(databaseName, handle.getJdbcTemplate());
+      setCurrentDatabase(databaseName, handle);
       return handle;
     }
   }
@@ -248,7 +246,7 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     String host = arguments.getHost("host.snowflakecomputing.com");
     buf.append(checkUrlComponent(OPT_HOST, host, DELIMITERS_WITH_FRAGMENT)).append("/");
     // FWIW we can/should totally use a Properties object here and pass it to
-    // SimpleDriverDataSource rather than messing with the URL.
+    // DriverDataSource rather than messing with the URL.
     List<String> optionalArguments = new ArrayList<>();
     if (arguments.getWarehouse() != null) {
       optionalArguments.add(
@@ -266,14 +264,12 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     return buf.toString();
   }
 
-  private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcTemplate jdbcTemplate)
-      throws MetadataDumperUsageException {
-    String currentDatabase =
-        jdbcTemplate.queryForObject(String.format("USE DATABASE %s;", databaseName), String.class);
+  private void setCurrentDatabase(@Nonnull String databaseName, @Nonnull JdbcHandle handle)
+      throws SQLException, MetadataDumperUsageException {
+    String currentDatabase = handle.queryForString(String.format("USE DATABASE %s;", databaseName));
     if (currentDatabase == null) {
-      Supplier<List<String>> showQuery =
-          () -> jdbcTemplate.query("SHOW DATABASES", (rs, rowNum) -> rs.getString("name"));
-      throw unrecognizedDatabase(databaseName, showQuery);
+      List<String> names = handle.queryStringColumn("SHOW DATABASES", "name");
+      throw unrecognizedDatabase(databaseName, () -> names);
     }
   }
 

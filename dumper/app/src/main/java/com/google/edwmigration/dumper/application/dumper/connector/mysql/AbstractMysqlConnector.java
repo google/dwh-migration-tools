@@ -31,10 +31,10 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import java.sql.Driver;
 import java.util.List;
 import javax.sql.DataSource;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /** @author shevek */
 @RespectsArgumentDriverRequired
@@ -75,7 +75,7 @@ public abstract class AbstractMysqlConnector extends AbstractJdbcConnector {
     Driver driver =
         newDriver(arguments.getDriverPaths(), "com.mysql.jdbc.Driver", "org.mariadb.jdbc.Driver");
     String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+    DataSource dataSource = new DriverDataSource(driver, url, arguments.getUser(), password);
     return new JdbcHandle(dataSource);
   }
 }

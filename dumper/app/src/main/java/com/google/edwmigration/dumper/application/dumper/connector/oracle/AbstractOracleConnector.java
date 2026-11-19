@@ -40,6 +40,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcC
 import com.google.edwmigration.dumper.application.dumper.connector.ConnectorPropertyWithDefault;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import com.google.edwmigration.dumper.application.dumper.utils.PropertyParser;
 import java.io.IOException;
 import java.sql.Driver;
@@ -49,7 +50,6 @@ import java.util.Optional;
 import java.util.Properties;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /**
  * https://docs.oracle.com/cd/B28359_01/java.111/b31224/getsta.htm You must set the CLASSPATH
@@ -162,7 +162,7 @@ public abstract class AbstractOracleConnector extends AbstractJdbcConnector {
   public Handle open(@Nonnull ConnectorArguments arguments) throws Exception {
     Driver driver = newDriver(arguments.getDriverPaths(), "oracle.jdbc.OracleDriver");
     String url = buildUrl(arguments);
-    DataSource dataSource = new SimpleDriverDataSource(driver, url, buildProperties(arguments));
+    DataSource dataSource = new DriverDataSource(driver, url, buildProperties(arguments));
     try {
       return new JdbcHandle(dataSource);
     } catch (SQLRecoverableException e) {

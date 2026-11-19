@@ -57,7 +57,6 @@ slf4j = "1.7.36"
 snakeyaml = "2.5"
 snowflake = "4.4.1"
 spotless-plugin-gradle = "6.13.0"
-spring = "5.3.39"
 sqlite-jdbc = "3.53.2.0"
 system-rules = "1.19.0"
 tez = "0.10.0"
@@ -70,7 +69,6 @@ avro = "1.11.4"
 fastutil = "8.5.15"
 h2 = "2.4.240"
 parquet = "1.15.2"
-spring-main = "6.1.10"
 google = "2.69.0"
 oozie-client = "5.2.1"
 amazon = "2.31.16"
@@ -176,8 +174,6 @@ slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 snowflake-jdbc = { module = "net.snowflake:snowflake-jdbc", version.ref = "snowflake" }
 spotless-plugin-gradle = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless-plugin-gradle" }
-spring-core = { module = "org.springframework:spring-core", version.ref = "spring" }
-spring-jdbc = { module = "org.springframework:spring-jdbc", version.ref = "spring" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 system-rules = { module = "com.github.stefanbirkner:system-rules", version.ref = "system-rules" }
 tez-common = { module = "org.apache.tez:tez-common", version.ref = "tez" }

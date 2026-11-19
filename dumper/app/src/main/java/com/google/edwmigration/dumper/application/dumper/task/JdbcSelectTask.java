@@ -18,10 +18,10 @@ package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.Nonnull;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** @author shevek */
 public class JdbcSelectTask extends AbstractJdbcTask<Summary> {

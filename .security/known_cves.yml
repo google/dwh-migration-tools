@@ -1,13 +1,5 @@
 # yaml-language-server: $schema=./known_cves_schema.json
 
-- CVE: CVE-2025-41249
-  artifact: org.springframework:spring-core:5.3.39
-  justification: >
-    The CVE is in Spring Security's @EnableMethodSecurity feature,
-    this annotation or any other spring-security is not used in the Dumper tools.
-    There is no dependency on Spring Security in the Dumper tools.
-  expiration_date: 2027-01-31
-
 - CVE: CVE-2026-1225
   artifact: ch.qos.logback:logback-core:1.3.16
   justification: >
@@ -61,20 +53,6 @@
     com.databricks.internal.json); fixed in 20260719. The standalone json jar is fixed (20260814,
     PR #1221); the bundled copy needs a databricks-jdbc upgrade. Tracked in b/579421681.
   expiration_date: 2026-12-31
-- CVE: CVE-2026-41848
-  artifact: org.springframework:spring-core:5.3.39
-  justification: >
-    Not a false positive: Spring Framework advisory that the GitHub advisory database maps to spring-
-    core 5.3.39. No open-source 5.3.x release has the fix; 6.2.x needs Java 17, and the Java 8
-    alternative is removing Spring. Tracked in b/579421681.
-  expiration_date: 2027-01-31
-- CVE: CVE-2026-59282
-  artifact: org.springframework:spring-core:5.3.39
-  justification: >
-    Not a false positive: data binding of untrusted property paths (spring-beans), affecting 5.3.0 to
-    5.3.49; the Dumper does not bind untrusted property paths. No open-source 5.3.x release has the fix;
-    6.2.x needs Java 17, and the Java 8 alternative is removing Spring. Tracked in b/579421681.
-  expiration_date: 2027-01-31
 
 # ===================================================================================================
 # False positives of Dependency-Check's CPE matching: the CPE names the wrong product, implementation,
@@ -283,54 +261,6 @@
   justification: >
     CVE-2025-26796 is a cross-site scripting issue in the Oozie server's web console (GitHub advisory:
     org.apache.oozie:oozie-core). The Dumper ships only the client library, which has no web interface.
-  expiration_date: 2027-05-31
-
-- false_positive: "spring-core: Spring Framework advisories in modules the Dumper does not ship"
-  artifacts:
-    - org.springframework:spring-core
-  advisories:
-    - CVE-2016-1000027
-    - CVE-2024-38820
-    - CVE-2026-22735
-    - CVE-2026-22737
-    - CVE-2026-22740
-    - CVE-2026-22741
-    - CVE-2026-22745
-    - CVE-2026-41838
-    - CVE-2026-41839
-    - CVE-2026-41840
-    - CVE-2026-41841
-    - CVE-2026-41842
-    - CVE-2026-41843
-    - CVE-2026-41844
-    - CVE-2026-41845
-    - CVE-2026-41846
-    - CVE-2026-41847
-    - CVE-2026-41849
-    - CVE-2026-41850
-    - CVE-2026-41851
-    - CVE-2026-41852
-    - CVE-2026-41853
-    - CVE-2026-41855
-    - CVE-2026-47884
-    - CVE-2026-47886
-    - CVE-2026-47887
-    - CVE-2026-47888
-    - CVE-2026-47891
-    - CVE-2026-47892
-    - CVE-2026-47893
-    - CVE-2026-59280
-    - CVE-2026-59281
-    - CVE-2026-59283
-    - CVE-2026-59313
-    - CVE-2026-59314
-  justification: >
-    Dependency-Check maps the framework-wide spring_framework CPE onto spring-core. The Dumper ships
-    spring-core, spring-beans, spring-jdbc and spring-tx. Each advisory listed is in another module
-    (spring-webmvc, spring-webflux, spring-web, spring-websocket, spring-expression, spring-context,
-    spring-context-support, spring-messaging, spring-jms), per the GitHub-reviewed advisory or, where
-    GitHub has not reviewed it, per the description. The advisories that do affect the shipped modules
-    are listed as open findings above.
   expiration_date: 2027-05-31
 
 - false_positive: "Standalone netty jars: request smuggling advisory in netty-codec-http"

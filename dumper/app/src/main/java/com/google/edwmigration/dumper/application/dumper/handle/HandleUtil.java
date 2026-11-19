@@ -23,18 +23,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 @ParametersAreNonnullByDefault
 public class HandleUtil {
 
   private static final Logger logger = LoggerFactory.getLogger(HandleUtil.class);
-
-  public static JdbcTemplate createJdbcTemplate(DataSource dataSource) {
-    JdbcTemplate template = new JdbcTemplate(dataSource);
-    template.setFetchSize(1024);
-    return template;
-  }
 
   static void verifyJdbcConnection(DataSource dataSource) throws SQLException {
     logger.debug("Testing connection to database using {}...", dataSource);

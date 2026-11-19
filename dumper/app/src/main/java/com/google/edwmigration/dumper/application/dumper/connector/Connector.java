@@ -18,7 +18,6 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static org.springframework.core.annotation.AnnotationUtils.getDeclaredRepeatableAnnotations;
 
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
@@ -34,7 +33,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nonnull;
 
 /** @author shevek */
@@ -110,9 +108,7 @@ public interface Connector {
 
     Map<String, InputDescriptor> map = new HashMap<>();
     for (Class<?> type : classes) {
-      Set<RespectsInput> respectsInputs =
-          getDeclaredRepeatableAnnotations(type, RespectsInput.class);
-      for (RespectsInput item : respectsInputs) {
+      for (RespectsInput item : DeclaredRespectsInputs.find(type)) {
         InputDescriptor descriptor = new InputDescriptor(item);
         map.putIfAbsent(descriptor.getKey(), descriptor);
       }

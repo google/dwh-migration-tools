@@ -29,10 +29,10 @@ import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import javax.annotation.Nonnull;
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.springframework.util.FileSystemUtils;
 
 /** @author shevek */
 @RunWith(JUnit4.class)
@@ -60,7 +60,7 @@ public class FileSystemOutputHandleFactoryTest {
   @Test
   public void testFileSystemFile() throws Exception {
     File root = TestUtils.newOutputDirectory("filesystem.dir");
-    FileSystemUtils.deleteRecursively(root);
+    FileUtils.deleteDirectory(root);
     root.mkdirs();
     testSinkFactory(
         new FileSystemOutputHandleFactory(FileSystems.getDefault(), root.getAbsolutePath()));

@@ -25,8 +25,10 @@ import com.google.edwmigration.dumper.application.dumper.io.OutputHandle.WriteMo
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask.TaskOptions;
 import com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils;
 import java.io.File;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.junit.BeforeClass;
@@ -59,9 +61,11 @@ public class JdbcSelectTaskTest {
     Class.forName("org.sqlite.JDBC");
     logger.info("Writing to sqlite database: {}", FILE.getAbsolutePath());
     FILE.delete();
-    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE)) {
-      handle.getJdbcTemplate().execute("CREATE TABLE foo ( a INT, b INT, c INT )");
-      handle.getJdbcTemplate().execute("INSERT INTO foo VALUES ( 1, 2, 3 )");
+    try (JdbcHandle handle = DumperTestUtils.newJdbcHandle(FILE);
+        Connection connection = handle.getDataSource().getConnection();
+        Statement statement = connection.createStatement()) {
+      statement.execute("CREATE TABLE foo ( a INT, b INT, c INT )");
+      statement.execute("INSERT INTO foo VALUES ( 1, 2, 3 )");
     }
   }
 

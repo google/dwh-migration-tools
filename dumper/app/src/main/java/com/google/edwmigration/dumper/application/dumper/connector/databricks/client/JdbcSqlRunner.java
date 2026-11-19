@@ -31,6 +31,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.handle.HandleUtil;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException;
@@ -50,7 +51,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.WeakHashMap;
 import javax.annotation.concurrent.ThreadSafe;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /**
  * Executes SQL statements on a running all-purpose cluster or SQL warehouse with the Databricks
@@ -127,7 +127,7 @@ public final class JdbcSqlRunner implements DatabricksSqlRunner {
     Driver driver = loadDriver();
     HikariConfig config =
         HandleUtil.createHikariConfig(
-            new SimpleDriverDataSource() {
+            new DriverDataSource() {
               @Override
               public Connection getConnection() throws SQLException {
                 return openConnection(driver, databricksConfig, url);

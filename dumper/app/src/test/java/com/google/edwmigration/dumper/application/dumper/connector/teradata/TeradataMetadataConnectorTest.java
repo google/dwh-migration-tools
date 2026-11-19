@@ -24,34 +24,32 @@ import com.google.common.io.Resources;
 import com.google.common.primitives.Ints;
 import com.google.edwmigration.dumper.application.dumper.*;
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractConnectorExecutionTest;
+import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.ProgressMonitor;
 import com.google.edwmigration.dumper.plugin.ext.jdk.progress.RecordProgressMonitor;
 import com.google.edwmigration.dumper.plugin.lib.dumper.spi.TeradataMetadataDumpFormat;
 import com.google.edwmigration.dumper.test.TestUtils;
 import java.io.File;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.UrlResource;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.ConnectionCallback;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
-import org.springframework.util.FileSystemUtils;
 
 /**
  * ./gradlew :compilerworks-application-dumper:test --tests
@@ -194,64 +192,59 @@ public class TeradataMetadataConnectorTest extends AbstractConnectorExecutionTes
   private File runDumper(String schemaSql, final int nDb, final int nTbl, final int nCol)
       throws Exception {
     if (true) {
-      DataSource dataSource = new DriverManagerDataSource("jdbc:postgresql:cw", "cw", "password");
+      DataSource dataSource =
+          new DriverDataSource(new org.postgresql.Driver(), "jdbc:postgresql:cw", "cw", "password");
       logger.debug("Resetting database...");
-      try (Connection connection = dataSource.getConnection()) {
+      try (Connection connection = dataSource.getConnection();
+          Statement statement = connection.createStatement()) {
         URL url = Resources.getResource(ResourceLocation.class, schemaSql);
-        ScriptUtils.executeSqlScript(connection, new UrlResource(url));
+        String script = Resources.toString(url, StandardCharsets.UTF_8);
+        for (String sql : JdbcHandle.splitSqlStatements(script)) {
+          statement.execute(sql);
+        }
       }
-      JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
       logger.debug("Rebuilding database....");
       try (ProgressMonitor monitor =
-          new RecordProgressMonitor("Creating sample schema", nDb * nTbl * nCol)
-              .withBlockSize(256)) {
-        jdbcTemplate.execute(
-            new ConnectionCallback<Void>() {
-              @Override
-              public Void doInConnection(Connection connection)
-                  throws SQLException, DataAccessException {
-                PreparedStatement q_db =
-                    connection.prepareStatement(
-                        "insert into DBC.DBase (\"DatabaseName\", \"DatabaseId\") values (?, ?)");
-                PreparedStatement q_tbl =
-                    connection.prepareStatement(
-                        "insert into DBC.TVM (\"DatabaseId\", \"TVMNameI\", \"TVMName\", \"TVMId\", \"TableKind\") values (?, ?, ?, ?, ?)");
-                PreparedStatement q_col =
-                    connection.prepareStatement(
-                        "insert into DBC.TVFields (\"TableId\", \"FieldName\", \"FieldId\", \"FieldType\") values (?, ?, ?, ?)");
-
-                connection.setAutoCommit(false);
-                for (int i_db = 0; i_db < nDb; i_db++) {
-                  byte[] databaseId = Ints.toByteArray(0xFF010000 | i_db);
-                  String databaseName = "db_" + i_db;
-                  exec(q_db, databaseName, databaseId);
-                  for (int i_tbl = 0; i_tbl < nTbl; i_tbl++) {
-                    byte[] tableId = newTableId(i_db, i_tbl);
-                    String tableName = "tbl_" + i_db + "_" + i_tbl;
-                    exec(q_tbl, databaseId, tableName, tableName, tableId, TableKind.T.name());
-                    q_col.clearBatch();
-                    for (int i_col = 0; i_col < nCol; i_col++) {
-                      short columnId = (short) i_col;
-                      String columnName = "col_" + i_db + "_" + i_tbl + "_" + i_col;
-                      setParameterValues(q_col, tableId, columnName, columnId, "CV");
-                      q_col.addBatch();
-                      monitor.count();
-                    }
-                    q_col.executeBatch();
-                    q_col.clearBatch();
-                  }
-                }
-                connection.commit();
-
-                return null;
-              }
-            });
+              new RecordProgressMonitor("Creating sample schema", nDb * nTbl * nCol)
+                  .withBlockSize(256);
+          Connection connection = dataSource.getConnection();
+          PreparedStatement q_db =
+              connection.prepareStatement(
+                  "insert into DBC.DBase (\"DatabaseName\", \"DatabaseId\") values (?, ?)");
+          PreparedStatement q_tbl =
+              connection.prepareStatement(
+                  "insert into DBC.TVM (\"DatabaseId\", \"TVMNameI\", \"TVMName\", \"TVMId\", \"TableKind\") values (?, ?, ?, ?, ?)");
+          PreparedStatement q_col =
+              connection.prepareStatement(
+                  "insert into DBC.TVFields (\"TableId\", \"FieldName\", \"FieldId\", \"FieldType\") values (?, ?, ?, ?)")) {
+        connection.setAutoCommit(false);
+        for (int i_db = 0; i_db < nDb; i_db++) {
+          byte[] databaseId = Ints.toByteArray(0xFF010000 | i_db);
+          String databaseName = "db_" + i_db;
+          exec(q_db, databaseName, databaseId);
+          for (int i_tbl = 0; i_tbl < nTbl; i_tbl++) {
+            byte[] tableId = newTableId(i_db, i_tbl);
+            String tableName = "tbl_" + i_db + "_" + i_tbl;
+            exec(q_tbl, databaseId, tableName, tableName, tableId, TableKind.T.name());
+            q_col.clearBatch();
+            for (int i_col = 0; i_col < nCol; i_col++) {
+              short columnId = (short) i_col;
+              String columnName = "col_" + i_db + "_" + i_tbl + "_" + i_col;
+              setParameterValues(q_col, tableId, columnName, columnId, "CV");
+              q_col.addBatch();
+              monitor.count();
+            }
+            q_col.executeBatch();
+            q_col.clearBatch();
+          }
+        }
+        connection.commit();
       }
     }
 
     File outputFile = TestUtils.newOutputFile("compilerworks-teradata-metadata-synthetic.zip");
-    FileSystemUtils.deleteRecursively(outputFile);
+    FileUtils.deleteQuietly(outputFile);
 
     List<String> args =
         Arrays.asList(
