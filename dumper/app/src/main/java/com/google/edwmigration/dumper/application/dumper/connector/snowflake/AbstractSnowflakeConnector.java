@@ -50,8 +50,10 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
@@ -83,6 +85,8 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
   static final String OCSP_FAIL_OPEN_SYSTEM_PROPERTY = "net.snowflake.jdbc.ocspFailOpen";
   private static final ImmutableSet<String> OCSP_DISABLING_PROPERTIES =
       ImmutableSet.of("disableOCSPChecks", "insecureMode");
+  private static final Pattern UNQUOTED_IDENTIFIER_PATTERN =
+      Pattern.compile("[A-Za-z_][A-Za-z0-9_$]*");
 
   public AbstractSnowflakeConnector(@Nonnull String name) {
     super(name);
@@ -288,6 +292,14 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
     return new MetadataDumperUsageException(message);
   }
 
+  /**
+   * Returns the database name as a Snowflake identifier for use in SQL.
+   *
+   * <p>A name that is a valid unquoted identifier is returned without quotes, so it resolves
+   * case-insensitively as before. Any other name is returned as a quoted identifier: an unquoted
+   * input is upper-cased first, as Snowflake does for unquoted identifiers, while a name given in
+   * double quotes keeps its case.
+   */
   @Nonnull
   static String sanitizeDatabaseName(@Nonnull String databaseName) {
     int lengthWithQuotes = databaseName.length() + 2;
@@ -304,7 +316,12 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
       throw new MetadataDumperUsageException(
           "Database name has incorrectly placed double quote(s). Aborting query.");
     }
-    return trimmedName;
+    if (UNQUOTED_IDENTIFIER_PATTERN.matcher(trimmedName).matches()) {
+      return trimmedName;
+    }
+    boolean isQuoted = databaseName.startsWith("\"") && databaseName.endsWith("\"");
+    String name = isQuoted ? trimmedName : trimmedName.toUpperCase(Locale.ROOT);
+    return "\"" + name + "\"";
   }
 
   static String describeAsDelegate(Connector connector, String baseName) {

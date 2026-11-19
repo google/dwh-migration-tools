@@ -528,7 +528,8 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   @VisibleForTesting
   public static String identifierNameStringLiteral(@Nonnull String identifierName) {
     String rawIdentifierString = identifierNameStringRaw(identifierName);
-    String escapedIdentifierSqlLiteral = rawIdentifierString.replace("'", "''");
+    String escapedIdentifierSqlLiteral =
+        rawIdentifierString.replace("\\", "\\\\").replace("'", "''");
     return String.format("'%s'", escapedIdentifierSqlLiteral);
   }
 
@@ -591,11 +592,13 @@ public class SnowflakeMetadataConnector extends AbstractSnowflakeConnector
   }
 
   private static String identifierNameStringRaw(@Nonnull String identifierName) {
-    if (identifierName.startsWith("\"") && identifierName.endsWith("\"")) {
+    if (identifierName.length() >= 2
+        && identifierName.startsWith("\"")
+        && identifierName.endsWith("\"")) {
       // This is a quoted identifier, it should be matched case-sensitively
       identifierName = identifierName.substring(1, identifierName.length() - 1);
     } else {
-      // Unquoted identifiers are stored uppercase, single quotes need to be escaped.
+      // Unquoted identifiers are stored uppercase, single quotes and backslashes need escaping.
       identifierName = identifierName.toUpperCase();
     }
     return identifierName;
