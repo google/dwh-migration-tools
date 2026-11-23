@@ -37,6 +37,8 @@ import com.google.edwmigration.dumper.application.dumper.connector.Connector;
 import com.google.edwmigration.dumper.application.dumper.connector.MetadataConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -63,9 +65,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /**
  * ./gradlew :compilerworks-application-dumper:installDist &&
@@ -136,7 +135,7 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
         @Nonnull ByteSink sink, @Nonnull JdbcHandle handle) {
       return new ResultSetExtractor<List<String>>() {
         @Override
-        public List<String> extractData(ResultSet rs) throws SQLException, DataAccessException {
+        public List<String> extractData(ResultSet rs) throws SQLException {
           CSVFormat format = newCsvFormat(rs);
           try (Writer writer = sink.asCharSink(StandardCharsets.UTF_8).openBufferedStream();
               CSVPrinter printer = format.print(writer)) {
@@ -326,7 +325,7 @@ public class NetezzaMetadataConnector extends AbstractJdbcConnector
 
     Driver driver = newDriver(arguments.getDriverPaths(), "org.netezza.Driver");
     String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+    DataSource dataSource = new DriverDataSource(driver, url, arguments.getUser(), password);
     return new JdbcHandle(dataSource);
   }
 

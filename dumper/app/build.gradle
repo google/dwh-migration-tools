@@ -102,8 +102,6 @@ dependencies {
     implementation(libs.harawata.appdirs) {
         exclude group: "net.java.dev.jna", module: "jna"
     }
-    implementation libs.spring.core
-    implementation libs.spring.jdbc
     implementation libs.hikaricp
     implementation libs.rate.limited.logger
     implementation libs.jackson.databind

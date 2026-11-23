@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.TaskRunContext;
 import java.io.IOException;
@@ -33,7 +34,6 @@ import java.time.format.DateTimeFormatter;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 @ParametersAreNonnullByDefault
 public class TeradataQueryLogsJdbcTask extends AbstractJdbcTask<QueryLogEntries> {

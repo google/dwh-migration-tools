@@ -19,12 +19,12 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import com.google.common.io.ByteSink;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** @author ishmum */
 public class JdbcSelectIntervalTask extends JdbcSelectTask {

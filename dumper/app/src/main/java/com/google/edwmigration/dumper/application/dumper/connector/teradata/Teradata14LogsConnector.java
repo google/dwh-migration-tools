@@ -32,6 +32,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterable;
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedIntervalIterableGenerator;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.DumpMetadataTask;
 import com.google.edwmigration.dumper.application.dumper.task.FormatTask;
@@ -52,9 +53,6 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 /** */
 @AutoService({Connector.class, LogsConnector.class})
@@ -138,8 +136,7 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
 
     @Nonnull
     private String getSql(@Nonnull JdbcHandle handle) {
-      Function<String, Boolean> validator =
-          expression -> isValid(handle.getJdbcTemplate(), expression);
+      Function<String, Boolean> validator = expression -> isValid(handle, expression);
       Predicate<String> predicate =
           expression -> state.expressionValidity.computeIfAbsent(expression, validator);
       return getSql(predicate);
@@ -153,15 +150,15 @@ public class Teradata14LogsConnector extends AbstractTeradataConnector
      * instance.
      */
     @Nonnull
-    private Boolean isValid(@Nonnull JdbcTemplate template, @Nonnull String expression) {
+    private Boolean isValid(@Nonnull JdbcHandle handle, @Nonnull String expression) {
       String table = isQueryTable(expression) ? queryTable + " ST" : logTable + " L";
       String sql = String.format(EXPRESSION_VALIDITY_QUERY, expression, table);
       logger.info(
           "Checking legality of projection expression '{}' using query: {}", expression, sql);
       try {
-        template.query(sql, rs -> {});
+        handle.executeQuery(sql);
         return Boolean.TRUE;
-      } catch (DataAccessException e) {
+      } catch (SQLException e) {
         logger.info(
             "Attribute '{}' is absent, will use NULL in projection: {}",
             expression,

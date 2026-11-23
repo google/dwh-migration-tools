@@ -18,6 +18,7 @@ package com.google.edwmigration.dumper.application.dumper.connector;
 
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -38,7 +39,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /** @author shevek */
 public abstract class AbstractJdbcConnector extends AbstractConnector {
@@ -156,7 +156,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
   }
 
   /** Just to put a toString() on it. */
-  private static class JdbcDataSource extends SimpleDriverDataSource {
+  private static class JdbcDataSource extends DriverDataSource {
 
     public JdbcDataSource(Driver driver, String url, String username, String password) {
       super(driver, url, username, password);
@@ -176,7 +176,7 @@ public abstract class AbstractJdbcConnector extends AbstractConnector {
   }
 
   @Nonnull
-  protected SimpleDriverDataSource newSimpleDataSource(
+  protected DriverDataSource newSimpleDataSource(
       @Nonnull Driver driver, @Nonnull String url, @Nonnull ConnectorArguments arguments)
       throws SQLException, MetadataDumperUsageException {
     if (!driver.acceptsURL(url))

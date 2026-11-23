@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * DTO class for the official Cloudera API <a
@@ -50,7 +50,7 @@ public class ApiYarnApplicationDto {
       return null;
     }
     String applicationId = apiYarnApplication.at("/applicationId").asText();
-    return StringUtils.hasText(applicationId) ? applicationId : null;
+    return StringUtils.isNotBlank(applicationId) ? applicationId : null;
   }
 
   public String getClusterName() {

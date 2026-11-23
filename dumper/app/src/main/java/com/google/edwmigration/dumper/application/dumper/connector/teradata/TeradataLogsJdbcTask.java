@@ -35,6 +35,7 @@ import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.AbstractTeradataConnector.SharedState;
 import com.google.edwmigration.dumper.application.dumper.connector.teradata.query.model.Expression;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.ResultSetExtractor;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractJdbcTask;
 import com.google.edwmigration.dumper.application.dumper.task.AbstractTask;
 import com.google.edwmigration.dumper.application.dumper.task.Summary;
@@ -53,9 +54,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
 
 public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
   private static final Logger logger = LoggerFactory.getLogger(TeradataLogsConnector.class);
@@ -166,8 +164,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
 
   @Nonnull
   private String getOrCreateSql(@Nonnull JdbcHandle handle) {
-    Function<String, Boolean> validator =
-        expression -> isValid(handle.getJdbcTemplate(), expression);
+    Function<String, Boolean> validator = expression -> isValid(handle, expression);
     Predicate<String> predicate =
         expression -> state.expressionValidity.computeIfAbsent(expression, validator);
     return getOrCreateSql(predicate, expressions);
@@ -294,7 +291,7 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
    * instance.
    */
   @Nonnull
-  private Boolean isValid(@Nonnull JdbcTemplate template, @Nonnull String expression) {
+  private Boolean isValid(@Nonnull JdbcHandle handle, @Nonnull String expression) {
     String table =
         isQueryTable(expression)
             ? tableNames.sqlLogsTableName() + " ST"
@@ -302,9 +299,9 @@ public class TeradataLogsJdbcTask extends AbstractJdbcTask<Summary> {
     String sql = formatQuery(String.format(EXPRESSION_VALIDITY_QUERY, expression, table));
     logger.info("Checking legality of projection expression '{}' using query: {}", expression, sql);
     try {
-      template.query(sql, rs -> {});
+      handle.executeQuery(sql);
       return Boolean.TRUE;
-    } catch (DataAccessException e) {
+    } catch (SQLException e) {
       logger.info(
           "Projection expression '{}' is not valid, will use NULL in projection: {}",
           expression,

@@ -34,10 +34,10 @@ import com.google.edwmigration.dumper.application.dumper.annotations.RespectsInp
 import com.google.edwmigration.dumper.application.dumper.connector.AbstractJdbcConnector;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import com.google.edwmigration.dumper.application.dumper.handle.JdbcHandle;
+import com.google.edwmigration.dumper.application.dumper.jdbc.DriverDataSource;
 import java.sql.Driver;
 import javax.annotation.Nonnull;
 import javax.sql.DataSource;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 /** @author matt */
 @RespectsArgumentDriverRequired
@@ -76,7 +76,7 @@ public abstract class AbstractVerticaConnector extends AbstractJdbcConnector {
 
     Driver driver = newDriver(arguments.getDriverPaths(), "com.vertica.jdbc.Driver");
     String password = arguments.getPasswordIfFlagProvided().orElse(null);
-    DataSource dataSource = new SimpleDriverDataSource(driver, url, arguments.getUser(), password);
+    DataSource dataSource = new DriverDataSource(driver, url, arguments.getUser(), password);
     return new JdbcHandle(dataSource);
   }
 }
