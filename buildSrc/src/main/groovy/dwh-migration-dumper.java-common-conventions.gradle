@@ -84,6 +84,17 @@ dependencies {
         testImplementation libs.system.rules
         testImplementation libs.postgresql
         testImplementation libs.joda.time
+
+        // Versions of libraries that come in through the Google Cloud clients
+        implementation libs.dumper.google.cloud.storage
+        implementation libs.api.common
+        implementation libs.google.auth.library.credentials
+        implementation libs.google.auth.library.oauth2.http
+        implementation libs.google.http.client
+        implementation libs.google.http.client.apache.v2
+        implementation libs.google.http.client.appengine
+        implementation libs.google.http.client.gson
+        implementation libs.conscrypt.openjdk.uber
     }
 
     implementation libs.slf4j.api
