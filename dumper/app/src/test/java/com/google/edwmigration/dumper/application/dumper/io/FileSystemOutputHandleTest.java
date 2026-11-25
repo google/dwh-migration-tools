@@ -97,6 +97,22 @@ public class FileSystemOutputHandleTest {
   }
 
   @Test
+  public void constructor_zipAbsoluteTarget_throws() throws IOException {
+    try (FileSystem zip = newZipFileSystem()) {
+      Path root = zip.getPath("/");
+
+      assertThrows(
+          IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, "/columns.csv"));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new FileSystemOutputHandle(root, "/DB/columns.csv"));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> new FileSystemOutputHandle(root, "/../columns.csv"));
+    }
+  }
+
+  @Test
   public void constructor_directoryTargetInSubdirectory_writesUnderRoot() throws IOException {
     Path root = temporaryFolder.newFolder("out").toPath();
     OutputHandle handle = new FileSystemOutputHandle(root, "DB/columns.csv");
@@ -120,6 +136,15 @@ public class FileSystemOutputHandleTest {
     assertThrows(
         IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, absoluteTarget));
     assertThrows(IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, "."));
+  }
+
+  @Test
+  public void constructor_directoryAbsoluteTargetUnderRoot_throws() throws IOException {
+    Path root = temporaryFolder.newFolder("out").toPath();
+    String absoluteTarget = root.toAbsolutePath().resolve("columns.csv").toString();
+
+    assertThrows(
+        IllegalArgumentException.class, () -> new FileSystemOutputHandle(root, absoluteTarget));
   }
 
   private FileSystem newZipFileSystem() throws IOException {
