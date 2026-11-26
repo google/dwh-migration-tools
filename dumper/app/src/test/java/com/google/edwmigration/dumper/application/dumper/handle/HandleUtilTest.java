@@ -241,4 +241,24 @@ public class HandleUtilTest {
         IllegalArgumentException.class,
         () -> JdbcHandle.splitSqlStatements("SELECT 1; /* not closed"));
   }
+
+  @Test
+  public void splitSqlStatements_blockCommentStartsWithSlash_removedUpToItsEnd() {
+    assertEquals(
+        ImmutableList.of("SELECT 1", "SELECT 2"),
+        JdbcHandle.splitSqlStatements("SELECT 1; /*/ comment */ SELECT 2;"));
+  }
+
+  @Test
+  public void splitSqlStatements_slashAfterBlockCommentStart_doesNotCloseComment() {
+    assertThrows(
+        IllegalArgumentException.class, () -> JdbcHandle.splitSqlStatements("SELECT 1; /*/"));
+  }
+
+  @Test
+  public void splitSqlStatements_emptyBlockComment_removed() {
+    assertEquals(
+        ImmutableList.of("SELECT 1", "SELECT 2"),
+        JdbcHandle.splitSqlStatements("SELECT 1; /**/ SELECT 2;"));
+  }
 }

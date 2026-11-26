@@ -209,7 +209,9 @@ public class JdbcHandle implements Handle {
    *   <li>Statements end at {@code ;}. A script that has no {@code ;} is split at line ends.
    *   <li>A separator inside single or double quotes does not end a statement. A backslash keeps
    *       the character after it as it is.
-   *   <li>{@code --} comments up to the end of the line and block comments are removed.
+   *   <li>{@code --} comments up to the end of the line and block comments are removed. A block
+   *       comment ends at the first {@code *}{@code /} after its opening {@code /}{@code *}, so
+   *       {@code /}{@code *}{@code /} opens a comment and does not close it.
    *   <li>Outside quotes, each run of spaces, tabs and line ends becomes one space, and the ones at
    *       the start of a statement are removed.
    * </ul>
@@ -303,7 +305,8 @@ public class JdbcHandle implements Handle {
         }
 
         if (text.startsWith(BLOCK_COMMENT_START, i)) {
-          int commentEnd = text.indexOf(BLOCK_COMMENT_END, i);
+          // The end is searched after the start, so that the two do not share the '*' of "/*/".
+          int commentEnd = text.indexOf(BLOCK_COMMENT_END, i + BLOCK_COMMENT_START.length());
           Preconditions.checkArgument(
               commentEnd >= 0, "The SQL script has a block comment that is not closed");
           i = commentEnd + BLOCK_COMMENT_END.length() - 1;
