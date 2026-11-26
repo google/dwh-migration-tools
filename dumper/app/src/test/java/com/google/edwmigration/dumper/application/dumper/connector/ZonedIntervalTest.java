@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,6 +35,10 @@ public class ZonedIntervalTest {
   private final ZonedDateTime FIVE_DAYS_AGO = getTimeSubtractingDays(5);
   private final ZonedDateTime THREE_DAYS_AGO = getTimeSubtractingDays(3);
   private final ZonedDateTime ONE_DAY_AGO = getTimeSubtractingDays(1);
+  private static final ZonedDateTime START_UTC =
+      ZonedDateTime.of(2024, 3, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+  private static final ZonedDateTime END_UTC = START_UTC.plusDays(2);
+  private static final ZoneOffset OTHER_ZONE = ZoneOffset.ofHours(2);
 
   @Test
   public void equals_trueWhenStartAndEndTimeAreEqual() {
@@ -63,6 +68,40 @@ public class ZonedIntervalTest {
 
     // Assert
     assertNotEquals("Intervals should not be equal", i1, i2);
+  }
+
+  @Test
+  public void equals_trueWhenSameInstantsAreInDifferentZones() {
+    // Arrange
+    ZonedInterval i1 = new ZonedInterval(START_UTC, END_UTC);
+    ZonedInterval i2 =
+        new ZonedInterval(
+            START_UTC.withZoneSameInstant(OTHER_ZONE), END_UTC.withZoneSameInstant(OTHER_ZONE));
+
+    // Assert
+    assertEquals("Intervals should be equal", i1, i2);
+  }
+
+  @Test
+  public void hashCode_sameWhenStartAndEndTimeAreEqual() {
+    // Arrange
+    ZonedInterval i1 = new ZonedInterval(START_UTC, END_UTC);
+    ZonedInterval i2 = new ZonedInterval(START_UTC, END_UTC);
+
+    // Assert
+    assertEquals("Hash codes should be equal", i1.hashCode(), i2.hashCode());
+  }
+
+  @Test
+  public void hashCode_sameWhenSameInstantsAreInDifferentZones() {
+    // Arrange
+    ZonedInterval i1 = new ZonedInterval(START_UTC, END_UTC);
+    ZonedInterval i2 =
+        new ZonedInterval(
+            START_UTC.withZoneSameInstant(OTHER_ZONE), END_UTC.withZoneSameInstant(OTHER_ZONE));
+
+    // Assert
+    assertEquals("Hash codes should be equal", i1.hashCode(), i2.hashCode());
   }
 
   @Test
