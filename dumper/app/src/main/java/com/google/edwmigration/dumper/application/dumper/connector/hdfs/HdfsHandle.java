@@ -21,13 +21,19 @@ import static com.google.edwmigration.dumper.application.dumper.ConnectorArgumen
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_HADOOP_HDFS_SITE_XML;
 import static com.google.edwmigration.dumper.application.dumper.ConnectorArguments.OPT_KERBEROS_PRINCIPAL;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
+import com.google.edwmigration.dumper.application.dumper.MetadataDumperUsageException;
 import com.google.edwmigration.dumper.application.dumper.handle.Handle;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.security.auth.login.LoginException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -120,12 +126,87 @@ class HdfsHandle implements Handle {
         UserGroupInformation.setConfiguration(conf);
         UserGroupInformation.loginUserFromSubject(null);
       }
+    } else {
+      ensureLoginUser();
     }
     set(conf, "fs.defaultFS", "hdfs://" + clusterHost + ":" + port + "/");
     set(conf, "fs.hdfs.impl", DistributedFileSystem.class.getName());
     FileSystem fs = FileSystem.get(conf);
     checkArgument(fs instanceof DistributedFileSystem, "Not a DistributedFileSystem");
     dfs = (DistributedFileSystem) fs;
+  }
+
+  /**
+   * Makes sure that Hadoop has a login user when Kerberos is not used.
+   *
+   * <p>Hadoop takes the user from the operating system first, and fails with a {@link
+   * LoginException} cause when the UID of this process has no user name, as in a container that
+   * runs with a UID that is not in its passwd file. {@code HADOOP_USER_NAME} is not read in that
+   * case. The user is then taken from the environment or system properties, see {@link
+   * #fallbackUserName}. Other login errors, such as an unreadable token file, are rethrown.
+   */
+  private static void ensureLoginUser() throws IOException {
+    try {
+      UserGroupInformation.getLoginUser();
+    } catch (IOException e) {
+      if (UserGroupInformation.isSecurityEnabled() || !isLoginFailure(e)) {
+        throw e;
+      }
+      String userName =
+          fallbackUserName(
+              System.getenv("HADOOP_USER_NAME"),
+              System.getProperty("HADOOP_USER_NAME"),
+              System.getenv("USER"),
+              System.getProperty("user.name"));
+      if (userName == null) {
+        throw new MetadataDumperUsageException(
+            String.format(
+                "Hadoop could not determine the user of this process (%s). Set the"
+                    + " HADOOP_USER_NAME environment variable to the user to access HDFS as.",
+                e.getMessage()));
+      }
+      logger.warn(
+          "Hadoop could not determine the user of this process ({}). Accessing HDFS as '{}'.",
+          e.getMessage(),
+          userName);
+      UserGroupInformation.setLoginUser(UserGroupInformation.createRemoteUser(userName));
+    }
+  }
+
+  /**
+   * Returns whether the exception wraps a JAAS {@link LoginException} from Hadoop's OS user lookup,
+   * rather than a later failure such as reading a token file.
+   */
+  @VisibleForTesting
+  static boolean isLoginFailure(@Nonnull IOException exception) {
+    return exception.getCause() instanceof LoginException;
+  }
+
+  /**
+   * Returns the first usable name of: the HADOOP_USER_NAME environment variable, the
+   * HADOOP_USER_NAME system property, the USER environment variable, and the user.name system
+   * property, which Java sets to "?" for a UID without a user name. Returns null if there is none.
+   */
+  @VisibleForTesting
+  @CheckForNull
+  static String fallbackUserName(
+      @Nullable String hadoopUserNameEnv,
+      @Nullable String hadoopUserNameProperty,
+      @Nullable String user,
+      @Nullable String userNameProperty) {
+    if (!Strings.isNullOrEmpty(hadoopUserNameEnv)) {
+      return hadoopUserNameEnv;
+    }
+    if (!Strings.isNullOrEmpty(hadoopUserNameProperty)) {
+      return hadoopUserNameProperty;
+    }
+    if (!Strings.isNullOrEmpty(user)) {
+      return user;
+    }
+    if (!Strings.isNullOrEmpty(userNameProperty) && !"?".equals(userNameProperty)) {
+      return userNameProperty;
+    }
+    return null;
   }
 
   private static void set(Configuration conf, String property, String value) {
