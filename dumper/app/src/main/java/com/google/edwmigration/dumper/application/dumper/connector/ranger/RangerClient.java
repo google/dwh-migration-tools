@@ -372,7 +372,7 @@ class RangerClient implements AutoCloseable {
       URL url;
       try {
         url =
-            baseUri
+            new URIBuilder(baseUri.build())
                 .setPath(path)
                 .addParameters(
                     queryParams.entrySet().stream()
