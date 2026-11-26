@@ -124,7 +124,7 @@ final class SnowflakeYamlSummaryTask extends AbstractJdbcTask<Void> {
       Optional<String> count = Optional.ofNullable(resultSet.getString(1));
       String yaml = rootString(isAssessment, count);
       try (Writer writer = sink.asCharSink(UTF_8).openBufferedStream()) {
-        mapper.writeValue(writer, yaml);
+        writer.write(yaml);
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }
