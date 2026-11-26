@@ -48,12 +48,15 @@ public class FileSystemOutputHandle implements OutputHandle {
    * Resolves a path against the root and checks that the result stays under the root.
    *
    * <p>The relative path is checked on its own as well, because some file systems, such as the ZIP
-   * file system, clamp {@code ..} at their root instead of leaving it.
+   * file system, clamp {@code ..} at their root instead of leaving it. An absolute path is rejected
+   * even when it points under the root, because resolving it ignores the root.
    */
   @Nonnull
   private static Path resolveUnderRoot(@Nonnull Path rootPath, @Nonnull String path) {
     Path root = rootPath.toAbsolutePath().normalize();
     Path relative = rootPath.getFileSystem().getPath(path).normalize();
+    Preconditions.checkArgument(
+        !relative.isAbsolute(), "Output path '%s' is not a relative path.", path);
     Path resolved = root.resolve(relative).normalize();
     Preconditions.checkArgument(
         !relative.startsWith("..") && resolved.startsWith(root) && !resolved.equals(root),
