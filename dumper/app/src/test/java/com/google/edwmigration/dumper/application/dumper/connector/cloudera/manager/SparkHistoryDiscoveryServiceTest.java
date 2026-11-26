@@ -22,16 +22,21 @@ import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.google.common.collect.ImmutableList;
+import com.google.edwmigration.dumper.application.dumper.ConnectorArguments;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.List;
+import javax.net.ssl.SSLHandshakeException;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -42,8 +47,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.slf4j.Logger;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SparkHistoryDiscoveryServiceTest {
@@ -383,6 +390,51 @@ public class SparkHistoryDiscoveryServiceTest {
         service.resolveUrl("my-cluster", knoxClient, com.google.common.collect.ImmutableList.of());
 
     assertTrue(result.isEmpty());
+  }
+
+  @Test
+  public void resolveUrl_knoxCertificateRejected_warnsAndNamesTlsFlag() throws Exception {
+    server.stubFor(
+        get("/api/v41/clusters/my-cluster/services")
+            .willReturn(okJson("{\"items\": [{\"name\": \"knox-1\", \"type\": \"KNOX\"}]}")));
+    server.stubFor(
+        get("/api/v41/clusters/my-cluster/services/knox-1/roles")
+            .willReturn(
+                okJson(
+                    "{\"items\": [{\"hostRef\": {\"hostname\": \"knox-host.example.com\"}, \"roleConfigGroupRef\": {\"roleConfigGroupName\": \"knox-BASE\"}}]}")));
+    server.stubFor(
+        get("/api/v41/clusters/my-cluster/services/knox-1/roleConfigGroups/knox-BASE/config")
+            .willReturn(
+                okJson(
+                    "{\"items\": [{\"name\": \"gateway_path\", \"value\": \"gateway\"}, {\"name\": \"gateway_default_api_topology_name\", \"value\": \"cdp-proxy-api\"}]}")));
+    String certificateError = "Certificate is not trusted";
+    when(knoxClient.execute(any(HttpGet.class)))
+        .thenThrow(new SSLHandshakeException(certificateError));
+    Logger serviceLogger = mock(Logger.class);
+    URI apiUri = URI.create("http://cm.example.com:" + server.port() + "/api/v41/");
+    SparkHistoryDiscoveryService loggingService =
+        new SparkHistoryDiscoveryService(objectMapper, cmClient, apiUri, serviceLogger);
+
+    List<String> result = loggingService.resolveUrl("my-cluster", knoxClient, ImmutableList.of());
+
+    assertTrue(result.isEmpty());
+    ArgumentCaptor<String> format = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Object> probedUrl = ArgumentCaptor.forClass(Object.class);
+    ArgumentCaptor<Object> cause = ArgumentCaptor.forClass(Object.class);
+    verify(serviceLogger, atLeastOnce())
+        .warn(format.capture(), probedUrl.capture(), cause.capture());
+    String tlsFlag = "--" + ConnectorArguments.OPT_CLOUDERA_DISABLE_TLS_VALIDATION;
+    for (String value : format.getAllValues()) {
+      assertTrue("Warning does not name " + tlsFlag + ": " + value, value.contains(tlsFlag));
+    }
+    for (Object value : probedUrl.getAllValues()) {
+      assertTrue(
+          "Unexpected URL: " + value,
+          value.toString().startsWith("https://knox-host.example.com/gateway/cdp-proxy-api/"));
+    }
+    for (Object value : cause.getAllValues()) {
+      assertEquals(certificateError, value);
+    }
   }
 
   @Test
