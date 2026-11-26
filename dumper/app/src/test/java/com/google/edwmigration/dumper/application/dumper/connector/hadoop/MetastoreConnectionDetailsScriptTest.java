@@ -178,8 +178,10 @@ public class MetastoreConnectionDetailsScriptTest {
 
     assertEquals(0, runScript(0));
 
+    // A parameter value ends at the next space, so the comma after the URL is redacted with it.
     assertEquals(
-        String.format(errorFormat, "jdbc:mysql://metastore-host/metastore?password=<redacted>"),
+        "Unable to open a test connection. JDBC url = jdbc:mysql://metastore-host/metastore"
+            + "?password=<redacted> username = hive.\n",
         new String(Files.readAllBytes(scriptError), UTF_8));
   }
 
@@ -245,6 +247,89 @@ public class MetastoreConnectionDetailsScriptTest {
     assertRedacted(
         "jdbc:oracle:thin:@metastore-host:1521:ORCL",
         "jdbc:oracle:thin:hive/p?s;s(a@b)@metastore-host:1521:ORCL");
+  }
+
+  @Test
+  public void run_parameterValueWithSemicolonCommaOrParens_redacted() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://metastore-host/metastore?user=<redacted>&password=<redacted>"
+            + "&useSSL=<redacted>",
+        "jdbc:mysql://metastore-host/metastore?user=hive&password=Se;cr,e(t)1&useSSL=true");
+  }
+
+  @Test
+  public void run_semicolonParameterValueWithOtherSeparators_redacted() throws Exception {
+    assertRedacted(
+        "jdbc:sqlserver://metastore-host:1433;databaseName=<redacted>;password=<redacted>"
+            + ";encrypt=<redacted>",
+        "jdbc:sqlserver://metastore-host:1433;databaseName=metastore;password=Se,cr(e)t&1?x"
+            + ";encrypt=true");
+  }
+
+  @Test
+  public void run_semicolonParameterValueInBraces_redacted() throws Exception {
+    assertRedacted(
+        "jdbc:sqlserver://metastore-host:1433;databaseName=<redacted>;password=<redacted>"
+            + ";encrypt=<redacted>",
+        "jdbc:sqlserver://metastore-host:1433;databaseName=metastore;password={Se;cr}};et1}"
+            + ";encrypt=true");
+  }
+
+  @Test
+  public void run_semicolonParameterValueWithSeparatorAndAt_hostKept() throws Exception {
+    assertRedacted(
+        "jdbc:sqlserver://metastore-host:1433;databaseName=<redacted>;user=<redacted>"
+            + ";password=<redacted>",
+        "jdbc:sqlserver://metastore-host:1433;databaseName=metastore;user=hive@corp"
+            + ";password=Se,c@ret1");
+    assertRedacted(
+        "jdbc:sqlserver://metastore-host:1433;databaseName=<redacted>;user=<redacted>"
+            + ";password=<redacted>",
+        "jdbc:sqlserver://metastore-host:1433;databaseName=metastore;user=hive@corp"
+            + ";password={Se;c@ret1}");
+  }
+
+  @Test
+  public void run_parenthesizedPropertyValueWithSemicolonOrAmpersand_redacted() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://address=(host=<redacted>)(user=<redacted>)(password=<redacted>)/metastore",
+        "jdbc:mysql://address=(host=metastore-host)(user=hive)(password=Se;cr&et1)/metastore");
+    assertRedacted(
+        "jdbc:mysql://(host=<redacted>,user=<redacted>,password=<redacted>)/metastore",
+        "jdbc:mysql://(host=metastore-host,user=hive,password=Se;cr&et1)/metastore");
+  }
+
+  @Test
+  public void run_userInfoContainingParameterSyntax_removed() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://metastore-host:3306/metastore",
+        "jdbc:mysql://hive:p;a=b@metastore-host:3306/metastore");
+    assertRedacted(
+        "jdbc:mariadb://metastore-host:3306/metastore",
+        "jdbc:mariadb://hive:p,a=b@metastore-host:3306/metastore");
+    assertRedacted(
+        "jdbc:postgresql://metastore-host:5432/metastore",
+        "jdbc:postgresql://hive:p;a=b@metastore-host:5432/metastore");
+    assertRedacted(
+        "jdbc:mysql:loadbalance://host1:3306,host2:3306/metastore",
+        "jdbc:mysql:loadbalance://hive:p;a=b@host1:3306,host2:3306/metastore");
+  }
+
+  @Test
+  public void run_parametersWithoutSeparatorsInValues_redactedAsBefore() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://host1:3306,host2:3306/metastore?createDatabaseIfNotExist=<redacted>"
+            + "&useSSL=<redacted>",
+        "jdbc:mysql://host1:3306,host2:3306/metastore?createDatabaseIfNotExist=true&useSSL=false");
+    assertRedacted(
+        "jdbc:derby:;databaseName=<redacted>;create=<redacted>",
+        "jdbc:derby:;databaseName=metastore_db;create=true");
+    assertRedacted(
+        "jdbc:oracle:thin:@(DESCRIPTION=<redacted>(ADDRESS=<redacted>(PROTOCOL=<redacted>)"
+            + "(HOST=<redacted>)(PORT=<redacted>))(CONNECT_DATA=<redacted>"
+            + "(SERVICE_NAME=<redacted>)))",
+        "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=metastore-host)(PORT=1521))"
+            + "(CONNECT_DATA=(SERVICE_NAME=metastore)))");
   }
 
   @Test
