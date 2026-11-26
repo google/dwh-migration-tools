@@ -19,6 +19,7 @@ package com.google.edwmigration.dumper.application.dumper.task;
 import static com.google.edwmigration.dumper.application.dumper.test.DumperTestUtils.getTimeSubtractingDays;
 
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import org.junit.Assert;
 import org.junit.Test;
@@ -75,5 +76,38 @@ public class SummaryTest {
 
     //  Assert
     Assert.assertEquals(expectedSummary, resultingSummary);
+  }
+
+  @Test
+  public void hashCode_equalSummariesWithInterval_returnsSameValue() {
+    Summary s1 = new Summary(5).withInterval(new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO));
+    Summary s2 = new Summary(5).withInterval(new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO));
+
+    Assert.assertEquals(s1, s2);
+    Assert.assertEquals(s1.hashCode(), s2.hashCode());
+  }
+
+  @Test
+  public void hashCode_equalSummariesWithIntervalsInDifferentZones_returnsSameValue() {
+    ZoneOffset otherZone = ZoneOffset.ofHours(2);
+    Summary s1 = new Summary(5).withInterval(new ZonedInterval(SEVEN_DAYS_AGO, FIVE_DAYS_AGO));
+    Summary s2 =
+        new Summary(5)
+            .withInterval(
+                new ZonedInterval(
+                    SEVEN_DAYS_AGO.withZoneSameInstant(otherZone),
+                    FIVE_DAYS_AGO.withZoneSameInstant(otherZone)));
+
+    Assert.assertEquals(s1, s2);
+    Assert.assertEquals(s1.hashCode(), s2.hashCode());
+  }
+
+  @Test
+  public void hashCode_equalSummariesWithoutInterval_returnsSameValue() {
+    Summary s1 = new Summary(5);
+    Summary s2 = new Summary(5);
+
+    Assert.assertEquals(s1, s2);
+    Assert.assertEquals(s1.hashCode(), s2.hashCode());
   }
 }

@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.task;
 
 import com.google.edwmigration.dumper.application.dumper.connector.ZonedInterval;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import javax.annotation.Nonnull;
@@ -86,5 +87,10 @@ public class Summary {
     if (!(obj instanceof Summary)) return false;
     Summary summary = (Summary) obj;
     return summary.rowCount() == rowCount() && summary.interval().equals(interval());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(rowCount, interval);
   }
 }
