@@ -37,12 +37,12 @@
   expiration_date: 2027-01-31
 
 - CVE: CVE-2026-89044
-  artifact: io.grpc:grpc-netty-shaded:1.85.0
+  artifact: io.grpc:grpc-netty-shaded:1.85.1
   justification: >
-    Not a false positive. grpc-netty-shaded 1.85.0 bundles netty 4.2.17.Final, including its HTTP codec,
+    Not a false positive. grpc-netty-shaded 1.85.1 bundles netty 4.2.17.Final, including its HTTP codec,
     and this advisory affects netty 4.2.13.Final to 4.2.17.Final; it is fixed in 4.2.18.Final. No grpc
-    release bundles the fix yet (1.85.1 also has 4.2.17.Final). Neither scanner reports it on this jar
-    (Dependency-Check reads the jar as netty 1.85.0, and the OSV record has no Maven package), so this
+    release bundles the fix yet (1.86.0 also has 4.2.17.Final). Neither scanner reports it on this jar
+    (Dependency-Check reads the jar as netty 1.85.1, and the OSV record has no Maven package), so this
     entry is kept by hand. The Dumper uses the bundled netty only as a gRPC client, through the Google
     Cloud client libraries. Tracked in b/579421681.
   expiration_date: 2026-12-31
@@ -77,7 +77,7 @@
 
 - false_positive: "grpc-netty-shaded: netty advisories that do not affect the bundled netty 4.2.17"
   artifacts:
-    - io.grpc:grpc-netty-shaded:1.85.0
+    - io.grpc:grpc-netty-shaded:1.85.1
   advisories:
     - CVE-2014-3488
     - CVE-2015-2156
@@ -152,7 +152,7 @@
     - CVE-2026-75595
     - CVE-2026-75596
   justification: >
-    Dependency-Check identifies grpc-netty-shaded as netty with grpc's own version (1.85.0), so every
+    Dependency-Check identifies grpc-netty-shaded as netty with grpc's own version (1.85.1), so every
     netty advisory with a range below 4.x matches. The jar bundles netty 4.2.17.Final (META-
     INF/io.grpc.netty.shaded.io.netty.versions.properties) with the modules buffer, common, transport,
     resolver, handler, handler-proxy, codec-base, codec-compression, codec-http, codec-http2,
@@ -283,6 +283,6 @@
     CVE-2026-89044 (Transfer-Encoding validation, netty 4.1.133 to 4.1.137) is in the HTTP codec.
     Dependency-Check reports it on whichever standalone netty jar it groups the netty CPE under. The
     Dumper does not ship netty-codec-http as a jar. Copies of the codec that other jars bundle are not
-    covered by this rule: the 4.2.17 one inside grpc-netty-shaded 1.85.0 is in the advisory's second
+    covered by this rule: the 4.2.17 one inside grpc-netty-shaded 1.85.1 is in the advisory's second
     range (4.2.13 to 4.2.17) and is listed as an open finding above.
   expiration_date: 2027-05-31
