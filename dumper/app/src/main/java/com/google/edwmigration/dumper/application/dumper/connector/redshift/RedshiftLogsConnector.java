@@ -45,8 +45,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Generates these csv. 1. userid => username mapping ( duplicated from schema ) 2. SVL_DDLTEXT for
- * DDLs 3 SVL_QUERY_TEXT for non-DDLS 4. SQL_QUERY_METRICS for metrics
+ * Generates these csv. 1. userid => username mapping ( duplicated from schema ) 2. STL_DDLTEXT for
+ * DDLs 3. STL_QUERY and STL_QUERYTEXT for non-DDLs
  */
 @AutoService({Connector.class, LogsConnector.class})
 @Description("Dumps logs from Amazon Redshift.")
@@ -124,41 +124,9 @@ public class RedshiftLogsConnector extends AbstractRedshiftConnector
         "Q.starttime",
         parallelTask);
 
-    if (false) {
-      // Metric Dance.... S3 logs has xid ..  .. so Above wil have to be used to map xid's to query
-      //  1. SVL_QUERY_METRICS doesn't have starttime
-      //  2. so join with QTL_QUERY....
-      String queryTemplateMetrics =
-          " SELECT Q.query as \"QueryID\", Q.xid, Q.starttime, QM.* "
-              + " FROM STL_QUERY Q JOIN SVL_QUERY_METRICS QM USING (query) WHERE ##";
-
-      makeTasks(
-          arguments,
-          RedshiftLogsDumpFormat.ZIP_ENTRY_PREFIX_METRICS,
-          queryTemplateMetrics,
-          "Q.starttime",
-          parallelTask);
-
-      // We want to know how many bytes were scanned per query, so we must consult STL_SCAN;
-      // SVL_QUERY_METRICS already gives us "scan_row_count", but doesn't tell us anything about
-      // bytes scanned.
-      String queryTemplateScan =
-          " SELECT Q.query as \"QueryID\", min(Q.starttime) as starttime, sum(QS.rows) as"
-              + " stl_scan_sum_rows, sum(QS.bytes) as stl_scan_sum_bytes  FROM STL_QUERY Q USING"
-              + " STL_SCAN QS USING (query) WHERE ## GROUP BY Q.query";
-
-      makeTasks(
-          arguments,
-          RedshiftLogsDumpFormat.ZIP_ENTRY_PREFIX_SCANS,
-          queryTemplateScan,
-          "Q.starttime",
-          parallelTask);
-
-      out.add(parallelTask.build());
-
-      out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
-      out.add(new FormatTask(FORMAT_NAME));
-    }
+    out.add(parallelTask.build());
+    out.add(new DumpMetadataTask(arguments, FORMAT_NAME));
+    out.add(new FormatTask(FORMAT_NAME));
   }
 
   // ##  in the template to be replaced by the complete WHERE clause.
