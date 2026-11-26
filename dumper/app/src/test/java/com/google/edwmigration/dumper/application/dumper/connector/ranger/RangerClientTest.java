@@ -154,6 +154,30 @@ public class RangerClientTest {
     assertThat(e.getCause(), instanceOf(SocketTimeoutException.class));
   }
 
+  @Test
+  public void doGet_multipleCalls_doesNotAccumulateQueryParams() {
+    server = new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort());
+    server.start();
+    server.stubFor(
+        get(urlEqualTo("/service/xusers/users?startIndex=0&pageSize=1"))
+            .willReturn(aResponse().withStatus(200).withBody("{\"vXUsers\":[{\"id\":1}]}")));
+    server.stubFor(
+        get(urlEqualTo("/service/xusers/users?startIndex=1&pageSize=1"))
+            .willReturn(aResponse().withStatus(200).withBody("{\"vXUsers\":[{\"id\":2}]}")));
+    ConnectionWrapper client =
+        ConnectionWrapper.builder(
+                new URIBuilder().setScheme("http").setHost("localhost").setPort(server.port()))
+            .build();
+
+    String page1 =
+        client.doGet("/service/xusers/users", ImmutableMap.of("startIndex", "0", "pageSize", "1"));
+    String page2 =
+        client.doGet("/service/xusers/users", ImmutableMap.of("startIndex", "1", "pageSize", "1"));
+
+    assertEquals("{\"vXUsers\":[{\"id\":1}]}" + System.lineSeparator(), page1);
+    assertEquals("{\"vXUsers\":[{\"id\":2}]}" + System.lineSeparator(), page2);
+  }
+
   private void startHttpsServerWithUsers() {
     server =
         new WireMockServer(WireMockConfiguration.wireMockConfig().dynamicPort().dynamicHttpsPort());
