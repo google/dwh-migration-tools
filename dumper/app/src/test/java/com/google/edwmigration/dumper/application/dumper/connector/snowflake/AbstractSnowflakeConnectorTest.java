@@ -130,6 +130,21 @@ public class AbstractSnowflakeConnectorTest extends AbstractConnectorTest {
   }
 
   @Test
+  public void sanitizeDatabaseName_emptyName_throwsUsageException() {
+    assertThrows(MetadataDumperUsageException.class, () -> sanitizeDatabaseName(""));
+    assertThrows(MetadataDumperUsageException.class, () -> sanitizeDatabaseName("\"\""));
+  }
+
+  @Test
+  public void sanitizeDatabaseName_unbalancedQuotes_throwsUsageException() {
+    assertThrows(MetadataDumperUsageException.class, () -> sanitizeDatabaseName("\""));
+    assertThrows(MetadataDumperUsageException.class, () -> sanitizeDatabaseName("\"my-db"));
+    assertThrows(MetadataDumperUsageException.class, () -> sanitizeDatabaseName("my-db\""));
+    assertThrows(MetadataDumperUsageException.class, () -> sanitizeDatabaseName("\"db1"));
+    assertThrows(MetadataDumperUsageException.class, () -> sanitizeDatabaseName("\"\"my-db\"\""));
+  }
+
+  @Test
   public void open_noUser_throwsUsageException() throws Exception {
     ConnectorArguments arguments =
         ConnectorArguments.create(ImmutableList.of("--connector", "snowflake", "--assessment"));

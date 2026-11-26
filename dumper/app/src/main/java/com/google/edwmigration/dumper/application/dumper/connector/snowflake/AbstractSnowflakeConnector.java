@@ -295,6 +295,9 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
    * case-insensitively as before. Any other name is returned as a quoted identifier: an unquoted
    * input is upper-cased first, as Snowflake does for unquoted identifiers, while a name given in
    * double quotes keeps its case.
+   *
+   * <p>Double quotes are accepted only as one pair around the whole name. An empty name, a name
+   * with a quote on one side only and a name with a quote inside are rejected.
    */
   @Nonnull
   static String sanitizeDatabaseName(@Nonnull String databaseName) {
@@ -307,15 +310,20 @@ public abstract class AbstractSnowflakeConnector extends AbstractJdbcConnector {
               lengthWithQuotes, maxLength));
     }
     CharMatcher doubleQuoteMatcher = CharMatcher.is('"');
-    String trimmedName = doubleQuoteMatcher.trimFrom(databaseName);
+    boolean isQuoted =
+        databaseName.length() >= 2 && databaseName.startsWith("\"") && databaseName.endsWith("\"");
+    String trimmedName =
+        isQuoted ? databaseName.substring(1, databaseName.length() - 1) : databaseName;
     if (doubleQuoteMatcher.matchesAnyOf(trimmedName)) {
       throw new MetadataDumperUsageException(
           "Database name has incorrectly placed double quote(s). Aborting query.");
     }
+    if (trimmedName.isEmpty()) {
+      throw new MetadataDumperUsageException("Database name is empty. Aborting query.");
+    }
     if (UNQUOTED_IDENTIFIER_PATTERN.matcher(trimmedName).matches()) {
       return trimmedName;
     }
-    boolean isQuoted = databaseName.startsWith("\"") && databaseName.endsWith("\"");
     String name = isQuoted ? trimmedName : trimmedName.toUpperCase(Locale.ROOT);
     return "\"" + name + "\"";
   }
