@@ -17,6 +17,7 @@
 package com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiConfigDto;
 import com.google.edwmigration.dumper.application.dumper.connector.cloudera.manager.dto.ApiConfigListDTO;
@@ -32,6 +33,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import javax.net.ssl.SSLException;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -44,7 +46,8 @@ import org.slf4j.LoggerFactory;
 
 public class SparkHistoryDiscoveryService {
 
-  private static final Logger logger = LoggerFactory.getLogger(SparkHistoryDiscoveryService.class);
+  private static final Logger CLASS_LOGGER =
+      LoggerFactory.getLogger(SparkHistoryDiscoveryService.class);
 
   private static final List<String> DEFAULT_CANDIDATE_PATHS =
       ImmutableList.of("spark3history", "sparkhistory");
@@ -52,12 +55,24 @@ public class SparkHistoryDiscoveryService {
   private final ObjectMapper objectMapper;
   private final CloseableHttpClient clouderaManagerHttpClient;
   private final URI apiURI;
+  private final Logger logger;
 
   public SparkHistoryDiscoveryService(
       ObjectMapper objectMapper, CloseableHttpClient clouderaManagerHttpClient, URI apiURI) {
+    this(objectMapper, clouderaManagerHttpClient, apiURI, CLASS_LOGGER);
+  }
+
+  /** Lets a test supply the logger; the application uses the logger of this class. */
+  @VisibleForTesting
+  SparkHistoryDiscoveryService(
+      ObjectMapper objectMapper,
+      CloseableHttpClient clouderaManagerHttpClient,
+      URI apiURI,
+      Logger logger) {
     this.objectMapper = objectMapper;
     this.clouderaManagerHttpClient = clouderaManagerHttpClient;
     this.apiURI = apiURI;
+    this.logger = logger;
   }
 
   /**
@@ -133,6 +148,13 @@ public class SparkHistoryDiscoveryService {
     try (CloseableHttpResponse response = knoxHttpClient.execute(new HttpGet(probeUrl))) {
       int status = response.getStatusLine().getStatusCode();
       return status == 200;
+    } catch (SSLException e) {
+      logger.warn(
+          "TLS verification failed probing {}. Configure a truststore or pass"
+              + " --cloudera-disable-tls-validation to skip certificate verification: {}",
+          url,
+          e.getMessage());
+      return false;
     } catch (IOException e) {
       logger.debug("Probe failed for URL: {}", url);
       return false;
