@@ -97,6 +97,62 @@ public class MetastoreConnectionDetailsScriptTest {
   }
 
   @Test
+  public void run_userInfoWithSemicolonCommaOrParens_removed() throws Exception {
+    assertRedacted(
+        "jdbc:postgresql://metastore-host:5432/metastore",
+        "jdbc:postgresql://hive:p;ss@metastore-host:5432/metastore");
+    assertRedacted(
+        "jdbc:mysql://metastore-host/metastore", "jdbc:mysql://hive:p,ss@metastore-host/metastore");
+    assertRedacted(
+        "jdbc:mysql://metastore-host/metastore",
+        "jdbc:mysql://hive:p(s)s@metastore-host/metastore");
+  }
+
+  @Test
+  public void run_userInfoWithSeparatorBeforeHostList_hostsKept() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://host1:3306,host2:3306/metastore",
+        "jdbc:mysql://hive:p;ss@host1:3306,host2:3306/metastore");
+  }
+
+  @Test
+  public void run_userInfoForEachHost_removedWithEarlierHosts() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://host2:3306/metastore",
+        "jdbc:mysql://hive:Secret1@host1:3306,hive:Secret1@host2:3306/metastore");
+  }
+
+  @Test
+  public void run_hostListWithoutCredentials_unchanged() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://host1:3306,host2:3306/metastore",
+        "jdbc:mysql://host1:3306,host2:3306/metastore");
+  }
+
+  @Test
+  public void run_atOnlyInParameterValues_hostKept() throws Exception {
+    assertRedacted(
+        "jdbc:mysql://metastore-host:3306/metastore?user=<redacted>&password=<redacted>",
+        "jdbc:mysql://metastore-host:3306/metastore?user=hive@corp&password=Se@cret1");
+  }
+
+  @Test
+  public void run_semicolonParametersContainingAt_hostKept() throws Exception {
+    assertRedacted(
+        "jdbc:sqlserver://metastore-host:1433;databaseName=<redacted>;user=<redacted>"
+            + ";password=<redacted>",
+        "jdbc:sqlserver://metastore-host:1433;databaseName=metastore;user=hive@corp"
+            + ";password=Se@cret1");
+  }
+
+  @Test
+  public void run_oracleUrlWithProtocol_hostKept() throws Exception {
+    assertRedacted(
+        "jdbc:oracle:thin:@tcps://metastore-host:2484/metastore",
+        "jdbc:oracle:thin:hive/Se@cret1@tcps://metastore-host:2484/metastore");
+  }
+
+  @Test
   public void run_oracleUserAndPassword_removed() throws Exception {
     assertRedacted(
         "jdbc:oracle:thin:@metastore-host:1521:ORCL",

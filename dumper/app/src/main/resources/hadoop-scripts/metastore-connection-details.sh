@@ -7,7 +7,7 @@ set -o pipefail
 redact_jdbc_urls() {
   sed -E \
     -e '/jdbc:/s#([?&;,(][^=?&;,()| ]+=)[^&;,()| ]*#\1<redacted>#g' \
-    -e '/jdbc:/s#(://)[^/?;,()| ]*@#\1#g' \
+    -e '/jdbc:/s#(://)[^/?| ]*@#\1#g' \
     -e '/jdbc:/s#(jdbc:oracle:[A-Za-z0-9]+:)[^@?;(),| ][^?;(),| ]*@#\1@#g' \
     -e '/jdbc:/s#(jdbc:oracle:[A-Za-z0-9]+:)[^@| ][^| ]*@#\1@#g'
 }
