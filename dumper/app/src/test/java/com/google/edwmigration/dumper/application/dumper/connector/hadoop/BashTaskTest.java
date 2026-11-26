@@ -69,6 +69,17 @@ public class BashTaskTest {
     assertEquals("3", readOutput("test-script.exit-status"));
   }
 
+  @Test
+  public void run_scriptSucceeds_errorOutputIsEmpty() throws Exception {
+    Path script = writeScript("echo 'hello'\n");
+
+    new BashTask("test-script", script, SHORT_TIMEOUT).run(context);
+
+    assertEquals("hello\n", readOutput("test-script.out"));
+    assertEquals("", readOutput("test-script.err"));
+    assertEquals("0", readOutput("test-script.exit-status"));
+  }
+
   @Test(timeout = 30_000)
   public void run_scriptExceedsTimeout_killsScriptAndItsChildren() throws Exception {
     Path scriptPidFile = temporaryFolder.getRoot().toPath().resolve("script.pid");

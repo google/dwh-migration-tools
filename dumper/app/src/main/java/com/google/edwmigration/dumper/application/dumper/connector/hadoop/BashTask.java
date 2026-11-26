@@ -52,10 +52,15 @@ public class BashTask implements Task<Void> {
    * every process it starts can be stopped together; Java 8 cannot list the children of a process.
    * On SIGTERM, SIGINT or SIGHUP the wrapper kills that process group. Otherwise it exits with the
    * exit status of the script.
+   *
+   * <p>Job control is on only while the script is started, which is what gives the script its own
+   * process group. It is turned off before the wait: with job control on, bash before 5.2 reports
+   * the finished job ({@code [1]+ Done ...}) on the standard error of the wrapper, and that line
+   * would end up in the error output of the script.
    */
   private static final String PROCESS_GROUP_WRAPPER =
       "trap 'kill -KILL -- -$script_pid 2>/dev/null; exit 143' TERM INT HUP; "
-          + "set -m; /bin/bash \"$1\" & script_pid=$!; wait $script_pid";
+          + "set -m; /bin/bash \"$1\" & script_pid=$!; set +m; wait $script_pid";
 
   private final String scriptName;
 
